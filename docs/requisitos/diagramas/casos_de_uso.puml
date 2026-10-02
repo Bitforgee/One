@@ -1,0 +1,48 @@
+@startuml casos_de_uso
+!pragma layout smetana
+skinparam dpi 200
+left to right direction
+skinparam defaultFontName "Times New Roman"
+skinparam shadowing false
+skinparam monochrome true
+
+actor Aluno
+actor Atendente
+actor Administrador
+actor "Provedor de IA" as IA <<externo>>
+actor "Serviço de e-mail" as Email <<externo>>
+actor "Agendador" as Tempo <<sistema>>
+
+rectangle "One" {
+  usecase "Autenticar-se" as UC01
+  usecase "Conversar com o assistente" as UC02
+  usecase "Abrir chamado" as UC03
+  usecase "Acompanhar chamado" as UC04
+  usecase "Atender chamado" as UC05
+  usecase "Encaminhar chamado" as UC06
+  usecase "Reclassificar chamado" as UC07
+  usecase "Gerenciar base de conhecimento" as UC08
+  usecase "Gerenciar usuários" as UC09
+  usecase "Configurar setores, categorias\ne roteamento" as UC10
+  usecase "Consultar indicadores" as UC11
+  usecase "Encerrar conversas e chamados\npor prazo" as UC12
+}
+
+Aluno --> UC01
+Aluno --> UC02
+Aluno --> UC04
+Atendente --> UC01
+Atendente --> UC05
+Atendente --> UC06
+Atendente --> UC07
+Administrador --> UC01
+Administrador --> UC08
+Administrador --> UC09
+Administrador --> UC10
+Administrador --> UC11
+UC03 .> UC02 : <<extend>>
+UC02 --> IA
+UC04 --> Email
+UC05 --> Email
+Tempo --> UC12
+@enduml
