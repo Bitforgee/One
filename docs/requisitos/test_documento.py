@@ -6,6 +6,7 @@ Run one check: python -m unittest discover -s docs/requisitos -p test_documento.
 import contextlib
 import io
 import re
+import subprocess
 import unicodedata
 import unittest
 from pathlib import Path
@@ -228,6 +229,31 @@ class Documento(unittest.TestCase):
     def test_sem_word_sai_1(self):  # C2
         self._sem_ferramenta(java=True, word=False, nome="Word")
 
+    def test_falha_no_meio_sai_1(self):  # C2
+        antes = (DOCX.read_bytes(), PDF.read_bytes())
+        saida = io.StringIO()
+        falha = subprocess.CalledProcessError(1, "java")
+        with mock.patch.object(gerar, "java_disponivel", return_value=True), \
+                mock.patch.object(gerar, "word_disponivel", return_value=True), \
+                mock.patch.object(gerar, "obter_plantuml", return_value=Path("plantuml.jar")), \
+                mock.patch.object(gerar, "renderizar", side_effect=falha), \
+                contextlib.redirect_stdout(saida), contextlib.redirect_stderr(saida):
+            codigo = gerar.main()
+        self.assertEqual(codigo, 1)
+        self.assertIn("Falha ao gerar o documento", saida.getvalue())
+        self.assertEqual((DOCX.read_bytes(), PDF.read_bytes()), antes)
+
+    def test_logo_na_capa(self):  # C37
+        capa = [b for b in self.blocos if isinstance(b, Paragraph) and self.secao_de[id(b)] == 0]
+        com_imagem = [i for i, b in enumerate(capa) if b._p.find(".//" + qn("w:drawing")) is not None]
+        self.assertEqual(len(com_imagem), 1, "capa must carry exactly one picture")
+        instituicao = next(i for i, b in enumerate(capa) if texto_xml(b._p) == "UNIVAG - CENTRO UNIVERSITÁRIO")
+        self.assertLess(com_imagem[0], instituicao, "logo must come before the institution name")
+        self.assertEqual(alinhamento_efetivo(capa[com_imagem[0]]), WD_ALIGN_PARAGRAPH.CENTER)
+        blip = capa[com_imagem[0]]._p.find(".//" + qn("a:blip"))
+        imagem = self.doc.part.related_parts[blip.get(qn("r:embed"))].blob
+        self.assertEqual(imagem, (AQUI / "logo_univag.png").read_bytes())
+
     def test_margens_a4(self):  # C3
         tolerancia = Cm(0.01)
         for n, secao in enumerate(self.doc.sections):
@@ -297,7 +323,7 @@ class Documento(unittest.TestCase):
             "2026",
         ]
         capa = [b for b in self.blocos if isinstance(b, Paragraph) and self.secao_de[id(b)] == 0 and texto_xml(b._p)]
-        self.assertEqual([texto_xml(b._p).casefold() for b in capa], [e.casefold() for e in esperado])
+        self.assertEqual([texto_xml(b._p) for b in capa], esperado)
         for b in capa:
             self.assertEqual(alinhamento_efetivo(b), WD_ALIGN_PARAGRAPH.CENTER, texto_xml(b._p))
 
@@ -466,11 +492,13 @@ class Documento(unittest.TestCase):
     # --- S3 ------------------------------------------------------------------------------
 
     def test_figuras(self):  # C29
-        corpo = self.doc.element.body
-        self.assertEqual(len(list(corpo.iter(qn("w:drawing")))), 4)
+        textuais = [b for b in self.blocos if isinstance(b, Paragraph) and self.secao_de[id(b)] >= 2]
+        self.assertEqual(sum(len(b._p.findall(".//" + qn("w:drawing"))) for b in textuais), 4)
         temas = ["casos de uso", "classes", "conceitual", "lógico"]
         encontradas = 0
         for i, b in enumerate(self.blocos):
+            if self.secao_de[id(b)] < 2:
+                continue
             if isinstance(b, Paragraph) and b._p.find(".//" + qn("w:drawing")) is not None:
                 encontradas += 1
                 legenda = texto_xml(self.blocos[i - 1]._p)

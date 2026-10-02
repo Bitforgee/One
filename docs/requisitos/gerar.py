@@ -36,6 +36,7 @@ TIMES = "Times New Roman"
 LARGURA_TEXTO = Cm(16)
 ALTURA_MAX_FIGURA = Cm(21)
 LINHAS_QUADRO_INTEIRO = 12
+LARGURA_LOGO = Cm(5)
 FONTE_FIGURA = "Fonte: elaborado pelos autores (2026)."
 
 SCRIPT_WORD = r"""
@@ -260,7 +261,10 @@ def linha_central(doc, texto, negrito=False, antes=0):
 
 
 def capa_e_folha_de_rosto(doc, meta):
-    linha_central(doc, meta["instituicao"], negrito=True)
+    logo = doc.add_paragraph(style="Capa")
+    logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    logo.add_run().add_picture(str(AQUI / meta["logo"]), width=LARGURA_LOGO)
+    linha_central(doc, meta["instituicao"], negrito=True, antes=12)
     linha_central(doc, meta["curso"], negrito=True)
     for n, autor in enumerate(meta["autores"]):
         linha_central(doc, autor, antes=96 if n == 0 else 0)
