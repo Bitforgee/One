@@ -1,0 +1,152 @@
+---
+config:
+  layout: elk
+  theme: neutral
+  themeVariables:
+    fontFamily: Times New Roman
+    fontSize: 16px
+  er:
+    entityPadding: 4
+    fontSize: 16
+---
+erDiagram
+  direction TB
+  setor {
+    bigint id PK
+    varchar(100) nome
+    boolean triagem "UK parcial"
+  }
+  categoria {
+    bigint id PK
+    varchar(100) nome UK
+  }
+  usuario {
+    bigint id PK
+    varchar(150) nome
+    varchar(254) email UK
+    varchar(255) senha_hash
+    boolean ativo
+  }
+  usuario_papel {
+    bigint usuario_id PK, FK
+    varchar(20) papel PK
+  }
+  curso {
+    bigint id PK
+    varchar(150) nome
+    bigint coordenacao_setor_id FK "nulo"
+  }
+  aluno_curso {
+    bigint usuario_id PK, FK
+    bigint curso_id PK, FK
+    smallint semestre
+  }
+  atendente_setor {
+    bigint usuario_id PK, FK
+    bigint setor_id PK, FK
+  }
+  regra_roteamento {
+    bigint id PK
+    bigint categoria_id FK, UK
+    varchar(30) destino
+    bigint setor_id FK "nulo"
+  }
+  artigo {
+    bigint id PK
+    bigint categoria_id FK
+    varchar(20) status
+  }
+  versao_artigo {
+    bigint id PK
+    bigint artigo_id FK
+    int numero
+    varchar(200) titulo
+    text[] perguntas
+    text resposta
+    text[] links "nulo"
+    timestamptz atualizado_em
+    bigint atualizado_por_id FK
+  }
+  conversa {
+    bigint id PK
+    bigint aluno_id FK
+    timestamptz iniciada_em
+    varchar(30) desfecho "nulo"
+    timestamptz encerrada_em "nulo"
+  }
+  mensagem_conversa {
+    bigint id PK
+    bigint conversa_id FK
+    varchar(20) autor
+    text texto
+    bigint versao_artigo_id FK "nulo"
+    timestamptz enviada_em
+  }
+  chamado {
+    bigint id PK
+    varchar(20) numero UK
+    bigint conversa_id FK, UK
+    bigint solicitante_id FK
+    bigint responsavel_id FK "nulo"
+    bigint curso_id FK
+    smallint semestre
+    bigint setor_id FK
+    bigint categoria_id FK
+    bigint categoria_original_id FK
+    varchar(200) titulo
+    text descricao "nulo"
+    varchar(20) estado
+    varchar(30) motivo_fechamento "nulo"
+    int encaminhamentos
+    int reaberturas
+    timestamptz criado_em
+  }
+  mensagem_chamado {
+    bigint id PK
+    bigint chamado_id FK
+    bigint autor_id FK
+    varchar(20) tipo
+    text texto
+    boolean aguarda_aluno
+    timestamptz enviada_em
+  }
+  anexo {
+    bigint id PK
+    bigint mensagem_chamado_id FK
+    varchar(255) nome_arquivo
+    varchar(100) tipo_conteudo
+    int tamanho_bytes
+  }
+  evento_chamado {
+    bigint id PK
+    bigint chamado_id FK
+    bigint ator_id FK
+    varchar(30) tipo
+    text detalhe "nulo"
+    timestamptz ocorrido_em
+  }
+
+  usuario ||--o{ usuario_papel : ""
+  usuario ||--o{ aluno_curso : ""
+  curso ||--o{ aluno_curso : ""
+  usuario ||--o{ atendente_setor : ""
+  setor ||--o{ atendente_setor : ""
+  setor |o--o{ curso : ""
+  categoria ||--o| regra_roteamento : ""
+  setor |o--o{ regra_roteamento : ""
+  categoria ||--o{ artigo : ""
+  artigo ||--|{ versao_artigo : ""
+  usuario ||--o{ versao_artigo : ""
+  usuario ||--o{ conversa : ""
+  conversa ||--|{ mensagem_conversa : ""
+  versao_artigo |o--o{ mensagem_conversa : ""
+  conversa ||--o| chamado : ""
+  usuario ||--o{ chamado : ""
+  curso ||--o{ chamado : ""
+  setor ||--o{ chamado : ""
+  categoria ||--o{ chamado : ""
+  chamado ||--o{ mensagem_chamado : ""
+  usuario ||--o{ mensagem_chamado : ""
+  mensagem_chamado ||--o{ anexo : ""
+  chamado ||--o{ evento_chamado : ""
+  usuario ||--o{ evento_chamado : ""
