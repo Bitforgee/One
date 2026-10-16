@@ -78,7 +78,7 @@ Quadro 2.2 — Requisitos funcionais
 
 Fonte: elaborado pelos autores com base na especificação de regras de negócio do projeto (2026).
 
-Os requisitos foram renumerados nesta versão. O Quadro 2.3 mostra, para cada identificador da versão anterior do documento de requisitos, o identificador novo. Três requisitos antigos tratavam de acesso e foram divididos: a operação do administrador continuou como requisito funcional, e a regra de acesso virou requisito não funcional de segurança.
+Os requisitos foram renumerados nesta versão. O Quadro 2.3 mostra, para cada identificador da versão anterior do documento de requisitos, o identificador novo. Dois requisitos antigos de acesso (RF-01 e RF-04) foram divididos: a operação do administrador continuou como requisito funcional, e a regra de acesso virou requisito não funcional de segurança. O antigo RF-03 (visibilidade por perfil) virou inteiro o RNF-13.
 
 Quadro 2.3 — Correspondência entre os identificadores antigos e novos dos requisitos funcionais
 
@@ -253,7 +253,7 @@ Quadro 2.8 — Restrições do projeto
 | A aplicação deve ser uma SPA e/ou um aplicativo híbrido, com *front-end* em Angular, React ou Vue e *back-end* com *web services* REST. O manual cita PHP, Java ou Node.js para o *back-end*; o grupo escolheu o ASP.NET Core (RNF-01), apoiado na seção 2.1.4 do manual, que aceita outras tecnologias, e ainda vai confirmar essa escolha com o professor orientador. | Manual do PEI, seção 2.1.4 e Apêndices D.1 a D.3 (UNIVAG, 2026) |
 | O produto mínimo viável não se integra ao Moodle, ao Portal do Aluno, ao sistema acadêmico nem ao sistema financeiro (RNF-08). | Escopo do produto |
 | O código-fonte fica em um repositório público no GitHub, e o documento final segue a estrutura do Apêndice D.5 e as normas da ABNT (RNF-10). | Manual do PEI, Apêndices D e F (UNIVAG, 2026) |
-| O trabalho segue o calendário da disciplina: Relatório Periódico 3 em 16/10; apresentação das funcionalidades implementadas de 27/10 a 30/10; documentação no AVA em 30/10; primeira versão do projeto no AVA em 13/11; aplicação disponível para a banca em 20/11; projeto documentado e código-fonte no GitHub até 27/11. | Calendário do PEI IV (UNIVAG, 2026) |
+| O trabalho segue o calendário da disciplina: Relatório Periódico 3 em 16/10; apresentação das funcionalidades implementadas de 27/10 a 30/10; documentação no AVA em 30/10; primeira versão do projeto no AVA em 13/11; aplicação disponível para a banca em 20/11; projeto documentado e código-fonte no GitHub até 27/11. | Calendário do PEI IV (UNIVAG, 2026); a data do RP3 vem da tarefa publicada no AVA |
 | O piloto é pequeno: uma instituição (o Univag), uma coordenação (a dos cursos de tecnologia), os alunos de Análise e Desenvolvimento de Sistemas, até três setores e de 10 a 30 artigos na base de conhecimento. | Escopo do produto |
 
 Fonte: elaborado pelos autores com base no Manual do PEI (UNIVAG, 2026).
@@ -401,7 +401,7 @@ Quadro 2.15 — Especificação do caso de uso UC-06
 | Ator principal | Atendente |
 | Ator secundário | Serviço de e-mail |
 | Pré-condições | Existe um chamado Aberto, Em atendimento ou Aguardando aluno em um dos setores do atendente. |
-| Fluxo principal | 1. O atendente abre a fila dos seus setores.<br>2. O atendente escolhe um chamado e o assume, ou envia a primeira resposta pública, e passa a ser o responsável; o chamado vai para Em atendimento.<br>3. O atendente lê a transcrição da conversa, o curso e o semestre do aluno e os artigos exibidos.<br>4. O atendente envia uma resposta pública, com anexo opcional.<br>5. O sistema registra a resposta no histórico e envia um e-mail ao aluno pelo serviço de e-mail. |
+| Fluxo principal | 1. O atendente abre a fila dos seus setores.<br>2. O atendente escolhe um chamado e o assume, ou envia a primeira resposta pública, e passa a ser o responsável; se o chamado estava Aberto, vai para Em atendimento (F2).<br>3. O atendente lê a transcrição da conversa, o curso e o semestre do aluno e os artigos exibidos.<br>4. O atendente envia uma resposta pública, com anexo opcional.<br>5. O sistema registra a resposta no histórico e envia um e-mail ao aluno pelo serviço de e-mail. |
 | Fluxos alternativos | A1 (passo 2): O chamado está atribuído a outro atendente do mesmo setor, e o atendente decide assumi-lo. O sistema troca o responsável e registra a troca no histórico (premissa Q8).<br>A2 (passo 4): O atendente registra uma nota interna em vez de uma resposta pública. A nota fica no histórico, o aluno não a vê, e nenhum e-mail é enviado.<br>A3 (passo 4): O atendente marca a resposta pública como "aguardando o aluno". O chamado vai para Aguardando aluno. |
 | Fluxos de exceção | E1 (passo 4): O anexo está fora dos tipos ou do tamanho permitidos (RNF-11). O sistema recusa o anexo. |
 | Pós-condições | O atendente é o responsável pelo chamado, que está Em atendimento ou Aguardando aluno; cada resposta, nota, anexo e troca de responsável está no histórico com autor, data e hora. |
@@ -550,7 +550,7 @@ Quadro 2.24 — Especificação do caso de uso UC-15
 | Identificador | UC-15 |
 |---|---|
 | Nome | Importar usuários |
-| Objetivo | Cadastrar de uma vez os alunos da lista entregue pela instituição, já com curso e semestre, sem digitar um a um. |
+| Objetivo | Cadastrar de uma vez os usuários da lista entregue pela instituição, com os alunos já vinculados a curso e semestre, sem digitar um a um. |
 | Ator principal | Administrador |
 | Ator secundário | Nenhum. |
 | Pré-condições | A instituição entregou a lista de alunos, com curso e semestre (premissas Q5 e Q19). |
@@ -592,7 +592,7 @@ Quadro 2.26 — Especificação do caso de uso UC-17
 | Fluxos alternativos | Nenhum. |
 | Fluxos de exceção | E1 (passo 3): Nenhum setor fica marcado como setor de triagem, ou mais de um fica. O sistema recusa a configuração. |
 | Pós-condições | O setor existe, com fila própria, e a configuração tem exatamente um setor de triagem. |
-| RFs relacionados | RF-11, RF-13 |
+| RFs relacionados | RF-12, RF-13 |
 
 Fonte: elaborado pelos autores (2026).
 

@@ -9,7 +9,7 @@ O grupo usa o Git, e os repositórios ficam no GitHub, na conta `Bitforgee`. O p
 - `Bitforgee/prototipo-v1-one`: documentação de requisitos, pesquisas, roadmap e o protótipo visual navegável.
 - `Bitforgee/One`: esta documentação e o código do produto, com o front-end em React e a API REST em ASP.NET Core.
 
-O Manual do PEI IV exige o código-fonte em um repositório público no GitHub.
+O Manual do PEI IV pede a entrega do software em mídia física e/ou em repositório público Git; o grupo usa o GitHub.
 
 O fluxo de branches segue o Quadro 3.1.
 
