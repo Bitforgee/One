@@ -1,36 +1,52 @@
-# Documentação do One
+# Documentação do Univag One (BitForge)
 
-Esta pasta guarda a documentação do Projeto Extensionista Integrador em Markdown. O documento final, nas normas da ABNT, é montado a partir da pasta `documento/`, seguindo a ordem dos nomes dos arquivos.
+Documentação do Projeto Extensionista Integrador IV, organizada como o template de projeto da PUC Minas (`ICEI-PUC-Minas-PMV-ADS/IntApplicationProject-Template`), com as correções pedidas pelo professor nas aulas. Os arquivos estão em Markdown; o documento final nas normas da ABNT será montado a partir deles, na estrutura do Apêndice D.5 do manual do PEI (tabela no fim desta página).
 
-## Documento final
+**Entrega atual:** [Relatório periódico 3 (RP3)](relatorios-periodicos/rp3.md).
 
-A ordem e os capítulos seguem a estrutura do projeto final do Manual do PEI (Apêndice D.5).
+## Capítulos
 
-| Arquivo | Conteúdo |
-| --- | --- |
-| [00-elementos-pre-textuais.md](documento/00-elementos-pre-textuais.md) | Capa, folha de rosto, resumo e palavras-chave |
-| [01-introducao.md](documento/01-introducao.md) | Propósito, escopo, premissas, convenções e estrutura do documento |
-| [02-fundamentacao-teorica.md](documento/02-fundamentacao-teorica.md) | Pesquisa sobre PWAs e frameworks |
-| [03-visao-geral.md](documento/03-visao-geral.md) | Descrição do produto, usuários, soluções similares, suposições e dependências |
-| [04-requisitos.md](documento/04-requisitos.md) | Requisitos funcionais e não funcionais |
-| [05-documentacao-das-funcionalidades.md](documento/05-documentacao-das-funcionalidades.md) | Casos de uso, diagrama de classes, modelos conceitual e lógico |
-| [06-funcionalidades-desenvolvidas.md](documento/06-funcionalidades-desenvolvidas.md) | Telas da aplicação e suas descrições |
-| [07-consideracoes-finais.md](documento/07-consideracoes-finais.md) | Conclusões, lições aprendidas e trabalhos futuros |
-| [08-referencias.md](documento/08-referencias.md) | Referências no padrão ABNT |
-| [09-apendices-e-anexos.md](documento/09-apendices-e-anexos.md) | Apêndices e anexos |
-
-Regras de escrita:
-
-- Use `#` para capítulos e `##` para seções. Não numere os títulos: a numeração sai na montagem.
-- As orientações de cada seção estão em comentários HTML (`<!-- ... -->`), que não aparecem quando o GitHub exibe o arquivo. Escreva o texto abaixo delas.
-- O Sumário não tem arquivo próprio: ele é gerado na montagem a partir dos títulos.
-- As figuras ficam em `figuras/` e entram no texto com caminho relativo, por exemplo `![Diagrama de casos de uso](../figuras/casos-de-uso.png)`.
+1. [Glossário](00-glossario.md)
+2. [Documentação de contexto](01-documentacao-de-contexto.md)
+3. [Especificação do projeto](02-especificacao-do-projeto.md): requisitos, regras de negócio, diagrama e especificações de casos de uso
+4. [Metodologia](03-metodologia.md)
+5. [Projeto de interface](04-projeto-de-interface.md): fluxo principal e telas do protótipo
+6. [Arquitetura da solução](05-arquitetura-da-solucao.md): arquitetura, diagrama de classes, modelos conceitual e lógico
+7. [Template padrão da aplicação](06-template-padrao-da-aplicacao.md)
+8. [Programação de funcionalidades](07-programacao-de-funcionalidades.md): o que está implementado e como acessar
+9. [Plano de testes de software](08-plano-de-testes-de-software.md)
+10. [Registro de testes de software](09-registro-de-testes-de-software.md)
+11. [Plano de testes de usabilidade](10-plano-de-testes-de-usabilidade.md)
+12. [Registro de testes de usabilidade](11-registro-de-testes-de-usabilidade.md)
+13. [Apresentação do projeto](12-apresentacao-do-projeto.md)
+14. [Referências](13-referencias.md)
 
 ## Outras pastas
 
-| Pasta | O que guardar |
+| Pasta | O que guarda |
 | --- | --- |
-| `acompanhamento/atas/` | Uma ata por reunião, copiada de `modelo-ata.md` e nomeada `AAAA-MM-DD.md` |
-| `acompanhamento/relatorios-semanais/` | Um relatório por semana, copiado de `modelo-relatorio-semanal.md` e nomeado `AAAA-MM-DD.md`, entregue pelo AVA (Apêndice D.4) |
-| `apresentacoes/` | Pitch da ideia inicial (roteiro na seção 2.8.1 do manual), PM Canvas, banner e slides da Feira de Projetos (seção 4.3) |
-| `figuras/` | Diagramas, com o arquivo-fonte (`.drawio` ou `.mmd`) ao lado do PNG exportado, e capturas de tela |
+| `figuras/` | Diagramas, com a fonte editável (`.puml`, `.drawio`, `.mmd`) ao lado do PNG, e telas do protótipo em `figuras/telas/` |
+| `pesquisas/` | Visão do produto, pesquisa de mercado, refinamento do nome, roteiro da entrevista e *roadmap*, copiados sem alteração do repositório do protótipo |
+| `acompanhamento/` | [Feedback do cliente](acompanhamento/feedback-cliente.md), atas (`atas/`, modelo em `modelo-ata.md`) e relatórios semanais (`relatorios-semanais/`); cópias nomeadas `AAAA-MM-DD.md` |
+| `relatorios-periodicos/` | Relatórios periódicos enviados pelo AVA |
+| `apresentacoes/` | Pitch, PM Canvas, banner e slides da Feira de Projetos |
+
+Os diagramas PlantUML são gerados com `java -jar plantuml.jar -tpng docs/figuras/<arquivo>.puml`.
+
+## Correspondência com o documento final (Apêndice D.5)
+
+| Elemento do Apêndice D.5 | Onde está |
+| --- | --- |
+| Capa, folha de rosto, resumo e palavras-chave | Feitos na montagem do documento ABNT; o resumo é escrito por último |
+| Sumário | Gerado automaticamente na montagem |
+| Introdução: propósito, escopo, premissas | [Documentação de contexto](01-documentacao-de-contexto.md) |
+| Introdução: convenções, termos e abreviações | [Glossário](00-glossario.md) |
+| Fundamentação teórica: PWAs e frameworks | [a preencher pelo grupo] |
+| Visão geral: produto, usuários, soluções similares, suposições | [Documentação de contexto](01-documentacao-de-contexto.md), [Especificação do projeto](02-especificacao-do-projeto.md) (perfis) e [pesquisa de mercado](pesquisas/One_Pesquisa_Mercado_Helpdesks.md) |
+| Requisitos funcionais e não funcionais | [Especificação do projeto](02-especificacao-do-projeto.md) |
+| Casos de uso: diagrama e especificações | [Especificação do projeto](02-especificacao-do-projeto.md) |
+| Diagrama de classes, modelos conceitual e lógico | [Arquitetura da solução](05-arquitetura-da-solucao.md) |
+| Funcionalidades desenvolvidas: telas | [Projeto de interface](04-projeto-de-interface.md) e [Programação de funcionalidades](07-programacao-de-funcionalidades.md) |
+| Considerações finais | [a preencher pelo grupo] |
+| Referências | [Referências](13-referencias.md) |
+| Apêndices e anexos | Metodologia, template, testes, apresentação, `acompanhamento/` e `pesquisas/` |
