@@ -4,9 +4,9 @@ Código-fonte do Univag One (BitForge). A pasta tem três partes:
 
 | Pasta | Conteúdo | Situação em 20/10/2026 |
 | --- | --- | --- |
-| [`backend/`](backend/) | API REST em ASP.NET Core (.NET 10), com testes de integração em xUnit | Estrutura inicial: `GET /health` e documento OpenAPI |
-| [`frontend/`](frontend/README.md) | SPA/PWA em React com Vite | Ainda sem código; o grupo vai escolher entre TypeScript e JavaScript |
-| [`prototipo/`](prototipo/README.md) | Protótipo visual navegável em HTML, CSS e JavaScript, com dados simulados e sem back-end | Publicado em <https://bitforgee.github.io/prototipo-v1-one/> |
+| [`src/backend/`](./backend/) | API REST em ASP.NET Core (.NET 10), com testes de integração em xUnit | Estrutura inicial: `GET /health` e documento OpenAPI |
+| [`src/frontend/`](./frontend/README.md) | SPA/PWA em React com Vite | Ainda sem código; o grupo vai escolher entre TypeScript e JavaScript |
+| [`src/prototipo/`](./prototipo/README.md) | Protótipo visual navegável em HTML, CSS e JavaScript, com dados simulados e sem back-end | Publicado em <https://bitforgee.github.io/prototipo-v1-one/> |
 
 Todos os comandos abaixo rodam a partir da raiz do repositório.
 
@@ -59,7 +59,7 @@ Os resultados da última execução estão no [registro de testes de software](.
 
 ## Front-end
 
-Como criar o projeto React depois da escolha da linguagem: [`frontend/README.md`](frontend/README.md).
+Como criar o projeto React depois da escolha da linguagem: [`src/frontend/README.md`](./frontend/README.md).
 
 # Histórico de versões
 

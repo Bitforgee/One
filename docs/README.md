@@ -1,6 +1,6 @@
 # Documentação do Univag One (BitForge)
 
-Documentação do Projeto Extensionista Integrador IV, organizada como o template de projeto da PUC Minas (`ICEI-PUC-Minas-PMV-ADS/IntApplicationProject-Template`), com as correções pedidas pelo professor nas aulas. Os arquivos estão em Markdown; o documento final nas normas da ABNT será montado a partir deles, na estrutura do Apêndice D.5 do manual do PEI (tabela no fim desta página).
+Documentação do Projeto Extensionista Integrador IV, organizada como o template de projeto da PUC Minas (`ICEI-PUC-Minas-PMV-ADS/IntApplicationProject-Template`), com as correções pedidas pelo professor nas aulas. Os arquivos estão em Markdown; o documento final nas normas da ABNT será montado a partir deles, na estrutura do Apêndice D.5 do manual do PEI (tabela no fim desta página). O código-fonte fica em [`src/`](../src/README.md) e as apresentações em [`presentation/`](../presentation/README.md).
 
 **Entrega atual:** [Relatório periódico 3 (RP3)](relatorios-periodicos/rp3.md).
 
@@ -29,7 +29,7 @@ Documentação do Projeto Extensionista Integrador IV, organizada como o templat
 | `pesquisas/` | Visão do produto, pesquisa de mercado, refinamento do nome, roteiro da entrevista e *roadmap*, copiados sem alteração do repositório do protótipo |
 | `acompanhamento/` | [Feedback do cliente](acompanhamento/feedback-cliente.md), atas (`atas/`, modelo em `modelo-ata.md`) e relatórios semanais (`relatorios-semanais/`); cópias nomeadas `AAAA-MM-DD.md` |
 | `relatorios-periodicos/` | Relatórios periódicos enviados pelo AVA |
-| `apresentacoes/` | Pitch, PM Canvas, banner e slides da Feira de Projetos |
+| `requisitos-abnt-v1/` | [Documento de requisitos em ABNT, versão 1](requisitos-abnt-v1/README.md) (02/10/2026), em `.docx` e `.pdf`, com o gerador; superado por estes capítulos |
 
 Os diagramas PlantUML são gerados com `java -jar plantuml.jar -tpng docs/figuras/<arquivo>.puml`.
 
