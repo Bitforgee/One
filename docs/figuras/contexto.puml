@@ -1,0 +1,38 @@
+@startuml contexto
+skinparam shadowing false
+left to right direction
+
+actor Aluno
+actor Atendente
+actor Administrador
+actor Agendador <<sistema>>
+
+rectangle "**Univag One**" as One #F5F5F5
+
+actor "Provedor de IA" as IA <<externo>>
+actor "Serviço de e-mail" as Email <<externo>>
+
+rectangle "WhatsApp" as WhatsApp <<fora do MVP>> #line.dashed
+rectangle "Moodle (AVA)" as Moodle <<fora do MVP>> #line.dashed
+rectangle "Sistema acadêmico" as Academico <<fora do MVP>> #line.dashed
+rectangle "Portal do Aluno" as Portal <<fora do MVP>> #line.dashed
+rectangle "Sistema financeiro" as Financeiro <<fora do MVP>> #line.dashed
+
+Aluno --> One : pergunta, confirmação\ndo chamado e respostas
+Aluno <-- One : resposta com artigo, protocolo\nONE-n e situação do chamado
+Atendente --> One : respostas, notas internas,\nencaminhamento e resolução
+Atendente <-- One : fila do setor
+Administrador --> One : usuários, setores, categorias,\nregras de roteamento e artigos
+Administrador <-- One : indicadores
+Agendador --> One : prazos vencidos de\nconversas e chamados
+
+One --> IA : pergunta + artigos publicados
+One <-- IA : resposta baseada no artigo
+One --> Email : notificações ao aluno
+
+One .. WhatsApp
+One .. Moodle
+One .. Academico
+One .. Portal
+One .. Financeiro
+@enduml

@@ -128,6 +128,14 @@ Para isso, o produto tem oito módulos:
 
 O piloto previsto é pequeno. Ele envolve uma instituição (o UNIVAG), uma coordenação (a dos cursos de tecnologia), os alunos de Análise e Desenvolvimento de Sistemas, até três setores e de dez a trinta artigos na base de conhecimento.
 
+A Figura 1.2 mostra o contexto do One. À esquerda ficam os três perfis de usuário e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. À direita ficam os dois serviços externos, o provedor de IA e o serviço de e-mail. As setas indicam o que entra e o que sai do sistema. As integrações em linha tracejada ficam fora do produto mínimo viável, conforme a seção Fora do escopo.
+
+Figura 1.2 — Diagrama de contexto
+
+![Diagrama de contexto do Univag One com usuários, serviços externos e integrações fora do produto mínimo viável](figuras/contexto.png)
+
+Fonte: elaborado pelos autores (2026).
+
 Os requisitos de cada módulo estão em [Especificação do projeto](02-especificacao-do-projeto.md).
 
 ## Fora do escopo
