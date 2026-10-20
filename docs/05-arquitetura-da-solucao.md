@@ -68,7 +68,7 @@ Fonte: elaborado pelos autores (2026).
 
 ## Diagrama de classes
 
-A Figura 5.5 mostra as classes do domínio, com seus atributos e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
+A Figura 5.5 mostra as classes do domínio, com seus atributos, operações e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
 
 Figura 5.5 — Diagrama de classes
 
@@ -90,7 +90,7 @@ Quadro 5.1 — Tipos enumerados do diagrama de classes
 
 Fonte: elaborado pelos autores (2026).
 
-**Pendente:** na próxima iteração, o grupo vai acrescentar ao diagrama os métodos de cada classe. Na aula de 07/10, o professor observou que, sem os métodos, o diagrama parece a estrutura das tabelas do banco. Métodos de cada classe: [a preencher pelo grupo].
+Os atributos são privados (-) e as operações são públicas (+). Cada operação vem de um caso de uso ou de uma transição do Quadro 2.6, e por isso o diagrama mostra o comportamento do domínio, e não só a estrutura das tabelas, como o professor pediu na aula de 07/10. A classe Chamado concentra as mudanças de estado: assumir (UC-06, F2), responder e registrar nota interna (UC-03 e UC-06), resolver (UC-07, F5), confirmar ou rejeitar a resolução (UC-05, F7 e F6), cancelar (UC-04, F8), encaminhar (UC-08, F9), reclassificar (UC-09) e fechar automaticamente (UC-22). A classe Conversa recebe as mensagens do aluno, abre o chamado e registra o desfecho (UC-01, UC-02 e UC-21). A classe Artigo é editada, publicada e arquivada (UC-11, UC-12 e UC-13). A classe RegraRoteamento define o setor de destino do chamado (UC-02, RF-12). A classe MensagemChamado recebe os anexos (UC-03 e UC-06), e a classe Usuario pode ser inativada (UC-16).
 
 ## Modelo conceitual
 
