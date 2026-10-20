@@ -1,0 +1,23 @@
+@startuml estados-chamado
+skinparam shadowing false
+hide empty description
+
+state "Em andamento" as EmAndamento #F5F5F5 {
+  state Aberto
+  state "Em atendimento" as EmAtendimento
+  state "Aguardando aluno" as AguardandoAluno
+}
+state Resolvido
+state Fechado
+
+[*] --> Aberto : F1: chamado criado\n/ sem responsável
+Aberto --> EmAtendimento : F2: assumir ou primeira resposta pública\n/ o atendente passa a ser o responsável
+EmAtendimento --> AguardandoAluno : F3: resposta pública\n[aguardando o aluno]
+AguardandoAluno --> EmAtendimento : F4: o aluno responde
+EmAtendimento --> Resolvido : <back:white>F5: resolver\n<back:white>[texto de resolução]
+Resolvido --> EmAtendimento : <back:white>F6: o aluno rejeita\n<back:white>[no prazo, com motivo]\n<back:white>/ reaberturas + 1
+Resolvido --> Fechado : F7: o aluno confirma ou o prazo vence\n/ motivo: confirmado ou\nfechado automaticamente
+EmAndamento --> Fechado : F8: o aluno cancela\n/ motivo: cancelado
+EmAndamento --> Aberto : F9: encaminhar [outro setor]\n/ sem responsável
+Fechado --> [*]
+@enduml

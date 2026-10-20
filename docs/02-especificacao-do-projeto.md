@@ -219,6 +219,14 @@ Quadro 2.6 — Transições de estado do chamado
 
 Fonte: elaborado pelos autores com base na especificação de regras de negócio do projeto (2026).
 
+A Figura 2.1 desenha as transições do Quadro 2.6 como um diagrama de estados. Cada seta traz o código da transição, o gatilho, a condição entre colchetes e o efeito depois da barra. Os estados Aberto, Em atendimento e Aguardando aluno ficam dentro do estado composto Em andamento, porque o cancelamento (F8) e o encaminhamento (F9) valem para os três. Por isso, cada uma dessas transições aparece uma vez só, saindo de Em andamento.
+
+Figura 2.1 — Diagrama de estados do chamado
+
+![Diagrama de estados do chamado com as transições F1 a F9](figuras/estados-chamado.png)
+
+Fonte: elaborado pelos autores com base na especificação de regras de negócio do projeto (2026).
+
 Os indicadores do painel (RF-27) seguem as definições do Quadro 2.7. Os tempos são medidos em tempo corrido, sem descontar o horário fora do expediente (premissa Q10). O filtro de período usa a data de início da conversa ou a data de criação do chamado. As duas medidas da regra BR-I1 ficam fora do sistema e são comparadas com a linha de base no piloto.
 
 Quadro 2.7 — Definição dos indicadores
@@ -260,13 +268,13 @@ Fonte: elaborado pelos autores com base no Manual do PEI (UNIVAG, 2026).
 
 ## Diagrama de casos de uso
 
-A Figura 2.1 mostra os 22 casos de uso do produto mínimo viável e os atores ligados a eles por linhas simples. Os atores são os três perfis de usuário (Aluno, Atendente e Administrador), dois sistemas externos (Provedor de IA e Serviço de e-mail) e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. Os casos de uso estão agrupados em cinco pacotes: Atendimento ao aluno, Atendimento pelos setores, Base de conhecimento, Administração e Rotinas automáticas. O caso de uso Abrir chamado estende Conversar com o assistente, porque só acontece quando a conversa não resolve a dúvida.
+A Figura 2.2 mostra os 22 casos de uso do produto mínimo viável e os atores ligados a eles por linhas simples. Os atores são os três perfis de usuário (Aluno, Atendente e Administrador), dois sistemas externos (Provedor de IA e Serviço de e-mail) e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. Os casos de uso estão agrupados em cinco pacotes: Atendimento ao aluno, Atendimento pelos setores, Base de conhecimento, Administração e Rotinas automáticas. O caso de uso Abrir chamado estende Conversar com o assistente, porque só acontece quando a conversa não resolve a dúvida.
 
 A cor de cada caso de uso mostra o status, conforme a legenda do diagrama: branco para Proposto, amarelo para Priorizado, azul para Em desenvolvimento, verde para Desenvolvido e vermelho para Cancelado. Todos os casos de uso estão como Proposto. Muitos deles já aparecem no protótipo visual, mas o protótipo não tem *back-end*, então nenhum está marcado como Desenvolvido.
 
 Em relação à versão anterior, o caso de uso Autenticar-se foi retirado, porque a entrada no sistema não é um objetivo do usuário: ela é feita pelo ASP.NET Core Identity e está especificada como requisito não funcional (RNF-15, com RNF-05, RNF-12 e RNF-14). Os antigos casos de uso Gerenciar base de conhecimento, Gerenciar usuários e Configurar setores, categorias e roteamento viraram um caso de uso por operação. Os casos de uso que reuniam mais de uma operação, como Acompanhar chamado, Atender chamado e Encerrar conversas e chamados por prazo, também foram divididos.
 
-Figura 2.1 — Diagrama de casos de uso
+Figura 2.2 — Diagrama de casos de uso
 
 ![Diagrama de casos de uso](figuras/casos-de-uso.png)
 
