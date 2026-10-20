@@ -2,6 +2,7 @@
 skinparam shadowing false
 left to right direction
 
+actor "Usuário" as Usuario
 actor Aluno
 actor Atendente
 actor Administrador
@@ -17,6 +18,12 @@ rectangle "Moodle (AVA)" as Moodle <<fora do MVP>> #line.dashed
 rectangle "Sistema acadêmico" as Academico <<fora do MVP>> #line.dashed
 rectangle "Portal do Aluno" as Portal <<fora do MVP>> #line.dashed
 rectangle "Sistema financeiro" as Financeiro <<fora do MVP>> #line.dashed
+
+Usuario --> One : login com\ne-mail e senha
+Usuario <-- One : perfis do usuário,\nidentificados depois do login
+Usuario <|-- Aluno
+Usuario <|-- Atendente
+Usuario <|-- Administrador
 
 Aluno --> One : pergunta, confirmação\ndo chamado e respostas
 Aluno <-- One : resposta com artigo, protocolo\nONE-n e situação do chamado

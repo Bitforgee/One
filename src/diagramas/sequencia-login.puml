@@ -1,0 +1,32 @@
+@startuml sequencia-login
+skinparam shadowing false
+autonumber
+
+actor Usuário as Usuario
+participant "Front-end SPA/PWA" as Front
+participant "API REST" as Api
+database PostgreSQL as Banco
+
+Usuario -> Front : informa e-mail e senha
+Front -> Api : envia as credenciais (HTTPS/JSON)
+Api -> Banco : lê a conta pelo e-mail
+Banco --> Api : conta, situação e perfis
+Api -> Api : compara a senha com o hash guardado (RNF-15)
+alt e-mail ou senha não conferem (E1)
+  Api --> Front : recusa o acesso
+  Front -> Usuario : informa que o e-mail ou a senha não conferem
+else a conta está inativa (E2, RNF-14)
+  Api --> Front : recusa o acesso
+  Front -> Usuario : informa que a conta está inativa
+else acesso válido
+  Api -> Api : identifica os perfis do usuário (RF-29)
+  Api --> Front : sessão autenticada e perfis do usuário
+  alt o usuário tem um perfil
+    Front -> Usuario : abre a tela inicial do perfil
+  else o usuário tem mais de um perfil (RNF-16)
+    Front -> Usuario : pede que escolha com qual perfil entrar
+    Usuario -> Front : escolhe o perfil
+    Front -> Usuario : abre a tela inicial do perfil escolhido
+  end
+end
+@enduml

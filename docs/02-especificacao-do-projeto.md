@@ -4,12 +4,13 @@ Este capítulo especifica o que o produto mínimo viável do One deve fazer. Ele
 
 ## Perfis de usuário
 
-O Quadro 2.1 descreve os três perfis de usuário e os atores externos que aparecem nos casos de uso. Uma mesma pessoa pode ter mais de um perfil.
+O Quadro 2.1 descreve o usuário, os três perfis de usuário e os atores externos que aparecem nos casos de uso. Uma mesma pessoa pode ter mais de um perfil. O sistema só sabe quais são os perfis de uma pessoa depois do login: até lá, ela é apenas um usuário (RNF-16).
 
 Quadro 2.1 — Perfis de usuário e atores externos
 
 | Perfil ou ator | Tipo | Quem é | O que faz no sistema |
 |---|---|---|---|
+| Usuário | Ator genérico | Pessoa com conta no One, cadastrada pelo administrador (RNF-12), antes de o sistema identificar o perfil dela | Entra no One com e-mail e senha (RNF-15); depois do login, age como Aluno, Atendente ou Administrador, conforme o perfil identificado ou escolhido (RNF-16) |
 | Aluno | Perfil de usuário | Estudante matriculado em um curso da instituição | Conversa com o assistente, abre e acompanha chamados, responde, cancela, confirma ou rejeita resoluções |
 | Atendente | Perfil de usuário | Funcionário de um setor, como a coordenação de curso ou a CAE | Vê a fila dos seus setores, assume, responde, encaminha, reclassifica e resolve chamados |
 | Administrador | Perfil de usuário | Responsável pela configuração do sistema | Cadastra usuários, setores, categorias, regras de roteamento e artigos da base de conhecimento, e consulta os indicadores |
@@ -21,7 +22,7 @@ Fonte: elaborado pelos autores (2026).
 
 ## Requisitos funcionais
 
-O Quadro 2.2 lista os requisitos funcionais do produto mínimo viável. A lista começa pelo que resolve o problema do aluno: a conversa com o assistente (RF-01 a RF-07). Depois vêm a abertura do chamado (RF-08 a RF-10), o roteamento (RF-11 a RF-14), o ciclo de vida e o atendimento do chamado (RF-15 a RF-23), a base de conhecimento (RF-24 a RF-26), os indicadores (RF-27) e a administração de usuários (RF-28 a RF-30). As regras de acesso, de visibilidade e de autenticação estão na seção Requisitos não funcionais (RNF-05 e RNF-12 a RNF-15).
+O Quadro 2.2 lista os requisitos funcionais do produto mínimo viável. A lista começa pelo que resolve o problema do aluno: a conversa com o assistente (RF-01 a RF-07). Depois vêm a abertura do chamado (RF-08 a RF-10), o roteamento (RF-11 a RF-14), o ciclo de vida e o atendimento do chamado (RF-15 a RF-23), a base de conhecimento (RF-24 a RF-26), os indicadores (RF-27) e a administração de usuários (RF-28 a RF-30). As regras de acesso, de visibilidade e de autenticação estão na seção Requisitos não funcionais (RNF-05 e RNF-12 a RNF-16).
 
 A coluna Origem mostra de quais regras de negócio cada requisito vem. As regras estão na seção Regras de negócio: os códigos BR (por exemplo, BR-B1) e as transições de estado do chamado, de F1 a F9.
 
@@ -120,7 +121,7 @@ Fonte: elaborado pelos autores (2026).
 
 ## Requisitos não funcionais
 
-O Quadro 2.4 traz os requisitos não funcionais. A fonte de cada um é o manual da disciplina, uma lei, uma premissa, uma regra de negócio ou uma decisão do grupo. Os requisitos RNF-01 a RNF-11 mantêm os identificadores da versão anterior. Os requisitos RNF-12 a RNF-15 são novos: os três primeiros vieram dos antigos RF-01, RF-03 e RF-04, e o RNF-15 registra como a autenticação é feita. Os valores do RNF-02 são uma proposta do grupo e ainda precisam ser validados com a coordenação.
+O Quadro 2.4 traz os requisitos não funcionais. A fonte de cada um é o manual da disciplina, uma lei, uma premissa, uma regra de negócio ou uma decisão do grupo. Os requisitos RNF-01 a RNF-11 mantêm os identificadores da versão anterior. Os requisitos RNF-12 a RNF-16 são novos: os três primeiros vieram dos antigos RF-01, RF-03 e RF-04, o RNF-15 registra como a autenticação é feita e o RNF-16, que o perfil só é identificado depois do login. Os valores do RNF-02 são uma proposta do grupo e ainda precisam ser validados com a coordenação.
 
 Quadro 2.4 — Requisitos não funcionais
 
@@ -141,6 +142,7 @@ Quadro 2.4 — Requisitos não funcionais
 | RNF-13 | Segurança | Cada perfil deve ver apenas o que lhe cabe: o aluno, as suas conversas e os seus chamados, sem as notas internas; o atendente, os chamados que estão nos seus setores, e ele perde o acesso quando o chamado é encaminhado para fora deles; o administrador, todos os chamados, todas as conversas e o painel de indicadores. Só o administrador cria, edita, publica e arquiva artigos. O servidor deve verificar essas regras em toda requisição, e não apenas a interface. | BR-A4, BR-A5, BR-A6, BR-C3, BR-G2, BR-H2; premissa Q12 (antigo RF-03) |
 | RNF-14 | Segurança | O usuário inativado não deve conseguir acessar o sistema; o histórico dele continua intacto e atribuído a ele. | BR-A7 (antigo RF-04) |
 | RNF-15 | Segurança | A autenticação deve ser feita com o ASP.NET Core Identity, e as senhas devem ser armazenadas como *hash*, nunca em texto puro. | Proposto pelo grupo; orientação do professor (aulas de 16/09 e 22/09) |
+| RNF-16 | Segurança | O sistema deve identificar os perfis do usuário só depois do login e abrir a tela inicial do perfil; quando o usuário tiver mais de um perfil, deve pedir que ele escolha com qual perfil entrar. | BR-A8; pedido do grupo em 20/10/2026 |
 
 Fonte: elaborado pelos autores (2026).
 
@@ -268,7 +270,7 @@ Fonte: elaborado pelos autores com base no Manual do PEI (UNIVAG, 2026).
 
 ## Diagrama de casos de uso
 
-A Figura 2.2 mostra os 22 casos de uso do produto mínimo viável e os atores ligados a eles por linhas simples. Os atores são os três perfis de usuário (Aluno, Atendente e Administrador), dois sistemas externos (Provedor de IA e Serviço de e-mail) e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. Os casos de uso estão agrupados em cinco pacotes: Atendimento ao aluno, Atendimento pelos setores, Base de conhecimento, Administração e Rotinas automáticas. O caso de uso Abrir chamado estende Conversar com o assistente, porque só acontece quando a conversa não resolve a dúvida.
+A Figura 2.2 mostra os 22 casos de uso do produto mínimo viável e os atores ligados a eles por linhas simples. Os atores são o Usuário, os três perfis de usuário (Aluno, Atendente e Administrador), dois sistemas externos (Provedor de IA e Serviço de e-mail) e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. Os casos de uso estão agrupados em cinco pacotes: Atendimento ao aluno, Atendimento pelos setores, Base de conhecimento, Administração e Rotinas automáticas. O caso de uso Abrir chamado estende Conversar com o assistente, porque só acontece quando a conversa não resolve a dúvida. O Usuário é a pessoa que entra no One; Aluno, Atendente e Administrador são especializações dele, ligadas por setas de generalização, porque o perfil só é identificado depois do login (RNF-16). Uma nota no diagrama registra essa regra.
 
 A cor de cada caso de uso mostra o status, conforme a legenda no topo do diagrama: branco para Proposto, amarelo para Priorizado, azul para Em desenvolvimento, verde para Desenvolvido e vermelho para Cancelado. Todos os casos de uso estão como Proposto. Muitos deles já aparecem no protótipo visual, mas o protótipo não tem *back-end*, então nenhum está marcado como Desenvolvido.
 

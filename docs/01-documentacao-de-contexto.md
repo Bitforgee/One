@@ -101,7 +101,7 @@ Relação com os Objetivos de Desenvolvimento Sustentável (ODS): [a preencher p
 
 ## Público-alvo
 
-O One tem três perfis de usuário. Uma mesma pessoa pode ter mais de um perfil.
+O One tem três perfis de usuário. Uma mesma pessoa pode ter mais de um perfil. O sistema só sabe qual é o perfil de uma pessoa depois do login: quem tem um perfil entra direto nele, e quem tem mais de um escolhe com qual entrar.
 
 - **Alunos.** No piloto, são os alunos de Análise e Desenvolvimento de Sistemas. Hoje eles usam principalmente o WhatsApp para falar com a coordenação, e a maior parte das mensagens chega pelo celular. Muitas vezes não sabem onde encontrar um serviço que já existe, como o boleto no Portal do Aluno. Conhecimentos prévios e relação com a tecnologia: [a preencher pelo grupo].
 - **Atendentes dos setores.** São os funcionários dos setores que recebem chamados, como a coordenação de curso e a Central de Atendimento ao Estudante (CAE). Pela premissa Q11, a coordenadora é atendente do setor da coordenação. A CAE resolve hoje as questões financeiras, os pagamentos e os documentos pessoais. O piloto prevê até três setores.
@@ -128,7 +128,7 @@ Para isso, o produto tem oito módulos:
 
 O piloto previsto é pequeno. Ele envolve uma instituição (o UNIVAG), uma coordenação (a dos cursos de tecnologia), os alunos de Análise e Desenvolvimento de Sistemas, até três setores e de dez a trinta artigos na base de conhecimento.
 
-A Figura 1.2 mostra o contexto do One. À esquerda ficam os três perfis de usuário e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. À direita ficam os dois serviços externos, o provedor de IA e o serviço de e-mail. As setas indicam o que entra e o que sai do sistema. As integrações em linha tracejada ficam fora do produto mínimo viável, conforme a seção Fora do escopo.
+A Figura 1.2 mostra o contexto do One. À esquerda ficam o Usuário, os três perfis de usuário e o Agendador, que encerra conversas e fecha chamados quando um prazo vence. O Usuário é a pessoa que entra no One com e-mail e senha; Aluno, Atendente e Administrador são especializações dele, porque o perfil só é identificado depois do login (RNF-16). À direita ficam os dois serviços externos, o provedor de IA e o serviço de e-mail. As setas indicam o que entra e o que sai do sistema. As integrações em linha tracejada ficam fora do produto mínimo viável, conforme a seção Fora do escopo.
 
 Figura 1.2 — Diagrama de contexto
 

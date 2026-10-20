@@ -18,6 +18,7 @@ legend top
   |<#EF9A9A>| Cancelado |
 endlegend
 
+actor "Usuário" as Usuario
 actor Aluno
 actor Atendente
 actor Administrador
@@ -89,4 +90,9 @@ Administrador -- UC20
 
 Agendador -- UC21
 Agendador -- UC22
+
+Usuario <|-- Aluno
+Usuario <|-- Atendente
+Usuario <|-- Administrador
+note left of Usuario : O perfil é identificado\ndepois do login (RNF-15, RNF-16)
 @enduml

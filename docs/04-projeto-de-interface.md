@@ -4,28 +4,29 @@ Este capítulo mostra como o usuário percorre o One e apresenta as telas do pro
 
 ## Fluxo principal
 
-O fluxo principal começa na dúvida do aluno e termina nos indicadores do administrador. Os passos são:
+O fluxo principal começa no login e termina nos indicadores do administrador. Os passos são:
 
-1. O aluno entra no One com o perfil Aluno e abre o assistente acadêmico.
-2. O aluno escreve a dúvida em texto livre, e isso inicia uma conversa (RF-01).
-3. O assistente procura um artigo publicado na base de conhecimento. Ele só responde com o conteúdo de artigos publicados (RF-02) e mostra qual artigo usou (RF-06).
-4. Se não houver artigo para a pergunta, o assistente avisa que não encontrou resposta e oferece abrir um chamado (RF-04).
-5. Quando há resposta, o assistente pergunta "Isso resolveu?", com as opções Sim e Não (RF-03).
-6. Se o aluno responde Sim, a conversa termina como resolvida pelo autoatendimento (RF-05).
-7. Se o aluno responde Não, o assistente oferece abrir um chamado. O chamado só é criado depois que o aluno confirma (RF-08).
-8. O chamado leva o contexto da conversa, e o aluno não precisa digitar tudo de novo (RF-09). Ele recebe um protocolo no formato ONE-n (RF-10). Cada conversa gera no máximo um chamado (RF-07).
-9. O sistema envia o chamado para o setor certo pela categoria. Sem regra para a categoria, o chamado vai para o setor de triagem (RF-11, RF-12).
-10. O atendente do setor vê o chamado na fila, assume o atendimento, responde ao aluno e registra notas internas que o aluno não vê (RF-15, RF-18).
-11. Se o chamado é de outro setor, o atendente o encaminha e registra o motivo (RF-20).
-12. O atendente resolve o chamado. O aluno confirma a resolução ou a rejeita (RF-15). O chamado fechado não aceita mais mudanças (RF-16).
-13. Cada passo fica no histórico do chamado, que só recebe acréscimos (RF-23).
-14. O administrador acompanha os indicadores do atendimento (RF-27) e mantém a base de conhecimento (RF-25).
+1. A pessoa entra no One com e-mail e senha (RNF-15). Só depois do login o sistema identifica o perfil dela: quem tem um perfil vai direto para a tela inicial dele, e quem tem mais de um escolhe com qual perfil entrar (RNF-16).
+2. Com o perfil Aluno, o aluno abre o assistente acadêmico.
+3. O aluno escreve a dúvida em texto livre, e isso inicia uma conversa (RF-01).
+4. O assistente procura um artigo publicado na base de conhecimento. Ele só responde com o conteúdo de artigos publicados (RF-02) e mostra qual artigo usou (RF-06).
+5. Se não houver artigo para a pergunta, o assistente avisa que não encontrou resposta e oferece abrir um chamado (RF-04).
+6. Quando há resposta, o assistente pergunta "Isso resolveu?", com as opções Sim e Não (RF-03).
+7. Se o aluno responde Sim, a conversa termina como resolvida pelo autoatendimento (RF-05).
+8. Se o aluno responde Não, o assistente oferece abrir um chamado. O chamado só é criado depois que o aluno confirma (RF-08).
+9. O chamado leva o contexto da conversa, e o aluno não precisa digitar tudo de novo (RF-09). Ele recebe um protocolo no formato ONE-n (RF-10). Cada conversa gera no máximo um chamado (RF-07).
+10. O sistema envia o chamado para o setor certo pela categoria. Sem regra para a categoria, o chamado vai para o setor de triagem (RF-11, RF-12).
+11. O atendente do setor vê o chamado na fila, assume o atendimento, responde ao aluno e registra notas internas que o aluno não vê (RF-15, RF-18).
+12. Se o chamado é de outro setor, o atendente o encaminha e registra o motivo (RF-20).
+13. O atendente resolve o chamado. O aluno confirma a resolução ou a rejeita (RF-15). O chamado fechado não aceita mais mudanças (RF-16).
+14. Cada passo fica no histórico do chamado, que só recebe acréscimos (RF-23).
+15. O administrador acompanha os indicadores do atendimento (RF-27) e mantém a base de conhecimento (RF-25).
 
-A Figura 4.1 mostra o mesmo fluxo como um diagrama de atividades, com uma raia para cada ator: Aluno, One (sistema), Atendente e Administrador. O diagrama de casos de uso mostra quem faz cada operação, mas não a ordem entre elas; as raias mostram essa ordem e quem age em cada passo. Os losangos são as decisões, e cada saída traz a condição entre colchetes. O conector A indica que, quando o aluno rejeita a resolução, o chamado volta para o atendente.
+A Figura 4.1 mostra o mesmo fluxo como um diagrama de atividades, com uma raia para cada ator: Usuário, One (sistema), Aluno, Atendente e Administrador. A raia Usuário é a da pessoa antes de o perfil ser identificado; o fluxo passa para a raia Aluno só depois do login e da identificação do perfil. O atendente e o administrador entram pelo mesmo caminho. O diagrama de casos de uso mostra quem faz cada operação, mas não a ordem entre elas; as raias mostram essa ordem e quem age em cada passo. Os losangos são as decisões, e cada saída traz a condição entre colchetes. O conector A indica que, quando o aluno rejeita a resolução, o chamado volta para o atendente.
 
 Figura 4.1 — Diagrama de atividades do fluxo principal
 
-![Diagrama de atividades do fluxo principal com as raias Aluno, One (sistema), Atendente e Administrador](diagramas/fluxo-principal.png)
+![Diagrama de atividades do fluxo principal com as raias Usuário, One (sistema), Aluno, Atendente e Administrador](diagramas/fluxo-principal.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -47,7 +48,7 @@ O protótipo é separado da arquitetura do MVP, que usa React no front-end e ASP
 
 As capturas abaixo foram geradas a partir do protótipo e estão em ordem de uso. Elas seguem o fluxo principal: login, assistente, chamado, atendimento e administração.
 
-A Figura 4.2 mostra a tela de login demonstrativo. O usuário escolhe um dos três perfis e entra sem senha. Esta tela não corresponde a um RF. A autenticação real é um requisito não funcional de segurança (RNF-15) e ainda não existe no protótipo.
+A Figura 4.2 mostra a tela de login demonstrativo. O usuário escolhe um dos três perfis e entra sem senha. A tela só simula a escolha de perfil do RNF-16: no sistema, a pessoa entra com e-mail e senha (RNF-15), o perfil vem da conta dela depois do login, e a escolha só aparece para quem tem mais de um perfil. A autenticação real ainda não existe no protótipo.
 
 Figura 4.2 — Seleção de perfil no login demonstrativo
 

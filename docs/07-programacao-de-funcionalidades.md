@@ -10,7 +10,7 @@ Quadro 7.1 — Funcionalidades do protótipo visual
 
 | Funcionalidade | Perfil | RFs cobertos (novos IDs) | Situação |
 | --- | --- | --- | --- |
-| Login demonstrativo: o usuário escolhe um perfil, sem senha | Aluno, Atendente, Administrador | Nenhum (a autenticação é o RNF-15) | Simulado no protótipo (sem back-end) |
+| Login demonstrativo: o usuário escolhe um perfil, sem senha | Aluno, Atendente, Administrador | Nenhum (a autenticação é o RNF-15; a escolha de perfil do RNF-16 é só simulada: qualquer pessoa escolhe qualquer perfil, sem conta nem senha) | Simulado no protótipo (sem back-end) |
 | Assistente acadêmico em chat: responde só com artigos publicados, mostra o artigo usado, pergunta "Isso resolveu?" com Sim e Não, avisa quando não há artigo e oferece abrir solicitação | Aluno | RF-01, RF-02, RF-03, RF-04, RF-05, RF-06, RF-07 | Simulado no protótipo (sem back-end) |
 | Consulta à base de conhecimento: busca por palavra-chave, filtro por categoria e leitura do artigo | Aluno, Atendente | RF-24, RF-25 | Simulado no protótipo (sem back-end) |
 | Gestão da base de conhecimento: criar, editar, publicar e arquivar artigos nas situações rascunho, publicado e arquivado, com nova versão ao editar um artigo publicado | Administrador | RF-24, RF-25, RF-26 | Simulado no protótipo (sem back-end) |

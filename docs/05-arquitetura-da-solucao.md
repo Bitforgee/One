@@ -28,7 +28,7 @@ Fonte: elaborado pelos autores (2026).
 
 **Autenticação (proposta).** A autenticação usa o ASP.NET Core Identity, com as senhas armazenadas como *hash* (RNF-15). Só o administrador cria contas, sem autocadastro (RNF-12), e o usuário inativado não acessa o sistema (RNF-14).
 
-**Banco de dados.** O PostgreSQL guarda os usuários, os setores, as categorias, os artigos e suas versões, as conversas, os chamados, as mensagens, os anexos e os eventos do histórico, conforme o modelo lógico (Figura 5.7). A aplicação não oferece nenhum meio de alterar ou apagar chamados, mensagens e eventos do histórico (RNF-06). O banco guarda o nome, o tipo e o tamanho de cada anexo; o local de armazenamento dos arquivos: [a preencher pelo grupo].
+**Banco de dados.** O PostgreSQL guarda os usuários, os setores, as categorias, os artigos e suas versões, as conversas, os chamados, as mensagens, os anexos e os eventos do histórico, conforme o modelo lógico (Figura 5.8). A aplicação não oferece nenhum meio de alterar ou apagar chamados, mensagens e eventos do histórico (RNF-06). O banco guarda o nome, o tipo e o tamanho de cada anexo; o local de armazenamento dos arquivos: [a preencher pelo grupo].
 
 **Provedor de IA.** A API envia ao provedor a pergunta do aluno junto com artigos publicados, que são a única base permitida para a resposta (RF-02). Os anexos nunca são enviados ao provedor, e o aluno vê um aviso sobre esse uso antes da primeira mensagem (RNF-03). Provedor escolhido: [a preencher pelo grupo].
 
@@ -40,27 +40,35 @@ Hoje o back-end tem só a base: o projeto `src/backend/One.Api` responde `Health
 
 ## Diagramas de sequência
 
-Os diagramas de sequência mostram o caminho de uma requisição pelas camadas da Figura 5.1, do usuário até o banco de dados e os serviços externos, e de volta. Eles detalham os casos de uso do fluxo principal. As mensagens descrevem cada passo, e não o nome dos *endpoints*, que ainda não foram definidos. Os blocos `alt` separam os caminhos alternativos e de exceção das especificações de casos de uso.
+Os diagramas de sequência mostram o caminho de uma requisição pelas camadas da Figura 5.1, do usuário até o banco de dados e os serviços externos, e de volta. Eles detalham a entrada no sistema e os casos de uso do fluxo principal. As mensagens descrevem cada passo, e não o nome dos *endpoints*, que ainda não foram definidos. Os blocos `alt` separam os caminhos alternativos e de exceção das especificações de casos de uso.
 
-A Figura 5.2 mostra o caso de uso Conversar com o assistente (UC-01). A API confere o usuário, lê os artigos publicados e só consulta o provedor de IA quando há artigo relacionado. Ela grava a cópia da resposta exibida, com o artigo e a versão (RF-06). Se não houver artigo (exceção E1) ou se o aluno responder Não (fluxo A1), o front-end oferece abrir um chamado.
+A Figura 5.2 mostra a entrada no One. Ela não é um caso de uso, porque entrar no sistema não é um objetivo do usuário, mas mostra o momento em que o perfil passa a ser conhecido: o sistema só sabe se a pessoa é aluno, atendente ou administrador depois do login. A API lê a conta pelo e-mail e compara a senha com o *hash* guardado (RNF-15). Se o e-mail ou a senha não conferem (exceção E1) ou se a conta está inativa (exceção E2, RNF-14), o acesso é recusado. Com o acesso válido, a API identifica os perfis do usuário (RF-29). Quem tem um perfil vai direto para a tela inicial dele; quem tem mais de um escolhe com qual perfil entrar (RNF-16). Os demais diagramas começam depois desse passo, com o perfil já identificado.
 
-Figura 5.2 — Diagrama de sequência de Conversar com o assistente
+Figura 5.2 — Diagrama de sequência de Entrar no One
+
+![Diagrama de sequência da entrada no One, com o login e a identificação do perfil](diagramas/sequencia-login.png)
+
+Fonte: elaborado pelos autores (2026).
+
+A Figura 5.3 mostra o caso de uso Conversar com o assistente (UC-01). A API confere o usuário, lê os artigos publicados e só consulta o provedor de IA quando há artigo relacionado. Ela grava a cópia da resposta exibida, com o artigo e a versão (RF-06). Se não houver artigo (exceção E1) ou se o aluno responder Não (fluxo A1), o front-end oferece abrir um chamado.
+
+Figura 5.3 — Diagrama de sequência de Conversar com o assistente
 
 ![Diagrama de sequência do caso de uso Conversar com o assistente](diagramas/sequencia-conversa.png)
 
 Fonte: elaborado pelos autores (2026).
 
-A Figura 5.3 mostra o caso de uso Abrir chamado (UC-02). Depois da confirmação do aluno, a API grava o chamado com o contexto da conversa, aplica a regra de roteamento da categoria e registra a criação no histórico. Sem regra, com a categoria Não classificado ou com o curso sem coordenação configurada (exceção E1), o chamado vai para o setor de triagem. Se o aluno não confirma (fluxo A1), nenhum chamado é criado.
+A Figura 5.4 mostra o caso de uso Abrir chamado (UC-02). Depois da confirmação do aluno, a API grava o chamado com o contexto da conversa, aplica a regra de roteamento da categoria e registra a criação no histórico. Sem regra, com a categoria Não classificado ou com o curso sem coordenação configurada (exceção E1), o chamado vai para o setor de triagem. Se o aluno não confirma (fluxo A1), nenhum chamado é criado.
 
-Figura 5.3 — Diagrama de sequência de Abrir chamado
+Figura 5.4 — Diagrama de sequência de Abrir chamado
 
 ![Diagrama de sequência do caso de uso Abrir chamado](diagramas/sequencia-chamado.png)
 
 Fonte: elaborado pelos autores (2026).
 
-A Figura 5.4 junta os casos de uso Atender chamado (UC-06) e Resolver chamado (UC-07). A API só devolve os chamados dos setores do atendente (RNF-13). Ao assumir, o atendente passa a ser o responsável, e o chamado vai para Em atendimento (F2). Cada resposta pública e a resolução geram um e-mail ao aluno; a nota interna (fluxo A2) fica só no histórico e não gera e-mail (RF-22).
+A Figura 5.5 junta os casos de uso Atender chamado (UC-06) e Resolver chamado (UC-07). A API só devolve os chamados dos setores do atendente (RNF-13). Ao assumir, o atendente passa a ser o responsável, e o chamado vai para Em atendimento (F2). Cada resposta pública e a resolução geram um e-mail ao aluno; a nota interna (fluxo A2) fica só no histórico e não gera e-mail (RF-22).
 
-Figura 5.4 — Diagrama de sequência de Atender e Resolver chamado
+Figura 5.5 — Diagrama de sequência de Atender e Resolver chamado
 
 ![Diagrama de sequência dos casos de uso Atender chamado e Resolver chamado](diagramas/sequencia-atendimento.png)
 
@@ -68,9 +76,9 @@ Fonte: elaborado pelos autores (2026).
 
 ## Diagrama de classes
 
-A Figura 5.5 mostra as classes do domínio, com seus atributos, operações e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
+A Figura 5.6 mostra as classes do domínio, com seus atributos, operações e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
 
-Figura 5.5 — Diagrama de classes
+Figura 5.6 — Diagrama de classes
 
 ![Diagrama de classes](diagramas/classes.png)
 
@@ -94,9 +102,9 @@ Os atributos são privados (-) e as operações são públicas (+). Cada operaç
 
 ## Modelo conceitual
 
-A Figura 5.6 traz o modelo conceitual de dados, na notação de Chen: as entidades são retângulos, os relacionamentos são losangos e o atributo identificador de cada entidade aparece sublinhado. A cardinalidade fica no formato (mínimo, máximo), junto da entidade a que se refere. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para ficar coerente com o diagrama de classes e com o modelo lógico, o modelo também registra quem atualizou cada versão de artigo (ATUALIZA), quem escreveu cada mensagem do chamado (ESCREVE), quem executou cada evento do histórico (EXECUTA) e a categoria com que o chamado foi aberto (ENQUADRA_NA_ABERTURA), que se mantém quando ele é reclassificado. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.5) e no modelo lógico (Figura 5.7).
+A Figura 5.7 traz o modelo conceitual de dados, na notação de Chen: as entidades são retângulos, os relacionamentos são losangos e o atributo identificador de cada entidade aparece sublinhado. A cardinalidade fica no formato (mínimo, máximo), junto da entidade a que se refere. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para ficar coerente com o diagrama de classes e com o modelo lógico, o modelo também registra quem atualizou cada versão de artigo (ATUALIZA), quem escreveu cada mensagem do chamado (ESCREVE), quem executou cada evento do histórico (EXECUTA) e a categoria com que o chamado foi aberto (ENQUADRA_NA_ABERTURA), que se mantém quando ele é reclassificado. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.6) e no modelo lógico (Figura 5.8).
 
-Figura 5.6 — Modelo conceitual de dados
+Figura 5.7 — Modelo conceitual de dados
 
 ![Modelo conceitual de dados na notação de Chen](diagramas/modelo-conceitual.png)
 
@@ -104,11 +112,11 @@ Fonte: elaborado pelos autores (2026).
 
 ## Modelo lógico
 
-A Figura 5.7 mostra o modelo lógico para o banco de dados PostgreSQL, com as chaves primárias (PK), estrangeiras (FK) e únicas (UK). Os relacionamentos muitos-para-muitos do modelo conceitual viraram as tabelas `aluno_curso` e `atendente_setor`, e os perfis do usuário ficam na tabela `usuario_papel`. Algumas regras dos requisitos ficam garantidas pelo próprio banco. O número do chamado é único e gerado por sequência (RF-10). A chave única em `chamado.conversa_id` impede que uma conversa tenha mais de um chamado (RF-07). Um índice único parcial sobre `setor.triagem` impede que exista mais de um setor de triagem (RF-13).
+A Figura 5.8 mostra o modelo lógico para o banco de dados PostgreSQL, com as chaves primárias (PK), estrangeiras (FK) e únicas (UK). Os relacionamentos muitos-para-muitos do modelo conceitual viraram as tabelas `aluno_curso` e `atendente_setor`, e os perfis do usuário ficam na tabela `usuario_papel`. Algumas regras dos requisitos ficam garantidas pelo próprio banco. O número do chamado é único e gerado por sequência (RF-10). A chave única em `chamado.conversa_id` impede que uma conversa tenha mais de um chamado (RF-07). Um índice único parcial sobre `setor.triagem` impede que exista mais de um setor de triagem (RF-13).
 
 Cada tabela lista as colunas com o tipo, e o asterisco marca as colunas obrigatórias (NOT NULL). Cada chave estrangeira tem a sua própria ligação, na notação pé de galinha: o lado da tabela referenciada mostra se a referência é obrigatória ou opcional, e o outro lado mostra quantas linhas podem apontar para ela. Quando duas ligações unem as mesmas tabelas, a linha traz o nome da coluna, como `solicitante_id` e `responsavel_id` ou `categoria_id` e `categoria_original_id`, em `chamado`.
 
-Figura 5.7 — Modelo lógico de dados
+Figura 5.8 — Modelo lógico de dados
 
 ![Modelo lógico de dados para o PostgreSQL, com uma ligação por chave estrangeira](diagramas/modelo-logico.png)
 

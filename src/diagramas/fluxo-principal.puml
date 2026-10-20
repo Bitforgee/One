@@ -1,8 +1,30 @@
 @startuml fluxo-principal
 skinparam shadowing false
 
-|Aluno|
+|Usuário|
 start
+:Entrar no One com e-mail e senha (RNF-15);
+|One (sistema)|
+:Conferir a senha e se a conta está ativa (RNF-14);
+if (Acesso válido?) then ([sim])
+else ([não])
+  :Recusar o acesso;
+  stop
+endif
+:Identificar os perfis do usuário (RF-29);
+if (Mais de um perfil?) then ([sim])
+  |Usuário|
+  :Escolher com qual perfil entrar (RNF-16);
+  |One (sistema)|
+else ([não])
+endif
+:Abrir a tela inicial do perfil (RNF-16);
+note right
+  O atendente e o administrador entram
+  pelo mesmo caminho. Daqui em diante,
+  o fluxo segue com o perfil Aluno.
+end note
+|Aluno|
 :Abrir o assistente e escrever a dúvida (RF-01);
 |One (sistema)|
 :Procurar um artigo publicado sobre a dúvida (RF-02);
