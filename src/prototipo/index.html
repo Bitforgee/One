@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="One — protótipo visual da central inteligente de atendimento universitário." />
+  <title>One — Protótipo Visual</title>
+
+  <!-- Anti-flash: aplica o tema salvo antes de pintar a tela. -->
+  <script type="module">
+    import { applySavedThemeEarly } from "./js/components/theme-switcher.js";
+    applySavedThemeEarly();
+  </script>
+
+  <!-- Bootstrap (local / offline) -->
+  <link rel="stylesheet" href="./vendor/bootstrap/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons (local / offline) -->
+  <link rel="stylesheet" href="./vendor/bootstrap-icons/bootstrap-icons.min.css" />
+
+  <!-- Design system do One -->
+  <link rel="stylesheet" href="./css/variables.css" />
+  <link rel="stylesheet" href="./css/themes.css" />
+  <link rel="stylesheet" href="./css/global.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
+  <link rel="stylesheet" href="./css/bootstrap-custom.css" />
+  <link rel="stylesheet" href="./css/responsive.css" />
+</head>
+<body>
+  <!-- Pular para o conteúdo (acessibilidade) -->
+  <a class="one-skip-link" href="#main-region">Pular para o conteúdo</a>
+
+  <!-- Raiz da aplicação; preenchida por app.js conforme a rota. -->
+  <div id="one-root"></div>
+
+  <!-- Bootstrap JS (bundle com Popper) -->
+  <script src="./vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Aplicação -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

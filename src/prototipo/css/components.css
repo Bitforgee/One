@@ -1,0 +1,323 @@
+/* ==========================================================================
+   One — Componentes reutilizáveis
+   Estilos próprios que complementam os componentes do Bootstrap.
+   Fase 1: sidebar, header, cartões, badges de estado, chip de perfil,
+   estados vazios e o esqueleto do showcase do design system.
+   ========================================================================== */
+
+/* --- Sidebar: casca ------------------------------------------------------- */
+.one-sidebar {
+  border-right: 1px solid var(--one-sidebar-border);
+}
+
+/* --- Sidebar: marca ------------------------------------------------------- */
+.one-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-2);
+  padding: var(--one-space-5) var(--one-space-4) var(--one-space-4);
+  color: var(--one-sidebar-text-active);
+}
+.one-sidebar__brand .one-logo__mark {
+  box-shadow: var(--one-shadow-md);
+}
+
+/* Divisor discreto entre grupos de navegação. */
+.one-sidebar__divider {
+  border-color: var(--one-sidebar-border);
+  opacity: .6;
+  margin: .5rem .75rem;
+}
+
+/* --- Sidebar: navegação --------------------------------------------------- */
+.one-sidebar__section {
+  padding: var(--one-space-3) var(--one-space-4) var(--one-space-1);
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--one-sidebar-text);
+  opacity: 0.6;
+}
+.one-sidebar__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--one-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.one-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-3);
+  padding: var(--one-space-3);
+  border-radius: var(--one-radius-md);
+  color: var(--one-sidebar-text);
+  font-size: var(--one-fs-sm);
+  font-weight: var(--one-fw-medium);
+  text-decoration: none;
+  /* Escopo explícito da transição (nada de transition:all). */
+  transition-property: background-color, color, box-shadow;
+  transition-duration: var(--one-transition-fast);
+}
+.one-sidebar__link:hover {
+  background: var(--one-sidebar-hover-bg);
+  color: var(--one-sidebar-text-active);
+  text-decoration: none;
+}
+.one-sidebar__link.is-active {
+  background: var(--one-sidebar-active-bg);
+  color: var(--one-sidebar-text-active);
+  box-shadow: inset 3px 0 0 var(--one-brand); /* barra à esquerda estilo GLPI */
+}
+.one-sidebar__link .bi {
+  font-size: 1.1rem;
+  flex: 0 0 auto;
+}
+.one-sidebar__link-label {
+  flex: 1 1 auto;
+}
+.one-sidebar__spacer { flex: 1 1 auto; }
+
+/* --- Sidebar: botão de recolher/expandir (desktop) ------------------------ */
+.one-sidebar__collapse {
+  color: var(--one-sidebar-text);
+  min-height: 40px; /* alvo de toque acessível */
+  margin: var(--one-space-2) var(--one-space-3) var(--one-space-3);
+}
+
+/* --- Sidebar recolhida: só ícones centralizados --------------------------- */
+/* Quando recolhida (~68px), a sidebar mostra apenas ícones centralizados, com
+   alvos de clique confortáveis, sem textos cortados nem estouro horizontal.
+   As regras usam .one-sidebar.is-collapsed, que só a aside do desktop recebe
+   (o Offcanvas do mobile nunca é marcado como recolhido). */
+
+/* Nada pode ultrapassar a largura da sidebar recolhida. */
+.one-sidebar.is-collapsed {
+  overflow-x: hidden;
+}
+
+/* Oculta rótulos de links, títulos de seção e os textos/ações do bloco de
+   usuário (restando só o avatar). display:none não reserva espaço. */
+.one-sidebar.is-collapsed .one-sidebar__link-label,
+.one-sidebar.is-collapsed .one-sidebar__section,
+.one-sidebar.is-collapsed .one-sidebar__user > *:not(.one-avatar) {
+  display: none;
+}
+
+/* Links: ícone centralizado e alvo de toque acessível (>=40px). */
+.one-sidebar.is-collapsed .one-sidebar__link {
+  justify-content: center;
+  gap: 0;
+  min-height: 40px;
+  padding-inline: var(--one-space-2);
+}
+
+/* Lista de navegação com respiro lateral menor, mantendo os ícones alinhados
+   ao centro da coluna estreita. */
+.one-sidebar.is-collapsed .one-sidebar__nav {
+  padding-inline: var(--one-space-2);
+}
+
+/* Marca: centraliza o símbolo "O" e esconde o logotipo textual "One". */
+.one-sidebar.is-collapsed .one-sidebar__brand {
+  justify-content: center;
+  gap: 0;
+  padding-inline: var(--one-space-2);
+}
+.one-sidebar.is-collapsed .one-sidebar__brand .one-logo {
+  display: none;
+}
+
+/* Bloco de usuário: avatar centralizado, sem reservar espaço para os textos. */
+.one-sidebar.is-collapsed .one-sidebar__user {
+  justify-content: center;
+  gap: 0;
+  padding-inline: var(--one-space-2);
+}
+
+/* Divisores acompanham a largura menor. */
+.one-sidebar.is-collapsed .one-sidebar__divider {
+  margin-inline: var(--one-space-2);
+}
+
+/* Botão de recolher/expandir: centralizado, alvo >=40px, mantido no fluxo
+   (segue focável e navegável por teclado). */
+.one-sidebar.is-collapsed .one-sidebar__collapse {
+  margin-inline: var(--one-space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Sidebar: usuário ----------------------------------------------------- */
+.one-sidebar__user {
+  margin: var(--one-space-3);
+  padding: var(--one-space-3);
+  border-radius: var(--one-radius-md);
+  background: var(--one-sidebar-active-bg);
+  color: var(--one-sidebar-text);
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-3);
+}
+.one-sidebar__user-name {
+  color: var(--one-sidebar-text-active);
+  font-weight: var(--one-fw-semibold);
+  font-size: .9rem;
+}
+.one-sidebar__user-role {
+  color: var(--one-sidebar-text);
+  opacity: .8;
+  font-size: var(--one-fs-xs);
+}
+
+/* --- Avatar --------------------------------------------------------------- */
+.one-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--one-radius-pill);
+  background: var(--one-brand-500);
+  color: #fff;
+  font-weight: var(--one-fw-semibold);
+  font-size: var(--one-fs-sm);
+  flex: 0 0 auto;
+  text-transform: uppercase;
+}
+.one-avatar--sm { width: 1.75rem; height: 1.75rem; font-size: var(--one-fs-xs); }
+.one-avatar--lg { width: 3rem; height: 3rem; font-size: var(--one-fs-md); }
+
+/* --- Chip de perfil ------------------------------------------------------- */
+.one-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--one-space-2);
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--one-radius-pill);
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-semibold);
+  border: 1px solid var(--one-border);
+  background: var(--one-surface-muted);
+  color: var(--one-text-muted);
+}
+.one-role-chip--aluno       { color: var(--one-brand-600); border-color: var(--one-brand-300); }
+.one-role-chip--atendente   { color: var(--one-accent-600); border-color: var(--one-accent-400); }
+.one-role-chip--admin       { color: var(--one-brand-800); border-color: var(--one-brand-500); }
+
+/* --- Cartão de superfície ------------------------------------------------- */
+.one-surface {
+  background: var(--one-surface);
+  border: 1px solid var(--one-border);
+  border-radius: var(--one-radius-lg);
+  box-shadow: var(--one-shadow-sm);
+}
+
+/* O Bootstrap .card alinhado aos nossos tokens. */
+.card {
+  --bs-card-bg: var(--one-surface);
+  --bs-card-border-color: var(--one-border);
+  --bs-card-border-radius: var(--one-radius-lg);
+  --bs-card-cap-bg: transparent;
+  box-shadow: var(--one-shadow-sm);
+}
+
+/* --- Indicador compacto (dashboards) — "stat chip" GLPI ------------------- */
+.one-stat {
+  padding: var(--one-space-3) var(--one-space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--one-space-3);
+}
+.one-stat__label {
+  font-size: var(--one-fs-xs);
+  color: var(--one-text-muted);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-2);
+}
+.one-stat__value {
+  font-size: var(--one-fs-xl);
+  font-weight: var(--one-fw-bold);
+  line-height: 1;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.one-stat__hint {
+  display: none; /* o aviso demonstrativo fica no cabeçalho, não em cada KPI */
+}
+
+/* --- Badges de estado do chamado (BR / seção F) --------------------------- */
+/* As cores comunicam o estado; o texto permanece como rótulo acessível. */
+.one-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--one-radius-pill);
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-semibold);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.one-status::before {
+  content: "";
+  width: 0.5rem; height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.one-status--open             { color: #2459a8; background: rgba(47,111,207,0.12);  border-color: rgba(47,111,207,0.35); }
+.one-status--in_progress      { color: #c8880a; background: rgba(200,136,10,0.12);  border-color: rgba(200,136,10,0.35); }
+.one-status--waiting_student  { color: #8a5cc4; background: rgba(138,92,196,0.12);  border-color: rgba(138,92,196,0.35); }
+.one-status--resolved         { color: #1f9d57; background: rgba(31,157,87,0.12);   border-color: rgba(31,157,87,0.35); }
+.one-status--closed           { color: #5b6675; background: rgba(91,102,117,0.12);  border-color: rgba(91,102,117,0.35); }
+
+/* --- Estado vazio --------------------------------------------------------- */
+.one-empty {
+  text-align: center;
+  padding: var(--one-space-7) var(--one-space-4);
+  color: var(--one-text-muted);
+}
+.one-empty .bi {
+  font-size: 2.5rem;
+  color: var(--one-text-subtle);
+  display: block;
+  margin-bottom: var(--one-space-3);
+}
+
+/* --- Botão de alternância de tema ----------------------------------------- */
+.one-theme-toggle {
+  --bs-btn-border-color: var(--one-border);
+  --bs-btn-hover-border-color: var(--one-border-strong);
+  --bs-btn-color: var(--one-text-muted);
+  --bs-btn-hover-color: var(--one-text);
+  --bs-btn-hover-bg: var(--one-surface-hover);
+}
+
+/* --- Showcase do design system (página de demonstração da Fase 1) --------- */
+.one-swatch {
+  height: 56px;
+  border-radius: var(--one-radius-md);
+  border: 1px solid var(--one-border);
+  display: flex;
+  align-items: flex-end;
+  padding: var(--one-space-1) var(--one-space-2);
+  font-size: var(--one-fs-xs);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.one-token-row {
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-3);
+  padding: var(--one-space-2) 0;
+  border-bottom: 1px solid var(--one-border);
+}

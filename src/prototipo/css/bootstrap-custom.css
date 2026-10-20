@@ -1,0 +1,124 @@
+/* ==========================================================================
+   One — Ajustes finos sobre o Bootstrap
+   Sobrescritas pontuais de componentes do Bootstrap para alinhá-los à
+   identidade do One. Mantemos o mínimo necessário: preferimos as variáveis
+   --bs-* (definidas em themes.css) a seletores específicos.
+   ========================================================================== */
+
+/* Botões primários usam a cor da marca já mapeada em --bs-primary. */
+.btn-primary {
+  --bs-btn-bg: var(--one-brand);
+  --bs-btn-border-color: var(--one-brand);
+  --bs-btn-hover-bg: var(--one-brand-hover);
+  --bs-btn-hover-border-color: var(--one-brand-hover);
+  --bs-btn-active-bg: var(--one-brand-hover);
+  --bs-btn-active-border-color: var(--one-brand-hover);
+  --bs-btn-disabled-bg: var(--one-brand);
+  --bs-btn-disabled-border-color: var(--one-brand);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--one-brand);
+  --bs-btn-border-color: var(--one-brand);
+  --bs-btn-hover-bg: var(--one-brand);
+  --bs-btn-hover-border-color: var(--one-brand);
+  --bs-btn-active-bg: var(--one-brand-hover);
+}
+
+/* Raio padrão dos botões e campos alinhado aos tokens. */
+.btn {
+  --bs-btn-border-radius: var(--one-radius-md);
+  font-weight: var(--one-fw-medium);
+}
+
+.form-control,
+.form-select {
+  --bs-border-radius: var(--one-radius-md);
+  background-color: var(--one-surface);
+  border-color: var(--one-border);
+  color: var(--one-text);
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--one-brand-400);
+  box-shadow: 0 0 0 0.2rem rgba(47, 111, 207, 0.2);
+}
+.form-control::placeholder {
+  color: var(--one-text-subtle);
+}
+
+/* Rótulos de formulário mais discretos. */
+.form-label {
+  font-size: var(--one-fs-sm);
+  font-weight: var(--one-fw-medium);
+  color: var(--one-text-muted);
+  margin-bottom: var(--one-space-1);
+}
+
+/* Dropdown alinhado às superfícies do tema. */
+.dropdown-menu {
+  --bs-dropdown-bg: var(--one-surface);
+  --bs-dropdown-border-color: var(--one-border);
+  --bs-dropdown-border-radius: var(--one-radius-md);
+  --bs-dropdown-link-color: var(--one-text);
+  --bs-dropdown-link-hover-bg: var(--one-surface-hover);
+  --bs-dropdown-link-hover-color: var(--one-text);
+  box-shadow: var(--one-shadow-md);
+}
+
+/* Offcanvas (sidebar mobile) usa o fundo escuro da sidebar. */
+.offcanvas.one-sidebar {
+  --bs-offcanvas-width: var(--one-sidebar-width);
+  --bs-offcanvas-bg: var(--one-sidebar-bg);
+  --bs-offcanvas-color: var(--one-sidebar-text);
+  --bs-offcanvas-border-color: transparent;
+}
+
+/* Toasts alinhados às superfícies. */
+.toast {
+  --bs-toast-bg: var(--one-surface);
+  --bs-toast-border-color: var(--one-border);
+  --bs-toast-color: var(--one-text);
+  --bs-toast-border-radius: var(--one-radius-md);
+  box-shadow: var(--one-shadow-md);
+}
+
+/* Modais com raio e sombra da marca. */
+.modal-content {
+  --bs-modal-bg: var(--one-surface);
+  --bs-modal-border-color: var(--one-border);
+  --bs-modal-border-radius: var(--one-radius-lg);
+  box-shadow: var(--one-shadow-lg);
+}
+
+/* Tabelas: cabeçalho discreto e linhas com hover. */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--one-text);
+  --bs-table-border-color: var(--one-border);
+  --bs-table-hover-bg: var(--one-surface-hover);
+  vertical-align: middle;
+}
+.table > thead th {
+  font-size: var(--one-fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--one-text-muted);
+  font-weight: var(--one-fw-semibold);
+  border-bottom: 1px solid var(--one-border-strong);
+}
+
+/* Nav-pills da marca. */
+.nav-pills {
+  --bs-nav-pills-link-active-bg: var(--one-brand);
+  --bs-nav-link-color: var(--one-text-muted);
+  --bs-nav-link-hover-color: var(--one-text);
+}
+
+/* Breadcrumb discreto. */
+.breadcrumb {
+  --bs-breadcrumb-divider-color: var(--one-text-subtle);
+  --bs-breadcrumb-item-active-color: var(--one-text-muted);
+  font-size: var(--one-fs-sm);
+  margin-bottom: 0;
+}

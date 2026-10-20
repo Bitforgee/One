@@ -1,0 +1,103 @@
+/* ==========================================================================
+   One — Design Tokens
+   Fase 1 (Fundação). Variáveis base da identidade visual do One.
+
+   Estratégia: complementamos as variáveis do Bootstrap 5.3 (--bs-*) com um
+   conjunto próprio de tokens (--one-*). Os temas (claro/escuro) sobrescrevem
+   um subconjunto destes tokens em themes.css, selecionados por
+   [data-bs-theme="light"|"dark"].
+
+   Nada aqui é dado institucional real: é a direção visual proposta no plano
+   da Fase 1 e aprovada para o protótipo.
+   ========================================================================== */
+
+:root {
+  /* --- Marca -------------------------------------------------------------- */
+  /* Azul institucional do One. A escala 50..900 permite estados e superfícies. */
+  --one-brand-50:  #eaf1fb;
+  --one-brand-100: #d2e2f7;
+  --one-brand-200: #a6c5ef;
+  --one-brand-300: #79a7e6;
+  --one-brand-400: #4d8add;
+  --one-brand-500: #2f6fcf; /* cor base da marca */
+  --one-brand-600: #2459a8;
+  --one-brand-700: #1c4583;
+  --one-brand-800: #15335f;
+  --one-brand-900: #0e2240;
+
+  /* Acento secundário (teal) — usado com parcimônia em destaques e gráficos. */
+  --one-accent-400: #2bb6a3;
+  --one-accent-500: #159a89;
+  --one-accent-600: #0f7d6f;
+
+  /* --- Estados semânticos (independentes de tema) ------------------------- */
+  --one-success: #1f9d57;
+  --one-warning: #c8880a;
+  --one-danger:  #d1434b;
+  --one-info:    #2f6fcf;
+
+  /* --- Tipografia --------------------------------------------------------- */
+  --one-font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  --one-font-mono: "Cascadia Code", "SFMono-Regular", Consolas,
+    "Liberation Mono", Menlo, monospace;
+
+  /* Escala tipográfica (base 16px, razão ~1.2). */
+  --one-fs-xs:   0.75rem;   /* 12px */
+  --one-fs-sm:   0.875rem;  /* 14px */
+  --one-fs-base: 1rem;      /* 16px */
+  --one-fs-md:   1.125rem;  /* 18px */
+  --one-fs-lg:   1.375rem;  /* 22px */
+  --one-fs-xl:   1.75rem;   /* 28px */
+  --one-fs-2xl:  2.25rem;   /* 36px */
+
+  --one-fw-regular:  400;
+  --one-fw-medium:   500;
+  --one-fw-semibold: 600;
+  --one-fw-bold:     700;
+
+  --one-lh-tight: 1.25;
+  --one-lh-base:  1.5;
+
+  /* --- Escala de espaçamento (base 4px) ----------------------------------- */
+  --one-space-1: 0.25rem;  /* 4px  */
+  --one-space-2: 0.5rem;   /* 8px  */
+  --one-space-3: 0.75rem;  /* 12px */
+  --one-space-4: 1rem;     /* 16px */
+  --one-space-5: 1.5rem;   /* 24px */
+  --one-space-6: 2rem;     /* 32px */
+  --one-space-7: 3rem;     /* 48px */
+  --one-space-8: 4rem;     /* 64px */
+
+  /* --- Raios -------------------------------------------------------------- */
+  /* Densidade administrativa (padrão GLPI): cantos mais discretos. */
+  --one-radius-sm:   0.25rem;
+  --one-radius-md:   0.375rem;
+  --one-radius-lg:   0.5rem;
+  --one-radius-pill: 50rem;
+
+  /* --- Sombras (sutis, estilo ferramenta administrativa) ------------------ */
+  --one-shadow-sm: 0 1px 1px rgba(15, 34, 64, 0.05);
+  --one-shadow-md: 0 2px 6px rgba(15, 34, 64, 0.08);
+  --one-shadow-lg: 0 6px 18px rgba(15, 34, 64, 0.12);
+
+  /* --- Transições --------------------------------------------------------- */
+  --one-transition-fast: 120ms ease;
+  --one-transition-base: 200ms ease;
+
+  /* --- Layout ------------------------------------------------------------- */
+  --one-sidebar-width:   248px;
+  --one-sidebar-collapsed: 68px; /* ícones-only reais na sidebar recolhida (alvo 64–72px) */
+  --one-header-height:   56px;   /* header compacto (alvo 56–64px) */
+  --one-content-max:     1360px; /* referenciável; não é mais aplicado globalmente */
+  --one-content-readable: 820px; /* largura de leitura confortável (formulário/chat) */
+
+  /* --- Densidade e foco (padrão GLPI) ------------------------------------- */
+  --one-density-cell-y: .5rem;   /* padding vertical de célula de tabela */
+  --one-focus-ring: 0 0 0 .2rem rgba(47, 111, 207, 0.35);
+
+  /* --- Camadas (z-index) -------------------------------------------------- */
+  --one-z-sidebar: 1030;
+  --one-z-header:  1020;
+  --one-z-overlay: 1040;
+}

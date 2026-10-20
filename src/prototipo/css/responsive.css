@@ -1,0 +1,71 @@
+/* ==========================================================================
+   One — Ajustes responsivos complementares
+   O Bootstrap já cobre os breakpoints principais; aqui ficam apenas os
+   ajustes do app shell e dos componentes próprios do One.
+   Breakpoints do Bootstrap: sm 576, md 768, lg 992, xl 1200, xxl 1400.
+   ========================================================================== */
+
+/* --- Tablet / mobile grande (< lg) ---------------------------------------- */
+@media (max-width: 991.98px) {
+  .one-header {
+    padding-inline: var(--one-space-4);
+  }
+  .one-page-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* --- Mobile (< md) -------------------------------------------------------- */
+@media (max-width: 767.98px) {
+  :root {
+    --one-fs-2xl: 1.875rem; /* reduz títulos grandes no celular */
+    --one-fs-xl:  1.5rem;
+  }
+  .one-content {
+    padding: var(--one-space-3);
+  }
+  .one-stat {
+    padding: var(--one-space-4);
+  }
+  /* Tabelas largas rolam horizontalmente dentro do wrapper .table-responsive;
+     evitamos rolagem horizontal na página inteira. */
+  .one-header__page-title {
+    font-size: var(--one-fs-md);
+  }
+}
+
+/* --- Mobile pequeno (< sm) ------------------------------------------------ */
+@media (max-width: 575.98px) {
+  .one-header__actions .btn-text {
+    display: none; /* mantém só o ícone em botões de ação no header */
+  }
+}
+
+/* --- Recolhimento é só desktop: oculta o botão no offcanvas móvel --------- */
+.offcanvas .one-sidebar__collapse {
+  display: none;
+}
+
+/* --- Detalhe do chamado ~70/30 em telas largas (>= xxl) ------------------- */
+@media (min-width: 1400px) {
+  .one-detail .col-lg-8 { flex: 0 0 70%; max-width: 70%; }
+  .one-detail .col-lg-4 { flex: 0 0 30%; max-width: 30%; }
+}
+
+/* --- Impressão (apoio a relatórios/apresentação) -------------------------- */
+@media print {
+  .one-sidebar,
+  .one-header,
+  .no-print {
+    display: none !important;
+  }
+  .one-app {
+    display: block;
+  }
+  .one-content {
+    overflow: visible;
+    height: auto;
+    padding: 0;
+  }
+}

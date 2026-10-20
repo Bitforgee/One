@@ -1,0 +1,175 @@
+{
+  "_meta": {
+    "descricao": "Dados demonstrativos (fictícios) do protótipo One. Não representam pessoas, chamados ou métricas reais.",
+    "versao": "fase-2",
+    "estados": ["OPEN", "IN_PROGRESS", "WAITING_STUDENT", "RESOLVED", "CLOSED"]
+  },
+  "categorias": [
+    { "id": "fin-boleto", "nome": "Financeiro › Boleto" },
+    { "id": "aca-documentos", "nome": "Acadêmico › Documentos" },
+    { "id": "aca-notas", "nome": "Acadêmico › Notas" },
+    { "id": "tec-portal", "nome": "Tecnologia › Portal do Aluno" },
+    { "id": "aca-matricula", "nome": "Acadêmico › Matrícula" }
+  ],
+  "artigos": [
+    {
+      "id": "KB-001",
+      "versao": 2,
+      "titulo": "Como emitir a segunda via do boleto?",
+      "categoria": "Financeiro › Boleto",
+      "perguntasRelacionadas": ["como emitir boleto", "segunda via do boleto", "onde vejo meu boleto", "preciso pagar a mensalidade", "emitir boleto do semestre"],
+      "conteudo": "Para emitir a segunda via do boleto:\n1. Acesse o Portal do Aluno.\n2. Entre em \"Financeiro\".\n3. Selecione \"Boletos\".\n4. Escolha a competência desejada e clique em \"Gerar segunda via\".",
+      "links": [{ "rotulo": "Acessar o Portal do Aluno", "url": "#" }],
+      "status": "PUBLISHED",
+      "atualizadoEm": "2026-10-04",
+      "atualizadoPor": "Ana Diretora"
+    },
+    {
+      "id": "KB-002",
+      "versao": 1,
+      "titulo": "Como solicitar o atestado de escolaridade?",
+      "categoria": "Acadêmico › Documentos",
+      "perguntasRelacionadas": ["atestado de escolaridade", "atestado de matrícula", "como solicitar atestado", "preciso de um comprovante de matrícula", "documento de matrícula"],
+      "conteudo": "O atestado de escolaridade pode ser emitido pelo próprio aluno:\n1. Acesse o Portal do Aluno.\n2. Entre em \"Documentos\".\n3. Selecione \"Atestado de matrícula\".\n4. Baixe o PDF gerado.",
+      "links": [{ "rotulo": "Portal do Aluno › Documentos", "url": "#" }],
+      "status": "PUBLISHED",
+      "atualizadoEm": "2026-10-03",
+      "atualizadoPor": "Ana Diretora"
+    },
+    {
+      "id": "KB-003",
+      "versao": 1,
+      "titulo": "Não consigo acessar o Portal do Aluno",
+      "categoria": "Tecnologia › Portal do Aluno",
+      "perguntasRelacionadas": ["não consigo acessar o portal", "esqueci minha senha", "portal fora do ar", "login do portal", "redefinir senha"],
+      "conteudo": "Se você não consegue acessar o Portal do Aluno:\n1. Confirme seu usuário (e-mail institucional).\n2. Use a opção \"Esqueci minha senha\" para redefinir.\n3. Caso persista, aguarde alguns minutos e tente novamente.",
+      "links": [{ "rotulo": "Redefinir senha", "url": "#" }],
+      "status": "PUBLISHED",
+      "atualizadoEm": "2026-10-02",
+      "atualizadoPor": "Ana Diretora"
+    },
+    {
+      "id": "KB-004",
+      "versao": 1,
+      "titulo": "Como funciona a rematrícula?",
+      "categoria": "Acadêmico › Matrícula",
+      "perguntasRelacionadas": ["rematrícula", "como me rematricular", "renovar matrícula", "matrícula do próximo semestre"],
+      "conteudo": "A rematrícula é feita no período divulgado pela coordenação:\n1. Acesse o Portal do Aluno.\n2. Entre em \"Matrícula\".\n3. Confira as disciplinas e confirme.\nFique atento ao prazo para evitar perda de vaga em turmas.",
+      "links": [],
+      "status": "PUBLISHED",
+      "atualizadoEm": "2026-09-28",
+      "atualizadoPor": "Ana Diretora"
+    },
+    {
+      "id": "KB-005",
+      "versao": 1,
+      "titulo": "Quando as notas são publicadas?",
+      "categoria": "Acadêmico › Notas",
+      "perguntasRelacionadas": ["minha nota não apareceu", "quando sai a nota", "nota não publicada", "lançamento de notas"],
+      "conteudo": "As notas são publicadas pelo professor conforme o calendário acadêmico. Caso uma nota não apareça após o prazo informado em sala, registre uma solicitação para a coordenação do seu curso.",
+      "links": [],
+      "status": "DRAFT",
+      "atualizadoEm": "2026-10-06",
+      "atualizadoPor": "Ana Diretora"
+    },
+    {
+      "id": "KB-006",
+      "versao": 3,
+      "titulo": "Política antiga de boleto (desatualizada)",
+      "categoria": "Financeiro › Boleto",
+      "perguntasRelacionadas": ["boleto no guichê", "boleto presencial"],
+      "conteudo": "Conteúdo arquivado: a emissão presencial de boletos foi descontinuada. Utilize o Portal do Aluno.",
+      "links": [],
+      "status": "ARCHIVED",
+      "atualizadoEm": "2026-08-15",
+      "atualizadoPor": "Ana Diretora"
+    }
+  ],
+  "setores": [
+    { "id": "secretaria", "nome": "Secretaria Acadêmica", "triagem": true },
+    { "id": "financeiro", "nome": "Financeiro", "triagem": false },
+    { "id": "coord-ads", "nome": "Coordenação ADS", "triagem": false },
+    { "id": "ti", "nome": "TI / Suporte", "triagem": false }
+  ],
+  "regrasRoteamento": [
+    { "categoria": "Financeiro › Boleto", "destino": "Financeiro" },
+    { "categoria": "Acadêmico › Documentos", "destino": "Secretaria Acadêmica" },
+    { "categoria": "Acadêmico › Matrícula", "destino": "Secretaria Acadêmica" },
+    { "categoria": "Acadêmico › Notas", "destino": "coordenacao-do-curso" },
+    { "categoria": "Tecnologia › Portal do Aluno", "destino": "TI / Suporte" }
+  ],
+  "cursos": [
+    { "id": "ads", "nome": "Análise e Desenvolvimento de Sistemas", "coordenacao": "Coordenação ADS" },
+    { "id": "eng-sw", "nome": "Engenharia de Software", "coordenacao": "Coordenação ADS" }
+  ],
+  "usuarios": [
+    { "nome": "Maria Souza", "perfil": "Aluno", "vinculo": "Análise e Desenvolvimento de Sistemas", "ativo": true },
+    { "nome": "João Silva", "perfil": "Aluno", "vinculo": "Análise e Desenvolvimento de Sistemas", "ativo": true },
+    { "nome": "Carlos Lima", "perfil": "Atendente", "vinculo": "Secretaria Acadêmica", "ativo": true },
+    { "nome": "Beatriz Rocha", "perfil": "Atendente", "vinculo": "Financeiro", "ativo": true },
+    { "nome": "Ana Diretora", "perfil": "Administrador", "vinculo": "—", "ativo": true },
+    { "nome": "Rafael Antigo", "perfil": "Atendente", "vinculo": "TI / Suporte", "ativo": false }
+  ],
+  "chamados": [
+    {
+      "protocolo": "ONE-1053",
+      "assunto": "Problema para emitir boleto",
+      "aluno": "João Silva",
+      "categoria": "Financeiro › Boleto",
+      "setor": "Financeiro",
+      "situacao": "OPEN",
+      "abertura": "2026-10-06",
+      "atualizacao": "2026-10-06"
+    },
+    {
+      "protocolo": "ONE-1052",
+      "assunto": "Nota de Arquitetura não publicada",
+      "aluno": "Maria Souza",
+      "categoria": "Acadêmico › Notas",
+      "setor": "Coordenação ADS",
+      "situacao": "IN_PROGRESS",
+      "abertura": "2026-10-05",
+      "atualizacao": "2026-10-06"
+    },
+    {
+      "protocolo": "ONE-1051",
+      "assunto": "Não consigo acessar o Portal do Aluno",
+      "aluno": "Pedro Alves",
+      "categoria": "Tecnologia › Portal do Aluno",
+      "setor": "TI / Suporte",
+      "situacao": "WAITING_STUDENT",
+      "abertura": "2026-10-05",
+      "atualizacao": "2026-10-06"
+    },
+    {
+      "protocolo": "ONE-1050",
+      "assunto": "Atestado de escolaridade",
+      "aluno": "Ana Costa",
+      "categoria": "Acadêmico › Documentos",
+      "setor": "Secretaria Acadêmica",
+      "situacao": "RESOLVED",
+      "abertura": "2026-10-03",
+      "atualizacao": "2026-10-05"
+    },
+    {
+      "protocolo": "ONE-1049",
+      "assunto": "Dúvida sobre rematrícula",
+      "aluno": "Lucas Pereira",
+      "categoria": "Acadêmico › Matrícula",
+      "setor": "Secretaria Acadêmica",
+      "situacao": "CLOSED",
+      "abertura": "2026-10-01",
+      "atualizacao": "2026-10-04"
+    },
+    {
+      "protocolo": "ONE-1048",
+      "assunto": "Segunda via do boleto do semestre",
+      "aluno": "Carla Dias",
+      "categoria": "Financeiro › Boleto",
+      "setor": "Financeiro",
+      "situacao": "IN_PROGRESS",
+      "abertura": "2026-10-02",
+      "atualizacao": "2026-10-06"
+    }
+  ]
+}

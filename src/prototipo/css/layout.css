@@ -1,0 +1,134 @@
+/* ==========================================================================
+   One — Layout (app shell)
+   Estrutura: sidebar fixa (desktop) + header + área de conteúdo.
+   No mobile a sidebar vira Offcanvas (ver components.css e sidebar.js).
+   O grid principal usa CSS Grid; o conteúdo interno usa o grid do Bootstrap.
+   ========================================================================== */
+
+/* --- App shell ------------------------------------------------------------ */
+.one-app {
+  display: grid;
+  grid-template-columns: var(--one-sidebar-width) 1fr;
+  grid-template-rows: 100vh;
+  min-height: 100vh;
+}
+
+.one-app__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* evita overflow horizontal com conteúdo largo */
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Área rolável do conteúdo (abaixo do header). */
+.one-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--one-space-5);
+}
+/* Padrão: largura total e fluida (dashboards, tabelas, listas, detalhe).
+   O conteúdo ocupa todo o espaço à direita da sidebar; o respiro lateral
+   vem de um padding horizontal responsivo moderado (equivalente a
+   px-2 / px-md-3 / px-xl-4). Sem max-width nem centralização global. */
+.one-content__inner {
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(var(--one-space-2), 2vw, var(--one-space-5));
+}
+/* Opt-in: largura de leitura confortável para formulários e chat.
+   Aplicado por página (ver js/pages/*) — não é o padrão. */
+.one-content__inner--readable {
+  max-width: var(--one-content-readable);
+  margin-inline: auto;
+}
+
+/* --- Sidebar (desktop) ---------------------------------------------------- */
+.one-sidebar {
+  grid-column: 1;
+  background: var(--one-sidebar-bg);
+  color: var(--one-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: var(--one-z-sidebar);
+}
+
+/* --- Header --------------------------------------------------------------- */
+.one-header {
+  height: var(--one-header-height);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--one-space-2);
+  padding-inline: var(--one-space-4);
+  background: var(--one-surface);
+  border-bottom: 1px solid var(--one-border);
+  z-index: var(--one-z-header);
+}
+/* Alvos de toque e foco visível nos controles do header (acessibilidade). */
+.one-header .btn {
+  min-height: 40px;
+}
+.one-header .btn:focus-visible {
+  box-shadow: var(--one-focus-ring);
+}
+
+/* --- Responsivo: colapsa a sidebar no mobile ------------------------------ */
+@media (max-width: 991.98px) {
+  .one-app {
+    grid-template-columns: 1fr; /* uma coluna; a sidebar sai do fluxo */
+  }
+  .one-sidebar--desktop {
+    display: none; /* no mobile usamos o Offcanvas */
+  }
+  .one-content {
+    padding: var(--one-space-4);
+  }
+}
+
+/* Botão de abrir a sidebar (visível só no mobile). */
+.one-header__toggle {
+  display: none;
+}
+@media (max-width: 991.98px) {
+  .one-header__toggle {
+    display: inline-flex;
+  }
+}
+
+/* --- Cabeçalho de página (título + breadcrumb + ações) -------------------- */
+.one-page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--one-space-3);
+  border-bottom: 1px solid var(--one-border); /* separador administrativo */
+  padding-bottom: var(--one-space-3);
+  margin-bottom: var(--one-space-4);
+}
+.one-page-head__title {
+  margin: 0;
+  text-wrap: balance;
+}
+.one-page-head__subtitle {
+  color: var(--one-text-muted);
+  font-size: var(--one-fs-sm);
+  margin: var(--one-space-1) 0 0;
+}
+
+/* Barra de filtros acessível (busca + selects + botões), reutilizável. */
+.one-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--one-space-2);
+  align-items: center;
+  margin-bottom: var(--one-space-4);
+}
+
+/* Grid recolhido: a sidebar vira uma coluna estreita só de ícones. */
+.one-app[data-sidebar-collapsed="1"] {
+  grid-template-columns: var(--one-sidebar-collapsed) 1fr;
+}

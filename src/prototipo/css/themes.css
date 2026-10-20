@@ -1,0 +1,96 @@
+/* ==========================================================================
+   One — Temas (claro / escuro)
+   Mapeia os tokens --one-* e as variáveis do Bootstrap (--bs-*) para cada tema.
+   Selecionados pelo atributo nativo do Bootstrap: data-bs-theme.
+   A preferência é persistida pelo theme-switcher.js (localStorage).
+   ========================================================================== */
+
+/* --- Tema claro (padrão) --------------------------------------------------- */
+[data-bs-theme="light"] {
+  --one-bg:            #f5f7fb; /* fundo da aplicação */
+  --one-surface:       #ffffff; /* cartões, painéis */
+  --one-surface-muted: #eef2f8; /* superfícies secundárias */
+  --one-surface-hover: #e7edf6;
+  --one-border:        #dbe2ec;
+  --one-border-strong: #c4cedd;
+
+  --one-text:          #1c2733; /* texto principal */
+  --one-text-muted:    #5b6675; /* texto secundário */
+  --one-text-subtle:   #8a94a3;
+  --one-text-on-brand: #ffffff;
+
+  --one-brand:         var(--one-brand-500);
+  --one-brand-hover:   var(--one-brand-600);
+  --one-brand-soft:    var(--one-brand-50);
+
+  /* Sidebar clara/institucional no tema claro (padrão GLPI). */
+  --one-sidebar-bg:    #ffffff;
+  --one-sidebar-text:  #41505f; /* texto inativo com contraste AA sobre branco */
+  --one-sidebar-text-active: var(--one-brand-700);
+  --one-sidebar-active-bg: var(--one-brand-50);
+  --one-sidebar-hover-bg:  #eef2f8;
+  --one-sidebar-border:    #dbe2ec; /* borda direita que separa do conteúdo */
+
+  /* Fundo da nota interna da timeline (claro). */
+  --one-timeline-interna-bg: rgba(200, 136, 10, 0.08);
+
+  /* Alinhar o Bootstrap ao nosso fundo/superfície. */
+  --bs-body-bg: var(--one-bg);
+  --bs-body-color: var(--one-text);
+  --bs-primary: var(--one-brand);
+  --bs-primary-rgb: 47, 111, 207;
+  --bs-border-color: var(--one-border);
+  --bs-secondary-color: var(--one-text-muted);
+  --bs-tertiary-bg: var(--one-surface-muted);
+}
+
+/* --- Tema escuro ----------------------------------------------------------- */
+[data-bs-theme="dark"] {
+  --one-bg:            #0b1420;
+  --one-surface:       #121e2e;
+  --one-surface-muted: #182738;
+  --one-surface-hover: #1f3147;
+  --one-border:        #243546;
+  --one-border-strong: #324a60;
+
+  --one-text:          #e7edf5;
+  --one-text-muted:    #a3b1c2;
+  --one-text-subtle:   #74839a;
+  --one-text-on-brand: #ffffff;
+
+  --one-brand:         var(--one-brand-400);
+  --one-brand-hover:   var(--one-brand-300);
+  --one-brand-soft:    rgba(77, 138, 221, 0.14);
+
+  --one-sidebar-bg:    #0a1322;
+  --one-sidebar-text:  #a9b8cc;
+  --one-sidebar-text-active: #ffffff;
+  --one-sidebar-active-bg: rgba(77, 138, 221, 0.26);
+  --one-sidebar-hover-bg:  #1b2a3a; /* hover escuro coerente (sem rgba branco) */
+  --one-sidebar-border:    #243546; /* = --one-border */
+
+  /* Fundo da nota interna da timeline (escuro). */
+  --one-timeline-interna-bg: rgba(230, 170, 40, 0.12);
+
+  --bs-body-bg: var(--one-bg);
+  --bs-body-color: var(--one-text);
+  --bs-primary: var(--one-brand);
+  --bs-primary-rgb: 77, 138, 221;
+  --bs-border-color: var(--one-border);
+  --bs-secondary-color: var(--one-text-muted);
+  --bs-tertiary-bg: var(--one-surface-muted);
+  --bs-emphasis-color: var(--one-text);
+}
+
+/* Transição suave ao alternar o tema (respeitando redução de movimento). */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .one-sidebar,
+  .one-header,
+  .card,
+  .one-surface {
+    transition: background-color var(--one-transition-base),
+      border-color var(--one-transition-base),
+      color var(--one-transition-base);
+  }
+}

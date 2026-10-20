@@ -1,0 +1,142 @@
+/* ==========================================================================
+   One — Estilos globais
+   Base tipográfica, reset leve e utilitários de acessibilidade.
+   ========================================================================== */
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--one-font-sans);
+  font-size: var(--one-fs-base);
+  line-height: var(--one-lh-base);
+  color: var(--one-text);
+  background-color: var(--one-bg);
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--one-fw-semibold);
+  line-height: var(--one-lh-tight);
+  color: var(--one-text);
+}
+
+h1 { font-size: var(--one-fs-2xl); }
+h2 { font-size: var(--one-fs-xl); }
+h3 { font-size: var(--one-fs-lg); }
+h4 { font-size: var(--one-fs-md); }
+
+a {
+  color: var(--one-brand);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--one-brand-hover);
+  text-decoration: underline;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--one-font-mono);
+}
+
+.text-muted-one { color: var(--one-text-muted) !important; }
+.text-subtle-one { color: var(--one-text-subtle) !important; }
+
+/* --- Foco visível (acessibilidade / WCAG 2.4.7) --------------------------- */
+:focus-visible {
+  outline: 3px solid var(--one-brand-400);
+  outline-offset: 2px;
+  border-radius: var(--one-radius-sm);
+}
+/* Remove o outline apenas quando não há foco por teclado. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* --- Skip link (acessibilidade / navegação por teclado) ------------------- */
+.one-skip-link {
+  position: absolute;
+  left: var(--one-space-2);
+  top: -4rem;
+  z-index: var(--one-z-overlay);
+  padding: var(--one-space-2) var(--one-space-4);
+  background: var(--one-brand);
+  color: var(--one-text-on-brand);
+  border-radius: var(--one-radius-md);
+  transition: top var(--one-transition-fast);
+}
+.one-skip-link:focus {
+  top: var(--one-space-2);
+  color: var(--one-text-on-brand);
+  text-decoration: none;
+}
+
+/* --- Conteúdo visível apenas para leitores de tela ------------------------ */
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+/* --- Barra de rolagem discreta -------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--one-border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--one-border-strong);
+  border-radius: var(--one-radius-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* --- Respeito a prefers-reduced-motion ------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Marca One ------------------------------------------------------------ */
+.one-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--one-space-2);
+  font-weight: var(--one-fw-bold);
+  font-size: var(--one-fs-lg);
+  letter-spacing: -0.01em;
+}
+.one-logo__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--one-radius-md);
+  background: linear-gradient(135deg, var(--one-brand-400), var(--one-brand-600));
+  color: #fff;
+  font-weight: var(--one-fw-bold);
+  flex: 0 0 auto;
+}
+
+/* Rótulo "demonstrativo" reutilizável (deixa claro que são dados fictícios). */
+.one-demo-badge {
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-medium);
+  color: var(--one-warning);
+  border: 1px solid var(--one-warning);
+  border-radius: var(--one-radius-pill);
+  padding: 0.1rem 0.6rem;
+  background: transparent;
+}

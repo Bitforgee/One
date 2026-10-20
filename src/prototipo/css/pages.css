@@ -1,0 +1,322 @@
+/* ==========================================================================
+   One — Estilos das páginas (Fase 2)
+   Landing, login, atalhos de painel, bolhas de chat (ilustração) e páginas de
+   erro. Reutiliza os tokens --one-* e as superfícies dos temas.
+   ========================================================================== */
+
+/* ===== Landing ============================================================ */
+.one-landing {
+  min-height: 100vh;
+  background: var(--one-bg);
+  color: var(--one-text);
+}
+.one-landing__nav {
+  background: var(--one-surface);
+  border-bottom: 1px solid var(--one-border);
+  padding-block: var(--one-space-3);
+}
+.one-landing__nav .nav-link {
+  color: var(--one-text-muted);
+  font-weight: var(--one-fw-medium);
+  border-radius: var(--one-radius-md);
+  padding-inline: var(--one-space-3);
+}
+.one-landing__nav .nav-link:hover { color: var(--one-text); }
+
+.one-landing__hero {
+  padding: var(--one-space-8) 0 var(--one-space-7);
+  background:
+    radial-gradient(900px 300px at 85% -20%, var(--one-brand-soft), transparent 70%),
+    var(--one-bg);
+}
+.one-landing__title {
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3rem);
+  font-weight: var(--one-fw-bold);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--one-space-4);
+}
+.one-landing__lead {
+  font-size: var(--one-fs-md);
+  color: var(--one-text-muted);
+  max-width: 46ch;
+}
+.one-landing__preview {
+  box-shadow: var(--one-shadow-lg);
+}
+
+.one-landing__section { padding: var(--one-space-7) 0; }
+.one-landing__section--muted { background: var(--one-surface-muted); }
+.one-landing__section-title {
+  font-size: var(--one-fs-xl);
+  font-weight: var(--one-fw-bold);
+  margin-bottom: var(--one-space-1);
+}
+.one-landing__benefit-icon {
+  width: 3rem; height: 3rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--one-radius-md);
+  background: var(--one-brand-soft);
+  color: var(--one-brand);
+  font-size: 1.5rem;
+}
+.one-landing__step {
+  display: flex; gap: var(--one-space-3); align-items: flex-start;
+  padding: var(--one-space-4);
+  background: var(--one-surface);
+  border: 1px solid var(--one-border);
+  border-radius: var(--one-radius-lg);
+  height: 100%;
+}
+.one-landing__step-num {
+  flex: 0 0 auto;
+  width: 2rem; height: 2rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--one-radius-pill);
+  background: var(--one-brand); color: #fff;
+  font-weight: var(--one-fw-bold);
+}
+.one-landing__cta { box-shadow: var(--one-shadow-md); }
+.one-landing__footer {
+  padding: var(--one-space-5) 0;
+  border-top: 1px solid var(--one-border);
+  background: var(--one-surface);
+}
+
+/* ===== Bolhas de chat (ilustração do hero) ================================ */
+.one-chat-bubble {
+  padding: var(--one-space-3);
+  border-radius: var(--one-radius-md);
+  margin-bottom: var(--one-space-2);
+  max-width: 90%;
+}
+.one-chat-bubble__who {
+  display: block;
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-semibold);
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+.one-chat-bubble--user {
+  background: var(--one-brand); color: #fff;
+  margin-left: auto;
+}
+.one-chat-bubble--system {
+  background: var(--one-surface-muted);
+  border: 1px solid var(--one-border);
+}
+
+/* ===== Login ============================================================== */
+.one-login {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--one-space-5);
+  background:
+    radial-gradient(700px 360px at 12% 0%, var(--one-brand-soft), transparent 65%),
+    var(--one-bg);
+}
+.one-login__panel {
+  width: 100%; max-width: 900px;
+  background: var(--one-surface);
+  border: 1px solid var(--one-border);
+  border-radius: var(--one-radius-lg);
+  box-shadow: var(--one-shadow-lg);
+  padding: var(--one-space-6);
+}
+.one-login__card {
+  border: 1px solid var(--one-border);
+  cursor: pointer;
+  transition: transform var(--one-transition-fast),
+    border-color var(--one-transition-fast),
+    box-shadow var(--one-transition-fast);
+}
+.one-login__card:hover {
+  transform: translateY(-3px);
+  border-color: var(--one-brand);
+  box-shadow: var(--one-shadow-md);
+}
+.one-login__icon {
+  width: 3rem; height: 3rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--one-radius-md);
+  background: var(--one-brand-soft);
+  color: var(--one-brand);
+  font-size: 1.5rem;
+}
+.one-login__card--atendente .one-login__icon { background: rgba(21,154,137,0.12); color: var(--one-accent-600); }
+.one-login__card--admin .one-login__icon { background: rgba(14,34,64,0.1); color: var(--one-brand-800); }
+.one-login__notice {
+  font-size: var(--one-fs-sm);
+  color: var(--one-text-muted);
+  background: var(--one-surface-muted);
+  border: 1px solid var(--one-border);
+  border-radius: var(--one-radius-md);
+  padding: var(--one-space-3);
+}
+
+/* ===== Atalhos de painel ================================================== */
+.one-shortcut {
+  border: 1px solid var(--one-border);
+  cursor: pointer;
+  transition: transform var(--one-transition-fast),
+    border-color var(--one-transition-fast),
+    box-shadow var(--one-transition-fast);
+}
+.one-shortcut:hover {
+  transform: translateY(-2px);
+  border-color: var(--one-brand);
+  box-shadow: var(--one-shadow-sm);
+}
+.one-shortcut__icon {
+  width: 2.5rem; height: 2.5rem; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--one-radius-md);
+  background: var(--one-brand-soft);
+  color: var(--one-brand);
+  font-size: 1.25rem;
+}
+
+/* ===== Páginas de erro ==================================================== */
+.one-error {
+  max-width: 480px;
+  margin: var(--one-space-8) auto;
+  text-align: center;
+  padding: var(--one-space-5);
+}
+.one-error__icon {
+  width: 4.5rem; height: 4.5rem; margin: 0 auto var(--one-space-3);
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--one-radius-pill);
+  background: var(--one-surface-muted);
+  color: var(--one-text-subtle);
+  font-size: 2rem;
+}
+.one-error__code {
+  font-size: var(--one-fs-2xl);
+  font-weight: var(--one-fw-bold);
+  color: var(--one-brand);
+  margin: 0;
+  line-height: 1;
+}
+.one-error__title { margin: var(--one-space-2) 0; }
+.one-error__message { color: var(--one-text-muted); }
+
+/* Erro em tela cheia (quando não há sessão). */
+.one-error-fullscreen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--one-bg);
+}
+
+/* ===== Base de conhecimento (Fase 3) ===================================== */
+.one-kb-card { transition: border-color var(--one-transition-fast), box-shadow var(--one-transition-fast); }
+.one-kb-card:hover { border-color: var(--one-brand); box-shadow: var(--one-shadow-sm); }
+.one-kb-content p { white-space: pre-wrap; }
+
+/* ===== Timeline do histórico do chamado (padrão GLPI "followups") ======== */
+.one-timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.one-timeline__item {
+  position: relative;
+  padding: .6rem .75rem .6rem 2rem;
+  border-left: 2px solid var(--one-border);
+  margin-left: .5rem;
+  border-radius: var(--one-radius-sm);
+}
+.one-timeline__item + .one-timeline__item { margin-top: var(--one-space-2); }
+.one-timeline__item::before {
+  content: "";
+  position: absolute;
+  left: -6px; top: 1rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--one-text-subtle);
+}
+.one-timeline__item--publica { background: var(--one-surface); }
+.one-timeline__item--publica::before { background: var(--one-brand); }
+.one-timeline__item--interna {
+  background: var(--one-timeline-interna-bg);
+  border-left-color: var(--one-warning);
+}
+.one-timeline__item--interna::before { background: var(--one-warning); }
+.one-timeline__item--evento { color: var(--one-text-muted); }
+.one-timeline__item--evento::before { background: var(--one-text-subtle); }
+.one-timeline__head { font-size: var(--one-fs-sm); }
+.one-timeline__body { font-size: var(--one-fs-sm); white-space: pre-wrap; }
+
+/* ===== Assistente / Chat (Fase 3) ======================================== */
+.one-chat { overflow: hidden; }
+.one-chat__window {
+  min-height: 320px;
+  max-height: 56vh;
+  overflow-y: auto;
+  padding: var(--one-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--one-space-3);
+  background: var(--one-bg);
+}
+.one-chat__input {
+  padding: var(--one-space-3) var(--one-space-4);
+  border-top: 1px solid var(--one-border);
+  background: var(--one-surface);
+}
+
+/* Mensagens */
+.one-msg { display: flex; }
+.one-msg--aluno { justify-content: flex-end; }
+.one-msg--assistente,
+.one-msg--sistema { justify-content: flex-start; }
+
+.one-msg__bubble {
+  max-width: 72%;
+  padding: var(--one-space-3);
+  border-radius: var(--one-radius-md);
+  font-size: var(--one-fs-sm);
+  line-height: 1.45;
+}
+.one-msg--aluno .one-msg__bubble {
+  background: var(--one-brand);
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+.one-msg--assistente .one-msg__bubble {
+  background: var(--one-surface-muted);
+  border: 1px solid var(--one-border);
+  border-bottom-left-radius: 2px;
+}
+.one-msg--sistema .one-msg__bubble {
+  background: transparent;
+  border: 1px dashed var(--one-border-strong);
+  color: var(--one-text-muted);
+}
+.one-msg__who {
+  display: block;
+  font-size: var(--one-fs-xs);
+  font-weight: var(--one-fw-semibold);
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+.one-msg__ref {
+  font-size: var(--one-fs-xs);
+  color: var(--one-text-muted);
+  border-top: 1px solid var(--one-border);
+  padding-top: var(--one-space-2);
+}
+.one-msg__actions { padding: 2px 0; }
+
+/* Indicador de digitação (apenas visual) */
+.one-typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+.one-typing span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--one-text-subtle);
+  animation: one-typing 1s infinite ease-in-out;
+}
+.one-typing span:nth-child(2) { animation-delay: .15s; }
+.one-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes one-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: .4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .one-typing span { animation: none; }
+}
