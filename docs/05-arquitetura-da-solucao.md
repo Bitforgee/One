@@ -4,7 +4,7 @@ Este capítulo mostra como o One é estruturado: a situação atual e a proposta
 
 ## Arquitetura atual e proposta
 
-Hoje não existe um sistema de atendimento. Os alunos falam com a coordenação pelo WhatsApp, por e-mail e pelo AVA, e nada disso fica registrado. Não há triagem dos pedidos nem dados sobre o que os alunos mais perguntam. Na semana anterior à segunda entrevista, foram cerca de 256 mensagens: 171 pelo WhatsApp, 70 por e-mail e 15 pelo AVA. A coordenadora atende uma demanda do começo ao fim, e as outras esperam. O que mais toma tempo é encontrar os dados do aluno, como curso e semestre.
+Hoje não existe um sistema de atendimento. Os alunos falam com a coordenação pelo WhatsApp, por e-mail e pelo AVA, e nada disso fica registrado. Não há triagem dos pedidos nem dados sobre o que os alunos mais perguntam. Na semana anterior à segunda entrevista, foram cerca de 256 mensagens: 171 pelo WhatsApp, 70 por e-mail e 15 pelo AVA. A coordenadora atende uma demanda do começo ao fim, e as outras esperam. O que mais toma tempo é encontrar os dados do aluno, como curso e semestre. A Figura 1.1, no capítulo de contexto, mostra esse processo atual.
 
 A arquitetura proposta coloca o One entre o aluno e os setores. O aluno faz a pergunta em uma aplicação web progressiva, e o assistente procura a resposta nos artigos publicados pela instituição. Se a resposta não resolver, a conversa vira um chamado registrado, que segue para o setor responsável já com a transcrição, o curso e o semestre do aluno. O atendente trata o chamado no mesmo sistema. Cada passo fica no histórico com autor, data e hora, e o administrador acompanha os indicadores.
 

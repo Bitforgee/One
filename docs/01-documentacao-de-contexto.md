@@ -46,6 +46,14 @@ A coordenadora divide cerca de 40 horas semanais entre aulas, coordenação dos 
 
 O que mais toma tempo é encontrar os dados do aluno, como curso e semestre. Isso atrasa até perguntas simples, como "qual é o meu e-mail institucional".
 
+A Figura 1.1 resume o processo atual de atendimento, com uma raia para o aluno e outra para a coordenação. A mensagem chega por um dos três canais e não fica registrada. A coordenação atende uma demanda por vez e procura os dados do aluno. Quando a demanda é de outro setor, o aluno é redirecionado e conta a história de novo.
+
+Figura 1.1 — Processo atual de atendimento
+
+![Diagrama de atividades do processo atual de atendimento, com as raias Aluno e Coordenação](figuras/processo-atual.png)
+
+Fonte: elaborado pelos autores com base na entrevista com a coordenação (2026).
+
 As demandas mais citadas foram o boleto do semestre e o atestado de escolaridade. O próprio aluno já consegue resolver as duas no Portal do Aluno. O serviço existe; o aluno é que não sabe onde encontrá-lo.
 
 Ainda faltam dados. A coordenadora não disse quanto tempo o aluno espera pela primeira resposta, só quanto dura cada atendimento. A unidade das horas de atendimento e o volume de cada tipo de demanda também estão a confirmar.

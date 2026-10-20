@@ -1,0 +1,29 @@
+@startuml processo-atual
+skinparam shadowing false
+
+|Aluno|
+start
+:Enviar a mensagem pelo WhatsApp, por e-mail ou pelo AVA;
+note right
+  Em 7 dias: 171 mensagens pelo WhatsApp,
+  70 por e-mail e 15 pelo AVA
+end note
+|Coordenação|
+:Receber a mensagem no canal em que ela chegou;
+note right
+  Nada fica registrado
+  e não há triagem
+end note
+:Atender uma demanda por vez, enquanto as outras esperam;
+:Procurar os dados do aluno (curso e semestre);
+if (A demanda é da coordenação?) then ([não])
+  :Redirecionar o aluno a outro setor;
+  |Aluno|
+  :Contar a história de novo ao outro setor;
+  stop
+else ([sim])
+  |Coordenação|
+  :Responder pelo mesmo canal;
+  stop
+endif
+@enduml
