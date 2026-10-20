@@ -28,7 +28,7 @@ Fonte: elaborado pelos autores (2026).
 
 **Autenticação (proposta).** A autenticação usa o ASP.NET Core Identity, com as senhas armazenadas como *hash* (RNF-15). Só o administrador cria contas, sem autocadastro (RNF-12), e o usuário inativado não acessa o sistema (RNF-14).
 
-**Banco de dados.** O PostgreSQL guarda os usuários, os setores, as categorias, os artigos e suas versões, as conversas, os chamados, as mensagens, os anexos e os eventos do histórico, conforme o modelo lógico (Figura 5.6). A aplicação não oferece nenhum meio de alterar ou apagar chamados, mensagens e eventos do histórico (RNF-06). O banco guarda o nome, o tipo e o tamanho de cada anexo; o local de armazenamento dos arquivos: [a preencher pelo grupo].
+**Banco de dados.** O PostgreSQL guarda os usuários, os setores, as categorias, os artigos e suas versões, as conversas, os chamados, as mensagens, os anexos e os eventos do histórico, conforme o modelo lógico (Figura 5.7). A aplicação não oferece nenhum meio de alterar ou apagar chamados, mensagens e eventos do histórico (RNF-06). O banco guarda o nome, o tipo e o tamanho de cada anexo; o local de armazenamento dos arquivos: [a preencher pelo grupo].
 
 **Provedor de IA.** A API envia ao provedor a pergunta do aluno junto com artigos publicados, que são a única base permitida para a resposta (RF-02). Os anexos nunca são enviados ao provedor, e o aluno vê um aviso sobre esse uso antes da primeira mensagem (RNF-03). Provedor escolhido: [a preencher pelo grupo].
 
@@ -58,11 +58,19 @@ Figura 5.3 — Diagrama de sequência de Abrir chamado
 
 Fonte: elaborado pelos autores (2026).
 
+A Figura 5.4 junta os casos de uso Atender chamado (UC-06) e Resolver chamado (UC-07). A API só devolve os chamados dos setores do atendente (RNF-13). Ao assumir, o atendente passa a ser o responsável, e o chamado vai para Em atendimento (F2). Cada resposta pública e a resolução geram um e-mail ao aluno; a nota interna (fluxo A2) fica só no histórico e não gera e-mail (RF-22).
+
+Figura 5.4 — Diagrama de sequência de Atender e Resolver chamado
+
+![Diagrama de sequência dos casos de uso Atender chamado e Resolver chamado](figuras/sequencia-atendimento.png)
+
+Fonte: elaborado pelos autores (2026).
+
 ## Diagrama de classes
 
-A Figura 5.4 mostra as classes do domínio, com seus atributos e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
+A Figura 5.5 mostra as classes do domínio, com seus atributos e associações. A classe VinculoCurso guarda o semestre do aluno em cada curso (premissa Q19), e a classe MensagemConversa aponta para a versão do artigo que foi exibida, o que preserva o histórico mesmo quando o artigo é editado depois (RF-06). Os tipos enumerados usados nos atributos estão no Quadro 5.1.
 
-Figura 5.4 — Diagrama de classes
+Figura 5.5 — Diagrama de classes
 
 ![Diagrama de classes](figuras/classes.png)
 
@@ -86,9 +94,9 @@ Fonte: elaborado pelos autores (2026).
 
 ## Modelo conceitual
 
-A Figura 5.5 traz o modelo conceitual de dados, na notação de entidades e relacionamentos, com a cardinalidade no formato (mínimo, máximo) e o identificador de cada entidade marcado pelo círculo preenchido. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.4) e no modelo lógico (Figura 5.6).
+A Figura 5.6 traz o modelo conceitual de dados, na notação de entidades e relacionamentos, com a cardinalidade no formato (mínimo, máximo) e o identificador de cada entidade marcado pelo círculo preenchido. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.5) e no modelo lógico (Figura 5.7).
 
-Figura 5.5 — Modelo conceitual de dados
+Figura 5.6 — Modelo conceitual de dados
 
 ![Modelo conceitual de dados](figuras/modelo-conceitual.png)
 
@@ -96,9 +104,9 @@ Fonte: elaborado pelos autores (2026).
 
 ## Modelo lógico
 
-A Figura 5.6 mostra o modelo lógico para o banco de dados PostgreSQL, com as chaves primárias (PK), estrangeiras (FK) e únicas (UK). Os relacionamentos muitos-para-muitos do modelo conceitual viraram as tabelas `aluno_curso` e `atendente_setor`, e os perfis do usuário ficam na tabela `usuario_papel`. Algumas regras dos requisitos ficam garantidas pelo próprio banco. O número do chamado é único e gerado por sequência (RF-10). A chave única em `chamado.conversa_id` impede que uma conversa tenha mais de um chamado (RF-07). Um índice único parcial sobre `setor.triagem` impede que exista mais de um setor de triagem (RF-13).
+A Figura 5.7 mostra o modelo lógico para o banco de dados PostgreSQL, com as chaves primárias (PK), estrangeiras (FK) e únicas (UK). Os relacionamentos muitos-para-muitos do modelo conceitual viraram as tabelas `aluno_curso` e `atendente_setor`, e os perfis do usuário ficam na tabela `usuario_papel`. Algumas regras dos requisitos ficam garantidas pelo próprio banco. O número do chamado é único e gerado por sequência (RF-10). A chave única em `chamado.conversa_id` impede que uma conversa tenha mais de um chamado (RF-07). Um índice único parcial sobre `setor.triagem` impede que exista mais de um setor de triagem (RF-13).
 
-Figura 5.6 — Modelo lógico de dados
+Figura 5.7 — Modelo lógico de dados
 
 ![Modelo lógico de dados](figuras/modelo-logico.png)
 

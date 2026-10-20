@@ -1,0 +1,34 @@
+@startuml sequencia-atendimento
+skinparam shadowing false
+autonumber
+
+actor Atendente
+participant "Front-end SPA/PWA" as Front
+participant "API REST" as Api
+database PostgreSQL as Banco
+participant "Serviço de e-mail" as Email
+
+Atendente -> Front : abre a fila dos seus setores
+Front -> Api : pede a fila (HTTPS/JSON)
+Api -> Banco : lê os chamados dos setores do atendente (RNF-13)
+Api --> Front : fila
+Atendente -> Front : assume o chamado
+Front -> Api : assumir
+Api -> Banco : define o responsável e muda de Aberto para Em atendimento (F2)
+Api -> Banco : registra a ação no histórico (RF-23)
+Front -> Atendente : mostra a transcrição, o curso, o semestre e os artigos exibidos
+alt resposta pública
+  Atendente -> Front : escreve a resposta, com anexo opcional
+  Front -> Api : envia a resposta
+  Api -> Banco : registra a resposta no histórico
+  Api -> Email : e-mail ao aluno (RF-22)
+else nota interna (A2)
+  Atendente -> Front : escreve a nota interna
+  Front -> Api : envia a nota
+  Api -> Banco : registra a nota, que o aluno não vê
+end
+Atendente -> Front : resolve, com o texto da resolução (UC-07)
+Front -> Api : resolver
+Api -> Banco : muda para Resolvido e registra no histórico (F5)
+Api -> Email : e-mail ao aluno (RF-22)
+@enduml
