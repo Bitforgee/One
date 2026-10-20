@@ -8,6 +8,16 @@ skinparam usecase {
   BorderColor #333333
 }
 
+legend top
+  Status dos casos de uso
+  |= Cor |= Status |
+  |<#FFFFFF>| Proposto |
+  |<#FFF59D>| Priorizado |
+  |<#90CAF9>| Em desenvolvimento |
+  |<#A5D6A7>| Desenvolvido |
+  |<#EF9A9A>| Cancelado |
+endlegend
+
 actor Aluno
 actor Atendente
 actor Administrador
@@ -16,26 +26,26 @@ actor "Serviço de e-mail" as Email <<externo>>
 actor Agendador <<sistema>>
 
 rectangle "Univag One" {
-  package "Atendimento ao aluno" {
+  package "Atendimento ao aluno" #F5F5F5 {
     usecase "UC-01\nConversar com o assistente" as UC01
     usecase "UC-02\nAbrir chamado" as UC02
     usecase "UC-03\nAcompanhar chamado" as UC03
     usecase "UC-04\nCancelar chamado" as UC04
     usecase "UC-05\nAvaliar resolução" as UC05
   }
-  package "Atendimento pelos setores" {
+  package "Atendimento pelos setores" #F5F5F5 {
     usecase "UC-06\nAtender chamado" as UC06
     usecase "UC-07\nResolver chamado" as UC07
     usecase "UC-08\nEncaminhar chamado" as UC08
     usecase "UC-09\nReclassificar chamado" as UC09
   }
-  package "Base de conhecimento" {
+  package "Base de conhecimento" #F5F5F5 {
     usecase "UC-10\nCadastrar artigo" as UC10
     usecase "UC-11\nEditar artigo" as UC11
     usecase "UC-12\nPublicar artigo" as UC12
     usecase "UC-13\nArquivar artigo" as UC13
   }
-  package "Administração" {
+  package "Administração" #F5F5F5 {
     usecase "UC-14\nCadastrar usuário" as UC14
     usecase "UC-15\nImportar usuários" as UC15
     usecase "UC-16\nInativar usuário" as UC16
@@ -44,7 +54,7 @@ rectangle "Univag One" {
     usecase "UC-19\nDefinir regra de roteamento" as UC19
     usecase "UC-20\nConsultar indicadores" as UC20
   }
-  package "Rotinas automáticas" {
+  package "Rotinas automáticas" #F5F5F5 {
     usecase "UC-21\nEncerrar conversa inativa" as UC21
     usecase "UC-22\nFechar chamado sem confirmação" as UC22
   }
@@ -79,14 +89,4 @@ Administrador -- UC20
 
 Agendador -- UC21
 Agendador -- UC22
-
-legend right
-  Status dos casos de uso
-  |= Cor |= Status |
-  |<#FFFFFF>| Proposto |
-  |<#FFF59D>| Priorizado |
-  |<#90CAF9>| Em desenvolvimento |
-  |<#A5D6A7>| Desenvolvido |
-  |<#EF9A9A>| Cancelado |
-endlegend
 @enduml
