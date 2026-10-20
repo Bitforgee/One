@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: Para citar este projeto, use estes metadados.
+title: "Univag One (BitForge)"
+abstract: >-
+  Central de atendimento acadêmico desenvolvida no Projeto Extensionista
+  Integrador IV do Curso Superior de Tecnologia em Análise e Desenvolvimento
+  de Sistemas do UNIVAG, para a coordenação dos cursos de tecnologia.
+authors:
+  - given-names: "Alfredo"
+    family-names: "Pinto de Souza Neto"
+    affiliation: "UNIVAG - Centro Universitário"
+  - given-names: "David"
+    family-names: "El Hage de Oliveira"
+    affiliation: "UNIVAG - Centro Universitário"
+  - given-names: "Gustavo Henrique"
+    family-names: "Rondon Melo"
+    affiliation: "UNIVAG - Centro Universitário"
+  - given-names: "Marco Antônio"
+    family-names: "Rodrigues Menezes"
+    affiliation: "UNIVAG - Centro Universitário"
+  - given-names: "João Henrique"
+    family-names: "Queiroz Mitsuyuki"
+    affiliation: "UNIVAG - Centro Universitário"
+  - given-names: "Walderson Ryutti"
+    family-names: "Shimokawa"
+    name-suffix: "Professor"
+    affiliation: "UNIVAG - Centro Universitário"
+keywords:
+  - atendimento acadêmico
+  - help desk
+  - PWA
+  - React
+  - ASP.NET Core
+version: 0.3.0
+date-released: 2026-10-20
