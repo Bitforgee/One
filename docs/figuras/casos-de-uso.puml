@@ -1,0 +1,92 @@
+@startuml casos-de-uso
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+
+actor Aluno
+actor Atendente
+actor Administrador
+actor "Provedor de IA" as IA <<externo>>
+actor "Serviço de e-mail" as Email <<externo>>
+actor Agendador <<sistema>>
+
+rectangle "Univag One" {
+  package "Atendimento ao aluno" {
+    usecase "UC-01\nConversar com o assistente" as UC01
+    usecase "UC-02\nAbrir chamado" as UC02
+    usecase "UC-03\nAcompanhar chamado" as UC03
+    usecase "UC-04\nCancelar chamado" as UC04
+    usecase "UC-05\nAvaliar resolução" as UC05
+  }
+  package "Atendimento pelos setores" {
+    usecase "UC-06\nAtender chamado" as UC06
+    usecase "UC-07\nResolver chamado" as UC07
+    usecase "UC-08\nEncaminhar chamado" as UC08
+    usecase "UC-09\nReclassificar chamado" as UC09
+  }
+  package "Base de conhecimento" {
+    usecase "UC-10\nCadastrar artigo" as UC10
+    usecase "UC-11\nEditar artigo" as UC11
+    usecase "UC-12\nPublicar artigo" as UC12
+    usecase "UC-13\nArquivar artigo" as UC13
+  }
+  package "Administração" {
+    usecase "UC-14\nCadastrar usuário" as UC14
+    usecase "UC-15\nImportar usuários" as UC15
+    usecase "UC-16\nInativar usuário" as UC16
+    usecase "UC-17\nCadastrar setor" as UC17
+    usecase "UC-18\nCadastrar categoria" as UC18
+    usecase "UC-19\nDefinir regra de roteamento" as UC19
+    usecase "UC-20\nConsultar indicadores" as UC20
+  }
+  package "Rotinas automáticas" {
+    usecase "UC-21\nEncerrar conversa inativa" as UC21
+    usecase "UC-22\nFechar chamado sem confirmação" as UC22
+  }
+}
+
+Aluno -- UC01
+Aluno -- UC02
+Aluno -- UC03
+Aluno -- UC04
+Aluno -- UC05
+UC02 .> UC01 : <<extend>>
+UC01 -- IA
+
+Atendente -- UC06
+Atendente -- UC07
+Atendente -- UC08
+Atendente -- UC09
+UC06 -- Email
+UC07 -- Email
+
+Administrador -- UC10
+Administrador -- UC11
+Administrador -- UC12
+Administrador -- UC13
+Administrador -- UC14
+Administrador -- UC15
+Administrador -- UC16
+Administrador -- UC17
+Administrador -- UC18
+Administrador -- UC19
+Administrador -- UC20
+
+Agendador -- UC21
+Agendador -- UC22
+
+legend right
+  Status dos casos de uso
+  |= Cor |= Status |
+  |<#FFFFFF>| Proposto |
+  |<#FFF59D>| Priorizado |
+  |<#90CAF9>| Em desenvolvimento |
+  |<#A5D6A7>| Desenvolvido |
+  |<#EF9A9A>| Cancelado |
+endlegend
+@enduml

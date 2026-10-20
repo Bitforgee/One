@@ -1,0 +1,25 @@
+@startuml arquitetura
+!pragma layout smetana
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+actor "Aluno, Atendente\ne Administrador" as Usuario
+
+node "Navegador (celular ou computador)" {
+  component "Front-end SPA/PWA\nReact + Vite + vite-plugin-pwa\nmanifesto e service worker" as Frontend
+}
+
+node "Servidor de aplicação" {
+  component "API REST\nASP.NET Core Web API (.NET 10)\nASP.NET Core Identity" as Api
+}
+
+database "PostgreSQL" as Banco
+cloud "Provedor de IA\n(externo)" as IA
+cloud "Serviço de e-mail\n(externo)" as Email
+
+Usuario --> Frontend : usa
+Frontend --> Api : HTTPS / JSON
+Api --> Banco : SQL
+Api --> IA : pergunta + artigos publicados
+Api --> Email : notificações ao aluno
+@enduml

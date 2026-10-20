@@ -1,0 +1,5 @@
+@One.Api_HostAddress = http://localhost:5221
+
+GET {{One.Api_HostAddress}}/health
+
+###
