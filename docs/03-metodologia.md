@@ -98,7 +98,7 @@ A especificação vem antes da implementação. Na Fase 3, a ordem prevista é:
 3. Dividir o trabalho em tarefas pequenas e verificáveis (`tasks.md`).
 4. Implementar os módulos na ordem da fatia vertical.
 
-Neste repositório, as especificações e as decisões técnicas ficam na pasta `.specs/`.
+As especificações técnicas e o registro de decisões são mantidos pelo grupo fora deste repositório.
 
 O acompanhamento segue as exigências do PEI IV: um relatório semanal no AVA, no modelo do Apêndice G, e ao menos um integrante em cada aula. As atas de reunião ficam em `docs/acompanhamento/atas/`.
 
