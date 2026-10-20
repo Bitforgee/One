@@ -1,19 +1,26 @@
 @startuml arquitetura
-!pragma layout smetana
 skinparam shadowing false
 skinparam componentStyle rectangle
+left to right direction
 
 actor "Aluno, Atendente\ne Administrador" as Usuario
 
-node "Navegador (celular ou computador)" {
-  component "Front-end SPA/PWA\nReact + Vite + vite-plugin-pwa\nmanifesto e service worker" as Frontend
+package "Camada de apresentação" #F5F5F5 {
+  node "Navegador (celular ou computador)" {
+    component "Front-end SPA/PWA\nReact + Vite + vite-plugin-pwa\nmanifesto e service worker" as Frontend
+  }
 }
 
-node "Servidor de aplicação" {
-  component "API REST\nASP.NET Core Web API (.NET 10)\nASP.NET Core Identity" as Api
+package "Camada de aplicação" #F5F5F5 {
+  node "Servidor de aplicação" {
+    component "API REST\nASP.NET Core Web API (.NET 10)\nASP.NET Core Identity" as Api
+  }
 }
 
-database "PostgreSQL" as Banco
+package "Camada de dados" #F5F5F5 {
+  database "PostgreSQL" as Banco
+}
+
 cloud "Provedor de IA\n(externo)" as IA
 cloud "Serviço de e-mail\n(externo)" as Email
 

@@ -12,11 +12,11 @@ A diferença é que hoje não há software no caminho: a mensagem vai de uma pes
 
 ## Visão geral da arquitetura
 
-A Figura 5.1 mostra a arquitetura proposta. Ela tem três camadas: o front-end, que roda no navegador; a API REST, que roda no servidor; e o banco de dados. A API também se comunica com dois serviços externos, o provedor de IA e o serviço de e-mail. A fonte editável da figura está em `figuras/arquitetura.puml` (PlantUML).
+A Figura 5.1 mostra a arquitetura proposta. Ela tem três camadas, da esquerda para a direita: a camada de apresentação, com o front-end que roda no navegador; a camada de aplicação, com a API REST que roda no servidor; e a camada de dados, com o banco PostgreSQL. A API também se comunica com dois serviços externos, o provedor de IA e o serviço de e-mail. Cada seta mostra quem chama quem e o que passa pela ligação. A fonte editável da figura está em `figuras/arquitetura.puml` (PlantUML).
 
-Figura 5.1 — Arquitetura da solução
+Figura 5.1 — Arquitetura proposta
 
-![Arquitetura da solução](figuras/arquitetura.png)
+![Arquitetura proposta em três camadas, com o provedor de IA e o serviço de e-mail como serviços externos](figuras/arquitetura.png)
 
 Fonte: elaborado pelos autores (2026).
 
