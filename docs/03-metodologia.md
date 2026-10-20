@@ -115,7 +115,7 @@ Quadro 3.4 — Ferramentas
 | GitHub | Hospedagem dos repositórios, pull requests e revisão de código. |
 | GitHub Actions e GitHub Pages | O workflow `deploy-pages.yml` do repositório `prototipo-v1-one` publica a pasta `prototipo-visual/` no GitHub Pages a cada push na `main` que altere o protótipo. |
 | Kiro IDE e VS Code | O projeto é desenvolvido no Kiro IDE, com recursos ECC. O VS Code é a alternativa compatível. |
-| draw.io, Mermaid e PlantUML | Diagramas. O arquivo-fonte fica ao lado da imagem exportada. |
+| PlantUML | Diagramas. O arquivo-fonte (`.puml`) fica ao lado da imagem gerada, e cada imagem guarda uma cópia da sua fonte. |
 | AVA | Entregas do PEI IV e relatórios semanais. |
 | Node.js e Google Chrome | Servidor estático e suítes de teste do protótipo. Os testes usam só a biblioteca padrão do Node e o Chrome instalado, sem dependências externas. |
 | SDK do .NET 10 | Execução e testes da API em ASP.NET Core. |

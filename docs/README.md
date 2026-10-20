@@ -25,13 +25,13 @@ Documentação do Projeto Extensionista Integrador IV, organizada como o templat
 
 | Pasta | O que guarda |
 | --- | --- |
-| `figuras/` | Diagramas, com a fonte editável (`.puml`, `.drawio`, `.mmd`) ao lado do PNG, e telas do protótipo em `figuras/telas/` |
+| `figuras/` | Diagramas, com a fonte editável em PlantUML (`.puml`) ao lado do PNG, e telas do protótipo em `figuras/telas/` |
 | `pesquisas/` | Visão do produto, pesquisa de mercado, refinamento do nome, roteiro da entrevista e *roadmap*, copiados sem alteração do repositório do protótipo |
 | `acompanhamento/` | [Feedback do cliente](acompanhamento/feedback-cliente.md), atas (`atas/`, modelo em `modelo-ata.md`) e relatórios semanais (`relatorios-semanais/`); cópias nomeadas `AAAA-MM-DD.md` |
 | `relatorios-periodicos/` | Relatórios periódicos enviados pelo AVA |
 | `requisitos-abnt-v1/` | [Documento de requisitos em ABNT, versão 1](requisitos-abnt-v1/README.md) (02/10/2026), em `.docx` e `.pdf`, com o gerador; superado por estes capítulos |
 
-Os diagramas PlantUML são gerados com `java -jar plantuml.jar -tpng docs/figuras/<arquivo>.puml`.
+Todos os diagramas são feitos em PlantUML. Para gerar o PNG de um `.puml`, renderize o arquivo em um servidor PlantUML ou rode `java -jar plantuml.jar -tpng docs/figuras/<arquivo>.puml` com o Graphviz instalado. As imagens atuais foram geradas pelo servidor PlantUML 1.2026.9, com Graphviz, e cada PNG guarda uma cópia da fonte de onde saiu.
 
 ## Correspondência com o documento final (Apêndice D.5)
 

@@ -114,7 +114,7 @@ Figura 5.7 — Modelo lógico de dados
 
 Fonte: elaborado pelos autores (2026).
 
-As fontes editáveis dos diagramas ficam ao lado das imagens: `figuras/classes.mmd` (Mermaid), `figuras/modelo-conceitual.drawio` (draw.io) e `figuras/modelo-logico.mmd` (Mermaid).
+As fontes editáveis dos diagramas, em PlantUML, ficam ao lado das imagens: `figuras/classes.puml`, `figuras/modelo-conceitual.puml` e `figuras/modelo-logico.puml`.
 
 ## Tecnologias utilizadas
 
@@ -136,7 +136,7 @@ Quadro 5.2 — Tecnologias utilizadas
 | Banco de dados (planejado) | PostgreSQL | Persistência dos dados do modelo lógico |
 | Serviço externo | Provedor de IA: [a preencher pelo grupo] | Interpretar a pergunta do aluno a partir dos artigos publicados (RNF-03) |
 | Serviço externo | Serviço de e-mail: [a preencher pelo grupo] | Notificar o aluno (RNF-09) |
-| Documentação e diagramas | Markdown, PlantUML, draw.io e Mermaid | Documentos e diagramas, com a fonte de cada figura em `figuras/` |
+| Documentação e diagramas | Markdown e PlantUML | Documentos e diagramas, com a fonte de cada figura em `figuras/` |
 | Versionamento e publicação | Git, GitHub, GitHub Actions e GitHub Pages | Repositórios públicos (RNF-10) e publicação do protótipo |
 | Ambiente de desenvolvimento | Kiro IDE | Desenvolvimento do protótipo visual |
 
