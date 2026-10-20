@@ -94,11 +94,11 @@ Os atributos são privados (-) e as operações são públicas (+). Cada operaç
 
 ## Modelo conceitual
 
-A Figura 5.6 traz o modelo conceitual de dados, na notação de entidades e relacionamentos, com a cardinalidade no formato (mínimo, máximo) e o identificador de cada entidade marcado pelo círculo preenchido. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.5) e no modelo lógico (Figura 5.7).
+A Figura 5.6 traz o modelo conceitual de dados, na notação de Chen: as entidades são retângulos, os relacionamentos são losangos e o atributo identificador de cada entidade aparece sublinhado. A cardinalidade fica no formato (mínimo, máximo), junto da entidade a que se refere. Nele, cada conversa gera no máximo um chamado, cada chamado fica em exatamente um setor e cada artigo tem uma ou mais versões. Para ficar coerente com o diagrama de classes e com o modelo lógico, o modelo também registra quem atualizou cada versão de artigo (ATUALIZA), quem escreveu cada mensagem do chamado (ESCREVE), quem executou cada evento do histórico (EXECUTA) e a categoria com que o chamado foi aberto (ENQUADRA_NA_ABERTURA), que se mantém quando ele é reclassificado. Para manter a figura legível, os demais atributos aparecem no diagrama de classes (Figura 5.5) e no modelo lógico (Figura 5.7).
 
 Figura 5.6 — Modelo conceitual de dados
 
-![Modelo conceitual de dados](figuras/modelo-conceitual.png)
+![Modelo conceitual de dados na notação de Chen](figuras/modelo-conceitual.png)
 
 Fonte: elaborado pelos autores (2026).
 

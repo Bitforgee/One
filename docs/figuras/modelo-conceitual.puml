@@ -1,0 +1,137 @@
+@startchen modelo-conceitual
+skinparam defaultFontSize 16
+skinparam ArrowFontSize 15
+skinparam ranksep 25
+skinparam nodesep 25
+
+entity USUARIO {
+  Id <<key>>
+}
+entity CURSO {
+  Id <<key>>
+}
+entity SETOR {
+  Id <<key>>
+}
+entity CATEGORIA {
+  Id <<key>>
+}
+entity REGRA_ROTEAMENTO {
+  Id <<key>>
+}
+entity ARTIGO {
+  Id <<key>>
+}
+entity VERSAO_ARTIGO {
+  Id <<key>>
+}
+entity CONVERSA {
+  Id <<key>>
+}
+entity MENSAGEM_CONVERSA {
+  Id <<key>>
+}
+entity CHAMADO {
+  Numero <<key>>
+}
+entity MENSAGEM_CHAMADO {
+  Id <<key>>
+}
+entity ANEXO {
+  Id <<key>>
+}
+entity EVENTO_CHAMADO {
+  Id <<key>>
+}
+
+relationship ROTEIA {
+}
+relationship CLASSIFICA {
+}
+relationship VERSIONA {
+}
+relationship DIRECIONA {
+}
+relationship ENQUADRA {
+}
+relationship ENQUADRA_NA_ABERTURA {
+}
+relationship EXIBE {
+}
+relationship HISTORIA {
+}
+relationship REGISTRA {
+}
+relationship ANEXA {
+}
+relationship ESTA_EM {
+}
+relationship GERA {
+}
+relationship CONTEM {
+}
+relationship COORDENA {
+}
+relationship ATUA_EM {
+}
+relationship SOLICITA {
+}
+relationship ASSUME {
+}
+relationship CURSA {
+  Semestre
+}
+relationship INICIA {
+}
+relationship ATUALIZA {
+}
+relationship ESCREVE {
+}
+relationship EXECUTA {
+}
+
+REGRA_ROTEAMENTO -(0,1)- ROTEIA
+ROTEIA -(1,1)- CATEGORIA
+CATEGORIA -(1,1)- CLASSIFICA
+CLASSIFICA -(0,n)- ARTIGO
+ARTIGO -(1,1)- VERSIONA
+VERSIONA -(1,n)- VERSAO_ARTIGO
+REGRA_ROTEAMENTO -(0,n)- DIRECIONA
+DIRECIONA -(0,1)- SETOR
+CATEGORIA -(1,1)- ENQUADRA
+ENQUADRA -(0,n)- CHAMADO
+CATEGORIA -(1,1)- ENQUADRA_NA_ABERTURA
+ENQUADRA_NA_ABERTURA -(0,n)- CHAMADO
+VERSAO_ARTIGO -(0,1)- EXIBE
+EXIBE -(0,n)- MENSAGEM_CONVERSA
+CHAMADO -(1,1)- HISTORIA
+HISTORIA -(0,n)- EVENTO_CHAMADO
+CHAMADO -(1,1)- REGISTRA
+REGISTRA -(0,n)- MENSAGEM_CHAMADO
+MENSAGEM_CHAMADO -(1,1)- ANEXA
+ANEXA -(0,n)- ANEXO
+SETOR -(1,1)- ESTA_EM
+ESTA_EM -(0,n)- CHAMADO
+CHAMADO -(0,1)- GERA
+GERA -(1,1)- CONVERSA
+CONVERSA -(1,1)- CONTEM
+CONTEM -(1,n)- MENSAGEM_CONVERSA
+SETOR -(0,1)- COORDENA
+COORDENA -(0,n)- CURSO
+SETOR -(0,n)- ATUA_EM
+ATUA_EM -(0,n)- USUARIO
+CHAMADO -(0,n)- SOLICITA
+SOLICITA -(1,1)- USUARIO
+CHAMADO -(0,n)- ASSUME
+ASSUME -(0,1)- USUARIO
+CURSO -(0,n)- CURSA
+CURSA -(0,n)- USUARIO
+USUARIO -(1,1)- INICIA
+INICIA -(0,n)- CONVERSA
+USUARIO -(1,1)- ATUALIZA
+ATUALIZA -(0,n)- VERSAO_ARTIGO
+USUARIO -(1,1)- ESCREVE
+ESCREVE -(0,n)- MENSAGEM_CHAMADO
+USUARIO -(1,1)- EXECUTA
+EXECUTA -(0,n)- EVENTO_CHAMADO
+@endchen
