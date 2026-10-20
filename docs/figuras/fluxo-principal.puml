@@ -1,0 +1,58 @@
+@startuml fluxo-principal
+skinparam shadowing false
+
+|Aluno|
+start
+:Abrir o assistente e escrever a dúvida (RF-01);
+|One (sistema)|
+:Procurar um artigo publicado sobre a dúvida (RF-02);
+if (Há artigo publicado?) then ([sim])
+  :Responder com o artigo e a versão usados (RF-06);
+  |Aluno|
+  :Responder se a dúvida foi resolvida (RF-03);
+  |One (sistema)|
+  if (Isso resolveu?) then ([não])
+  else ([sim])
+    :Encerrar a conversa como resolvida (RF-05);
+    stop
+  endif
+else ([não])
+  :Avisar que não encontrou resposta;
+endif
+:Oferecer abrir um chamado (RF-04);
+|Aluno|
+:Aceitar ou recusar o chamado;
+|One (sistema)|
+if (Aluno confirma o chamado?) then ([sim])
+else ([não])
+  :Encerrar a conversa como recusada;
+  stop
+endif
+:Criar o chamado com o contexto da conversa e o protocolo ONE-n (RF-07 a RF-10);
+:Rotear pela categoria ou para o setor de triagem (RF-11, RF-12);
+|Atendente|
+repeat
+  :Ver o chamado na fila do setor;
+backward:Encaminhar ao setor certo, com o motivo (RF-20);
+repeat while (Setor correto?) is ([não]) not ([sim])
+(A)
+:Assumir, responder ao aluno e registrar notas internas (RF-15, RF-18);
+:Resolver o chamado com o texto da resolução;
+|Aluno|
+if (Aluno confirma a resolução?) then ([não])
+  :Rejeitar a resolução, com o motivo (F6);
+  (A)
+  detach
+else ([sim])
+endif
+|One (sistema)|
+:Fechar o chamado e manter cada passo no histórico (RF-16, RF-23);
+note right
+  Se o aluno não responder em 7 dias,
+  o chamado fecha sozinho (UC-22).
+end note
+|Administrador|
+:Acompanhar os indicadores do atendimento (RF-27);
+:Manter a base de conhecimento (RF-25);
+stop
+@enduml
