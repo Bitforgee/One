@@ -12,11 +12,11 @@ A diferença é que hoje não há software no caminho: a mensagem vai de uma pes
 
 ## Visão geral da arquitetura
 
-A Figura 5.1 mostra a arquitetura proposta. Ela tem três camadas, da esquerda para a direita: a camada de apresentação, com o front-end que roda no navegador; a camada de aplicação, com a API REST que roda no servidor; e a camada de dados, com o banco PostgreSQL. A API também se comunica com dois serviços externos, o provedor de IA e o serviço de e-mail. Cada seta mostra quem chama quem e o que passa pela ligação. A fonte editável da figura está em `figuras/arquitetura.puml` (PlantUML).
+A Figura 5.1 mostra a arquitetura proposta. Ela tem três camadas, da esquerda para a direita: a camada de apresentação, com o front-end que roda no navegador; a camada de aplicação, com a API REST que roda no servidor; e a camada de dados, com o banco PostgreSQL. A API também se comunica com dois serviços externos, o provedor de IA e o serviço de e-mail. Cada seta mostra quem chama quem e o que passa pela ligação. A fonte editável da figura está em `src/diagramas/arquitetura.puml` (PlantUML).
 
 Figura 5.1 — Arquitetura proposta
 
-![Arquitetura proposta em três camadas, com o provedor de IA e o serviço de e-mail como serviços externos](figuras/arquitetura.png)
+![Arquitetura proposta em três camadas, com o provedor de IA e o serviço de e-mail como serviços externos](diagramas/arquitetura.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -46,7 +46,7 @@ A Figura 5.2 mostra o caso de uso Conversar com o assistente (UC-01). A API conf
 
 Figura 5.2 — Diagrama de sequência de Conversar com o assistente
 
-![Diagrama de sequência do caso de uso Conversar com o assistente](figuras/sequencia-conversa.png)
+![Diagrama de sequência do caso de uso Conversar com o assistente](diagramas/sequencia-conversa.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -54,7 +54,7 @@ A Figura 5.3 mostra o caso de uso Abrir chamado (UC-02). Depois da confirmação
 
 Figura 5.3 — Diagrama de sequência de Abrir chamado
 
-![Diagrama de sequência do caso de uso Abrir chamado](figuras/sequencia-chamado.png)
+![Diagrama de sequência do caso de uso Abrir chamado](diagramas/sequencia-chamado.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -62,7 +62,7 @@ A Figura 5.4 junta os casos de uso Atender chamado (UC-06) e Resolver chamado (U
 
 Figura 5.4 — Diagrama de sequência de Atender e Resolver chamado
 
-![Diagrama de sequência dos casos de uso Atender chamado e Resolver chamado](figuras/sequencia-atendimento.png)
+![Diagrama de sequência dos casos de uso Atender chamado e Resolver chamado](diagramas/sequencia-atendimento.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -72,7 +72,7 @@ A Figura 5.5 mostra as classes do domínio, com seus atributos, operações e as
 
 Figura 5.5 — Diagrama de classes
 
-![Diagrama de classes](figuras/classes.png)
+![Diagrama de classes](diagramas/classes.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -98,7 +98,7 @@ A Figura 5.6 traz o modelo conceitual de dados, na notação de Chen: as entidad
 
 Figura 5.6 — Modelo conceitual de dados
 
-![Modelo conceitual de dados na notação de Chen](figuras/modelo-conceitual.png)
+![Modelo conceitual de dados na notação de Chen](diagramas/modelo-conceitual.png)
 
 Fonte: elaborado pelos autores (2026).
 
@@ -110,11 +110,11 @@ Cada tabela lista as colunas com o tipo, e o asterisco marca as colunas obrigat�
 
 Figura 5.7 — Modelo lógico de dados
 
-![Modelo lógico de dados para o PostgreSQL, com uma ligação por chave estrangeira](figuras/modelo-logico.png)
+![Modelo lógico de dados para o PostgreSQL, com uma ligação por chave estrangeira](diagramas/modelo-logico.png)
 
 Fonte: elaborado pelos autores (2026).
 
-As fontes editáveis dos diagramas, em PlantUML, ficam ao lado das imagens: `figuras/classes.puml`, `figuras/modelo-conceitual.puml` e `figuras/modelo-logico.puml`.
+As fontes editáveis dos diagramas, em PlantUML, ficam em `src/diagramas/`: `classes.puml`, `modelo-conceitual.puml` e `modelo-logico.puml`.
 
 ## Tecnologias utilizadas
 
@@ -136,7 +136,7 @@ Quadro 5.2 — Tecnologias utilizadas
 | Banco de dados (planejado) | PostgreSQL | Persistência dos dados do modelo lógico |
 | Serviço externo | Provedor de IA: [a preencher pelo grupo] | Interpretar a pergunta do aluno a partir dos artigos publicados (RNF-03) |
 | Serviço externo | Serviço de e-mail: [a preencher pelo grupo] | Notificar o aluno (RNF-09) |
-| Documentação e diagramas | Markdown e PlantUML | Documentos e diagramas, com a fonte de cada figura em `figuras/` |
+| Documentação e diagramas | Markdown e PlantUML | Documentos e diagramas, com a fonte de cada diagrama em `src/diagramas/` |
 | Versionamento e publicação | Git, GitHub, GitHub Actions e GitHub Pages | Repositórios públicos (RNF-10) e publicação do protótipo |
 | Ambiente de desenvolvimento | Kiro IDE | Desenvolvimento do protótipo visual |
 

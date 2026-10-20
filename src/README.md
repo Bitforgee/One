@@ -1,11 +1,12 @@
 # Instruções de utilização
 
-Código-fonte do Univag One (BitForge). A pasta tem três partes:
+Código-fonte do Univag One (BitForge). A pasta tem quatro partes:
 
 | Pasta | Conteúdo | Situação em 20/10/2026 |
 | --- | --- | --- |
 | [`src/backend/`](./backend/) | API REST em ASP.NET Core (.NET 10), com testes de integração em xUnit | Estrutura inicial: `GET /health` e documento OpenAPI |
 | [`src/frontend/`](./frontend/README.md) | SPA/PWA em React com Vite | Ainda sem código; o grupo vai escolher entre TypeScript e JavaScript |
+| [`src/diagramas/`](./diagramas/) | Fontes PlantUML (`.puml`) dos diagramas da documentação; as imagens PNG ficam em [`docs/diagramas/`](../docs/diagramas/) | 12 diagramas |
 | [`src/prototipo/`](./prototipo/README.md) | Protótipo visual navegável em HTML, CSS e JavaScript, com dados simulados e sem back-end | Publicado em <https://bitforgee.github.io/prototipo-v1-one/> |
 
 Todos os comandos abaixo rodam a partir da raiz do repositório.

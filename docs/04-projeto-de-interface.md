@@ -25,7 +25,7 @@ A Figura 4.1 mostra o mesmo fluxo como um diagrama de atividades, com uma raia p
 
 Figura 4.1 — Diagrama de atividades do fluxo principal
 
-![Diagrama de atividades do fluxo principal com as raias Aluno, One (sistema), Atendente e Administrador](figuras/fluxo-principal.png)
+![Diagrama de atividades do fluxo principal com as raias Aluno, One (sistema), Atendente e Administrador](diagramas/fluxo-principal.png)
 
 Fonte: elaborado pelos autores (2026).
 

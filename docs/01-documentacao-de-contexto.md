@@ -50,7 +50,7 @@ A Figura 1.1 resume o processo atual de atendimento, com uma raia para o aluno e
 
 Figura 1.1 — Processo atual de atendimento
 
-![Diagrama de atividades do processo atual de atendimento, com as raias Aluno e Coordenação](figuras/processo-atual.png)
+![Diagrama de atividades do processo atual de atendimento, com as raias Aluno e Coordenação](diagramas/processo-atual.png)
 
 Fonte: elaborado pelos autores com base na entrevista com a coordenação (2026).
 
@@ -132,7 +132,7 @@ A Figura 1.2 mostra o contexto do One. À esquerda ficam os três perfis de usu�
 
 Figura 1.2 — Diagrama de contexto
 
-![Diagrama de contexto do Univag One com usuários, serviços externos e integrações fora do produto mínimo viável](figuras/contexto.png)
+![Diagrama de contexto do Univag One com usuários, serviços externos e integrações fora do produto mínimo viável](diagramas/contexto.png)
 
 Fonte: elaborado pelos autores (2026).
 

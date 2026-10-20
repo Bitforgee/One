@@ -223,7 +223,7 @@ A Figura 2.1 desenha as transições do Quadro 2.6 como um diagrama de estados. 
 
 Figura 2.1 — Diagrama de estados do chamado
 
-![Diagrama de estados do chamado com as transições F1 a F9](figuras/estados-chamado.png)
+![Diagrama de estados do chamado com as transições F1 a F9](diagramas/estados-chamado.png)
 
 Fonte: elaborado pelos autores com base na especificação de regras de negócio do projeto (2026).
 
@@ -276,7 +276,7 @@ Em relação à versão anterior, o caso de uso Autenticar-se foi retirado, porq
 
 Figura 2.2 — Diagrama de casos de uso
 
-![Diagrama de casos de uso](figuras/casos-de-uso.png)
+![Diagrama de casos de uso](diagramas/casos-de-uso.png)
 
 Fonte: elaborado pelos autores (2026).
 
