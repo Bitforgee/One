@@ -1,0 +1,32 @@
+@startuml sequencia-chamado
+skinparam shadowing false
+autonumber
+
+actor Aluno
+participant "Front-end SPA/PWA" as Front
+participant "API REST" as Api
+database PostgreSQL as Banco
+
+Front -> Aluno : oferece registrar o pedido como chamado
+Aluno -> Front : acrescenta uma descrição, se quiser
+alt o aluno confirma
+  Aluno -> Front : confirma
+  Front -> Api : cria o chamado (HTTPS/JSON)
+  Api -> Banco : grava o chamado Aberto, sem responsável, com solicitante, curso,\nsemestre, transcrição, artigos exibidos, título, categoria e número ONE-n
+  Api -> Banco : lê a regra de roteamento da categoria
+  Banco --> Api : regra
+  alt a regra define o setor (fixo ou coordenação do curso)
+    Api -> Banco : coloca o chamado na fila do setor de destino (RF-12)
+  else sem regra, Não classificado ou curso sem coordenação (E1)
+    Api -> Banco : coloca o chamado na fila do setor de triagem
+  end
+  Api -> Banco : registra a criação no histórico (RF-23)
+  Api -> Banco : encerra a conversa como escalada
+  Api --> Front : número ONE-n
+  Front -> Aluno : mostra o número e inclui o chamado na lista
+else o aluno não confirma (A1)
+  Aluno -> Front : recusa
+  Front -> Api : recusa o chamado
+  Api -> Banco : encerra a conversa como recusada
+end
+@enduml
