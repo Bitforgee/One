@@ -1,0 +1,35 @@
+@startuml sequencia-conversa
+skinparam shadowing false
+autonumber
+
+actor Aluno
+participant "Front-end SPA/PWA" as Front
+participant "API REST" as Api
+database PostgreSQL as Banco
+participant "Provedor de IA" as IA
+
+Front -> Aluno : avisa que as mensagens vão para um provedor externo de IA (RNF-03)
+Aluno -> Front : escreve a dúvida
+Front -> Api : envia a pergunta (HTTPS/JSON)
+Api -> Api : confere o usuário e o perfil
+Api -> Banco : lê os artigos publicados relacionados
+Banco --> Api : artigos
+alt há artigo publicado
+  Api -> IA : pergunta + artigos publicados
+  IA --> Api : resposta baseada no artigo
+  Api -> Banco : grava a mensagem e a cópia da resposta, com artigo e versão (RF-06)
+  Api --> Front : resposta (JSON)
+  Front -> Aluno : mostra a resposta e pergunta "Isso resolveu?"
+  alt o aluno responde Sim
+    Aluno -> Front : Sim
+    Front -> Api : envia a resposta
+    Api -> Banco : encerra a conversa como resolvida pelo autoatendimento (RF-05)
+  else o aluno responde Não (A1)
+    Aluno -> Front : Não
+    Front -> Aluno : oferece abrir um chamado (UC-02)
+  end
+else nenhum artigo publicado corresponde (E1)
+  Api --> Front : não encontrou resposta
+  Front -> Aluno : informa e oferece abrir um chamado (UC-02)
+end
+@enduml
