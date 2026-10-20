@@ -4,7 +4,7 @@ Este capítulo descreve como o grupo organiza o trabalho: o controle de versão,
 
 ## Controle de versão
 
-O grupo usa o Git e o GitHub. Até 16/10/2026, o projeto ficava em dois repositórios da conta `Bitforgee`:
+O grupo usa o Git e o GitHub. Até 20/10/2026, o projeto ficava em dois repositórios da conta `Bitforgee`:
 
 - `prototipo-v1-one`: documentação de requisitos, pesquisas, roadmap e o protótipo visual navegável;
 - `One`: esta documentação e o código do produto, com o front-end em React e a API REST em ASP.NET Core.
@@ -98,7 +98,7 @@ A especificação vem antes da implementação. Na Fase 3, a ordem prevista é:
 3. Dividir o trabalho em tarefas pequenas e verificáveis (`tasks.md`).
 4. Implementar os módulos na ordem da fatia vertical.
 
-No repositório `Bitforgee/One`, as especificações e as decisões técnicas ficam na pasta `.specs/`.
+Neste repositório, as especificações e as decisões técnicas ficam na pasta `.specs/`.
 
 O acompanhamento segue as exigências do PEI IV: um relatório semanal no AVA, no modelo do Apêndice G, e ao menos um integrante em cada aula. As atas de reunião ficam em `docs/acompanhamento/atas/`.
 
