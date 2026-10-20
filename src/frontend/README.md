@@ -13,16 +13,16 @@ Rode a partir da raiz do repositório. O `--overwrite` troca este README pelo do
 TypeScript:
 
 ```bash
-npm create vite@latest frontend -- --template react-ts --overwrite
+npm create vite@latest src/frontend -- --template react-ts --overwrite
 ```
 
 JavaScript:
 
 ```bash
-npm create vite@latest frontend -- --template react --overwrite
+npm create vite@latest src/frontend -- --template react --overwrite
 ```
 
-Depois, dentro de `frontend/`:
+Depois, dentro de `src/frontend/`:
 
 ```bash
 npm install
