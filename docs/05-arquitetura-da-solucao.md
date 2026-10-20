@@ -106,9 +106,11 @@ Fonte: elaborado pelos autores (2026).
 
 A Figura 5.7 mostra o modelo lógico para o banco de dados PostgreSQL, com as chaves primárias (PK), estrangeiras (FK) e únicas (UK). Os relacionamentos muitos-para-muitos do modelo conceitual viraram as tabelas `aluno_curso` e `atendente_setor`, e os perfis do usuário ficam na tabela `usuario_papel`. Algumas regras dos requisitos ficam garantidas pelo próprio banco. O número do chamado é único e gerado por sequência (RF-10). A chave única em `chamado.conversa_id` impede que uma conversa tenha mais de um chamado (RF-07). Um índice único parcial sobre `setor.triagem` impede que exista mais de um setor de triagem (RF-13).
 
+Cada tabela lista as colunas com o tipo, e o asterisco marca as colunas obrigatórias (NOT NULL). Cada chave estrangeira tem a sua própria ligação, na notação pé de galinha: o lado da tabela referenciada mostra se a referência é obrigatória ou opcional, e o outro lado mostra quantas linhas podem apontar para ela. Quando duas ligações unem as mesmas tabelas, a linha traz o nome da coluna, como `solicitante_id` e `responsavel_id` ou `categoria_id` e `categoria_original_id`, em `chamado`.
+
 Figura 5.7 — Modelo lógico de dados
 
-![Modelo lógico de dados](figuras/modelo-logico.png)
+![Modelo lógico de dados para o PostgreSQL, com uma ligação por chave estrangeira](figuras/modelo-logico.png)
 
 Fonte: elaborado pelos autores (2026).
 
