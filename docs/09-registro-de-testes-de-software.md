@@ -1,6 +1,6 @@
 # Registro de testes de software
 
-Este capítulo registra os resultados dos testes descritos no plano de testes de software. Os números do protótipo são os informados no relatório de homologação e no README do protótipo; o grupo não os reexecutou para este documento. Os números do back-end vêm da execução de 16/10/2026.
+Este capítulo registra os resultados dos testes descritos no plano de testes de software. Os números do Quadro 9.1 são os informados no relatório de homologação e no README do protótipo. Os números do back-end vêm da execução de 16/10/2026. Em 20/10/2026, depois da reorganização do repositório, todas as suítes foram executadas de novo (Quadro 9.4).
 
 ## Resultados do protótipo
 
@@ -27,7 +27,7 @@ Segundo o relatório de responsividade, a largura da página também foi medida 
 
 ## Resultados do back-end
 
-Os testes de integração do back-end foram executados em 16/10/2026 com o comando `dotnet test backend/One.slnx`. O Quadro 9.2 mostra os resultados.
+Os testes de integração do back-end foram executados em 16/10/2026, quando o projeto ficava na pasta `backend/` do repositório `One`. O Quadro 9.2 mostra os resultados.
 
 Quadro 9.2 — Resultados dos testes do back-end
 
@@ -59,6 +59,26 @@ Quadro 9.3 — Defeito encontrado na homologação
 | Verificação | A regressão `tests/reclassificar-closed.mjs` passou 4/4, e as cinco suítes continuaram sem falhas. |
 
 Fonte: elaborado pelos autores (2026), com base no relatório de homologação do protótipo.
+
+## Reexecução após a reorganização
+
+Em 20/10/2026, a documentação, o back-end e o protótipo foram reunidos em um só repositório. Para confirmar que nada quebrou, as suítes foram executadas de novo a partir das novas pastas. As do protótipo rodaram em `src/prototipo/`, com o servidor estático ativo na porta 4178. Os testes do back-end rodaram com `dotnet test src/backend/One.slnx`. O Quadro 9.4 mostra os resultados.
+
+Quadro 9.4 — Reexecução dos testes em 20/10/2026
+
+| Suíte | Comando | Resultado | Código de saída |
+| --- | --- | --- | --- |
+| Unitários e integração (protótipo) | `node tests/run-headless.mjs` | 67 ok, 0 falhas | 0 |
+| Smoke de navegação (protótipo) | `node tests/smoke-app.mjs` | 20/20 cenários ok | 0 |
+| Erros de console (protótipo) | `node tests/console-check.mjs` | 0 erros de JavaScript | 0 |
+| Acessibilidade estrutural (protótipo) | `node tests/a11y-check.mjs` | 0 avisos estruturais | 0 |
+| Ponta a ponta por CDP (protótipo) | `node tests/e2e.mjs` | 20/20 verificações ok | 0 |
+| Regressão do defeito D1 (protótipo) | `node tests/reclassificar-closed.mjs` | 4/4 ok | 0 |
+| Integração (back-end) | `dotnet test src/backend/One.slnx` | 4 aprovados, 0 com falha | 0 |
+
+Fonte: elaborado pelos autores (2026).
+
+Os resultados são os mesmos dos Quadros 9.1 e 9.2.
 
 ## Relatório de testes de software
 

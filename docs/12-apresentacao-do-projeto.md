@@ -62,6 +62,10 @@ O grupo respondeu que o primeiro produto mínimo viável vai cobrir as dúvidas 
 
 O professor aprovou a proposta: disse que ela ficou boa e, ao encerrar a aula, que as propostas estavam ficando muito boas e que a próxima etapa é a execução.
 
+## Apresentação do protótipo inicial
+
+Os slides da apresentação do protótipo inicial, de 14/10/2026, estão em [`presentation/2026-10-14-prototipo-inicial/`](../presentation/2026-10-14-prototipo-inicial/One_Apresentacao_Prototipo.pdf), em PDF e em [HTML](../presentation/2026-10-14-prototipo-inicial/slides.html). Eles mostram o problema, os três perfis, o fluxo principal e as telas do protótipo publicado. A lista de todas as apresentações fica em [`presentation/README.md`](../presentation/README.md).
+
 ## Vídeos
 
 O Quadro 12.1 lista os vídeos do projeto. O pitch foi apresentado em uma aula gravada.

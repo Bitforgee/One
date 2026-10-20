@@ -44,7 +44,7 @@ O protótipo tem verificações automáticas próprias. Segundo o README e o rel
 
 ## Back-end
 
-O back-end fica em `backend/` no repositório `Bitforgee/One`. É uma ASP.NET Core Web API em .NET 10, no projeto `backend/One.Api`.
+O back-end fica em `src/backend/`. É uma ASP.NET Core Web API em .NET 10, no projeto `src/backend/One.Api`.
 
 Hoje a API tem só a estrutura inicial:
 
@@ -52,16 +52,16 @@ Hoje a API tem só a estrutura inicial:
 - Em ambiente de desenvolvimento, o documento OpenAPI fica em `/openapi/v1.json`. Em produção, esse endereço não existe.
 - O endpoint de exemplo do modelo do .NET (`/weatherforecast`) foi removido.
 
-O projeto `backend/One.Api.Tests` tem 4 testes de integração, escritos com xUnit e `WebApplicationFactory`:
+O projeto `src/backend/One.Api.Tests` tem 4 testes de integração, escritos com xUnit e `WebApplicationFactory`:
 
 1. `GET /health` responde 200 com o texto `Healthy`.
 2. O documento OpenAPI é servido em desenvolvimento.
 3. O documento OpenAPI não é servido em produção.
 4. O endpoint de exemplo `/weatherforecast` responde 404.
 
-Os 4 testes passaram com `dotnet test backend/One.slnx` em 16/10/2026.
+Os 4 testes passaram em 16/10/2026 e de novo em 20/10/2026, com `dotnet test src/backend/One.slnx`, depois da reorganização do repositório.
 
-Ainda não há endpoints de negócio, banco de dados nem autenticação. A pasta `frontend/` também ainda não tem código: o grupo vai escolher entre TypeScript e JavaScript antes de criar o projeto React.
+Ainda não há endpoints de negócio, banco de dados nem autenticação. A pasta `src/frontend/` também ainda não tem código: o grupo vai escolher entre TypeScript e JavaScript antes de criar o projeto React.
 
 O próximo passo planejado é a primeira fatia vertical, descrita na Fase 3 do roadmap do projeto. A ideia é ter o fluxo completo de ponta a ponta, e não módulos pela metade. A ordem prevista dos módulos é:
 
@@ -80,16 +80,16 @@ O roadmap marca a demonstração das funcionalidades implementadas para 27, 28 e
 
 O protótipo publicado pode ser aberto em qualquer navegador, no computador ou no celular, sem instalar nada: <https://bitforgee.github.io/prototipo-v1-one/>. A página abre na seleção de perfis. Basta escolher Aluno, Atendente ou Administrador.
 
-Para rodar o protótipo no próprio computador, clone o repositório `prototipo-v1-one` e suba um servidor estático na pasta `prototipo-visual/`. É preciso ter Node ou Python instalado:
+Para rodar o protótipo no próprio computador, suba um servidor estático na pasta `src/prototipo/` deste repositório. É preciso ter Node ou Python instalado:
 
 ```powershell
-cd prototipo-visual
+cd src/prototipo
 node tests/static-server.mjs 4178      # ou: py -m http.server 4178
 ```
 
 Depois, abra `http://localhost:4178` e escolha um perfil. Para voltar aos dados iniciais, use o menu do usuário e a opção **Restaurar dados demonstrativos**. O parâmetro `?theme=dark` ou `?theme=light` força o tema.
 
-Com o servidor ativo, os testes do protótipo rodam a partir de `prototipo-visual/`:
+Com o servidor ativo, os testes do protótipo rodam a partir de `src/prototipo/`:
 
 ```powershell
 node tests/run-headless.mjs    # unidade e integração
@@ -99,10 +99,10 @@ node tests/a11y-check.mjs      # acessibilidade estrutural
 node tests/e2e.mjs             # ponta a ponta no navegador
 ```
 
-Para rodar a API, é preciso ter o SDK do .NET 10. A partir da raiz do repositório `One`:
+Para rodar a API, é preciso ter o SDK do .NET 10. A partir da raiz do repositório:
 
 ```bash
-dotnet run --project backend/One.Api
+dotnet run --project src/backend/One.Api
 ```
 
 A API sobe em `http://localhost:5221`. O endereço `http://localhost:5221/health` deve responder `Healthy`.
@@ -110,10 +110,9 @@ A API sobe em `http://localhost:5221`. O endereço `http://localhost:5221/health
 Para rodar os testes da API:
 
 ```bash
-dotnet test backend/One.slnx
+dotnet test src/backend/One.slnx
 ```
 
-## Repositórios
+## Repositório
 
-- Projeto One (documentação, back-end e front-end): <https://github.com/Bitforgee/One>
-- Protótipo visual e documentos de origem: <https://github.com/Bitforgee/prototipo-v1-one>
+Documentação, back-end, front-end e protótipo ficam neste repositório. As instruções completas de execução estão em [`src/README.md`](../src/README.md). O repositório `Bitforgee/prototipo-v1-one` continua no GitHub só para publicar o protótipo no GitHub Pages.

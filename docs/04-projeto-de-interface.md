@@ -31,7 +31,7 @@ O assistente do protótipo não usa inteligência artificial. Ele compara palavr
 
 A interface tem tema claro e tema escuro. A escolha fica salva no navegador. O layout é responsivo e funciona no computador, no tablet e no celular.
 
-O protótipo está publicado no GitHub Pages, no endereço <https://bitforgee.github.io/prototipo-v1-one/>. O código está em <https://github.com/Bitforgee/prototipo-v1-one>, na pasta `prototipo-visual/`.
+O protótipo está publicado no GitHub Pages, no endereço <https://bitforgee.github.io/prototipo-v1-one/>. O código está neste repositório, em [`src/prototipo/`](../src/prototipo/), copiado da versão publicada (commit `e10c6d3` do repositório `Bitforgee/prototipo-v1-one`).
 
 O protótipo é separado da arquitetura do MVP, que usa React no front-end e ASP.NET Core no back-end. Ele serve para demonstrar o fluxo de ponta a ponta antes da implementação.
 

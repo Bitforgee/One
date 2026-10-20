@@ -1,6 +1,6 @@
 # Template padrão da aplicação
 
-Este capítulo descreve o padrão visual do One: identidade, cores, temas, layout, componentes, responsividade, ícones e acessibilidade. O padrão foi definido no protótipo visual navegável, na pasta `prototipo-visual/` do repositório `prototipo-v1-one`. As informações vêm do README do protótipo e dos relatórios de reformulação visual, de responsividade e de homologação.
+Este capítulo descreve o padrão visual do One: identidade, cores, temas, layout, componentes, responsividade, ícones e acessibilidade. O padrão foi definido no protótipo visual navegável, hoje em `src/prototipo/` (antes, a pasta `prototipo-visual/` do repositório `prototipo-v1-one`). As informações vêm do README do protótipo e dos relatórios de reformulação visual, de responsividade e de homologação.
 
 O protótipo usa HTML5 semântico, CSS3 e JavaScript ES6+ sem framework, com Bootstrap 5.3.3 e Bootstrap Icons 1.11.3. As duas bibliotecas ficam em arquivos locais, na pasta `vendor/`. Nenhuma dependência vem de CDN, e o protótipo funciona offline.
 

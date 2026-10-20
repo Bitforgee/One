@@ -1,13 +1,15 @@
 # Metodologia
 
-Este capítulo descreve como o grupo organiza o trabalho: o controle de versão, a divisão de papéis, o processo, as ferramentas e o cronograma. As regras vêm do README do repositório `Bitforgee/prototipo-v1-one` e do roadmap do projeto (`roadmap.md`).
+Este capítulo descreve como o grupo organiza o trabalho: o controle de versão, a divisão de papéis, o processo, as ferramentas e o cronograma. As regras vêm do README do repositório `Bitforgee/prototipo-v1-one` e do roadmap do projeto (`pesquisas/roadmap.md`).
 
 ## Controle de versão
 
-O grupo usa o Git, e os repositórios ficam no GitHub, na conta `Bitforgee`. O projeto tem dois repositórios:
+O grupo usa o Git e o GitHub. Até 16/10/2026, o projeto ficava em dois repositórios da conta `Bitforgee`:
 
-- `Bitforgee/prototipo-v1-one`: documentação de requisitos, pesquisas, roadmap e o protótipo visual navegável.
-- `Bitforgee/One`: esta documentação e o código do produto, com o front-end em React e a API REST em ASP.NET Core.
+- `prototipo-v1-one`: documentação de requisitos, pesquisas, roadmap e o protótipo visual navegável;
+- `One`: esta documentação e o código do produto, com o front-end em React e a API REST em ASP.NET Core.
+
+Em 20/10/2026, os dois foram reunidos neste repositório, organizado como o modelo de projeto integrador da PUC Minas: a documentação em `docs/`, o código em `src/` (`src/backend/`, `src/frontend/` e `src/prototipo/`) e as apresentações em `presentation/`. O histórico de commits do One foi preservado. O protótipo entrou na versão publicada (commit `e10c6d3` de `prototipo-v1-one`), e aquele repositório continua publicando o site do protótipo.
 
 O Manual do PEI IV pede a entrega do software em mídia física e/ou em repositório público Git; o grupo usa o GitHub.
 
@@ -111,7 +113,7 @@ Quadro 3.4 — Ferramentas
 | Ferramenta | Uso no projeto |
 | --- | --- |
 | GitHub | Hospedagem dos repositórios, pull requests e revisão de código. |
-| GitHub Actions e GitHub Pages | O workflow `deploy-pages.yml` publica a pasta `prototipo-visual/` no GitHub Pages a cada push na `main` que altere o protótipo. |
+| GitHub Actions e GitHub Pages | O workflow `deploy-pages.yml` do repositório `prototipo-v1-one` publica a pasta `prototipo-visual/` no GitHub Pages a cada push na `main` que altere o protótipo. |
 | Kiro IDE e VS Code | O projeto é desenvolvido no Kiro IDE, com recursos ECC. O VS Code é a alternativa compatível. |
 | draw.io, Mermaid e PlantUML | Diagramas. O arquivo-fonte fica ao lado da imagem exportada. |
 | AVA | Entregas do PEI IV e relatórios semanais. |

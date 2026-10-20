@@ -2,8 +2,8 @@
 
 Este capítulo apresenta a estratégia de testes do One, os tipos de teste, os casos de teste e a forma de executá-los. Hoje existem testes em duas frentes:
 
-- O **protótipo visual**, no repositório `prototipo-v1-one`. Ele roda só no navegador, com dados simulados. Os testes verificam as regras de negócio sobre esses dados e a interface.
-- O **back-end**, no repositório `One`. É a API REST em ASP.NET Core (.NET 10), ainda na estrutura inicial. Os testes verificam o comportamento básico da API.
+- O **protótipo visual**, em `src/prototipo/`. Ele roda só no navegador, com dados simulados. Os testes verificam as regras de negócio sobre esses dados e a interface.
+- O **back-end**, em `src/backend/`. É a API REST em ASP.NET Core (.NET 10), ainda na estrutura inicial. Os testes verificam o comportamento básico da API.
 
 ## Estratégia
 
@@ -30,9 +30,9 @@ Quadro 8.1 — Tipos de teste
 | Acessibilidade estrutural (protótipo) | `node tests/a11y-check.mjs` | Idioma da página, texto alternativo, rótulos de formulário, nomes de botões, regiões da página e título `h1`. |
 | Ponta a ponta por CDP (protótipo) | `node tests/e2e.mjs` | A interface conduzida por cliques reais no Chrome: login, assistente, Sim/Não, criação de chamado, atendimento, resolução, confirmação, histórico, indicadores, troca de tema e bloqueio 403. |
 | Regressão do defeito D1 (protótipo) | `node tests/reclassificar-closed.mjs` | Que um chamado fechado não pode ser reclassificado (defeito D1, ver capítulo de registro de testes). |
-| Integração (back-end) | `dotnet test backend/One.slnx` | A API em memória, pelos casos do Quadro 8.3. |
+| Integração (back-end) | `dotnet test src/backend/One.slnx` | A API em memória, pelos casos do Quadro 8.3. |
 
-Fonte: elaborado pelos autores (2026), com base no README do protótipo, no relatório de homologação e em `backend/One.Api.Tests/ApiTests.cs`.
+Fonte: elaborado pelos autores (2026), com base no README do protótipo, no relatório de homologação e em `src/backend/One.Api.Tests/ApiTests.cs`.
 
 ## Rastreabilidade dos testes do protótipo
 
@@ -64,7 +64,7 @@ Limites da cobertura, segundo o relatório de homologação:
 
 ## Casos de teste do back-end
 
-O Quadro 8.3 descreve os casos de teste de integração da API, em `backend/One.Api.Tests/ApiTests.cs`.
+O Quadro 8.3 descreve os casos de teste de integração da API, em `src/backend/One.Api.Tests/ApiTests.cs`.
 
 Quadro 8.3 — Casos de teste do back-end
 
@@ -75,11 +75,11 @@ Quadro 8.3 — Casos de teste do back-end
 | CT-03 — OpenAPI fora de desenvolvimento | Verificar se o documento OpenAPI não é exposto em produção. | Subir a API no ambiente `Production` e enviar `GET /openapi/v1.json`. | Status 404. |
 | CT-04 — Endpoint de exemplo removido | Verificar se o endpoint de exemplo do modelo do projeto foi removido. | Enviar `GET /weatherforecast`. | Status 404. |
 
-Fonte: elaborado pelos autores (2026), com base em `backend/One.Api.Tests/ApiTests.cs`.
+Fonte: elaborado pelos autores (2026), com base em `src/backend/One.Api.Tests/ApiTests.cs`.
 
 ## Como executar
 
-Os testes do protótipo rodam a partir da pasta `prototipo-visual/`, com o servidor estático ativo na porta 4178:
+Os testes do protótipo rodam a partir da pasta `src/prototipo/`, com o servidor estático ativo na porta 4178:
 
 ```powershell
 node tests/static-server.mjs 4178   # em um terminal separado
@@ -92,10 +92,10 @@ node tests/e2e.mjs                  # ponta a ponta por CDP; rode isolado
 
 A suíte ponta a ponta deve rodar sozinha. Execuções sobrepostas podem deixar processos do Chrome abertos e travar a sessão de depuração.
 
-Os testes do back-end rodam a partir da raiz do repositório `One`, com o SDK do .NET 10 instalado:
+Os testes do back-end rodam a partir da raiz do repositório, com o SDK do .NET 10 instalado:
 
 ```bash
-dotnet test backend/One.slnx
+dotnet test src/backend/One.slnx
 ```
 
 ## Limitações

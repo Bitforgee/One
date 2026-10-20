@@ -36,7 +36,7 @@ Fonte: elaborado pelos autores (2026).
 
 Um exemplo mostra o caminho de uma pergunta. O aluno escreve no front-end, que envia a mensagem à API. A API confere o usuário e o perfil, lê os artigos publicados no PostgreSQL e consulta o provedor de IA. Depois, grava a mensagem e uma cópia da resposta exibida (RF-06) e devolve a resposta ao front-end em JSON. Se o aluno aceitar abrir um chamado, a API cria o chamado, define o setor pela regra de roteamento (RF-12) e registra o evento no histórico.
 
-Hoje o back-end tem só a base: o projeto `backend/One.Api` responde `Healthy` em `GET /health` e publica o documento OpenAPI em `/openapi/v1.json`, apenas no ambiente de desenvolvimento. O projeto `backend/One.Api.Tests` tem 4 testes automatizados. A pasta `frontend/` ainda não tem código, porque o grupo vai escolher entre TypeScript e JavaScript. O protótipo visual (capítulo 4) não segue esta arquitetura: ele roda só no navegador, com dados simulados no `localStorage`, sem back-end, sem IA e sem autenticação real.
+Hoje o back-end tem só a base: o projeto `src/backend/One.Api` responde `Healthy` em `GET /health` e publica o documento OpenAPI em `/openapi/v1.json`, apenas no ambiente de desenvolvimento. O projeto `src/backend/One.Api.Tests` tem 4 testes automatizados. A pasta `src/frontend/` ainda não tem código, porque o grupo vai escolher entre TypeScript e JavaScript. O protótipo visual (capítulo 4, código em `src/prototipo/`) não segue esta arquitetura: ele roda só no navegador, com dados simulados no `localStorage`, sem back-end, sem IA e sem autenticação real.
 
 ## Diagrama de classes
 
@@ -118,6 +118,6 @@ A escolha do ASP.NET Core se apoia na seção 2.1.4 do Manual do PEI, que aceita
 
 O protótipo visual está publicado no GitHub Pages, em <https://bitforgee.github.io/prototipo-v1-one/>. A publicação é automática, pelo *workflow* do GitHub Actions `.github/workflows/deploy-pages.yml` do repositório `prototipo-v1-one`. Ele roda a cada *push* na branch `main` que altere a pasta `prototipo-visual/` ou o próprio *workflow*, e também pode ser disparado manualmente. Só a pasta `prototipo-visual/` é publicada; a documentação fica no repositório, mas não vira página do site. Como o protótipo não tem back-end, um serviço de arquivos estáticos como o GitHub Pages basta para ele.
 
-O código-fonte fica em repositórios públicos no GitHub (RNF-10): <https://github.com/Bitforgee/One> e <https://github.com/Bitforgee/prototipo-v1-one>.
+O código-fonte fica neste repositório Git (RNF-10): a API em `src/backend/`, o front-end em `src/frontend/` e o protótipo em `src/prototipo/`. O repositório `Bitforgee/prototipo-v1-one` continua no GitHub só para publicar o site do protótipo.
 
 A hospedagem do front-end React, da API e do banco PostgreSQL ainda não foi definida: [a preencher pelo grupo]. Pelo calendário da disciplina, a aplicação precisa estar disponível para a banca em 20/11.
