@@ -11,6 +11,7 @@ import unicodedata
 import unittest
 from pathlib import Path
 from unittest import mock
+from xml.etree import ElementTree
 
 import docx
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -212,10 +213,11 @@ class Documento(unittest.TestCase):
         self.assertTrue(DOCX.read_bytes().startswith(b"PK"), "docx missing or not a zip package")
         self.assertTrue(PDF.read_bytes().startswith(b"%PDF"), "pdf missing or not a PDF")
 
-    def _sem_ferramenta(self, java, word, nome):  # C2
+    def _sem_ferramenta(self, node, word, nome, edge=True):  # C2
         antes = (DOCX.read_bytes(), PDF.read_bytes())
         saida = io.StringIO()
-        with mock.patch.object(gerar, "java_disponivel", return_value=java), \
+        with mock.patch.object(gerar, "node_disponivel", return_value=node), \
+                mock.patch.object(gerar, "edge_disponivel", return_value=edge), \
                 mock.patch.object(gerar, "word_disponivel", return_value=word), \
                 contextlib.redirect_stdout(saida), contextlib.redirect_stderr(saida):
             codigo = gerar.main()
@@ -223,19 +225,23 @@ class Documento(unittest.TestCase):
         self.assertIn(nome, saida.getvalue())
         self.assertEqual((DOCX.read_bytes(), PDF.read_bytes()), antes)
 
-    def test_sem_java_sai_1(self):  # C2
-        self._sem_ferramenta(java=False, word=True, nome="Java")
+    def test_sem_node_sai_1(self):  # C2
+        self._sem_ferramenta(node=False, word=True, nome="Node.js")
+
+    def test_sem_edge_sai_1(self):  # C2
+        self._sem_ferramenta(node=True, word=True, nome="Edge", edge=False)
 
     def test_sem_word_sai_1(self):  # C2
-        self._sem_ferramenta(java=True, word=False, nome="Word")
+        self._sem_ferramenta(node=True, word=False, nome="Word")
 
     def test_falha_no_meio_sai_1(self):  # C2
         antes = (DOCX.read_bytes(), PDF.read_bytes())
         saida = io.StringIO()
-        falha = subprocess.CalledProcessError(1, "java")
-        with mock.patch.object(gerar, "java_disponivel", return_value=True), \
+        falha = subprocess.CalledProcessError(1, "draw.io")
+        with mock.patch.object(gerar, "node_disponivel", return_value=True), \
+                mock.patch.object(gerar, "edge_disponivel", return_value=True), \
                 mock.patch.object(gerar, "word_disponivel", return_value=True), \
-                mock.patch.object(gerar, "obter_plantuml", return_value=Path("plantuml.jar")), \
+                mock.patch.object(gerar, "obter_drawio", return_value=Path("draw.io.exe")), \
                 mock.patch.object(gerar, "renderizar", side_effect=falha), \
                 contextlib.redirect_stdout(saida), contextlib.redirect_stderr(saida):
             codigo = gerar.main()
@@ -469,8 +475,8 @@ class Documento(unittest.TestCase):
             self.assertRegex(t["Identificador"], r"^UC-\d{2}$")
 
     def test_uc_diagrama_especificacao(self):  # C26
-        puml = (DIAGRAMAS / "casos_de_uso.puml").read_text(encoding="utf-8")
-        no_diagrama = {f"UC-{n}" for n in re.findall(r"\bas\s+UC(\d{2})\b", puml)}
+        fonte = (DIAGRAMAS / "casos_de_uso.drawio").read_text(encoding="utf-8")
+        no_diagrama = set(re.findall(r"\bUC-\d{2}\b", fonte))
         no_documento = {t["Identificador"] for t in self.tabelas_uc()}
         self.assertTrue(no_diagrama)
         self.assertEqual(sorted(no_diagrama - no_documento), [], "in the diagram without a specification")
@@ -521,20 +527,24 @@ class Documento(unittest.TestCase):
                 self.assertTrue(texto_xml(seguinte._p).startswith("Fonte:"), f"Quadro {numero}")
         self.assertGreater(numero, 0)
 
-    def test_figuras_tem_fonte_puml(self):  # C31
+    def test_figuras_tem_fonte(self):  # C31
         figuras = re.findall(r"!\[[^\]]*\]\(diagramas/([^)]+)\.png\)", CONTEUDO.read_text(encoding="utf-8"))
         self.assertEqual(len(figuras), 4)
         for nome in figuras:
-            self.assertTrue((DIAGRAMAS / f"{nome}.puml").is_file(), nome)
+            fontes = [f for f in (DIAGRAMAS / f"{nome}.mmd", DIAGRAMAS / f"{nome}.drawio") if f.is_file()]
+            self.assertEqual(len(fontes), 1, nome)
 
     def test_modelo_conceitual_logico(self):  # C32
-        def entidades(arquivo):
-            texto = (DIAGRAMAS / arquivo).read_text(encoding="utf-8")
-            nomes = re.findall(r'^\s*entity\s+(?:"[^"]+"\s+as\s+)?(\w+)', texto, re.MULTILINE)
+        def normal(nomes):
             return {sem_acento(n).lower().replace("_", "") for n in nomes}
 
-        conceitual = entidades("modelo_conceitual.puml")
-        logico = entidades("modelo_logico.puml")
+        celulas = ElementTree.parse(DIAGRAMAS / "modelo_conceitual.drawio").getroot().iter("mxCell")
+        # invariant: entities are the all-caps vertices; relationships share the casing but are rhombi.
+        conceitual = normal(c.get("value") for c in celulas if c.get("vertex") == "1"
+                            and re.fullmatch(r"[A-Z_]+", c.get("value") or "")
+                            and "rhombus" not in (c.get("style") or ""))
+        logico = normal(re.findall(r"^\s*(\w+)\s*\{", (DIAGRAMAS / "modelo_logico.mmd").read_text(encoding="utf-8"),
+                                   re.MULTILINE))
         self.assertTrue(conceitual)
         self.assertEqual(sorted(conceitual - logico), [], "conceptual entities with no table")
 

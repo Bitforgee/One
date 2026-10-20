@@ -1,11 +1,13 @@
 """Generates One_Levantamento_e_Requisitos.docx and .pdf from conteudo.md, metadados.json and diagramas/.
 
 Usage: python docs/requisitos/gerar.py
-Needs python-docx (requirements.txt), Java 17 for PlantUML, and Microsoft Word to update the
-table of contents and export the PDF.
+Needs python-docx (requirements.txt), Node.js (Mermaid CLI through npx, rendered by Microsoft Edge)
+for the .mmd diagrams, draw.io Desktop (downloaded to .cache) for the .drawio diagrams, and
+Microsoft Word to update the table of contents and export the PDF.
 """
 
 import json
+import os
 import re
 import shutil
 import struct
@@ -14,6 +16,7 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 
 import docx
@@ -27,11 +30,13 @@ from docx.shared import Cm, Pt, RGBColor
 
 AQUI = Path(__file__).resolve().parent
 NOME = "One_Levantamento_e_Requisitos"
-VERSAO_PLANTUML = "1.2026.8"
-JAR = AQUI / ".cache" / f"plantuml-{VERSAO_PLANTUML}.jar"
-URL_JAR = (
-    f"https://github.com/plantuml/plantuml/releases/download/v{VERSAO_PLANTUML}/plantuml-{VERSAO_PLANTUML}.jar"
+VERSAO_DRAWIO = "31.7.0"
+DRAWIO = AQUI / ".cache" / f"drawio-{VERSAO_DRAWIO}" / "draw.io.exe"
+URL_DRAWIO = (
+    f"https://github.com/jgraph/drawio-desktop/releases/download/v{VERSAO_DRAWIO}/draw.io-{VERSAO_DRAWIO}-windows.zip"
 )
+MERMAID_CLI = "@mermaid-js/mermaid-cli@11.17.0"
+EDGE = Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "Microsoft" / "Edge" / "Application" / "msedge.exe"
 TIMES = "Times New Roman"
 LARGURA_TEXTO = Cm(16)
 ALTURA_MAX_FIGURA = Cm(21)
@@ -59,8 +64,12 @@ finally {
 """
 
 
-def java_disponivel():
-    return shutil.which("java") is not None
+def node_disponivel():
+    return shutil.which("npx") is not None
+
+
+def edge_disponivel():
+    return EDGE.is_file()
 
 
 def word_disponivel():
@@ -75,22 +84,33 @@ def word_disponivel():
     return resultado.returncode == 0
 
 
-def obter_plantuml():
-    if not JAR.is_file():
-        JAR.parent.mkdir(exist_ok=True)
-        parcial = JAR.with_suffix(".parcial")
-        urllib.request.urlretrieve(URL_JAR, parcial)
-        parcial.replace(JAR)
-    return JAR
+def obter_drawio():
+    if not DRAWIO.is_file():
+        pasta = DRAWIO.parent
+        pasta.parent.mkdir(exist_ok=True)
+        arquivo, parcial = pasta.with_suffix(".zip"), pasta.with_suffix(".parcial")
+        urllib.request.urlretrieve(URL_DRAWIO, arquivo)
+        shutil.rmtree(parcial, ignore_errors=True)
+        with zipfile.ZipFile(arquivo) as zip_:
+            zip_.extractall(parcial)
+        parcial.replace(pasta)
+        arquivo.unlink()
+    return DRAWIO
 
 
-def renderizar(jar, destino):
-    fontes = sorted((AQUI / "diagramas").glob("*.puml"))
-    subprocess.run(
-        ["java", "-Djava.awt.headless=true", "-jar", str(jar), "-charset", "UTF-8", "-tpng",
-         "-o", str(destino), *map(str, fontes)],
-        check=True,
-    )
+def renderizar(drawio, destino):
+    fontes = sorted((AQUI / "diagramas").glob("*.mmd")) + sorted((AQUI / "diagramas").glob("*.drawio"))
+    # why: Edge ships with Windows, so Mermaid CLI renders with it instead of downloading Chromium.
+    ambiente = {**os.environ, "PUPPETEER_EXECUTABLE_PATH": str(EDGE), "PUPPETEER_SKIP_DOWNLOAD": "1"}
+    for fonte in fontes:
+        png = destino / f"{fonte.stem}.png"
+        if fonte.suffix == ".mmd":
+            comando = [shutil.which("npx"), "-y", MERMAID_CLI, "-i", str(fonte), "-o", str(png),
+                       "-s", "2", "-w", "4000", "-b", "white"]
+        else:
+            comando = [str(drawio), "--export", "--format", "png", "--scale", "3", "--border", "10",
+                       "--output", str(png), str(fonte)]
+        subprocess.run(comando, check=True, env=ambiente)
     return {f.stem: destino / f"{f.stem}.png" for f in fontes}
 
 
@@ -246,10 +266,17 @@ def campo(paragrafo, instrucao, provisorio):
 
 # --- partes do documento -------------------------------------------------------------------
 
-def texto_com_negrito(paragrafo, texto):
-    for n, trecho in enumerate(texto.split("**")):
-        if trecho:
-            paragrafo.add_run(trecho).bold = n % 2 == 1
+def adicionar_texto(paragrafo, texto, negrito=False):
+    """Adds `texto` as runs, rendering **negrito** and *itálico* markers."""
+    for trecho in re.split(r"(\*\*[^*]+\*\*|\*[^*]+\*)", texto):
+        if trecho.startswith("**"):
+            paragrafo.add_run(trecho[2:-2]).bold = True
+        elif trecho.startswith("*"):
+            run = paragrafo.add_run(trecho[1:-1])
+            run.italic = True
+            run.bold = negrito or None
+        elif trecho:
+            paragrafo.add_run(trecho).bold = negrito or None
 
 
 def linha_central(doc, texto, negrito=False, antes=0):
@@ -326,7 +353,7 @@ def quadro(doc, numero, titulo, linhas, fonte):
             celula.paragraphs[0].style = doc.styles["Tabela"]
             for n, parte in enumerate(partes):
                 paragrafo = celula.paragraphs[0] if n == 0 else celula.add_paragraph(style="Tabela")
-                paragrafo.add_run(parte).bold = r == 0
+                adicionar_texto(paragrafo, parte, negrito=r == 0)
                 # why: a quadro short enough for one page stays whole, with its caption and source.
                 paragrafo.paragraph_format.keep_with_next = len(linhas) <= LINHAS_QUADRO_INTEIRO
     cabecalho = tabela.rows[0]._tr.get_or_add_trPr()
@@ -371,10 +398,10 @@ def corpo(doc, blocos, imagens):
             numero = ".".join(str(c) for c in contadores[:nivel])
             doc.add_paragraph(f"{numero} {texto.upper() if nivel <= 2 else texto}", style=f"Heading {nivel}")
         elif tipo == "paragrafo":
-            texto_com_negrito(doc.add_paragraph(style="Referencia" if em_referencias else "Normal"), bloco[1])
+            adicionar_texto(doc.add_paragraph(style="Referencia" if em_referencias else "Normal"), bloco[1])
         elif tipo == "lista":
             for item in bloco[1]:
-                texto_com_negrito(doc.add_paragraph(style="List Bullet"), item)
+                adicionar_texto(doc.add_paragraph(style="List Bullet"), item)
         elif tipo == "quadro":
             quadros += 1
             quadro(doc, quadros, bloco[1], bloco[2], bloco[3])
@@ -408,7 +435,8 @@ def finalizar_no_word(docx_tmp, pdf_tmp):
 
 
 def main():
-    faltando = [nome for nome, disponivel in (("Java", java_disponivel), ("Microsoft Word", word_disponivel))
+    faltando = [nome for nome, disponivel in (("Node.js", node_disponivel), ("Microsoft Edge", edge_disponivel),
+                                              ("Microsoft Word", word_disponivel))
                 if not disponivel()]
     if faltando:
         print("Ferramenta ausente: " + ", ".join(faltando) + ". Nada foi alterado.", file=sys.stderr)
@@ -416,7 +444,7 @@ def main():
     try:
         with tempfile.TemporaryDirectory() as temporario:
             temporario = Path(temporario)
-            imagens = renderizar(obter_plantuml(), temporario)
+            imagens = renderizar(obter_drawio(), temporario)
             docx_tmp, pdf_tmp = temporario / f"{NOME}.docx", temporario / f"{NOME}.pdf"
             montar_documento(docx_tmp, imagens)
             finalizar_no_word(docx_tmp, pdf_tmp)
@@ -426,7 +454,7 @@ def main():
                 shutil.copy2(imagem, AQUI / "diagramas" / imagem.name)
             shutil.copy2(docx_tmp, AQUI / f"{NOME}.docx")
             shutil.copy2(pdf_tmp, AQUI / f"{NOME}.pdf")
-    except (OSError, subprocess.CalledProcessError, urllib.error.URLError) as erro:
+    except (OSError, subprocess.CalledProcessError, urllib.error.URLError, zipfile.BadZipFile) as erro:
         print(f"Falha ao gerar o documento: {erro}. Os arquivos anteriores foram mantidos.", file=sys.stderr)
         return 1
     print(AQUI / f"{NOME}.docx")

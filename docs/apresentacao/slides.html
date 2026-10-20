@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>One: protótipo inicial</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --azul: #2f6fd6;
+    --azul-claro: #e8f0fc;
+    --texto: #1d2433;
+    --suave: #5b6578;
+    --linha: #dde3ec;
+    --fundo: #f5f7fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; color: var(--texto); font-family: "Segoe UI", Arial, sans-serif; }
+  .slide {
+    width: 1280px; height: 720px; padding: 56px 72px 48px;
+    position: relative; overflow: hidden; page-break-after: always;
+    display: flex; flex-direction: column;
+  }
+  .slide:last-child { page-break-after: auto; }
+  .rotulo { color: var(--azul); font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: 40px; line-height: 1.15; font-weight: 700; margin-bottom: 28px; }
+  p, li { font-size: 21px; line-height: 1.45; }
+  ul { list-style: none; }
+  ul li { padding-left: 24px; position: relative; margin-bottom: 14px; }
+  ul li::before { content: ""; position: absolute; left: 0; top: 12px; width: 9px; height: 9px; border-radius: 2px; background: var(--azul); }
+  .rodape { position: absolute; left: 72px; right: 72px; bottom: 22px; display: flex; justify-content: space-between; font-size: 13px; color: var(--suave); }
+  .nota { font-size: 17px; color: var(--suave); }
+
+  /* slide de funcionalidade: texto à esquerda, print grande à direita */
+  .feat { padding-top: 44px; }
+  .feat h1 { font-size: 32px; margin-bottom: 22px; }
+  .feat .corpo { display: grid; grid-template-columns: 340px 1fr; gap: 40px; flex: 1; min-height: 0; }
+  .feat li { font-size: 19px; margin-bottom: 16px; }
+  .tela { height: 478px; border: 1px solid var(--linha); border-radius: 10px; overflow: hidden; box-shadow: 0 6px 24px rgba(20,40,80,.12); background: var(--fundo); }
+  /* why: the inset drops the prototype's 248px sidebar so the screen content reads larger */
+  .tela img { width: 100%; height: 100%; object-fit: cover; object-position: right top; object-view-box: inset(0 0 0 248px); display: block; }
+  .legenda { font-size: 14px; color: var(--suave); margin-top: 8px; }
+  .perfil-tag { display: inline-block; font-size: 14px; font-weight: 600; color: var(--azul); background: var(--azul-claro); border-radius: 6px; padding: 3px 10px; margin-bottom: 18px; }
+
+  /* capa */
+  .capa { background: linear-gradient(135deg, #1f4fa3 0%, #2f6fd6 100%); color: #fff; justify-content: center; }
+  .capa .marca { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; }
+  .capa .logo-one { width: 64px; height: 64px; border-radius: 14px; background: #fff; color: var(--azul); font-size: 36px; font-weight: 700; display: grid; place-items: center; }
+  .capa h1 { font-size: 56px; margin: 0; }
+  .capa .sub { font-size: 26px; opacity: .92; margin-bottom: 44px; }
+  .capa .equipe { font-size: 18px; line-height: 1.6; opacity: .95; }
+  .capa .univag { position: absolute; right: 72px; bottom: 48px; background: #fff; border-radius: 10px; padding: 10px 16px; }
+  .capa .univag img { height: 52px; display: block; }
+  .capa .link { position: absolute; left: 72px; bottom: 48px; font-size: 16px; opacity: .9; }
+
+  /* números */
+  .numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 34px; }
+  .numero { background: var(--azul-claro); border-radius: 12px; padding: 22px 24px; }
+  .numero b { display: block; font-size: 44px; color: var(--azul); line-height: 1.1; }
+  .numero span { font-size: 17px; color: var(--texto); }
+
+  /* perfis */
+  .perfis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 26px; }
+  .perfil { border: 1px solid var(--linha); border-radius: 12px; padding: 22px 24px; }
+  .perfil h2 { font-size: 24px; color: var(--azul); margin-bottom: 8px; }
+  .perfil p { font-size: 20px; }
+
+  /* fluxo */
+  .fluxo { display: flex; align-items: stretch; gap: 10px; margin: 8px 0 30px; }
+  .passo { flex: 1; background: var(--azul-claro); border-radius: 12px; padding: 18px 16px; font-size: 17px; line-height: 1.35; }
+  .passo b { display: block; color: var(--azul); font-size: 14px; margin-bottom: 6px; letter-spacing: .05em; }
+  .seta { align-self: center; color: var(--azul); font-size: 26px; }
+  .frase { border-left: 5px solid var(--azul); padding: 6px 0 6px 20px; font-size: 26px; font-style: italic; }
+
+  .tabela { width: 100%; border-collapse: collapse; }
+  .tabela td { font-size: 22px; padding: 18px 14px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  .tabela td:first-child { width: 150px; color: var(--azul); font-weight: 600; white-space: nowrap; }
+
+  .colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+
+  .fim { justify-content: center; align-items: flex-start; }
+  .fim h1 { font-size: 52px; }
+</style>
+</head>
+<body>
+
+<section class="slide capa">
+  <div class="marca"><div class="logo-one">O</div><h1>One</h1></div>
+  <p class="sub">Atendimento acadêmico em um só lugar, com registro.<br>Apresentação do protótipo inicial</p>
+  <p class="equipe">
+    Alfredo Pinto de Souza Neto · David El Hage de Oliveira · Gustavo Henrique Rondon Melo<br>
+    Marco Antônio Rodrigues Menezes · João Henrique Queiroz Mitsuyuki<br>
+    Projeto Extensionista Integrador IV, ADS · Orientador: Prof. Esp. Walderson Ryutti Shimokawa
+  </p>
+  <p class="link">bitforgee.github.io/prototipo-v1-one</p>
+  <div class="univag"><img src="../requisitos/logo_univag.png" alt="UNIVAG"></div>
+</section>
+
+<section class="slide">
+  <p class="rotulo">O problema</p>
+  <h1>Os pedidos dos alunos chegam por vários canais e nada fica registrado</h1>
+  <div class="numeros">
+    <div class="numero"><b>~256</b><span>mensagens de alunos à coordenação em 7 dias (171 WhatsApp, 70 e-mail, 15 AVA)</span></div>
+    <div class="numero"><b>50%</b><span>dessas mensagens eram pedidos de fato</span></div>
+    <div class="numero"><b>~40 h</b><span>por semana da coordenadora, divididas entre aulas, coordenação e professores</span></div>
+  </div>
+  <ul>
+    <li>Ninguém sabe depois quem recebeu o pedido, quem cuidou dele e quanto tempo levou.</li>
+    <li>O aluno não sabe a quem recorrer e repete a história a cada redirecionamento.</li>
+    <li>Boleto e atestado, os pedidos mais citados, já estão no Portal do Aluno, mas o aluno não sabe onde encontrá-los.</li>
+  </ul>
+  <div class="rodape"><span>Fonte: entrevistas com a coordenação dos cursos de tecnologia do Univag (set. e out. 2026)</span><span>2</span></div>
+</section>
+
+<section class="slide">
+  <p class="rotulo">Público-alvo</p>
+  <h1>Três perfis usam o One</h1>
+  <div class="perfis">
+    <div class="perfil"><h2>Aluno</h2><p>Faz a pergunta com as próprias palavras, consulta a base e acompanha as solicitações abertas.</p></div>
+    <div class="perfil"><h2>Atendente</h2><p>Coordenação, secretaria, financeiro ou TI. Atende a fila do próprio setor e resolve os chamados.</p></div>
+    <div class="perfil"><h2>Administrador</h2><p>Cadastra setores, categorias e regras, publica os artigos e acompanha os indicadores.</p></div>
+  </div>
+  <p>No piloto previsto entram o Univag, a coordenação dos cursos de tecnologia, os alunos de Análise e Desenvolvimento de Sistemas, até três setores e de 10 a 30 artigos na base.</p>
+  <p class="nota" style="margin-top:14px">A coordenadora é a principal interessada: é para ela que chega hoje a maior parte das mensagens.</p>
+  <div class="rodape"><span>One · protótipo inicial</span><span>3</span></div>
+</section>
+
+<section class="slide">
+  <p class="rotulo">Como funciona</p>
+  <h1>Um fluxo só, da pergunta ao indicador</h1>
+  <div class="fluxo">
+    <div class="passo"><b>1</b>O aluno escreve a dúvida</div><span class="seta">›</span>
+    <div class="passo"><b>2</b>O assistente procura nos artigos publicados</div><span class="seta">›</span>
+    <div class="passo"><b>3</b>Não resolveu? A conversa vira solicitação com protocolo</div><span class="seta">›</span>
+    <div class="passo"><b>4</b>A regra da categoria leva ao setor certo</div><span class="seta">›</span>
+    <div class="passo"><b>5</b>O atendente responde e resolve</div><span class="seta">›</span>
+    <div class="passo"><b>6</b>Tudo entra no histórico e nos indicadores</div>
+  </div>
+  <p class="frase">"O aluno não precisa saber quem resolve; o One precisa."</p>
+  <p class="nota" style="margin-top:24px">O chamado já nasce com a conversa, o curso do aluno, a categoria e o setor. O atendente não precisa pedir que o aluno explique tudo de novo.</p>
+  <div class="rodape"><span>One · protótipo inicial</span><span>4</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>A tela inicial resume as solicitações do aluno</h1>
+  <div class="corpo">
+    <ul>
+      <li>Mostra quantas solicitações estão em aberto, em atendimento e resolvidas.</li>
+      <li>Lista as mais recentes com protocolo, categoria, setor e situação.</li>
+      <li>Os botões do topo levam ao novo atendimento e à consulta das solicitações.</li>
+    </ul>
+    <div><div class="tela"><img src="img/aluno_inicio.png" alt="Tela inicial do aluno"></div>
+    <p class="legenda">Tela inicial da aluna Maria Souza</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>5</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>O assistente responde com a base da instituição</h1>
+  <div class="corpo">
+    <ul>
+      <li>O aluno escreve a dúvida ou escolhe uma das sugestões.</li>
+      <li>A resposta vem de um artigo publicado, e o artigo aparece como fonte (KB-001, versão 2).</li>
+      <li>No fim, o assistente pergunta se a resposta resolveu.</li>
+    </ul>
+    <div><div class="tela"><img src="img/assistente_resposta.png" alt="Assistente respondendo sobre boleto"></div>
+    <p class="legenda">Pergunta sobre boleto respondida pelo artigo KB-001</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>6</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>Se não resolveu, a conversa vira solicitação</h1>
+  <div class="corpo">
+    <ul>
+      <li>Quando o aluno responde "Não", o assistente oferece registrar o pedido.</li>
+      <li>Com um clique, o sistema gera o protocolo ONE-1054 e encaminha ao Financeiro, o setor da categoria boleto.</li>
+      <li>O aluno não preenche formulário nem repete a pergunta.</li>
+    </ul>
+    <div><div class="tela"><img src="img/assistente_abrir.png" alt="Assistente criando a solicitação ONE-1054"></div>
+    <p class="legenda">"Não resolveu" seguido da criação da solicitação</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>7</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>O aluno também pode abrir a solicitação direto</h1>
+  <div class="corpo">
+    <ul>
+      <li>Informa o assunto, escolhe a categoria e, se quiser, descreve o caso.</li>
+      <li>O setor de destino é preenchido sozinho: nota vai para a Coordenação ADS, que é a coordenação do curso da aluna.</li>
+      <li>Antes de criar, uma janela pede para confirmar assunto, categoria e setor.</li>
+    </ul>
+    <div><div class="tela"><img src="img/aluno_novo.png" alt="Formulário de novo atendimento"></div>
+    <p class="legenda">Novo atendimento com o setor definido pela categoria</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>8</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>Cada solicitação tem protocolo, situação e histórico</h1>
+  <div class="corpo">
+    <ul>
+      <li>O histórico registra cada evento com data e hora.</li>
+      <li>Ao lado ficam o curso, a categoria, o setor e o responsável.</li>
+      <li>O aluno responde pelo próprio chamado e pode cancelá-lo.</li>
+    </ul>
+    <div><div class="tela"><img src="img/aluno_solicitacao.png" alt="Detalhe da solicitação ONE-1054"></div>
+    <p class="legenda">Solicitação aberta e encaminhada à Coordenação ADS</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>9</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Aluno</p>
+  <h1>A base de conhecimento fica aberta para consulta</h1>
+  <div class="corpo">
+    <ul>
+      <li>O aluno busca por palavra-chave e filtra por categoria.</li>
+      <li>Cada artigo mostra categoria, versão, data e links úteis, como o do Portal do Aluno.</li>
+      <li>Só aparecem artigos publicados.</li>
+    </ul>
+    <div><div class="tela"><img src="img/aluno_artigo.png" alt="Artigo da base de conhecimento"></div>
+    <p class="legenda">Artigo "Como emitir a segunda via do boleto?"</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>10</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Atendente</p>
+  <h1>O atendente vê só a fila do seu setor</h1>
+  <div class="corpo">
+    <ul>
+      <li>Carlos Lima, da Secretaria Acadêmica, vê apenas os chamados desse setor.</li>
+      <li>Busca por protocolo, assunto ou aluno e filtra por situação.</li>
+      <li>O menu separa os chamados em atendimento, aguardando aluno e resolvidos.</li>
+    </ul>
+    <div><div class="tela"><img src="img/atendente_fila.png" alt="Fila de chamados do setor"></div>
+    <p class="legenda">Fila de chamados da Secretaria Acadêmica</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>11</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Atendente</p>
+  <h1>O chamado chega com o contexto preenchido</h1>
+  <div class="corpo">
+    <ul>
+      <li>Aluno, curso, categoria, setor e responsável já estão no chamado.</li>
+      <li>A mensagem pode ir para o aluno ou virar uma nota interna, que ele não vê.</li>
+      <li>Se faltar informação, o atendente marca o chamado como "aguardando aluno".</li>
+    </ul>
+    <div><div class="tela"><img src="img/atendente_chamado.png" alt="Chamado ONE-1050 com nota interna"></div>
+    <p class="legenda">Chamado ONE-1050 com uma nota interna sendo escrita</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>12</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Administrador</p>
+  <h1>O administrador define para onde cada categoria vai</h1>
+  <div class="corpo">
+    <ul>
+      <li>Cada categoria tem um destino: um setor fixo ou a coordenação do curso do aluno.</li>
+      <li>Boleto vai para o Financeiro; notas vão para a coordenação do curso.</li>
+      <li>No mesmo menu ficam os cadastros de usuários, cursos, setores e categorias.</li>
+    </ul>
+    <div><div class="tela"><img src="img/admin_regras.png" alt="Regras de encaminhamento"></div>
+    <p class="legenda">Regras de encaminhamento por categoria</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>13</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Administrador</p>
+  <h1>A base de conhecimento é mantida pelo administrador</h1>
+  <div class="corpo">
+    <ul>
+      <li>Os artigos são criados, editados, publicados e arquivados.</li>
+      <li>Cada artigo tem número de versão; o KB-001 está na versão 2.</li>
+      <li>Rascunhos e artigos arquivados não alimentam o assistente.</li>
+    </ul>
+    <div><div class="tela"><img src="img/admin_artigos.png" alt="Gestão dos artigos"></div>
+    <p class="legenda">Artigos publicados, em rascunho e arquivados</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>14</span></div>
+</section>
+
+<section class="slide feat">
+  <p class="rotulo">Funcionalidades · Administrador</p>
+  <h1>Os indicadores mostram o volume e o roteamento</h1>
+  <div class="corpo">
+    <ul>
+      <li>Total de chamados, abertos, roteamento correto e taxa de reabertura.</li>
+      <li>Gráficos por categoria, por situação e por setor.</li>
+      <li>No protótipo, os números são dados demonstrativos.</li>
+    </ul>
+    <div><div class="tela"><img src="img/admin_indicadores.png" alt="Painel de indicadores"></div>
+    <p class="legenda">Painel de indicadores do administrador</p></div>
+  </div>
+  <div class="rodape"><span>One · protótipo inicial</span><span>15</span></div>
+</section>
+
+<section class="slide">
+  <p class="rotulo">Diferenciais</p>
+  <h1>O que diferencia o One</h1>
+  <table class="tabela">
+    <tr><td>Curso</td><td>"Minha nota não saiu" vai para a coordenação do curso do aluno, sem ele escolher setor.</td></tr>
+    <tr><td>Registro</td><td>Quem pediu, quem respondeu, quando e o que foi dito ficam no histórico, sem exclusão.</td></tr>
+    <tr><td>Base aprovada</td><td>O assistente só responde o que a instituição publicou. Sem artigo, ele oferece encaminhar.</td></tr>
+    <tr><td>Adoção leve</td><td>Não depende de integração com o sistema acadêmico. Aponta o aluno para o serviço que já existe no Portal.</td></tr>
+  </table>
+  <p class="nota" style="margin-top:22px">Ficam fora do MVP: WhatsApp, integrações com Moodle e Portal do Aluno, roteamento por IA e notificações push.</p>
+  <div class="rodape"><span>One · protótipo inicial</span><span>16</span></div>
+</section>
+
+<section class="slide">
+  <p class="rotulo">Onde estamos</p>
+  <h1>O que o protótipo é hoje e o que vem depois</h1>
+  <div class="colunas">
+    <div>
+      <p style="margin-bottom:14px"><b>Hoje</b></p>
+      <ul>
+        <li>Protótipo visual publicado no GitHub Pages, com dados demonstrativos.</li>
+        <li>O login escolhe um perfil, sem senha; as permissões são simuladas no navegador.</li>
+        <li>O assistente é uma simulação local, sem inteligência artificial.</li>
+      </ul>
+    </div>
+    <div>
+      <p style="margin-bottom:14px"><b>Próximas entregas</b></p>
+      <ul>
+        <li>20 e 21/10: diagramas e documento de requisitos.</li>
+        <li>27 a 30/10: demonstrar as funcionalidades implementadas.</li>
+        <li>Pendente com a coordenação: qual registro o MEC exige e por quanto tempo guardar o histórico.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="rodape"><span>Calendário: Manual do PEI IV, Apêndice F</span><span>17</span></div>
+</section>
+
+<section class="slide fim">
+  <p class="rotulo">Obrigado</p>
+  <h1>Perguntas?</h1>
+  <p>Protótipo: <b>bitforgee.github.io/prototipo-v1-one</b></p>
+  <p class="nota" style="margin-top:10px">Entre como Aluno, Atendente ou Administrador na tela de login.</p>
+  <div class="rodape"><span>One · protótipo inicial</span><span>18</span></div>
+</section>
+
+</body>
+</html>

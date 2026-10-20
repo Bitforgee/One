@@ -134,3 +134,12 @@ A reunião de 01/10/2026 decide três dos cinco diferenciais:
 | 2 — Registro para o MEC | 5.1–5.3 (Q15) | Rebaixar para "rastreabilidade" (benefício de gestão, não de conformidade) e tirar "com registro" do descritor |
 | 3 — Tempo da coordenação | 1.1–1.5 (Q17) | Se chegam poucas demandas a ela, o público principal passa a ser secretaria/CAE |
 | 1 — Encaminha pelo curso | 2.2–2.3 (Q16), 7.1 (CAE) | Se quase tudo vai para a CAE, o diferencial vira "triagem para a CAE", não "coordenação do curso" |
+
+Resultado de 01/10/2026 (só as seções 1–2 do roteiro foram cobertas; achados E1.8–E1.13 em
+`requirements.md`):
+
+- **Diferencial 3 — mantido.** Chegam a ela ~256 mensagens por semana, ~50% demandas de fato.
+- **Diferencial 1 — mantido.** Só financeiro e documentos pessoais vão para a CAE; o restante se
+  divide entre coordenação, professor e representante. O professor ainda não cabe no
+  roteamento (Q18).
+- **Diferencial 2 — em aberto.** A seção 5 (MEC) não foi perguntada; segue por e-mail (Q15).
