@@ -89,6 +89,10 @@ public class DivisaoTests
         Assert.Equal(new string('f', 1000) + ".", f[0]);
         Assert.StartsWith(f[0][^200..], f[1]);
         Assert.EndsWith(new string('g', 900), f[^1]);
+
+        // parágrafo ou frase dentro dos primeiros 200 caracteres não serve de corte (o trecho seguinte voltaria para antes do começo)
+        Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + "\n\n" + new string('b', 1600))[0].Length);
+        Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + ". " + new string('b', 1600))[0].Length);
     }
 }
 
@@ -137,6 +141,25 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         var trechos = await f.Db(m.I.Id, db => db.TrechosFonte.Where(t => t.VersaoDocumentoId == versao.Id).ToListAsync());
         Assert.NotEmpty(trechos);
         Assert.All(trechos, t => Assert.Null(t.Embedding));
+
+        // mesma transação: se gravar um trecho falha, nem o documento nem a versão ficam
+        Task<(int, int, int)> Linhas() => f.Db(m.I.Id, async db => (await db.Documentos.CountAsync(), await db.VersoesDocumento.CountAsync(), await db.TrechosFonte.CountAsync()));
+        await f.Db(m.I.Id, db => db.Database.ExecuteSqlRawAsync("""
+            CREATE FUNCTION falha_de_teste() RETURNS trigger LANGUAGE plpgsql AS $$
+            BEGIN IF NEW.texto LIKE '%FALHADETESTE%' THEN RAISE EXCEPTION 'falha de teste'; END IF; RETURN NEW; END $$;
+            CREATE TRIGGER falha_de_teste BEFORE INSERT ON trecho_fonte FOR EACH ROW EXECUTE FUNCTION falha_de_teste();
+            """));
+        try
+        {
+            var antes = await Linhas();
+            var falha = await m.Admin.Subir("Falha", m.Categoria, Pdfs.Criar("Texto FALHADETESTE do regulamento."));
+            Assert.Equal(HttpStatusCode.InternalServerError, falha.StatusCode);
+            Assert.Equal(antes, await Linhas());
+        }
+        finally
+        {
+            await f.Db(m.I.Id, db => db.Database.ExecuteSqlRawAsync("DROP TRIGGER falha_de_teste ON trecho_fonte; DROP FUNCTION falha_de_teste();"));
+        }
     }
 
     // C28
@@ -162,12 +185,23 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
             ("versão sem %PDF", HttpStatusCode.UnsupportedMediaType, () => m.Admin.NovaVersao(existente, Encoding.UTF8.GetBytes("não é pdf"))),
             ("versão 20 MB + 1", HttpStatusCode.RequestEntityTooLarge, () => m.Admin.NovaVersao(existente, Pdfs.ComTamanho(valido, 20 * 1024 * 1024 + 1))),
             ("versão sem texto", HttpStatusCode.BadRequest, () => m.Admin.NovaVersao(existente, Pdfs.Criar(""))),
+            ("título com 201 caracteres", HttpStatusCode.BadRequest, () => m.Admin.Subir(new string('t', 201), m.Categoria, valido)),
+            ("sem categoria", HttpStatusCode.BadRequest, () => m.Admin.Subir("Doc", null, valido)),
+            ("categoria não numérica", HttpStatusCode.BadRequest, () => m.Admin.PostAsync("/api/admin/documentos",
+                new MultipartFormDataContent { { new StringContent("Doc"), "titulo" }, { new StringContent("abc"), "categoriaId" }, { new ByteArrayContent(valido), "arquivo", "r.pdf" } })),
+            ("sem arquivo", HttpStatusCode.BadRequest, () => m.Admin.Subir("Doc", m.Categoria, null)),
+            ("versão sem arquivo", HttpStatusCode.BadRequest, () => m.Admin.PostAsync($"/api/admin/documentos/{existente}/versoes", new MultipartFormDataContent { { new StringContent("x"), "outro" } })),
+            ("PDF ilegível", HttpStatusCode.BadRequest, () => m.Admin.Subir("Doc", m.Categoria, Encoding.ASCII.GetBytes("%PDF-1.7\nisto não é um pdf de verdade"))),
         };
         foreach (var (caso, esperado, pedir) in recusas)
         {
             var r = await pedir();
             Assert.True(r.StatusCode == esperado, $"{caso}: {(int)r.StatusCode}");
             if (caso.EndsWith("sem texto")) Assert.Equal(DocumentoRotas.SemTexto, (await r.Json()).GetProperty("detail").GetString());
+            if (caso == "PDF ilegível") Assert.Equal("Não foi possível ler o PDF.", (await r.Json()).GetProperty("detail").GetString());
+            if (caso.Contains("título com")) Assert.Equal("Informe o título, com até 200 caracteres.", (await r.Json()).GetProperty("detail").GetString());
+            if (caso.Contains("categoria não") || caso == "sem categoria") Assert.Equal("Escolha uma categoria ativa.", (await r.Json()).GetProperty("detail").GetString());
+            if (caso.EndsWith("sem arquivo")) Assert.Equal("Envie o PDF no campo arquivo.", (await r.Json()).GetProperty("detail").GetString());
         }
         Assert.Equal(antes, await f.Db(m.I.Id, async db => (await db.Documentos.CountAsync(), await db.VersoesDocumento.CountAsync(), await db.TrechosFonte.CountAsync())));
 
@@ -325,6 +359,12 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("Estágio", "ATIVO", "estagio.pdf", 2, "PENDENTE"),
             (reg.GetProperty("categoria").GetString(), reg.GetProperty("estado").GetString(), reg.GetProperty("versao").GetProperty("nomeArquivo").GetString(),
              reg.GetProperty("versao").GetProperty("paginas").GetInt32(), reg.GetProperty("indexacao").GetString()));
+
+        // o calendário desiste depois de 5 tentativas; o regulamento é indexado pelo agendador
+        await f.Db(m.I.Id, db => db.TrechosFonte.Where(t => t.VersaoDocumento!.Documento!.Titulo == "Calendário acadêmico").ExecuteUpdateAsync(s => s.SetProperty(t => t.Tentativas, 5)));
+        await Agendador.Executar();
+        var depois = (await (await m.Admin.GetAsync("/api/admin/documentos")).Json()).EnumerateArray().Select(d => d.GetProperty("indexacao").GetString());
+        Assert.Equal(["FALHOU", "INDEXADO"], depois);
     }
 
     // C44

@@ -90,14 +90,23 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Nao_chama_chat_nem_grava()
     {
         var i = await Base();
-        var arquivo = Arquivo(Perguntas);
+        await f.Db(i.Id, async db =>
+        {
+            var d = new Documento { Titulo = "Regulamento de estagio", CategoriaId = (await db.Categorias.FirstAsync()).Id };
+            d.Versoes.Add(new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+            db.Documentos.Add(d);
+            await db.SaveChangesAsync();
+        });
+        // o título de um documento ativo também é fonte aceita
+        var arquivo = Arquivo(Perguntas.Append(new { pergunta = "horas de estagio", fonte = "Regulamento de estagio" }).ToArray());
         var (chat, embeddings, antes) = (f.Llm.Corpos.Count, f.Llm.CorposEmbeddings.Count, await Linhas());
 
-        var (codigo, _, _) = await Rodar("avaliar-busca", "--slug", i.Slug, "--arquivo", arquivo);
+        var (codigo, saida, _) = await Rodar("avaliar-busca", "--slug", i.Slug, "--arquivo", arquivo);
 
         Assert.Equal(0, codigo);
+        Assert.EndsWith("/4", saida.Trim());
         Assert.Equal(chat, f.Llm.Corpos.Count);
-        Assert.Equal(embeddings + 3, f.Llm.CorposEmbeddings.Count);
+        Assert.Equal(embeddings + 4, f.Llm.CorposEmbeddings.Count);
         Assert.Equal(antes, await Linhas());
     }
 
@@ -110,6 +119,8 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         {
             ("slug inexistente", ["avaliar-busca", "--slug", "nao-existe", "--arquivo", Arquivo(Perguntas)], ["--slug: instituição \"nao-existe\" não existe"]),
             ("não é JSON", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo("isto não é json")], ["--arquivo: JSON inválido"]),
+            ("arquivo inexistente", ["avaliar-busca", "--slug", i.Slug, "--arquivo", "nao-existe.json"], ["--arquivo: arquivo \"nao-existe.json\" não encontrado"]),
+            ("lista vazia", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo("[]")], ["--arquivo: nenhuma pergunta"]),
             ("pergunta vazia", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo(new object[] { Perguntas[0], new { pergunta = " ", fonte = "Rematricula prazo" } })], ["[1].pergunta: obrigatória"]),
             ("fonte que não é título ativo", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo(new object[] { new { pergunta = "x", fonte = "Artigo arquivado" }, new { pergunta = "y", fonte = "Não existe" } })],
                 ["[0].fonte: \"Artigo arquivado\" não é título de artigo ou documento ativo", "[1].fonte: \"Não existe\" não é título de artigo ou documento ativo"]),
@@ -123,5 +134,16 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
             foreach (var e in esperado) Assert.Contains(e, erro);
             Assert.Equal(embeddings, f.Llm.CorposEmbeddings.Count);
         }
+
+        // provedor de embeddings fora: sai com 1 e diz o motivo
+        f.Llm.ResponderEmbeddings = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError));
+        try
+        {
+            var (codigo, saida, erro) = await Rodar("avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo(Perguntas));
+            Assert.Equal(1, codigo);
+            Assert.DoesNotContain("/3", saida);
+            Assert.Contains("embeddings: falha ao gerar o vetor da pergunta \"rematricula prazo\"", erro);
+        }
+        finally { f.Llm.ResponderEmbeddings = null; }
     }
 }

@@ -81,6 +81,8 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
 
         var lotes = f.Llm.CorposEmbeddings.Skip(antes).Select(c => JsonDocument.Parse(c).RootElement.GetProperty("input").GetArrayLength()).ToList();
         Assert.Equal([100, 100, 50], lotes);
+        Assert.All(f.Llm.CorposEmbeddings.Skip(antes).Select(c => JsonDocument.Parse(c).RootElement), c =>
+            Assert.Equal(("text-embedding-3-small", "float"), (c.GetProperty("model").GetString(), c.GetProperty("encoding_format").GetString())));
         foreach (var i in instituicoes)
         {
             var vetores = await f.Db(i.Id, db => db.TrechosFonte.Select(t => t.Embedding).ToListAsync());

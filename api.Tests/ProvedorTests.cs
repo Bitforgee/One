@@ -187,21 +187,29 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
         await using var con = new Npgsql.NpgsqlConnection(f.ConnectionString);
         await con.OpenAsync();
         async Task<string> Foto(string tabela) => (string)(await new Npgsql.NpgsqlCommand($"SELECT string_agg(t::text, '|' ORDER BY id) FROM {tabela} t", con).ExecuteScalarAsync())!;
-        foreach (var (tabela, sql) in new[]
+        const string SoEmbedding = "trecho_fonte: só o embedding vazio e as tentativas podem mudar";
+        foreach (var (tabela, sql, motivo) in new[]
         {
-            ("versao_documento", "UPDATE versao_documento SET nome_arquivo = 'outro.pdf'"),
-            ("versao_documento", "DELETE FROM versao_documento"),
-            ("citacao_artigo", "UPDATE citacao_artigo SET trechos = ARRAY['outro']"),
-            ("citacao_artigo", "DELETE FROM citacao_artigo"),
-            ("trecho_fonte", "DELETE FROM trecho_fonte"),
-            ("trecho_fonte", "UPDATE trecho_fonte SET texto = 'outro'"),
-            ("trecho_fonte", $"UPDATE trecho_fonte SET embedding = (SELECT embedding FROM trecho_fonte WHERE id = {Semente.Fonte(c.Faltas.Id)}) WHERE id = {indexado}"),
+            ("versao_documento", "UPDATE versao_documento SET nome_arquivo = 'outro.pdf'", "tabela versao_documento é append-only"),
+            ("versao_documento", "DELETE FROM versao_documento", "tabela versao_documento é append-only"),
+            ("citacao_artigo", "UPDATE citacao_artigo SET trechos = ARRAY['outro']", "tabela citacao_artigo é append-only"),
+            ("citacao_artigo", "DELETE FROM citacao_artigo", "tabela citacao_artigo é append-only"),
+            // o trecho sem citação: a recusa só pode vir do trigger, não da FK de citacao_artigo
+            ("trecho_fonte", "DELETE FROM trecho_fonte WHERE texto = 'pendente'", "trecho_fonte não aceita DELETE"),
+            ("trecho_fonte", "UPDATE trecho_fonte SET texto = 'outro'", SoEmbedding),
+            ("trecho_fonte", $"UPDATE trecho_fonte SET embedding = (SELECT embedding FROM trecho_fonte WHERE id = {Semente.Fonte(c.Faltas.Id)}) WHERE id = {indexado}", SoEmbedding),
         })
         {
             var antes = await Foto(tabela);
-            await Assert.ThrowsAsync<Npgsql.PostgresException>(() => new Npgsql.NpgsqlCommand(sql, con).ExecuteNonQueryAsync());
+            var e = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => new Npgsql.NpgsqlCommand(sql, con).ExecuteNonQueryAsync());
+            Assert.Equal(("P0001", motivo), (e.SqlState, e.MessageText));
             Assert.Equal(antes, await Foto(tabela));
         }
+
+        // door R4: o número da versão é único por documento
+        var repetida = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => new Npgsql.NpgsqlCommand(
+            "INSERT INTO versao_documento (instituicao_id, documento_id, numero, nome_arquivo, conteudo, texto, paginas, criada_em) SELECT instituicao_id, documento_id, numero, nome_arquivo, conteudo, texto, paginas, criada_em FROM versao_documento", con).ExecuteNonQueryAsync());
+        Assert.Equal(("23505", "ix_versao_documento_documento_id_numero"), (repetida.SqlState, repetida.ConstraintName));
 
         // o embedding vazio pode ser gravado uma vez
         var gravados = await new Npgsql.NpgsqlCommand($"UPDATE trecho_fonte SET embedding = (SELECT embedding FROM trecho_fonte WHERE id = {indexado}) WHERE texto = 'pendente'", con).ExecuteNonQueryAsync();
