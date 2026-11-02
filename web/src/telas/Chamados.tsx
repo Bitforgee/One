@@ -94,7 +94,17 @@ export function ChamadoDetalhe() {
   const [encaminhar, setEncaminhar] = useState(false)
   const [setorId, setSetorId] = useState('')
   const [categoriaId, setCategoriaId] = useState('')
+  const [arquivos, setArquivos] = useState<File[]>([])
+  const [envio, setEnvio] = useState(0) // troca a chave do campo de arquivo para limpá-lo depois do envio
+  const [original, setOriginal] = useState('')
+  const [prontas, setProntas] = useState<{ id: number; titulo: string; texto: string }[]>([])
   const fuso = me.instituicao.fuso
+  const setorDaEquipe = chamado?.eventos ? chamado.setorId : undefined
+
+  // AC 147: respostas prontas do setor do chamado, só para a equipe
+  useEffect(() => {
+    if (setorDaEquipe) api<typeof prontas>(`/api/respostas-prontas?setorId=${setorDaEquipe}`).then(setProntas, () => setProntas([]))
+  }, [setorDaEquipe])
 
   if (erro && !chamado) return <Alert variant="danger">{erro}</Alert>
   if (!chamado) return <Carregando />
@@ -121,9 +131,12 @@ export function ChamadoDetalhe() {
     f.set('tipo', nota ? 'NOTA' : 'PUBLICA')
     f.set('texto', texto)
     f.set('aguardaAluno', String(!nota && aguardaAluno))
+    if (!nota) arquivos.forEach((a) => f.append('anexos', a))
     executar('mensagens', f, () => {
       setTexto('')
       setAguardaAluno(false)
+      setArquivos([])
+      setEnvio((n) => n + 1)
     })
   }
 
@@ -193,6 +206,15 @@ export function ChamadoDetalhe() {
                 {m.tipo === 'NOTA' && <Badge bg="warning" text="dark" className="ms-2">Nota interna</Badge>}
               </div>
               <div style={quebra}>{m.texto}</div>
+              {m.anexos?.map((x) => (
+                <div key={x.id} className="small">
+                  <i className="bi bi-paperclip me-1" aria-hidden="true" />
+                  <a href={`/api/anexos/${x.id}`} target="_blank" rel="noreferrer">
+                    {x.nome}
+                  </a>{' '}
+                  <span className="text-body-secondary">({Math.ceil(x.tamanho / 1024)} KB)</span>
+                </div>
+              ))}
               <div className="small text-body-secondary text-end">{formatarData(m.criadaEm, fuso)}</div>
             </Card.Body>
           </Card>
@@ -201,10 +223,33 @@ export function ChamadoDetalhe() {
 
       {(pode('responder') || pode('nota')) && (
         <Form onSubmit={responder} className="mb-3">
+          {equipe && prontas.length > 0 && !nota && (
+            <Form.Select aria-label="Resposta pronta" className="mb-2" value="" onChange={(e) => setTexto(prontas.find((p) => String(p.id) === e.target.value)?.texto ?? texto)}>
+              <option value="">Inserir resposta pronta…</option>
+              {prontas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.titulo}
+                </option>
+              ))}
+            </Form.Select>
+          )}
           <Form.Group controlId="resposta">
             <Form.Label>{c.estado === 'RESOLVIDO' && !equipe ? 'Responder (reabre a solicitação)' : 'Responder'}</Form.Label>
             <Form.Control as="textarea" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
           </Form.Group>
+          {!nota && (
+            <Form.Group controlId="anexos" className="mt-2">
+              <Form.Label className="small">Anexos (PDF, JPG ou PNG, até 10 MB cada)</Form.Label>
+              <Form.Control
+                key={envio}
+                type="file"
+                size="sm"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setArquivos(Array.from((e.target as HTMLInputElement).files ?? []))}
+              />
+            </Form.Group>
+          )}
           {equipe && (
             <Stack direction="horizontal" gap={3} className="flex-wrap mt-2">
               {pode('nota') && <Form.Check id="nota" label="Nota interna" checked={nota} onChange={(e) => setNota(e.target.checked)} />}
@@ -281,6 +326,26 @@ export function ChamadoDetalhe() {
               </Form.Select>
               <BotaoAcao type="submit" pendente={acao.pendente} variant="outline-secondary" disabled={!categoriaId}>
                 Salvar
+              </BotaoAcao>
+            </Stack>
+          </Form.Group>
+        </Form>
+      )}
+
+      {pode('duplicado') && (
+        <Form
+          className="mb-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))
+          }}
+        >
+          <Form.Group controlId="original">
+            <Form.Label>Duplicado de outro pedido do mesmo aluno</Form.Label>
+            <Stack direction="horizontal" gap={2}>
+              <Form.Control placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} />
+              <BotaoAcao type="submit" pendente={acao.pendente} variant="outline-secondary" disabled={!original.trim()}>
+                Marcar
               </BotaoAcao>
             </Stack>
           </Form.Group>

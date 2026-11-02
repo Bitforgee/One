@@ -41,10 +41,10 @@ Proof: `npm --prefix web run test -- -t "login mostra o nome da instituição"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoRotaTests.Slug_inexistente_ou_inativo_404"`
 Proof: `npm --prefix web run test -- -t "slug desconhecido mostra Instituição não encontrada"`
 
-**C7** - Um usuário da `demo`, com o papel exigido pela rota, recebe 404 ao usar o id ou número de um recurso que só existe na `univag`, nas 27 rotas da `Surface` com `{id}` ou `{numero}` (AC 7)
+**C7** - [x] Um usuário da `demo`, com o papel exigido pela rota, recebe 404 ao usar o id ou número de um recurso que só existe na `univag`, nas 27 rotas da `Surface` com `{id}` ou `{numero}` (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Recurso_de_outra_instituicao_404"`
 
-**C8** - `categoriaId`, `setorId`, `matriculaId` ou `numeroOriginal` de outra instituição no corpo da requisição recebem 400, o mesmo de um id inexistente (AC 7)
+**C8** - [x] `categoriaId`, `setorId`, `matriculaId` ou `numeroOriginal` de outra instituição no corpo da requisição recebem 400, o mesmo de um id inexistente (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Id_de_outra_instituicao_no_corpo_400"`
 
 **C9** - [x] O mesmo CPF, o mesmo e-mail e o mesmo número de matrícula são gravados na `univag` e na `demo` sem erro, como contas e matrículas distintas (AC 8)
@@ -130,7 +130,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DefinirSenhaTests.Sen
 **C35** - [x] Token já usado, token emitido há 61 minutos e token inexistente respondem 400 com "Link inválido ou vencido." (AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DefinirSenhaTests.Link_usado_vencido_ou_inexistente_400"`
 
-**C36** - Sem cookie, as 49 rotas `/api/*` registradas fora de instituição, login, primeiro acesso, definir senha e logout respondem 401 (AC 21)
+**C36** - [x] Sem cookie, as 49 rotas `/api/*` registradas fora de instituição, login, primeiro acesso, definir senha e logout respondem 401 (AC 21)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Sem_cookie_401_em_toda_rota_privada"`
 
 **C37** - [x] `POST /api/auth/logout` responde 204 e devolve `one.auth` vencido, com ou sem sessão (Surface)
@@ -398,7 +398,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Men
 **C119** - [x] Dois atendentes alteram o mesmo chamado lido na mesma versão: a primeira alteração grava e a segunda responde 409 (AC 91, door 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConcorrenciaTests.Segunda_alteracao_simultanea_409"`
 
-**C120** - Criação, transição, atribuição, encaminhamento, reclassificação, resposta, nota e anexo gravam cada um um evento com tipo, ator (vazio para o Sistema) e data em UTC; o detalhe os lista em ordem cronológica no fuso da instituição (AC 92)
+**C120** - [x] Criação, transição, atribuição, encaminhamento, reclassificação, resposta, nota e anexo gravam cada um um evento com tipo, ator (vazio para o Sistema) e data em UTC; o detalhe os lista em ordem cronológica no fuso da instituição (AC 92)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EventosTests.Cada_acao_grava_evento"`
 Proof: `npm --prefix web run test -- -t "eventos em ordem no fuso"`
 
@@ -529,37 +529,37 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Falha_
 
 ### S10 - E-mail e anexos (P3) · ~7 files · ~40 KB · ~10k
 
-**C160** - Uma resposta pública do atendente gera para o aluno o e-mail "[Univag] ONE-1: nova resposta" com o link `/univag/chamados/ONE-1` (AC 122)
+**C160** - [x] Uma resposta pública do atendente gera para o aluno o e-mail "[Univag] ONE-1: nova resposta" com o link `/univag/chamados/ONE-1` (AC 122)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Resposta_publica_gera_email"`
 
-**C161** - Resolver gera o e-mail "[Univag] ONE-1 foi resolvido" com o texto da resolução e o link para confirmar ou rejeitar (AC 123)
+**C161** - [x] Resolver gera o e-mail "[Univag] ONE-1 foi resolvido" com o texto da resolução e o link para confirmar ou rejeitar (AC 123)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Resolucao_gera_email"`
 
-**C162** - Uma nota interna gera 0 linhas em `email_saida` (AC 124)
+**C162** - [x] Uma nota interna gera 0 linhas em `email_saida` (AC 124)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Nota_interna_nao_gera_email"`
 
-**C163** - A linha de `email_saida` existe depois da ação e não existe quando a transação da ação falha; a execução seguinte do agendador a envia e grava `enviado_em` (AC 125, door 11)
+**C163** - [x] A linha de `email_saida` existe depois da ação e não existe quando a transação da ação falha; a execução seguinte do agendador a envia e grava `enviado_em` (AC 125, door 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Email_na_transacao_da_acao"`
 
-**C164** - Com o SMTP falhando, cada uma das 5 tentativas soma 1 a `tentativas`, marca a próxima para 2^`tentativas` minutos e grava a falha no log; depois da 5ª o agendador para, grava a desistência no log, e a ação continua gravada (AC 126)
+**C164** - [x] Com o SMTP falhando, cada uma das 5 tentativas soma 1 a `tentativas`, marca a próxima para 2^`tentativas` minutos e grava a falha no log; depois da 5ª o agendador para, grava a desistência no log, e a ação continua gravada (AC 126)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Retry_2_a_n_e_desiste_em_5"`
 
-**C165** - Uma resposta pública com um PDF, um JPG e um PNG, o maior com exatamente 10 MB, responde 201 e lista os três anexos na mensagem (AC 127)
+**C165** - [x] Uma resposta pública com um PDF, um JPG e um PNG, o maior com exatamente 10 MB, responde 201 e lista os três anexos na mensagem (AC 127)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Pdf_jpg_png_ate_10mb"`
 
-**C166** - `GET /api/anexos/{id}` responde 200 com os mesmos bytes enviados e o `Content-Type` original, lidos da coluna `bytea` (door 13)
+**C166** - [x] `GET /api/anexos/{id}` responde 200 com os mesmos bytes enviados e o `Content-Type` original, lidos da coluna `bytea` (door 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Download_devolve_os_mesmos_bytes"`
 
-**C167** - Um `.exe` renomeado para `.pdf` responde 415 e a mensagem não é gravada (AC 128)
+**C167** - [x] Um `.exe` renomeado para `.pdf` responde 415 e a mensagem não é gravada (AC 128)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Tipo_desconhecido_415"`
 
-**C168** - Um PDF de 10 MB + 1 byte responde 413 e a mensagem não é gravada (AC 128)
+**C168** - [x] Um PDF de 10 MB + 1 byte responde 413 e a mensagem não é gravada (AC 128)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Acima_de_10mb_413"`
 
-**C169** - Um anexo numa nota interna responde 400 e a nota não é gravada (AC 128)
+**C169** - [x] Um anexo numa nota interna responde 400 e a nota não é gravada (AC 128)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Anexo_em_nota_interna_400"`
 
-**C170** - Um anexo pedido por outro aluno ou por atendente de outro setor responde 404 (AC 129)
+**C170** - [x] Um anexo pedido por outro aluno ou por atendente de outro setor responde 404 (AC 129)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Sem_acesso_404"`
 
 ### S11 - Indicadores (P2) · ~5 files · ~40 KB · ~10k
@@ -603,10 +603,10 @@ Proof: `npm --prefix web run e2e -- -g "sem rolagem horizontal a 360 px"`
 **C182** - [x] `web/package.json` fixa `bootstrap` 5.3.8, `react-bootstrap` 2.10.10, `bootstrap-icons` 1.13.2, `react-router` 8 e `vite-plugin-pwa` 2.0.0 (door 9)
 Proof: `npm --prefix web run test -- -t "dependências do kit de interface"`
 
-**C183** - As respostas 400, 401, 403, 404, 409, 413, 415 e 429 trazem `title` e `detail` em português e nenhuma traz "One or more validation errors occurred." (AC 141)
+**C183** - [x] As respostas 400, 401, 403, 404, 409, 413, 415 e 429 trazem `title` e `detail` em português e nenhuma traz "One or more validation errors occurred." (AC 141)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProblemDetailsTests.Detail_em_portugues"`
 
-**C184** - Toda resposta 4xx e 5xx da API tem `Content-Type` `application/problem+json` com `type`, `title`, `status` e `detail`, e `errors` por campo no 400; a SPA mostra o `detail` num `Alert` (AC 142, door 8)
+**C184** - [x] Toda resposta 4xx e 5xx da API tem `Content-Type` `application/problem+json` com `type`, `title`, `status` e `detail`, e `errors` por campo no 400; a SPA mostra o `detail` num `Alert` (AC 142, door 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProblemDetailsTests.Erros_sao_problem_json"`
 Proof: `npm --prefix web run test -- -t "erro mostra detail num Alert"`
 
@@ -621,28 +621,28 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SpaTests.Spa_em_slug_
 
 ### S13 - Extras inspirados no GLPI (P3) · ~6 files · ~30 KB · ~8k
 
-**C188** - Com o relógio injetado, um chamado há 3 dias em `AGUARDANDO_ALUNO` gera uma única vez o e-mail "[Univag] ONE-1 aguarda sua resposta" e um evento de ator vazio; a execução seguinte não gera outro (AC 145)
+**C188** - [x] Com o relógio injetado, um chamado há 3 dias em `AGUARDANDO_ALUNO` gera uma única vez o e-mail "[Univag] ONE-1 aguarda sua resposta" e um evento de ator vazio; a execução seguinte não gera outro (AC 145)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Lembrete_no_3o_dia_uma_vez"`
 
-**C189** - Um chamado há 7 dias em `AGUARDANDO_ALUNO` fica `RESOLVIDO` com o texto "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução." e ator vazio, e a rejeição do aluno depois disso responde 200 (AC 146)
+**C189** - [x] Um chamado há 7 dias em `AGUARDANDO_ALUNO` fica `RESOLVIDO` com o texto "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução." e ator vazio, e a rejeição do aluno depois disso responde 200 (AC 146)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Resolve_no_7o_dia_aguardando"`
 
-**C190** - `GET /api/respostas-prontas?setorId=` responde 200 ao atendente do setor com a resposta pronta cadastrada, e o chamado guarda só o texto editado que foi enviado (AC 147)
+**C190** - [x] `GET /api/respostas-prontas?setorId=` responde 200 ao atendente do setor com a resposta pronta cadastrada, e o chamado guarda só o texto editado que foi enviado (AC 147)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Resposta_pronta_guarda_texto_enviado"`
 
-**C191** - `GET /api/respostas-prontas` com `setorId` de um setor que não é do atendente responde 404 (Surface)
+**C191** - [x] `GET /api/respostas-prontas` com `setorId` de um setor que não é do atendente responde 404 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Respostas_prontas_de_outro_setor_404"`
 
-**C192** - Marcar como duplicado de outro chamado do mesmo aluno responde 200, fecha com motivo `DUPLICADO`, guarda o número original, envia "Este pedido continua em ONE-1." como resposta pública e tira o chamado das contagens de indicadores (AC 148)
+**C192** - [x] Marcar como duplicado de outro chamado do mesmo aluno responde 200, fecha com motivo `DUPLICADO`, guarda o número original, envia "Este pedido continua em ONE-1." como resposta pública e tira o chamado das contagens de indicadores (AC 148)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Duplicado_fecha_e_sai_dos_indicadores"`
 
-**C193** - `numeroOriginal` igual ao próprio chamado, de outro aluno ou inexistente responde 400 e nada muda (AC 149)
+**C193** - [x] `numeroOriginal` igual ao próprio chamado, de outro aluno ou inexistente responde 400 e nada muda (AC 149)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Original_invalido_400"`
 
-**C194** - O aluno marcando duplicado recebe 403, e marcar um chamado `RESOLVIDO` ou `FECHADO` responde 409 (Surface)
+**C194** - [x] O aluno marcando duplicado recebe 403, e marcar um chamado `RESOLVIDO` ou `FECHADO` responde 409 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Duplicado_por_aluno_403_e_em_fechado_409"`
 
-**C195** - Um artigo `ATIVO` com `visivelAte` ontem não vai ao provedor, com `visivelDe` hoje vai, e `visivelDe` posterior a `visivelAte` responde 400 (AC 150)
+**C195** - [x] Um artigo `ATIVO` com `visivelAte` ontem não vai ao provedor, com `visivelDe` hoje vai, e `visivelDe` posterior a `visivelAte` responde 400 (AC 150)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Validade_do_artigo"`
 
 ## Coverage
@@ -796,4 +796,13 @@ estimado em 30k.
   - o detalhe do chamado traz para a equipe `setores` e `categorias` ativos, destinos de encaminhar e reclassificar
   - artigo: resposta até 8000 caracteres e título até 200; categoria precisa existir (pode estar inativa); `api()` da SPA aceita `PUT`
 - Não construído ainda: telas de administração de usuários, importação de matrículas e cadastros (só pela API); seletor de setor na tela de Indicadores para o administrador
+- Lote 4 (S10, S13) fechado em verde: os 195 checks marcados, com `dotnet test api.Tests` 190 verdes, `npm --prefix web run test` 32 verdes, o e2e "sem rolagem horizontal a 360 px" com 10 telas verdes contra `vite preview` e o e2e "manifesto e service worker" verde contra o contêiner reconstruído (`docker compose up -d --build`, migração `Lote4` aplicada na subida). Fechados também: C7 (27 rotas), C8 (com `numeroOriginal`), C36 (49 rotas privadas), C120 (evento `ANEXO`), C183 e C184 (413 e 415)
+- Decidido no meio do lote 4, sem o usuário:
+  - e-mail também na resolução automática por falta de resposta (AC 146 resolve, e AC 123 diz que toda resolução avisa) e na marcação de duplicado (é resposta pública de atendente, AC 122)
+  - o aluno pode anexar arquivos na própria resposta e na rejeição por mensagem; anexo só é recusado em nota interna
+  - o tipo do anexo guardado e devolvido é o da assinatura do arquivo, não o `Content-Type` enviado
+  - novas colunas em `chamado`: `aguardando_desde` e `lembrete_em` (prazos do S13) e `numero_original`; em `artigo`: `visivel_de` e `visivel_ate` (`date`); em `anexo`: nome, tipo, tamanho e conteúdo `bytea`
+  - o lembrete grava um evento `LEMBRETE`, tipo a mais além dos 8 do AC 92
+  - o detalhe do chamado traz `setorId` (para as respostas prontas) e `numeroOriginal`; cada mensagem traz a lista de anexos
+- Telas de administração feitas depois do lote 4, sem check próprio no plano: Usuários, Matrículas (importação com confirmação e tabela de erros por linha) e Cadastros (setores, categorias, cursos, regras e respostas prontas, em abas); testes Vitest para a importação, o atendente novo e a regra por coordenação, e as três telas entraram no e2e de 360 px
 - Abandonado: nada

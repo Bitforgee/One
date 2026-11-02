@@ -4,11 +4,12 @@ import { BotaoAcao, useAcao } from '../acao'
 import { api } from '../api'
 
 type Versao = { id: number; numero: number; titulo: string; perguntas: string[]; resposta: string; links: string[] }
-type Artigo = { id: number; estado: 'RASCUNHO' | 'ATIVO' | 'ARQUIVADO'; categoriaId: number; categoria: string; versao: Versao }
+type Artigo = { id: number; estado: 'RASCUNHO' | 'ATIVO' | 'ARQUIVADO'; categoriaId: number; categoria: string; visivelDe: string | null; visivelAte: string | null; versao: Versao }
 type Categoria = { id: number; nome: string; ativa: boolean }
-type Rascunho = { id?: number; titulo: string; perguntas: string; categoriaId: string; resposta: string; links: string }
+type Rascunho = { id?: number; titulo: string; perguntas: string; categoriaId: string; resposta: string; links: string; visivelDe: string; visivelAte: string }
 
 const Cores = { RASCUNHO: 'secondary', ATIVO: 'success', ARQUIVADO: 'dark' } as const
+const dataBr = (iso: string) => iso.split('-').reverse().join('/')
 const linhas = (texto: string) => texto.split('\n').map((l) => l.trim()).filter(Boolean)
 
 // S7: a base interna que o assistente usa como fonte; nunca aparece para o aluno.
@@ -34,7 +35,7 @@ export function Artigos() {
   function salvar(e: FormEvent) {
     e.preventDefault()
     const r = editando!
-    const corpo = { titulo: r.titulo, perguntas: linhas(r.perguntas), categoriaId: Number(r.categoriaId), resposta: r.resposta, links: linhas(r.links) }
+    const corpo = { titulo: r.titulo, perguntas: linhas(r.perguntas), categoriaId: Number(r.categoriaId), resposta: r.resposta, links: linhas(r.links), visivelDe: r.visivelDe || null, visivelAte: r.visivelAte || null }
     acao.executar(async () => {
       await api(r.id ? `/api/admin/artigos/${r.id}` : '/api/admin/artigos', corpo, r.id ? 'PUT' : undefined)
       setEditando(undefined)
@@ -50,9 +51,9 @@ export function Artigos() {
     })
   }
 
-  const novo = () => setEditando({ titulo: '', perguntas: '', categoriaId: '', resposta: '', links: '' })
+  const novo = () => setEditando({ titulo: '', perguntas: '', categoriaId: '', resposta: '', links: '', visivelDe: '', visivelAte: '' })
   const editar = (a: Artigo) =>
-    setEditando({ id: a.id, titulo: a.versao.titulo, perguntas: a.versao.perguntas.join('\n'), categoriaId: String(a.categoriaId), resposta: a.versao.resposta, links: a.versao.links.join('\n') })
+    setEditando({ id: a.id, titulo: a.versao.titulo, perguntas: a.versao.perguntas.join('\n'), categoriaId: String(a.categoriaId), resposta: a.versao.resposta, links: a.versao.links.join('\n'), visivelDe: a.visivelDe ?? '', visivelAte: a.visivelAte ?? '' })
 
   return (
     <>
@@ -77,6 +78,8 @@ export function Artigos() {
             </div>
             <div className="small text-body-secondary">
               {a.categoria} · versão {a.versao.numero}
+              {a.visivelDe && ` · válido de ${dataBr(a.visivelDe)}`}
+              {a.visivelAte && ` · válido até ${dataBr(a.visivelAte)}`}
             </div>
             <Stack direction="horizontal" gap={2} className="mt-2 flex-wrap">
               <Button size="sm" variant="outline-primary" onClick={() => editar(a)}>
@@ -132,6 +135,20 @@ export function Artigos() {
                 <Form.Label>Links (um por linha, com https://)</Form.Label>
                 <Form.Control as="textarea" rows={2} value={editando.links} onChange={(e) => setEditando({ ...editando, links: e.target.value })} />
               </Form.Group>
+              <Row className="g-2 mt-1">
+                <Col xs={6}>
+                  <Form.Group controlId="visivelDe">
+                    <Form.Label>Válido de (opcional)</Form.Label>
+                    <Form.Control type="date" value={editando.visivelDe} onChange={(e) => setEditando({ ...editando, visivelDe: e.target.value })} />
+                  </Form.Group>
+                </Col>
+                <Col xs={6}>
+                  <Form.Group controlId="visivelAte">
+                    <Form.Label>Válido até (opcional)</Form.Label>
+                    <Form.Control type="date" value={editando.visivelAte} onChange={(e) => setEditando({ ...editando, visivelAte: e.target.value })} />
+                  </Form.Group>
+                </Col>
+              </Row>
               {acao.alerta}
             </Modal.Body>
           )}

@@ -52,6 +52,8 @@ describe('equipe', () => {
       categoriaId: 3,
       resposta: 'Faltas não são abonadas.',
       links: ['https://univag.edu.br/estatuto'],
+      visivelDe: null,
+      visivelAte: null,
     })
   })
 

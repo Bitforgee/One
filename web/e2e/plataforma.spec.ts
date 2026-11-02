@@ -65,6 +65,10 @@ async function simularApi(page: Page) {
         eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
         acoes: ['responder', 'nota', 'resolver', 'encaminhar', 'reclassificar'],
       })
+    if (caminho === '/api/admin/usuarios')
+      return json(200, [{ id: 1, cpf: '12345678909', nome: 'Carla Regina de Souza Albuquerque', email: 'carla.regina.albuquerque@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ATENDENTE', 'ADMINISTRADOR'], setores: [1] }])
+    if (caminho === '/api/admin/setores') return json(200, [{ id: 1, nome: 'Coordenação de Análise e Desenvolvimento de Sistemas', triagem: false, ativo: true }])
+    if (['/api/admin/cursos', '/api/admin/regras', '/api/admin/respostas-prontas'].includes(caminho)) return json(200, [])
     if (caminho === '/api/admin/categorias') return json(200, [{ id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true }])
     if (caminho === '/api/admin/artigos')
       return json(200, [{ id: 1, estado: 'ARQUIVADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
@@ -99,6 +103,9 @@ test.describe('sem rolagem horizontal a 360 px', () => {
     ['Detalhe do chamado', '/univag/chamados/ONE-123', async (p) => void (await p.getByText('Resumo gerado por IA').waitFor())],
     ['Artigos', '/univag/artigos', async (p) => void (await p.getByText('ARQUIVADO').waitFor())],
     ['Indicadores', '/univag/indicadores', async (p) => void (await p.getByText('Indicador principal').waitFor())],
+    ['Usuários', '/univag/usuarios', async (p) => void (await p.getByText('Carla Regina de Souza Albuquerque').waitFor())],
+    ['Matrículas', '/univag/matriculas', async (p) => void (await p.getByLabel('Arquivo CSV').waitFor())],
+    ['Cadastros', '/univag/cadastros', async (p) => void (await p.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').waitFor())],
   ]
 
   for (const [nome, caminho, preparar] of telas)

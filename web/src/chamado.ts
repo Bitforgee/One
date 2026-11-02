@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
 
 export type Fonte = { versaoArtigoId: number; titulo: string; trechos: string[]; atualizado: boolean }
-export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string }
+export type Anexo = { id: number; nome: string; tipo: string; tamanho: number }
+export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string; anexos?: Anexo[] }
 export type Evento = { tipo: string; ator: string; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }
 
 // Resposta de GET /api/chamados/{numero}; resumo, fontes e eventos só vêm para a equipe.
@@ -11,6 +12,8 @@ export type Chamado = {
   titulo: string
   estado: string
   motivoFechamento: string | null
+  numeroOriginal?: string | null
+  setorId?: number
   setor: string
   categoria: string
   responsavel: string | null

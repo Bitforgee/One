@@ -206,6 +206,29 @@ describe('chamado', () => {
     ])
   })
 
+  it('resposta pronta preenche o texto e o anexo vai junto', async () => {
+    const chamadas = api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () => [200, daEquipe({ setorId: 5 })],
+      'GET /api/respostas-prontas?setorId=5': () => [200, [{ id: 1, titulo: 'Boleto', texto: 'Seu boleto está no Portal do Aluno.' }]],
+      'POST /api/chamados/ONE-1/mensagens': () => [201, daEquipe({ setorId: 5 })],
+    })
+    abrir('/univag/chamados/ONE-1')
+
+    await userEvent.selectOptions(await screen.findByLabelText('Resposta pronta'), '1')
+    expect(screen.getByLabelText('Responder')).toHaveValue('Seu boleto está no Portal do Aluno.')
+    await userEvent.type(screen.getByLabelText('Responder'), ' Até mais.')
+    const pdf = new File(['%PDF-1.4'], 'boleto.pdf', { type: 'application/pdf' })
+    await userEvent.upload(screen.getByLabelText(/Anexos/), pdf)
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    await waitFor(() => expect(chamadas.some((c) => c.metodo === 'POST')).toBe(true))
+    const corpo = chamadas.find((c) => c.metodo === 'POST')!.corpo
+    expect(corpo.texto).toBe('Seu boleto está no Portal do Aluno. Até mais.')
+    expect(corpo.tipo).toBe('PUBLICA')
+    expect((corpo.anexos as File).name).toBe('boleto.pdf')
+  })
+
   it('Fila vazia e Minhas solicitações vazia', async () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE'] })], 'GET /api/chamados?escopo=fila': () => [200, []], 'GET /api/chamados?escopo=meus': () => [200, []] })
     abrir('/univag/fila')

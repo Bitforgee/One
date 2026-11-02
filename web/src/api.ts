@@ -1,8 +1,10 @@
 export class ErroApi extends Error {
   status: number
-  constructor(status: number, detail: string) {
+  corpo: any // o ProblemDetails inteiro, por exemplo os `erros` por linha da importação
+  constructor(status: number, detail: string, corpo?: unknown) {
     super(detail)
     this.status = status
+    this.corpo = corpo
   }
 }
 
@@ -18,7 +20,7 @@ export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?
   })
   const texto = await r.text()
   const json = texto ? JSON.parse(texto) : undefined
-  if (!r.ok) throw new ErroApi(r.status, json?.detail ?? 'Não foi possível concluir a requisição.')
+  if (!r.ok) throw new ErroApi(r.status, json?.detail ?? 'Não foi possível concluir a requisição.', json)
   return json as T
 }
 

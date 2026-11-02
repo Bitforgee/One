@@ -1,6 +1,7 @@
 import { Container } from 'react-bootstrap'
 import { Route, Routes } from 'react-router'
 import { Artigos, Indicadores } from './telas/Equipe'
+import { Cadastros, Matriculas, Usuarios } from './telas/Admin'
 import { ChamadoDetalhe, Fila, Solicitacoes } from './telas/Chamados'
 import { Assistente } from './telas/Assistente'
 import { Autenticado } from './telas/Autenticado'
@@ -22,6 +23,9 @@ export function App() {
           <Route path="fila" element={<Fila />} />
           <Route path="artigos" element={<Artigos />} />
           <Route path="indicadores" element={<Indicadores />} />
+          <Route path="usuarios" element={<Usuarios />} />
+          <Route path="matriculas" element={<Matriculas />} />
+          <Route path="cadastros" element={<Cadastros />} />
         </Route>
       </Route>
     </Routes>

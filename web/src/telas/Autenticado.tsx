@@ -10,6 +10,9 @@ const Menu = [
   { papeis: ['ATENDENTE'], caminho: 'fila', rotulo: 'Fila', icone: 'bi-inbox' },
   { papeis: ['ADMINISTRADOR'], caminho: 'artigos', rotulo: 'Artigos', icone: 'bi-journal-text' },
   { papeis: ['ATENDENTE', 'ADMINISTRADOR'], caminho: 'indicadores', rotulo: 'Indicadores', icone: 'bi-bar-chart' },
+  { papeis: ['ADMINISTRADOR'], caminho: 'usuarios', rotulo: 'Usuários', icone: 'bi-people' },
+  { papeis: ['ADMINISTRADOR'], caminho: 'matriculas', rotulo: 'Matrículas', icone: 'bi-upload' },
+  { papeis: ['ADMINISTRADOR'], caminho: 'cadastros', rotulo: 'Cadastros', icone: 'bi-gear' },
 ]
 
 export function Autenticado() {
