@@ -46,6 +46,25 @@ async function simularApi(page: Page) {
       })
     if (caminho === '/api/conversas')
       return json(201, { conversaId: 1, resposta: { tipo: 'resposta', texto: 'O boleto do semestre fica no Portal do Aluno: https://portal.univag.edu.br/financeiro/boletos/segunda-via' } })
+    const longo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
+    if (caminho === '/api/chamados' && rota.request().url().includes('escopo=fila'))
+      return json(200, [{ numero: 'ONE-123', titulo: longo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', dias: 12 }])
+    if (caminho === '/api/chamados') return json(200, [{ numero: 'ONE-123', titulo: longo, estado: 'EM_ATENDIMENTO', criadoEm: '2026-11-02T12:00:00Z' }])
+    if (caminho === '/api/chamados/ONE-123')
+      return json(200, {
+        numero: 'ONE-123', titulo: longo, estado: 'EM_ATENDIMENTO', motivoFechamento: null, setor: 'Coordenação de Análise e Desenvolvimento de Sistemas',
+        categoria: 'Financeiro > Boletos e mensalidades', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', resolvidoEm: null,
+        matricula: { numero: '2000567890', curso: 'Análise e Desenvolvimento de Sistemas', semestre: 3 }, solicitante: 'Ana Beatriz', origemCategoria: 'IA',
+        resumo: 'Aluna pede a segunda via do boleto de novembro com valor corrigido.',
+        transcricao: [
+          { autor: 'ALUNO', texto: longo, criadaEm: '2026-11-02T12:00:00Z' },
+          { autor: 'ASSISTENTE', texto: 'O boleto fica em https://portal.univag.edu.br/financeiro/boletos/segunda-via', criadaEm: '2026-11-02T12:00:05Z',
+            fontes: [{ versaoArtigoId: 1, titulo: 'Como emitir a segunda via do boleto do semestre', trechos: ['https://portal.univag.edu.br/financeiro/boletos/segunda-via'], atualizado: true }] },
+        ],
+        mensagens: [{ id: 1, tipo: 'NOTA', texto: 'Conferir com a tesouraria antes de responder.', autor: 'Carla Regina de Souza', doAluno: false, criadaEm: '2026-11-02T12:10:00Z' }],
+        eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
+        acoes: ['responder', 'nota', 'resolver', 'encaminhar', 'reclassificar'],
+      })
     return json(404, { status: 404, detail: 'Recurso não encontrado.' })
   })
 }
@@ -53,7 +72,7 @@ async function simularApi(page: Page) {
 test.describe('sem rolagem horizontal a 360 px', () => {
   test.use({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' })
 
-  // Os lotes seguintes acrescentam Minhas solicitações, Fila, Detalhe do chamado, Artigos e Indicadores (7 telas).
+  // Os lotes seguintes acrescentam Artigos e Indicadores (7 telas).
   const telas: [string, string, (p: Page) => Promise<void>][] = [
     ['Login', '/univag', async (p) => void (await p.getByLabel('CPF').waitFor())],
     [
@@ -65,6 +84,9 @@ test.describe('sem rolagem horizontal a 360 px', () => {
         await p.getByText('Isso resolveu?').waitFor()
       },
     ],
+    ['Minhas solicitações', '/univag/solicitacoes', async (p) => void (await p.getByText('ONE-123').waitFor())],
+    ['Fila', '/univag/fila', async (p) => void (await p.getByText('ONE-123').waitFor())],
+    ['Detalhe do chamado', '/univag/chamados/ONE-123', async (p) => void (await p.getByText('Resumo gerado por IA').waitFor())],
   ]
 
   for (const [nome, caminho, preparar] of telas)

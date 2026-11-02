@@ -14,7 +14,7 @@ export function api(rotas: Record<string, Rota>) {
     'fetch',
     vi.fn(async (url: string, init?: RequestInit) => {
       const metodo = init?.method ?? 'GET'
-      const corpo = init?.body ? JSON.parse(String(init.body)) : undefined
+      const corpo = init?.body instanceof FormData ? Object.fromEntries(init.body) : init?.body ? JSON.parse(String(init.body)) : undefined
       chamadas.push({ metodo, url, corpo })
       const rota = rotas[`${metodo} ${url}`]
       const [status, json] = rota ? await rota(corpo) : [404, { title: 'Não encontrado', status: 404, detail: 'Recurso não encontrado.' }]

@@ -6,6 +6,7 @@ import type { Sessao } from '../sessao'
 
 const Menu = [
   { papel: 'ALUNO', caminho: 'assistente', rotulo: 'Assistente', icone: 'bi-chat-dots' },
+  { papel: 'ALUNO', caminho: 'solicitacoes', rotulo: 'Minhas solicitações', icone: 'bi-list-check' },
   { papel: 'ATENDENTE', caminho: 'fila', rotulo: 'Fila', icone: 'bi-inbox' },
   { papel: 'ADMINISTRADOR', caminho: 'artigos', rotulo: 'Artigos', icone: 'bi-journal-text' },
 ]

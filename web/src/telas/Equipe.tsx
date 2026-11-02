@@ -1,13 +1,4 @@
-// Telas da equipe; o conteúdo chega com os slices de atendimento (S5) e de artigos (S7).
-export function Fila() {
-  return (
-    <>
-      <h1 className="h4">Fila</h1>
-      <p className="text-body-secondary">Nenhum chamado na fila dos seus setores.</p>
-    </>
-  )
-}
-
+// Tela do administrador; o conteúdo chega com a base de conhecimento (S7).
 export function Artigos() {
   return (
     <>

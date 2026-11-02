@@ -21,9 +21,9 @@
 ## Handoff
 
 **Feature**: mvp-one
-**Where**: lote 1 (S1, S2, S12, S3) verde; 74 dos 88 checks do lote marcados em `checks.md`, os 14 abertos dependem de rotas e telas dos lotes 2 a 4 (lista em `checks.md` `## Handoff`)
+**Where**: lotes 1 (S1, S2, S12, S3) e 2 (S4, S5, S8, mais as rotas do S6) verdes; 142 dos 195 checks marcados em `checks.md`; abertos e decisões do lote 2 em `checks.md` `## Handoff`
 **In progress**: none
-**Next step**: lote 2 (S4, S5, S8), lendo `checks.md` e o diff do lote 1
+**Next step**: lote 3 (S6 na tela, S7, S9, S11), lendo `checks.md` e o diff do lote 2; telas de administração do S8 ainda faltam para a banca
 **Blockers**: none para o build; as seis perguntas `blocks go-live` do plano continuam abertas
-**Uncommitted**: nothing
+**Uncommitted**: lote 2 inteiro (api, api.Tests, web, migração `Lote2`, `checks.md`, este arquivo)
 **Branch**: main

@@ -50,7 +50,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Id_de
 **C9** - [x] O mesmo CPF, o mesmo e-mail e o mesmo número de matrícula são gravados na `univag` e na `demo` sem erro, como contas e matrículas distintas (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Mesmo_cpf_email_matricula_em_duas_instituicoes"`
 
-**C10** - `POST /api/admin/usuarios` com CPF ou e-mail que já existe na mesma instituição responde 409 e não cria conta (AC 8, AC 109)
+**C10** - [x] `POST /api/admin/usuarios` com CPF ou e-mail que já existe na mesma instituição responde 409 e não cria conta (AC 8, AC 109)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Cpf_ou_email_repetido_409"`
 
 **C11** - [x] A SPA mostra o instante `2026-11-02T02:30:00Z` como `01/11/2026 22:30` numa instituição com fuso `America/Cuiaba` (AC 9)
@@ -212,7 +212,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Link_
 **C61** - [x] Depois de rodar os cenários de C54 e C58 a C60, toda `mensagem_conversa` com tipo final `resposta` tem ao menos um trecho confirmado para cada artigo citado (AC 39)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Nenhuma_resposta_exibida_sem_trecho_por_artigo"`
 
-**C62** - Nas respostas de `POST /api/conversas`, mensagens, `GET /api/conversas/{id}`, `GET /api/chamados` e `GET /api/chamados/{numero}` para o aluno não aparecem título, resposta, links nem trechos dos artigos usados, nem as chaves `artigoId`, `versaoArtigoId`, `trechos` ou `fontes` (AC 40)
+**C62** - [x] Nas respostas de `POST /api/conversas`, mensagens, `GET /api/conversas/{id}`, `GET /api/chamados` e `GET /api/chamados/{numero}` para o aluno não aparecem título, resposta, links nem trechos dos artigos usados, nem as chaves `artigoId`, `versaoArtigoId`, `trechos` ou `fontes` (AC 40)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SigiloTests.Aluno_nao_recebe_dado_de_artigo"`
 
 **C63** - [x] `GET /api/artigos/versoes/{id}` pedido por aluno responde 404 (AC 40)
@@ -256,10 +256,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Encerra
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Decima_primeira_mensagem_409"`
 Proof: `npm --prefix web run test -- -t "limite oferece só dois botões"`
 
-**C75** - Mensagem, avaliação, encerramento e transferência numa conversa com desfecho respondem 409, e a conversa fica igual (AC 52)
+**C75** - [x] Mensagem, avaliação, encerramento e transferência numa conversa com desfecho respondem 409, e a conversa fica igual (AC 52)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Conversa_com_desfecho_409"`
 
-**C76** - As 5 rotas de `/api/conversas/{id}` usadas por outro aluno da mesma instituição respondem 404 (AC 53)
+**C76** - [x] As 5 rotas de `/api/conversas/{id}` usadas por outro aluno da mesma instituição respondem 404 (AC 53)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Conversa_de_outro_aluno_404"`
 
 **C77** - [x] `GET /api/conversas/{id}` responde 200 com as mensagens em ordem cronológica, o texto exibido de cada resposta, o desfecho e, depois da transferência, `chamadoNumero` (Surface)
@@ -268,7 +268,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Get_con
 **C78** - [x] `POST /api/conversas/{id}/avaliacao` sem `resolveu` responde 400 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Avaliacao_sem_resolveu_400"`
 
-**C79** - Depois de editar o artigo citado, o aluno continua vendo o mesmo texto exibido; `GET /api/artigos/versoes/{id}` responde 200 ao atendente com a versão citada e `versaoAtivaAtualId` da nova, e o detalhe do atendente mostra "Este artigo foi atualizado depois desta resposta." (AC 54)
+**C79** - [x] Depois de editar o artigo citado, o aluno continua vendo o mesmo texto exibido; `GET /api/artigos/versoes/{id}` responde 200 ao atendente com a versão citada e `versaoAtivaAtualId` da nova, e o detalhe do atendente mostra "Este artigo foi atualizado depois desta resposta." (AC 54)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VersaoCitadaTests.Edicao_nao_muda_o_exibido_e_avisa_a_equipe"`
 Proof: `npm --prefix web run test -- -t "aviso de artigo atualizado"`
 
@@ -277,152 +277,152 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RateLimitTests.Onze_m
 
 ### S4 - Transferência para um atendente (P1) · ~8 files · ~45 KB · ~11k
 
-**C81** - `POST /api/conversas/{id}/transferir` numa conversa sem desfecho responde 201 com `numero`, `estado` `ABERTO` e `setor`; o chamado fica sem responsável e a conversa com desfecho `TRANSFERIDA` (AC 56)
+**C81** - [x] `POST /api/conversas/{id}/transferir` numa conversa sem desfecho responde 201 com `numero`, `estado` `ABERTO` e `setor`; o chamado fica sem responsável e a conversa com desfecho `TRANSFERIDA` (AC 56)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Transferir_201_aberto_sem_responsavel"`
 
-**C82** - `POST /api/atendimento-direto` com descrição de 1 e de 2000 caracteres responde 201, cria conversa e chamado com categoria "Não classificado" e faz 0 chamadas ao provedor de IA (AC 57)
+**C82** - [x] `POST /api/atendimento-direto` com descrição de 1 e de 2000 caracteres responde 201, cria conversa e chamado com categoria "Não classificado" e faz 0 chamadas ao provedor de IA (AC 57)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Atendimento_direto_sem_chamar_ia"`
 
-**C83** - `POST /api/atendimento-direto` com descrição vazia ou de 2001 caracteres responde 400 sem gravar (Surface, AC 57)
+**C83** - [x] `POST /api/atendimento-direto` com descrição vazia ou de 2001 caracteres responde 400 sem gravar (Surface, AC 57)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Atendimento_direto_descricao_invalida_400"`
 
-**C84** - `POST /api/atendimento-direto` por usuário sem o papel aluno responde 403 (Surface, AC 33)
+**C84** - [x] `POST /api/atendimento-direto` por usuário sem o papel aluno responde 403 (Surface, AC 33)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Atendimento_direto_sem_papel_aluno_403"`
 
-**C85** - O atendimento direto conta no limite de 10 mensagens por aluno em 60 s, e o pedido que passa do limite responde 429 (Surface, Observable)
+**C85** - [x] O atendimento direto conta no limite de 10 mensagens por aluno em 60 s, e o pedido que passa do limite responde 429 (Surface, Observable)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RateLimitTests.Atendimento_direto_conta_no_limite_do_aluno"`
 
-**C86** - Duas transferências na `univag` geram `ONE-1` e `ONE-2`, e a primeira da `demo` gera `ONE-1` (AC 58)
+**C86** - [x] Duas transferências na `univag` geram `ONE-1` e `ONE-2`, e a primeira da `demo` gera `ONE-1` (AC 58)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~NumeracaoTests.Numero_por_instituicao"`
 
-**C87** - 20 transferências paralelas de conversas diferentes na mesma instituição geram 20 números distintos de `ONE-1` a `ONE-20` (door 5)
+**C87** - [x] 20 transferências paralelas de conversas diferentes na mesma instituição geram 20 números distintos de `ONE-1` a `ONE-20` (door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~NumeracaoTests.Vinte_transferencias_paralelas_numeros_distintos"`
 
-**C88** - O chamado guarda solicitante, matrícula, o semestre da matrícula na transferência (mesmo depois de uma importação mudar o semestre), título com os 120 primeiros caracteres de uma primeira mensagem de 121, a conversa e o último `resumo` não vazio cortado em 500 caracteres (AC 59)
+**C88** - [x] O chamado guarda solicitante, matrícula, o semestre da matrícula na transferência (mesmo depois de uma importação mudar o semestre), título com os 120 primeiros caracteres de uma primeira mensagem de 121, a conversa e o último `resumo` não vazio cortado em 500 caracteres (AC 59)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Chamado_guarda_contexto"`
 
-**C89** - A categoria do chamado é a última sugestão válida da IA com origem `IA`; com sugestão de categoria inativa e artigo citado, a categoria do último artigo com origem `ARTIGO`; sem sugestão nem artigo, "Não classificado" com origem `PADRAO` (AC 60, AC 61, AC 62)
+**C89** - [x] A categoria do chamado é a última sugestão válida da IA com origem `IA`; com sugestão de categoria inativa e artigo citado, a categoria do último artigo com origem `ARTIGO`; sem sugestão nem artigo, "Não classificado" com origem `PADRAO` (AC 60, AC 61, AC 62)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CategoriaOrigemTests.Origem_da_categoria"`
 
-**C90** - O chamado vai para o setor fixo da regra; para a coordenação do curso da matrícula quando a regra aponta coordenação; e para a triagem quando a categoria não tem regra, é "Não classificado" ou o curso não tem coordenação (AC 63, AC 64, AC 65)
+**C90** - [x] O chamado vai para o setor fixo da regra; para a coordenação do curso da matrícula quando a regra aponta coordenação; e para a triagem quando a categoria não tem regra, é "Não classificado" ou o curso não tem coordenação (AC 63, AC 64, AC 65)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RoteamentoTests.Setor_do_chamado"`
 
-**C91** - Aluno com duas matrículas ativas que transfere sem `matriculaId`, ou com uma matrícula inativa ou de outro aluno, recebe 400, e a SPA pede a escolha mostrando número e curso das duas (AC 66)
+**C91** - [x] Aluno com duas matrículas ativas que transfere sem `matriculaId`, ou com uma matrícula inativa ou de outro aluno, recebe 400, e a SPA pede a escolha mostrando número e curso das duas (AC 66)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Duas_matriculas_sem_escolha_400"`
 Proof: `npm --prefix web run test -- -t "pede escolha da matrícula"`
 
-**C92** - Dois pedidos simultâneos de transferência da mesma conversa criam um chamado; um responde 201 e o outro 409 (AC 67, Relations)
+**C92** - [x] Dois pedidos simultâneos de transferência da mesma conversa criam um chamado; um responde 201 e o outro 409 (AC 67, Relations)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Transferencia_dupla_um_chamado_e_409"`
 
-**C93** - Depois da transferência a tela Assistente mostra "Transferido para Financeiro. Protocolo ONE-1." e, abaixo, as respostas públicas do chamado (AC 68)
+**C93** - [x] Depois da transferência a tela Assistente mostra "Transferido para Financeiro. Protocolo ONE-1." e, abaixo, as respostas públicas do chamado (AC 68)
 Proof: `npm --prefix web run test -- -t "transferido mostra protocolo e respostas"`
 
-**C94** - Com a conversa transferida aberta, a SPA não pede `GET /api/chamados/{numero}` aos 14,9 s e pede aos 15 s e aos 30 s (AC 69, door 18)
+**C94** - [x] Com a conversa transferida aberta, a SPA não pede `GET /api/chamados/{numero}` aos 14,9 s e pede aos 15 s e aos 30 s (AC 69, door 18)
 Proof: `npm --prefix web run test -- -t "atualiza chamado a cada 15 s"`
 
 ### S5 - Atender e acompanhar até fechar (P1) · ~14 files · ~90 KB · ~23k
 
-**C95** - `GET /api/chamados?escopo=fila` responde 200 com os chamados não fechados dos setores do atendente, do mais antigo ao mais novo, com número, título, categoria, estado, responsável e dias desde a criação (AC 70)
+**C95** - [x] `GET /api/chamados?escopo=fila` responde 200 com os chamados não fechados dos setores do atendente, do mais antigo ao mais novo, com número, título, categoria, estado, responsável e dias desde a criação (AC 70)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~FilaTests.Fila_do_setor_mais_antigo_primeiro"`
 
-**C96** - `GET /api/chamados?escopo=meus` para aluno lista só os chamados dele, do mais recente ao mais antigo, com número, título e estado (AC 71)
+**C96** - [x] `GET /api/chamados?escopo=meus` para aluno lista só os chamados dele, do mais recente ao mais antigo, com número, título e estado (AC 71)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~FilaTests.Minhas_solicitacoes_so_do_aluno_mais_recente_primeiro"`
 
-**C97** - Atendente de outro setor recebe 404 no `GET /api/chamados/{numero}` e nas 9 ações `POST /api/chamados/{numero}/*` (AC 72)
+**C97** - [x] Atendente de outro setor recebe 404 no `GET /api/chamados/{numero}` e nas 9 ações `POST /api/chamados/{numero}/*` (AC 72)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Atendente_de_outro_setor_404"`
 
-**C98** - `GET /api/chamados/{numero}` responde 200 ao atendente com matrícula, curso, semestre, resumo, transcrição, artigos e trechos de cada resposta do assistente, respostas públicas, notas internas, eventos e `acoes` do estado; a SPA mostra o resumo com o rótulo "Resumo gerado por IA" (AC 73)
+**C98** - [x] `GET /api/chamados/{numero}` responde 200 ao atendente com matrícula, curso, semestre, resumo, transcrição, artigos e trechos de cada resposta do assistente, respostas públicas, notas internas, eventos e `acoes` do estado; a SPA mostra o resumo com o rótulo "Resumo gerado por IA" (AC 73)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Detalhe_do_atendente_traz_contexto_e_fontes"`
 Proof: `npm --prefix web run test -- -t "detalhe rotula Resumo gerado por IA"`
 
-**C99** - O aluno recebe no detalhe estado, transcrição, respostas públicas e `acoes` do estado, sem `resumo` (AC 74)
+**C99** - [x] O aluno recebe no detalhe estado, transcrição, respostas públicas e `acoes` do estado, sem `resumo` (AC 74)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Detalhe_do_aluno_sem_resumo"`
 
-**C100** - Nenhuma resposta da API ao aluno traz o texto de nota interna, evento de nota interna, o resumo ou as fontes do assistente (AC 75)
+**C100** - [x] Nenhuma resposta da API ao aluno traz o texto de nota interna, evento de nota interna, o resumo ou as fontes do assistente (AC 75)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Aluno_nao_recebe_nota_resumo_nem_fontes"`
 
-**C101** - Atendente do setor assume um chamado `ABERTO`: 200, estado `EM_ATENDIMENTO` e ele como responsável (AC 76)
+**C101** - [x] Atendente do setor assume um chamado `ABERTO`: 200, estado `EM_ATENDIMENTO` e ele como responsável (AC 76)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Assumir_aberto"`
 
-**C102** - A primeira resposta pública de um atendente do setor num chamado `ABERTO` responde 201, muda o estado para `EM_ATENDIMENTO` e o torna responsável (AC 77)
+**C102** - [x] A primeira resposta pública de um atendente do setor num chamado `ABERTO` responde 201, muda o estado para `EM_ATENDIMENTO` e o torna responsável (AC 77)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Primeira_resposta_publica_assume"`
 
-**C103** - Assumir um chamado de outro atendente do mesmo setor troca o responsável e grava um evento com o anterior e o novo (AC 78)
+**C103** - [x] Assumir um chamado de outro atendente do mesmo setor troca o responsável e grava um evento com o anterior e o novo (AC 78)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Assumir_de_outro_troca_e_registra"`
 
-**C104** - Resposta pública do responsável com `aguardaAluno` verdadeiro em `EM_ATENDIMENTO` muda o estado para `AGUARDANDO_ALUNO` (AC 79)
+**C104** - [x] Resposta pública do responsável com `aguardaAluno` verdadeiro em `EM_ATENDIMENTO` muda o estado para `AGUARDANDO_ALUNO` (AC 79)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Aguardando_aluno"`
 
-**C105** - Resposta do aluno em `AGUARDANDO_ALUNO` muda o estado para `EM_ATENDIMENTO` (AC 80)
+**C105** - [x] Resposta do aluno em `AGUARDANDO_ALUNO` muda o estado para `EM_ATENDIMENTO` (AC 80)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Resposta_do_aluno_volta_em_atendimento"`
 
-**C106** - Resolver com texto de 1 e de 4000 caracteres responde 200, muda o estado para `RESOLVIDO` e o texto aparece ao aluno como resposta pública (AC 81)
+**C106** - [x] Resolver com texto de 1 e de 4000 caracteres responde 200, muda o estado para `RESOLVIDO` e o texto aparece ao aluno como resposta pública (AC 81)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Resolver_com_texto"`
 
-**C107** - Resolver sem texto ou com 4001 caracteres responde 400 e o estado não muda (AC 82)
+**C107** - [x] Resolver sem texto ou com 4001 caracteres responde 400 e o estado não muda (AC 82)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Resolver_sem_texto_ou_4001_400"`
 
-**C108** - O aluno confirma um chamado `RESOLVIDO`: 200, estado `FECHADO` com motivo `CONFIRMADO` (AC 83)
+**C108** - [x] O aluno confirma um chamado `RESOLVIDO`: 200, estado `FECHADO` com motivo `CONFIRMADO` (AC 83)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Confirmar_fecha"`
 
-**C109** - Rejeitar com motivo 7 dias exatos depois da resolução responde 200, volta para `EM_ATENDIMENTO` e soma 1 às reaberturas (AC 84)
+**C109** - [x] Rejeitar com motivo 7 dias exatos depois da resolução responde 200, volta para `EM_ATENDIMENTO` e soma 1 às reaberturas (AC 84)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Rejeitar_ate_7_dias"`
 
-**C110** - Rejeitar sem motivo responde 400 e o estado continua `RESOLVIDO` (AC 85)
+**C110** - [x] Rejeitar sem motivo responde 400 e o estado continua `RESOLVIDO` (AC 85)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Rejeitar_sem_motivo_400"`
 
-**C111** - Rejeitar 7 dias e 1 minuto depois da resolução responde 409 (AC 85)
+**C111** - [x] Rejeitar 7 dias e 1 minuto depois da resolução responde 409 (AC 85)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Rejeitar_depois_de_7_dias_409"`
 
-**C112** - Resposta pública do aluno num chamado `RESOLVIDO` volta o chamado para `EM_ATENDIMENTO`, soma 1 às reaberturas e grava o texto como motivo; depois de 7 dias responde 409 (AC 86)
+**C112** - [x] Resposta pública do aluno num chamado `RESOLVIDO` volta o chamado para `EM_ATENDIMENTO`, soma 1 às reaberturas e grava o texto como motivo; depois de 7 dias responde 409 (AC 86)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Mensagem_do_aluno_em_resolvido_rejeita"`
 
-**C113** - Rejeição de um chamado cujo responsável foi desativado deixa o chamado `ABERTO` no setor atual, sem responsável (AC 87)
+**C113** - [x] Rejeição de um chamado cujo responsável foi desativado deixa o chamado `ABERTO` no setor atual, sem responsável (AC 87)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Rejeicao_sem_responsavel_ativo_volta_aberto"`
 
-**C114** - O aluno cancela chamados `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`: 200, estado `FECHADO` com motivo `CANCELADO` e a justificativa guardada (AC 88)
+**C114** - [x] O aluno cancela chamados `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`: 200, estado `FECHADO` com motivo `CANCELADO` e a justificativa guardada (AC 88)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Cancelar_nos_3_estados"`
 
-**C115** - Para as 9 ações (resposta pública, nota interna, assumir, resolver, confirmar, rejeitar, cancelar, encaminhar, reclassificar) nos 5 estados, cada par permitido responde 2xx e cada par não permitido responde 409 sem mudar o chamado (AC 89)
+**C115** - [x] Para as 9 ações (resposta pública, nota interna, assumir, resolver, confirmar, rejeitar, cancelar, encaminhar, reclassificar) nos 5 estados, cada par permitido responde 2xx e cada par não permitido responde 409 sem mudar o chamado (AC 89)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_estado"`
 
-**C116** - Para as 9 ações e os 2 papéis do chamado (aluno dono e atendente do setor), cada par não permitido, como aluno assumindo ou atendente confirmando, responde 403 sem mudar o chamado (AC 89)
+**C116** - [x] Para as 9 ações e os 2 papéis do chamado (aluno dono e atendente do setor), cada par não permitido, como aluno assumindo ou atendente confirmando, responde 403 sem mudar o chamado (AC 89)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_papel"`
 
-**C117** - Mensagem pública ou nota num chamado `FECHADO` responde 409 (AC 90)
+**C117** - [x] Mensagem pública ou nota num chamado `FECHADO` responde 409 (AC 90)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Mensagem_em_fechado_409"`
 
-**C118** - `POST /api/chamados/{numero}/mensagens` com texto vazio responde 400 sem gravar (Surface)
+**C118** - [x] `POST /api/chamados/{numero}/mensagens` com texto vazio responde 400 sem gravar (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Mensagem_sem_texto_400"`
 
-**C119** - Dois atendentes alteram o mesmo chamado lido na mesma versão: a primeira alteração grava e a segunda responde 409 (AC 91, door 14)
+**C119** - [x] Dois atendentes alteram o mesmo chamado lido na mesma versão: a primeira alteração grava e a segunda responde 409 (AC 91, door 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConcorrenciaTests.Segunda_alteracao_simultanea_409"`
 
 **C120** - Criação, transição, atribuição, encaminhamento, reclassificação, resposta, nota e anexo gravam cada um um evento com tipo, ator (vazio para o Sistema) e data em UTC; o detalhe os lista em ordem cronológica no fuso da instituição (AC 92)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EventosTests.Cada_acao_grava_evento"`
 Proof: `npm --prefix web run test -- -t "eventos em ordem no fuso"`
 
-**C121** - Nenhuma rota registrada usa `PUT`, `PATCH` ou `DELETE` sobre mensagens, eventos, versões de artigo ou anexos (AC 93)
+**C121** - [x] Nenhuma rota registrada usa `PUT`, `PATCH` ou `DELETE` sobre mensagens, eventos, versões de artigo ou anexos (AC 93)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImutabilidadeTests.Sem_rota_de_edicao"`
 
-**C122** - `UPDATE` e `DELETE` em `mensagem_conversa`, `mensagem_chamado`, `evento_chamado`, `versao_artigo` e `anexo` lançam exceção do trigger, e a linha fica igual (AC 93, AC 46, door 6)
+**C122** - [x] `UPDATE` e `DELETE` em `mensagem_conversa`, `mensagem_chamado`, `evento_chamado`, `versao_artigo` e `anexo` lançam exceção do trigger, e a linha fica igual (AC 93, AC 46, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImutabilidadeTests.Trigger_recusa_update_e_delete"`
 
 ### S6 - Encaminhar e reclassificar (P2) · ~3 files · ~12 KB · ~3k
 
-**C123** - Encaminhar para outro setor com motivo responde 200, grava o motivo como nota interna, deixa o chamado `ABERTO` no destino sem responsável e soma 1 aos encaminhamentos (AC 94)
+**C123** - [x] Encaminhar para outro setor com motivo responde 200, grava o motivo como nota interna, deixa o chamado `ABERTO` no destino sem responsável e soma 1 aos encaminhamentos (AC 94)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Encaminhar_abre_no_destino"`
 
-**C124** - Encaminhar para o setor atual ou sem motivo responde 400 e o chamado fica igual (AC 95)
+**C124** - [x] Encaminhar para o setor atual ou sem motivo responde 400 e o chamado fica igual (AC 95)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Mesmo_setor_ou_sem_motivo_400"`
 
-**C125** - Depois do encaminhamento, o atendente que pertence só ao setor anterior recebe 404 no chamado (AC 96)
+**C125** - [x] Depois do encaminhamento, o atendente que pertence só ao setor anterior recebe 404 no chamado (AC 96)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Setor_anterior_perde_acesso_404"`
 
-**C126** - Reclassificar responde 200, muda a categoria atual e mantém a categoria original, a origem e o setor (AC 97)
+**C126** - [x] Reclassificar responde 200, muda a categoria atual e mantém a categoria original, a origem e o setor (AC 97)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Reclassificar_mantem_original"`
 
-**C127** - Reclassificar para categoria inativa ou inexistente responde 400 (Surface)
+**C127** - [x] Reclassificar para categoria inativa ou inexistente responde 400 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Categoria_inativa_ou_inexistente_400"`
 
 ### S7 - Base de conhecimento (P2) · ~6 files · ~35 KB · ~9k
@@ -462,55 +462,55 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.List
 
 ### S8 - Alunos e administração (P1 importação, P2 resto) · ~10 files · ~60 KB · ~15k
 
-**C139** - `POST /api/admin/matriculas/importacao` com 3 linhas válidas, um CPF já existente e uma matrícula já existente responde 200 com `criados` e `atualizados` corretos; o aluno novo fica sem senha, o existente tem nome e e-mail atualizados e a matrícula existente tem curso, semestre e situação atualizados (AC 105, door 15)
+**C139** - [x] `POST /api/admin/matriculas/importacao` com 3 linhas válidas, um CPF já existente e uma matrícula já existente responde 200 com `criados` e `atualizados` corretos; o aluno novo fica sem senha, o existente tem nome e e-mail atualizados e a matrícula existente tem curso, semestre e situação atualizados (AC 105, door 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImportacaoTests.Csv_valido_cria_e_atualiza"`
 
-**C140** - Um CSV com uma linha de CPF inválido, e-mail inválido, curso inexistente, semestre 0 ou 13, situação `TRANCADA` ou matrícula já ligada a outro CPF responde 400 com a linha e o motivo, e nenhuma linha do arquivo é gravada (AC 106)
+**C140** - [x] Um CSV com uma linha de CPF inválido, e-mail inválido, curso inexistente, semestre 0 ou 13, situação `TRANCADA` ou matrícula já ligada a outro CPF responde 400 com a linha e o motivo, e nenhuma linha do arquivo é gravada (AC 106)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImportacaoTests.Linha_invalida_nada_entra"`
 
-**C141** - Uma matrícula que passa a `INATIVA` deixa de ser aceita como `matriculaId` numa transferência nova, e o chamado antigo que a usa continua com ela (AC 107)
+**C141** - [x] Uma matrícula que passa a `INATIVA` deixa de ser aceita como `matriculaId` numa transferência nova, e o chamado antigo que a usa continua com ela (AC 107)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImportacaoTests.Matricula_inativa_sai_das_novas_transferencias"`
 
-**C142** - `POST /api/admin/usuarios` responde 201 com conta ativa; com `senhaTemporaria` de 8 caracteres a conta tem `deveTrocarSenha` verdadeiro, e sem ela a conta fica sem senha (AC 108)
+**C142** - [x] `POST /api/admin/usuarios` responde 201 com conta ativa; com `senhaTemporaria` de 8 caracteres a conta tem `deveTrocarSenha` verdadeiro, e sem ela a conta fica sem senha (AC 108)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Criar_com_e_sem_senha_temporaria"`
 
-**C143** - Criar usuário sem papel, ou atendente sem setor, responde 400 (AC 109)
+**C143** - [x] Criar usuário sem papel, ou atendente sem setor, responde 400 (AC 109)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Sem_papel_ou_setor_400"`
 
-**C144** - `PUT /api/admin/usuarios/{id}` com `senhaTemporaria` responde 200 e deixa `deveTrocarSenha` verdadeiro (AC 110)
+**C144** - [x] `PUT /api/admin/usuarios/{id}` com `senhaTemporaria` responde 200 e deixa `deveTrocarSenha` verdadeiro (AC 110)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Senha_temporaria_obriga_troca"`
 
-**C145** - `POST /api/admin/usuarios/{id}/desativar` responde 200 e mantém as conversas, chamados, mensagens e eventos do usuário (AC 111)
+**C145** - [x] `POST /api/admin/usuarios/{id}/desativar` responde 200 e mantém as conversas, chamados, mensagens e eventos do usuário (AC 111)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Desativar_mantem_historico"`
 
-**C146** - Desativar um atendente tira o responsável dos chamados não fechados dele, volta para `ABERTO` os `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO` e grava em cada um evento com o administrador como ator (AC 112)
+**C146** - [x] Desativar um atendente tira o responsável dos chamados não fechados dele, volta para `ABERTO` os `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO` e grava em cada um evento com o administrador como ator (AC 112)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Desativar_atendente_devolve_chamados"`
 
-**C147** - `PUT` e `desativar` em usuário inexistente respondem 404 (Surface)
+**C147** - [x] `PUT` e `desativar` em usuário inexistente respondem 404 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Usuario_inexistente_404"`
 
-**C148** - Desmarcar o único setor de triagem ou marcar um segundo responde 400 sem gravar (AC 113)
+**C148** - [x] Desmarcar o único setor de triagem ou marcar um segundo responde 400 sem gravar (AC 113)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Triagem_zero_ou_duas_400"`
 
-**C149** - Inserir por SQL um segundo setor com `triagem` verdadeiro na mesma instituição viola `ux_setor_triagem` (door 7)
+**C149** - [x] Inserir por SQL um segundo setor com `triagem` verdadeiro na mesma instituição viola `ux_setor_triagem` (door 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Indice_recusa_segundo_setor_de_triagem"`
 
-**C150** - Salvar duas vezes a regra de uma categoria deixa uma única regra, com o destino da segunda (AC 114, Relations)
+**C150** - [x] Salvar duas vezes a regra de uma categoria deixa uma única regra, com o destino da segunda (AC 114, Relations)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Regra_unica_por_categoria"`
 
-**C151** - Regra de setor fixo sem setor responde 400 (AC 115)
+**C151** - [x] Regra de setor fixo sem setor responde 400 (AC 115)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Regra_setor_fixo_sem_setor_400"`
 
-**C152** - Depois de associar o curso ADS ao setor "Coordenação ADS", um chamado novo de categoria com regra de coordenação vai para esse setor (AC 116)
+**C152** - [x] Depois de associar o curso ADS ao setor "Coordenação ADS", um chamado novo de categoria com regra de coordenação vai para esse setor (AC 116)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Curso_com_coordenacao_roteia"`
 
-**C153** - Renomear a categoria "Não classificado" responde 400 (AC 117)
+**C153** - [x] Renomear a categoria "Não classificado" responde 400 (AC 117)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Renomear_nao_classificado_400"`
 
-**C154** - Em setores, categorias, cursos, regras e respostas prontas: `POST` responde 201, `GET` 200, `PUT` 200 e `PUT` com id inexistente 404 (Surface)
+**C154** - [x] Em setores, categorias, cursos, regras e respostas prontas: `POST` responde 201, `GET` 200, `PUT` 200 e `PUT` com id inexistente 404 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Crud_dos_cadastros"`
 
-**C155** - Nome repetido na instituição para setor, categoria e curso, e título repetido no mesmo setor para resposta pronta, respondem 409 (Surface)
+**C155** - [x] Nome repetido na instituição para setor, categoria e curso, e título repetido no mesmo setor para resposta pronta, respondem 409 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Nome_repetido_409"`
 
 ### S9 - Prazos automáticos (P2) · ~3 files · ~15 KB · ~4k
@@ -775,5 +775,15 @@ estimado em 30k.
 - Mechanism: handoff, 4 lotes sequenciais, cada um só começa com as provas do anterior verdes (escolha do usuário em 01/11/2026)
 - Lote 1 (S1, S2, S12, S3) fechado em verde: 74 checks marcados `[x]`. Ficam abertos 14 checks do lote 1 cuja prova depende de rotas ou telas dos lotes seguintes; o teste de cada um já existe e cobre o que o lote 1 entrega, e quem criar a parte que falta estende a mesma tabela do teste (comentário no teste indica onde): C7 (`IsolamentoTests`, faltam as rotas de chamado, anexo e administração até 27), C8 (teste não escrito: os ids no corpo chegam com S4, S6 e S13), C10 (S8, `UsuarioAdminTests`), C12 (S11), C13 (agendador e `email_saida`, S10; o agendador deve ficar em `api/Agendador.cs`, o único arquivo além do comando que C17 aceita com `IgnoreQueryFilters`), C36 (`SessaoTests` lê as rotas do próprio app; falta conferir que são 49), C44 (`CpfTests`, faltam as respostas de chamado, fila e indicadores), C62 (`SigiloTests`, faltam `GET /api/chamados` e `GET /api/chamados/{numero}`), C75 e C76 (`ConversaTests`, falta a transferência), C79 (API pronta em `VersaoCitadaTests`; falta o aviso no detalhe do atendente, S5, e o teste Vitest "aviso de artigo atualizado"), C181 (faltam 5 das 7 telas na lista do e2e), C183 e C184 (`ProblemDetailsTests.Erros()`, faltam 413 e 415 do S10). As tabelas `chamado`, `mensagem_chamado`, `anexo`, `evento_chamado`, `resposta_pronta`, `atendente_setor` e `email_saida` já existem com chave e `instituicao_id` (C16); os lotes seguintes acrescentam colunas por migração nova
 - Decidido no meio do build, sem o usuário: chave do provedor em `Llm:ChaveApi` como diz a door 4 (o pedido ao builder dizia `Llm:ApiKey`); o token de primeiro acesso é `<slug>.<32 bytes base64url>` para achar a instituição sem sair do filtro global, e o SHA-256 guardado é o do token inteiro; o tamanho de 20 a 400 do trecho vale para o texto como o modelo devolveu (C55 só passa assim) e a busca vale para os textos normalizados; os limites de taxa leem `Limites:AuthPorMinuto` e `Limites:MensagensPorMinuto` (padrão 5 e 10) para os testes subirem o teto; formato do arquivo de carga na nova linha 20 de `Landing`, registrada no commit do código e não antes dele
+- Lote 2 (S4, S5, S8) fechado em verde: 68 checks marcados `[x]` (142 no total), com `dotnet test api.Tests` 146 verdes, `npm --prefix web run test` 25 verdes e o e2e "sem rolagem horizontal a 360 px" 5 verdes contra `vite preview`. Também fechados do lote 1: C10, C62, C75, C76, C79. As rotas do S6 (encaminhar, reclassificar) foram feitas neste lote porque a matriz do S5 (C115, C116) as exercita; C123 a C127 provados. Continuam abertos: C7 (faltam anexo, artigos do admin e duplicado para as 27), C8 (`numeroOriginal`, S13), C12, C13, C36 (contar as 49 quando todas existirem), C44 (indicadores), C120 (evento `ANEXO`, S10), C137 (artigos do admin, S7; o teste já lê as rotas `/api/admin/*` do app), C181 (Artigos e Indicadores), C183, C184
+- Decidido no meio do lote 2, sem o usuário:
+  - estados x ações além do que o plano fixa: nota e reclassificar valem também em `RESOLVIDO`; resolver vale em `ABERTO` e torna responsável quem resolve; resposta pública do atendente em `RESOLVIDO` é 409; qualquer atendente do setor age no chamado, não só o responsável; assumir sendo já o responsável é 409
+  - toda ação de chamado, inclusive `POST mensagens` (201), devolve o detalhe do chamado e não só a mensagem; `POST mensagens` lê formulário (urlencoded ou multipart) com `tipo` `PUBLICA` ou `NOTA`
+  - o aluno não recebe `eventos` nem a chave `fontes` no detalhe; o evento de criação tem ator vazio (Sistema)
+  - importação: `criados` e `atualizados` contam matrículas (uma por linha); motivo a mais "e-mail já usado por outro CPF"
+  - xmin divergente e chave única violada viram 409 em todo o app (`StatusCodeSelector` do `ExceptionHandler`)
+  - regra para "Não classificado" é recusada com 400; desativar atendente tira o responsável também dos `RESOLVIDO`, sem mudar o estado
+  - índices únicos novos (migração `Lote2`): nome de setor, categoria e curso por instituição; título de resposta pronta por setor
+  - POST sem corpo numa rota com corpo JSON cai no fallback 404 de `/api` (política de `Accepts` do roteamento); a SPA sempre envia `{}`
+- Não construído no lote 2: telas de administração (usuários, importação de matrículas e cadastros só pela API) e os botões de encaminhar e reclassificar no detalhe do chamado
 - Abandonado: nada
-
