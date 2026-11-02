@@ -1,0 +1,41 @@
+using Mediator;
+using Microsoft.AspNetCore.Http.HttpResults;
+using One.Api.Dados;
+
+namespace One.Api.Chamados;
+
+// door 5: a mensagem de uma das 9 ações do chamado; o AgirNoChamado roda antes do handler de toda mensagem que a implementa.
+public interface IAcaoChamado : IRequest<IResult>
+{
+    string Numero { get; }
+    string Acao { get; }
+    Usuario Usuario { get; }
+    Instituicao Instituicao { get; }
+    bool Criado => false;
+    ValueTask<IResult?> Validar(AcessoChamado a, OneDb db);
+}
+
+// Pipeline de toda ação: 404 visibilidade, 403 papel, 400 corpo, 409 estado; depois o handler aplica e o behavior grava numa
+// transação. O handler devolve Results.Empty quando aplicou, ou a recusa.
+public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado acesso, TimeProvider relogio, Prazos prazos, IConfiguration cfg)
+    : IPipelineBehavior<TMessage, TResponse> where TMessage : IAcaoChamado
+{
+    // TResponse é sempre IResult: IAcaoChamado é IRequest<IResult>
+    public async ValueTask<TResponse> Handle(TMessage m, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken ct) =>
+        (TResponse)await Agir(m, async () => (IResult)(object)(await next(m, ct))!);
+
+    async Task<IResult> Agir(TMessage m, Func<Task<IResult>> aplicar)
+    {
+        var (chamado, papel) = await ChamadoRotas.Carregar(db, m.Usuario, m.Numero);
+        if (chamado is null) return ChamadoRotas.NaoEncontrado();
+        acesso.Preencher(chamado, papel!, m.Usuario, m.Instituicao, relogio.GetUtcNow().UtcDateTime, cfg, prazos);
+        if (PermissoesChamado.Estados(m.Acao, papel!) is not { } estados) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
+        if (await m.Validar(acesso, db) is { } invalido) return invalido;
+        if (!estados.Contains(chamado.Estado)) return Problemas.Erro(409, "A ação não é permitida no estado atual do chamado.");
+        var aplicada = await aplicar();
+        if (aplicada is not EmptyHttpResult) return aplicada;
+        await db.SaveChangesAsync();
+        var corpo = await DetalheChamado.Montar(db, m.Usuario.Id, chamado, papel!);
+        return m.Criado ? Results.Created($"/api/chamados/{m.Numero}", corpo) : Results.Ok(corpo);
+    }
+}

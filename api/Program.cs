@@ -59,7 +59,8 @@ public class Program
         s.AddHostedService(sp => sp.GetRequiredService<Agendador>());
         s.AddHttpClient("llm", Llm);
         // vertical-slice-completa door 2: Scoped, para o handler usar o OneDb que Sessao.Validar filtrou nesta requisição
-        s.AddMediator(o => o.ServiceLifetime = ServiceLifetime.Scoped);
+        s.AddMediator(o => { o.ServiceLifetime = ServiceLifetime.Scoped; o.PipelineBehaviors = [typeof(AgirNoChamado<,>)]; });
+        s.AddScoped<AcessoChamado>();
         s.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
 
         s.AddProblemDetails(o => o.CustomizeProblemDetails = c =>
