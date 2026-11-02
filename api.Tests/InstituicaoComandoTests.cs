@@ -80,6 +80,9 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         { "e-mail sem @", "--admin-email" },
         { "nome vazio", "--nome" },
         { "nome do administrador vazio", "--admin-nome" },
+        { "slug com 2 caracteres", "--slug" },
+        { "slug com 31 caracteres", "--slug" },
+        { "fuso sem id IANA", "--fuso" },
     };
 
     [Theory]
@@ -98,6 +101,9 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             "CPF com dígito errado" => Criar(Semente.NovoSlug(), cpf: cpfErrado),
             "nome vazio" => Trocar(Criar(Semente.NovoSlug()), "--nome", ""),
             "nome do administrador vazio" => Trocar(Criar(Semente.NovoSlug()), "--admin-nome", ""),
+            "slug com 2 caracteres" => Criar("ab"),
+            "slug com 31 caracteres" => Criar(new string('a', 31)),
+            "fuso sem id IANA" => Criar(Semente.NovoSlug(), fuso: "E. South America Standard Time"),
             _ => Criar(Semente.NovoSlug(), email: "admin.univag.edu.br"),
         };
         var antes = await Contagens();
@@ -190,6 +196,8 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             (Artigo(artigo.Replace("Não classificado", "Nenhuma")), "artigos[0].categoria"),
             ("{ não é json", "--arquivo"),
             ("null", "--arquivo: vazio"),
+            (Artigo(artigo.Replace("[\"P?\"]", "[\"P?\",\" \"]")), "artigos[0].perguntas"),
+            ("{\"cursos\":[{\"nome\":\"ADS\"},{\"nome\":\"ADS\"}]}", "cursos[1].nome"),
         };
         var antes = await Contagens();
 

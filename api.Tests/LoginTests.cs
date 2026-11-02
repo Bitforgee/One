@@ -86,10 +86,14 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var i = await f.Instituicao();
         var u = await f.Usuario(i, [Papeis.Aluno]);
+        var inativa = await f.Instituicao();
+        var daInativa = await f.Usuario(inativa, [Papeis.Aluno]);
+        await f.Db(null, db => db.Instituicoes.Where(x => x.Id == inativa.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativa, false)));
 
         var respostas = new[]
         {
             await f.Cliente().Login("instituicao-inexistente", u.Cpf),
+            await f.Cliente().Login(inativa.Slug, daInativa.Cpf),
             await f.Cliente().Login(i.Slug, Semente.NovoCpf()),
             await f.Cliente().Login(i.Slug, u.Cpf, "senha-errada-1"),
         };

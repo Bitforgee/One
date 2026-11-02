@@ -108,9 +108,11 @@ public static partial class InstituicaoComando
             else categorias[c.Nome] = new Categoria { Nome = c.Nome };
         }
         var cursos = new List<Curso>();
+        var nomesDeCurso = (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet();
         foreach (var (c, i) in (arq.Cursos ?? []).Select((c, i) => (c, i)))
         {
             if (string.IsNullOrWhiteSpace(c.Nome)) erros.Add($"cursos[{i}].nome: obrigatório");
+            else if (!nomesDeCurso.Add(c.Nome)) erros.Add($"cursos[{i}].nome: \"{c.Nome}\" repetido");
             if (c.Coordenacao is not null && !setores.ContainsKey(c.Coordenacao)) erros.Add($"cursos[{i}].coordenacao: setor \"{c.Coordenacao}\" não existe");
             cursos.Add(new Curso { Nome = c.Nome ?? "" });
         }

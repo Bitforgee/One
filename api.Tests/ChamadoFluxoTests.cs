@@ -20,6 +20,10 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         var c = await b.Ler(numero);
         Assert.Equal(EmAtendimento, c.Estado);
         Assert.Equal(b.A.Usuario.Id, c.ResponsavelId);
+        // assumir de novo sendo o responsável: 409 e nenhum evento a mais
+        var eventos = (await b.Eventos(numero)).Count;
+        Assert.Equal(HttpStatusCode.Conflict, (await b.A.Cliente.PostAsync($"/api/chamados/{numero}/assumir", null)).StatusCode);
+        Assert.Equal(eventos, (await b.Eventos(numero)).Count);
     }
 
     [Fact]

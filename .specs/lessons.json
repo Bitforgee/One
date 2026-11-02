@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 6,
+  "next_id": 15,
   "lessons": [
     {
       "id": "L-001",
@@ -94,6 +94,168 @@
       ],
       "created": "2026-11-02T16:05:23Z",
       "last_seen": "2026-11-02T16:05:23Z"
+    },
+    {
+      "id": "L-006",
+      "key": "surviving_mutant::para cada gravacao do agendador que reconfere a condicao update where escreva um teste que muda o item entre ler e processar nao basta cobrir conversa e resolvido",
+      "text": "Para cada gravação do agendador que reconfere a condição (UPDATE ... WHERE), escreva um teste que muda o item entre Ler() e Processar(); não basta cobrir conversa e RESOLVIDO.",
+      "signal": "surviving_mutant",
+      "scope": "api/agendador",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Agendador.cs:124 (api/agendador)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-007",
+      "key": "surviving_mutant::limite escrito dentro de uma regex como 3 30 e limite teste um valor curto demais e um longo demais nao so um caractere proibido",
+      "text": "Limite escrito dentro de uma regex (como {3,30}) é limite: teste um valor curto demais e um longo demais, não só um caractere proibido.",
+      "signal": "surviving_mutant",
+      "scope": "api/comando",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Comando/InstituicaoComando.cs:29 (api/comando)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-008",
+      "key": "ac_gap::conte cada disjuncao e cada estado que a mensagem de recusa nomeia ativo desativada conta desativada como membro proprio inexistente e inativo pedem casos separados",
+      "text": "Conte cada disjunção e cada estado que a mensagem de recusa nomeia (ativo, desativada, conta desativada) como membro próprio; inexistente e inativo pedem casos separados.",
+      "signal": "ac_gap",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Rotas/ChamadoRotas.cs:277 (api)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-009",
+      "key": "ac_gap::tire os motivos de sem base do codigo texto vazio provedor indisponivel e nao so do ac e de a cada um uma linha na tabela do teste",
+      "text": "Tire os motivos de sem_base do código (texto_vazio, provedor_indisponivel) e não só do AC, e dê a cada um uma linha na tabela do teste.",
+      "signal": "ac_gap",
+      "scope": "api/assistente",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Assistente/Assistente.cs:131 (api/assistente)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-010",
+      "key": "ac_gap::toda decisao tomada no meio do build e anotada no handoff como assumir sendo ja o responsavel 409 entra na tabela de decisao do teste no mesmo commit",
+      "text": "Toda decisão tomada no meio do build e anotada no Handoff (como assumir sendo já o responsável = 409) entra na tabela de decisão do teste no mesmo commit.",
+      "signal": "ac_gap",
+      "scope": "api/rotas",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Rotas/ChamadoRotas.cs:232 (api/rotas)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-011",
+      "key": "ac_gap::janela de validade tem dois lados teste o item antes do inicio e depois do fim alem dos dois limites",
+      "text": "Janela de validade tem dois lados: teste o item antes do início e depois do fim, além dos dois limites.",
+      "signal": "ac_gap",
+      "scope": "api/assistente",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Assistente/Assistente.cs:53 (api/assistente)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-012",
+      "key": "ac_gap::cada prazo do agendador precisa do caso exatamente no prazo e do caso um minuto antes nao so do que vence",
+      "text": "Cada prazo do agendador precisa do caso exatamente no prazo e do caso um minuto antes, não só do que vence.",
+      "signal": "ac_gap",
+      "scope": "api/agendador",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Agendador.cs:16 (api/agendador)"
+      ],
+      "created": "2026-11-02T16:26:35Z",
+      "last_seen": "2026-11-02T16:26:35Z"
+    },
+    {
+      "id": "L-013",
+      "key": "spec_precision_gap::conte os membros da coverage por condicao e nao por linha de recusa uma linha com ou else if esconde casos sem teste",
+      "text": "Conte os membros da Coverage por condição e não por linha de recusa; uma linha com || ou else if esconde casos sem teste.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/coverage",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        ".specs/features/mvp-one/checks.md:710 (specs/coverage)"
+      ],
+      "created": "2026-11-02T16:26:36Z",
+      "last_seen": "2026-11-02T16:26:36Z"
+    },
+    {
+      "id": "L-014",
+      "key": "gate_fail::injete falhas so num worktree git checkout de um arquivo mutado num tree com mudancas nao commitadas apaga tambem a correcao",
+      "text": "Injete falhas só num worktree: git checkout de um arquivo mutado num tree com mudanças não commitadas apaga também a correção.",
+      "signal": "gate_fail",
+      "scope": "processo",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "sessão 02/11, git checkout depois de mutação (processo)"
+      ],
+      "created": "2026-11-02T16:30:36Z",
+      "last_seen": "2026-11-02T16:30:36Z"
     }
   ]
 }

@@ -260,6 +260,8 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
             ("provedor_conteudo_vazio", _ => Task.FromResult(LlmFalso.Bruto(""))),
             ("provedor_json_invalido", _ => Task.FromResult(LlmFalso.Bruto("isto não é json"))),
             ("provedor_tipo_desconhecido", _ => Task.FromResult(LlmFalso.Conteudo(new { tipo = "outro", texto = "x" }))),
+            ("provedor_indisponivel", _ => throw new HttpRequestException("conexão recusada")),
+            ("texto_vazio", _ => Task.FromResult(LlmFalso.Conteudo(Cenario.Resposta("", [c.Boleto.Id], (c.Boleto.Id, Cenario.TrechoBoleto))))),
         };
         foreach (var (motivo, responder) in casos)
         {

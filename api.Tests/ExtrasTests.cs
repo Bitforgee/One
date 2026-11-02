@@ -37,14 +37,48 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(AguardandoAluno, (await b.Ler(numero)).Estado);
     }
 
+    // AC 120 nos prazos de AGUARDANDO_ALUNO: o aluno responde entre a leitura e a gravação do agendador
+    [Fact]
+    public async Task Resposta_do_aluno_antes_preserva_prazos_aguardando()
+    {
+        var b = await Balcao.Criar(f);
+        var lembrete = await b.Chamado(AguardandoAluno);
+        var resolver = await b.Chamado(AguardandoAluno);
+        await AguardandoHa(b, lembrete, TimeSpan.FromDays(3));
+        await AguardandoHa(b, resolver, TimeSpan.FromDays(7));
+        var ids = (await b.Ler(lembrete)).Id;
+        var idr = (await b.Ler(resolver)).Id;
+
+        var lidos = await Agendador.Ler();
+        Assert.Contains(lidos, x => x.Tipo == "lembrete" && x.Id == ids);
+        Assert.Contains(lidos, x => x.Tipo == "aguardando" && x.Id == idr);
+        foreach (var numero in new[] { lembrete, resolver })
+            Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(b.ClienteAluno, numero, "Segue o comprovante.")).StatusCode);
+
+        await Agendador.Processar(lidos);
+
+        foreach (var numero in new[] { lembrete, resolver })
+        {
+            var c = await b.Ler(numero);
+            Assert.Equal((EmAtendimento, (DateTime?)null), (c.Estado, c.LembreteEm));
+            Assert.DoesNotContain(await b.Eventos(numero), e => e.Tipo == "LEMBRETE" || e.Para == Resolvido);
+        }
+        Assert.Empty(await Emails(b, $"[Univag] {lembrete} aguarda sua resposta"));
+        Assert.Empty(await Emails(b, $"[Univag] {resolver} foi resolvido"));
+    }
+
     [Fact]
     public async Task Resolve_no_7o_dia_aguardando()
     {
         var b = await Balcao.Criar(f);
         var numero = await b.Chamado(AguardandoAluno);
+        var quase = await b.Chamado(AguardandoAluno);
         await AguardandoHa(b, numero, TimeSpan.FromDays(7));
+        await AguardandoHa(b, quase, TimeSpan.FromDays(7) - TimeSpan.FromMinutes(1));
 
         await Agendador.Executar();
+
+        Assert.Equal(AguardandoAluno, (await b.Ler(quase)).Estado);
 
         var c = await b.Ler(numero);
         Assert.Equal((Resolvido, f.Relogio.GetUtcNow().UtcDateTime), (c.Estado, c.ResolvidoEm));
@@ -151,11 +185,13 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         }
         await Ativo("Rematrícula 2026/1", null, hoje.AddDays(-1));
         await Ativo("Rematrícula 2026/2", hoje, null);
+        await Ativo("Rematrícula 2027/1", hoje.AddDays(1), null);
 
         await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "rematrícula" });
 
         Assert.DoesNotContain("Rematrícula 2026/1", f.Llm.Corpos[^1]);
         Assert.Contains("Rematrícula 2026/2", f.Llm.Corpos[^1]);
+        Assert.DoesNotContain("Rematrícula 2027/1", f.Llm.Corpos[^1]);
         var invalido = await admin.PostAsJsonAsync("/api/admin/artigos", new { titulo = "x", perguntas = new[] { "?" }, categoriaId = categoria, resposta = "x", visivelDe = hoje, visivelAte = hoje.AddDays(-1) });
         Assert.Equal(HttpStatusCode.BadRequest, invalido.StatusCode);
     }

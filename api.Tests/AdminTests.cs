@@ -388,6 +388,14 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, segunda.StatusCode);
         var regra = await f.Db(i.Id, db => db.Regras.SingleAsync(r => r.CategoriaId == categoria.Id));
         Assert.Equal(("COORDENACAO_CURSO", (long?)null), (regra.Destino, regra.SetorId));
+
+        // PUT da regra de outra categoria apontando para uma que já tem regra: 409 com a mensagem própria
+        var outra = await f.Categoria(i, "Notas");
+        var idOutra = (await (await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = outra.Id, destino = "COORDENACAO_CURSO" })).Json()).GetProperty("id").GetInt64();
+        var conflito = await admin.PutAsJsonAsync($"/api/admin/regras/{idOutra}", new { categoriaId = categoria.Id, destino = "COORDENACAO_CURSO" });
+        Assert.Equal(HttpStatusCode.Conflict, conflito.StatusCode);
+        Assert.Equal("Esta categoria já tem uma regra.", (await conflito.Json()).GetProperty("detail").GetString());
+        Assert.Equal(outra.Id, await f.Db(i.Id, db => db.Regras.Where(r => r.Id == idOutra).Select(r => r.CategoriaId).SingleAsync()));
     }
 
     [Fact]
@@ -469,8 +477,11 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         var padrao = await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
 
         var r = await admin.PutAsJsonAsync($"/api/admin/categorias/{padrao.Id}", new { nome = "Outros" });
+        var desativar = await admin.PutAsJsonAsync($"/api/admin/categorias/{padrao.Id}", new { nome = "Não classificado", ativa = false });
 
         Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, desativar.StatusCode);
+        Assert.True((await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao))).Ativa);
         Assert.Equal("Não classificado", (await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao))).Nome);
     }
 
