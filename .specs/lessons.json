@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 17,
+  "next_id": 18,
   "lessons": [
     {
       "id": "L-001",
@@ -292,6 +292,24 @@
       ],
       "created": "2026-11-02T16:43:25Z",
       "last_seen": "2026-11-02T16:43:25Z"
+    },
+    {
+      "id": "L-017",
+      "key": "surviving_mutant::numa tabela de recusas com preparo comum cada caso deve falhar so na sua condicao avancar o relogio depois de emitir todos os tokens deixou o usado o de conta desativada e o de instituicao inativa tambem vencidos e os mutantes dessas condicoes sobreviveram",
+      "text": "Numa tabela de recusas com preparo comum, cada caso deve falhar só na sua condição: avançar o relógio depois de emitir todos os tokens deixou o usado, o de conta desativada e o de instituição inativa também vencidos, e os mutantes dessas condições sobreviveram.",
+      "signal": "surviving_mutant",
+      "scope": "api/auth",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api.Tests/DefinirSenhaTests.cs:64 (api/auth)"
+      ],
+      "created": "2026-11-02T16:55:12Z",
+      "last_seen": "2026-11-02T16:55:12Z"
     }
   ]
 }

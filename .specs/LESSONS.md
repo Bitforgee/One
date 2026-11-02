@@ -110,6 +110,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api/Comando/InstituicaoComando.cs:107 (api/comando)
 - last seen: 2026-11-02T16:43:25Z
 
+### L-017 - Numa tabela de recusas com preparo comum, cada caso deve falhar só na sua condição: avançar o relógio depois de emitir todos os tokens deixou o usado, o de conta desativada e o de instituição inativa também vencidos, e os mutantes dessas condições sobreviveram.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/auth` · harmful: 0
+- features: mvp-one
+- evidence: api.Tests/DefinirSenhaTests.cs:64 (api/auth)
+- last seen: 2026-11-02T16:55:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
