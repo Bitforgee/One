@@ -1,0 +1,8 @@
+400 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Requisição inválida","status":400,"detail":"A mensagem deve ter de 1 a 1000 caracteres.","errors":{"mensagem":["A mensagem deve ter de 1 a 1000 caracteres."]}}
+401 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.2","title":"Não autenticado","status":401,"detail":"CPF ou senha inválidos."}
+403 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.4","title":"Acesso negado","status":403,"detail":"O assistente é só para alunos com matrícula ativa."}
+404 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Não encontrado","status":404,"detail":"Instituição não encontrada."}
+409 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflito","status":409,"detail":"Esta conversa já foi encerrada."}
+413 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.14","title":"Arquivo grande demais","status":413,"detail":"O arquivo a.pdf passa de 10 MB."}
+415 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.16","title":"Tipo de arquivo não aceito","status":415,"detail":"O arquivo a.pdf não é PDF, JPG nem PNG."}
+429 {"type":"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/429","title":"Muitas requisições","status":429,"detail":"Muitas tentativas. Aguarde um minuto e tente de novo."}

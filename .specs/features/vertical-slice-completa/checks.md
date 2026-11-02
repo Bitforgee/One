@@ -34,18 +34,18 @@ Proof: `npm --prefix web run e2e`
 **C2** - Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
 Proof: `python .specs/features/refatoracao-solid/asserts_preservados.py <base>`
 
-**C3** - O retrato `api.Tests/Retratos/rotas.txt` tem 61 linhas, uma por endpoint do `EndpointDataSource` na ordem de registro, cada uma com o método HTTP, o `RoutePattern.RawText`, a presença de `IAllowAnonymous`, a presença de `IAuthorizeData` e o nome da política de `EnableRateLimitingAttribute`: 59 rotas com exatamente 1 método, mais os 2 fallbacks de `Program.Rotas` (`/api/{**resto}` e o do `MapFallbackToFile`); 5 com `IAllowAnonymous` (`/api/auth/login`, `/api/auth/primeiro-acesso`, `/api/auth/definir-senha`, `/api/auth/logout`, `/api/instituicoes/{slug}`); 59 com `IAuthorizeData`; política `auth` em 2 (`/api/auth/login`, `/api/auth/primeiro-acesso`) e `mensagens` em 3 (`/api/conversas`, `/api/conversas/{id:long}/mensagens`, `/api/atendimento-direto`). A tabela viva do app é igual ao retrato linha a linha, na mesma sequência (AC 2)
+**C3** - [x] O retrato `api.Tests/Retratos/rotas.txt` tem 61 linhas, uma por endpoint do `EndpointDataSource` na ordem de registro, cada uma com o método HTTP, o `RoutePattern.RawText`, a presença de `IAllowAnonymous`, a presença de `IAuthorizeData` e o nome da política de `EnableRateLimitingAttribute`: 59 rotas com exatamente 1 método, mais os 2 fallbacks de `Program.Rotas` (`/api/{**resto}` e o do `MapFallbackToFile`); 5 com `IAllowAnonymous` (`/api/auth/login`, `/api/auth/primeiro-acesso`, `/api/auth/definir-senha`, `/api/auth/logout`, `/api/instituicoes/{slug}`); 59 com `IAuthorizeData`; política `auth` em 2 (`/api/auth/login`, `/api/auth/primeiro-acesso`) e `mensagens` em 3 (`/api/conversas`, `/api/conversas/{id:long}/mensagens`, `/api/atendimento-direto`). A tabela viva do app é igual ao retrato linha a linha, na mesma sequência (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SpaTests.Spa_em_slug_e_api_404_em_problem_json"`
 
-**C4** - Os retratos `api.Tests/Retratos/rotas.txt` e `api.Tests/Retratos/erros.txt` foram gravados com o código da base: cada um foi adicionado num único commit depois de `<base>`, `git diff <base> <esse commit> -- api` é vazio (nenhum arquivo de `api/` mudou até ali), e nenhum dos dois mudou desde que foi adicionado (AC 2, AC 4)
+**C4** - [x] Os retratos `api.Tests/Retratos/rotas.txt` e `api.Tests/Retratos/erros.txt` foram gravados com o código da base: cada um foi adicionado num único commit depois de `<base>`, `git diff <base> <esse commit> -- api` é vazio (nenhum arquivo de `api/` mudou até ali), e nenhum dos dois mudou desde que foi adicionado (AC 2, AC 4)
 Proof: `python .specs/features/vertical-slice-completa/retratos_antes.py <base>`
 
-**C5** - Para um aluno e para um atendente sem o papel `ADMINISTRADOR`, cada uma das 29 rotas `/api/admin/*` lidas do `EndpointDataSource` responde 403 com `detail` igual a "Só administradores podem usar esta área." (AC 3)
+**C5** - [x] Para um aluno e para um atendente sem o papel `ADMINISTRADOR`, cada uma das 29 rotas `/api/admin/*` lidas do `EndpointDataSource` responde 403 com `detail` igual a "Só administradores podem usar esta área." (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Admin_403_com_detail_nas_29_rotas"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AdminTests.Sem_papel_admin_403"`
 
-**C6** - O retrato `api.Tests/Retratos/erros.txt` guarda 8 corpos, e cada pedido abaixo devolve hoje o corpo gravado byte a byte, depois de tirar dos dois lados só o membro `"traceId":"..."`: 400 `POST /api/conversas` com `{"mensagem":""}` por aluno com matrícula ativa; 401 `POST /api/auth/login` com senha errada; 403 `POST /api/conversas` com `{"mensagem":"oi"}` por atendente; 404 `GET /api/instituicoes/nao-existe`; 409 `POST /api/conversas/{id}/encerrar` numa conversa já encerrada; 413 `POST /api/chamados/{numero}/mensagens` com o PDF `a.pdf` de 10 MB + 1 byte; 415 o mesmo pedido com o conteúdo `Balcao.Exe` em `a.pdf`; 429 o 6º `POST /api/auth/login` em 60 s no `OneFactoryComLimites` (AC 4)
+**C6** - [x] O retrato `api.Tests/Retratos/erros.txt` guarda 8 corpos, e cada pedido abaixo devolve hoje o corpo gravado byte a byte, depois de tirar dos dois lados só o membro `"traceId":"..."`: 400 `POST /api/conversas` com `{"mensagem":""}` por aluno com matrícula ativa; 401 `POST /api/auth/login` com senha errada; 403 `POST /api/conversas` com `{"mensagem":"oi"}` por atendente; 404 `GET /api/instituicoes/nao-existe`; 409 `POST /api/conversas/{id}/encerrar` numa conversa já encerrada; 413 `POST /api/chamados/{numero}/mensagens` com o PDF `a.pdf` de 10 MB + 1 byte; 415 o mesmo pedido com o conteúdo `Balcao.Exe` em `a.pdf`; 429 o 6º `POST /api/auth/login` em 60 s no `OneFactoryComLimites` (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_erro_iguais_aos_da_base"`
 
 ### S2 - `Mediator` no lugar (P1) · ~6 files · ~32 KB · ~8k
@@ -247,5 +247,4 @@ cerca de 72 KB = ~18k.
   build e de testes. Corte não necessário: um builder para S1 a S4
 - Mechanism: um builder, num subagente (a estimativa cabe no budget; o pedido do usuário de 02/11/2026
   "use subagentes" fica atendido pelo builder e pelo Verifier, cada um num subagente próprio)
-- Feature base (`<base>`): o commit que congela `plan.md` e `checks.md` (hash preenchido pelo
-  orquestrador ao commitar)
+- Feature base (`<base>`): `65adab5` (docs: checks congelados sobre o plano aprovado), no `main`; o commit que congela `plan.md` e `checks.md`
