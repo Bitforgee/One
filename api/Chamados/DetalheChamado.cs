@@ -16,7 +16,7 @@ public static class DetalheChamado
 
     record LinhaDaTranscricao(long Id, string Autor, string Texto, DateTime CriadaEm, List<CitacaoArtigo> Citacoes);
 
-    public static async Task<object> Montar(OneDb db, HttpContext ctx, Chamado c, string papel)
+    public static async Task<object> Montar(OneDb db, long usuarioId, Chamado c, string papel)
     {
         var equipe = papel == PermissoesChamado.Atendente;
         var matricula = await db.Matriculas.Where(m => m.Id == c.MatriculaId).Select(m => new { numero = m.Numero, curso = m.Curso!.Nome, semestre = c.Semestre }).SingleAsync();
@@ -50,7 +50,7 @@ public static class DetalheChamado
                 : (object)new { autor = m.Autor, texto = m.Texto, criadaEm = m.CriadaEm }),
             mensagens = await Mensagens(db, c, equipe, nomes),
             eventos = daEquipe.Eventos,
-            acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, ctx.Usuario().Id),
+            acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId),
             // destinos de encaminhar e reclassificar (S6), só para a equipe
             setores = daEquipe.Setores,
             categorias = daEquipe.Categorias,

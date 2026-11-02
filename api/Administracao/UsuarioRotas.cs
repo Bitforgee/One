@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Acesso;
 using One.Api.Dados;
-using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Administracao;
 
@@ -15,14 +14,14 @@ public static class UsuarioRotas
 
     public static void Mapear(RouteGroupBuilder admin)
     {
-        admin.MapGet("/usuarios", Listar);
-        admin.MapPost("/usuarios", Criar);
-        admin.MapPut("/usuarios/{id:long}", Alterar);
+        ListarUsuarios.Mapear(admin);
+        CriarUsuario.Mapear(admin);
+        AlterarUsuario.Mapear(admin);
         // AC 111 e 112: nada do histórico some; os chamados do atendente voltam para a fila do setor.
-        admin.MapPost("/usuarios/{id:long}/desativar", Desativar);
+        DesativarUsuario.Mapear(admin);
     }
 
-    static async Task<object> Saida(OneDb db, Usuario u) => new
+    public static async Task<object> Saida(OneDb db, Usuario u) => new
     {
         id = u.Id,
         cpf = u.Cpf,
@@ -35,7 +34,7 @@ public static class UsuarioRotas
     };
 
     // 400 nos campos, 409 em CPF ou e-mail repetidos na instituição (AC 108, AC 109).
-    static async Task<IResult?> Validar(OneDb db, UsuarioIn i, long id) =>
+    public static async Task<IResult?> Validar(OneDb db, UsuarioIn i, long id) =>
         Pessoa(i) ?? await PapeisESetores(db, i) ?? await Repetidos(db, i, id);
 
     static IResult? Pessoa(UsuarioIn i)
@@ -66,7 +65,7 @@ public static class UsuarioRotas
     }
 
     // Grava o usuário, os papéis e os setores num SaveChanges só (AC 30 do refatoracao-solid).
-    static async Task Gravar(OneDb db, Usuario u, UsuarioIn i, IPasswordHasher<Usuario> hasher)
+    public static async Task Gravar(OneDb db, Usuario u, UsuarioIn i, IPasswordHasher<Usuario> hasher)
     {
         u.Cpf = Cpf.Normalizar(i.Cpf)!;
         u.Nome = i.Nome!;
@@ -94,51 +93,5 @@ public static class UsuarioRotas
             vinculo.CurrentValue = usuarioId.CurrentValue;
             vinculo.IsTemporary = usuarioId.IsTemporary;
         }
-    }
-
-    static async Task<IResult> Listar(OneDb db)
-    {
-        var lista = new List<object>();
-        foreach (var u in await db.Usuarios.Include(u => u.Papeis).OrderBy(u => u.Nome).ToListAsync()) lista.Add(await Saida(db, u));
-        return Results.Ok(lista);
-    }
-
-    static async Task<IResult> Criar(UsuarioIn i, OneDb db, IPasswordHasher<Usuario> hasher)
-    {
-        if (await Validar(db, i, 0) is { } erro) return erro;
-        var u = db.Usuarios.Add(new Usuario()).Entity;
-        await Gravar(db, u, i, hasher);
-        return Results.Created($"/api/admin/usuarios/{u.Id}", await Saida(db, u));
-    }
-
-    static async Task<IResult> Alterar(long id, UsuarioIn i, OneDb db, IPasswordHasher<Usuario> hasher)
-    {
-        var u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Id == id);
-        if (u is null) return AdminRotas.NaoEncontrado();
-        if (await Validar(db, i, id) is { } erro) return erro;
-        await Gravar(db, u, i, hasher);
-        return Results.Ok(await Saida(db, u));
-    }
-
-    static async Task<IResult> Desativar(long id, HttpContext ctx, OneDb db, TimeProvider relogio)
-    {
-        var u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Id == id);
-        if (u is null) return AdminRotas.NaoEncontrado();
-        var agora = relogio.GetUtcNow().UtcDateTime;
-        var adminId = ctx.Usuario().Id;
-        u.Ativo = false;
-        foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
-        {
-            db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Atribuicao, AtorId = adminId, De = u.Nome, Detalhe = "Responsável desativado", CriadoEm = agora });
-            c.ResponsavelId = null;
-            if (c.Estado is EmAtendimento or AguardandoAluno)
-            {
-                db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Transicao, AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
-                c.Estado = Aberto;
-                c.AguardandoDesde = null;
-            }
-        }
-        await db.SaveChangesAsync();
-        return Results.Ok(await Saida(db, u));
     }
 }

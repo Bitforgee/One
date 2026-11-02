@@ -79,16 +79,16 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Map_
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fora_do_mediator"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Logout_204_expira_cookie"`
 
-**C15** - Na conversa de outro aluno: `POST /api/conversas/{id}/mensagens` com `{"mensagem":""}` e `POST /api/conversas/{id}/avaliacao` com `{}` respondem 404 com `detail` "Conversa não encontrada.", e a conversa não muda (AC 13, door 4)
+**C15** - [x] Na conversa de outro aluno: `POST /api/conversas/{id}/mensagens` com `{"mensagem":""}` e `POST /api/conversas/{id}/avaliacao` com `{}` respondem 404 com `detail` "Conversa não encontrada.", e a conversa não muda (AC 13, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Conversa_alheia_404_mesmo_com_corpo_invalido"`
 
-**C16** - `POST /api/conversas` com `{"mensagem":""}` responde 403 com `detail` "O assistente é só para alunos com matrícula ativa." para um atendente e para um aluno cuja única matrícula não está `ATIVA`; `POST /api/atendimento-direto` com `{"descricao":""}` por um atendente responde 403 com `detail` "O atendimento é só para alunos com matrícula ativa."; nenhuma conversa é criada (AC 14, door 4)
+**C16** - [x] `POST /api/conversas` com `{"mensagem":""}` responde 403 com `detail` "O assistente é só para alunos com matrícula ativa." para um atendente e para um aluno cuja única matrícula não está `ATIVA`; `POST /api/atendimento-direto` com `{"descricao":""}` por um atendente responde 403 com `detail` "O atendimento é só para alunos com matrícula ativa."; nenhuma conversa é criada (AC 14, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Sem_matricula_ativa_403_mesmo_com_corpo_invalido"`
 
-**C17** - Numa conversa do próprio aluno já encerrada: `POST /api/conversas/{id}/mensagens` com `{"mensagem":""}` responde 400 (`errors.mensagem`) e `POST /api/conversas/{id}/avaliacao` com `{}` responde 400 (`errors.resolveu`), não 409 (door 4)
+**C17** - [x] Numa conversa do próprio aluno já encerrada: `POST /api/conversas/{id}/mensagens` com `{"mensagem":""}` responde 400 (`errors.mensagem`) e `POST /api/conversas/{id}/avaliacao` com `{}` responde 400 (`errors.resolveu`), não 409 (door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Conversa_encerrada_400_antes_de_409"`
 
-**C18** - Com id 999999 (inexistente) e corpo inválido, um administrador recebe 404 em 8 rotas: `PUT /api/admin/setores/{id}`, `PUT /api/admin/categorias/{id}`, `PUT /api/admin/cursos/{id}`, `PUT /api/admin/respostas-prontas/{id}`, `PUT /api/admin/regras/{id}` e `PUT /api/admin/usuarios/{id}` com `{}` e `detail` "Item não encontrado."; `PUT /api/admin/artigos/{id}` com `{}` e `detail` "Artigo não encontrado."; `POST /api/admin/documentos/{id}/versoes` com um arquivo que não é PDF e `detail` "Documento não encontrado." (door 4)
+**C18** - [x] Com id 999999 (inexistente) e corpo inválido, um administrador recebe 404 em 8 rotas: `PUT /api/admin/setores/{id}`, `PUT /api/admin/categorias/{id}`, `PUT /api/admin/cursos/{id}`, `PUT /api/admin/respostas-prontas/{id}`, `PUT /api/admin/regras/{id}` e `PUT /api/admin/usuarios/{id}` com `{}` e `detail` "Item não encontrado."; `PUT /api/admin/artigos/{id}` com `{}` e `detail` "Artigo não encontrado."; `POST /api/admin/documentos/{id}/versoes` com um arquivo que não é PDF e `detail` "Documento não encontrado." (door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Id_inexistente_404_mesmo_com_corpo_invalido"`
 
 **C19** - Nenhum dos 58 tipos de mensagem de C11 tem propriedade do tipo `HttpContext`, `HttpRequest` ou `IHttpContextAccessor`; nenhum dos 58 handlers de C12 nem `AgirNoChamado<,>` tem parâmetro de construtor desses tipos; `DetalheChamado.Montar` não tem parâmetro `HttpContext`; o texto `IHttpContextAccessor` não aparece em `api/`. O login válido continua 200 com o cookie `one.auth`, o anexo PDF enviado em `multipart/form-data` continua aceito e o upload de documento continua 201 (door 6)
@@ -97,7 +97,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Login_vali
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Pdf_jpg_png_ate_10mb"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Subir_pdf_201"`
 
-**C20** - Em `api.Tests/ArquiteturaTests.cs`, os pares de `ReferenciasEntreFatias` em `HEAD` são um subconjunto dos pares de `<base>`, e o array `Fatias` e os corpos de `Fatias_do_api`, `Namespace_igual_a_pasta` e `IgnoreQueryFilters_so_no_agendador_e_no_comando` são iguais aos de `<base>`; os 3 testes passam (AC 15)
+**C20** - [x] Em `api.Tests/ArquiteturaTests.cs`, os pares de `ReferenciasEntreFatias` em `HEAD` são um subconjunto dos pares de `<base>`, e o array `Fatias` e os corpos de `Fatias_do_api`, `Namespace_igual_a_pasta` e `IgnoreQueryFilters_so_no_agendador_e_no_comando` são iguais aos de `<base>`; os 3 testes passam (AC 15)
 Proof: `python .specs/features/vertical-slice-completa/listas_fixas.py <base>`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Referencias_entre_fatias"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fatias_do_api"`
@@ -109,7 +109,7 @@ Proof: `dotnet build api -warnaserror:CA1502`
 Proof: `bash .specs/features/refatoracao-solid/ca1502_barra.sh`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Barreira_de_complexidade_configurada"`
 
-**C22** - Com o SMTP fora, `POST /api/auth/primeiro-acesso` de um aluno sem senha responde 202 e grava 1 log de nível `Error` com a categoria `One.Api.Email` e o campo `InstituicaoId` da instituição (Assumption "Categoria dos logs")
+**C22** - [x] Com o SMTP fora, `POST /api/auth/primeiro-acesso` de um aluno sem senha responde 202 e grava 1 log de nível `Error` com a categoria `One.Api.Email` e o campo `InstituicaoId` da instituição (Assumption "Categoria dos logs")
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Smtp_fora_loga_na_categoria_Email"`
 
 ### S4 - Permissão das ações do chamado em um lugar (P1) · ~20 files · ~97 KB · ~24k

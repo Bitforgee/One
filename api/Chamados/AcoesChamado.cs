@@ -47,7 +47,7 @@ public static class AcoesChamado
         if (!estados.Contains(chamado.Estado)) return Problemas.Erro(409, "A ação não é permitida no estado atual do chamado.");
         if (await aplicar(a) is { } recusa) return recusa;
         await db.SaveChangesAsync();
-        var corpo = await DetalheChamado.Montar(db, ctx, chamado, papel!);
+        var corpo = await DetalheChamado.Montar(db, u.Id, chamado, papel!);
         return criado ? Results.Created($"/api/chamados/{numero}", corpo) : Results.Ok(corpo);
     }
 

@@ -1,0 +1,38 @@
+using Mediator;
+using Microsoft.EntityFrameworkCore;
+using One.Api.Dados;
+using static One.Api.Dados.EstadosChamado;
+
+namespace One.Api.Administracao;
+
+public sealed record DesativarUsuario(long Id, Usuario Admin) : IRequest<IResult>
+{
+    public static void Mapear(RouteGroupBuilder g) =>
+        g.MapPost("/usuarios/{id:long}/desativar", (long id, HttpContext ctx, IMediator m) => m.Send(new DesativarUsuario(id, ctx.Usuario())));
+}
+
+public sealed class DesativarUsuarioHandler(OneDb db, TimeProvider relogio) : IRequestHandler<DesativarUsuario, IResult>
+{
+    public async ValueTask<IResult> Handle(DesativarUsuario m, CancellationToken ct)
+    {
+        var id = m.Id;
+        var u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Id == id);
+        if (u is null) return AdminRotas.NaoEncontrado();
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        var adminId = m.Admin.Id;
+        u.Ativo = false;
+        foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
+        {
+            db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Atribuicao, AtorId = adminId, De = u.Nome, Detalhe = "Responsável desativado", CriadoEm = agora });
+            c.ResponsavelId = null;
+            if (c.Estado is EmAtendimento or AguardandoAluno)
+            {
+                db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Transicao, AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
+                c.Estado = Aberto;
+                c.AguardandoDesde = null;
+            }
+        }
+        await db.SaveChangesAsync();
+        return Results.Ok(await UsuarioRotas.Saida(db, u));
+    }
+}

@@ -1,0 +1,24 @@
+using Mediator;
+using Microsoft.EntityFrameworkCore;
+using One.Api.Dados;
+
+namespace One.Api.Chamados;
+
+// AC 147: respostas prontas do setor, só para quem atende nele
+public sealed record RespostasProntasDoSetor(long? SetorId, Usuario Usuario) : IRequest<IResult>
+{
+    public static void Mapear(RouteGroupBuilder g) =>
+        g.MapGet("/respostas-prontas", (long? setorId, HttpContext ctx, IMediator m) => m.Send(new RespostasProntasDoSetor(setorId, ctx.Usuario())));
+}
+
+public sealed class RespostasProntasDoSetorHandler(OneDb db) : IRequestHandler<RespostasProntasDoSetor, IResult>
+{
+    public async ValueTask<IResult> Handle(RespostasProntasDoSetor m, CancellationToken ct)
+    {
+        var u = m.Usuario;
+        if (!u.Tem(Papeis.Atendente) || !await db.AtendenteSetores.AnyAsync(a => a.UsuarioId == u.Id && a.SetorId == m.SetorId))
+            return Problemas.Erro(404, "Setor não encontrado.");
+        return Results.Ok(await db.RespostasProntas.Where(r => r.SetorId == m.SetorId).OrderBy(r => r.Titulo)
+            .Select(r => new { id = r.Id, titulo = r.Titulo, texto = r.Texto }).ToListAsync());
+    }
+}

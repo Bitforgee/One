@@ -9,26 +9,26 @@ public record AvaliacaoIn(bool? Resolveu);
 public record TransferirIn(long? MatriculaId);
 public record AtendimentoDiretoIn(string? Descricao, long? MatriculaId);
 
+// As rotas da conversa e os auxiliares que mais de um caso de uso da conversa usa.
 public static class ConversaRotas
 {
     public const string Aluno = "ALUNO";
-    const int LimiteMensagensDoAluno = 10;
 
-    static IResult? ValidarMensagem(string? m) =>
+    public static IResult? ValidarMensagem(string? m) =>
         string.IsNullOrWhiteSpace(m) || m.Length > 1000
             ? Problemas.Invalido("A mensagem deve ter de 1 a 1000 caracteres.", "mensagem")
             : null;
 
-    static IResult NaoEncontrada() => Problemas.Erro(404, "Conversa não encontrada.");
-    static IResult JaEncerrada() => Problemas.Erro(409, "Esta conversa já foi encerrada.");
+    public static IResult NaoEncontrada() => Problemas.Erro(404, "Conversa não encontrada.");
+    public static IResult JaEncerrada() => Problemas.Erro(409, "Esta conversa já foi encerrada.");
 
-    static Task<Conversa?> DoAluno(OneDb db, HttpContext ctx, long id) =>
-        db.Conversas.Include(c => c.Mensagens).ThenInclude(m => m.Citacoes).FirstOrDefaultAsync(c => c.Id == id && c.AlunoId == ctx.Usuario().Id);
+    public static Task<Conversa?> DoAluno(OneDb db, Usuario aluno, long id) =>
+        db.Conversas.Include(c => c.Mensagens).ThenInclude(m => m.Citacoes).FirstOrDefaultAsync(c => c.Id == id && c.AlunoId == aluno.Id);
 
-    static async Task<bool> PodeUsarAssistente(OneDb db, Usuario u) =>
+    public static async Task<bool> PodeUsarAssistente(OneDb db, Usuario u) =>
         u.Tem(Papeis.Aluno) && await db.Matriculas.AnyAsync(m => m.UsuarioId == u.Id && m.Situacao == "ATIVA");
 
-    static async Task<IResult> Transferido(OneDb db, Chamado chamado) =>
+    public static async Task<IResult> Transferido(OneDb db, Chamado chamado) =>
         Results.Created($"/api/chamados/{chamado.Numero}", new
         {
             numero = chamado.Numero,
@@ -36,7 +36,7 @@ public static class ConversaRotas
             setor = await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync(),
         });
 
-    static async Task<object> Responder(OneDb db, Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
+    public static async Task<object> Responder(OneDb db, Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
     {
         conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = mensagem, CriadaEm = agora });
         conversa.UltimaMensagemEm = agora;
@@ -49,106 +49,13 @@ public static class ConversaRotas
 
     public static void Mapear(RouteGroupBuilder api)
     {
-        api.MapPost("/conversas", NovaConversa).RequireRateLimiting("mensagens");
-        api.MapPost("/conversas/{id:long}/mensagens", NovaMensagem).RequireRateLimiting("mensagens");
-        api.MapGet("/conversas/{id:long}", Ver);
-        api.MapPost("/conversas/{id:long}/avaliacao", Avaliar);
-        api.MapPost("/conversas/{id:long}/transferir", Transferir);
+        NovaConversa.Mapear(api);
+        NovaMensagem.Mapear(api);
+        VerConversa.Mapear(api);
+        AvaliarConversa.Mapear(api);
+        TransferirConversa.Mapear(api);
         // AC 57: atendente antes de qualquer mensagem, sem chamar o provedor de IA.
-        api.MapPost("/atendimento-direto", AtendimentoDireto).RequireRateLimiting("mensagens");
-        api.MapPost("/conversas/{id:long}/encerrar", Encerrar);
-    }
-
-    static async Task<IResult> NovaConversa(MensagemIn i, HttpContext ctx, OneDb db, Assistente assistente, TimeProvider relogio)
-    {
-        var u = ctx.Usuario();
-        if (!await PodeUsarAssistente(db, u)) return Problemas.Erro(403, "O assistente é só para alunos com matrícula ativa.");
-        if (ValidarMensagem(i.Mensagem) is { } erro) return erro;
-
-        var agora = relogio.GetUtcNow().UtcDateTime;
-        var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
-        db.Conversas.Add(conversa);
-        var resposta = await Responder(db, assistente, conversa, i.Mensagem!, agora);
-        return Results.Created($"/api/conversas/{conversa.Id}", new { conversaId = conversa.Id, resposta });
-    }
-
-    static async Task<IResult> NovaMensagem(long id, MensagemIn i, HttpContext ctx, OneDb db, Assistente assistente, TimeProvider relogio)
-    {
-        var conversa = await DoAluno(db, ctx, id);
-        if (conversa is null) return NaoEncontrada();
-        if (ValidarMensagem(i.Mensagem) is { } erro) return erro;
-        if (conversa.Desfecho is not null) return JaEncerrada();
-        if (conversa.Mensagens.Count(m => m.Autor == Aluno) >= LimiteMensagensDoAluno)
-            return Problemas.Erro(409, "A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre.");
-
-        var resposta = await Responder(db, assistente, conversa, i.Mensagem!, relogio.GetUtcNow().UtcDateTime);
-        return Results.Ok(new { resposta });
-    }
-
-    static async Task<IResult> Ver(long id, HttpContext ctx, OneDb db)
-    {
-        var conversa = await DoAluno(db, ctx, id);
-        if (conversa is null) return NaoEncontrada();
-        var chamadoNumero = await db.Chamados.Where(c => c.ConversaId == id).Select(c => c.Numero).FirstOrDefaultAsync();
-        return Results.Ok(new
-        {
-            conversa = new { id = conversa.Id, criadaEm = conversa.CriadaEm },
-            mensagens = conversa.Mensagens.OrderBy(m => m.Id)
-                .Select(m => new { autor = m.Autor, texto = m.Texto, tipo = m.TipoFinal, criadaEm = m.CriadaEm }),
-            desfecho = conversa.Desfecho,
-            chamadoNumero,
-        });
-    }
-
-    static async Task<IResult> Avaliar(long id, AvaliacaoIn i, HttpContext ctx, OneDb db, TimeProvider relogio)
-    {
-        var conversa = await DoAluno(db, ctx, id);
-        if (conversa is null) return NaoEncontrada();
-        if (i.Resolveu is null) return Problemas.Invalido("Informe se a resposta resolveu.", "resolveu");
-        if (conversa.Desfecho is not null) return JaEncerrada();
-        if (i.Resolveu.Value)
-        {
-            conversa.Desfecho = Desfechos.Resolvida;
-            conversa.DesfechoEm = relogio.GetUtcNow().UtcDateTime;
-            await db.SaveChangesAsync();
-        }
-        return Results.Ok(new { desfecho = conversa.Desfecho });
-    }
-
-    static async Task<IResult> Transferir(long id, TransferirIn? i, HttpContext ctx, OneDb db, TimeProvider relogio)
-    {
-        var conversa = await DoAluno(db, ctx, id);
-        if (conversa is null) return NaoEncontrada();
-        if (conversa.Desfecho is not null) return JaEncerrada();
-        var matricula = await Transferencia.Matricula(db, conversa.AlunoId, i?.MatriculaId);
-        if (matricula is null) return Transferencia.MatriculaInvalida();
-        return await Transferido(db, await Transferencia.Criar(db, ctx.Instituicao(), conversa, matricula, relogio.GetUtcNow().UtcDateTime));
-    }
-
-    static async Task<IResult> AtendimentoDireto(AtendimentoDiretoIn i, HttpContext ctx, OneDb db, TimeProvider relogio)
-    {
-        var u = ctx.Usuario();
-        if (!await PodeUsarAssistente(db, u)) return Problemas.Erro(403, "O atendimento é só para alunos com matrícula ativa.");
-        if (string.IsNullOrWhiteSpace(i.Descricao) || i.Descricao.Length > 2000)
-            return Problemas.Invalido("A descrição deve ter de 1 a 2000 caracteres.", "descricao");
-        var matricula = await Transferencia.Matricula(db, u.Id, i.MatriculaId);
-        if (matricula is null) return Transferencia.MatriculaInvalida();
-
-        var agora = relogio.GetUtcNow().UtcDateTime;
-        var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
-        conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = i.Descricao, CriadaEm = agora });
-        db.Conversas.Add(conversa);
-        return await Transferido(db, await Transferencia.Criar(db, ctx.Instituicao(), conversa, matricula, agora));
-    }
-
-    static async Task<IResult> Encerrar(long id, HttpContext ctx, OneDb db, TimeProvider relogio)
-    {
-        var conversa = await DoAluno(db, ctx, id);
-        if (conversa is null) return NaoEncontrada();
-        if (conversa.Desfecho is not null) return JaEncerrada();
-        conversa.Desfecho = Desfechos.Encerrada;
-        conversa.DesfechoEm = relogio.GetUtcNow().UtcDateTime;
-        await db.SaveChangesAsync();
-        return Results.Ok(new { desfecho = conversa.Desfecho });
+        AtendimentoDireto.Mapear(api);
+        EncerrarConversa.Mapear(api);
     }
 }

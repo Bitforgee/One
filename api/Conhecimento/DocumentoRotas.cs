@@ -6,6 +6,7 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 namespace One.Api.Conhecimento;
 
 // RAG S3, door R4: PDFs da instituição como fonte interna do assistente; nunca aparecem para o aluno (AD-012).
+// Os auxiliares que mais de um caso de uso de documento usa.
 public static class DocumentoRotas
 {
     const long MaxPdf = 20 * 1024 * 1024;
@@ -34,10 +35,10 @@ public static class DocumentoRotas
         return trechos;
     }
 
-    record Pdf(byte[] Conteudo, string Texto, int Paginas, string Nome);
+    public record Pdf(byte[] Conteudo, string Texto, int Paginas, string Nome);
 
     // AC 18: 413 acima de 20 MB, 415 sem a assinatura %PDF, 400 sem texto extraível
-    static async Task<(Pdf?, IResult?)> LerPdf(IFormFile? arquivo)
+    public static async Task<(Pdf?, IResult?)> LerPdf(IFormFile? arquivo)
     {
         if (arquivo is null) return (null, Problemas.Invalido("Envie o PDF no campo arquivo.", "arquivo"));
         var (lido, recusa) = await Arquivos.Ler(arquivo, MaxPdf, [Arquivos.Pdf], "O PDF passa de 20 MB.", "O arquivo não é PDF.");
@@ -55,7 +56,7 @@ public static class DocumentoRotas
         }
     }
 
-    static VersaoDocumento Versao(OneDb db, Pdf pdf, int numero, DateTime agora)
+    public static VersaoDocumento Versao(OneDb db, Pdf pdf, int numero, DateTime agora)
     {
         var v = new VersaoDocumento { Numero = numero, NomeArquivo = pdf.Nome, Conteudo = pdf.Conteudo, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
         // AC 16: os trechos pendentes entram na mesma transação; o agendador gera os embeddings
@@ -63,7 +64,7 @@ public static class DocumentoRotas
         return v;
     }
 
-    static async Task<object> Saida(OneDb db, Documento d)
+    public static async Task<object> Saida(OneDb db, Documento d)
     {
         var v = d.Ultima();
         var trechos = await db.TrechosFonte.Where(t => t.VersaoDocumentoId == v.Id).Select(t => new { Indexado = t.Embedding != null, t.Tentativas }).ToListAsync();
@@ -79,78 +80,18 @@ public static class DocumentoRotas
         };
     }
 
-    static Task<Documento?> Ler(OneDb db, long id) =>
+    public static Task<Documento?> Ler(OneDb db, long id) =>
         db.Documentos.ComUltimaVersao().FirstOrDefaultAsync(d => d.Id == id);
 
     public static void MapearAdmin(RouteGroupBuilder admin)
     {
-        admin.MapGet("/documentos", Listar);
-        admin.MapPost("/documentos", Criar);
+        ListarDocumentos.Mapear(admin);
+        CriarDocumento.Mapear(admin);
         // AC 19 e AC 20: versão nova só em documento ATIVO; as anteriores ficam guardadas
-        admin.MapPost("/documentos/{id:long}/versoes", NovaVersao);
-        admin.MapPost("/documentos/{id:long}/arquivar", Arquivar);
-    }
-
-    static async Task<IResult> Listar(OneDb db)
-    {
-        var lista = new List<object>();
-        foreach (var d in await db.Documentos.ComUltimaVersao().OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
-            lista.Add(await Saida(db, d));
-        return Results.Ok(lista);
-    }
-
-    static async Task<IResult> Criar(HttpRequest req, OneDb db, TimeProvider relogio)
-    {
-        var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
-        var titulo = form["titulo"].ToString();
-        if (string.IsNullOrWhiteSpace(titulo) || titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
-        if (!long.TryParse(form["categoriaId"], out var categoriaId) || !await db.Categorias.AnyAsync(c => c.Id == categoriaId && c.Ativa))
-            return Problemas.Invalido("Escolha uma categoria ativa.", "categoriaId");
-        var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
-        if (erro is not null) return erro;
-
-        var d = new Documento { Titulo = titulo, CategoriaId = categoriaId };
-        d.Versoes.Add(Versao(db, pdf!, 1, relogio.GetUtcNow().UtcDateTime));
-        db.Documentos.Add(d);
-        await db.SaveChangesAsync();
-        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, d));
-    }
-
-    static async Task<IResult> NovaVersao(long id, HttpRequest req, OneDb db, TimeProvider relogio)
-    {
-        var d = await Ler(db, id);
-        if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
-        var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
-        var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
-        if (erro is not null) return erro;
-        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento está arquivado.");
-
-        d.Versoes.Add(Versao(db, pdf!, d.Ultima().Numero + 1, relogio.GetUtcNow().UtcDateTime));
-        await db.SaveChangesAsync();
-        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, id) ?? d));
-    }
-
-    static async Task<IResult> Arquivar(long id, OneDb db)
-    {
-        var d = await Ler(db, id);
-        if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
-        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento já está arquivado.");
-        d.Estado = EstadosDocumento.Arquivado;
-        await db.SaveChangesAsync();
-        return Results.Ok(await Saida(db, d));
-    }
-
-    static async Task<IResult> Baixar(long id, HttpContext ctx, OneDb db)
-    {
-        var u = ctx.Usuario();
-        if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Documento não encontrado.");
-        var v = await db.VersoesDocumento.Where(x => x.Id == id).Select(x => new { x.Conteudo, x.NomeArquivo }).FirstOrDefaultAsync();
-        return v is null ? Problemas.Erro(404, "Documento não encontrado.") : Results.File(v.Conteudo, "application/pdf", v.NomeArquivo);
+        NovaVersaoDocumento.Mapear(admin);
+        ArquivarDocumento.Mapear(admin);
     }
 
     // AC 21 e AC 22: só atendente e administrador baixam a versão citada; para os demais ela "não existe"
-    public static void Mapear(RouteGroupBuilder api)
-    {
-        api.MapGet("/documentos/versoes/{id:long}", Baixar);
-    }
+    public static void Mapear(RouteGroupBuilder api) => BaixarVersaoDocumento.Mapear(api);
 }

@@ -5,29 +5,12 @@ namespace One.Api.Conhecimento;
 
 public record ArtigoIn(string? Titulo, string[]? Perguntas, long? CategoriaId, string? Resposta, string[]? Links, DateOnly? VisivelDe = null, DateOnly? VisivelAte = null);
 
+// Os auxiliares que mais de um caso de uso de artigo usa.
 public static class ArtigoRotas
 {
-    public static void Mapear(RouteGroupBuilder api)
-    {
-        // Só atendentes e administradores veem a base interna; para os demais a versão "não existe" (AC 40).
-        api.MapGet("/artigos/versoes/{id:long}", async (long id, HttpContext ctx, OneDb db) =>
-        {
-            var u = ctx.Usuario();
-            if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Versão de artigo não encontrada.");
-            var v = await db.VersoesArtigo.Include(x => x.Artigo).FirstOrDefaultAsync(x => x.Id == id);
-            if (v is null) return Problemas.Erro(404, "Versão de artigo não encontrada.");
-            var atual = await db.VersoesAtuais().Where(x => x.ArtigoId == v.ArtigoId).Select(x => x.Id).FirstAsync();
-            return Results.Ok(new
-            {
-                titulo = v.Titulo,
-                texto = v.Resposta,
-                links = v.Links,
-                versaoAtivaAtualId = v.Artigo!.Estado == EstadosArtigo.Ativo && atual != v.Id ? atual : (long?)null,
-            });
-        });
-    }
+    public static void Mapear(RouteGroupBuilder api) => VerVersaoArtigo.Mapear(api);
 
-    static object Saida(Artigo a, string categoria, Dictionary<long, string> indexacao)
+    public static object Saida(Artigo a, string categoria, Dictionary<long, string> indexacao)
     {
         var v = a.Ultima();
         return new
@@ -44,7 +27,7 @@ public static class ArtigoRotas
     }
 
     // AC 99 e 100: título, ao menos uma pergunta, categoria e resposta; links só http(s).
-    static async Task<IResult?> Validar(OneDb db, ArtigoIn i)
+    public static async Task<IResult?> Validar(OneDb db, ArtigoIn i)
     {
         if (TituloEPerguntas(i) is { } erro) return erro;
         if (!await db.Categorias.AnyAsync(c => c.Id == i.CategoriaId)) return Problemas.Invalido("Escolha uma categoria.", "categoriaId");
@@ -69,7 +52,7 @@ public static class ArtigoRotas
 
     static bool LinkInvalido(string l) => !Uri.TryCreate(l, UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https");
 
-    static VersaoArtigo Versao(ArtigoIn i, int numero, DateTime agora) => new()
+    public static VersaoArtigo Versao(ArtigoIn i, int numero, DateTime agora) => new()
     {
         Numero = numero,
         Titulo = i.Titulo!,
@@ -79,9 +62,9 @@ public static class ArtigoRotas
         CriadaEm = agora,
     };
 
-    static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
+    public static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
 
-    static async Task<IResult> Responder(OneDb db, Artigo a, int status = 200)
+    public static async Task<IResult> Responder(OneDb db, Artigo a, int status = 200)
     {
         var atual = a.Versoes.Max(v => v.Id);
         var corpo = Saida(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync(), await Fontes.Indexacao(db, [atual]));
@@ -91,43 +74,14 @@ public static class ArtigoRotas
     // S7: o administrador escreve, versiona, ativa e arquiva; nada é apagado (versões append-only, door 6).
     public static void MapearAdmin(RouteGroupBuilder admin)
     {
-        admin.MapGet("/artigos", async (OneDb db) =>
-        {
-            var categorias = await db.Categorias.ToDictionaryAsync(c => c.Id, c => c.Nome);
-            var artigos = await db.Artigos.Include(a => a.Versoes).OrderBy(a => a.Id).ToListAsync();
-            var indexacao = await Fontes.Indexacao(db, artigos.Select(a => a.Ultima().Id).ToList());
-            return Results.Ok(artigos.Select(a => Saida(a, categorias[a.CategoriaId], indexacao)));
-        });
-
-        admin.MapPost("/artigos", async (ArtigoIn i, OneDb db, TimeProvider relogio) =>
-        {
-            if (await Validar(db, i) is { } erro) return erro;
-            var a = new Artigo { CategoriaId = i.CategoriaId!.Value, VisivelDe = i.VisivelDe, VisivelAte = i.VisivelAte, Versoes = [Versao(i, 1, relogio.GetUtcNow().UtcDateTime)] };
-            db.Artigos.Add(a);
-            await db.SaveChangesAsync();
-            return await Responder(db, a, 201);
-        });
-
-        admin.MapPut("/artigos/{id:long}", async (long id, ArtigoIn i, OneDb db, TimeProvider relogio) =>
-        {
-            var a = await Ler(db, id);
-            if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
-            if (await Validar(db, i) is { } erro) return erro;
-            a.CategoriaId = i.CategoriaId!.Value;
-            (a.VisivelDe, a.VisivelAte) = (i.VisivelDe, i.VisivelAte);
-            var agora = relogio.GetUtcNow().UtcDateTime;
-            var nova = Versao(i, a.Ultima().Numero + 1, agora);
-            a.Versoes.Add(nova);
-            if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(Fontes.DoArtigo(nova, agora));
-            await db.SaveChangesAsync();
-            return await Responder(db, a);
-        });
-
-        admin.MapPost("/artigos/{id:long}/ativar", (long id, OneDb db, TimeProvider relogio) => Mudar(db, id, EstadosArtigo.Ativo, relogio));
-        admin.MapPost("/artigos/{id:long}/arquivar", (long id, OneDb db, TimeProvider relogio) => Mudar(db, id, EstadosArtigo.Arquivado, relogio));
+        ListarArtigos.Mapear(admin);
+        CriarArtigo.Mapear(admin);
+        AlterarArtigo.Mapear(admin);
+        AtivarArtigo.Mapear(admin);
+        ArquivarArtigo.Mapear(admin);
     }
 
-    static async Task<IResult> Mudar(OneDb db, long id, string estado, TimeProvider relogio)
+    public static async Task<IResult> Mudar(OneDb db, long id, string estado, TimeProvider relogio)
     {
         var a = await Ler(db, id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
