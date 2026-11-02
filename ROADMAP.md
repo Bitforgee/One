@@ -1,10 +1,13 @@
 # One: roadmap
 
-- **Data:** 02/11/2026, revisão da tarde (RAG antes da banca, OpenAI no lugar do DeepSeek)
+- **Data:** 02/11/2026, revisão da noite (RAG construído e verificado no `main`;
+  refatoração SOLID/clean code em fatias verticais aprovada, obrigatória antes da banca)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
-  - `.specs/STATE.md`: decisões AD-001 a AD-013;
+  - `.specs/features/rag/plan.md` e `checks.md`: o RAG (Etapa 4), 46 checks;
+  - `.specs/features/refatoracao-solid/plan.md` e `checks.md`: a refatoração (Etapa 4b), 36 critérios, 39 checks;
+  - `.specs/STATE.md`: decisões AD-001 a AD-018;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -31,17 +34,19 @@ A Univag é o primeiro cliente.
 
 ## Onde estamos (02/11/2026)
 
-O código do MVP inteiro, P1, P2 e P3, ficou pronto bem antes das datas. O que falta para a banca
-deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
+O código do MVP inteiro (P1, P2 e P3) e o RAG ficaram prontos bem antes das datas. O que falta
+para a banca deixou de ser código: a verificação do RAG fechar, dados reais, chave da OpenAI,
+hospedagem e ensaio.
 
 | Item | Estado |
 | --- | --- |
-| Plano do MVP (`plan.md`) | Aprovado em 01/11/2026 |
-| `checks.md` | 195 checks; os 195 marcados como provados pelo construtor |
-| Código | Os 13 slices (S1 a S13) e as telas de administração, em 4 lotes, todos verdes. 11 commits em `main` (`8c0cb43..a1314d6`) |
-| Testes | API 190, web 32, e2e de 360 px em 10 telas, e2e de PWA contra o contêiner |
-| Verificação independente | **Rodando** (subagente novo, perfil `standard`, com injeção de falhas). O relatório sai em `verification.md` |
+| MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
+| RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
+| Código | 31 commits em `main` (`8c0cb43..a92daae`), 5 deles do RAG |
+| Testes | API 237, web 35, e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
+| Chave da OpenAI no `.env` | Ainda não colocada |
+| Refatoração (`refatoracao-solid`) | Plano aprovado e 39 checks escritos em 02/11; build do lote 1 (`api/`) começando |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -50,9 +55,20 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
   tabela; comandos `instituicao criar` e `instituicao carga`.
 - **Acesso (S2):** login por CPF dentro da instituição, primeiro acesso por e-mail, troca de senha
   e limite de tentativas.
-- **Assistente (S3):** conversa com o modelo usando só os artigos ativos. O servidor confere cada
-  trecho e cada link; se algo não confere, o aluno vê "não encontrei". Números longos e e-mails
-  são retirados antes do envio, e nada do artigo chega ao aluno.
+- **Assistente (S3 e RAG):** conversa com o `gpt-6-luna` da OpenAI. A cada mensagem, as 3
+  últimas falas do aluno viram um embedding (`text-embedding-3-small`) e o `pgvector` traz os 5
+  trechos mais próximos, só de artigos ativos e válidos e de documentos ativos da instituição. O
+  servidor confere cada trecho e cada link contra o trecho buscado; se algo não confere, ou se a
+  busca cair, o aluno vê "não encontrei". Números longos e e-mails são retirados antes do envio, e
+  nada de artigo ou documento chega ao aluno.
+- **Documentos (RAG):** tela Documentos para enviar PDFs com texto (até 20 MB), subir nova versão e
+  arquivar. O texto vira trechos de até 1500 caracteres, e o agendador gera os embeddings em
+  segundo plano, com até 5 tentativas. Artigos e documentos mostram "Indexando", "Indexado" ou
+  "Falhou". No chamado, a equipe vê a fonte citada (artigo ou documento, com link para o PDF da
+  versão citada).
+- **Medição da busca (RAG):** comando `instituicao avaliar-busca --slug --arquivo` com perguntas e
+  a fonte esperada; mostra acerto e posição, ou o que veio no lugar, e o total. Não chama o chat
+  nem grava nada.
 - **Transferência (S4):** "Falar com atendente" a qualquer momento, com protocolo `ONE-n` contado
   por instituição. A categoria vem da IA, do artigo ou do padrão, e o setor sai da regra. Quando o
   aluno tem mais de uma matrícula ativa, ele escolhe qual usar. A conversa é atualizada a cada 15 s.
@@ -78,9 +94,9 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 ## Etapas até a banca
 
 ```text
- Etapa 0      Etapa 1–3                 Etapa 4             Etapa 5                        Banca    Piloto
- Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI  →   Dados, IA real e ensaio   →   20/11 →  Univag
- 01–03/11                                03–09/11            09–19/11
+ Etapa 0      Etapa 1–3                 Etapa 4            Etapa 4b          Etapa 5                     Banca    Piloto
+ Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI  →  Refatoração   →   Dados, IA real e ensaio  →  20/11 →  Univag
+ 01–03/11                                código 02/11       até 08/11         09–19/11 (código congelado a partir de 13/11)
                        ▲ 13/11 AVA: já atendido pelo código
 ```
 
@@ -106,23 +122,88 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
       1 a 8 reprovaram por testes faltando e um teste que mascarava três regras do link de senha;
       a única mudança de código foi recusar curso repetido na carga.
 
-### Etapa 4: RAG com OpenAI (03–09/11), construído no `main`
+### Etapa 4: RAG com OpenAI (previsto 03–09/11; código feito em 02/11), no `main`
 
 Decisões do grupo em 02/11/2026: o RAG entra **antes** da banca, direto no `main`, e a banca de
 20/11 roda com ele, sem uma versão anterior pronta para voltar (AD-014). Plano e checks aprovados
-em `.specs/features/rag/` (45 checks):
+em `.specs/features/rag/` (46 checks):
 - troca do DeepSeek pela OpenAI (`gpt-6-luna` no chat, `text-embedding-3-small` nos embeddings);
-- busca por significado com `pgvector` no próprio PostgreSQL (imagem `pgvector/pgvector:0.8.7-pg18`);
+- busca por significado com `pgvector` no próprio PostgreSQL (imagem
+  `pgvector/pgvector:0.8.7-pg18-trixie`, door R8: a variante `bookworm` dava desencontro de
+  collation com o banco existente);
 - documentos da instituição em PDF como fonte, além dos artigos;
 - comando `instituicao avaliar-busca` para medir a busca com perguntas reais;
 - sem framework de agentes (MAF) nem `Microsoft.Extensions.AI`: as chamadas continuam pelo
   `HttpClient` próprio (door R7 do plano).
 
-- [ ] Build dos 45 checks e verificação independente aprovada.
+- [x] S1 e S2: troca para a OpenAI, indexação pelo agendador e busca (`9c0a7a3`, `564a5f3`).
+- [x] S3: documentos em PDF, tela Documentos, indexação na tela Artigos e fonte de documento no
+      chamado (`cf83134`).
+- [x] S4: comando `instituicao avaliar-busca` (`c29942e`).
+- [x] Verificação independente aprovada em 02/11, na rodada 3. Rodada 1 reprovou com 2 checks
+      fracos e 7 falhas injetadas que nenhum teste pegava; rodada 2 com 3 mutantes sobreviventes (URL
+      de `/embeddings`, título de 200 aceito, JSON `null` no `avaliar-busca`). Todas lacunas de
+      teste, nenhum erro de código; fechadas em `a92daae` e `00d439c`.
 - [ ] Chamada real com a chave para responder a pergunta aberta 1 do plano (o `gpt-6-luna` aceita
       `temperature: 0`?).
 
-**Saída:** RAG no `main` com os checks verdes e a verificação aprovada.
+**Saída:** RAG no `main` com os checks verdes e a verificação aprovada. Com o código adiantado,
+a semana de 03–09/11 fica para a chave real, a pergunta aberta 1 e a Etapa 5.
+
+### Etapa 4b: refatoração SOLID e clean code, em fatias verticais (obrigatória antes da banca)
+
+Decisão do usuário em 02/11/2026: a refatoração entra **inteira antes da banca** (AD-018), e o
+código passa para uma arquitetura de **fatias verticais simples** (AD-017). Plano e checks em
+`.specs/features/refatoracao-solid/` (skills `tlc-spec-lean` e `ub-mode`, perfil `standard`),
+feitos a partir de uma auditoria do código e do `crapper`/`dryer` em 02/11.
+
+Nada muda para o usuário: nenhuma rota, campo JSON, tabela ou chave de configuração. O que justifica
+fazer antes da banca:
+- **um defeito latente:** os prazos vêm de `Prazos:*`, mas os textos dizem "7 dias" e "3 dias"
+  fixos, e o prazo de rejeição é outra constante. Mudar a configuração manda e-mail com o prazo
+  errado e tira do aluno o direito de rejeitar antes do fechamento. A rejeição passa a seguir
+  `Prazos:ConfirmacaoDias`;
+- o código está por camada técnica (`api/Rotas/`, `web/src/telas/`), não por assunto: mexer em
+  "documentos" hoje é abrir 5 arquivos em 4 pastas;
+- a mesma consulta "última versão do artigo/documento" em 11 lugares, e "artigo ou documento" em 4;
+- regras centrais (permissões, 14 indicadores, carga, CSV) só testáveis subindo o PostgreSQL;
+- telas com complexidade alta: `ChamadoDetalhe` 64, `Cadastros` 45, `Assistente` 40.
+
+**A arquitetura (door 3 do plano, AD-017):**
+- `api/` em 7 fatias por assunto: `Acesso`, `Assistente`, `Chamados`, `Conhecimento`,
+  `Indicadores`, `Administracao`, `Instituicoes`. Cada uma guarda as rotas, as regras e os tipos do
+  seu assunto. Compartilhado só em `api/Dados/` e nos arquivos da raiz (`Program`, `Problemas`,
+  `Sessao`, `Cpf`, `Tokens`, `Email`, `Agendador`, prazos);
+- `web/src/` em 6 fatias: `acesso`, `assistente`, `chamados`, `conhecimento`, `indicadores`,
+  `administracao`, com o teste de cada tela dentro da fatia;
+- uma fatia só usa outra pelos pares de uma lista fechada no `ArquiteturaTests`;
+- **sem** handler por caso de uso nem MediatR (seriam ~60 arquivos e uma interface sem segundo
+  uso), e **sem** camadas de serviços/repositórios, controllers ou mapeadores de DTO.
+
+**Medição (`ub-mode`):** o `dotnet build` passa a barrar método com complexidade ciclomática acima
+de 10 (CA1502, AD-018); no `web/`, `crapper` abaixo de CRAP 10, `dryer` sem duplicação a partir de
+0.8 e `mutator` sem sobreviventes. As ferramentas do `ub-mode` não leem C#; no `api/` a mutação é a
+injeção de falhas do Verifier.
+
+- [x] Aprovar o `plan.md` (02/11: recomendações aceitas; fatias verticais; tudo antes da banca).
+- [x] Escrever `checks.md`: 39 checks em 5 slices, validados pelo `validate_checks.py`.
+- [x] Mecanismo do build: handoff em 2 lotes, `api/` (S1 a S4) e depois `web/` (S5), porque a
+      estimativa (180k) passa do budget de 150k.
+- [x] Verificação do `rag` aprovada (rodada 3, 02/11).
+- [ ] S1: rede de segurança e medição (nenhuma asserção existente pode sumir; CA1502; cobertura
+      do `web/`).
+- [ ] S2: uma decisão em um lugar (prazos, literais gravados, consultas repetidas, glossário).
+- [ ] S3: regras de negócio puras, com teste sem banco.
+- [ ] S4: `api/` em fatias verticais; `ChamadoRotas`, `AdminRotas` e `Assistente` com uma
+      responsabilidade cada.
+- [ ] S5: `web/` em fatias verticais; telas abaixo de CRAP 10.
+- [ ] Verificação independente aprovada.
+
+**Saída (meta 08/11, limite 12/11):** S1 a S5 no `main` com a suíte inteira verde, nenhuma
+asserção existente removida, e a verificação aprovada.
+**Congelamento de código de 13/11 a 20/11:** só correção de bug, para o ensaio da Etapa 5 rodar
+uma semana sobre o código que vai à banca. Se o limite de 12/11 estiver em risco, o grupo decide
+antes o que corta; a decisão de 02/11 é que a refatoração entra antes da banca.
 
 ### Etapa 5: dados, IA real e ensaio (09–19/11)
 
@@ -195,7 +276,7 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Fase | Objetivo | Itens |
 | --- | --- | --- |
 | Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>roda no RAG (Etapa 4), já usado na banca;</li><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite da OpenAI pela LGPD, sem região de dados no Brasil, e SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
-| Escala | aguentar o volume de mais alunos | <ul><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
+| Escala | aguentar o volume de mais alunos | <ul><li>consultas N+1 em `AdminRotas` e `DocumentoRotas`;</li><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
 | Qualidade da IA | aprender com o que falhou | <ul><li>relatório de perguntas sem base;</li><li>revisão das respostas da IA pelo administrador;</li><li>botão "reportar resposta errada";</li><li>atendente sugere artigo a partir da resolução</li></ul> |
 | Segunda instituição | provar o produto multi-instituição | <ul><li>tela do operador;</li><li>provedor de IA, prazos e marca por instituição;</li><li>subdomínio próprio</li></ul> |
 | Integrações | tirar o CSV do caminho | <ul><li>API dos ERPs acadêmicos;</li><li>Moodle com botão "Preciso de ajuda";</li><li>WhatsApp como primeiro canal extra</li></ul> |
@@ -219,6 +300,7 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | --- | --- |
 | A IA inventa uma regra (caso Air Canada) | o servidor confere trechos e links; se algo falha, mostra "não encontrei"; tudo fica gravado (door 19, AD-012) |
 | O modelo não copia os trechos literalmente e quase tudo vira "não encontrei" | **ainda não medido**. Medir com a OpenAI na Etapa 5, ajustar o prompt e a base |
+| A busca não traz a fonte certa e o aluno recebe "não encontrei" com a resposta existindo | rodar o `avaliar-busca` com perguntas reais antes do piloto (pergunta aberta 4 do plano `rag`) |
 | A banca roda no RAG sem versão anterior para voltar | ensaio obrigatório com a chave real na Etapa 5; se a IA ou a busca caírem, o aluno ainda vê "não encontrei" e fala com um atendente |
 | A base interna vaza para o aluno | AC 40 com teste na API do aluno; fontes só para atendente e administrador |
 | Dados de uma instituição aparecem em outra | filtro global (door 16) e teste com duas instituições nas 27 rotas com id |
@@ -228,4 +310,5 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Internet ou API de IA fora do ar na banca | "não encontrei" com transferência continua funcionando; ensaiar sem rede |
 | Aluno preso no robô | "Falar com atendente" sempre visível, inclusive antes da primeira mensagem |
 | Expectativa inflada de autoatendimento | meta do piloto de 20 a 40% (Gartner), não os 65 a 98% dos fornecedores |
+| A refatoração quebra algo às vésperas da banca | nenhuma asserção existente pode sumir (C2); verificação com injeção de falhas; meta 08/11, limite 12/11 e congelamento de 13/11 a 20/11 |
 | Crescimento de escopo | a seção `Out of scope` do plano decide; item novo entra lá antes de entrar no código |

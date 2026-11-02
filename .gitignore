@@ -10,3 +10,4 @@ TestResults/
 web/test-results/
 web/playwright-report/
 web/coverage/
+.metrics/
