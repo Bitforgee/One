@@ -95,28 +95,28 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Glos
 
 ### S3 - Regras de negócio puras, testadas sem banco (P1) · ~12 files · ~90 KB · ~30k
 
-**C21** - A tabela de permissões do chamado devolve, para cada uma das 11 ações × 2 papéis (`ALUNO`, `ATENDENTE`) × 5 estados, exatamente as ações de hoje: par ausente nega, estado fora da lista nega, e `assumir` some para quem já é o responsável - um caso afirmado por célula, 110 células mais o caso do responsável (AC 18)
+**C21** - [x] A tabela de permissões do chamado devolve, para cada uma das 11 ações × 2 papéis (`ALUNO`, `ATENDENTE`) × 5 estados, exatamente as ações de hoje: par ausente nega, estado fora da lista nega, e `assumir` some para quem já é o responsável - um caso afirmado por célula, 110 células mais o caso do responsável (AC 18)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PermissoesChamadoTests.Acoes_por_papel_e_estado"`
 
-**C22** - A função dos indicadores recebe chamados, eventos e o fuso e devolve os 14 indicadores; para um chamado resolvido 10 h depois de aberto, com 4 h em `AGUARDANDO_ALUNO`, o tempo de resolução é 6 h (AC 19, AC 20)
+**C22** - [x] A função dos indicadores recebe chamados, eventos e o fuso e devolve os 14 indicadores; para um chamado resolvido 10 h depois de aberto, com 4 h em `AGUARDANDO_ALUNO`, o tempo de resolução é 6 h (AC 19, AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresCalculoTests.Resolucao_desconta_aguardando"`
 
-**C23** - Sobre a mesma massa do `IndicadoresTests` de hoje, a função pura devolve os mesmos 14 números que a rota devolve (AC 19)
+**C23** - [x] Sobre a mesma massa do `IndicadoresTests` de hoje, a função pura devolve os mesmos 14 números que a rota devolve (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresCalculoTests.Os_14_iguais_aos_da_rota"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests"`
 
-**C24** - A validação da carga devolve a lista de erros sem gravar, com um caso afirmado por motivo (os 16 motivos de `setores`, `categorias`, `cursos`, `regras` e `artigos`), e o comando com qualquer erro não grava nenhuma linha (AC 21)
+**C24** - [x] A validação da carga devolve a lista de erros sem gravar, com um caso afirmado por motivo (os 16 motivos de `setores`, `categorias`, `cursos`, `regras` e `artigos`), e o comando com qualquer erro não grava nenhuma linha (AC 21)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CargaValidacaoTests.Um_caso_por_motivo"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests"`
 
-**C25** - A leitura do CSV de matrículas devolve as linhas válidas e os erros por linha sem gravar, com os mesmos textos de hoje, um caso afirmado por motivo (os 10 motivos), incluindo dois motivos na mesma linha juntados por "; " (AC 22)
+**C25** - [x] A leitura do CSV de matrículas devolve as linhas válidas e os erros por linha sem gravar, com os mesmos textos de hoje, um caso afirmado por motivo (os 10 motivos), incluindo dois motivos na mesma linha juntados por "; " (AC 22)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CsvMatriculasTests.Um_caso_por_motivo"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AdminTests"`
 
-**C26** - A regra de pergunta do assistente aceita uma pergunta de 200 caracteres terminada em "?", recusa a de 201, recusa a que não termina em "?", aceita a 2ª pergunta seguida e recusa a 3ª (AC 23, AC 24)
+**C26** - [x] A regra de pergunta do assistente aceita uma pergunta de 200 caracteres terminada em "?", recusa a de 201, recusa a que não termina em "?", aceita a 2ª pergunta seguida e recusa a 3ª (AC 23, AC 24)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PerguntaTests.Limites"`
 
-**C27** - As classes `PermissoesChamadoTests`, `IndicadoresCalculoTests`, `CargaValidacaoTests`, `CsvMatriculasTests` e `PerguntaTests` não usam `OneFactory`, `OneDb` nem `HttpClient` (AC 18, 19, 21, 22, 24)
+**C27** - [x] As classes `PermissoesChamadoTests`, `IndicadoresCalculoTests`, `CargaValidacaoTests`, `CsvMatriculasTests` e `PerguntaTests` não usam `OneFactory`, `OneDb` nem `HttpClient` (AC 18, 19, 21, 22, 24)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Testes_de_regra_sem_banco"`
 
 ### S4 - O `api/` em fatias verticais, um arquivo por responsabilidade (P1) · ~25 files · ~175 KB · ~30k

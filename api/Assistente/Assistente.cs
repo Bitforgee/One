@@ -110,9 +110,8 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
                     if (motivo is null) tipoFinal = Tipos.Resposta;
                     break;
                 case Tipos.Pergunta:
-                    var ultimas = conversa.Mensagens.Where(m => m.Autor == Autor).OrderByDescending(m => m.Id).Take(2).ToList();
-                    var texto = saida.Texto?.Trim() ?? "";
-                    if (texto.Length is > 0 and <= 200 && texto.EndsWith('?') && !(ultimas.Count == 2 && ultimas.All(m => m.TipoFinal == Tipos.Pergunta)))
+                    var ultimas = conversa.Mensagens.Where(m => m.Autor == Autor).OrderByDescending(m => m.Id).Take(2).Select(m => m.TipoFinal).ToList();
+                    if (Pergunta.Aceita(saida.Texto, ultimas))
                         tipoFinal = Tipos.Pergunta;
                     else motivo = "pergunta_invalida";
                     break;

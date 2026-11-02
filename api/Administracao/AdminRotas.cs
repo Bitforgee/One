@@ -15,12 +15,11 @@ public record RespostaProntaIn(long? SetorId, string? Titulo, string? Texto);
 
 public static class AdminRotas
 {
-    const string CabecalhoCsv = "cpf;nome;email;matricula;curso;semestre;situacao";
     static readonly string[] PapeisValidos = [Papeis.Aluno, Papeis.Atendente, Papeis.Administrador];
 
     static IResult NaoEncontrado() => Problemas.Erro(404, "Item não encontrado.");
     static IResult Repetido(string detalhe) => Problemas.Erro(409, detalhe);
-    static bool Nome(string? n, int max = 100) => !string.IsNullOrWhiteSpace(n) && n.Length <= max;
+    internal static bool Nome(string? n, int max = 100) => !string.IsNullOrWhiteSpace(n) && n.Length <= max;
 
     public static void Mapear(RouteGroupBuilder api)
     {
@@ -29,7 +28,7 @@ public static class AdminRotas
             c.HttpContext.Usuario().Tem(Papeis.Administrador) ? await next(c) : Problemas.Erro(403, "Só administradores podem usar esta área."));
 
         Usuarios(admin);
-        admin.MapPost("/matriculas/importacao", Importar);
+        ImportacaoRotas.Mapear(admin);
 
         Cadastro<Setor, SetorIn>(admin, "/setores",
             s => new { id = s.Id, nome = s.Nome, triagem = s.Triagem, ativo = s.Ativo },
@@ -256,81 +255,4 @@ public static class AdminRotas
             return Results.Ok(await Saida(db, u));
         });
     }
-
-    record Linha(int Numero, string Cpf, string Nome, string Email, string Matricula, long CursoId, int Semestre, string Situacao);
-
-    // door 15 e AC 105 a 107: tudo ou nada; atualiza alunos pelo CPF e matrículas pelo número, dentro da instituição.
-    static async Task<IResult> Importar(HttpRequest req, OneDb db)
-    {
-        var form = req.HasFormContentType ? await req.ReadFormAsync() : null;
-        var arquivo = form?.Files["arquivo"] ?? form?.Files.FirstOrDefault();
-        if (arquivo is null) return Problemas.Invalido("Envie o arquivo CSV no campo arquivo.", "arquivo");
-        string texto;
-        using (var leitor = new StreamReader(arquivo.OpenReadStream(), System.Text.Encoding.UTF8)) texto = await leitor.ReadToEndAsync();
-        var linhas = texto.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
-        while (linhas.Count > 0 && linhas[^1].Trim() == "") linhas.RemoveAt(linhas.Count - 1);
-
-        var erros = new List<object>();
-        if (linhas.Count == 0 || linhas[0].Trim() != CabecalhoCsv)
-            return ErrosCsv([new { linha = 1, motivo = $"O cabeçalho deve ser {CabecalhoCsv}." }]);
-
-        var cursos = await db.Cursos.ToDictionaryAsync(c => c.Nome, c => c.Id);
-        var campos = linhas.Skip(1).Select((l, n) => (numero: n + 2, c: l.Split(';').Select(x => x.Trim()).ToArray())).ToList();
-        var cpfsDoArquivo = campos.Select(x => Cpf.Normalizar(x.c.ElementAtOrDefault(0)) ?? "").ToList();
-        var numerosDoArquivo = campos.Select(x => x.c.ElementAtOrDefault(3) ?? "").ToList();
-        var emailsDoArquivo = campos.Select(x => x.c.ElementAtOrDefault(2) ?? "").ToList();
-        var matriculasExistentes = await db.Matriculas.Where(m => numerosDoArquivo.Contains(m.Numero))
-            .Select(m => new { m.Numero, Cpf = db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single() }).ToDictionaryAsync(m => m.Numero, m => m.Cpf);
-        var emailsExistentes = await db.Usuarios.Where(u => emailsDoArquivo.Contains(u.Email)).ToDictionaryAsync(u => u.Email, u => u.Cpf);
-
-        var validas = new List<Linha>();
-        var donoDaMatricula = new Dictionary<string, string>(matriculasExistentes);
-        var donoDoEmail = new Dictionary<string, string>(emailsExistentes);
-        foreach (var (numero, c) in campos)
-        {
-            var motivos = new List<string>();
-            if (c.Length != 7) { erros.Add(new { linha = numero, motivo = "A linha deve ter 7 campos separados por ponto e vírgula." }); continue; }
-            var cpf = Cpf.Normalizar(c[0]);
-            if (cpf is null) motivos.Add("CPF inválido");
-            if (!Nome(c[1], 200)) motivos.Add("nome vazio ou com mais de 200 caracteres");
-            if (!Email.Valido().IsMatch(c[2])) motivos.Add("e-mail inválido");
-            else if (cpf is not null && donoDoEmail.TryGetValue(c[2], out var outroCpf) && outroCpf != cpf) motivos.Add("e-mail já usado por outro CPF na instituição");
-            if (c[3].Length is 0 or > 20) motivos.Add("matrícula vazia ou com mais de 20 caracteres");
-            else if (cpf is not null && donoDaMatricula.TryGetValue(c[3], out var dono) && dono != cpf) motivos.Add("matrícula já ligada a outro CPF na instituição");
-            if (!cursos.TryGetValue(c[4], out var cursoId)) motivos.Add("curso inexistente na instituição");
-            if (!int.TryParse(c[5], out var semestre) || semestre is < 1 or > 12) motivos.Add("semestre fora de 1 a 12");
-            if (c[6] is not ("ATIVA" or "INATIVA")) motivos.Add("situação deve ser ATIVA ou INATIVA");
-
-            if (motivos.Count > 0) { erros.Add(new { linha = numero, motivo = string.Join("; ", motivos) }); continue; }
-            donoDaMatricula[c[3]] = cpf!;
-            donoDoEmail[c[2]] = cpf!;
-            validas.Add(new Linha(numero, cpf!, c[1], c[2], c[3], cursoId, semestre, c[6]));
-        }
-        if (erros.Count > 0) return ErrosCsv(erros);
-
-        var alunos = await db.Usuarios.Include(u => u.Papeis).Where(u => cpfsDoArquivo.Contains(u.Cpf)).ToDictionaryAsync(u => u.Cpf);
-        var matriculas = await db.Matriculas.Where(m => numerosDoArquivo.Contains(m.Numero)).ToDictionaryAsync(m => m.Numero);
-        var (criados, atualizados) = (0, 0);
-        foreach (var l in validas)
-        {
-            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(new Usuario { Cpf = l.Cpf }).Entity; // sem senha: entra pelo primeiro acesso
-            u.Nome = l.Nome;
-            u.Email = l.Email;
-            if (!u.Tem(Papeis.Aluno)) u.Papeis.Add(new UsuarioPapel { Papel = Papeis.Aluno });
-            if (matriculas.TryGetValue(l.Matricula, out var m)) atualizados++;
-            else
-            {
-                matriculas[l.Matricula] = m = new Matricula { Numero = l.Matricula };
-                u.Matriculas.Add(m);
-                criados++;
-            }
-            (m.CursoId, m.Semestre, m.Situacao) = (l.CursoId, l.Semestre, l.Situacao);
-        }
-        await db.SaveChangesAsync();
-        return Results.Ok(new { criados, atualizados });
-    }
-
-    static IResult ErrosCsv(List<object> erros) =>
-        Results.Problem(detail: "O arquivo tem linhas inválidas; nenhuma linha foi importada.", statusCode: 400, title: Problemas.Titulo(400),
-            extensions: new Dictionary<string, object?> { ["erros"] = erros });
 }

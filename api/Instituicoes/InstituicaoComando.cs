@@ -31,133 +31,103 @@ public static partial class InstituicaoComando
 
     [GeneratedRegex("^[a-z0-9-]{3,30}$")] private static partial Regex SlugValido();
 
+    record NovaInstituicao(string Slug, string Nome, string Fuso, string? Cpf, string AdminNome, string Email);
+
+    static async Task<List<string>> ValidarCriacao(OneDb db, NovaInstituicao n)
+    {
+        var erros = new List<string>();
+        if (!SlugValido().IsMatch(n.Slug)) erros.Add($"--slug: \"{n.Slug}\" deve casar com ^[a-z0-9-]{{3,30}}$");
+        else if (await db.Instituicoes.AnyAsync(i => i.Slug == n.Slug)) erros.Add($"--slug: \"{n.Slug}\" já existe");
+        if (n.Nome == "") erros.Add("--nome: obrigatório");
+        if (!(TimeZoneInfo.TryFindSystemTimeZoneById(n.Fuso, out var tz) && tz.HasIanaId)) erros.Add($"--fuso: \"{n.Fuso}\" não é um fuso IANA (ex.: America/Cuiaba)");
+        if (n.Cpf is null) erros.Add("--admin-cpf: CPF inválido");
+        if (n.AdminNome == "") erros.Add("--admin-nome: obrigatório");
+        if (!Email.Valido().IsMatch(n.Email)) erros.Add($"--admin-email: \"{n.Email}\" não é um e-mail válido");
+        return erros;
+    }
+
     static async Task<List<string>> Criar(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
     {
         var db = sp.GetRequiredService<OneDb>();
         var agora = sp.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         string Valor(string chave) => o.GetValueOrDefault(chave)?.Trim() ?? "";
-        var (slug, nome, fuso, cpf, adminNome, email) = (Valor("slug"), Valor("nome"), Valor("fuso"), Cpf.Normalizar(Valor("admin-cpf")), Valor("admin-nome"), Valor("admin-email"));
-
-        var erros = new List<string>();
-        if (!SlugValido().IsMatch(slug)) erros.Add($"--slug: \"{slug}\" deve casar com ^[a-z0-9-]{{3,30}}$");
-        else if (await db.Instituicoes.AnyAsync(i => i.Slug == slug)) erros.Add($"--slug: \"{slug}\" já existe");
-        if (nome == "") erros.Add("--nome: obrigatório");
-        if (!(TimeZoneInfo.TryFindSystemTimeZoneById(fuso, out var tz) && tz.HasIanaId)) erros.Add($"--fuso: \"{fuso}\" não é um fuso IANA (ex.: America/Cuiaba)");
-        if (cpf is null) erros.Add("--admin-cpf: CPF inválido");
-        if (adminNome == "") erros.Add("--admin-nome: obrigatório");
-        if (!Email.Valido().IsMatch(email)) erros.Add($"--admin-email: \"{email}\" não é um e-mail válido");
+        var n = new NovaInstituicao(Valor("slug"), Valor("nome"), Valor("fuso"), Cpf.Normalizar(Valor("admin-cpf")), Valor("admin-nome"), Valor("admin-email"));
+        var erros = await ValidarCriacao(db, n);
         if (erros.Count > 0) return erros;
 
         await using var tx = await db.Database.BeginTransactionAsync();
-        var instituicao = new Instituicao { Slug = slug, Nome = nome, Fuso = fuso, CriadaEm = agora };
+        var instituicao = new Instituicao { Slug = n.Slug, Nome = n.Nome, Fuso = n.Fuso, CriadaEm = agora };
         db.Instituicoes.Add(instituicao);
         await db.SaveChangesAsync();
         db.InstituicaoAtual = instituicao.Id;
 
         db.Setores.Add(new Setor { Nome = "Triagem", Triagem = true });
         db.Categorias.Add(new Categoria { Nome = "Não classificado", Padrao = true });
-        var admin = new Usuario { Cpf = cpf!, Nome = adminNome, Email = email, Papeis = [new UsuarioPapel { Papel = Papeis.Administrador }] };
+        var admin = new Usuario { Cpf = n.Cpf!, Nome = n.AdminNome, Email = n.Email, Papeis = [new UsuarioPapel { Papel = Papeis.Administrador }] };
         db.Usuarios.Add(admin);
         await db.SaveChangesAsync();
-        var (token, registro) = Tokens.Novo(slug, admin.Id, agora);
+        var (token, registro) = Tokens.Novo(n.Slug, admin.Id, agora);
         db.Tokens.Add(registro);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
 
-        saida.WriteLine($"Instituição {slug} criada.");
-        saida.WriteLine($"Link de primeiro acesso do administrador (vale 60 minutos): {Tokens.Link(sp.GetRequiredService<IConfiguration>(), slug, token)}");
+        saida.WriteLine($"Instituição {n.Slug} criada.");
+        saida.WriteLine($"Link de primeiro acesso do administrador (vale 60 minutos): {Tokens.Link(sp.GetRequiredService<IConfiguration>(), n.Slug, token)}");
         return [];
     }
 
-    record ArquivoCarga(List<SetorCarga>? Setores, List<CursoCarga>? Cursos, List<CategoriaCarga>? Categorias, List<RegraCarga>? Regras, List<ArtigoCarga>? Artigos);
-    record SetorCarga(string? Nome);
-    record CursoCarga(string? Nome, string? Coordenacao);
-    record CategoriaCarga(string? Nome);
-    record RegraCarga(string? Categoria, string? Setor, bool CoordenacaoDoCurso);
-    record ArtigoCarga(string? Titulo, List<string>? Perguntas, string? Categoria, string? Resposta, List<string>? Links);
+    // --slug de uma instituição existente e --arquivo JSON legível; devolve a instituição e o arquivo, ou o erro.
+    static async Task<(Instituicao?, T?, string?)> LerArquivo<T>(OneDb db, Dictionary<string, string> o) where T : class
+    {
+        var slug = o.GetValueOrDefault("slug") ?? "";
+        var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == slug);
+        if (instituicao is null) return (null, null, $"--slug: instituição \"{slug}\" não existe");
+        if (!File.Exists(o.GetValueOrDefault("arquivo"))) return (null, null, $"--arquivo: arquivo \"{o.GetValueOrDefault("arquivo")}\" não encontrado");
+        try { return (instituicao, JsonSerializer.Deserialize<T>(await File.ReadAllTextAsync(o["arquivo"]), JsonSerializerOptions.Web), null); }
+        catch (JsonException e) { return (null, null, $"--arquivo: JSON inválido ({e.Message})"); }
+    }
 
     static async Task<List<string>> Carga(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
     {
         var db = sp.GetRequiredService<OneDb>();
-        var agora = sp.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var slug = o.GetValueOrDefault("slug") ?? "";
-        var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == slug);
-        if (instituicao is null) return [$"--slug: instituição \"{slug}\" não existe"];
-        if (!File.Exists(o.GetValueOrDefault("arquivo"))) return [$"--arquivo: arquivo \"{o.GetValueOrDefault("arquivo")}\" não encontrado"];
-
-        ArquivoCarga? arq;
-        try { arq = JsonSerializer.Deserialize<ArquivoCarga>(await File.ReadAllTextAsync(o["arquivo"]), JsonSerializerOptions.Web); }
-        catch (JsonException e) { return [$"--arquivo: JSON inválido ({e.Message})"]; }
+        var (instituicao, arq, erro) = await LerArquivo<ArquivoCarga>(db, o);
+        if (erro is not null) return [erro];
         if (arq is null) return ["--arquivo: vazio"];
 
-        db.InstituicaoAtual = instituicao.Id;
-        var setoresExistentes = await db.Setores.ToDictionaryAsync(s => s.Nome);
-        var categoriasExistentes = await db.Categorias.ToDictionaryAsync(c => c.Nome);
-        var comRegra = await db.Regras.Select(r => r.CategoriaId).ToListAsync();
-
-        var erros = new List<string>();
-        var setores = new Dictionary<string, Setor>(setoresExistentes);
-        foreach (var (s, i) in (arq.Setores ?? []).Select((s, i) => (s, i)))
-        {
-            if (string.IsNullOrWhiteSpace(s.Nome)) erros.Add($"setores[{i}].nome: obrigatório");
-            else if (setores.ContainsKey(s.Nome)) erros.Add($"setores[{i}].nome: \"{s.Nome}\" repetido");
-            else setores[s.Nome] = new Setor { Nome = s.Nome };
-        }
-        var categorias = new Dictionary<string, Categoria>(categoriasExistentes);
-        foreach (var (c, i) in (arq.Categorias ?? []).Select((c, i) => (c, i)))
-        {
-            if (string.IsNullOrWhiteSpace(c.Nome)) erros.Add($"categorias[{i}].nome: obrigatório");
-            else if (categorias.ContainsKey(c.Nome)) erros.Add($"categorias[{i}].nome: \"{c.Nome}\" repetida");
-            else categorias[c.Nome] = new Categoria { Nome = c.Nome };
-        }
-        var cursos = new List<Curso>();
-        var nomesDeCurso = (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet();
-        foreach (var (c, i) in (arq.Cursos ?? []).Select((c, i) => (c, i)))
-        {
-            if (string.IsNullOrWhiteSpace(c.Nome)) erros.Add($"cursos[{i}].nome: obrigatório");
-            else if (!nomesDeCurso.Add(c.Nome)) erros.Add($"cursos[{i}].nome: \"{c.Nome}\" repetido");
-            if (c.Coordenacao is not null && !setores.ContainsKey(c.Coordenacao)) erros.Add($"cursos[{i}].coordenacao: setor \"{c.Coordenacao}\" não existe");
-            cursos.Add(new Curso { Nome = c.Nome ?? "" });
-        }
-        var regras = new List<(RegraRoteamento regra, Categoria categoria, Setor? setor)>();
-        foreach (var (r, i) in (arq.Regras ?? []).Select((r, i) => (r, i)))
-        {
-            if (r.Categoria is null || !categorias.TryGetValue(r.Categoria, out var categoria)) { erros.Add($"regras[{i}].categoria: categoria \"{r.Categoria}\" não existe"); continue; }
-            if (comRegra.Contains(categoria.Id) || regras.Any(x => x.categoria == categoria)) erros.Add($"regras[{i}].categoria: \"{r.Categoria}\" já tem regra");
-            Setor? setor = null;
-            if (r.CoordenacaoDoCurso == (r.Setor is not null)) erros.Add($"regras[{i}]: informe setor ou coordenacaoDoCurso, um dos dois");
-            else if (r.Setor is not null && !setores.TryGetValue(r.Setor, out setor)) erros.Add($"regras[{i}].setor: setor \"{r.Setor}\" não existe");
-            regras.Add((new RegraRoteamento { Destino = r.CoordenacaoDoCurso ? "COORDENACAO_CURSO" : "SETOR" }, categoria, setor));
-        }
-        var artigos = new List<(ArtigoCarga a, Categoria categoria)>();
-        foreach (var (a, i) in (arq.Artigos ?? []).Select((a, i) => (a, i)))
-        {
-            if (string.IsNullOrWhiteSpace(a.Titulo)) erros.Add($"artigos[{i}].titulo: obrigatório");
-            if (a.Perguntas is null || a.Perguntas.Count == 0 || a.Perguntas.Any(string.IsNullOrWhiteSpace)) erros.Add($"artigos[{i}].perguntas: informe ao menos uma pergunta");
-            if (string.IsNullOrWhiteSpace(a.Resposta)) erros.Add($"artigos[{i}].resposta: obrigatória");
-            foreach (var (l, j) in (a.Links ?? []).Select((l, j) => (l, j)))
-                if (!l.StartsWith("https://") && !l.StartsWith("http://")) erros.Add($"artigos[{i}].links[{j}]: deve começar com https:// ou http://");
-            if (a.Categoria is null || !categorias.TryGetValue(a.Categoria, out var categoria)) erros.Add($"artigos[{i}].categoria: categoria \"{a.Categoria}\" não existe");
-            else artigos.Add((a, categoria));
-        }
+        db.InstituicaoAtual = instituicao!.Id;
+        var existentes = new Existentes(await db.Setores.ToDictionaryAsync(s => s.Nome), await db.Categorias.ToDictionaryAsync(c => c.Nome),
+            (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet(), await db.Regras.Select(r => r.CategoriaId).ToListAsync());
+        var (erros, plano) = CargaValidacao.Validar(arq, existentes);
         if (erros.Count > 0) return erros;
 
+        var (setores, categorias) = await Gravar(db, arq, existentes, plano, sp.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+        saida.WriteLine($"setores: {setores}");
+        saida.WriteLine($"cursos: {plano.Cursos.Count}");
+        saida.WriteLine($"categorias: {categorias}");
+        saida.WriteLine($"regras: {plano.Regras.Count}");
+        saida.WriteLine($"artigos: {plano.Artigos.Count}");
+        return [];
+    }
+
+    // Grava o plano numa transação; devolve quantos setores e categorias eram novos.
+    static async Task<(int, int)> Gravar(OneDb db, ArquivoCarga arq, Existentes existentes, Plano plano, DateTime agora)
+    {
         await using var tx = await db.Database.BeginTransactionAsync();
-        var novosSetores = setores.Values.Except(setoresExistentes.Values).ToList();
-        var novasCategorias = categorias.Values.Except(categoriasExistentes.Values).ToList();
+        var novosSetores = plano.Setores.Values.Except(existentes.Setores.Values).ToList();
+        var novasCategorias = plano.Categorias.Values.Except(existentes.Categorias.Values).ToList();
         db.Setores.AddRange(novosSetores);
         db.Categorias.AddRange(novasCategorias);
         await db.SaveChangesAsync();
         foreach (var (c, i) in (arq.Cursos ?? []).Select((c, i) => (c, i)))
-            cursos[i].SetorCoordenacaoId = c.Coordenacao is null ? null : setores[c.Coordenacao].Id;
-        db.Cursos.AddRange(cursos);
-        foreach (var (regra, categoria, setor) in regras)
+            plano.Cursos[i].SetorCoordenacaoId = c.Coordenacao is null ? null : plano.Setores[c.Coordenacao].Id;
+        db.Cursos.AddRange(plano.Cursos);
+        foreach (var (regra, categoria, setor) in plano.Regras)
         {
             regra.CategoriaId = categoria.Id;
             regra.SetorId = setor?.Id;
             db.Regras.Add(regra);
         }
-        foreach (var (a, categoria) in artigos)
+        foreach (var (a, categoria) in plano.Artigos)
         {
             var versao = new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora };
             db.Artigos.Add(new Artigo { CategoriaId = categoria.Id, Estado = EstadosArtigo.Ativo, Versoes = [versao] });
@@ -165,13 +135,7 @@ public static partial class InstituicaoComando
         }
         await db.SaveChangesAsync();
         await tx.CommitAsync();
-
-        saida.WriteLine($"setores: {novosSetores.Count}");
-        saida.WriteLine($"cursos: {cursos.Count}");
-        saida.WriteLine($"categorias: {novasCategorias.Count}");
-        saida.WriteLine($"regras: {regras.Count}");
-        saida.WriteLine($"artigos: {artigos.Count}");
-        return [];
+        return (novosSetores.Count, novasCategorias.Count);
     }
 
     record PerguntaAvaliacao(string? Pergunta, string? Fonte);
@@ -180,17 +144,27 @@ public static partial class InstituicaoComando
     static async Task<List<string>> AvaliarBusca(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
     {
         var db = sp.GetRequiredService<OneDb>();
-        var slug = o.GetValueOrDefault("slug") ?? "";
-        var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == slug);
-        if (instituicao is null) return [$"--slug: instituição \"{slug}\" não existe"];
-        if (!File.Exists(o.GetValueOrDefault("arquivo"))) return [$"--arquivo: arquivo \"{o.GetValueOrDefault("arquivo")}\" não encontrado"];
-
-        List<PerguntaAvaliacao>? perguntas;
-        try { perguntas = JsonSerializer.Deserialize<List<PerguntaAvaliacao>>(await File.ReadAllTextAsync(o["arquivo"]), JsonSerializerOptions.Web); }
-        catch (JsonException e) { return [$"--arquivo: JSON inválido ({e.Message})"]; }
+        var (instituicao, perguntas, erro) = await LerArquivo<List<PerguntaAvaliacao>>(db, o);
+        if (erro is not null) return [erro];
         if (perguntas is null || perguntas.Count == 0) return ["--arquivo: nenhuma pergunta"];
 
-        db.InstituicaoAtual = instituicao.Id;
+        db.InstituicaoAtual = instituicao!.Id;
+        var erros = await ValidarPerguntas(db, perguntas);
+        if (erros.Count > 0) return erros;
+
+        var acertos = 0;
+        foreach (var p in perguntas)
+        {
+            var (posicao, falha) = await Avaliar(sp, instituicao.Id, p, saida);
+            if (falha is not null) return [falha];
+            if (posicao > 0) acertos++;
+        }
+        saida.WriteLine($"{acertos}/{perguntas.Count}");
+        return [];
+    }
+
+    static async Task<List<string>> ValidarPerguntas(OneDb db, List<PerguntaAvaliacao> perguntas)
+    {
         var artigos = await db.VersoesAtuais().Where(v => v.Artigo!.Estado == EstadosArtigo.Ativo).Select(v => v.Titulo).ToListAsync();
         var titulos = artigos.Concat(await db.Documentos.Where(d => d.Estado == EstadosDocumento.Ativo).Select(d => d.Titulo).ToListAsync()).ToHashSet();
         var erros = new List<string>();
@@ -199,26 +173,22 @@ public static partial class InstituicaoComando
             if (string.IsNullOrWhiteSpace(p?.Pergunta)) erros.Add($"[{i}].pergunta: obrigatória");
             if (p?.Fonte is not { } fonte || !titulos.Contains(fonte)) erros.Add($"[{i}].fonte: \"{p?.Fonte}\" não é título de artigo ou documento ativo");
         }
-        if (erros.Count > 0) return erros;
+        return erros;
+    }
 
-        var embeddings = sp.GetRequiredService<Embeddings>();
-        var assistente = sp.GetRequiredService<Assistente.Assistente>();
-        var acertos = 0;
-        foreach (var p in perguntas)
+    // Posição da fonte esperada entre as buscadas (0 = não veio), ou a falha dos embeddings.
+    static async Task<(int, string?)> Avaliar(IServiceProvider sp, long instituicaoId, PerguntaAvaliacao p, TextWriter saida)
+    {
+        float[] vetor;
+        try { vetor = (await sp.GetRequiredService<Embeddings>().Gerar([Mascara.Aplicar(p.Pergunta!)]))[0]; }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
         {
-            float[] vetor;
-            try { vetor = (await embeddings.Gerar([Mascara.Aplicar(p.Pergunta!)]))[0]; }
-            catch (Exception e) when (e is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
-            {
-                return [$"embeddings: falha ao gerar o vetor da pergunta \"{p.Pergunta}\" ({e.Message})"];
-            }
-            var buscadas = await assistente.Buscar(vetor, instituicao.Id);
-            var posicao = buscadas.FindIndex(f => f.Titulo == p.Fonte) + 1;
-            var lista = string.Join(" | ", buscadas.Select(f => $"{f.Titulo} ({f.Distancia.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)})"));
-            if (posicao > 0) acertos++;
-            saida.WriteLine(posicao > 0 ? $"acerto {posicao}: {p.Pergunta} -> {lista}" : $"erro: {p.Pergunta} (esperado \"{p.Fonte}\") -> {lista}");
+            return (0, $"embeddings: falha ao gerar o vetor da pergunta \"{p.Pergunta}\" ({e.Message})");
         }
-        saida.WriteLine($"{acertos}/{perguntas.Count}");
-        return [];
+        var buscadas = await sp.GetRequiredService<Assistente.Assistente>().Buscar(vetor, instituicaoId);
+        var posicao = buscadas.FindIndex(f => f.Titulo == p.Fonte) + 1;
+        var lista = string.Join(" | ", buscadas.Select(f => $"{f.Titulo} ({f.Distancia.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)})"));
+        saida.WriteLine(posicao > 0 ? $"acerto {posicao}: {p.Pergunta} -> {lista}" : $"erro: {p.Pergunta} (esperado \"{p.Fonte}\") -> {lista}");
+        return (posicao, null);
     }
 }

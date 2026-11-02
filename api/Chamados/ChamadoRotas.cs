@@ -14,27 +14,8 @@ public record DuplicadoIn(string? NumeroOriginal);
 
 public static class ChamadoRotas
 {
-    const string Aluno = "ALUNO";
-    const string Atendente = "ATENDENTE";
-
-    static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
-    static readonly string[] NaoFechados = [.. Abertos, Resolvido];
-
-    // AC 89: ação x papel no chamado -> estados em que a ação vale. Par ausente = 403; estado fora da lista = 409.
-    static readonly Dictionary<(string acao, string papel), string[]> Permitidas = new()
-    {
-        [("responder", Aluno)] = NaoFechados, // em RESOLVIDO vale como rejeição (AC 86)
-        [("responder", Atendente)] = Abertos,
-        [("nota", Atendente)] = NaoFechados,
-        [("assumir", Atendente)] = Abertos,
-        [("resolver", Atendente)] = Abertos,
-        [("confirmar", Aluno)] = [Resolvido],
-        [("rejeitar", Aluno)] = [Resolvido],
-        [("cancelar", Aluno)] = Abertos,
-        [("encaminhar", Atendente)] = Abertos,
-        [("reclassificar", Atendente)] = NaoFechados,
-        [("duplicado", Atendente)] = Abertos,
-    };
+    const string Aluno = PermissoesChamado.Aluno;
+    const string Atendente = PermissoesChamado.Atendente;
 
     const long MaxAnexo = 10 * 1024 * 1024;
 
@@ -51,11 +32,6 @@ public static class ChamadoRotas
         if (u.Tem(Papeis.Atendente) && await db.AtendenteSetores.AnyAsync(a => a.UsuarioId == u.Id && a.SetorId == c.SetorId)) return (c, Atendente);
         return (null, null);
     }
-
-    static IEnumerable<string> Acoes(Chamado c, string papel, long usuarioId) =>
-        Permitidas.Where(p => p.Key.papel == papel && p.Value.Contains(c.Estado))
-            .Select(p => p.Key.acao)
-            .Where(a => a != "assumir" || c.ResponsavelId != usuarioId);
 
     static void Evento(OneDb db, Acesso a, string tipo, string? de = null, string? para = null, string? detalhe = null) =>
         db.EventosChamado.Add(new EventoChamado { ChamadoId = a.Chamado.Id, Tipo = tipo, AtorId = a.Usuario.Id, De = de, Para = para, Detalhe = detalhe, CriadoEm = a.Agora });
@@ -122,7 +98,7 @@ public static class ChamadoRotas
         var (chamado, papel) = await Carregar(db, u, numero);
         if (chamado is null) return NaoEncontrado();
         var a = new Acesso(chamado, papel!, u, relogio.GetUtcNow().UtcDateTime, ctx.Instituicao(), ctx.RequestServices.GetRequiredService<IConfiguration>(), ctx.RequestServices.GetRequiredService<Prazos>());
-        if (!Permitidas.TryGetValue((acao, papel!), out var estados)) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
+        if (PermissoesChamado.Estados(acao, papel!) is not { } estados) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
         if (await validar(a) is { } invalido) return invalido;
         if (!estados.Contains(chamado.Estado)) return Problemas.Erro(409, "A ação não é permitida no estado atual do chamado.");
         if (await aplicar(a) is { } recusa) return recusa;
@@ -386,7 +362,7 @@ public static class ChamadoRotas
                 ? (await db.EventosChamado.Where(e => e.ChamadoId == c.Id).OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
                     .Select(e => new { tipo = e.Tipo, ator = e.AtorId is { } a ? nomes[a] : "Sistema", de = e.De, para = e.Para, detalhe = e.Detalhe, criadoEm = e.CriadoEm })
                 : null,
-            acoes = Acoes(c, papel, u.Id),
+            acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, u.Id),
             // destinos de encaminhar e reclassificar (S6), só para a equipe
             setores = equipe ? await db.Setores.Where(s => s.Ativo && s.Id != c.SetorId).OrderBy(s => s.Nome).Select(s => new { id = s.Id, nome = s.Nome }).ToListAsync() : null,
             categorias = equipe ? await db.Categorias.Where(x => x.Ativa).OrderBy(x => x.Nome).Select(x => new { id = x.Id, nome = x.Nome }).ToListAsync() : null,

@@ -205,6 +205,19 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(ArquivosQue(new Regex(@"Length:\s*>=\s*8\b")));
     }
 
+    // C27: as regras puras são testadas sem subir o PostgreSQL nem o host HTTP
+    [Fact]
+    public void Testes_de_regra_sem_banco()
+    {
+        foreach (var classe in new[] { "PermissoesChamadoTests", "IndicadoresCalculoTests", "CargaValidacaoTests", "CsvMatriculasTests", "PerguntaTests" })
+        {
+            var texto = File.ReadAllText(Path.Combine(Raiz(), "api.Tests", classe + ".cs"));
+            Assert.Contains($"public class {classe}", texto);
+            foreach (var proibido in new[] { "OneFactory", "OneDb", "HttpClient" })
+                Assert.False(texto.Contains(proibido), $"{classe} usa {proibido}");
+        }
+    }
+
     // C19
     [Fact]
     public void Sem_DateTime_Now() =>
