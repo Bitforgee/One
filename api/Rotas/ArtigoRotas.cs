@@ -28,13 +28,20 @@ public static class ArtigoRotas
         });
     }
 
-    static object Saida(Artigo a, string categoria)
+    // RAG, AC 6 e Surface: estado da indexação do trecho da versão atual; nulo quando o artigo nunca foi ativado nessa versão
+    public static async Task<Dictionary<long, string>> Indexacao(OneDb db, List<long> versoes) =>
+        (await db.TrechosFonte.Where(t => t.VersaoArtigoId != null && versoes.Contains(t.VersaoArtigoId.Value))
+            .Select(t => new { Versao = t.VersaoArtigoId!.Value, Indexado = t.Embedding != null, t.Tentativas }).ToListAsync())
+        .ToDictionary(t => t.Versao, t => t.Indexado ? "INDEXADO" : t.Tentativas >= 5 ? "FALHOU" : "PENDENTE");
+
+    static object Saida(Artigo a, string categoria, Dictionary<long, string> indexacao)
     {
         var v = a.Versoes.OrderByDescending(x => x.Numero).First();
         return new
         {
             id = a.Id,
             estado = a.Estado,
+            indexacao = indexacao.GetValueOrDefault(v.Id),
             categoriaId = a.CategoriaId,
             categoria,
             visivelDe = a.VisivelDe,
@@ -70,7 +77,8 @@ public static class ArtigoRotas
 
     static async Task<IResult> Responder(OneDb db, Artigo a, int status = 200)
     {
-        var corpo = Saida(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync());
+        var atual = a.Versoes.Max(v => v.Id);
+        var corpo = Saida(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync(), await Indexacao(db, [atual]));
         return status == 201 ? Results.Created($"/api/admin/artigos/{a.Id}", corpo) : Results.Ok(corpo);
     }
 
@@ -81,7 +89,8 @@ public static class ArtigoRotas
         {
             var categorias = await db.Categorias.ToDictionaryAsync(c => c.Id, c => c.Nome);
             var artigos = await db.Artigos.Include(a => a.Versoes).OrderBy(a => a.Id).ToListAsync();
-            return Results.Ok(artigos.Select(a => Saida(a, categorias[a.CategoriaId])));
+            var indexacao = await Indexacao(db, artigos.Select(a => a.Versoes.OrderByDescending(v => v.Numero).First().Id).ToList());
+            return Results.Ok(artigos.Select(a => Saida(a, categorias[a.CategoriaId], indexacao)));
         });
 
         admin.MapPost("/artigos", async (ArtigoIn i, OneDb db, TimeProvider relogio) =>

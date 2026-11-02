@@ -19,85 +19,85 @@ com o construtor.
 
 ### S1 - O assistente passa a usar a OpenAI (P1) · ~5 files · ~30 KB · ~8k
 
-**C1** - Uma mensagem do aluno gera `POST https://llm.teste/v1/chat/completions` com `model` `gpt-6-luna`, `response_format` `{"type":"json_object"}`, `max_completion_tokens` 800 e `reasoning_effort` `none`, e o corpo não tem `max_tokens`, `temperature` nem `thinking` (AC 1, door R1; substitui o nº 53 do `mvp-one`)
+**C1** - [x] Uma mensagem do aluno gera `POST https://llm.teste/v1/chat/completions` com `model` `gpt-6-luna`, `response_format` `{"type":"json_object"}`, `max_completion_tokens` 800 e `reasoning_effort` `none`, e o corpo não tem `max_tokens`, `temperature` nem `thinking` (AC 1, door R1; substitui o nº 53 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Parametros_e_ordem_do_prompt"`
 
-**C2** - Com `usage` `{"prompt_tokens":1200,"completion_tokens":80,"prompt_tokens_details":{"cached_tokens":1000}}`, o log da chamada traz `entradaComCache` 1000, `entradaSemCache` 200 e `saida` 80 (AC 2)
+**C2** - [x] Com `usage` `{"prompt_tokens":1200,"completion_tokens":80,"prompt_tokens_details":{"cached_tokens":1000}}`, o log da chamada traz `entradaComCache` 1000, `entradaSemCache` 200 e `saida` 80 (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProvedorTests.Log_tokens_com_cache_openai"`
 
-**C3** - O chat respondendo 429, 500, demorando mais de 20 s ou devolvendo JSON inválido faz o aluno ver o texto fixo de `sem_base`, e o log traz o motivo de cada caso (AC 3)
+**C3** - [x] O chat respondendo 429, 500, demorando mais de 20 s ou devolvendo JSON inválido faz o aluno ver o texto fixo de `sem_base`, e o log traz o motivo de cada caso (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProvedorTests.Falhas_do_chat_viram_sem_base"`
 
-**C4** - Sem configuração de teste, o app lê `Llm:BaseUrl` `https://api.openai.com/v1`, `Llm:Modelo` `gpt-6-luna` e `Llm:ModeloEmbeddings` `text-embedding-3-small`, e o `docker-compose.yml` passa `Llm__ChaveApi` ao contêiner da `api` (door R1)
+**C4** - [x] Sem configuração de teste, o app lê `Llm:BaseUrl` `https://api.openai.com/v1`, `Llm:Modelo` `gpt-6-luna` e `Llm:ModeloEmbeddings` `text-embedding-3-small`, e o `docker-compose.yml` passa `Llm__ChaveApi` ao contêiner da `api` (door R1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProvedorTests.Configuracao_padrao_openai"`
 
-**C5** - O corpo enviado ao chat traz só as regras fixas, os trechos buscados (id da fonte, título da fonte, texto do trecho e links do artigo de origem), as categorias ativas e as últimas 10 mensagens mascaradas; nome, CPF, matrícula e curso do aluno nunca aparecem (AC 34 do `mvp-one` com a busca; substitui o C52)
+**C5** - [x] O corpo enviado ao chat traz só as regras fixas, os trechos buscados (id da fonte, título da fonte, texto do trecho e links do artigo de origem), as categorias ativas e as últimas 10 mensagens mascaradas; nome, CPF, matrícula e curso do aluno nunca aparecem (AC 34 do `mvp-one` com a busca; substitui o C52)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Corpo_so_traz_o_permitido"`
 
 ### S2 - O assistente busca por significado nos artigos (P1) · ~12 files · ~90 KB · ~22k
 
-**C6** - Ativar um artigo grava 1 trecho de fonte pendente (sem embedding) com o título, as perguntas e a resposta da versão atual; editar o artigo ativo grava o trecho da versão nova; uma falha forçada na gravação do trecho deixa o artigo no estado anterior (AC 4)
+**C6** - [x] Ativar um artigo grava 1 trecho de fonte pendente (sem embedding) com o título, as perguntas e a resposta da versão atual; editar o artigo ativo grava o trecho da versão nova; uma falha forçada na gravação do trecho deixa o artigo no estado anterior (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndexacaoTests.Ativar_e_editar_gravam_trecho_pendente"`
 
-**C7** - Com 250 trechos pendentes em duas instituições, uma execução do agendador faz 3 chamadas a `/embeddings` com 100, 100 e 50 entradas e grava um vetor de 1536 posições em cada trecho (AC 5)
+**C7** - [x] Com 250 trechos pendentes em duas instituições, uma execução do agendador faz 3 chamadas a `/embeddings` com 100, 100 e 50 entradas e grava um vetor de 1536 posições em cada trecho (AC 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndexacaoTests.Lotes_de_100_gravam_vetores"`
 
-**C8** - Com `/embeddings` respondendo 500, cada uma de 5 execuções soma 1 a `tentativas` dos trechos do lote, marca a próxima para 2^`tentativas` minutos e grava a falha no log com a instituição; a 6ª execução não chama a API, e `GET /api/admin/artigos` mostra `indexacao` `FALHOU` (AC 6)
+**C8** - [x] Com `/embeddings` respondendo 500, cada uma de 5 execuções soma 1 a `tentativas` dos trechos do lote, marca a próxima para 2^`tentativas` minutos e grava a falha no log com a instituição; a 6ª execução não chama a API, e `GET /api/admin/artigos` mostra `indexacao` `FALHOU` (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndexacaoTests.Falha_de_embeddings_tenta_5_vezes"`
 
-**C9** - `GET /api/admin/artigos` responde 200 com `indexacao` `PENDENTE` logo depois de ativar e `INDEXADO` depois da execução do agendador (Surface)
+**C9** - [x] `GET /api/admin/artigos` responde 200 com `indexacao` `PENDENTE` logo depois de ativar e `INDEXADO` depois da execução do agendador (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndexacaoTests.Indexacao_no_admin"`
 
-**C10** - Com 7 artigos indexados, uma mensagem faz o chat receber exatamente os 5 trechos mais próximos do vetor da consulta, em ordem crescente de distância de cosseno (AC 7; substitui o nº 133 do `mvp-one`)
+**C10** - [x] Com 7 artigos indexados, uma mensagem faz o chat receber exatamente os 5 trechos mais próximos do vetor da consulta, em ordem crescente de distância de cosseno (AC 7; substitui o nº 133 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Chat_recebe_os_5_mais_proximos"`
 
-**C11** - Na 4ª mensagem de uma conversa, a entrada enviada a `/embeddings` é a concatenação da 2ª, 3ª e 4ª mensagens do aluno e não traz a 1ª; uma resposta "sim" depois de uma conversa sobre boleto ainda busca o trecho do boleto (AC 7)
+**C11** - [x] Na 4ª mensagem de uma conversa, a entrada enviada a `/embeddings` é a concatenação da 2ª, 3ª e 4ª mensagens do aluno e não traz a 1ª; uma resposta "sim" depois de uma conversa sobre boleto ainda busca o trecho do boleto (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Consulta_com_as_ultimas_3_mensagens"`
 
-**C12** - A entrada enviada a `/embeddings` troca `2000567890`, `123.456.789-09` e `aluno@x.com` por `[número removido]` e `[e-mail removido]`, como o corpo do chat (AC 7, AC 34 do `mvp-one`)
+**C12** - [x] A entrada enviada a `/embeddings` troca `2000567890`, `123.456.789-09` e `aluno@x.com` por `[número removido]` e `[e-mail removido]`, como o corpo do chat (AC 7, AC 34 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Consulta_de_embedding_mascarada"`
 
-**C13** - A busca nunca devolve trecho de artigo `RASCUNHO`, `ARQUIVADO`, com `visivelAte` ontem, com `visivelDe` amanhã, de versão anterior, sem embedding ou de outra instituição, mesmo quando é o mais próximo da consulta (AC 8; substitui o nº 195 do `mvp-one`)
+**C13** - [x] A busca nunca devolve trecho de artigo `RASCUNHO`, `ARQUIVADO`, com `visivelAte` ontem, com `visivelDe` amanhã, de versão anterior, sem embedding ou de outra instituição, mesmo quando é o mais próximo da consulta (AC 8; substitui o nº 195 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.So_trechos_buscaveis"`
 
-**C14** - Depois de arquivar um artigo, a próxima mensagem não recebe o trecho dele, e a conversa que o citou continua mostrando o texto exibido (AC 9; substitui o nº 134 do `mvp-one`)
+**C14** - [x] Depois de arquivar um artigo, a próxima mensagem não recebe o trecho dele, e a conversa que o citou continua mostrando o texto exibido (AC 9; substitui o nº 134 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Arquivar_tira_da_busca"`
 
-**C15** - Sem nenhum trecho indexado na instituição, o chat recebe a lista de fontes vazia e uma `resposta` do modelo vira `sem_base` (AC 10)
+**C15** - [x] Sem nenhum trecho indexado na instituição, o chat recebe a lista de fontes vazia e uma `resposta` do modelo vira `sem_base` (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Sem_trechos_indexados"`
 
-**C16** - Uma `resposta` que cita o id de um trecho de artigo ativo da instituição que não estava entre os buscados vira `sem_base`, e o log traz `fonte_invalida` (AC 11)
+**C16** - [x] Uma `resposta` que cita o id de um trecho de artigo ativo da instituição que não estava entre os buscados vira `sem_base`, e o log traz `fonte_invalida` (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Fonte_fora_dos_buscados_sem_base"`
 
-**C17** - Contra o trecho de fonte citado: um trecho copiado literalmente gera `resposta`; um trecho que não está no texto do trecho de fonte gera `sem_base` com `trecho_invalido`; um link que não está nos links do artigo de origem gera `sem_base` com `link_invalido` (AC 12, door 19)
+**C17** - [x] Contra o trecho de fonte citado: um trecho copiado literalmente gera `resposta`; um trecho que não está no texto do trecho de fonte gera `sem_base` com `trecho_invalido`; um link que não está nos links do artigo de origem gera `sem_base` com `link_invalido` (AC 12, door 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Conferencia_contra_o_trecho_de_fonte"`
 
-**C18** - A mensagem do assistente guarda `trechos_buscados` com os ids na ordem da busca (e uma lista vazia quando nada foi buscado), e cada citação nova guarda o `trecho_fonte_id` com `versao_artigo_id` nulo (AC 13, door R5)
+**C18** - [x] A mensagem do assistente guarda `trechos_buscados` com os ids na ordem da busca (e uma lista vazia quando nada foi buscado), e cada citação nova guarda o `trecho_fonte_id` com `versao_artigo_id` nulo (AC 13, door R5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Grava_buscados_e_citacoes"`
 
-**C19** - `UPDATE` e `DELETE` em `versao_documento` e em `citacao_artigo`, `DELETE` em `trecho_fonte` e `UPDATE` de `texto` ou de `embedding` já preenchido em `trecho_fonte` lançam exceção do trigger e a linha fica igual; `UPDATE` de `embedding` nulo para um vetor é aceito (Relations, door R3, door 6)
+**C19** - [x] `UPDATE` e `DELETE` em `versao_documento` e em `citacao_artigo`, `DELETE` em `trecho_fonte` e `UPDATE` de `texto` ou de `embedding` já preenchido em `trecho_fonte` lançam exceção do trigger e a linha fica igual; `UPDATE` de `embedding` nulo para um vetor é aceito (Relations, door R3, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ImutabilidadeRagTests.Trechos_e_versoes_append_only"`
 
-**C20** - Com `/embeddings` respondendo 500 na consulta, o aluno vê o texto fixo de `sem_base`, o chat recebe 0 chamadas e o log traz `busca_indisponivel` (AC 14)
+**C20** - [x] Com `/embeddings` respondendo 500 na consulta, o aluno vê o texto fixo de `sem_base`, o chat recebe 0 chamadas e o log traz `busca_indisponivel` (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Embedding_da_consulta_falha_sem_base"`
 
-**C21** - O log de cada busca traz instituição, conversa, ids buscados, distâncias e duração em milissegundos, e não traz o texto de nenhuma mensagem do aluno (AC 15)
+**C21** - [x] O log de cada busca traz instituição, conversa, ids buscados, distâncias e duração em milissegundos, e não traz o texto de nenhuma mensagem do aluno (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Log_da_busca_sem_texto"`
 
-**C22** - O banco tem a extensão `vector`, `trecho_fonte.embedding` é `vector(1536)` com índice `hnsw` `vector_cosine_ops`; o `docker-compose.yml` usa `pgvector/pgvector:0.8.7-pg18-trixie` (tag trocada com o usuário em 02/11/2026, door R8); o modelo do `OneDbDesignTime` mapeia `embedding` para `vector(1536)` (door R2; substitui a parte da imagem do nº 19 do `mvp-one`)
+**C22** - [x] O banco tem a extensão `vector`, `trecho_fonte.embedding` é `vector(1536)` com índice `hnsw` `vector_cosine_ops`; o `docker-compose.yml` usa `pgvector/pgvector:0.8.7-pg18-trixie` (tag trocada com o usuário em 02/11/2026, door R8); o modelo do `OneDbDesignTime` mapeia `embedding` para `vector(1536)` (door R2; substitui a parte da imagem do nº 19 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Pgvector_e_indice_hnsw"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Layout_e_compose"`
 
-**C23** - Inserir por SQL um `trecho_fonte` com `versao_artigo_id` e `versao_documento_id` preenchidos, ou com os dois nulos, viola o `CHECK`; inserir uma citação sem `trecho_fonte_id` e sem `versao_artigo_id` viola o `CHECK` (Relations, doors R3 e R5)
+**C23** - [x] Inserir por SQL um `trecho_fonte` com `versao_artigo_id` e `versao_documento_id` preenchidos, ou com os dois nulos, viola o `CHECK`; inserir uma citação sem `trecho_fonte_id` e sem `versao_artigo_id` viola o `CHECK` (Relations, doors R3 e R5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Check_constraints"`
 
-**C24** - `documento`, `versao_documento` e `trecho_fonte` têm `instituicao_id` não nulo com FK e filtro global, como as outras 20 tabelas (Relations, door 16)
+**C24** - [x] `documento`, `versao_documento` e `trecho_fonte` têm `instituicao_id` não nulo com FK e filtro global, como as outras 20 tabelas (Relations, door 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 
-**C46** - `api/One.Api.csproj` não referencia nenhum pacote `Microsoft.Agents.AI*` nem `Microsoft.Extensions.AI*`, e o chat e os embeddings saem pelo `HttpClient` nomeado `llm` (door R7, adicionada com a decisão do usuário de 02/11/2026)
+**C46** - [x] `api/One.Api.csproj` não referencia nenhum pacote `Microsoft.Agents.AI*` nem `Microsoft.Extensions.AI*`, e o chat e os embeddings saem pelo `HttpClient` nomeado `llm` (door R7, adicionada com a decisão do usuário de 02/11/2026)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Sem_framework_de_agentes"`
 
-**C25** - `.specs/STATE.md` tem as entradas ativas do provedor OpenAI e da busca por trechos, e a AD-006 está marcada como substituída (door R6)
+**C25** - [x] `.specs/STATE.md` tem as entradas ativas do provedor OpenAI e da busca por trechos, e a AD-006 está marcada como substituída (door R6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Decisoes_registradas"`
 
 ### S3 - Documentos da instituição viram fonte do assistente (P1) · ~12 files · ~100 KB · ~25k
@@ -247,3 +247,6 @@ que o construtor precisa ler (`Assistente.cs`, `Agendador.cs`, `ChamadoRotas.cs`
   contexto fixo e o código existente: 60k + 14k + 40k = 114k, abaixo do budget de 150k - um
   construtor
 - Mechanism: um construtor (cabe no budget, sem pergunta)
+- **Boundary:** S1 e S2 (C1 a C25 e C46) fechados em `9c0a7a3` e no commit seguinte; S3 (documentos) e S4 (`avaliar-busca`) abertos
+- **Settled mid-build:** tag `pgvector/pgvector:0.8.7-pg18-trixie` (door R8, decidida com o usuário por causa do desencontro de collation). O modelo cita fontes por `fonteIds` e `trechos[].fonteId` (ids de `trecho_fonte`), no lugar de `artigoIds`; o log da chamada continua com os ids dos artigos citados (AC 47 do `mvp-one`), derivados do trecho. Nos testes, o trecho de um artigo semeado tem id fixo `1_000_000 + id do artigo` (`Semente.Fonte`), para citar sem consultar o banco e sem colisão entre classes em paralelo
+- **Abandoned:** nada
