@@ -1,0 +1,7 @@
+**/bin
+**/obj
+**/node_modules
+api/wwwroot
+web/test-results
+web/playwright-report
+.git

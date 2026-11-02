@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="api/One.Api.csproj" />
+  <Project Path="api.Tests/One.Api.Tests.csproj" />
+  <Folder Name="/web/">
+    <File Path="web/package.json" />
+  </Folder>
+</Solution>

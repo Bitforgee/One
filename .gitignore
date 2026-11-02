@@ -1,0 +1,12 @@
+bin/
+obj/
+node_modules/
+dist/
+api/wwwroot/
+.env
+*.user
+.vs/
+TestResults/
+web/test-results/
+web/playwright-report/
+web/coverage/
