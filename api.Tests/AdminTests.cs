@@ -207,6 +207,7 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         {
             ("cpf", new { cpf = "12345678900", nome = "X", email = "x@x.com", papeis = new[] { Papeis.Administrador } }),
             ("nome", new { cpf, nome = " ", email = "x@x.com", papeis = new[] { Papeis.Administrador } }),
+            ("nome", new { cpf, nome = new string('n', 201), email = "x@x.com", papeis = new[] { Papeis.Administrador } }),
             ("email", new { cpf, nome = "X", email = "sem-arroba", papeis = new[] { Papeis.Administrador } }),
             ("papeis", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { "DIRETOR" } }),
             ("setores", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Atendente }, setores = new[] { 999999L } }),
@@ -391,7 +392,12 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         var padrao = await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
         var recusas = new (string rota, string campo, object corpo)[]
         {
+            ("setores", "nome", new { nome = " " }),
+            ("setores", "nome", new { nome = new string('s', 101) }),
+            ("categorias", "nome", new { nome = "" }),
+            ("categorias", "nome", new { nome = new string('c', 101) }),
             ("cursos", "nome", new { nome = "" }),
+            ("cursos", "nome", new { nome = new string('c', 201) }),
             ("cursos", "setorCoordenacaoId", new { nome = "Direito", setorCoordenacaoId = 999999 }),
             ("regras", "categoriaId", new { categoriaId = 999999, destino = "COORDENACAO_CURSO" }),
             ("regras", "categoriaId", new { categoriaId = padrao.Id, destino = "COORDENACAO_CURSO" }),
@@ -399,6 +405,7 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
             ("regras", "setorId", new { categoriaId = categoria.Id, destino = "SETOR", setorId = 999999 }),
             ("respostas-prontas", "setorId", new { setorId = 999999, titulo = "Boleto", texto = "x" }),
             ("respostas-prontas", "titulo", new { setorId = setor.Id, titulo = " ", texto = "x" }),
+            ("respostas-prontas", "titulo", new { setorId = setor.Id, titulo = new string('t', 201), texto = "x" }),
             ("respostas-prontas", "texto", new { setorId = setor.Id, titulo = "Boleto", texto = "" }),
             ("respostas-prontas", "texto", new { setorId = setor.Id, titulo = "Boleto", texto = new string('t', 4001) }),
         };
@@ -411,6 +418,8 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await f.Db(i.Id, db => db.Regras.CountAsync()));
         Assert.Equal(0, await f.Db(i.Id, db => db.RespostasProntas.CountAsync()));
         Assert.Equal(0, await f.Db(i.Id, db => db.Cursos.CountAsync()));
+        Assert.Equal(["Financeiro", "Triagem"], await f.Db(i.Id, db => db.Setores.OrderBy(x => x.Nome).Select(x => x.Nome).ToListAsync()));
+        Assert.Equal(["Boleto", "Não classificado"], await f.Db(i.Id, db => db.Categorias.OrderBy(x => x.Nome).Select(x => x.Nome).ToListAsync()));
         Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/respostas-prontas", new { setorId = setor.Id, titulo = "Boleto", texto = new string('t', 4000) })).StatusCode);
     }
 

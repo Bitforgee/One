@@ -229,7 +229,9 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, (await Balcao.Mensagem(b.ClienteAluno, numero, "")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await Balcao.Mensagem(b.A.Cliente, numero, "   ")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Balcao.Mensagem(b.ClienteAluno, numero, new string('m', 4001))).StatusCode);
         Assert.Equal(0, await f.Db(b.Instituicao.Id, db => db.MensagensChamado.CountAsync()));
+        Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(b.ClienteAluno, numero, new string('m', 4000))).StatusCode);
         Assert.Equal(Aberto, (await b.Ler(numero)).Estado);
     }
 }

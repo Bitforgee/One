@@ -814,4 +814,5 @@ estimado em 30k.
   - 429 em `POST /api/conversas/{id}/mensagens`: asserção a mais em `RateLimitTests.Onze_mensagens_em_60s_429` (C80)
   - `duplicado` por atendente de outro setor: rota a mais em `VisibilidadeTests.RotasDoChamado` (C97, e por tabela C7)
   - AC 10, fuso no agendador: o lembrete do 3º dia passa a trazer "desde dd/mm/aaaa hh:mm (horário da instituição)" no fuso da instituição do item, e `AgendadorTests.Item_usa_fuso_nome_e_remetente_da_sua_instituicao` (C13) confere isso em Cuiabá (UTC-4) e São Paulo (UTC-3)
+- Verificação, rodada 2 (FAIL só na linha "entrada que não decide" da Test policy), corrigida na rodada 3: `CadastroTests.Recusas_dos_cadastros_400` (C154) passou a cobrir nome vazio e longo demais em setores (101), categorias (101) e cursos (201) e título de resposta pronta com 201, conferindo que nada foi gravado; `UsuarioAdminTests.Campos_invalidos_400` (C143), nome com 201; `ChamadoFluxoTests.Mensagem_sem_texto_400` (C118), mensagem de 4001 recusada e de 4000 aceita
 - Abandonado: nada
