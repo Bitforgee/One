@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 5,
+  "next_id": 6,
   "lessons": [
     {
       "id": "L-001",
@@ -76,6 +76,24 @@
       ],
       "created": "2026-11-02T15:55:35Z",
       "last_seen": "2026-11-02T15:55:35Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::faca a primeira varredura de recusas sobre todo o codigo de entrada rotas importacoes e comandos de uma vez ampliar o escopo a cada rodada gera uma rodada nova por canal",
+      "text": "Faça a primeira varredura de recusas sobre todo o código de entrada (rotas, importações e comandos) de uma vez; ampliar o escopo a cada rodada gera uma rodada nova por canal.",
+      "signal": "ac_gap",
+      "scope": "verificacao",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md rodadas 2 a 5 (verificacao)"
+      ],
+      "created": "2026-11-02T16:05:23Z",
+      "last_seen": "2026-11-02T16:05:23Z"
     }
   ]
 }

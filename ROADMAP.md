@@ -1,6 +1,6 @@
 # One: roadmap
 
-- **Data:** 02/11/2026 (atualiza a versão de 01/11/2026)
+- **Data:** 02/11/2026, revisão da tarde (RAG antes da banca, OpenAI no lugar do DeepSeek)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -78,9 +78,9 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 ## Etapas até a banca
 
 ```text
- Etapa 0      Etapa 1–3                Etapa 4                       Banca     Etapa 5          Piloto
- Preparar  →  Código (feito 01–02/11) → Dados, IA real e ensaio   →  20/11  →  RAG          →   Univag
- 01–03/11                               03–19/11                               (plano + build)
+ Etapa 0      Etapa 1–3                 Etapa 4             Etapa 5                        Banca    Piloto
+ Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI  →   Dados, IA real e ensaio   →   20/11 →  Univag
+ 01–03/11                                03–09/11            09–19/11
                        ▲ 13/11 AVA: já atendido pelo código
 ```
 
@@ -90,8 +90,9 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 - [x] Escrever `checks.md` (skill `tlc-spec-lean`).
 - [x] `git init` em `D:\one-system`.
 - [ ] Criar o repositório remoto do grupo e enviar `main` (o `git push` espera o OK do grupo).
-- [ ] Criar a conta DeepSeek com crédito (pergunta 3). Sem ela, o assistente só diz "não
-      encontrei".
+- [x] Conta da OpenAI criada (substitui a conta DeepSeek, que não é mais necessária).
+- [ ] Colocar a chave da OpenAI no `.env` da raiz (`LLM_CHAVE_API=...`; o arquivo é ignorado pelo
+      git) e garantir crédito. Sem ela, o assistente só diz "não encontrei".
 - [ ] Pedir à coordenação da Univag os setores, os atendentes e o texto dos primeiros 10 a 30
       artigos (pergunta 6). **É o item de prazo mais longo.**
 
@@ -101,14 +102,38 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 - [x] Lote 2: transferência, atendimento e importação (S4, S5, S8), mais as rotas do S6.
 - [x] Lote 3: tela do S6, artigos (S7), prazos (S9) e indicadores (S11).
 - [x] Lote 4: e-mail e anexos (S10), extras do GLPI (S13) e as telas de administração.
-- [ ] Verificação independente aprovada; corrigir o que ela apontar, em até 3 rodadas.
+- [ ] Verificação independente aprovada. Rodadas 1 a 5 reprovaram só por testes faltando (o
+      código não mudou de comportamento); a correção da rodada 5 está pronta e espera a rodada 6.
 
-### Etapa 4: dados, IA real e ensaio (03–19/11)
+### Etapa 4: RAG com OpenAI (03–09/11), construído no `main`
 
-- [ ] **Medir com o DeepSeek de verdade** quantas respostas caem em "não encontrei" porque o
-      trecho não confere. Se passar de 1 em cada 3, ajustar o prompt (`api/Assistente/Assistente.cs`).
-      **É o maior risco técnico que sobrou, e os testes não medem isso:** eles usam um provedor
-      simulado.
+Decisões do grupo em 02/11/2026: o RAG entra **antes** da banca, direto no `main`, e a banca de
+20/11 roda com ele, sem uma versão anterior pronta para voltar (AD-014). Plano e checks aprovados
+em `.specs/features/rag/` (45 checks):
+- troca do DeepSeek pela OpenAI (`gpt-6-luna` no chat, `text-embedding-3-small` nos embeddings);
+- busca por significado com `pgvector` no próprio PostgreSQL (imagem `pgvector/pgvector:0.8.7-pg18`);
+- documentos da instituição em PDF como fonte, além dos artigos;
+- comando `instituicao avaliar-busca` para medir a busca com perguntas reais;
+- sem framework de agentes (MAF) nem `Microsoft.Extensions.AI`: as chamadas continuam pelo
+  `HttpClient` próprio (door R7 do plano).
+
+- [ ] Build dos 45 checks e verificação independente aprovada.
+- [ ] Chamada real com a chave para responder a pergunta aberta 1 do plano (o `gpt-6-luna` aceita
+      `temperature: 0`?).
+
+**Saída:** RAG no `main` com os checks verdes e a verificação aprovada.
+
+### Etapa 5: dados, IA real e ensaio (09–19/11)
+
+- [ ] **Ensaio obrigatório com a chave real da OpenAI**, porque a banca roda no RAG sem versão
+      anterior para voltar: chat da OpenAI, imagem `pgvector`, indexação de artigos e PDFs pelo
+      agendador, e o assistente respondendo de ponta a ponta no contêiner.
+- [ ] **Medir com a OpenAI de verdade** quantas respostas caem em "não encontrei" porque o trecho
+      não confere, e rodar o `avaliar-busca` com perguntas reais. Se passar de 1 em cada 3, ajustar
+      o prompt ou a base. **É o maior risco técnico que sobrou, e os testes não medem isso:** eles
+      usam um provedor simulado.
+- [ ] PDFs de exemplo ou reais da Univag (estatuto, regulamento de estágio, calendário) na tela
+      Documentos.
 - [ ] Arquivo de carga da `univag` (setores, cursos, categorias do Quadro 6 mais `Ouvidoria`,
       regras e artigos) e uma segunda instituição `demo`, para mostrar a separação.
 - [ ] CSV de alunos de teste para a demonstração, importado pela tela Matrículas.
@@ -124,16 +149,18 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
   6. a `demo` não vê nada da `univag`.
 - [ ] Ensaiar com a internet caída: o assistente precisa cair em "não encontrei" sem travar.
 
-**Saída (20/11):** demonstração ensaiada, hospedada, com a verificação aprovada.
+**Saída (20/11):** demonstração ensaiada com a chave real, hospedada, com as duas verificações
+(MVP e RAG) aprovadas.
 
-### Etapa 5: RAG, próxima etapa de construção (pré-requisito do piloto)
+### Histórico: como a Etapa 4 (RAG) foi decidida
 
 Decisão do grupo em 02/11/2026 (AD-014): o piloto na Univag só começa com o assistente usando
 RAG. Hoje o catálogo inteiro de artigos ativos vai no prompt (door 4), sem busca nem embeddings.
 Essa forma serve para 10 a 30 artigos e deixa de servir com a base real de uma instituição.
 
-Como toda feature, começa por `plan.md` e `checks.md` (skill `tlc-spec-lean`), aprovados antes de
-qualquer código. As decisões abaixo ficam para esse plano; nenhuma está tomada.
+As decisões abaixo eram as que estavam em aberto em 02/11 de manhã. O plano aprovado à tarde
+escolheu: artigos **e** documentos, busca por embeddings com `pgvector`, e a OpenAI gerando os
+embeddings (o DeepSeek não tem API de embeddings).
 
 | Decisão em aberto | Opções | Ponto de atenção |
 | --- | --- | --- |
@@ -166,7 +193,7 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 
 | Fase | Objetivo | Itens |
 | --- | --- | --- |
-| Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>começa só com a Etapa 5 (RAG) concluída;</li><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite do DeepSeek pela LGPD ou troca de provedor, SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
+| Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>roda no RAG (Etapa 4), já usado na banca;</li><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite da OpenAI pela LGPD, sem região de dados no Brasil, e SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
 | Escala | aguentar o volume de mais alunos | <ul><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
 | Qualidade da IA | aprender com o que falhou | <ul><li>relatório de perguntas sem base;</li><li>revisão das respostas da IA pelo administrador;</li><li>botão "reportar resposta errada";</li><li>atendente sugere artigo a partir da resolução</li></ul> |
 | Segunda instituição | provar o produto multi-instituição | <ul><li>tela do operador;</li><li>provedor de IA, prazos e marca por instituição;</li><li>subdomínio próprio</li></ul> |
@@ -178,8 +205,8 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | # | Pergunta | Quem resolve | Até | Se não resolver |
 | --- | --- | --- | --- | --- |
 | 1 | A Univag fornece o CSV dos alunos do piloto? | coordenação / TI Univag | piloto | só alunos de teste |
-| 2 | A Univag aceita o DeepSeek, com dados na China (LGPD art. 33)? | Univag (jurídico) | piloto | trocar `Llm:BaseUrl` e `Llm:Modelo` por um provedor aceito |
-| 3 | Quem cria a conta DeepSeek e coloca crédito? | grupo | **03/11** | o assistente só diz "não encontrei", e a medição da Etapa 4 não acontece |
+| 2 | A Univag aceita a OpenAI processando conversas mascaradas e documentos, sem região de dados no Brasil (LGPD art. 33)? | Univag (jurídico) | piloto | o assistente roda só em teste |
+| 3 | ~~Quem cria a conta de IA?~~ Resolvida: conta da OpenAI criada. Falta a chave no `.env` com crédito | grupo | **03/11** | o assistente só diz "não encontrei", e o ensaio da Etapa 5 não acontece |
 | 4 | Qual conta SMTP envia os e-mails? | grupo | 16/11 | Mailpit local e senha temporária dada pelo admin |
 | 5 | Onde hospedar a banca, e com qual domínio? | grupo | **16/11** | `docker compose` num notebook |
 | 6 | A coordenação fornece setores, atendentes e textos dos artigos? | coordenação Univag | **06/11** | carga de exemplo escrita pelo grupo |
@@ -190,10 +217,11 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Risco | Mitigação |
 | --- | --- |
 | A IA inventa uma regra (caso Air Canada) | o servidor confere trechos e links; se algo falha, mostra "não encontrei"; tudo fica gravado (door 19, AD-012) |
-| O DeepSeek não copia os trechos literalmente e quase tudo vira "não encontrei" | **ainda não medido**: depende da pergunta 3. Medir na Etapa 4, ajustar o prompt e, se não resolver, testar outro modelo trocando só a configuração |
+| O modelo não copia os trechos literalmente e quase tudo vira "não encontrei" | **ainda não medido**. Medir com a OpenAI na Etapa 5, ajustar o prompt e a base |
+| A banca roda no RAG sem versão anterior para voltar | ensaio obrigatório com a chave real na Etapa 5; se a IA ou a busca caírem, o aluno ainda vê "não encontrei" e fala com um atendente |
 | A base interna vaza para o aluno | AC 40 com teste na API do aluno; fontes só para atendente e administrador |
 | Dados de uma instituição aparecem em outra | filtro global (door 16) e teste com duas instituições nas 27 rotas com id |
-| O código ficou pronto, mas sem dados reais nem IA real | a Etapa 4 inteira é sobre isso; a carga de exemplo é o plano B |
+| O código ficou pronto, mas sem dados reais nem IA real | a Etapa 5 inteira é sobre isso; a carga de exemplo é o plano B |
 | O repositório existe só numa máquina | criar o remoto do grupo e enviar `main` |
 | Não ter artigos reais da Univag a tempo | pedir em 03/11; plano B: o grupo escreve 10 artigos a partir do Quadro 6 |
 | Internet ou API de IA fora do ar na banca | "não encontrei" com transferência continua funcionando; ensaiar sem rede |

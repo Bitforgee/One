@@ -128,6 +128,21 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(3, erro.GetProperty("linha").GetInt32());
             Assert.Contains(motivo, erro.GetProperty("motivo").GetString());
         }
+        // duas linhas do mesmo arquivo que conflitam entre si: a segunda é recusada
+        var conflitos = new (string linhas, string motivo)[]
+        {
+            ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000005;ADS;3;ATIVA\n{Semente.NovoCpf()};Caio;caio@aluno.com;2000000005;ADS;3;ATIVA", "matrícula já ligada a outro CPF"),
+            ($"{Semente.NovoCpf()};Bia;mesmo@aluno.com;2000000006;ADS;3;ATIVA\n{Semente.NovoCpf()};Caio;mesmo@aluno.com;2000000007;ADS;3;ATIVA", "e-mail já usado por outro CPF"),
+        };
+        foreach (var (linhas, motivo) in conflitos)
+        {
+            var r = await admin.Importar($"{Cabecalho}\n{linhas}\n");
+            Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+            var erro = Assert.Single((await r.Json()).GetProperty("erros").EnumerateArray());
+            Assert.Equal(3, erro.GetProperty("linha").GetInt32());
+            Assert.Contains(motivo, erro.GetProperty("motivo").GetString());
+        }
+
         // cabeçalho errado ou arquivo vazio: erro na linha 1
         foreach (var arquivo in new[] { $"cpf;nome;email\n{valida}\n", "" })
         {
@@ -140,6 +155,11 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
         Assert.Equal(["2000000099"], await f.Db(i.Id, db => db.Matriculas.Select(m => m.Numero).ToListAsync()));
         Assert.Equal(dono.Id, await f.Db(i.Id, db => db.Matriculas.Select(m => m.UsuarioId).SingleAsync()));
+
+        // no limite: nome com 200 e matrícula com 20 caracteres entram
+        var limite = await admin.Importar($"{Cabecalho}\n{Semente.NovoCpf()};{new string('n', 200)};limite@aluno.com;{new string('2', 20)};ADS;3;ATIVA\n");
+        Assert.Equal(HttpStatusCode.OK, limite.StatusCode);
+        Assert.Equal(1, (await limite.Json()).GetProperty("criados").GetInt32());
     }
 
     [Fact]

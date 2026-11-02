@@ -15,6 +15,13 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         return (codigo, saida.ToString(), erro.ToString());
     }
 
+    static string[] Trocar(string[] args, string flag, string valor)
+    {
+        var copia = (string[])args.Clone();
+        copia[Array.IndexOf(copia, flag) + 1] = valor;
+        return copia;
+    }
+
     static string[] Criar(string slug, string fuso = "America/Cuiaba", string? cpf = null, string email = "admin@univag.edu.br") =>
         ["criar", "--slug", slug, "--nome", "Univag", "--fuso", fuso, "--admin-cpf", cpf ?? Semente.NovoCpf(), "--admin-nome", "Coordenadora", "--admin-email", email];
 
@@ -71,6 +78,8 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         { "fuso não IANA", "--fuso" },
         { "CPF com dígito errado", "--admin-cpf" },
         { "e-mail sem @", "--admin-email" },
+        { "nome vazio", "--nome" },
+        { "nome do administrador vazio", "--admin-nome" },
     };
 
     [Theory]
@@ -87,6 +96,8 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             "slug já existente" => Criar(existente),
             "fuso não IANA" => Criar(Semente.NovoSlug(), fuso: "Cuiaba"),
             "CPF com dígito errado" => Criar(Semente.NovoSlug(), cpf: cpfErrado),
+            "nome vazio" => Trocar(Criar(Semente.NovoSlug()), "--nome", ""),
+            "nome do administrador vazio" => Trocar(Criar(Semente.NovoSlug()), "--admin-nome", ""),
             _ => Criar(Semente.NovoSlug(), email: "admin.univag.edu.br"),
         };
         var antes = await Contagens();
@@ -178,6 +189,7 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             (Artigo(artigo.Replace("\"links\":[]", "\"links\":[\"www.x.com\"]")), "artigos[0].links[0]"),
             (Artigo(artigo.Replace("Não classificado", "Nenhuma")), "artigos[0].categoria"),
             ("{ não é json", "--arquivo"),
+            ("null", "--arquivo: vazio"),
         };
         var antes = await Contagens();
 
@@ -190,9 +202,35 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.StartsWith(caminho, Assert.Single(erro.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
             Assert.Equal("", saida);
         }
-        Assert.Equal(1, (await Rodar("carga", "--slug", "nao-existe", "--arquivo", Arquivo(Carga()))).codigo);
-        Assert.Equal(1, (await Rodar("carga", "--slug", slug, "--arquivo", Path.Combine(Path.GetTempPath(), "nao-existe.json"))).codigo);
+        var semInstituicao = await Rodar("carga", "--slug", "nao-existe", "--arquivo", Arquivo(Carga()));
+        Assert.Equal(1, semInstituicao.codigo);
+        Assert.StartsWith("--slug: instituição \"nao-existe\" não existe", semInstituicao.erro);
+        var semArquivo = await Rodar("carga", "--slug", slug, "--arquivo", Path.Combine(Path.GetTempPath(), "nao-existe.json"));
+        Assert.Equal(1, semArquivo.codigo);
+        Assert.StartsWith("--arquivo: arquivo", semArquivo.erro);
+        Assert.Contains("não encontrado", semArquivo.erro);
         Assert.Equal(antes, await Contagens());
+
+        // a categoria já tem regra gravada no banco por uma carga anterior
+        var categoria = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
+        File.WriteAllText(categoria, "{\"categorias\":[{\"nome\":\"Boleto\"}],\"regras\":[{\"categoria\":\"Boleto\",\"coordenacaoDoCurso\":true}]}");
+        Assert.Equal(0, (await Rodar("carga", "--slug", slug, "--arquivo", categoria)).codigo);
+        var depois = await Contagens();
+        var regraDeNovo = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
+        File.WriteAllText(regraDeNovo, "{\"regras\":[{\"categoria\":\"Boleto\",\"coordenacaoDoCurso\":true}]}");
+        var repetida = await Rodar("carga", "--slug", slug, "--arquivo", regraDeNovo);
+        Assert.Equal(1, repetida.codigo);
+        Assert.StartsWith("regras[0].categoria", repetida.erro);
+        Assert.Contains("já tem regra", repetida.erro);
+        Assert.Equal(depois, await Contagens());
+
+        // subcomando desconhecido ou ausente: uso e código 1
+        foreach (var args in new[] { new[] { "apagar" }, Array.Empty<string>() })
+        {
+            var (codigo, _, erro) = await Rodar(args);
+            Assert.Equal(1, codigo);
+            Assert.StartsWith("uso: instituicao criar", erro);
+        }
     }
 
     [Fact]

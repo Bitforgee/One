@@ -38,6 +38,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md rodada 4, AdminRotas.cs:272-295 (api)
 - last seen: 2026-11-02T15:55:35Z
 
+### L-005 - Faça a primeira varredura de recusas sobre todo o código de entrada (rotas, importações e comandos) de uma vez; ampliar o escopo a cada rodada gera uma rodada nova por canal.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `verificacao` · harmful: 0
+- features: mvp-one
+- evidence: verification.md rodadas 2 a 5 (verificacao)
+- last seen: 2026-11-02T16:05:23Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
