@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql;
@@ -344,5 +345,141 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var comoErro = projeto.Descendants("WarningsAsErrors").SelectMany(e => e.Value.Split(';')).Select(x => x.Trim()).ToList();
         Assert.Contains("CA1502", comoErro);
         Assert.Contains("MSG0005", comoErro);
+    }
+
+    static bool Concreto(Type t) => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false };
+
+    static Type? Fechado(Type t, Type aberto) =>
+        t.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == aberto);
+
+    // vertical-slice-completa: as mensagens do mediator (Mediator.IRequest<T>, direto ou por IAcaoChamado) e o T de cada uma
+    public static List<(Type mensagem, Type resposta)> Mensagens() =>
+        typeof(Program).Assembly.GetTypes().Where(Concreto)
+            .Select(t => (t, Fechado(t, typeof(Mediator.IRequest<>))))
+            .Where(x => x.Item2 is not null)
+            .Select(x => (x.t, x.Item2!.GetGenericArguments()[0])).ToList();
+
+    static string ArquivoDo(Type t) => Path.Combine(Api, t.Namespace!["One.Api.".Length..], t.Name + ".cs");
+
+    // C11: door 3, um arquivo por caso de uso, com a mensagem e o Mapear, numa das 7 fatias
+    [Fact]
+    public void Um_arquivo_por_caso_de_uso()
+    {
+        var mensagens = Mensagens().Select(m => m.mensagem).ToList();
+        Assert.Equal(58, mensagens.Count);
+        var porFatia = new Dictionary<string, int> { ["Acesso"] = 6, ["Assistente"] = 7, ["Chamados"] = 13, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 20, ["Instituicoes"] = 0 };
+        foreach (var (fatia, n) in porFatia)
+            Assert.True(mensagens.Count(t => t.Namespace == $"One.Api.{fatia}") == n, $"{fatia}: {mensagens.Count(t => t.Namespace == $"One.Api.{fatia}")}, esperado {n}");
+        var declaraMensagem = new Regex(@"\b(class|record|struct)\s+\w+[^{;]*?:\s*[^{;]*?(\bIRequest<|\bIAcaoChamado\b)");
+        foreach (var t in mensagens)
+        {
+            Assert.DoesNotContain(t.Name, Fatias);
+            var arquivo = ArquivoDo(t);
+            Assert.True(File.Exists(arquivo), $"{t.Name}: sem {Relativo(arquivo)}");
+            var codigo = SemComentarios(arquivo);
+            Assert.True(declaraMensagem.Matches(codigo).Count == 1, $"{Relativo(arquivo)}: {declaraMensagem.Matches(codigo).Count} mensagens declaradas");
+            Assert.Contains($" {t.Name}", declaraMensagem.Match(codigo).Value);
+            Assert.Contains("public static void Mapear(RouteGroupBuilder", codigo);
+        }
+    }
+
+    // C12: door 3, um handler por mensagem, no mesmo arquivo
+    [Fact]
+    public void Um_handler_por_mensagem_no_mesmo_arquivo()
+    {
+        var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto)
+            .Select(t => (handler: t, contrato: Fechado(t, typeof(Mediator.IRequestHandler<,>)))).Where(x => x.contrato is not null).ToList();
+        var mensagens = Mensagens().Select(m => m.mensagem).ToList();
+        Assert.Equal(58, handlers.Count);
+        Assert.Equal(mensagens.Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))),
+            handlers.Select(h => h.contrato!.GetGenericArguments()[0]).Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))));
+        foreach (var (handler, contrato) in handlers)
+        {
+            var mensagem = contrato!.GetGenericArguments()[0];
+            Assert.Equal(mensagem.Name + "Handler", handler.Name);
+            Assert.Matches($@"\bclass\s+{handler.Name}\b", SemComentarios(ArquivoDo(mensagem)));
+        }
+    }
+
+    // C13: um Map* por caso de uso; fora deles só o logout e os 2 fallbacks do Program
+    [Fact]
+    public void Map_so_nos_casos_de_uso()
+    {
+        var map = new Regex(@"\.(MapGet|MapPost|MapPut|MapDelete|MapPatch|MapMethods|MapFallback\w*)\(");
+        var porArquivo = CodigoApi().Select(p => (arquivo: Relativo(p), maps: map.Matches(SemComentarios(p)).Select(m => m.Value).ToList()))
+            .Where(x => x.maps.Count > 0).ToDictionary(x => x.arquivo, x => x.maps);
+        var casos = Mensagens().Select(m => Relativo(ArquivoDo(m.mensagem))).ToHashSet();
+
+        Assert.Equal(61, porArquivo.Values.Sum(m => m.Count));
+        foreach (var caso in casos)
+            Assert.True(porArquivo.GetValueOrDefault(caso)?.Count == 1, $"{caso}: {porArquivo.GetValueOrDefault(caso)?.Count ?? 0} Map*");
+        Assert.Equal([".MapFallback(", ".MapFallbackToFile("], porArquivo["Program.cs"].Order());
+        var resto = Assert.Single(porArquivo.Keys.Except(casos).Except(["Program.cs"]));
+        Assert.Single(porArquivo[resto]);
+        Assert.Matches(new Regex(@"\.MapPost\(""/auth/logout"""), SemComentarios(Path.Combine(Api, resto)));
+    }
+
+    // C14: o que fica fora do mediator não o referencia
+    [Fact]
+    public void Fora_do_mediator()
+    {
+        var logout = Assert.Single(CodigoApi(), p => File.ReadAllText(p).Contains("\"/auth/logout\""));
+        foreach (var arquivo in new[] { Path.Combine(Api, "Agendador.cs"), Path.Combine(Api, "Sessao.cs"), Path.Combine(Api, "Instituicoes", "InstituicaoComando.cs"), logout })
+        {
+            var codigo = File.ReadAllText(arquivo);
+            foreach (var proibido in new[] { "IMediator", "ISender", "using Mediator" })
+                Assert.False(codigo.Contains(proibido), $"{Relativo(arquivo)} contém {proibido}");
+        }
+    }
+
+    // C19: door 6, mensagem e handler não dependem do HttpContext
+    [Fact]
+    public void Handler_sem_HttpContext()
+    {
+        var proibidos = new[] { typeof(HttpContext), typeof(HttpRequest), typeof(IHttpContextAccessor) };
+        foreach (var (mensagem, _) in Mensagens())
+            Assert.All(mensagem.GetProperties(), p => Assert.DoesNotContain(p.PropertyType, proibidos));
+        var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => Fechado(t, typeof(Mediator.IRequestHandler<,>)) is not null).ToList();
+        Assert.Equal(58, handlers.Count);
+        foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
+            foreach (var c in t.GetConstructors())
+                Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
+        var montar = Assert.Single(typeof(One.Api.Chamados.DetalheChamado).GetMethods(), m => m.Name == "Montar");
+        Assert.DoesNotContain(typeof(HttpContext), montar.GetParameters().Select(p => p.ParameterType));
+        Assert.Empty(ArquivosQue(new Regex("IHttpContextAccessor")));
+    }
+
+    // C23: door 5, a permissão das ações é decidida só no AgirNoChamado
+    [Fact]
+    public void Permissao_so_no_AgirNoChamado()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var chamaEstados = CodigoApi().Where(p => !p.EndsWith($"{sep}Chamados{sep}PermissoesChamado.cs"))
+            .Where(p =>
+            {
+                var codigo = SemComentarios(p);
+                return Regex.IsMatch(codigo, @"PermissoesChamado\.Estados\(")
+                    || (Regex.IsMatch(codigo, @"using\s+static\s+One\.Api\.Chamados\.PermissoesChamado\s*;") && Regex.IsMatch(codigo, @"(?<![\w.])Estados\("));
+            }).ToList();
+        var arquivo = Assert.Single(chamaEstados);
+        Assert.Contains("class AgirNoChamado<", SemComentarios(arquivo));
+    }
+
+    // C24: as 9 ações do chamado e os 10 nomes de ação de PermissoesChamado
+    [Fact]
+    public void Nove_acoes_do_chamado()
+    {
+        var acoes = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => typeof(One.Api.Chamados.IAcaoChamado).IsAssignableFrom(t)).ToList();
+        Assert.Equal(9, acoes.Count);
+        Assert.All(acoes, t => Assert.True(File.Exists(Path.Combine(Api, "Chamados", t.Name + ".cs")) && t.Namespace == "One.Api.Chamados", t.Name));
+
+        // cada ação construída com valores neutros; o formulário de /mensagens uma vez com tipo PUBLICA e uma com NOTA
+        object Construir(Type t, string tipo) =>
+            Assert.Single(t.GetConstructors()).Invoke([.. Assert.Single(t.GetConstructors()).GetParameters().Select(p =>
+                p.ParameterType == typeof(IFormCollection) ? new FormCollection(new() { ["tipo"] = tipo })
+                : p.ParameterType == typeof(string) ? "2026-000001"
+                : p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null)]);
+        var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
+        Assert.Equal(["assumir", "cancelar", "confirmar", "duplicado", "encaminhar", "nota", "reclassificar", "rejeitar", "resolver", "responder"], nomes.Order());
     }
 }
