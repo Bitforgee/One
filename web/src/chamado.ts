@@ -24,6 +24,8 @@ export type Chamado = {
   mensagens: MensagemChamado[]
   eventos: Evento[] | null
   acoes: string[]
+  setores?: { id: number; nome: string }[] | null
+  categorias?: { id: number; nome: string }[] | null
 }
 
 export const Estados: Record<string, string> = {

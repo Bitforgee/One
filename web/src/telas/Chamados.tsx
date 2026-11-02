@@ -91,6 +91,9 @@ export function ChamadoDetalhe() {
   const [resolucao, setResolucao] = useState('')
   const [motivo, setMotivo] = useState('')
   const [cancelar, setCancelar] = useState(false)
+  const [encaminhar, setEncaminhar] = useState(false)
+  const [setorId, setSetorId] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
   const fuso = me.instituicao.fuso
 
   if (erro && !chamado) return <Alert variant="danger">{erro}</Alert>
@@ -227,6 +230,11 @@ export function ChamadoDetalhe() {
             Confirmar resolução
           </BotaoAcao>
         )}
+        {pode('encaminhar') && (
+          <Button variant="outline-secondary" onClick={() => setEncaminhar(true)} disabled={acao.pendente}>
+            Encaminhar
+          </Button>
+        )}
         {pode('cancelar') && (
           <Button variant="outline-danger" onClick={() => setCancelar(true)} disabled={acao.pendente}>
             Cancelar solicitação
@@ -249,6 +257,33 @@ export function ChamadoDetalhe() {
           <BotaoAcao type="submit" pendente={acao.pendente} variant="success" className="mt-2" disabled={!resolucao.trim()}>
             Resolver
           </BotaoAcao>
+        </Form>
+      )}
+
+      {pode('reclassificar') && (
+        <Form
+          className="mb-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))
+          }}
+        >
+          <Form.Group controlId="categoria">
+            <Form.Label>Reclassificar</Form.Label>
+            <Stack direction="horizontal" gap={2}>
+              <Form.Select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+                <option value="">Escolha a categoria</option>
+                {c.categorias?.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.nome}
+                  </option>
+                ))}
+              </Form.Select>
+              <BotaoAcao type="submit" pendente={acao.pendente} variant="outline-secondary" disabled={!categoriaId}>
+                Salvar
+              </BotaoAcao>
+            </Stack>
+          </Form.Group>
         </Form>
       )}
 
@@ -285,6 +320,47 @@ export function ChamadoDetalhe() {
           </ListGroup>
         </>
       )}
+
+      <Modal show={encaminhar} onHide={() => setEncaminhar(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Encaminhar para outro setor?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="small">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>
+          <Form.Group controlId="setor" className="mb-2">
+            <Form.Label>Setor</Form.Label>
+            <Form.Select value={setorId} onChange={(e) => setSetorId(e.target.value)}>
+              <option value="">Escolha o setor</option>
+              {c.setores?.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.nome}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="motivo-encaminhar">
+            <Form.Label>Motivo</Form.Label>
+            <Form.Control as="textarea" rows={2} maxLength={4000} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setEncaminhar(false)}>
+            Voltar
+          </Button>
+          <Button
+            disabled={!setorId || !motivo.trim()}
+            onClick={() => {
+              setEncaminhar(false)
+              executar('encaminhar', { setorId: Number(setorId), motivo }, () => {
+                setMotivo('')
+                setSetorId('')
+              })
+            }}
+          >
+            Encaminhar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={cancelar} onHide={() => setCancelar(false)} centered>
         <Modal.Header closeButton>

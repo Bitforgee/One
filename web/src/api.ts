@@ -8,10 +8,10 @@ export class ErroApi extends Error {
 
 // Toda chamada à API passa por aqui: erro vira ErroApi com o `detail` do ProblemDetails.
 // FormData vai como multipart (mensagens de chamado); o resto, como JSON.
-export async function api<T = unknown>(caminho: string, corpo?: unknown): Promise<T> {
+export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?: 'PUT'): Promise<T> {
   const formulario = corpo instanceof FormData
   const r = await fetch(caminho, {
-    method: corpo === undefined ? 'GET' : 'POST',
+    method: metodo ?? (corpo === undefined ? 'GET' : 'POST'),
     credentials: 'same-origin',
     headers: corpo === undefined || formulario ? undefined : { 'Content-Type': 'application/json' },
     body: corpo === undefined ? undefined : formulario ? corpo : JSON.stringify(corpo),

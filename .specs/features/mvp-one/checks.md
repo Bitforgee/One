@@ -56,10 +56,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Cpf
 **C11** - [x] A SPA mostra o instante `2026-11-02T02:30:00Z` como `01/11/2026 22:30` numa instituição com fuso `America/Cuiaba` (AC 9)
 Proof: `npm --prefix web run test -- -t "formata data no fuso da instituição"`
 
-**C12** - Um chamado criado em `2026-11-02T02:30:00Z` conta no dia 01/11/2026 dos indicadores da `univag` (`America/Cuiaba`) (AC 9)
+**C12** - [x] Um chamado criado em `2026-11-02T02:30:00Z` conta no dia 01/11/2026 dos indicadores da `univag` (`America/Cuiaba`) (AC 9)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Dia_do_periodo_no_fuso"`
 
-**C13** - Numa execução do agendador com e-mails pendentes da `univag` e da `demo`, cada e-mail sai com o nome da sua instituição no assunto e no nome do remetente (AC 10)
+**C13** - [x] Numa execução do agendador com e-mails pendentes da `univag` e da `demo`, cada e-mail sai com o nome da sua instituição no assunto e no nome do remetente (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Item_usa_fuso_nome_e_remetente_da_sua_instituicao"`
 
 **C14** - [x] Depois de a instituição ser marcada inativa, a requisição seguinte com um cookie dela responde 401 (AC 11)
@@ -155,7 +155,7 @@ Proof: `npm --prefix web run test -- -t "tela inicial por papel"`
 **C43** - [x] Depois de o administrador desativar uma conta com sessão aberta, a requisição seguinte dessa sessão responde 401 (AC 26)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Conta_desativada_401_na_proxima_requisicao"`
 
-**C44** - Nenhuma resposta fora de `/api/admin/*` traz um CPF de 11 dígitos; `me` traz `***.456.789-**` (AC 27)
+**C44** - [x] Nenhuma resposta fora de `/api/admin/*` traz um CPF de 11 dígitos; `me` traz `***.456.789-**` (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CpfTests.Respostas_fora_do_admin_mascaram_cpf"`
 
 ### S3 - O assistente conversa e resolve com a base interna (P1) · ~14 files · ~80 KB · ~20k
@@ -427,37 +427,37 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EncaminharTests.Categ
 
 ### S7 - Base de conhecimento (P2) · ~6 files · ~35 KB · ~9k
 
-**C128** - `POST /api/admin/artigos` com título, uma pergunta, categoria e resposta responde 201 com o artigo `RASCUNHO` na versão 1 (AC 98)
+**C128** - [x] `POST /api/admin/artigos` com título, uma pergunta, categoria e resposta responde 201 com o artigo `RASCUNHO` na versão 1 (AC 98)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Criar_rascunho_versao_1"`
 
-**C129** - Faltando título, perguntas, categoria ou resposta, `POST /api/admin/artigos` responde 400 (AC 99)
+**C129** - [x] Faltando título, perguntas, categoria ou resposta, `POST /api/admin/artigos` responde 400 (AC 99)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Campo_obrigatorio_faltando_400"`
 
-**C130** - Um link `ftp://x` ou `www.x.com` responde 400 (AC 100)
+**C130** - [x] Um link `ftp://x` ou `www.x.com` responde 400 (AC 100)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Link_sem_http_400"`
 
-**C131** - `PUT /api/admin/artigos/{id}` responde 200 com a versão 2, e a versão 1 continua legível (AC 101)
+**C131** - [x] `PUT /api/admin/artigos/{id}` responde 200 com a versão 2, e a versão 1 continua legível (AC 101)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Editar_cria_versao_seguinte"`
 
-**C132** - Gravar duas versões com o mesmo número para o mesmo artigo viola a restrição única no banco (Relations)
+**C132** - [x] Gravar duas versões com o mesmo número para o mesmo artigo viola a restrição única no banco (Relations)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Numero_de_versao_unico"`
 
-**C133** - Depois de `POST /api/admin/artigos/{id}/ativar` (200), a próxima chamada ao provedor daquela instituição traz o artigo (AC 102)
+**C133** - [x] Depois de `POST /api/admin/artigos/{id}/ativar` (200), a próxima chamada ao provedor daquela instituição traz o artigo (AC 102)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Ativar_entra_na_proxima_mensagem"`
 
-**C134** - Depois de arquivar, a próxima chamada ao provedor não traz o artigo e as conversas que o citaram continuam com o texto exibido (AC 103)
+**C134** - [x] Depois de arquivar, a próxima chamada ao provedor não traz o artigo e as conversas que o citaram continuam com o texto exibido (AC 103)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Arquivar_sai_da_base_e_mantem_conversas"`
 
-**C135** - Ativar um artigo `ATIVO` e arquivar um artigo `ARQUIVADO` respondem 409 (Surface)
+**C135** - [x] Ativar um artigo `ATIVO` e arquivar um artigo `ARQUIVADO` respondem 409 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Ativar_ativo_ou_arquivar_arquivado_409"`
 
-**C136** - `PUT`, `ativar` e `arquivar` com id inexistente respondem 404 (Surface)
+**C136** - [x] `PUT`, `ativar` e `arquivar` com id inexistente respondem 404 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Artigo_inexistente_404"`
 
-**C137** - Aluno e atendente sem o papel administrador recebem 403 nas 25 rotas `/api/admin/*` (AC 104)
+**C137** - [x] Aluno e atendente sem o papel administrador recebem 403 nas 25 rotas `/api/admin/*` (AC 104)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AdminTests.Sem_papel_admin_403"`
 
-**C138** - `GET /api/admin/artigos` responde 200 com cada artigo, o estado e a versão atual (Surface)
+**C138** - [x] `GET /api/admin/artigos` responde 200 com cada artigo, o estado e a versão atual (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArtigoAdminTests.Listar_200"`
 
 ### S8 - Alunos e administração (P1 importação, P2 resto) · ~10 files · ~60 KB · ~15k
@@ -515,16 +515,16 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Nome_re
 
 ### S9 - Prazos automáticos (P2) · ~3 files · ~15 KB · ~4k
 
-**C156** - Com o relógio injetado, uma conversa sem desfecho com a última mensagem há 30 minutos fica `ABANDONADA` na execução seguinte, e uma de 29 minutos continua aberta (AC 118)
+**C156** - [x] Com o relógio injetado, uma conversa sem desfecho com a última mensagem há 30 minutos fica `ABANDONADA` na execução seguinte, e uma de 29 minutos continua aberta (AC 118)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Conversa_parada_30_min_abandona"`
 
-**C157** - Um chamado `RESOLVIDO` há 7 dias sem confirmação nem rejeição fica `FECHADO` com motivo `FECHADO_AUTOMATICAMENTE` e evento de ator vazio (AC 119)
+**C157** - [x] Um chamado `RESOLVIDO` há 7 dias sem confirmação nem rejeição fica `FECHADO` com motivo `FECHADO_AUTOMATICAMENTE` e evento de ator vazio (AC 119)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Resolvido_7_dias_fecha_automaticamente"`
 
-**C158** - Uma conversa que recebe mensagem e um chamado rejeitado depois da leitura do agendador e antes da gravação ficam como o aluno deixou (AC 120)
+**C158** - [x] Uma conversa que recebe mensagem e um chamado rejeitado depois da leitura do agendador e antes da gravação ficam como o aluno deixou (AC 120)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Acao_do_aluno_antes_preserva_item"`
 
-**C159** - Quando um item lança exceção, o agendador grava o erro no log com a instituição e processa os outros itens da mesma execução (AC 121)
+**C159** - [x] Quando um item lança exceção, o agendador grava o erro no log com a instituição e processa os outros itens da mesma execução (AC 121)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Falha_num_item_segue_os_outros"`
 
 ### S10 - E-mail e anexos (P3) · ~7 files · ~40 KB · ~10k
@@ -564,32 +564,32 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Sem_acesso
 
 ### S11 - Indicadores (P2) · ~5 files · ~40 KB · ~10k
 
-**C171** - Sobre uma carga de desfechos conhecidos, `GET /api/indicadores` responde 200 e cada um dos 14 indicadores do Quadro 12 bate com o valor calculado à mão (AC 130)
+**C171** - [x] Sobre uma carga de desfechos conhecidos, `GET /api/indicadores` responde 200 e cada um dos 14 indicadores do Quadro 12 bate com o valor calculado à mão (AC 130)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Quatorze_indicadores_batem_com_a_conta"`
 
-**C172** - Uma conversa `ABANDONADA` não entra na contagem de autoatendimento (AC 131)
+**C172** - [x] Uma conversa `ABANDONADA` não entra na contagem de autoatendimento (AC 131)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Abandonada_nao_e_autoatendimento"`
 
-**C173** - Uma conversa com um `sem_base` seguido de uma `resposta` conta 1 vez como pergunta sem artigo (AC 132)
+**C173** - [x] Uma conversa com um `sem_base` seguido de uma `resposta` conta 1 vez como pergunta sem artigo (AC 132)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Sem_base_conta_pergunta_sem_artigo"`
 
-**C174** - Um chamado de 10 horas entre criação e resolução, com 4 horas em `AGUARDANDO_ALUNO`, tem tempo de resolução de 6 horas (AC 133)
+**C174** - [x] Um chamado de 10 horas entre criação e resolução, com 4 horas em `AGUARDANDO_ALUNO`, tem tempo de resolução de 6 horas (AC 133)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Desconta_aguardando_aluno"`
 
-**C175** - Para atendente, os indicadores contam só chamados que estão ou estiveram nos setores dele, e um `setorId` alheio responde 403 (AC 134)
+**C175** - [x] Para atendente, os indicadores contam só chamados que estão ou estiveram nos setores dele, e um `setorId` alheio responde 403 (AC 134)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Atendente_ve_so_seus_setores"`
 
-**C176** - Aluno pedindo indicadores recebe 403 (AC 135)
+**C176** - [x] Aluno pedindo indicadores recebe 403 (AC 135)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Aluno_403"`
 
-**C177** - Um período sem conversas nem chamados devolve contagens 0, taxas `null` e `semDados` verdadeiro, e a SPA mostra "Sem dados no período" (AC 136)
+**C177** - [x] Um período sem conversas nem chamados devolve contagens 0, taxas `null` e `semDados` verdadeiro, e a SPA mostra "Sem dados no período" (AC 136)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Periodo_vazio_sem_dados"`
 Proof: `npm --prefix web run test -- -t "Sem dados no período"`
 
-**C178** - `de` posterior a `ate` responde 400 (AC 137)
+**C178** - [x] `de` posterior a `ate` responde 400 (AC 137)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.De_depois_de_ate_400"`
 
-**C179** - A resposta de indicadores não contém nome, CPF, matrícula nem texto de mensagem presentes na carga (AC 138)
+**C179** - [x] A resposta de indicadores não contém nome, CPF, matrícula nem texto de mensagem presentes na carga (AC 138)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Sem_dado_pessoal"`
 
 ### S12 - Plataforma e interface (P1) · ~10 files · ~40 KB · ~10k
@@ -597,7 +597,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Sem_
 **C180** - [x] No app rodando pelo `docker compose`, o manifesto tem `name` "One" e ícones de 192 e 512 px, o service worker registra, e depois de uma chamada a `/api/auth/me` o cache do service worker não tem nenhuma entrada `/api/` (AC 139)
 Proof: `npm --prefix web run e2e -- -g "manifesto e service worker"`
 
-**C181** - A 360 px de largura, as telas Login, Assistente, Minhas solicitações, Fila, Detalhe do chamado, Artigos e Indicadores têm `scrollWidth` menor ou igual a 360 (AC 140)
+**C181** - [x] A 360 px de largura, as telas Login, Assistente, Minhas solicitações, Fila, Detalhe do chamado, Artigos e Indicadores têm `scrollWidth` menor ou igual a 360 (AC 140)
 Proof: `npm --prefix web run e2e -- -g "sem rolagem horizontal a 360 px"`
 
 **C182** - [x] `web/package.json` fixa `bootstrap` 5.3.8, `react-bootstrap` 2.10.10, `bootstrap-icons` 1.13.2, `react-router` 8 e `vite-plugin-pwa` 2.0.0 (door 9)
@@ -786,4 +786,14 @@ estimado em 30k.
   - índices únicos novos (migração `Lote2`): nome de setor, categoria e curso por instituição; título de resposta pronta por setor
   - POST sem corpo numa rota com corpo JSON cai no fallback 404 de `/api` (política de `Accepts` do roteamento); a SPA sempre envia `{}`
 - Não construído no lote 2: telas de administração (usuários, importação de matrículas e cadastros só pela API) e os botões de encaminhar e reclassificar no detalhe do chamado
+- Lote 3 (S6 na tela, S7, S9, S11) fechado em verde: 28 checks marcados (170 no total), com `dotnet test api.Tests` 171 verdes, `npm --prefix web run test` 28 verdes e o e2e "sem rolagem horizontal a 360 px" 7 verdes contra `vite preview`. Fechados também do lote 1: C12, C13, C44, C181. Continuam abertos: C7 (faltam anexo e duplicado), C8 (`numeroOriginal`), C36 (hoje 46 rotas privadas; as 49 fecham com `GET /api/anexos/{id}`, `GET /api/respostas-prontas` e `POST duplicado`), C120 (evento `ANEXO`), C183, C184 e os 25 checks do lote 4 (S10, S13)
+- Decidido no meio do lote 3, sem o usuário:
+  - indicadores com escopo de setor (atendente, ou administrador com `setorId`) devolvem `null` nos indicadores de conversa (alunos ativos, conversas, as 4 taxas de conversa, ranking por conversas e indicador principal), porque conversa não pertence a setor
+  - período por data de criação para conversas e chamados, como diz a seção I; "chamados resolvidos" e as taxas de roteamento e reabertura usam os chamados com transição para `RESOLVIDO` dentro do período; "chamados abertos" é o retrato do momento da consulta; tempos em horas, médias; taxas de 0 a 1 com 4 casas
+  - "estiveram nos setores dele" é lido pelo nome do setor de origem nos eventos `ENCAMINHAMENTO` (o evento guarda nomes); renomear um setor apaga esse histórico para o atendente
+  - o agendador separa `Ler()` de `Processar()` e cada gravação reconfere a condição (`UPDATE ... WHERE`), o que prova o AC 120 sem gancho de teste; o laço fica desligado nos testes (`Agendador:Ativo=false`), que chamam `Executar()` com o relógio falso
+  - o agendador já envia a fila `email_saida` com a regra de 5 tentativas e 2^n minutos (necessário para o C13); a gravação dos e-mails pelas ações e as provas C160 a C164 ficam para o lote 4
+  - o detalhe do chamado traz para a equipe `setores` e `categorias` ativos, destinos de encaminhar e reclassificar
+  - artigo: resposta até 8000 caracteres e título até 200; categoria precisa existir (pode estar inativa); `api()` da SPA aceita `PUT`
+- Não construído ainda: telas de administração de usuários, importação de matrículas e cadastros (só pela API); seletor de setor na tela de Indicadores para o administrador
 - Abandonado: nada

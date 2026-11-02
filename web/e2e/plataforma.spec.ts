@@ -65,6 +65,17 @@ async function simularApi(page: Page) {
         eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
         acoes: ['responder', 'nota', 'resolver', 'encaminhar', 'reclassificar'],
       })
+    if (caminho === '/api/admin/categorias') return json(200, [{ id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true }])
+    if (caminho === '/api/admin/artigos')
+      return json(200, [{ id: 1, estado: 'ARQUIVADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
+        versao: { id: 1, numero: 12, titulo: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', perguntas: ['boleto?'], resposta: 'x', links: [] } }])
+    if (caminho === '/api/indicadores')
+      return json(200, {
+        semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.6543, taxaEscalonamento: 0.2, taxaAbandono: 0.1457, taxaPerguntasSemArtigo: 0.12,
+        chamadosAbertos: 321, chamadosResolvidos: 1200, tempoPrimeiraRespostaHoras: 12.75, tempoResolucaoHoras: 123.25, roteamentoCorreto: 0.91, taxaReabertura: 0.05,
+        principaisCategorias: { porConversas: [{ categoria: 'Financeiro > Boletos e mensalidades', total: 1000 }], porChamados: [{ categoria: 'Acadêmico > Notas e frequência', total: 300 }] },
+        indicadorPrincipal: 0.7123,
+      })
     return json(404, { status: 404, detail: 'Recurso não encontrado.' })
   })
 }
@@ -72,7 +83,6 @@ async function simularApi(page: Page) {
 test.describe('sem rolagem horizontal a 360 px', () => {
   test.use({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' })
 
-  // Os lotes seguintes acrescentam Artigos e Indicadores (7 telas).
   const telas: [string, string, (p: Page) => Promise<void>][] = [
     ['Login', '/univag', async (p) => void (await p.getByLabel('CPF').waitFor())],
     [
@@ -87,6 +97,8 @@ test.describe('sem rolagem horizontal a 360 px', () => {
     ['Minhas solicitações', '/univag/solicitacoes', async (p) => void (await p.getByText('ONE-123').waitFor())],
     ['Fila', '/univag/fila', async (p) => void (await p.getByText('ONE-123').waitFor())],
     ['Detalhe do chamado', '/univag/chamados/ONE-123', async (p) => void (await p.getByText('Resumo gerado por IA').waitFor())],
+    ['Artigos', '/univag/artigos', async (p) => void (await p.getByText('ARQUIVADO').waitFor())],
+    ['Indicadores', '/univag/indicadores', async (p) => void (await p.getByText('Indicador principal').waitFor())],
   ]
 
   for (const [nome, caminho, preparar] of telas)

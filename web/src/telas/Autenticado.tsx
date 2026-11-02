@@ -5,10 +5,11 @@ import { api, type Me } from '../api'
 import type { Sessao } from '../sessao'
 
 const Menu = [
-  { papel: 'ALUNO', caminho: 'assistente', rotulo: 'Assistente', icone: 'bi-chat-dots' },
-  { papel: 'ALUNO', caminho: 'solicitacoes', rotulo: 'Minhas solicitações', icone: 'bi-list-check' },
-  { papel: 'ATENDENTE', caminho: 'fila', rotulo: 'Fila', icone: 'bi-inbox' },
-  { papel: 'ADMINISTRADOR', caminho: 'artigos', rotulo: 'Artigos', icone: 'bi-journal-text' },
+  { papeis: ['ALUNO'], caminho: 'assistente', rotulo: 'Assistente', icone: 'bi-chat-dots' },
+  { papeis: ['ALUNO'], caminho: 'solicitacoes', rotulo: 'Minhas solicitações', icone: 'bi-list-check' },
+  { papeis: ['ATENDENTE'], caminho: 'fila', rotulo: 'Fila', icone: 'bi-inbox' },
+  { papeis: ['ADMINISTRADOR'], caminho: 'artigos', rotulo: 'Artigos', icone: 'bi-journal-text' },
+  { papeis: ['ATENDENTE', 'ADMINISTRADOR'], caminho: 'indicadores', rotulo: 'Indicadores', icone: 'bi-bar-chart' },
 ]
 
 export function Autenticado() {
@@ -47,7 +48,7 @@ export function Autenticado() {
           <Navbar.Toggle aria-controls="menu" aria-label="Menu" />
           <Navbar.Collapse id="menu">
             <Nav className="me-auto">
-              {Menu.filter((m) => me.papeis.includes(m.papel)).map((m) => (
+              {Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p))).map((m) => (
                 <Nav.Link key={m.caminho} as={NavLink} to={`/${slug}/${m.caminho}`}>
                   <i className={`bi ${m.icone} me-1`} aria-hidden="true" />
                   {m.rotulo}
