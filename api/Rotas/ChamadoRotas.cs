@@ -310,6 +310,9 @@ public static class ChamadoRotas
                     .Select(e => new { tipo = e.Tipo, ator = e.AtorId is { } a ? nomes[a] : "Sistema", de = e.De, para = e.Para, detalhe = e.Detalhe, criadoEm = e.CriadoEm })
                 : null,
             acoes = Acoes(c, papel, u.Id),
+            // destinos de encaminhar e reclassificar (S6), só para a equipe
+            setores = equipe ? await db.Setores.Where(s => s.Ativo && s.Id != c.SetorId).OrderBy(s => s.Nome).Select(s => new { id = s.Id, nome = s.Nome }).ToListAsync() : null,
+            categorias = equipe ? await db.Categorias.Where(x => x.Ativa).OrderBy(x => x.Nome).Select(x => new { id = x.Id, nome = x.Nome }).ToListAsync() : null,
         };
     }
 }

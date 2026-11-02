@@ -37,6 +37,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("App:UrlBase", "http://localhost:8080");
         builder.UseSetting("Llm:BaseUrl", "https://llm.teste/v1");
         builder.UseSetting("Llm:Modelo", "deepseek-flash");
+        builder.UseSetting("Agendador:Ativo", "false"); // os testes chamam Agendador.Executar com o relógio falso
         if (!LimitesReais)
         {
             builder.UseSetting("Limites:AuthPorMinuto", "100000");

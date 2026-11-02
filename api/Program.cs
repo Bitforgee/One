@@ -18,6 +18,8 @@ builder.Services.TryAddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddSingleton<Email>();
 builder.Services.AddScoped<One.Api.Assistente.Assistente>();
+builder.Services.AddSingleton<Agendador>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Agendador>());
 builder.Services.AddHttpClient("llm", c => c.Timeout = Timeout.InfiniteTimeSpan);
 builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
 
@@ -79,6 +81,7 @@ ConversaRotas.Mapear(api);
 ChamadoRotas.Mapear(api);
 ArtigoRotas.Mapear(api);
 AdminRotas.Mapear(api);
+IndicadorRotas.Mapear(api);
 
 app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
 app.MapFallbackToFile("index.html");

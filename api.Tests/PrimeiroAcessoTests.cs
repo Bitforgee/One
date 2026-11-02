@@ -13,7 +13,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string Mensagem = "Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição.";
 
-    static async Task<JsonElement?> EmailNoMailpit(string para)
+    public static async Task<JsonElement?> EmailNoMailpit(string para)
     {
         using var http = new HttpClient { BaseAddress = new Uri("http://localhost:8025") };
         for (var tentativa = 0; tentativa < 20; tentativa++)

@@ -74,6 +74,7 @@ public static class AdminRotas
             (r, i) => { r.SetorId = i.SetorId!.Value; r.Titulo = i.Titulo!; r.Texto = i.Texto!; });
 
         Regras(admin);
+        ArtigoRotas.MapearAdmin(admin);
     }
 
     // GET lista, POST cria, PUT {id} altera; validar devolve 400/409 ou null.

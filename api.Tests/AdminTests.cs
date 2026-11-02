@@ -28,7 +28,7 @@ public static class Admin
 
 public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C137: lê as rotas /api/admin/* do próprio app; os artigos (S7) entram sozinhos quando existirem.
+    // C137: lê as 25 rotas /api/admin/* do próprio app.
     [Fact]
     public async Task Sem_papel_admin_403()
     {
@@ -39,7 +39,7 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.True(rotas.Count >= 19, $"{rotas.Count} rotas de admin");
+        Assert.Equal(25, rotas.Count);
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)

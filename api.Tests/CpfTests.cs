@@ -8,7 +8,7 @@ namespace One.Api.Tests;
 
 public class CpfTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C44: respostas fora de /api/admin/*. Os indicadores (S11) entram nesta lista.
+    // C44: respostas fora de /api/admin/*.
     [Fact]
     public async Task Respostas_fora_do_admin_mascaram_cpf()
     {
@@ -34,6 +34,7 @@ public class CpfTests(OneFactory f) : IClassFixture<OneFactory>
         await Guardar(atendente.Cliente.GetAsync("/api/chamados?escopo=fila"));
         await Guardar(atendente.Cliente.GetAsync($"/api/chamados/{numero}"));
         await Guardar(atendente.Cliente.PostAsync($"/api/chamados/{numero}/assumir", null));
+        await Guardar(atendente.Cliente.GetAsync("/api/indicadores?de=2026-11-01&ate=2026-11-30"));
 
         Assert.Contains(corpos, x => x.Contains("***.456.789-**"));
         Assert.All(corpos, x => Assert.DoesNotMatch(new Regex(@"(?<!\d)\d{11}(?!\d)"), x));

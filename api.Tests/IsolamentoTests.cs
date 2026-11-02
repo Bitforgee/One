@@ -8,7 +8,7 @@ namespace One.Api.Tests;
 
 public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C7: rotas com {id} ou {numero}. Faltam as de anexo (S10), artigos do admin (S7) e duplicado (S13) para as 27.
+    // C7: rotas com {id} ou {numero}. Faltam as de anexo (S10) e duplicado (S13).
     [Fact]
     public async Task Recurso_de_outra_instituicao_404()
     {
@@ -44,6 +44,9 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
             (equipeDemo, HttpMethod.Put, $"/api/admin/cursos/{curso.Id}", new { nome = "Invadido" }),
             (equipeDemo, HttpMethod.Put, $"/api/admin/regras/{regra.Id}", new { categoriaId = boleto.Id, destino = "COORDENACAO_CURSO" }),
             (equipeDemo, HttpMethod.Put, $"/api/admin/respostas-prontas/{pronta.Id}", new { setorId = setorDemo.Id, titulo = "Invadido", texto = "x" }),
+            (equipeDemo, HttpMethod.Put, $"/api/admin/artigos/{artigo.Id}", new { titulo = "Invadido", perguntas = new[] { "x?" }, categoriaId = categoria.Id, resposta = "x", links = Array.Empty<string>() }),
+            (equipeDemo, HttpMethod.Post, $"/api/admin/artigos/{artigo.Id}/ativar", new { }),
+            (equipeDemo, HttpMethod.Post, $"/api/admin/artigos/{artigo.Id}/arquivar", new { }),
         };
         foreach (var (cliente, metodo, url, corpo) in rotas)
         {
@@ -69,6 +72,8 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain("Invadido", nomes);
         Assert.True((await f.Db(univag.Id, db => db.Usuarios.SingleAsync(u => u.Id == alunoUnivag.Usuario.Id))).Ativo);
         Assert.Equal("SETOR", (await f.Db(univag.Id, db => db.Regras.SingleAsync())).Destino);
+        var artigoDepois = await f.Db(univag.Id, db => db.Artigos.Include(x => x.Versoes).SingleAsync(x => x.Id == artigo.Id));
+        Assert.Equal(("ATIVO", 1), (artigoDepois.Estado, artigoDepois.Versoes.Count));
     }
 
     // C8: categoriaId, setorId e matriculaId de outra instituição no corpo valem o mesmo que um id inexistente. numeroOriginal chega com o S13.
