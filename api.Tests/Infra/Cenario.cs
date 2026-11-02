@@ -24,12 +24,13 @@ public record Cenario(Instituicao Instituicao, Aluno Aluno, Artigo Boleto, Artig
         return new Cenario(i, await f.AlunoLogado(i), boleto, faltas);
     }
 
+    // Cita artigos semeados pelo trecho de fonte deles (Semente.Fonte); um id que não é de artigo semeado vira um trecho inexistente.
     public static object Resposta(string texto, long[] artigoIds, params (long artigoId, string texto)[] trechos) => new
     {
         tipo = "resposta",
         texto,
-        artigoIds,
-        trechos = trechos.Select(t => new { t.artigoId, t.texto }),
+        fonteIds = artigoIds.Select(Semente.Fonte),
+        trechos = trechos.Select(t => new { fonteId = Semente.Fonte(t.artigoId), t.texto }),
         categoriaId = (long?)null,
         resumo = "Aluno pergunta sobre o boleto.",
     };

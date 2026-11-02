@@ -35,8 +35,11 @@ public static class Transferencia
         if (sugerida is not null) (categoriaId, origem) = (sugerida, OrigemIa);
         else if (assistente.FirstOrDefault(m => m.Citacoes.Count > 0) is { } citou)
         {
-            var versaoId = citou.Citacoes.OrderBy(c => c.Id).Last().VersaoArtigoId;
-            categoriaId = await db.VersoesArtigo.Where(v => v.Id == versaoId).Select(v => v.Artigo!.CategoriaId).SingleAsync();
+            var ultima = citou.Citacoes.OrderBy(c => c.Id).Last();
+            categoriaId = ultima.TrechoFonteId is { } trecho
+                ? await db.TrechosFonte.Where(t => t.Id == trecho)
+                    .Select(t => t.VersaoArtigoId != null ? t.VersaoArtigo!.Artigo!.CategoriaId : t.VersaoDocumento!.Documento!.CategoriaId).SingleAsync()
+                : await db.VersoesArtigo.Where(v => v.Id == ultima.VersaoArtigoId).Select(v => v.Artigo!.CategoriaId).SingleAsync();
             origem = OrigemArtigo;
         }
         var categoria = categoriaId is null ? categoriasAtivas.Single(c => c.Padrao) : await db.Categorias.SingleAsync(c => c.Id == categoriaId);

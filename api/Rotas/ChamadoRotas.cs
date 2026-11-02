@@ -368,16 +368,35 @@ public static class ChamadoRotas
         var fontes = new Dictionary<long, object>();
         if (equipe)
         {
-            var versoes = transcricao.SelectMany(m => m.Citacoes).Select(x => x.VersaoArtigoId).Distinct().ToList();
-            var dados = await db.VersoesArtigo.Where(v => versoes.Contains(v.Id))
+            // citação nova aponta para o trecho de fonte (artigo ou documento); as anteriores ao RAG, para a versão de artigo
+            var citacoes = transcricao.SelectMany(m => m.Citacoes).ToList();
+            var idsTrecho = citacoes.Where(x => x.TrechoFonteId != null).Select(x => x.TrechoFonteId!.Value).Distinct().ToList();
+            var trechos = await db.TrechosFonte.Where(t => idsTrecho.Contains(t.Id)).ToDictionaryAsync(t => t.Id, t => (t.VersaoArtigoId, t.VersaoDocumentoId));
+            long? VersaoArtigo(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoArtigoId : x.VersaoArtigoId;
+            long? VersaoDocumento(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoDocumentoId : null;
+            var idsArtigo = citacoes.Select(VersaoArtigo).OfType<long>().Distinct().ToList();
+            var idsDocumento = citacoes.Select(VersaoDocumento).OfType<long>().Distinct().ToList();
+            var artigos = await db.VersoesArtigo.Where(v => idsArtigo.Contains(v.Id))
                 .Select(v => new
                 {
                     v.Id,
                     v.Titulo,
+                    v.Numero,
                     Atual = v.Artigo!.Estado == EstadosArtigo.Ativo ? db.VersoesArtigo.Where(x => x.ArtigoId == v.ArtigoId).OrderByDescending(x => x.Numero).Select(x => x.Id).First() : v.Id,
                 }).ToDictionaryAsync(v => v.Id);
+            var documentos = await db.VersoesDocumento.Where(v => idsDocumento.Contains(v.Id))
+                .Select(v => new
+                {
+                    v.Id,
+                    v.Documento!.Titulo,
+                    v.Numero,
+                    Atual = v.Documento.Estado == EstadosDocumento.Ativo ? db.VersoesDocumento.Where(x => x.DocumentoId == v.DocumentoId).OrderByDescending(x => x.Numero).Select(x => x.Id).First() : v.Id,
+                }).ToDictionaryAsync(v => v.Id);
+            object Fonte(CitacaoArtigo x) => VersaoDocumento(x) is { } d
+                ? new { tipo = "DOCUMENTO", versaoArtigoId = (long?)null, versaoDocumentoId = (long?)d, titulo = documentos[d].Titulo, numero = documentos[d].Numero, trechos = x.Trechos, atualizado = documentos[d].Atual != d }
+                : new { tipo = "ARTIGO", versaoArtigoId = VersaoArtigo(x), versaoDocumentoId = (long?)null, titulo = artigos[VersaoArtigo(x)!.Value].Titulo, numero = artigos[VersaoArtigo(x)!.Value].Numero, trechos = x.Trechos, atualizado = artigos[VersaoArtigo(x)!.Value].Atual != VersaoArtigo(x) };
             foreach (var m in transcricao.Where(m => m.Citacoes.Count > 0))
-                fontes[m.Id] = m.Citacoes.Select(x => new { versaoArtigoId = x.VersaoArtigoId, titulo = dados[x.VersaoArtigoId].Titulo, trechos = x.Trechos, atualizado = dados[x.VersaoArtigoId].Atual != x.VersaoArtigoId });
+                fontes[m.Id] = m.Citacoes.Select(Fonte);
         }
 
         return new

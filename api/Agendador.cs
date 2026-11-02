@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Assistente;
 using One.Api.Chamados;
+using Pgvector;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -48,12 +50,20 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(c => new Item("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
         itens.AddRange(await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
             .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync());
+        // RAG, AC 5: trechos de fonte sem embedding, de todas as instituições
+        itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
+            .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
         return itens;
     }
 
     public async Task Processar(List<Item> itens, CancellationToken parar = default)
     {
-        foreach (var item in itens)
+        foreach (var lote in itens.Where(i => i.Tipo == "trecho").Chunk(Embeddings.Lote))
+        {
+            parar.ThrowIfCancellationRequested();
+            await Indexar(lote);
+        }
+        foreach (var item in itens.Where(i => i.Tipo != "trecho"))
         {
             parar.ThrowIfCancellationRequested();
             try
@@ -75,6 +85,42 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             {
                 log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
             }
+        }
+    }
+
+    // RAG, AC 5 e AC 6: um lote de até 100 trechos (de várias instituições) por chamada; a falha soma tentativa e espera 2^n minutos.
+    // O embedding só é gravado num trecho que ainda não tem (o trigger recusa trocar um embedding existente).
+    async Task Indexar(Item[] lote)
+    {
+        using var escopo = escopos.CreateScope();
+        var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
+        var ids = lote.Select(i => i.Id).ToList();
+        var trechos = await db.TrechosFonte.IgnoreQueryFilters().Where(t => ids.Contains(t.Id) && t.Embedding == null).OrderBy(t => t.Id)
+            .Select(t => new { t.Id, t.Texto, t.InstituicaoId, t.Tentativas }).ToListAsync();
+        if (trechos.Count == 0) return;
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        try
+        {
+            var vetores = await escopo.ServiceProvider.GetRequiredService<Embeddings>().Gerar(trechos.Select(t => t.Texto).ToList());
+            for (var i = 0; i < trechos.Count; i++)
+            {
+                var (id, vetor) = (trechos[i].Id, new Vector(vetores[i]));
+                await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Id == id && t.Embedding == null)
+                    .ExecuteUpdateAsync(s => s.SetProperty(t => t.Embedding, vetor));
+            }
+            log.LogInformation("Agendador indexou {Quantidade} trechos de fonte", trechos.Count);
+        }
+        catch (Exception falha) // status, rede, 20 s ou formato: tudo conta como tentativa
+        {
+            foreach (var t in trechos)
+            {
+                var tentativas = t.Tentativas + 1;
+                await db.TrechosFonte.IgnoreQueryFilters().Where(x => x.Id == t.Id && x.Embedding == null)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Tentativas, tentativas).SetProperty(x => x.ProximaTentativa, agora.AddMinutes(Math.Pow(2, tentativas))));
+            }
+            foreach (var instituicao in trechos.GroupBy(t => t.InstituicaoId))
+                log.LogWarning(falha, "Falha ao gerar embeddings de {Quantidade} trechos da instituição {InstituicaoId}, tentativa {Tentativas}",
+                    instituicao.Count(), instituicao.Key, instituicao.Max(t => t.Tentativas) + 1);
         }
     }
 

@@ -14,6 +14,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "usuario", "usuario_papel", "setor", "atendente_setor", "curso", "matricula", "categoria", "regra_roteamento",
         "artigo", "versao_artigo", "token_acesso", "conversa", "mensagem_conversa", "citacao_artigo", "chamado",
         "mensagem_chamado", "anexo", "evento_chamado", "resposta_pronta", "email_saida",
+        "documento", "versao_documento", "trecho_fonte",
     ];
 
     public static string Raiz()
@@ -81,7 +82,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var raiz = Raiz();
         var compose = File.ReadAllText(Path.Combine(raiz, "docker-compose.yml"));
-        Assert.Matches(new Regex(@"^\s+image:\s*postgres:18\s*$", RegexOptions.Multiline), compose);
+        Assert.Matches(new Regex(@"^\s+image:\s*pgvector/pgvector:0\.8\.7-pg18-trixie\s*$", RegexOptions.Multiline), compose); // RAG, doors R2 e R8
         Assert.Matches(new Regex(@"^\s+image:\s*axllent/mailpit\s*$", RegexOptions.Multiline), compose);
 
         var solucao = File.ReadAllText(Path.Combine(raiz, "One.slnx"));

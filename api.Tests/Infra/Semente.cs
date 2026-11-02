@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Assistente;
 using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;
@@ -91,18 +92,31 @@ public static class Semente
             return c;
         });
 
+    // Id do trecho de fonte do artigo semeado: os testes citam o artigo por ele, sem consultar o banco.
+    public static long Fonte(long artigoId) => 1_000_000 + artigoId;
+
     public static Task<Artigo> Artigo(this OneFactory f, Instituicao i, string titulo, string resposta, string[]? links = null,
         string estado = EstadosArtigo.Ativo, long? categoriaId = null) =>
         f.Db(i.Id, async db =>
         {
+            var versao = new VersaoArtigo { Numero = 1, Titulo = titulo, Perguntas = [titulo + "?"], Resposta = resposta, Links = [.. links ?? []], CriadaEm = f.Relogio.GetUtcNow().UtcDateTime };
             var a = new Artigo
             {
                 CategoriaId = categoriaId ?? (await db.Categorias.FirstAsync()).Id,
                 Estado = estado,
-                Versoes = [new VersaoArtigo { Numero = 1, Titulo = titulo, Perguntas = [titulo + "?"], Resposta = resposta, Links = [.. links ?? []], CriadaEm = f.Relogio.GetUtcNow().UtcDateTime }],
+                Versoes = [versao],
             };
             db.Artigos.Add(a);
             await db.SaveChangesAsync();
+            if (estado == EstadosArtigo.Ativo)
+            {
+                // já indexado, como se o agendador tivesse rodado
+                var trecho = Fontes.DoArtigo(versao, f.Relogio.GetUtcNow().UtcDateTime);
+                trecho.Id = Fonte(a.Id);
+                trecho.Embedding = new Pgvector.Vector(LlmFalso.Vetor(trecho.Texto));
+                db.TrechosFonte.Add(trecho);
+                await db.SaveChangesAsync();
+            }
             return a;
         });
 

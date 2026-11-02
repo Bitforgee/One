@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 
@@ -98,6 +99,9 @@ public class ArtigoAdminTests(OneFactory f) : IClassFixture<OneFactory>
 
     static bool CatalogoTem(OneFactory f, string titulo) => f.Llm.Corpos[^1].Contains(titulo);
 
+    // RAG: o artigo ativado só entra na busca depois que o agendador gera o embedding do trecho
+    Task Indexar() => f.Services.GetRequiredService<Agendador>().Executar();
+
     [Fact]
     public async Task Ativar_entra_na_proxima_mensagem()
     {
@@ -108,6 +112,7 @@ public class ArtigoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(CatalogoTem(f, "Faltas não são abonadas"));
 
         Assert.Equal(HttpStatusCode.OK, (await admin.PostAsync($"/api/admin/artigos/{id}/ativar", null)).StatusCode);
+        await Indexar();
 
         await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "posso abonar falta?" });
         Assert.True(CatalogoTem(f, "Faltas não são abonadas"));
@@ -120,7 +125,9 @@ public class ArtigoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         var aluno = await f.AlunoLogado(i);
         var id = await Criar(admin, categoria);
         await admin.PostAsync($"/api/admin/artigos/{id}/ativar", null);
-        f.Llm.Devolver(Cenario.Resposta("Faltas não são abonadas, mesmo com atestado.", [id], (id, "Faltas não são abonadas, nem com atestado médico")));
+        await Indexar();
+        var trecho = await f.Db(i.Id, db => db.TrechosFonte.Where(t => t.VersaoArtigo!.ArtigoId == id).Select(t => t.Id).SingleAsync());
+        f.Llm.Devolver(new { tipo = "resposta", texto = "Faltas não são abonadas, mesmo com atestado.", fonteIds = new[] { trecho }, trechos = new[] { new { fonteId = trecho, texto = "Faltas não são abonadas, nem com atestado médico" } } });
         var conversa = (await (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "posso abonar falta?" })).Json()).GetProperty("conversaId").GetInt64();
 
         Assert.Equal(HttpStatusCode.OK, (await admin.PostAsync($"/api/admin/artigos/{id}/arquivar", null)).StatusCode);

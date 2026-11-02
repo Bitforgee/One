@@ -174,13 +174,13 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
 
         var respostas = await f.Db(c.Instituicao.Id, db => db.MensagensConversa.Include(m => m.Citacoes)
             .Where(m => m.TipoFinal == "resposta").ToListAsync());
-        var versoes = await f.Db(c.Instituicao.Id, db => db.VersoesArtigo.ToDictionaryAsync(v => v.Id));
+        var fontes = await f.Db(c.Instituicao.Id, db => db.TrechosFonte.ToDictionaryAsync(t => t.Id, t => t.Texto));
         Assert.Equal(3, respostas.Count);
         foreach (var m in respostas)
         {
             Assert.NotEmpty(m.Citacoes);
             Assert.All(m.Citacoes, ct => Assert.NotEmpty(ct.Trechos));
-            Assert.All(m.Citacoes, ct => Assert.All(ct.Trechos, t => Assert.True(Conferencia.TrechoConfere(t, versoes[ct.VersaoArtigoId].Resposta))));
+            Assert.All(m.Citacoes, ct => Assert.All(ct.Trechos, t => Assert.True(Conferencia.TrechoConfere(t, fontes[ct.TrechoFonteId!.Value]))));
         }
         Assert.Contains(respostas, m => m.Citacoes.Count == 2);
     }
@@ -300,15 +300,17 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
         var mensagens = await f.Db(c.Instituicao.Id, db => db.MensagensConversa.Include(m => m.Citacoes)
             .Where(m => m.ConversaId == id && m.Autor == "ASSISTENTE").OrderBy(m => m.Id).ToListAsync());
         var versaoBoleto = await f.Db(c.Instituicao.Id, db => db.VersoesArtigo.SingleAsync(v => v.ArtigoId == c.Boleto.Id));
+        // RAG, door R5: a citação nova grava o trecho de fonte; a versão citada é a do trecho
+        var versaoDoTrecho = await f.Db(c.Instituicao.Id, db => db.TrechosFonte.ToDictionaryAsync(t => t.Id, t => t.VersaoArtigoId));
 
         var exibida = mensagens[0];
         Assert.Equal("Você encontra o boleto no Portal do Aluno.", exibida.Texto);
         Assert.Equal("resposta", exibida.TipoDevolvido);
         Assert.Equal("resposta", exibida.TipoFinal);
-        Assert.Equal("deepseek-flash", exibida.Modelo);
+        Assert.Equal("gpt-6-luna", exibida.Modelo);
         Assert.Equal(f.Relogio.GetUtcNow().UtcDateTime, exibida.CriadaEm);
         var citacao = Assert.Single(exibida.Citacoes);
-        Assert.Equal(versaoBoleto.Id, citacao.VersaoArtigoId);
+        Assert.Equal(versaoBoleto.Id, versaoDoTrecho[citacao.TrechoFonteId!.Value]);
         Assert.Equal([Cenario.TrechoBoleto], citacao.Trechos);
 
         var rebaixada = mensagens[1];
@@ -332,7 +334,7 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
         var (id, _) = await c.Primeira(segredo);
 
         var log = Assert.Single(f.Logs.Entradas, l => l.Mensagem.StartsWith("Chamada ao provedor de IA") && Equals(l.Campos.GetValueOrDefault("InstituicaoId"), c.Instituicao.Id));
-        Assert.Equal("deepseek-flash", log.Campos["Modelo"]);
+        Assert.Equal("gpt-6-luna", log.Campos["Modelo"]);
         Assert.True(log.Campos.ContainsKey("DuracaoMs"));
         Assert.Equal(1000, log.Campos["EntradaComCache"]);
         Assert.Equal(200, log.Campos["EntradaSemCache"]);

@@ -50,11 +50,15 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         });
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{conversaId}/mensagens", new { mensagem = "mensagem-12" });
 
+        // RAG C5: regras, trechos buscados (id, título, texto e links do artigo de origem), categorias ativas e as últimas 10 mensagens
         var corpo = f.Llm.Corpos[^1];
         foreach (var proibido in new[] { u.Nome, u.Cpf, matricula.Numero, matricula.Curso!.Nome, "outra instituição", "rascunho", "arquivado", "Categoria desativada" })
             Assert.DoesNotContain(proibido, corpo);
-        foreach (var permitido in new[] { "Como emitir o boleto do semestre", "Faltas não são abonadas", "Categoria ativa", "Não classificado" })
+        foreach (var permitido in new[] { "Como emitir o boleto do semestre", "Faltas não são abonadas", Cenario.RespostaBoleto, Cenario.LinkBoleto, "Categoria ativa", "Não classificado" })
             Assert.Contains(permitido, corpo);
+        var fontes = JsonDocument.Parse(Mensagens(f.Llm.UltimoCorpo)[1].GetProperty("content").GetString()!["Fontes (JSON):\n".Length..]).RootElement.EnumerateArray().ToList();
+        Assert.Equal(["id", "titulo", "texto", "links"], fontes[0].EnumerateObject().Select(p => p.Name));
+        Assert.Contains(fontes, x => x.GetProperty("id").GetInt64() == Semente.Fonte(c.Boleto.Id));
 
         var conversa = Mensagens(f.Llm.UltimoCorpo).Skip(3).Select(m => m.GetProperty("content").GetString()).ToList();
         Assert.Equal(Enumerable.Range(3, 10).Select(n => $"mensagem-{n:00}"), conversa);
@@ -70,18 +74,20 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         var pedido = f.Llm.Pedidos[^1];
         Assert.Equal(HttpMethod.Post, pedido.Method);
         Assert.Equal("https://llm.teste/v1/chat/completions", pedido.RequestUri!.ToString());
+        // RAG C1 (door R1): corpo do Chat Completions da OpenAI
         var corpo = f.Llm.UltimoCorpo;
-        Assert.Equal("deepseek-flash", corpo.GetProperty("model").GetString());
+        Assert.Equal("gpt-6-luna", corpo.GetProperty("model").GetString());
         Assert.Equal("json_object", corpo.GetProperty("response_format").GetProperty("type").GetString());
-        Assert.Equal(0, corpo.GetProperty("temperature").GetDouble());
-        Assert.Equal(800, corpo.GetProperty("max_tokens").GetInt32());
-        Assert.False(corpo.TryGetProperty("thinking", out _));
+        Assert.Equal(800, corpo.GetProperty("max_completion_tokens").GetInt32());
+        Assert.Equal("none", corpo.GetProperty("reasoning_effort").GetString());
+        foreach (var ausente in new[] { "max_tokens", "temperature", "thinking" })
+            Assert.False(corpo.TryGetProperty(ausente, out _), ausente);
 
         var m = Mensagens(corpo);
         Assert.Equal(4, m.Count);
         Assert.Equal(["system", "system", "system", "user"], m.Select(x => x.GetProperty("role").GetString()));
-        Assert.Contains("Responda só com o que está nos artigos", m[0].GetProperty("content").GetString());
-        Assert.StartsWith("Artigos", m[1].GetProperty("content").GetString());
+        Assert.Contains("Responda só com o que está nas fontes", m[0].GetProperty("content").GetString());
+        Assert.StartsWith("Fontes", m[1].GetProperty("content").GetString());
         Assert.Contains(Cenario.RespostaBoleto, m[1].GetProperty("content").GetString());
         Assert.StartsWith("Categorias", m[2].GetProperty("content").GetString());
         Assert.Equal("onde tiro o boleto?", m[3].GetProperty("content").GetString());

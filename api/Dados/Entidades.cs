@@ -1,3 +1,5 @@
+using Pgvector;
+
 namespace One.Api.Dados;
 
 public interface  IDaInstituicao
@@ -179,6 +181,7 @@ public class MensagemConversa : IDaInstituicao
     public string? Resumo { get; set; }
     public DateTime CriadaEm { get; set; }
     public List<CitacaoArtigo> Citacoes { get; set; } = [];
+    public List<long>? TrechosBuscados { get; set; } // RAG, door R5: ids de trecho_fonte em ordem de distância
 }
 
 public class CitacaoArtigo : IDaInstituicao
@@ -186,8 +189,56 @@ public class CitacaoArtigo : IDaInstituicao
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public long MensagemConversaId { get; set; }
-    public long VersaoArtigoId { get; set; }
+    public long? VersaoArtigoId { get; set; } // só nas citações anteriores ao RAG
+    public long? TrechoFonteId { get; set; } // RAG, door R5
     public List<string> Trechos { get; set; } = [];
+}
+
+public static class EstadosDocumento
+{
+    public const string Ativo = "ATIVO";
+    public const string Arquivado = "ARQUIVADO";
+}
+
+// RAG, door R4: PDF da instituição, fonte interna do assistente como o artigo (AD-012)
+public class Documento : IDaInstituicao
+{
+    public long Id { get; set; }
+    public long InstituicaoId { get; set; }
+    public string Titulo { get; set; } = "";
+    public long CategoriaId { get; set; }
+    public string Estado { get; set; } = EstadosDocumento.Ativo;
+    public List<VersaoDocumento> Versoes { get; set; } = [];
+}
+
+public class VersaoDocumento : IDaInstituicao
+{
+    public long Id { get; set; }
+    public long InstituicaoId { get; set; }
+    public long DocumentoId { get; set; }
+    public Documento? Documento { get; set; }
+    public int Numero { get; set; }
+    public string NomeArquivo { get; set; } = "";
+    public byte[] Conteudo { get; set; } = [];
+    public string Texto { get; set; } = "";
+    public int Paginas { get; set; }
+    public DateTime CriadaEm { get; set; }
+}
+
+// RAG, door R3: unidade da busca e da citação; pertence a exatamente uma versão, de artigo ou de documento
+public class TrechoFonte : IDaInstituicao
+{
+    public long Id { get; set; }
+    public long InstituicaoId { get; set; }
+    public long? VersaoArtigoId { get; set; }
+    public VersaoArtigo? VersaoArtigo { get; set; }
+    public long? VersaoDocumentoId { get; set; }
+    public VersaoDocumento? VersaoDocumento { get; set; }
+    public int Ordem { get; set; }
+    public string Texto { get; set; } = "";
+    public Vector? Embedding { get; set; }
+    public int Tentativas { get; set; }
+    public DateTime ProximaTentativa { get; set; }
 }
 
 public static class EstadosChamado

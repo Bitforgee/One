@@ -3,7 +3,7 @@
 Profile: standard
 Plan: `.specs/features/rag/plan.md`
 
-46 checks em 4 slices · 7 one-way doors · 5 perguntas abertas, 1 bloqueia (a 1, só a chamada real; nenhum check depende dela) e 4 bloqueiam só o uso real
+46 checks em 4 slices · 8 one-way doors · 5 perguntas abertas, 1 bloqueia (a 1, só a chamada real; nenhum check depende dela) e 4 bloqueiam só o uso real
 
 **Como as provas rodam.** Mesmas ferramentas do `mvp-one`:
 
@@ -84,7 +84,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Embedding_
 **C21** - O log de cada busca traz instituição, conversa, ids buscados, distâncias e duração em milissegundos, e não traz o texto de nenhuma mensagem do aluno (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~BuscaTests.Log_da_busca_sem_texto"`
 
-**C22** - O banco tem a extensão `vector`, `trecho_fonte.embedding` é `vector(1536)` com índice `hnsw` `vector_cosine_ops`; o `docker-compose.yml` usa `pgvector/pgvector:0.8.7-pg18`; o modelo do `OneDbDesignTime` mapeia `embedding` para `vector(1536)` (door R2; substitui a parte da imagem do nº 19 do `mvp-one`)
+**C22** - O banco tem a extensão `vector`, `trecho_fonte.embedding` é `vector(1536)` com índice `hnsw` `vector_cosine_ops`; o `docker-compose.yml` usa `pgvector/pgvector:0.8.7-pg18-trixie` (tag trocada com o usuário em 02/11/2026, door R8); o modelo do `OneDbDesignTime` mapeia `embedding` para `vector(1536)` (door R2; substitui a parte da imagem do nº 19 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Pgvector_e_indice_hnsw"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Layout_e_compose"`
 
@@ -191,7 +191,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Detalh
 | `indexacao` (3) | `PENDENTE` C9 · `INDEXADO` C9 · `FALHOU` C8 | - |
 | saídas do `avaliar-busca` (2) | 0 C41 · 1 C43 | - |
 | erros do `avaliar-busca` (4) | C43, table-driven over all 4 | - |
-| one-way doors (7) | R1 C1 · R2 C22 · R3 C19 · R4 C26 · R5 C18 · R6 C25 · R7 C46 | - |
+| one-way doors (8) | R1 C1 · R2 C22 · R3 C19 · R4 C26 · R5 C18 · R6 C25 · R7 C46 · R8 C22 | - |
 | entidades de Relations (5) | `documento` C24 · `versao_documento` C19 · `trecho_fonte` C23 · citação C18 · trechos buscados C18 | - |
 | restrições de Relations (5) | um tipo de versão por trecho C23 · citação com fonte C23 · append-only C19 · 1536 dimensões C22 · instituição C24 | - |
 | checks do `mvp-one` substituídos (8) | nº 19 do mvp -> C22 · nº 36 do mvp -> C37 · nº 52 do mvp -> C5 · nº 53 do mvp -> C1 · nº 133 do mvp -> C10 · nº 134 do mvp -> C14 · nº 137 do mvp -> C35 · nº 195 do mvp -> C13 | - |

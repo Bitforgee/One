@@ -187,7 +187,7 @@ public class CategoriaOrigemTests(OneFactory f) : IClassFixture<OneFactory>
         const string trecho = "emitida pelo Portal do Aluno, no menu Documentos";
         var boleto2 = await f.Artigo(c.Instituicao, "Boleto do financeiro", Cenario.RespostaBoleto, categoriaId: financeiro.Id);
 
-        object Cita(Artigo a, string t, long? categoriaId = null) => new { tipo = "resposta", texto = "Peça pelo portal.", artigoIds = new[] { a.Id }, trechos = new[] { new { artigoId = a.Id, texto = t } }, categoriaId };
+        object Cita(Artigo a, string t, long? categoriaId = null) => new { tipo = "resposta", texto = "Peça pelo portal.", fonteIds = new[] { Semente.Fonte(a.Id) }, trechos = new[] { new { fonteId = Semente.Fonte(a.Id), texto = t } }, categoriaId };
 
         // cada caso é uma conversa com várias respostas; vale sempre a última sugestão válida ou o último artigo citado (AC 60, AC 61)
         var casos = new (object[] saidas, string categoria, string origem)[]

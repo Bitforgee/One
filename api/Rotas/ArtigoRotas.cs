@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Assistente;
 using One.Api.Dados;
 
 namespace One.Api.Rotas;
@@ -99,21 +100,28 @@ public static class ArtigoRotas
             if (await Validar(db, i) is { } erro) return erro;
             a.CategoriaId = i.CategoriaId!.Value;
             (a.VisivelDe, a.VisivelAte) = (i.VisivelDe, i.VisivelAte);
-            a.Versoes.Add(Versao(i, a.Versoes.Max(v => v.Numero) + 1, relogio.GetUtcNow().UtcDateTime));
+            var agora = relogio.GetUtcNow().UtcDateTime;
+            var nova = Versao(i, a.Versoes.Max(v => v.Numero) + 1, agora);
+            a.Versoes.Add(nova);
+            if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(Fontes.DoArtigo(nova, agora));
             await db.SaveChangesAsync();
             return await Responder(db, a);
         });
 
-        admin.MapPost("/artigos/{id:long}/ativar", (long id, OneDb db) => Mudar(db, id, EstadosArtigo.Ativo));
-        admin.MapPost("/artigos/{id:long}/arquivar", (long id, OneDb db) => Mudar(db, id, EstadosArtigo.Arquivado));
+        admin.MapPost("/artigos/{id:long}/ativar", (long id, OneDb db, TimeProvider relogio) => Mudar(db, id, EstadosArtigo.Ativo, relogio));
+        admin.MapPost("/artigos/{id:long}/arquivar", (long id, OneDb db, TimeProvider relogio) => Mudar(db, id, EstadosArtigo.Arquivado, relogio));
     }
 
-    static async Task<IResult> Mudar(OneDb db, long id, string estado)
+    static async Task<IResult> Mudar(OneDb db, long id, string estado, TimeProvider relogio)
     {
         var a = await Ler(db, id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (a.Estado == estado) return Problemas.Erro(409, estado == EstadosArtigo.Ativo ? "O artigo já está ativo." : "O artigo já está arquivado.");
         a.Estado = estado;
+        var atual = a.Versoes.OrderByDescending(v => v.Numero).First();
+        // reativar um artigo arquivado reaproveita o trecho que a versão atual já tem
+        if (estado == EstadosArtigo.Ativo && !await db.TrechosFonte.AnyAsync(t => t.VersaoArtigoId == atual.Id))
+            db.TrechosFonte.Add(Fontes.DoArtigo(atual, relogio.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync();
         return await Responder(db, a);
     }

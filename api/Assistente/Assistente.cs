@@ -3,6 +3,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
 
 namespace One.Api.Assistente;
 
@@ -20,10 +22,13 @@ public static class Textos
     public const string Transferir = "Vou transferir você para um atendente.";
 }
 
-public record Trecho(long ArtigoId, string? Texto);
-public record SaidaModelo(string? Tipo, string? Texto, List<long>? ArtigoIds, List<Trecho>? Trechos, long? CategoriaId, string? Resumo);
+public record Trecho(long FonteId, string? Texto);
+public record SaidaModelo(string? Tipo, string? Texto, List<long>? FonteIds, List<Trecho>? Trechos, long? CategoriaId, string? Resumo);
 
-public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db)
+// Trecho de fonte devolvido pela busca, com o que o modelo e a conferência precisam (door R3).
+public record Fonte(long Id, string Titulo, string Texto, List<string> Links, double Distancia, long? ArtigoId);
+
+public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db, Embeddings embeddings)
 {
     public const string Autor = "ASSISTENTE";
 
@@ -32,42 +37,89 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
     const string Regras = """
         Você é o assistente de atendimento ao aluno de uma instituição de ensino superior. Responda em português do Brasil, tratando o aluno por "você", em poucas frases.
         Regras:
-        1. Responda só com o que está nos artigos abaixo. Não invente regras, prazos, valores nem exceções.
-        2. Não cite nem mencione os artigos, seus títulos ou ids no texto para o aluno.
-        3. Em "trechos", copie literalmente, sem mudar nenhuma letra, de 1 a 3 trechos de 20 a 400 caracteres da resposta de cada artigo citado que sustentam o que você escreveu.
-        4. Use só links que aparecem nos artigos citados.
+        1. Responda só com o que está nas fontes abaixo. Não invente regras, prazos, valores nem exceções.
+        2. Não cite nem mencione as fontes, seus títulos ou ids no texto para o aluno.
+        3. Em "trechos", copie literalmente, sem mudar nenhuma letra, de 1 a 3 trechos de 20 a 400 caracteres do texto de cada fonte citada que sustentam o que você escreveu.
+        4. Use só links que aparecem nas fontes citadas.
         5. Se faltar informação para escolher a orientação certa, faça uma pergunta curta, de até 200 caracteres e terminada em "?", com tipo "pergunta".
-        6. Se nenhum artigo responde, devolva tipo "sem_base". Se o aluno pedir um atendente, devolva tipo "transferir".
+        6. Se nenhuma fonte responde, devolva tipo "sem_base". Se o aluno pedir um atendente, devolva tipo "transferir".
         7. Em "categoriaId", sugira a categoria do assunto entre as categorias abaixo. Em "resumo", resuma o caso em uma frase para o atendente, sem dados pessoais.
-        Devolva apenas um objeto JSON: {"tipo":"resposta"|"pergunta"|"sem_base"|"transferir","texto":"...","artigoIds":[12],"trechos":[{"artigoId":12,"texto":"..."}],"categoriaId":3,"resumo":"..."}
+        Devolva apenas um objeto JSON: {"tipo":"resposta"|"pergunta"|"sem_base"|"transferir","texto":"...","fonteIds":[12],"trechos":[{"fonteId":12,"texto":"..."}],"categoriaId":3,"resumo":"..."}
         """;
+
+    // RAG, AC 7: a consulta são as últimas 3 mensagens do aluno, mascaradas como as do chat (AC 34 do mvp-one)
+    public static string Consulta(IEnumerable<MensagemConversa> mensagens) =>
+        string.Join("\n", mensagens.Where(m => m.Autor != Autor).OrderBy(m => m.Id).TakeLast(3).Select(m => Mascara.Aplicar(m.Texto)));
+
+    // RAG, AC 7 e AC 8: os K trechos mais próximos, só de fontes buscáveis da instituição da sessão (door 16)
+    public async Task<List<Fonte>> Buscar(float[] vetor, long instituicaoId)
+    {
+        var k = cfg.GetValue("Rag:K", 5);
+        var fuso = await db.Instituicoes.Where(i => i.Id == instituicaoId).Select(i => i.Fuso).SingleAsync();
+        var hoje = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(relogio.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(fuso)));
+        var consulta = new Vector(vetor);
+        var achados = await db.TrechosFonte
+            .Where(t => t.Embedding != null && (
+                (t.VersaoArtigoId != null && t.VersaoArtigo!.Artigo!.Estado == EstadosArtigo.Ativo
+                    && (t.VersaoArtigo.Artigo.VisivelDe == null || t.VersaoArtigo.Artigo.VisivelDe <= hoje)
+                    && (t.VersaoArtigo.Artigo.VisivelAte == null || t.VersaoArtigo.Artigo.VisivelAte >= hoje)
+                    && t.VersaoArtigo.Numero == db.VersoesArtigo.Where(x => x.ArtigoId == t.VersaoArtigo.ArtigoId).Max(x => x.Numero))
+                || (t.VersaoDocumentoId != null && t.VersaoDocumento!.Documento!.Estado == EstadosDocumento.Ativo
+                    && t.VersaoDocumento.Numero == db.VersoesDocumento.Where(x => x.DocumentoId == t.VersaoDocumento.DocumentoId).Max(x => x.Numero))))
+            .OrderBy(t => t.Embedding!.CosineDistance(consulta)).ThenBy(t => t.Id)
+            .Take(k)
+            .Select(t => new
+            {
+                t.Id,
+                t.Texto,
+                Distancia = t.Embedding!.CosineDistance(consulta),
+                Titulo = t.VersaoArtigoId != null ? t.VersaoArtigo!.Titulo : t.VersaoDocumento!.Documento!.Titulo,
+                t.VersaoArtigoId,
+                ArtigoId = t.VersaoArtigoId != null ? t.VersaoArtigo!.ArtigoId : (long?)null,
+            }).ToListAsync();
+        var idsArtigo = achados.Where(a => a.VersaoArtigoId != null).Select(a => a.VersaoArtigoId!.Value).ToList();
+        var links = await db.VersoesArtigo.Where(v => idsArtigo.Contains(v.Id)).ToDictionaryAsync(v => v.Id, v => v.Links);
+        return achados.Select(a => new Fonte(a.Id, a.Titulo, a.Texto, a.VersaoArtigoId is { } v ? links[v] : [], a.Distancia, a.ArtigoId)).ToList();
+    }
 
     // Recebe a conversa com a mensagem nova do aluno já gravada e devolve a mensagem do assistente a gravar.
     public async Task<MensagemConversa> Responder(Conversa conversa)
     {
-        var modelo = cfg["Llm:Modelo"] ?? "deepseek-flash";
-        // shortcut: o catálogo inteiro vai no prompt; acima de ~100 artigos por instituição, pré-filtrar por busca textual (door 4)
-        // AC 150: só artigos dentro da validade, em dias do fuso da instituição
-        var fuso = await db.Instituicoes.Where(i => i.Id == conversa.InstituicaoId).Select(i => i.Fuso).SingleAsync();
-        var hoje = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(relogio.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(fuso)));
-        var artigos = await db.Artigos.Where(a => a.Estado == EstadosArtigo.Ativo && (a.VisivelDe == null || a.VisivelDe <= hoje) && (a.VisivelAte == null || a.VisivelAte >= hoje))
-            .Select(a => a.Versoes.OrderByDescending(v => v.Numero).First()).ToListAsync();
+        var modelo = cfg["Llm:Modelo"] ?? "gpt-6-luna";
+        var inicioBusca = relogio.GetTimestamp();
+        List<Fonte> fontes;
+        try
+        {
+            fontes = await Buscar((await embeddings.Gerar([Consulta(conversa.Mensagens)]))[0], conversa.InstituicaoId);
+        }
+        catch (Exception e) when (e is HttpRequestException or OperationCanceledException or JsonException or InvalidOperationException)
+        {
+            // AC 14: sem embedding da consulta não há busca nem chamada ao chat
+            log.LogWarning(e, "Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", "busca_indisponivel", conversa.InstituicaoId, conversa.Id);
+            return new MensagemConversa { Autor = Autor, Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] };
+        }
+        log.LogInformation("Busca de fontes: instituicao={InstituicaoId} conversa={ConversaId} trechos={Trechos} distancias={Distancias} duracaoMs={DuracaoMs}",
+            conversa.InstituicaoId, conversa.Id, string.Join(",", fontes.Select(f => f.Id)),
+            string.Join(",", fontes.Select(f => f.Distancia.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))),
+            (long)relogio.GetElapsedTime(inicioBusca).TotalMilliseconds);
+
         var categorias = await db.Categorias.Where(c => c.Ativa).OrderBy(c => c.Id).Select(c => new { id = c.Id, nome = c.Nome }).ToListAsync();
         var historico = conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10)
             .Select(m => new { role = m.Autor == Autor ? "assistant" : "user", content = Mascara.Aplicar(m.Texto) });
 
+        // RAG, door R1: corpo do Chat Completions da OpenAI, sem max_tokens nem temperature (pergunta 1 do plano)
         var corpo = new
         {
             model = modelo,
             messages = new object[]
             {
                 new { role = "system", content = Regras },
-                new { role = "system", content = "Artigos (JSON):\n" + JsonSerializer.Serialize(artigos.Select(v => new { id = v.ArtigoId, titulo = v.Titulo, perguntas = v.Perguntas, resposta = v.Resposta, links = v.Links }), Json) },
+                new { role = "system", content = "Fontes (JSON):\n" + JsonSerializer.Serialize(fontes.Select(f => new { id = f.Id, titulo = f.Titulo, texto = f.Texto, links = f.Links }), Json) },
                 new { role = "system", content = "Categorias (JSON):\n" + JsonSerializer.Serialize(categorias, Json) },
             }.Concat(historico),
             response_format = new { type = "json_object" },
-            temperature = 0,
-            max_tokens = 800,
+            max_completion_tokens = 800,
+            reasoning_effort = "none",
         };
 
         var inicio = relogio.GetTimestamp();
@@ -80,7 +132,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             switch (saida!.Tipo)
             {
                 case Tipos.Resposta:
-                    (citacoes, motivo) = Conferir(saida, artigos);
+                    (citacoes, motivo) = Conferir(saida, fontes);
                     if (motivo is null) tipoFinal = Tipos.Resposta;
                     break;
                 case Tipos.Pergunta:
@@ -101,7 +153,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         log.LogInformation(
             "Chamada ao provedor de IA: instituicao={InstituicaoId} modelo={Modelo} duracaoMs={DuracaoMs} entradaComCache={EntradaComCache} entradaSemCache={EntradaSemCache} saida={TokensSaida} tipoDevolvido={TipoDevolvido} tipoFinal={TipoFinal} artigos={Artigos}",
             conversa.InstituicaoId, modelo, (long)relogio.GetElapsedTime(inicio).TotalMilliseconds, uso.ComCache, uso.SemCache, uso.Saida,
-            saida?.Tipo, tipoFinal, string.Join(",", saida?.ArtigoIds ?? []));
+            saida?.Tipo, tipoFinal, string.Join(",", (saida?.FonteIds ?? []).Select(id => fontes.FirstOrDefault(f => f.Id == id)?.ArtigoId).OfType<long>()));
 
         return new MensagemConversa
         {
@@ -120,26 +172,28 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             Resumo = saida?.Resumo,
             CriadaEm = relogio.GetUtcNow().UtcDateTime,
             Citacoes = citacoes,
+            TrechosBuscados = fontes.Select(f => f.Id).ToList(),
         };
     }
 
-    static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<VersaoArtigo> ativos)
+    // door 19 contra o trecho de fonte citado (AC 11 e AC 12): só fontes buscadas; trecho literal no texto da fonte; links do artigo de origem
+    static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<Fonte> buscadas)
     {
-        var ids = saida.ArtigoIds?.Distinct().ToList() ?? [];
-        var citados = ids.Select(id => ativos.FirstOrDefault(v => v.ArtigoId == id)).ToList();
-        if (ids.Count == 0 || citados.Any(v => v is null)) return ([], "artigo_invalido");
+        var ids = saida.FonteIds?.Distinct().ToList() ?? [];
+        var citadas = ids.Select(id => buscadas.FirstOrDefault(f => f.Id == id)).ToList();
+        if (ids.Count == 0 || citadas.Any(f => f is null)) return ([], "fonte_invalida");
         if (string.IsNullOrWhiteSpace(saida.Texto)) return ([], "texto_vazio");
 
         var trechos = saida.Trechos ?? [];
-        var trechosConferem = trechos.All(t => citados.FirstOrDefault(v => v!.ArtigoId == t.ArtigoId) is { } v && Conferencia.TrechoConfere(t.Texto, v.Resposta))
-            && citados.All(v => trechos.Any(t => t.ArtigoId == v!.ArtigoId));
+        var trechosConferem = trechos.All(t => citadas.FirstOrDefault(f => f!.Id == t.FonteId) is { } f && Conferencia.TrechoConfere(t.Texto, f.Texto))
+            && citadas.All(f => trechos.Any(t => t.FonteId == f!.Id));
         if (!trechosConferem) return ([], "trecho_invalido");
-        if (!Conferencia.LinksConferem(saida.Texto, citados.SelectMany(v => v!.Links))) return ([], "link_invalido");
+        if (!Conferencia.LinksConferem(saida.Texto, citadas.SelectMany(f => f!.Links))) return ([], "link_invalido");
 
-        return (citados.Select(v => new CitacaoArtigo
+        return (citadas.Select(f => new CitacaoArtigo
         {
-            VersaoArtigoId = v!.Id,
-            Trechos = trechos.Where(t => t.ArtigoId == v.ArtigoId).Select(t => t.Texto!).ToList(),
+            TrechoFonteId = f!.Id,
+            Trechos = trechos.Where(t => t.FonteId == f.Id).Select(t => t.Texto!).ToList(),
         }).ToList(), null);
     }
 
@@ -151,7 +205,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         var uso = new Uso();
         try
         {
-            var url = (cfg["Llm:BaseUrl"] ?? "https://api.deepseek.com").TrimEnd('/') + "/chat/completions";
+            var url = (cfg["Llm:BaseUrl"] ?? "https://api.openai.com/v1").TrimEnd('/') + "/chat/completions";
             using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(corpo, options: Json) };
             if (!string.IsNullOrEmpty(cfg["Llm:ChaveApi"])) req.Headers.Authorization = new("Bearer", cfg["Llm:ChaveApi"]);
             using var resp = await http.CreateClient("llm").SendAsync(req, limite.Token);

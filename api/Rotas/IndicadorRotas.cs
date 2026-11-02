@@ -89,10 +89,15 @@ public static class IndicadorRotas
                 from ci in db.Citacoes
                 join m in db.MensagensConversa on ci.MensagemConversaId equals m.Id
                 join c in db.Conversas on m.ConversaId equals c.Id
-                join v in db.VersoesArtigo on ci.VersaoArtigoId equals v.Id
-                join a in db.Artigos on v.ArtigoId equals a.Id
                 where c.CriadaEm >= inicio && c.CriadaEm < fim
-                select new { c.Id, a.CategoriaId }).Distinct().ToListAsync();
+                select new
+                {
+                    c.Id,
+                    CategoriaId = ci.TrechoFonteId != null
+                        ? db.TrechosFonte.Where(t => t.Id == ci.TrechoFonteId)
+                            .Select(t => t.VersaoArtigoId != null ? t.VersaoArtigo!.Artigo!.CategoriaId : t.VersaoDocumento!.Documento!.CategoriaId).First()
+                        : db.VersoesArtigo.Where(v => v.Id == ci.VersaoArtigoId).Select(v => v.Artigo!.CategoriaId).First(),
+                }).Distinct().ToListAsync();
             var comDesfecho = conversas.Count(c => c.Desfecho != null);
             int Desfecho(string d) => conversas.Count(c => c.Desfecho == d);
             var confirmadosSemReabertura = criados.Count(c => c.Estado == Fechado && c.MotivoFechamento is "CONFIRMADO" or "FECHADO_AUTOMATICAMENTE" && c.Reaberturas == 0);

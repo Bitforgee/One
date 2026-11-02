@@ -155,12 +155,11 @@ public static partial class InstituicaoComando
             db.Regras.Add(regra);
         }
         foreach (var (a, categoria) in artigos)
-            db.Artigos.Add(new Artigo
-            {
-                CategoriaId = categoria.Id,
-                Estado = EstadosArtigo.Ativo,
-                Versoes = [new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora }],
-            });
+        {
+            var versao = new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora };
+            db.Artigos.Add(new Artigo { CategoriaId = categoria.Id, Estado = EstadosArtigo.Ativo, Versoes = [versao] });
+            db.TrechosFonte.Add(One.Api.Assistente.Fontes.DoArtigo(versao, agora)); // RAG, AC 4
+        }
         await db.SaveChangesAsync();
         await tx.CommitAsync();
 

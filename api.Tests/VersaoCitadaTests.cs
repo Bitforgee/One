@@ -15,7 +15,8 @@ public class VersaoCitadaTests(OneFactory f) : IClassFixture<OneFactory>
         f.Llm.Devolver(c.RespostaBoletoValida("Você encontra o boleto no Portal do Aluno."));
         var (id, _) = await c.Primeira();
         var v1 = await f.Db(c.Instituicao.Id, db => db.VersoesArtigo.SingleAsync(v => v.ArtigoId == c.Boleto.Id));
-        var citada = await f.Db(c.Instituicao.Id, db => db.Citacoes.Select(x => x.VersaoArtigoId).SingleAsync());
+        // RAG, door R5: a citação grava o trecho de fonte; a versão citada é a do trecho
+        var citada = await f.Db(c.Instituicao.Id, db => db.Citacoes.Select(x => db.TrechosFonte.Where(t => t.Id == x.TrechoFonteId).Select(t => t.VersaoArtigoId).Single()).SingleAsync());
         Assert.Equal(v1.Id, citada);
 
         // edição do artigo: nova versão (a rota de edição chega com o S7)

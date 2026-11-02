@@ -30,9 +30,13 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<EventoChamado> EventosChamado => Set<EventoChamado>();
     public DbSet<RespostaPronta> RespostasProntas => Set<RespostaPronta>();
     public DbSet<EmailSaida> EmailsSaida => Set<EmailSaida>();
+    public DbSet<Documento> Documentos => Set<Documento>();
+    public DbSet<VersaoDocumento> VersoesDocumento => Set<VersaoDocumento>();
+    public DbSet<TrechoFonte> TrechosFonte => Set<TrechoFonte>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
+        mb.HasPostgresExtension("vector");
         mb.Entity<Instituicao>(e =>
         {
             e.Property(x => x.Slug).HasMaxLength(30);
@@ -81,7 +85,22 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
         });
         mb.Entity<Conversa>().HasOne<Usuario>().WithMany().HasForeignKey(x => x.AlunoId);
-        mb.Entity<CitacaoArtigo>().HasOne<VersaoArtigo>().WithMany().HasForeignKey(x => x.VersaoArtigoId);
+        mb.Entity<CitacaoArtigo>(e =>
+        {
+            e.HasOne<VersaoArtigo>().WithMany().HasForeignKey(x => x.VersaoArtigoId);
+            e.HasOne<TrechoFonte>().WithMany().HasForeignKey(x => x.TrechoFonteId);
+            e.ToTable(t => t.HasCheckConstraint("ck_citacao_artigo_fonte", "trecho_fonte_id IS NOT NULL OR versao_artigo_id IS NOT NULL"));
+        });
+        mb.Entity<Documento>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
+        mb.Entity<VersaoDocumento>().HasIndex(x => new { x.DocumentoId, x.Numero }).IsUnique();
+        mb.Entity<TrechoFonte>(e =>
+        {
+            e.HasOne(x => x.VersaoArtigo).WithMany().HasForeignKey(x => x.VersaoArtigoId);
+            e.HasOne(x => x.VersaoDocumento).WithMany().HasForeignKey(x => x.VersaoDocumentoId);
+            e.Property(x => x.Embedding).HasColumnType("vector(1536)");
+            e.HasIndex(x => x.Embedding).HasMethod("hnsw").HasOperators("vector_cosine_ops");
+            e.ToTable(t => t.HasCheckConstraint("ck_trecho_fonte_uma_versao", "(versao_artigo_id IS NULL) <> (versao_documento_id IS NULL)"));
+        });
         mb.Entity<Chamado>(e =>
         {
             e.Property(x => x.Numero).HasMaxLength(20);
@@ -165,5 +184,5 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
 public class OneDbDesignTime : IDesignTimeDbContextFactory<OneDb>
 {
     public OneDb CreateDbContext(string[] args) =>
-        new(new DbContextOptionsBuilder<OneDb>().UseNpgsql("Host=localhost;Database=one;Username=postgres;Password=postgres").Options);
+        new(new DbContextOptionsBuilder<OneDb>().UseNpgsql("Host=localhost;Database=one;Username=postgres;Password=postgres", o => o.UseVector()).Options);
 }

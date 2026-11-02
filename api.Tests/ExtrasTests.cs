@@ -186,6 +186,7 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         await Ativo("Rematrícula 2026/1", null, hoje.AddDays(-1));
         await Ativo("Rematrícula 2026/2", hoje, null);
         await Ativo("Rematrícula 2027/1", hoje.AddDays(1), null);
+        await Agendador.Executar(); // RAG: indexa os trechos dos artigos ativados
 
         await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "rematrícula" });
 

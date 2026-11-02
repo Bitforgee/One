@@ -13,11 +13,12 @@ var comando = args is ["instituicao", ..];
 var builder = WebApplication.CreateBuilder(args);
 if (comando) builder.Logging.ClearProviders();
 
-builder.Services.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One")));
+builder.Services.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()));
 builder.Services.TryAddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddSingleton<Email>();
 builder.Services.AddScoped<One.Api.Assistente.Assistente>();
+builder.Services.AddSingleton<One.Api.Assistente.Embeddings>();
 builder.Services.AddSingleton<Agendador>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Agendador>());
 builder.Services.AddHttpClient("llm", c => c.Timeout = Timeout.InfiniteTimeSpan);

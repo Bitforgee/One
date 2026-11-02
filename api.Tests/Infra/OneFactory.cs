@@ -36,7 +36,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Smtp:Porta", PortaSmtp.ToString());
         builder.UseSetting("App:UrlBase", "http://localhost:8080");
         builder.UseSetting("Llm:BaseUrl", "https://llm.teste/v1");
-        builder.UseSetting("Llm:Modelo", "deepseek-flash");
+        builder.UseSetting("Llm:Modelo", "gpt-6-luna");
         builder.UseSetting("Agendador:Ativo", "false"); // os testes chamam Agendador.Executar com o relógio falso
         if (!LimitesReais)
         {
@@ -116,8 +116,36 @@ public class HasherEspiao : IPasswordHasher<Usuario>
 
 public class LlmFalso : HttpMessageHandler
 {
+    // Corpos e Pedidos são só do chat; os de /embeddings ficam em CorposEmbeddings.
     public List<string> Corpos { get; } = [];
     public List<HttpRequestMessage> Pedidos { get; } = [];
+    public List<string> CorposEmbeddings { get; } = [];
+    public Func<string, CancellationToken, Task<HttpResponseMessage>>? ResponderEmbeddings { get; set; }
+
+    // Vetor determinístico: cada palavra (sem acento, 3+ letras) soma 1 numa posição fixa; textos com palavras em comum ficam próximos.
+    public static float[] Vetor(string texto)
+    {
+        var v = new float[1536];
+        var limpo = new string(texto.ToLowerInvariant().Normalize(NormalizationForm.FormD).Where(ch => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch) != System.Globalization.UnicodeCategory.NonSpacingMark).ToArray());
+        foreach (var palavra in System.Text.RegularExpressions.Regex.Split(limpo, "[^a-z0-9]+").Where(p => p.Length > 2))
+        {
+            var h = 2166136261u;
+            foreach (var ch in palavra) h = (h ^ ch) * 16777619u;
+            v[h % 1536] += 1;
+        }
+        if (v.All(x => x == 0)) v[0] = 1;
+        var norma = (float)Math.Sqrt(v.Sum(x => x * x));
+        return v.Select(x => x / norma).ToArray();
+    }
+
+    public static HttpResponseMessage RespostaEmbeddings(IEnumerable<string> textos) => new(System.Net.HttpStatusCode.OK)
+    {
+        Content = new StringContent(JsonSerializer.Serialize(new
+        {
+            data = textos.Select((t, i) => new { index = i, embedding = Vetor(t) }),
+            usage = new { prompt_tokens = 10, total_tokens = 10 },
+        }), Encoding.UTF8, "application/json"),
+    };
     public Func<CancellationToken, Task<HttpResponseMessage>> Responder { get; set; } = _ => Task.FromResult(Conteudo(new { tipo = "sem_base", texto = "" }));
 
     public static readonly object UsoPadrao = new { prompt_tokens = 1200, completion_tokens = 80, prompt_cache_hit_tokens = 1000, prompt_cache_miss_tokens = 200 };
@@ -136,6 +164,12 @@ public class LlmFalso : HttpMessageHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var corpo = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
+        if (request.RequestUri!.AbsolutePath.EndsWith("/embeddings"))
+        {
+            lock (CorposEmbeddings) CorposEmbeddings.Add(corpo);
+            if (ResponderEmbeddings is { } r) return await r(corpo, cancellationToken);
+            return RespostaEmbeddings(JsonDocument.Parse(corpo).RootElement.GetProperty("input").EnumerateArray().Select(e => e.GetString()!));
+        }
         Pedidos.Add(request);
         Corpos.Add(corpo);
         return await Responder(cancellationToken);

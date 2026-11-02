@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using One.Api.Dados;
+using Pgvector;
 
 #nullable disable
 
@@ -21,6 +22,7 @@ namespace One.Api.Dados.Migracoes
                 .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("One.Api.Dados.Anexo", b =>
@@ -348,12 +350,16 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("bigint")
                         .HasColumnName("mensagem_conversa_id");
 
+                    b.Property<long?>("TrechoFonteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("trecho_fonte_id");
+
                     b.PrimitiveCollection<List<string>>("Trechos")
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("trechos");
 
-                    b.Property<long>("VersaoArtigoId")
+                    b.Property<long?>("VersaoArtigoId")
                         .HasColumnType("bigint")
                         .HasColumnName("versao_artigo_id");
 
@@ -366,10 +372,16 @@ namespace One.Api.Dados.Migracoes
                     b.HasIndex("MensagemConversaId")
                         .HasDatabaseName("ix_citacao_artigo_mensagem_conversa_id");
 
+                    b.HasIndex("TrechoFonteId")
+                        .HasDatabaseName("ix_citacao_artigo_trecho_fonte_id");
+
                     b.HasIndex("VersaoArtigoId")
                         .HasDatabaseName("ix_citacao_artigo_versao_artigo_id");
 
-                    b.ToTable("citacao_artigo");
+                    b.ToTable("citacao_artigo", t =>
+                        {
+                            t.HasCheckConstraint("ck_citacao_artigo_fonte", "trecho_fonte_id IS NOT NULL OR versao_artigo_id IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("One.Api.Dados.Conversa", b =>
@@ -450,6 +462,45 @@ namespace One.Api.Dados.Migracoes
                         .HasDatabaseName("ix_curso_instituicao_id_nome");
 
                     b.ToTable("curso");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Documento", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CategoriaId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("estado");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("titulo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_documento");
+
+                    b.HasIndex("CategoriaId")
+                        .HasDatabaseName("ix_documento_categoria_id");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_documento_instituicao_id");
+
+                    b.ToTable("documento");
                 });
 
             modelBuilder.Entity("One.Api.Dados.EmailSaida", b =>
@@ -758,6 +809,10 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("text")
                         .HasColumnName("tipo_final");
 
+                    b.PrimitiveCollection<List<long>>("TrechosBuscados")
+                        .HasColumnType("bigint[]")
+                        .HasColumnName("trechos_buscados");
+
                     b.HasKey("Id")
                         .HasName("pk_mensagem_conversa");
 
@@ -943,6 +998,72 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("token_acesso");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.TrechoFonte", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(1536)")
+                        .HasColumnName("embedding");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordem");
+
+                    b.Property<DateTime>("ProximaTentativa")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("proxima_tentativa");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.Property<long?>("VersaoArtigoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("versao_artigo_id");
+
+                    b.Property<long?>("VersaoDocumentoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("versao_documento_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_trecho_fonte");
+
+                    b.HasIndex("Embedding")
+                        .HasDatabaseName("ix_trecho_fonte_embedding");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_trecho_fonte_instituicao_id");
+
+                    b.HasIndex("VersaoArtigoId")
+                        .HasDatabaseName("ix_trecho_fonte_versao_artigo_id");
+
+                    b.HasIndex("VersaoDocumentoId")
+                        .HasDatabaseName("ix_trecho_fonte_versao_documento_id");
+
+                    b.ToTable("trecho_fonte", t =>
+                        {
+                            t.HasCheckConstraint("ck_trecho_fonte_uma_versao", "(versao_artigo_id IS NULL) <> (versao_documento_id IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("One.Api.Dados.Usuario", b =>
                 {
                     b.Property<long>("Id")
@@ -1090,6 +1211,63 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("versao_artigo");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.VersaoDocumento", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<byte[]>("Conteudo")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("conteudo");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<long>("DocumentoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("documento_id");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("NomeArquivo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome_arquivo");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero");
+
+                    b.Property<int>("Paginas")
+                        .HasColumnType("integer")
+                        .HasColumnName("paginas");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.HasKey("Id")
+                        .HasName("pk_versao_documento");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_versao_documento_instituicao_id");
+
+                    b.HasIndex("DocumentoId", "Numero")
+                        .IsUnique()
+                        .HasDatabaseName("ix_versao_documento_documento_id_numero");
+
+                    b.ToTable("versao_documento");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Anexo", b =>
                 {
                     b.HasOne("One.Api.Dados.Instituicao", null)
@@ -1231,11 +1409,14 @@ namespace One.Api.Dados.Migracoes
                         .IsRequired()
                         .HasConstraintName("fk_citacao_artigo_mensagens_conversa_mensagem_conversa_id");
 
+                    b.HasOne("One.Api.Dados.TrechoFonte", null)
+                        .WithMany()
+                        .HasForeignKey("TrechoFonteId")
+                        .HasConstraintName("fk_citacao_artigo_trechos_fonte_trecho_fonte_id");
+
                     b.HasOne("One.Api.Dados.VersaoArtigo", null)
                         .WithMany()
                         .HasForeignKey("VersaoArtigoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_citacao_artigo_versoes_artigo_versao_artigo_id");
                 });
 
@@ -1269,6 +1450,23 @@ namespace One.Api.Dados.Migracoes
                         .WithMany()
                         .HasForeignKey("SetorCoordenacaoId")
                         .HasConstraintName("fk_curso_setores_setor_coordenacao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Documento", b =>
+                {
+                    b.HasOne("One.Api.Dados.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_documento_categoria_categoria_id");
+
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_documento_instituicoes_instituicao_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.EmailSaida", b =>
@@ -1434,6 +1632,30 @@ namespace One.Api.Dados.Migracoes
                         .HasConstraintName("fk_token_acesso_usuarios_usuario_id");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.TrechoFonte", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_trecho_fonte_instituicao_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.VersaoArtigo", "VersaoArtigo")
+                        .WithMany()
+                        .HasForeignKey("VersaoArtigoId")
+                        .HasConstraintName("fk_trecho_fonte_versoes_artigo_versao_artigo_id");
+
+                    b.HasOne("One.Api.Dados.VersaoDocumento", "VersaoDocumento")
+                        .WithMany()
+                        .HasForeignKey("VersaoDocumentoId")
+                        .HasConstraintName("fk_trecho_fonte_versoes_documento_versao_documento_id");
+
+                    b.Navigation("VersaoArtigo");
+
+                    b.Navigation("VersaoDocumento");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Usuario", b =>
                 {
                     b.HasOne("One.Api.Dados.Instituicao", null)
@@ -1480,6 +1702,25 @@ namespace One.Api.Dados.Migracoes
                     b.Navigation("Artigo");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.VersaoDocumento", b =>
+                {
+                    b.HasOne("One.Api.Dados.Documento", "Documento")
+                        .WithMany("Versoes")
+                        .HasForeignKey("DocumentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_versao_documento_documento_documento_id");
+
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_versao_documento_instituicao_instituicao_id");
+
+                    b.Navigation("Documento");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Artigo", b =>
                 {
                     b.Navigation("Versoes");
@@ -1488,6 +1729,11 @@ namespace One.Api.Dados.Migracoes
             modelBuilder.Entity("One.Api.Dados.Conversa", b =>
                 {
                     b.Navigation("Mensagens");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Documento", b =>
+                {
+                    b.Navigation("Versoes");
                 });
 
             modelBuilder.Entity("One.Api.Dados.MensagemChamado", b =>
