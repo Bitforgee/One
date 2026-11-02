@@ -327,4 +327,22 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var arquivo = Assert.Single(DaPasta("Administracao"), p => File.ReadAllText(p).Contains("\"/matriculas/importacao\""));
         Assert.Single(Regex.Matches(SemComentarios(arquivo), @"\.Map\w*\("));
     }
+
+    // vertical-slice-completa C7: door 1, o Mediator 3.0.2 sem MediatR, com CA1502 e MSG0005 como erro
+    [Fact]
+    public void Mediator_referenciado()
+    {
+        var projeto = System.Xml.Linq.XDocument.Load(Path.Combine(Api, "One.Api.csproj"));
+        var pacotes = projeto.Descendants("PackageReference").ToList();
+        string? Valor(System.Xml.Linq.XElement e, string nome) => (string?)e.Attribute(nome) ?? e.Element(nome)?.Value;
+        var abstracoes = Assert.Single(pacotes, p => (string?)p.Attribute("Include") == "Mediator.Abstractions");
+        Assert.Equal("3.0.2", Valor(abstracoes, "Version"));
+        var gerador = Assert.Single(pacotes, p => (string?)p.Attribute("Include") == "Mediator.SourceGenerator");
+        Assert.Equal("3.0.2", Valor(gerador, "Version"));
+        Assert.Equal("all", Valor(gerador, "PrivateAssets"));
+        Assert.DoesNotContain(pacotes, p => ((string?)p.Attribute("Include") ?? "").StartsWith("MediatR", StringComparison.OrdinalIgnoreCase));
+        var comoErro = projeto.Descendants("WarningsAsErrors").SelectMany(e => e.Value.Split(';')).Select(x => x.Trim()).ToList();
+        Assert.Contains("CA1502", comoErro);
+        Assert.Contains("MSG0005", comoErro);
+    }
 }

@@ -50,10 +50,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_d
 
 ### S2 - `Mediator` no lugar (P1) · ~6 files · ~32 KB · ~8k
 
-**C7** - `api/One.Api.csproj` tem `PackageReference` de `Mediator.Abstractions` versão `3.0.2` e de `Mediator.SourceGenerator` versão `3.0.2` com `PrivateAssets` igual a `all`, nenhum `PackageReference` cujo `Include` começa com `MediatR` (comparação sem diferenciar maiúsculas), e o `WarningsAsErrors` contém `CA1502` e `MSG0005` (AC 5, door 1)
+**C7** - [x] `api/One.Api.csproj` tem `PackageReference` de `Mediator.Abstractions` versão `3.0.2` e de `Mediator.SourceGenerator` versão `3.0.2` com `PrivateAssets` igual a `all`, nenhum `PackageReference` cujo `Include` começa com `MediatR` (comparação sem diferenciar maiúsculas), e o `WarningsAsErrors` contém `CA1502` e `MSG0005` (AC 5, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Mediator_referenciado"`
 
-**C8** - Um arquivo plantado em `api/` com `public sealed record MensagemPlantada : Mediator.IRequest<IResult>` e sem handler faz `dotnet build api --no-incremental` sair com código diferente de 0 e a saída conter `error MSG0005`; o mesmo arquivo com um `MensagemPlantadaHandler : IRequestHandler<MensagemPlantada, IResult>` compila com código 0 e sem `MSG0005`; o arquivo plantado sai no fim (AC 6, door 1)
+**C8** - [x] Um arquivo plantado em `api/` com `public sealed record MensagemPlantada : Mediator.IRequest<IResult>` e sem handler faz `dotnet build api --no-incremental` sair com código diferente de 0 e a saída conter `error MSG0005`; o mesmo arquivo com um `MensagemPlantadaHandler : IRequestHandler<MensagemPlantada, IResult>` compila com código 0 e sem `MSG0005`; o arquivo plantado sai no fim (AC 6, door 1)
 Proof: `bash .specs/features/vertical-slice-completa/msg0005_barra.sh`
 
 **C9** - Com o app do teste: `IMediator` resolvido 2 vezes no mesmo escopo de `f.Services` é a mesma instância, e resolvido em 2 escopos diferentes são 2 instâncias diferentes; `AcessoChamado` segue a mesma regra (AC 7, door 2)
