@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using One.Api.Chamados;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
-namespace One.Api.Rotas;
+namespace One.Api.Chamados;
 
 public record ResolverIn(string? Texto);
 public record RejeitarIn(string? Motivo);

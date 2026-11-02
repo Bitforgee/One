@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
-namespace One.Api.Rotas;
+namespace One.Api.Acesso;
 
 public static class InstituicaoRotas
 {

@@ -3,7 +3,7 @@ using One.Api.Assistente;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
-namespace One.Api.Rotas;
+namespace One.Api.Indicadores;
 
 // S11: os 14 indicadores do Quadro 12 (conteudo.md), com as definições da seção I das regras de negócio.
 public static class IndicadorRotas

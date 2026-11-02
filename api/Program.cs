@@ -5,9 +5,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using One.Api;
-using One.Api.Comando;
+using One.Api.Acesso;
+using One.Api.Administracao;
+using One.Api.Assistente;
+using One.Api.Chamados;
+using One.Api.Conhecimento;
 using One.Api.Dados;
-using One.Api.Rotas;
+using One.Api.Indicadores;
+using One.Api.Instituicoes;
 
 var comando = args is ["instituicao", ..];
 var builder = WebApplication.CreateBuilder(args);
@@ -17,8 +22,8 @@ builder.Services.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredServic
 builder.Services.TryAddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddSingleton<Email>();
-builder.Services.AddScoped<One.Api.Assistente.Assistente>();
-builder.Services.AddSingleton<One.Api.Assistente.Embeddings>();
+builder.Services.AddScoped<Assistente>();
+builder.Services.AddSingleton<Embeddings>();
 builder.Services.AddSingleton<Agendador>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Agendador>());
 builder.Services.AddHttpClient("llm", c => c.Timeout = Timeout.InfiniteTimeSpan);

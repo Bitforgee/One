@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
-namespace One.Api.Rotas;
+namespace One.Api.Administracao;
 
 public record UsuarioIn(string? Cpf, string? Nome, string? Email, string? SenhaTemporaria, string[]? Papeis, long[]? Setores);
 public record SetorIn(string? Nome, bool? Triagem, bool? Ativo);

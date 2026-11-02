@@ -3,8 +3,9 @@ using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using One.Api.Assistente;
+using One.Api.Conhecimento;
 
-namespace One.Api.Comando;
+namespace One.Api.Instituicoes;
 
 // Comando do operador da plataforma: `dotnet One.Api.dll instituicao criar|carga ...`. Sai com 0 ou 1.
 public static partial class InstituicaoComando
@@ -160,7 +161,7 @@ public static partial class InstituicaoComando
         {
             var versao = new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora };
             db.Artigos.Add(new Artigo { CategoriaId = categoria.Id, Estado = EstadosArtigo.Ativo, Versoes = [versao] });
-            db.TrechosFonte.Add(One.Api.Assistente.Fontes.DoArtigo(versao, agora)); // RAG, AC 4
+            db.TrechosFonte.Add(Fontes.DoArtigo(versao, agora)); // RAG, AC 4
         }
         await db.SaveChangesAsync();
         await tx.CommitAsync();

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
-namespace One.Api.Rotas;
+namespace One.Api.Acesso;
 
 public record LoginIn(string? Instituicao, string? Cpf, string? Senha);
 public record PrimeiroAcessoIn(string? Instituicao, string? Cpf);

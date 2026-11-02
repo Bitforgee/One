@@ -1,5 +1,4 @@
 using System.Text.Json;
-using One.Api.Dados;
 
 namespace One.Api.Assistente;
 
@@ -30,13 +29,4 @@ public class Embeddings(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             throw new JsonException("resposta de embeddings fora do formato");
         return corpo.Data.OrderBy(d => d.Index).Select(d => d.Embedding).ToList();
     }
-}
-
-public static class Fontes
-{
-    // RAG, AC 4: o trecho de um artigo é a versão inteira: título, perguntas e resposta
-    public static string TextoDoArtigo(VersaoArtigo v) => $"{v.Titulo}\n{string.Join("\n", v.Perguntas)}\n{v.Resposta}";
-
-    public static TrechoFonte DoArtigo(VersaoArtigo v, DateTime agora) =>
-        new() { VersaoArtigo = v, Ordem = 0, Texto = TextoDoArtigo(v), ProximaTentativa = agora };
 }

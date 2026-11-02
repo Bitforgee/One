@@ -3,7 +3,7 @@ using One.Api.Dados;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
-namespace One.Api.Rotas;
+namespace One.Api.Conhecimento;
 
 // RAG S3, door R4: PDFs da instituição como fonte interna do assistente; nunca aparecem para o aluno (AD-012).
 public static class DocumentoRotas

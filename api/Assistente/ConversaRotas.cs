@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using One.Api.Chamados;
 using One.Api.Dados;
 
-namespace One.Api.Rotas;
+namespace One.Api.Assistente;
 
 public record MensagemIn(string? Mensagem);
 public record AvaliacaoIn(bool? Resolveu);
@@ -36,7 +36,7 @@ public static class ConversaRotas
             setor = await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync(),
         });
 
-    static async Task<object> Responder(OneDb db, Assistente.Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
+    static async Task<object> Responder(OneDb db, Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
     {
         conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = mensagem, CriadaEm = agora });
         conversa.UltimaMensagemEm = agora;
@@ -49,7 +49,7 @@ public static class ConversaRotas
 
     public static void Mapear(RouteGroupBuilder api)
     {
-        api.MapPost("/conversas", async (MensagemIn i, HttpContext ctx, OneDb db, Assistente.Assistente assistente, TimeProvider relogio) =>
+        api.MapPost("/conversas", async (MensagemIn i, HttpContext ctx, OneDb db, Assistente assistente, TimeProvider relogio) =>
         {
             var u = ctx.Usuario();
             if (!await PodeUsarAssistente(db, u)) return Problemas.Erro(403, "O assistente é só para alunos com matrícula ativa.");
@@ -62,7 +62,7 @@ public static class ConversaRotas
             return Results.Created($"/api/conversas/{conversa.Id}", new { conversaId = conversa.Id, resposta });
         }).RequireRateLimiting("mensagens");
 
-        api.MapPost("/conversas/{id:long}/mensagens", async (long id, MensagemIn i, HttpContext ctx, OneDb db, Assistente.Assistente assistente, TimeProvider relogio) =>
+        api.MapPost("/conversas/{id:long}/mensagens", async (long id, MensagemIn i, HttpContext ctx, OneDb db, Assistente assistente, TimeProvider relogio) =>
         {
             var conversa = await DoAluno(db, ctx, id);
             if (conversa is null) return NaoEncontrada();

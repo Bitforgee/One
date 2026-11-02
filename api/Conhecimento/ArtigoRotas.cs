@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
 using One.Api.Dados;
 
-namespace One.Api.Rotas;
+namespace One.Api.Conhecimento;
 
 public record ArtigoIn(string? Titulo, string[]? Perguntas, long? CategoriaId, string? Resposta, string[]? Links, DateOnly? VisivelDe = null, DateOnly? VisivelAte = null);
 

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Comando;
+using One.Api.Instituicoes;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

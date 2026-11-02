@@ -5,7 +5,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using One.Api.Dados;
-using One.Api.Rotas;
+using One.Api.Conhecimento;
 using One.Api.Tests.Infra;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
