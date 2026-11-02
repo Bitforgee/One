@@ -75,6 +75,47 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
+    // C17 (verificação rodada 1, F13): transferir recusa a conversa encerrada (409) antes da matrícula inválida (400)
+    [Fact]
+    public async Task Transferir_conversa_encerrada_409_antes_de_400()
+    {
+        var c = await Cenario.Criar(f);
+        var (id, _) = await c.Primeira();
+        Assert.Equal(HttpStatusCode.OK, (await c.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null)).StatusCode);
+        var chamados = await f.Db(c.Instituicao.Id, db => db.Chamados.CountAsync());
+
+        var r = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { matriculaId = 999999 });
+
+        Assert.Equal(HttpStatusCode.Conflict, r.StatusCode);
+        Assert.Equal("Esta conversa já foi encerrada.", await Detail(r));
+        Assert.Equal(chamados, await f.Db(c.Instituicao.Id, db => db.Chamados.CountAsync()));
+    }
+
+    // C17 (verificação rodada 1): nos 4 cadastros, o campo inválido (400) vem antes do nome/título repetido (409)
+    [Fact]
+    public async Task Cadastro_400_antes_de_409()
+    {
+        var (i, admin) = await Admin.Criar(f);
+        var setor = await f.Db(i.Id, db => db.Setores.SingleAsync(s => s.Triagem));
+        var padrao = await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/categorias", new { nome = "Boleto" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/cursos", new { nome = "Direito" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/respostas-prontas", new { setorId = setor.Id, titulo = "Boleto", texto = "x" })).StatusCode);
+
+        foreach (var (metodo, rota, corpo, campo) in new (string, string, object, string)[]
+        {
+            ("POST", "/api/admin/setores", new { nome = setor.Nome, triagem = true }, "triagem"),
+            ("PUT", $"/api/admin/categorias/{padrao.Id}", new { nome = "Boleto" }, "nome"),
+            ("POST", "/api/admin/cursos", new { nome = "Direito", setorCoordenacaoId = 999999 }, "setorCoordenacaoId"),
+            ("POST", "/api/admin/respostas-prontas", new { setorId = setor.Id, titulo = "Boleto", texto = "" }, "texto"),
+        })
+        {
+            var r = metodo == "POST" ? await admin.PostAsJsonAsync(rota, corpo) : await admin.PutAsJsonAsync(rota, corpo);
+            Assert.True(r.StatusCode == HttpStatusCode.BadRequest, $"{rota}: {(int)r.StatusCode}");
+            Assert.True((await r.Json()).GetProperty("errors").TryGetProperty(campo, out _), $"{rota} sem errors.{campo}");
+        }
+    }
+
     // C18
     [Fact]
     public async Task Id_inexistente_404_mesmo_com_corpo_invalido()
