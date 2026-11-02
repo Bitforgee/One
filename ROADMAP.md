@@ -1,12 +1,15 @@
 # One: roadmap
 
-- **Data:** 02/11/2026, revisão da noite (RAG construído e verificado no `main`;
-  refatoração SOLID/clean code em fatias verticais aprovada, obrigatória antes da banca)
+- **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
+  interface nova em build, lote 1 de 3; domínio rico e contratos com plano aprovado)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
   - `.specs/features/rag/plan.md` e `checks.md`: o RAG (Etapa 4), 46 checks;
   - `.specs/features/refatoracao-solid/plan.md` e `checks.md`: a refatoração (Etapa 4b), 36 critérios, 39 checks;
+  - `.specs/features/vertical-slice-completa/`: um arquivo por caso de uso com `Mediator` (Etapa 4c), 31 checks;
+  - `.specs/features/interface-nova/`: shadcn/ui e Tailwind no `web/` (Etapa 4c), 61 critérios, 94 checks;
+  - `.specs/features/dominio-e-contratos/plan.md`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios;
   - `.specs/STATE.md`: decisões AD-001 a AD-024;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
@@ -42,11 +45,14 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 49 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08` |
-| Testes | API 268 (237 antes da refatoração), web 99 (35 antes da refatoração), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Código | 68 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
+| Testes | API 292 (237 antes da refatoração), web 99 (35 antes da refatoração; o lote 1 da interface nova ainda vai mudar esse número), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
+| Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
+| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. Lote 1 (S0 a S2: portões, fundação Tailwind/shadcn/TanStack Query e o chat do Assistente) com 3 commits, fechando a mutação |
+| Domínio rico e contratos (`dominio-e-contratos`) | Plano aprovado em 02/11 (`066ca62`): 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo; checks em escrita |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -218,11 +224,11 @@ antes do código, verificação independente depois), e a próxima só começa c
 | Quando | Feature | Onde |
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
-| 03–05/11 | domínio rico e contratos por caso de uso (AD-024) | `api/` |
+| 03–05/11 | domínio rico e contratos por caso de uso (AD-024): plano aprovado em 02/11, checks em escrita | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
-| 04–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca | `web/` |
+| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: build começou em 02/11; lote 1 (Assistente) quase pronto, lotes 2 (detalhe do chamado, Indicadores, listas) e 3 (demais telas e saída do Bootstrap) a seguir | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
 
