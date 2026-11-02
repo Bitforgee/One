@@ -29,9 +29,9 @@
 
 ## Handoff
 
-**Feature**: `refatoracao-solid`: lote 1 (C1-C34, `api/`) e lote 2 (C35-C39, `web/`) verdes, último commit de código `b7ca20d`; `rag` fechado (PASS rodada 3)
-**In progress**: verificação independente do `refatoracao-solid` (`c267db8..HEAD`, perfil standard)
-**Next step**: depois do PASS, Etapa 4c (AD-019 a AD-022), uma feature por vez com `tlc-spec-lean`
-**Blockers**: none para a verificação; chave da OpenAI no `.env`, logo e cores do One (até 04/11) e as perguntas `blocks go-live` seguem abertas
+**Feature**: `refatoracao-solid` fechado: verificação independente PASS na rodada 2 (`verification.md`, `validate_verification.py` exit 0). `vertical-slice-completa`: plano escrito, perguntas respondidas, aguardando aprovação. `interface-nova`: plano em escrita
+**In progress**: aprovação do plano `vertical-slice-completa`; plano `interface-nova`
+**Next step**: com o plano aprovado, checks do `vertical-slice-completa` e build (03–05/11); depois MinIO, SignalR, Web Push (Etapa 4c)
+**Blockers**: logo e cores do One (até 04/11) para a interface; chave da OpenAI no `.env`; perguntas `blocks go-live`
 **Uncommitted**: nothing
 **Branch**: main

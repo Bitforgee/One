@@ -42,11 +42,11 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 31 commits em `main` (`8c0cb43..a92daae`), 5 deles do RAG |
-| Testes | API 267 (237 antes da refatoração), web 99 (35 antes da refatoração), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Código | 49 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08` |
+| Testes | API 268 (237 antes da refatoração), web 99 (35 antes da refatoração), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
-| Refatoração (`refatoracao-solid`) | Lote 1 (`api/`, C1 a C34) verde em 02/11 (`69fd9ab..d6cb69a`): API 267 testes, CA1502 de 18 métodos para 0. Lote 2 (`web/`, C35 a C39) verde em 02/11 (`6912b5f..b7ca20d`): web 99 testes, pior CRAP de 120,9 para 9,0, 282 mutantes mortos e 0 sobreviventes. Verificação independente em andamento |
+| Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -198,7 +198,9 @@ injeção de falhas do Verifier.
 - [x] S4: `api/` em fatias verticais; `ChamadoRotas`, `AdminRotas` e `Assistente` com uma
       responsabilidade cada.
 - [x] S5: `web/` em fatias verticais; telas abaixo de CRAP 10.
-- [ ] Verificação independente aprovada.
+- [x] Verificação independente aprovada em 02/11, na rodada 2 (`verification.md`). A rodada 1 reprovou
+      com 1 falha injetada que nenhum teste pegava (o aviso de versão atualizada para documento citado);
+      fechada em `f18ad08`. Texto impreciso em C17, C21, C32 e C35, com as afirmações provadas.
 
 **Saída (meta 08/11, limite 12/11):** S1 a S5 no `main` com a suíte inteira verde, nenhuma
 asserção existente removida, e a verificação aprovada.

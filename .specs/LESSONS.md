@@ -138,6 +138,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks)
 - last seen: 2026-11-02T22:06:05Z
 
+### L-022 - Quando a correção de um check acrescenta um teste em outra classe, acrescente o filtro dele às linhas Proof do check; sem isso o próprio proof do check não exercita a parte corrigida.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: refatoracao-solid
+- evidence: checks.md:125-126 C28 (verification.md rodada 2) (specs/checks)
+- last seen: 2026-11-02T22:11:53Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
