@@ -6,3 +6,4 @@ Conferido por `seletores_conferem.py <base>`.
 
 | Arquivo | Antes | Depois | Afirmação |
 | --- | --- | --- | --- |
+| `web/src/test/estrutura.test.ts` | `expect(pastas).toEqual(Fatias)` | `expect(pastas).toEqual([...Fatias, 'ui'])` | as pastas de `web/src` são exatamente as listadas; a lista ganha `ui` (door 3, AD-023, escolha do usuário em 02/11) |

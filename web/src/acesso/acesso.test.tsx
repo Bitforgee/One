@@ -94,6 +94,91 @@ describe('acesso', () => {
     expect(todas['bootstrap-icons']).toBe('1.13.2')
     expect(todas['react-router']).toMatch(/^\^?8\./)
     expect(todas['vite-plugin-pwa']).toBe('2.0.0')
+    // door 9: a stack nova com versão exata, e nada do AI SDK nem do next-themes
+    expect(todas['tailwindcss']).toBe('4.3.4')
+    expect(todas['@tailwindcss/vite']).toBe('4.3.4')
+    expect(todas['lucide-react']).toBe('1.66.0')
+    expect(todas['@tanstack/react-query']).toBe('5.105.3')
+    expect(todas['vaul']).toBe('1.1.2')
+    for (const proibido of ['next-themes', 'ai', '@ai-sdk/react', 'streamdown']) expect(todas[proibido], proibido).toBeUndefined()
+  })
+
+  it('cabeçalho num único nav por papel', async () => {
+    for (const [papel, links] of [
+      ['ALUNO', ['Assistente', 'Minhas solicitações']],
+      ['ATENDENTE', ['Fila', 'Indicadores']],
+      ['ADMINISTRADOR', ['Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros']],
+    ] as const) {
+      api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
+      const { unmount } = abrir('/univag/trocar-senha')
+      await screen.findByRole('heading', { name: 'Trocar senha' })
+      const navs = screen.getAllByRole('navigation')
+      expect(navs, papel).toHaveLength(1)
+      const nav = within(navs[0])
+      expect(nav.getByText('Univag')).toBeInTheDocument()
+      expect(nav.getAllByRole('link').map((l) => l.textContent)).toEqual(links)
+      expect(nav.getByRole('button', { name: 'Menu' })).toBeInTheDocument()
+      expect(nav.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  it('ícones Lucide do cabeçalho', async () => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })] })
+    abrir('/univag/trocar-senha')
+    const nav = within(await screen.findByRole('navigation'))
+    const icone = (el: HTMLElement) => el.querySelector('svg')
+    for (const [rotulo, classe] of [
+      ['Assistente', 'lucide-message-circle'],
+      ['Minhas solicitações', 'lucide-list-checks'],
+      ['Fila', 'lucide-inbox'],
+      ['Artigos', 'lucide-book-text'],
+      ['Documentos', 'lucide-file-text'],
+      ['Indicadores', 'lucide-chart-column'],
+      ['Usuários', 'lucide-users'],
+      ['Matrículas', 'lucide-upload'],
+      ['Cadastros', 'lucide-settings'],
+    ]) {
+      const svg = icone(nav.getByRole('link', { name: rotulo }))
+      expect(svg, rotulo).toHaveClass(classe)
+      expect(svg, rotulo).toHaveAttribute('aria-hidden', 'true')
+    }
+    for (const [nome, classe] of [
+      ['Sair', 'lucide-log-out'],
+      ['Menu', 'lucide-menu'],
+    ]) {
+      const svg = icone(nav.getByRole('button', { name: nome }))
+      expect(svg, nome).toHaveClass(classe)
+      expect(svg, nome).toHaveAttribute('aria-hidden', 'true')
+    }
+  })
+
+  it('QueryClient por montagem sem nova tentativa nem releitura no foco', async () => {
+    const leiturasDoMe = (chamadas: { url: string }[]) => chamadas.filter((c) => c.url === '/api/auth/me').length
+
+    // 500 no /me: uma chamada só, e a tela volta para o Login
+    const falha = api({ ...instituicao, 'GET /api/auth/me': () => [500, { status: 500, detail: 'Erro.' }] })
+    const primeira = abrir('/univag/assistente')
+    expect(await screen.findByLabelText('CPF')).toBeInTheDocument()
+    expect(leiturasDoMe(falha)).toBe(1)
+    primeira.unmount()
+
+    // com o /me carregado, foco e visibilidade da janela não releem
+    const chamadas = api({ 'GET /api/auth/me': () => [200, me()] })
+    const segunda = abrir('/univag/trocar-senha')
+    await screen.findByRole('heading', { name: 'Trocar senha' })
+    window.dispatchEvent(new Event('focus'))
+    window.dispatchEvent(new Event('visibilitychange'))
+    document.dispatchEvent(new Event('visibilitychange'))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(leiturasDoMe(chamadas)).toBe(1)
+    segunda.unmount()
+
+    // outra montagem do App não herda o /me da anterior
+    api({ 'GET /api/auth/me': () => new Promise(() => {}) })
+    abrir('/univag/trocar-senha')
+    expect(await screen.findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
+    expect(screen.queryByText('Univag')).not.toBeInTheDocument()
   })
 
   it('primeiro acesso mostra a mensagem da API no lugar do formulário', async () => {

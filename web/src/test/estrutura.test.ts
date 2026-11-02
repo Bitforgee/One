@@ -8,6 +8,9 @@ const texto = (arquivo: string) => fontes[`/src/${arquivo}`]
 
 const Fatias = ['acesso', 'administracao', 'assistente', 'chamados', 'conhecimento', 'indicadores']
 const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'datas.ts', 'main.tsx', 'sessao.ts']
+// Pacotes que só o código copiado dos registros (shadcn/ui, AI Elements) importa (door 3)
+const SoDaUi = /from ['"](?:radix-ui|@radix-ui\/[^'"]+|vaul|class-variance-authority|use-stick-to-bottom|clsx|tailwind-merge)['"]/
+const ForaDaUi = /(?:from|import)\s*['"](?:\.\.\/|@\/(?!ui\/))/
 const pasta = (arquivo: string) => (arquivo.includes('/') ? arquivo.split('/')[0] : '')
 
 // Fatia de cada tela: o App importa a tela da pasta dela e a liga a um caminho.
@@ -24,7 +27,7 @@ function fatiaPorCaminho(): Record<string, string> {
 
 it('estrutura em fatias', () => {
   const pastas = [...new Set(arquivos.map(pasta).filter((p) => p !== '' && p !== 'test'))].sort()
-  expect(pastas).toEqual(Fatias)
+  expect(pastas).toEqual([...Fatias, 'ui'])
   expect(arquivos.filter((a) => a.startsWith('telas/'))).toEqual([])
 
   // cada teste de tela mora numa fatia e abre ao menos uma tela dessa fatia
@@ -48,4 +51,9 @@ it('estrutura em fatias', () => {
     )
     expect(importam.size, arquivo).toBeGreaterThanOrEqual(2)
   }
+
+  // ui/ só tem código dos registros: não importa fatia nem módulo da raiz; o cn só existe em ui/utils.ts
+  for (const arquivo of arquivos.filter((a) => pasta(a) === 'ui')) expect(texto(arquivo), arquivo).not.toMatch(ForaDaUi)
+  expect(arquivos.filter((a) => /(?:function|const)\s+cn\b/.test(texto(a)))).toEqual(['ui/utils.ts'])
+  expect(arquivos.filter((a) => pasta(a) !== 'ui' && SoDaUi.test(texto(a)))).toEqual([])
 })
