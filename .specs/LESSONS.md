@@ -144,6 +144,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md:125-126 C28 (verification.md rodada 2) (specs/checks)
 - last seen: 2026-11-02T22:11:53Z
 
+### L-023 - Tire da base a sequência de recusas de cada handler e dê um caso HTTP com dois motivos ao mesmo tempo a cada par 409 antes de 400; o conjunto escrito a partir do plano esquece handlers como o de transferir.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/ordem-das-recusas` · harmful: 0
+- features: vertical-slice-completa
+- evidence: api/Assistente/TransferirConversa.cs:20 (F13) (api/ordem-das-recusas)
+- last seen: 2026-11-02T23:09:00Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

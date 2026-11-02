@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 23,
+  "next_id": 24,
   "lessons": [
     {
       "id": "L-001",
@@ -402,6 +402,24 @@
       ],
       "created": "2026-11-02T22:11:53Z",
       "last_seen": "2026-11-02T22:11:53Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::tire da base a sequencia de recusas de cada handler e de um caso http com dois motivos ao mesmo tempo a cada par 409 antes de 400 o conjunto escrito a partir do plano esquece handlers como o de transferir",
+      "text": "Tire da base a sequência de recusas de cada handler e dê um caso HTTP com dois motivos ao mesmo tempo a cada par 409 antes de 400; o conjunto escrito a partir do plano esquece handlers como o de transferir.",
+      "signal": "surviving_mutant",
+      "scope": "api/ordem-das-recusas",
+      "status": "candidate",
+      "features": [
+        "vertical-slice-completa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Assistente/TransferirConversa.cs:20 (F13) (api/ordem-das-recusas)"
+      ],
+      "created": "2026-11-02T23:09:00Z",
+      "last_seen": "2026-11-02T23:09:00Z"
     }
   ]
 }
