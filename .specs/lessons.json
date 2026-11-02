@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 4,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::regra de ultimo de varios so e provada por um teste com dois ou mais itens diferentes um item so nao distingue primeiro de ultimo",
+      "text": "Regra de 'último de vários' só é provada por um teste com dois ou mais itens diferentes; um item só não distingue primeiro de último.",
+      "signal": "surviving_mutant",
+      "scope": "api/chamados",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Chamados/Transferencia.cs:30 (F5) (api/chamados)"
+      ],
+      "created": "2026-11-02T15:26:00Z",
+      "last_seen": "2026-11-02T15:26:00Z"
+    },
+    {
+      "id": "L-002",
+      "key": "gate_fail::confira que cada filtro de prova executa exatamente um teste um fullyqualifiedname que nao casa nada sai com codigo 0",
+      "text": "Confira que cada filtro de prova executa exatamente um teste: um FullyQualifiedName que não casa nada sai com código 0.",
+      "signal": "gate_fail",
+      "scope": "api.Tests",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C164 (api.Tests)"
+      ],
+      "created": "2026-11-02T15:26:00Z",
+      "last_seen": "2026-11-02T15:26:00Z"
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::antes de entregar liste todo problemas invalido e todo 400 413 415 das rotas e ligue cada um a uma assercao a lista tirada do codigo acha recusas que a lista tirada do plano esquece",
+      "text": "Antes de entregar, liste todo Problemas.Invalido e todo 400/413/415 das rotas e ligue cada um a uma asserção; a lista tirada do código acha recusas que a lista tirada do plano esquece.",
+      "signal": "ac_gap",
+      "scope": "api/rotas",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md rodadas 2 e 3, Test policy linha 3 (api/rotas)"
+      ],
+      "created": "2026-11-02T15:26:00Z",
+      "last_seen": "2026-11-02T15:26:00Z"
+    }
+  ]
+}
