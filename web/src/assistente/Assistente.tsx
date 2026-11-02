@@ -69,7 +69,7 @@ function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso:
   )
 }
 
-type Seguimento = { ultima?: Tipo; avaliada: boolean; desfecho: string | null; explicar: boolean; avaliar: (resolveu: boolean) => void; pendente: boolean; transferir: () => void }
+type Seguimento = { ultima?: Tipo; avaliada?: boolean; desfecho: string | null; explicar: boolean; avaliar: (resolveu: boolean) => void; pendente: boolean; transferir: () => void }
 
 // Depois da última resposta: a avaliação, o convite para explicar melhor e a confirmação da transferência.
 function Seguimento({ ultima, avaliada, desfecho, explicar, avaliar, pendente, transferir }: Seguimento) {
@@ -239,7 +239,7 @@ export function Assistente() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [texto, setTexto] = useState('')
   const [desfecho, setDesfecho] = useState<string | null>(null)
-  const [avaliada, setAvaliada] = useState(false)
+  const [avaliada, setAvaliada] = useState<boolean>() // só conta depois de uma resposta, e cada envio a zera
   const [explicar, setExplicar] = useState(false)
   const [confirmar, setConfirmar] = useState<Confirmar>()
   const envio = useAcao()

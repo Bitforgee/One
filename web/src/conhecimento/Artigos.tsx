@@ -14,6 +14,8 @@ const Novo: Rascunho = { titulo: '', perguntas: '', categoriaId: '', resposta: '
 const dataBr = (iso: string) => iso.split('-').reverse().join('/')
 const linhas = (texto: string) => texto.split('\n').map((l) => l.trim()).filter(Boolean)
 
+const data = (v: string | null) => (v === null ? '' : v)
+
 const rascunho = (a: Artigo): Rascunho => ({
   id: a.id,
   titulo: a.versao.titulo,
@@ -21,8 +23,8 @@ const rascunho = (a: Artigo): Rascunho => ({
   categoriaId: String(a.categoriaId),
   resposta: a.versao.resposta,
   links: a.versao.links.join('\n'),
-  visivelDe: a.visivelDe ?? '',
-  visivelAte: a.visivelAte ?? '',
+  visivelDe: data(a.visivelDe),
+  visivelAte: data(a.visivelAte),
 })
 
 const corpo = (r: Rascunho) => ({

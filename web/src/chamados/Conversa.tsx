@@ -1,6 +1,7 @@
 import { Badge, Card, ListGroup, Stack } from 'react-bootstrap'
 import { Estados, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
+import { responsavel } from './Chamados'
 
 export const quebra = { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } as const
 
@@ -15,7 +16,7 @@ export function Cabecalho({ c }: { c: Chamado }) {
           {Estados[c.estado]}
         </Badge>
         <span className="small text-body-secondary">
-          {c.setor} · {c.categoria} · {c.responsavel ?? 'sem responsável'}
+          {c.setor} · {c.categoria} · {responsavel(c.responsavel)}
         </span>
       </p>
       {c.eventos && (
@@ -119,6 +120,8 @@ export function Mensagens({ mensagens, fuso }: { mensagens: MensagemChamado[]; f
   )
 }
 
+const traco = (v: string | null) => (v === null ? '—' : v)
+
 export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: string }) {
   if (!eventos) return null
   return (
@@ -129,7 +132,7 @@ export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: s
           <ListGroup.Item as="li" key={i} className="px-0">
             <span className="text-body-secondary me-2">{formatarData(e.criadoEm, fuso)}</span>
             {e.tipo} · {e.ator}
-            {(e.de || e.para) && ` · ${e.de ?? '—'} → ${e.para ?? '—'}`}
+            {(e.de || e.para) && ` · ${traco(e.de)} → ${traco(e.para)}`}
           </ListGroup.Item>
         ))}
       </ListGroup>

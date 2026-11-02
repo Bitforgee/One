@@ -46,12 +46,15 @@ function ListaDeChamados<T extends ItemMeu>({ titulo, url, vazio, detalhe }: { t
   )
 }
 
+// O nome nunca vem vazio da API: só null quer dizer sem responsável.
+export const responsavel = (nome: string | null) => (nome === null ? 'sem responsável' : nome)
+
 const dias = (n: number) => (n === 1 ? '1 dia' : `${n} dias`)
 
 function DetalheDaFila({ c }: { c: ItemFila }) {
   return (
     <div className="small text-body-secondary">
-      {c.categoria} · {c.responsavel ?? 'sem responsável'} · {dias(c.dias)}
+      {c.categoria} · {responsavel(c.responsavel)} · {dias(c.dias)}
     </div>
   )
 }

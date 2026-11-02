@@ -95,4 +95,52 @@ describe('acesso', () => {
     expect(todas['react-router']).toMatch(/^\^?8\./)
     expect(todas['vite-plugin-pwa']).toBe('2.0.0')
   })
+
+  it('primeiro acesso mostra a mensagem da API no lugar do formulário', async () => {
+    const chamadas = api({ 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'Se o CPF estiver cadastrado, enviamos um link para o e-mail.' }] })
+    abrir('/univag/primeiro-acesso')
+    await userEvent.type(await screen.findByLabelText('CPF'), '12345678909')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar link' }))
+    expect(await screen.findByText('Se o CPF estiver cadastrado, enviamos um link para o e-mail.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Enviar link' })).not.toBeInTheDocument()
+    expect(chamadas.map((c) => c.corpo)).toEqual([{ instituicao: 'univag', cpf: '12345678909' }])
+  })
+
+  it('definir senha envia o token do link e mostra Senha criada', async () => {
+    const chamadas = api({ 'POST /api/auth/definir-senha': () => [204, undefined] })
+    abrir('/univag/definir-senha?token=abc123')
+    expect(screen.queryByText(/Senha criada/)).not.toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'senha-boa-123')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar senha' }))
+    expect(await screen.findByText(/Senha criada/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Entre com o CPF e a nova senha.' })).toHaveAttribute('href', '/univag')
+    expect(screen.queryByLabelText('Nova senha')).not.toBeInTheDocument()
+    expect(chamadas.map((c) => c.corpo)).toEqual([{ token: 'abc123', novaSenha: 'senha-boa-123' }])
+  })
+
+  it('troca de senha por vontade própria não mostra o aviso da senha temporária', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    expect(await screen.findByRole('heading', { name: 'Trocar senha' })).toBeInTheDocument()
+    expect(screen.queryByText('Troque a senha temporária para continuar.')).not.toBeInTheDocument()
+  })
+
+  it('trocada a senha temporária, abre a tela inicial', async () => {
+    // a API passa a responder deveTrocarSenha false depois da troca
+    let trocou = false
+    const chamadas = api({
+      'GET /api/auth/me': () => [200, me({ deveTrocarSenha: !trocou })],
+      'POST /api/auth/senha': () => {
+        trocou = true
+        return [204, undefined]
+      },
+    })
+    abrir('/univag/trocar-senha')
+    expect(await screen.findByText('Troque a senha temporária para continuar.')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'temporaria-1')
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'senha-boa-123')
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    expect(await screen.findByRole('heading', { name: 'Assistente' })).toBeInTheDocument()
+    expect(chamadas.find((c) => c.url === '/api/auth/senha')?.corpo).toEqual({ senhaAtual: 'temporaria-1', novaSenha: 'senha-boa-123' })
+  })
 })

@@ -24,10 +24,11 @@ function useProntas(setorId?: number) {
 
 type Equipe = { equipe: boolean; nota: boolean }
 
-function SelecaoPronta({ equipe, nota, prontas, texto, setTexto }: Equipe & { prontas: Pronta[]; texto: string; setTexto: (t: string) => void }) {
-  if (!equipe || nota || prontas.length === 0) return null
+// Só a equipe recebe prontas: o aluno nunca as busca.
+function SelecaoPronta({ nota, prontas, setTexto }: { nota: boolean; prontas: Pronta[]; setTexto: (t: string) => void }) {
+  if (nota || prontas.length === 0) return null
   return (
-    <Form.Select aria-label="Resposta pronta" className="mb-2" value="" onChange={(e) => setTexto(prontas.find((p) => String(p.id) === e.target.value)?.texto ?? texto)}>
+    <Form.Select aria-label="Resposta pronta" className="mb-2" value="" onChange={(e) => setTexto(prontas.find((p) => String(p.id) === e.target.value)!.texto)}>
       <option value="">Inserir resposta pronta…</option>
       {prontas.map((p) => (
         <option key={p.id} value={p.id}>
@@ -38,12 +39,12 @@ function SelecaoPronta({ equipe, nota, prontas, texto, setTexto }: Equipe & { pr
   )
 }
 
-function CampoAnexos({ nota, envio, setArquivos }: { nota: boolean; envio: number; setArquivos: (a: File[]) => void }) {
+function CampoAnexos({ nota, envio, setArquivos }: { nota: boolean; envio?: boolean; setArquivos: (a: File[]) => void }) {
   if (nota) return null
   return (
     <Form.Group controlId="anexos" className="mt-2">
       <Form.Label className="small">Anexos (PDF, JPG ou PNG, até 10 MB cada)</Form.Label>
-      <Form.Control key={envio} type="file" size="sm" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setArquivos(Array.from((e.target as HTMLInputElement).files!))} />
+      <Form.Control key={String(envio)} type="file" size="sm" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setArquivos(Array.from((e.target as HTMLInputElement).files!))} />
     </Form.Group>
   )
 }
@@ -79,7 +80,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   const [nota, setNota] = useState(false)
   const [aguardaAluno, setAguardaAluno] = useState(false)
   const [arquivos, setArquivos] = useState<File[]>([])
-  const [envio, setEnvio] = useState(0) // troca a chave do campo de arquivo para limpá-lo depois do envio
+  const [envio, setEnvio] = useState<boolean>() // cada envio troca a chave do campo de arquivo, que volta vazio
   const prontas = useProntas(equipe ? c.setorId : undefined)
   if (!pode('responder') && !pode('nota')) return null
 
@@ -89,13 +90,13 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
       setTexto('')
       setAguardaAluno(false)
       setArquivos([])
-      setEnvio((n) => n + 1)
+      setEnvio((n) => !n)
     })
   }
 
   return (
     <Form onSubmit={responder} className="mb-3">
-      <SelecaoPronta equipe={equipe} nota={nota} prontas={prontas} texto={texto} setTexto={setTexto} />
+      <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Form.Group controlId="resposta">
         <Form.Label>{rotuloResposta(c, equipe)}</Form.Label>
         <Form.Control as="textarea" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
