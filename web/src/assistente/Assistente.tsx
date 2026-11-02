@@ -1,11 +1,21 @@
+import { useMutation } from '@tanstack/react-query'
+import { Hand, Send, ShieldAlert } from 'lucide-react'
+import { motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
-import { Alert, Button, Card, Form, Modal, Spinner, Stack } from 'react-bootstrap'
 import { Link, useParams } from 'react-router'
-import { BotaoAcao, useAcao } from '../acao'
 import { api, type Matricula } from '../api'
 import { useChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { useSessao } from '../sessao'
+import { Alert } from '../ui/alert'
+import { Button } from '../ui/button'
+import { Conversation, ConversationContent } from '../ui/conversation'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Label } from '../ui/label'
+import { Message, MessageContent } from '../ui/message'
+import { NativeSelect, NativeSelectOption } from '../ui/native-select'
+import { Spinner } from '../ui/spinner'
+import { Textarea } from '../ui/textarea'
 
 type Tipo = 'resposta' | 'pergunta' | 'sem_base' | 'transferir'
 type Mensagem = { autor: 'ALUNO' | 'ASSISTENTE'; texto: string; tipo?: Tipo; em: string }
@@ -17,7 +27,6 @@ const AvisoExterno =
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.'
 const AvisoResposta = 'Resposta gerada por IA com base nas orientações da instituição.'
 const LimiteDoAluno = 10
-const quebra = { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } as const
 
 // No limite de mensagens, depois de um sem_base ou de um "Não", o atendente vira o botão principal.
 function situacao(mensagens: Mensagem[], explicar: boolean) {
@@ -47,25 +56,47 @@ function transferir(conversaId: number | undefined, descricao: string, matricula
     : api<Transferencia>(`/api/conversas/${conversaId}/transferir`, escolha)
 }
 
+const MensagemAnimada = motion.create(Message)
+
+type BalaoProps = { doAluno: boolean; autor?: string; texto: string; aviso?: boolean; em: string; fuso: string }
+
+// Aluno à direita em bg-primary-subtle; assistente e atendente à esquerda em bg-muted. O texto do modelo vai como
+// texto puro (AD-012). O balão novo entra subindo 8 px, só com transform; o MotionConfig do App respeita o movimento reduzido.
+function Balao({ doAluno, autor, texto, aviso, em, fuso }: BalaoProps) {
+  return (
+    <MensagemAnimada
+      from={doAluno ? 'user' : 'assistant'}
+      initial={{ y: 8 }}
+      animate={{ y: 0 }}
+      transition={{ ease: 'easeOut' }}
+      className={`w-fit max-w-[90%] gap-1 rounded-lg px-3 py-2 ${doAluno ? 'ms-auto bg-primary-subtle' : 'me-auto bg-muted'}`}
+    >
+      <div className="text-xs font-semibold empty:hidden">{autor}</div>
+      <MessageContent className="w-full text-base break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
+        {texto}
+      </MessageContent>
+      {aviso && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
+      <div className="text-end text-xs text-muted-foreground">{formatarData(em, fuso)}</div>
+    </MensagemAnimada>
+  )
+}
+
 function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso: string; digitando: boolean }) {
   return (
-    <Stack gap={2} className="mb-3">
-      {mensagens.map((m, i) => (
-        <Card key={i} className={m.autor === 'ALUNO' ? 'ms-auto bg-primary-subtle' : 'me-auto'} style={{ maxWidth: '90%' }}>
-          <Card.Body className="py-2 px-3">
-            <div style={quebra}>{m.texto}</div>
-            {m.tipo === 'resposta' && <div className="small text-body-secondary mt-1">{AvisoResposta}</div>}
-            <div className="small text-body-secondary text-end">{formatarData(m.em, fuso)}</div>
-          </Card.Body>
-        </Card>
-      ))}
-      {digitando && (
-        <div className="text-body-secondary small">
-          <Spinner animation="grow" size="sm" role="status" aria-label="Digitando" className="me-2" />
-          digitando…
-        </div>
-      )}
-    </Stack>
+    <Conversation className="overflow-y-visible">
+      {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
+      <ConversationContent className="gap-2 px-0 py-2" scrollClassName="[scrollbar-gutter:auto]!">
+        {mensagens.map((m, i) => (
+          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} aviso={m.tipo === 'resposta'} em={m.em} fuso={fuso} />
+        ))}
+        {digitando && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Spinner aria-label="Digitando" />
+            digitando…
+          </div>
+        )}
+      </ConversationContent>
+    </Conversation>
   )
 }
 
@@ -76,9 +107,9 @@ function Seguimento({ ultima, avaliada, desfecho, explicar, avaliar, pendente, t
   return (
     <>
       {ultima === 'resposta' && !avaliada && !desfecho && <Avaliacao avaliar={avaliar} pendente={pendente} />}
-      {explicar && <p>Quer explicar melhor ou falar com um atendente?</p>}
+      {explicar && <p className="my-2">Quer explicar melhor ou falar com um atendente?</p>}
       {ultima === 'transferir' && !desfecho && (
-        <Button className="mb-3" onClick={transferir}>
+        <Button className="my-2" onClick={transferir}>
           Confirmar transferência
         </Button>
       )}
@@ -88,12 +119,12 @@ function Seguimento({ ultima, avaliada, desfecho, explicar, avaliar, pendente, t
 
 function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void; pendente: boolean }) {
   return (
-    <div className="mb-3">
-      <span className="me-2">Isso resolveu?</span>
-      <Button size="sm" variant="success" className="me-2" onClick={() => avaliar(true)} disabled={pendente}>
+    <div className="my-2 flex items-center gap-2">
+      <span>Isso resolveu?</span>
+      <Button size="sm" className="bg-success" onClick={() => avaliar(true)} disabled={pendente}>
         Sim
       </Button>
-      <Button size="sm" variant="outline-secondary" onClick={() => avaliar(false)} disabled={pendente}>
+      <Button size="sm" variant="outline" onClick={() => avaliar(false)} disabled={pendente}>
         Não
       </Button>
     </div>
@@ -106,21 +137,17 @@ function Transferido({ transferido, fuso }: { transferido: Transferencia; fuso: 
   const { chamado } = useChamado(transferido.numero)
   return (
     <>
-      <Alert variant="success">{`Transferido para ${transferido.setor}. Protocolo ${transferido.numero}.`}</Alert>
-      <Stack gap={2} className="mb-3">
+      <Alert>{`Transferido para ${transferido.setor}. Protocolo ${transferido.numero}.`}</Alert>
+      <div className="my-2 flex flex-col gap-2">
         {chamado?.mensagens
           .filter((m) => m.tipo === 'PUBLICA')
           .map((m) => (
-            <Card key={m.id} className={m.doAluno ? 'ms-auto bg-primary-subtle' : 'me-auto'} style={{ maxWidth: '90%' }}>
-              <Card.Body className="py-2 px-3">
-                {!m.doAluno && <div className="small fw-semibold">{m.autor}</div>}
-                <div style={quebra}>{m.texto}</div>
-                <div className="small text-body-secondary text-end">{formatarData(m.criadaEm, fuso)}</div>
-              </Card.Body>
-            </Card>
+            <Balao key={m.id} doAluno={m.doAluno} autor={m.doAluno ? undefined : m.autor} texto={m.texto} em={m.criadaEm} fuso={fuso} />
           ))}
-      </Stack>
-      <Link to={`/${slug}/chamados/${transferido.numero}`}>Abrir a solicitação {transferido.numero}</Link>
+      </div>
+      <Link to={`/${slug}/chamados/${transferido.numero}`} className="text-primary">
+        Abrir a solicitação {transferido.numero}
+      </Link>
     </>
   )
 }
@@ -140,28 +167,28 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   return (
     <>
       {!noLimite && (
-        <Form onSubmit={enviar} className="mb-2">
-          <Form.Group controlId="mensagem">
-            <Form.Label className="visually-hidden">Mensagem</Form.Label>
-            <Form.Control as="textarea" rows={2} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva sua dúvida" />
-          </Form.Group>
-          <BotaoAcao type="submit" pendente={pendente} className="mt-2" disabled={!texto.trim()}>
-            <i className="bi bi-send me-1" aria-hidden="true" />
+        <form onSubmit={enviar} className="mb-2 flex items-end gap-2">
+          <Label htmlFor="mensagem" className="sr-only">
+            Mensagem
+          </Label>
+          <Textarea id="mensagem" rows={2} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva sua dúvida" className="field-sizing-fixed min-h-0 resize-none" />
+          <Button type="submit" disabled={pendente || !texto.trim()}>
+            {pendente ? <Spinner /> : <Send aria-hidden="true" />}
             Enviar
-          </BotaoAcao>
-        </Form>
+          </Button>
+        </form>
       )}
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button variant={destaque ? 'primary' : 'outline-primary'} onClick={() => confirmar('atendente')}>
-          <i className="bi bi-person-raised-hand me-1" aria-hidden="true" />
+      <div className="flex flex-wrap gap-2">
+        <Button variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
+          <Hand aria-hidden="true" />
           Falar com atendente
         </Button>
         {emConversa && (
-          <Button variant="outline-secondary" onClick={() => confirmar('encerrar')}>
+          <Button variant="outline" onClick={() => confirmar('encerrar')}>
             Encerrar
           </Button>
         )}
-      </Stack>
+      </div>
     </>
   )
 }
@@ -181,51 +208,61 @@ type ModalProps = {
 
 function PedidoAoAtendente({ emConversa, descricao, setDescricao, ativas, matriculaId, setMatriculaId }: Omit<ModalProps, 'confirmar' | 'fechar' | 'pronto' | 'confirmarAcao'>) {
   return (
-    <>
+    <div className="flex flex-col gap-3">
       <p>Sua conversa será enviada a um atendente da instituição, que responde por aqui.</p>
       {!emConversa && (
-        <Form.Group controlId="descricao" className="mb-3">
-          <Form.Label>Descreva seu pedido</Form.Label>
-          <Form.Control as="textarea" rows={3} maxLength={2000} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-        </Form.Group>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="descricao">Descreva seu pedido</Label>
+          <Textarea id="descricao" rows={3} maxLength={2000} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+        </div>
       )}
       {ativas.length > 1 && (
-        <Form.Group controlId="matricula">
-          <Form.Label>Matrícula</Form.Label>
-          <Form.Select value={matriculaId} onChange={(e) => setMatriculaId(e.target.value)}>
-            <option value="">Escolha a matrícula</option>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="matricula">Matrícula</Label>
+          <NativeSelect id="matricula" value={matriculaId} onChange={(e) => setMatriculaId(e.target.value)}>
+            <NativeSelectOption value="">Escolha a matrícula</NativeSelectOption>
             {ativas.map((m) => (
-              <option key={m.id} value={m.id}>{`${m.numero} — ${m.curso}`}</option>
+              <NativeSelectOption key={m.id} value={m.id}>{`${m.numero} — ${m.curso}`}</NativeSelectOption>
             ))}
-          </Form.Select>
-        </Form.Group>
+          </NativeSelect>
+        </div>
       )}
-    </>
+    </div>
   )
 }
 
 function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: ModalProps) {
   const encerrar = confirmar === 'encerrar'
   return (
-    <Modal show={!!confirmar} onHide={fechar} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>{encerrar ? 'Encerrar a conversa?' : 'Falar com um atendente?'}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>{encerrar ? 'A conversa será encerrada.' : <PedidoAoAtendente {...pedido} />}</Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={fechar}>
-          Cancelar
-        </Button>
-        <Button onClick={confirmarAcao} disabled={!pronto}>
-          Confirmar
-        </Button>
-      </Modal.Footer>
-    </Modal>
+    <Dialog open={!!confirmar} onOpenChange={fechar}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>{encerrar ? 'Encerrar a conversa?' : 'Falar com um atendente?'}</DialogTitle>
+        </DialogHeader>
+        {encerrar ? <p>A conversa será encerrada.</p> : <PedidoAoAtendente {...pedido} />}
+        <DialogFooter>
+          <Button variant="outline" onClick={fechar}>
+            Cancelar
+          </Button>
+          <Button onClick={confirmarAcao} disabled={!pronto}>
+            Confirmar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
 function Encerrada({ desfecho }: { desfecho: string }) {
-  return <Alert variant="secondary">{desfecho === 'RESOLVIDA_AUTOATENDIMENTO' ? 'Que bom que resolveu! Conversa encerrada.' : 'Conversa encerrada.'}</Alert>
+  return <Alert>{desfecho === 'RESOLVIDA_AUTOATENDIMENTO' ? 'Que bom que resolveu! Conversa encerrada.' : 'Conversa encerrada.'}</Alert>
+}
+
+function Erro({ erro }: { erro: Error | null }) {
+  return erro && (
+    <Alert variant="destructive" className="mt-3">
+      {erro.message}
+    </Alert>
+  )
 }
 
 export function Assistente() {
@@ -242,16 +279,9 @@ export function Assistente() {
   const [avaliada, setAvaliada] = useState<boolean>() // só conta depois de uma resposta, e cada envio a zera
   const [explicar, setExplicar] = useState(false)
   const [confirmar, setConfirmar] = useState<Confirmar>()
-  const envio = useAcao()
-  const acao = useAcao()
   const agora = () => new Date().toISOString()
-  const { ultima, noLimite, destaque } = situacao(mensagens, explicar)
-  const emConversa = conversaId !== undefined
-
-  function enviar(e: FormEvent) {
-    e.preventDefault()
-    const mensagem = texto
-    envio.executar(async () => {
+  const envio = useMutation({
+    mutationFn: async (mensagem: string) => {
       setMensagens((m) => [...m, { autor: 'ALUNO', texto: mensagem, em: agora() }])
       setTexto('')
       setAvaliada(false)
@@ -259,11 +289,19 @@ export function Assistente() {
       const r = await perguntar(conversaId, mensagem)
       if (r.conversaId) setConversaId(r.conversaId)
       setMensagens((m) => [...m, { autor: 'ASSISTENTE', texto: r.resposta.texto, tipo: r.resposta.tipo, em: agora() }])
-    })
+    },
+  })
+  const acao = useMutation({ mutationFn: (passo: () => Promise<void>) => passo() })
+  const { ultima, noLimite, destaque } = situacao(mensagens, explicar)
+  const emConversa = conversaId !== undefined
+
+  function enviar(e: FormEvent) {
+    e.preventDefault()
+    envio.mutate(texto)
   }
 
   function avaliar(resolveu: boolean) {
-    acao.executar(async () => {
+    acao.mutate(async () => {
       const r = await api<{ desfecho: string | null }>(`/api/conversas/${conversaId}/avaliacao`, { resolveu })
       setAvaliada(true)
       setDesfecho(r.desfecho)
@@ -274,7 +312,7 @@ export function Assistente() {
   function confirmarAcao() {
     const qual = confirmar
     setConfirmar(undefined)
-    acao.executar(async () => {
+    acao.mutate(async () => {
       if (qual === 'encerrar') setDesfecho((await api<{ desfecho: string }>(`/api/conversas/${conversaId}/encerrar`, {})).desfecho)
       else {
         // AC 66: com mais de uma matrícula ativa, o aluno escolhe qual
@@ -290,28 +328,28 @@ export function Assistente() {
   }
 
   return (
-    <>
-      <h1 className="h4">Assistente</h1>
-      <Alert variant="info" className="small">
-        <i className="bi bi-shield-exclamation me-2" aria-hidden="true" />
+    <div className="mx-auto flex max-w-3xl flex-col">
+      <h1 className="text-xl font-semibold">Assistente</h1>
+      <p className="my-2 flex gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+        <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         {AvisoExterno}
-      </Alert>
+      </p>
       {mensagens.length === 0 && (
-        <p className="text-body-secondary">
-          Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”
-        </p>
+        <p className="my-2 text-muted-foreground">Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”</p>
       )}
-      <Conversa mensagens={mensagens} fuso={fuso} digitando={envio.pendente} />
-      <Seguimento ultima={ultima} avaliada={avaliada} desfecho={desfecho} explicar={explicar} avaliar={avaliar} pendente={acao.pendente} transferir={() => abrir('atendente')} />
+      <Conversa mensagens={mensagens} fuso={fuso} digitando={envio.isPending} />
+      <Seguimento ultima={ultima} avaliada={avaliada} desfecho={desfecho} explicar={explicar} avaliar={avaliar} pendente={acao.isPending} transferir={() => abrir('atendente')} />
       {transferido ? (
         <Transferido transferido={transferido} fuso={fuso} />
       ) : desfecho ? (
         <Encerrada desfecho={desfecho} />
       ) : (
-        <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.pendente} destaque={destaque} emConversa={emConversa} confirmar={abrir} />
+        <div className="sticky bottom-0 z-10 bg-background py-2">
+          <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} />
+        </div>
       )}
-      {envio.alerta}
-      {acao.alerta}
+      <Erro erro={envio.error} />
+      <Erro erro={acao.error} />
       <Confirmacao
         confirmar={confirmar}
         fechar={() => setConfirmar(undefined)}
@@ -324,6 +362,6 @@ export function Assistente() {
         pronto={podeConfirmar(confirmar, conversaId, descricao, ativas.length, matriculaId)}
         confirmarAcao={confirmarAcao}
       />
-    </>
+    </div>
   )
 }

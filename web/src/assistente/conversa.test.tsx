@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { onlineManager } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
 const Exemplo = /Pergunte, por exemplo/
@@ -31,8 +32,8 @@ describe('conversa com o assistente', () => {
     await enviar()
     expect(await screen.findByText('É do semestre atual?')).toBeInTheDocument()
     expect(screen.queryByText(Exemplo)).not.toBeInTheDocument()
-    expect(screen.getByText('preciso do boleto').closest('.card')).toHaveClass('ms-auto')
-    expect(screen.getByText('É do semestre atual?').closest('.card')).toHaveClass('me-auto')
+    expect(screen.getByText('preciso do boleto').closest('.is-user, .is-assistant')).toHaveClass('ms-auto')
+    expect(screen.getByText('É do semestre atual?').closest('.is-user, .is-assistant')).toHaveClass('me-auto')
   })
 
   it('enquanto o assistente responde, mostra digitando', async () => {
@@ -155,10 +156,10 @@ describe('conversa com o assistente', () => {
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Confirmar transferência' }))
     await userEvent.click(confirmar())
-    const atendente = (await screen.findByText('Olá!')).closest('.card') as HTMLElement
+    const atendente = (await screen.findByText('Olá!')).closest('.is-user, .is-assistant') as HTMLElement
     expect(within(atendente).getByText('Carla')).toBeInTheDocument()
     expect(atendente).toHaveClass('me-auto')
-    const aluno = screen.getByText('Oi.').closest('.card') as HTMLElement
+    const aluno = screen.getByText('Oi.').closest('.is-user, .is-assistant') as HTMLElement
     expect(within(aluno).queryByText('Ana')).not.toBeInTheDocument()
     expect(aluno).toHaveClass('ms-auto')
     expect(screen.queryByRole('button', { name: 'Confirmar transferência' })).not.toBeInTheDocument()
@@ -176,5 +177,46 @@ describe('conversa com o assistente', () => {
     await enviar('mensagem 10')
     await screen.findByText('mensagem 10')
     await waitFor(() => expect(screen.queryByLabelText('Mensagem')).not.toBeInTheDocument())
+  })
+
+  it('a conversa fica num log', async () => {
+    assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })
+    await enviar()
+    const log = within(await screen.findByRole('log'))
+    expect(await log.findByText('É do semestre atual?')).toBeInTheDocument()
+    const aluno = log.getByText('preciso do boleto').closest('.is-user, .is-assistant')
+    expect(aluno).toHaveClass('ms-auto', 'bg-primary-subtle')
+    expect(aluno).not.toHaveClass('me-auto')
+    const assistenteBalao = log.getByText('É do semestre atual?').closest('.is-user, .is-assistant')
+    expect(assistenteBalao).toHaveClass('me-auto')
+    expect(assistenteBalao).not.toHaveClass('ms-auto', 'bg-primary-subtle')
+  })
+
+  it('resposta do modelo em texto puro', async () => {
+    const Modelo = '**negrito**\n- item\n<b>x</b> &amp;'
+    assistente({ 'POST /api/conversas': responde('resposta', Modelo) })
+    await enviar()
+    const texto = await screen.findByText((_, el) => el?.textContent === Modelo && el.classList.contains('whitespace-pre-wrap'))
+    expect(texto.textContent).toBe(Modelo)
+    expect(texto).toHaveClass('whitespace-pre-wrap')
+    expect(texto.closest('.is-assistant')!.querySelector('strong, li, b, ul')).toBeNull()
+  })
+
+  it('sem rede o envio mostra o erro', async () => {
+    const fetch = vi.fn(async () => {
+      throw new TypeError('Failed to fetch')
+    })
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/assistente')
+    await screen.findByLabelText('Mensagem')
+    vi.stubGlobal('fetch', fetch)
+    onlineManager.setOnline(false)
+    try {
+      await enviar()
+      expect(await screen.findByRole('alert')).toHaveTextContent('Failed to fetch')
+      expect(fetch).toHaveBeenCalledTimes(1)
+    } finally {
+      onlineManager.setOnline(true)
+    }
   })
 })

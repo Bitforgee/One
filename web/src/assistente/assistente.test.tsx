@@ -63,10 +63,11 @@ describe('assistente', () => {
   it('sem_base destaca Falar com atendente', async () => {
     assistente({ 'POST /api/conversas': responde('sem_base', SemBase) })
     await screen.findByLabelText('Mensagem')
-    expect(falar()).toHaveClass('btn-outline-primary')
+    expect(falar()).toHaveClass('bg-background')
+    expect(falar()).not.toHaveClass('bg-primary')
     await enviar()
     expect(await screen.findByText(SemBase)).toBeInTheDocument()
-    expect(falar()).toHaveClass('btn-primary')
+    expect(falar()).toHaveClass('bg-primary')
     expect(screen.queryByText('Isso resolveu?')).not.toBeInTheDocument()
   })
 
@@ -87,7 +88,7 @@ describe('assistente', () => {
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Não' }))
     expect(await screen.findByText('Quer explicar melhor ou falar com um atendente?')).toBeInTheDocument()
-    expect(falar()).toHaveClass('btn-primary')
+    expect(falar()).toHaveClass('bg-primary')
     expect(chamadas.find((c) => c.url === '/api/conversas/7/avaliacao')?.corpo).toEqual({ resolveu: false })
     expect(screen.getByLabelText('Mensagem')).toBeInTheDocument()
   })
@@ -108,5 +109,24 @@ describe('assistente', () => {
     expect(screen.getByRole('button', { name: 'Encerrar' })).toBeVisible()
     const botoes = screen.getAllByRole('button').filter((b) => !b.closest('nav')).map((b) => b.textContent?.trim())
     expect(botoes).toEqual(['Falar com atendente', 'Encerrar'])
+  })
+
+  it('limite destaca Falar com atendente', async () => {
+    assistente({
+      'POST /api/conversas': responde('pergunta', 'É do semestre atual?'),
+      'POST /api/conversas/7/mensagens': () => [200, { resposta: { tipo: 'pergunta', texto: 'É do semestre atual?' } }],
+    })
+    for (let n = 1; n <= 10; n++) {
+      await enviar(`mensagem ${n}`)
+      await waitFor(() => expect(screen.getAllByText('É do semestre atual?')).toHaveLength(n))
+      // em conversa aberta, antes do limite, o botão fica na variante outline
+      if (n === 9) {
+        expect(falar()).toHaveClass('bg-background')
+        expect(falar()).not.toHaveClass('bg-primary')
+      }
+    }
+    expect(screen.queryByLabelText('Mensagem')).not.toBeInTheDocument()
+    expect(falar()).toHaveClass('bg-primary')
+    expect(falar()).not.toHaveClass('bg-background')
   })
 })
