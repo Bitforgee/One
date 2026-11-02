@@ -289,7 +289,7 @@ public static class AdminRotas
             if (c.Length != 7) { erros.Add(new { linha = numero, motivo = "A linha deve ter 7 campos separados por ponto e vírgula." }); continue; }
             var cpf = Cpf.Normalizar(c[0]);
             if (cpf is null) motivos.Add("CPF inválido");
-            if (!Nome(c[1], 200)) motivos.Add("nome vazio");
+            if (!Nome(c[1], 200)) motivos.Add("nome vazio ou com mais de 200 caracteres");
             if (!Email.Valido().IsMatch(c[2])) motivos.Add("e-mail inválido");
             else if (cpf is not null && donoDoEmail.TryGetValue(c[2], out var outroCpf) && outroCpf != cpf) motivos.Add("e-mail já usado por outro CPF na instituição");
             if (c[3].Length is 0 or > 20) motivos.Add("matrícula vazia ou com mais de 20 caracteres");

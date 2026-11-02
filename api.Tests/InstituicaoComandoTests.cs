@@ -150,6 +150,51 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         });
     }
 
+    // Test policy, entrada que não decide: cada recusa do arquivo de carga sai com 1, o caminho e nada gravado
+    [Fact]
+    public async Task Carga_cada_recusa_sai_1()
+    {
+        var slug = Semente.NovoSlug();
+        await Rodar(Criar(slug));
+        const string artigo = "\"titulo\":\"T\",\"perguntas\":[\"P?\"],\"categoria\":\"Não classificado\",\"resposta\":\"R\",\"links\":[]";
+        string Artigo(string troca) => "{\"artigos\":[{" + troca + "}]}";
+        var casos = new (string json, string caminho)[]
+        {
+            ("{\"setores\":[{\"nome\":\"\"}]}", "setores[0].nome"),
+            ("{\"setores\":[{\"nome\":\"A\"},{\"nome\":\"A\"}]}", "setores[1].nome"),
+            ("{\"setores\":[{\"nome\":\"Triagem\"}]}", "setores[0].nome"),
+            ("{\"categorias\":[{\"nome\":\" \"}]}", "categorias[0].nome"),
+            ("{\"categorias\":[{\"nome\":\"B\"},{\"nome\":\"B\"}]}", "categorias[1].nome"),
+            ("{\"cursos\":[{\"nome\":\"\"}]}", "cursos[0].nome"),
+            ("{\"cursos\":[{\"nome\":\"ADS\",\"coordenacao\":\"Nenhum\"}]}", "cursos[0].coordenacao"),
+            ("{\"regras\":[{\"categoria\":\"Nenhuma\",\"coordenacaoDoCurso\":true}]}", "regras[0].categoria"),
+            ("{\"categorias\":[{\"nome\":\"B\"}],\"regras\":[{\"categoria\":\"B\",\"coordenacaoDoCurso\":true},{\"categoria\":\"B\",\"coordenacaoDoCurso\":true}]}", "regras[1].categoria"),
+            ("{\"setores\":[{\"nome\":\"S\"}],\"categorias\":[{\"nome\":\"B\"}],\"regras\":[{\"categoria\":\"B\",\"setor\":\"S\",\"coordenacaoDoCurso\":true}]}", "regras[0]:"),
+            ("{\"categorias\":[{\"nome\":\"B\"}],\"regras\":[{\"categoria\":\"B\"}]}", "regras[0]:"),
+            ("{\"categorias\":[{\"nome\":\"B\"}],\"regras\":[{\"categoria\":\"B\",\"setor\":\"Nenhum\"}]}", "regras[0].setor"),
+            (Artigo(artigo.Replace("\"titulo\":\"T\"", "\"titulo\":\"\"")), "artigos[0].titulo"),
+            (Artigo(artigo.Replace("[\"P?\"]", "[]")), "artigos[0].perguntas"),
+            (Artigo(artigo.Replace("\"resposta\":\"R\"", "\"resposta\":\" \"")), "artigos[0].resposta"),
+            (Artigo(artigo.Replace("\"links\":[]", "\"links\":[\"www.x.com\"]")), "artigos[0].links[0]"),
+            (Artigo(artigo.Replace("Não classificado", "Nenhuma")), "artigos[0].categoria"),
+            ("{ não é json", "--arquivo"),
+        };
+        var antes = await Contagens();
+
+        foreach (var (json, caminho) in casos)
+        {
+            var arquivo = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
+            File.WriteAllText(arquivo, json);
+            var (codigo, saida, erro) = await Rodar("carga", "--slug", slug, "--arquivo", arquivo);
+            Assert.True(codigo == 1, $"{caminho}: saiu {codigo}");
+            Assert.StartsWith(caminho, Assert.Single(erro.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+            Assert.Equal("", saida);
+        }
+        Assert.Equal(1, (await Rodar("carga", "--slug", "nao-existe", "--arquivo", Arquivo(Carga()))).codigo);
+        Assert.Equal(1, (await Rodar("carga", "--slug", slug, "--arquivo", Path.Combine(Path.GetTempPath(), "nao-existe.json"))).codigo);
+        Assert.Equal(antes, await Contagens());
+    }
+
     [Fact]
     public async Task Carga_invalida_nao_grava_nada()
     {

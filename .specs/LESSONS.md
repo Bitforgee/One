@@ -32,6 +32,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md rodadas 2 e 3, Test policy linha 3 (api/rotas)
 - last seen: 2026-11-02T15:26:00Z
 
+### L-004 - Varra também os canais de erro próprios (ErrosCsv, erros do comando de carga) e não só Problemas.Invalido; cada motivo deles precisa de um caso no teste.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `api` · harmful: 0
+- features: mvp-one
+- evidence: verification.md rodada 4, AdminRotas.cs:272-295 (api)
+- last seen: 2026-11-02T15:55:35Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

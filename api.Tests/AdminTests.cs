@@ -110,6 +110,12 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
             ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000002;ADS;13;ATIVA", "semestre fora de 1 a 12"),
             ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000002;ADS;3;TRANCADA", "situação deve ser ATIVA ou INATIVA"),
             ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000099;ADS;3;ATIVA", "matrícula já ligada a outro CPF"),
+            ($"{Semente.NovoCpf()};Bia;{dono.Email};2000000002;ADS;3;ATIVA", "e-mail já usado por outro CPF"),
+            ($"{Semente.NovoCpf()};;bia@aluno.com;2000000002;ADS;3;ATIVA", "nome vazio ou com mais de 200 caracteres"),
+            ($"{Semente.NovoCpf()};{new string('n', 201)};bia@aluno.com;2000000002;ADS;3;ATIVA", "nome vazio ou com mais de 200 caracteres"),
+            ($"{Semente.NovoCpf()};Bia;bia@aluno.com;;ADS;3;ATIVA", "matrícula vazia ou com mais de 20 caracteres"),
+            ($"{Semente.NovoCpf()};Bia;bia@aluno.com;{new string('1', 21)};ADS;3;ATIVA", "matrícula vazia ou com mais de 20 caracteres"),
+            ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000002", "7 campos"),
         };
         var antes = await f.Db(i.Id, db => db.Usuarios.CountAsync());
 
@@ -121,6 +127,15 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
             var erro = Assert.Single((await r.Json()).GetProperty("erros").EnumerateArray());
             Assert.Equal(3, erro.GetProperty("linha").GetInt32());
             Assert.Contains(motivo, erro.GetProperty("motivo").GetString());
+        }
+        // cabeçalho errado ou arquivo vazio: erro na linha 1
+        foreach (var arquivo in new[] { $"cpf;nome;email\n{valida}\n", "" })
+        {
+            var r = await admin.Importar(arquivo);
+            Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+            var erro = Assert.Single((await r.Json()).GetProperty("erros").EnumerateArray());
+            Assert.Equal(1, erro.GetProperty("linha").GetInt32());
+            Assert.Contains("cabeçalho", erro.GetProperty("motivo").GetString());
         }
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
         Assert.Equal(["2000000099"], await f.Db(i.Id, db => db.Matriculas.Select(m => m.Numero).ToListAsync()));

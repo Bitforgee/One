@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 4,
+  "next_id": 5,
   "lessons": [
     {
       "id": "L-001",
@@ -58,6 +58,24 @@
       ],
       "created": "2026-11-02T15:26:00Z",
       "last_seen": "2026-11-02T15:26:00Z"
+    },
+    {
+      "id": "L-004",
+      "key": "ac_gap::varra tambem os canais de erro proprios erroscsv erros do comando de carga e nao so problemas invalido cada motivo deles precisa de um caso no teste",
+      "text": "Varra também os canais de erro próprios (ErrosCsv, erros do comando de carga) e não só Problemas.Invalido; cada motivo deles precisa de um caso no teste.",
+      "signal": "ac_gap",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md rodada 4, AdminRotas.cs:272-295 (api)"
+      ],
+      "created": "2026-11-02T15:55:35Z",
+      "last_seen": "2026-11-02T15:55:35Z"
     }
   ]
 }
