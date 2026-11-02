@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, me } from './test/util'
+import { abrir, api, me } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const setores = [{ id: 1, nome: 'Triagem', triagem: true, ativo: true }, { id: 2, nome: 'Financeiro', triagem: false, ativo: true }]

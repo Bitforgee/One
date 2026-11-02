@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Container, Nav, Navbar, Spinner } from 'react-bootstrap'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router'
-import { api, type Me } from '../api'
-import type { Sessao } from '../sessao'
+import { api, type Me } from './api'
+import type { Sessao } from './sessao'
 
 const Menu = [
   { papeis: ['ALUNO'], caminho: 'assistente', rotulo: 'Assistente', icone: 'bi-chat-dots' },

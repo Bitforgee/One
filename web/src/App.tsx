@@ -1,11 +1,12 @@
 import { Container } from 'react-bootstrap'
 import { Route, Routes } from 'react-router'
-import { Artigos, Documentos, Indicadores } from './telas/Equipe'
-import { Cadastros, Matriculas, Usuarios } from './telas/Admin'
-import { ChamadoDetalhe, Fila, Solicitacoes } from './telas/Chamados'
-import { Assistente } from './telas/Assistente'
-import { Autenticado } from './telas/Autenticado'
-import { DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './telas/Acesso'
+import { DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
+import { Cadastros, Matriculas, Usuarios } from './administracao/Admin'
+import { Assistente } from './assistente/Assistente'
+import { Autenticado } from './Autenticado'
+import { ChamadoDetalhe, Fila, Solicitacoes } from './chamados/Chamados'
+import { Artigos, Documentos } from './conhecimento/Conhecimento'
+import { Indicadores } from './indicadores/Indicadores'
 
 export function App() {
   return (

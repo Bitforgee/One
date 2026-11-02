@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 import { App } from '../App'
 import type { Me } from '../api'
+import type { Chamado } from '../chamado'
 
 export type Rota = (corpo: any) => [number, unknown] | Promise<[number, unknown]>
 export type Chamada = { metodo: string; url: string; corpo: any }
@@ -44,6 +45,33 @@ export function me(parcial: Partial<Me> = {}): Me {
     deveTrocarSenha: false,
     instituicao: { slug: 'univag', nome: 'Univag', fuso: 'America/Cuiaba' },
     matriculas: [{ id: 1, numero: '2000567890', curso: 'ADS', semestre: 3, situacao: 'ATIVA' }],
+    ...parcial,
+  }
+}
+
+// Chamado como o aluno o recebe; a equipe recebe também resumo, fontes e eventos.
+export function chamado(parcial: Partial<Chamado> = {}): Chamado {
+  return {
+    numero: 'ONE-1',
+    titulo: 'preciso do boleto',
+    estado: 'EM_ATENDIMENTO',
+    motivoFechamento: null,
+    setor: 'Financeiro',
+    categoria: 'Boleto',
+    responsavel: 'Carla',
+    criadoEm: '2026-11-02T12:00:00Z',
+    resolvidoEm: null,
+    matricula: { numero: '2000567890', curso: 'ADS', semestre: 3 },
+    solicitante: null,
+    resumo: null,
+    origemCategoria: null,
+    transcricao: [
+      { autor: 'ALUNO', texto: 'preciso do boleto', criadaEm: '2026-11-02T12:00:00Z' },
+      { autor: 'ASSISTENTE', texto: 'O boleto fica no portal.', criadaEm: '2026-11-02T12:00:05Z' },
+    ],
+    mensagens: [],
+    eventos: null,
+    acoes: ['responder', 'cancelar'],
     ...parcial,
   }
 }

@@ -1,9 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import pacote from '../package.json'
-import { formatarData } from './datas'
-import { abrir, api, me } from './test/util'
+import pacote from '../../package.json'
+import { formatarData } from '../datas'
+import { abrir, api, me } from '../test/util'
 
 const instituicao = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univag' }] as [number, unknown] }
 

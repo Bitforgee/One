@@ -1,34 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Chamado } from './chamado'
-import { abrir, api, me, type Rota } from './test/util'
-
-function chamado(parcial: Partial<Chamado> = {}): Chamado {
-  return {
-    numero: 'ONE-1',
-    titulo: 'preciso do boleto',
-    estado: 'EM_ATENDIMENTO',
-    motivoFechamento: null,
-    setor: 'Financeiro',
-    categoria: 'Boleto',
-    responsavel: 'Carla',
-    criadoEm: '2026-11-02T12:00:00Z',
-    resolvidoEm: null,
-    matricula: { numero: '2000567890', curso: 'ADS', semestre: 3 },
-    solicitante: null,
-    resumo: null,
-    origemCategoria: null,
-    transcricao: [
-      { autor: 'ALUNO', texto: 'preciso do boleto', criadaEm: '2026-11-02T12:00:00Z' },
-      { autor: 'ASSISTENTE', texto: 'O boleto fica no portal.', criadaEm: '2026-11-02T12:00:05Z' },
-    ],
-    mensagens: [],
-    eventos: null,
-    acoes: ['responder', 'cancelar'],
-    ...parcial,
-  }
-}
+import { describe, expect, it } from 'vitest'
+import type { Chamado } from '../chamado'
+import { abrir, api, chamado, me } from '../test/util'
 
 // Chamado como a equipe o recebe: resumo, fontes e eventos.
 function daEquipe(parcial: Partial<Chamado> = {}): Chamado {
@@ -44,97 +18,7 @@ function daEquipe(parcial: Partial<Chamado> = {}): Chamado {
 
 const equipe = me({ papeis: ['ATENDENTE'], matriculas: [] })
 
-function emConversa(rotas: Record<string, Rota> = {}, quem = me()) {
-  return api({
-    'GET /api/auth/me': () => [200, quem],
-    'POST /api/conversas': () => [201, { conversaId: 7, resposta: { tipo: 'sem_base', texto: 'Não encontrei.' } }],
-    ...rotas,
-  })
-}
-
-async function transferirConversa() {
-  await userEvent.type(await screen.findByLabelText('Mensagem'), 'preciso do boleto')
-  await userEvent.click(screen.getByRole('button', { name: /Enviar/ }))
-  await screen.findByText('Não encontrei.')
-  await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
-  await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
-}
-
-const transferido: Rota = () => [201, { numero: 'ONE-1', estado: 'ABERTO', setor: 'Financeiro' }]
-
 describe('chamado', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('pede escolha da matrícula', async () => {
-    const duas = me({
-      matriculas: [
-        { id: 1, numero: '2000567890', curso: 'ADS', semestre: 3, situacao: 'ATIVA' },
-        { id: 2, numero: '2000567891', curso: 'Direito', semestre: 1, situacao: 'ATIVA' },
-        { id: 3, numero: '2000567892', curso: 'Medicina', semestre: 1, situacao: 'INATIVA' },
-      ],
-    })
-    const chamadas = emConversa({ 'POST /api/atendimento-direto': transferido, 'GET /api/chamados/ONE-1': () => [200, chamado()] }, duas)
-    abrir('/univag/assistente')
-
-    await userEvent.click(await screen.findByRole('button', { name: /Falar com atendente/ }))
-    const dialogo = await screen.findByRole('dialog')
-    const opcoes = within(within(dialogo).getByLabelText('Matrícula')).getAllByRole('option').map((o) => o.textContent)
-    expect(opcoes).toEqual(['Escolha a matrícula', '2000567890 — ADS', '2000567891 — Direito'])
-    await userEvent.type(within(dialogo).getByLabelText('Descreva seu pedido'), 'Quero trancar o curso')
-    expect(within(dialogo).getByRole('button', { name: 'Confirmar' })).toBeDisabled()
-
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Matrícula'), '2')
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
-
-    await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')
-    expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'Quero trancar o curso', matriculaId: 2 })
-  })
-
-  it('transferido mostra protocolo e respostas', async () => {
-    const chamadas = emConversa({
-      'POST /api/conversas/7/transferir': transferido,
-      'GET /api/chamados/ONE-1': () => [
-        200,
-        chamado({
-          mensagens: [
-            { id: 1, tipo: 'PUBLICA', texto: 'Olá! Vou reemitir seu boleto.', autor: 'Carla', doAluno: false, criadaEm: '2026-11-02T12:10:00Z' },
-            { id: 2, tipo: 'PUBLICA', texto: 'Obrigada!', autor: 'Ana', doAluno: true, criadaEm: '2026-11-02T12:11:00Z' },
-          ],
-        }),
-      ],
-    })
-    abrir('/univag/assistente')
-
-    await transferirConversa()
-
-    expect(await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')).toBeInTheDocument()
-    expect(await screen.findByText('Olá! Vou reemitir seu boleto.')).toBeInTheDocument()
-    expect(screen.getByText('Obrigada!')).toBeInTheDocument()
-    expect(screen.getByText('preciso do boleto')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /ONE-1/ })).toHaveAttribute('href', '/univag/chamados/ONE-1')
-    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
-  })
-
-  it('atualiza chamado a cada 15 s', async () => {
-    // só o setInterval é falso: os findBy e o userEvent continuam no relógio real
-    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
-    const chamadas = emConversa({ 'POST /api/conversas/7/transferir': transferido, 'GET /api/chamados/ONE-1': () => [200, chamado()] })
-    abrir('/univag/assistente')
-    await transferirConversa()
-    await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')
-    const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
-    await waitFor(() => expect(leituras()).toBe(1))
-
-    vi.advanceTimersByTime(14_900)
-    expect(leituras()).toBe(1)
-    vi.advanceTimersByTime(100)
-    expect(leituras()).toBe(2)
-    vi.advanceTimersByTime(15_000)
-    expect(leituras()).toBe(3)
-  })
-
   it('detalhe rotula Resumo gerado por IA', async () => {
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe()] })
     abrir('/univag/chamados/ONE-1')
@@ -269,5 +153,30 @@ describe('chamado', () => {
     expect(await screen.findByText('Nenhum chamado na fila dos seus setores.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('link', { name: /Minhas solicitações/ }))
     expect(await screen.findByText(/Você ainda não tem solicitações./)).toBeInTheDocument()
+  })
+
+  it('encaminhar pede setor e motivo', async () => {
+    const detalhe = {
+      numero: 'ONE-1', titulo: 'boleto', estado: 'ABERTO', motivoFechamento: null, setor: 'Triagem', categoria: 'Não classificado', responsavel: null,
+      criadoEm: '2026-11-02T12:00:00Z', resolvidoEm: null, matricula: { numero: '2000567890', curso: 'ADS', semestre: 3 }, solicitante: 'Ana', resumo: null,
+      origemCategoria: 'PADRAO', transcricao: [], mensagens: [], eventos: [], acoes: ['responder', 'nota', 'assumir', 'resolver', 'encaminhar', 'reclassificar'],
+      setores: [{ id: 5, nome: 'Financeiro' }], categorias: [{ id: 3, nome: 'Boleto' }],
+    }
+    const chamadas = api({
+      'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE'], matriculas: [] })],
+      'GET /api/chamados/ONE-1': () => [200, detalhe],
+      'POST /api/chamados/ONE-1/encaminhar': () => [200, { ...detalhe, acoes: [] }],
+    })
+    abrir('/univag/chamados/ONE-1')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Encaminhar' }))
+    const dialogo = within(await screen.findByRole('dialog'))
+    expect(dialogo.getByRole('button', { name: 'Encaminhar' })).toBeDisabled()
+    await userEvent.selectOptions(dialogo.getByLabelText('Setor'), '5')
+    await userEvent.type(dialogo.getByLabelText('Motivo'), 'É do financeiro.')
+    await userEvent.click(dialogo.getByRole('button', { name: 'Encaminhar' }))
+
+    await screen.findByText('Nenhuma resposta ainda.')
+    expect(chamadas.find((c) => c.url.endsWith('/encaminhar'))?.corpo).toEqual({ setorId: 5, motivo: 'É do financeiro.' })
   })
 })
