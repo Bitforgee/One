@@ -456,11 +456,37 @@ estimados) / 4 + 8k de saída das barreiras e das suítes. Contexto fixo por con
   `administracao` e a saída do Bootstrap: 103k + 30k = 133k). Nenhuma slice foi dividida
 - Mechanism: handoff em lotes sequenciais por subagente, só com o lote anterior verde - escolha do
   usuário em 02/11/2026
-- Feature base (`<base>`): o commit que congela `plan.md` e `checks.md` (o coordenador faz o commit e
-  grava o hash aqui)
+- Feature base (`<base>`): b2e7e79 (`docs(interface-nova): plan, checks and AD-023`), o commit que congela
+  `plan.md` e `checks.md`
 - e2e: o Playwright roda contra o contêiner `api` compartilhado (porta 8080), que serve o `web/`
   gravado em `api/wwwroot`. Um construtor só roda as provas Playwright (C1 e2e, C8, C18, C19, C21,
   C32 a C34, C38, C44, C48, C54, C59, C66, C80, C83, C89) e só reconstrói esse contêiner quando
   nenhum outro construtor (hoje o `vertical-slice-completa`, em `api/`) o estiver reconstruindo; o
   coordenador sequencia. As provas Vitest e os scripts que não dependem do contêiner rodam a qualquer
   momento
+
+### Lote 1 (S0, S1, S2)
+
+- Boundary: C1–C38 closed at 3559eed (commits 2aa8a9a, 0446817, 3559eed). Provas em 3559eed: Vitest 118/118;
+  Playwright 23/23 duas vezes contra o contêiner `api` reconstruído com `docker compose up -d --build api` (o
+  Dockerfile compila o `web/` da árvore); `seletores_conferem.py`, `consultas_preservadas.py` (389 consultas) e
+  `chamadas_iguais.py` (99 testes) com 0 problema contra b2e7e79; `ui_isolada.sh` sai 0; `precache_completo.py`
+  18 URLs, 0 problema; `crapper` sai 0 (pior: `Documentos` 9.0, das telas ainda não migradas); `dryer` sem
+  candidato; `mutator_web.sh` 300 mortos, 0 sobreviventes, 0 descobertos
+- Settled mid-build: (1) o `!important` dos utilitários do Bootstrap inverte a ordem das camadas e ganha das
+  utilidades do Tailwind de mesmo nome (`px-4`, `bg-primary`, `gap-4`...); `index.css` ganhou um bloco
+  `@layer base` temporário que devolve o valor do Tailwind às classes de um lado só que as telas migradas usam
+  (sem atalhos como `p-4`, que ganhariam do `px-0` vizinho); quem migrar outra tela acrescenta a linha, a S9
+  apaga o bloco; (2) na barra, de 640 a 1279 px os links mostram só o ícone (rótulo `sm:max-xl:sr-only`), porque
+  9 rótulos não cabem em 640 px numa barra de 56 px; (3) o Vitest troca CSS importado (`?raw`) por texto vazio, e
+  `interface.test.ts` lê `src/index.css` do disco (cwd `web/`); (4) `setup.ts` ganhou também um `matchMedia`
+  falso, que o Vaul chama ao abrir a gaveta; (5) o registro do shadcn 4.23 importa `cn` de um pacote `cn` e o
+  `sonner` usa `next-themes`: as cópias apontam para `@/ui/utils` e para o `ThemeProvider` (edições de door 3),
+  com "Close" → "Fechar" e "Loading" → "Carregando"; (6) sem `baseUrl` no `tsconfig.json` (o TS 6 o recusa); (7)
+  textos que são só nome acessível ("Menu" do botão, "Carregando", "Digitando", "Mensagem", o placeholder) são
+  conferidos por papel ou atributo, não no texto visível; "Tema", "Claro", "Escuro", "Sistema" ficam para a S9;
+  (8) `chamadas_iguais.py` grava as chamadas 50 ms depois de cada teste (relógio de `node:timers`), senão
+  "lista carregando mostra o Spinner e nada mais" variava entre duas rodadas da própria base; (9) o balão entra
+  com `ease: 'easeOut'` para não passar de 0 px; (10) a API simulada do e2e saiu para `e2e/simulada.ts`, com os
+  papéis como parâmetro e um documento para a tela Documentos
+- Abandoned: nenhum
