@@ -7,7 +7,7 @@
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
   - `.specs/features/rag/plan.md` e `checks.md`: o RAG (Etapa 4), 46 checks;
   - `.specs/features/refatoracao-solid/plan.md` e `checks.md`: a refatoração (Etapa 4b), 36 critérios, 39 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-022;
+  - `.specs/STATE.md`: decisões AD-001 a AD-024;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -211,13 +211,14 @@ antes o que corta; a decisão de 02/11 é que a refatoração entra antes da ban
 ### Etapa 4c: arquitetura completa, interface nova, arquivos e tempo real (antes da banca, 03–16/11)
 
 Decisão do usuário em 02/11/2026: **todos os assuntos discutidos em 02/11 entram antes da banca**
-(AD-019 a AD-022). Cada item é uma feature própria do `tlc-spec-lean` (plano e checks aprovados
+(AD-019 a AD-024). Cada item é uma feature própria do `tlc-spec-lean` (plano e checks aprovados
 antes do código, verificação independente depois), e a próxima só começa com a anterior verde. No
 `api/` uma feature por vez; a interface nova, que só mexe no `web/`, corre em paralelo.
 
 | Quando | Feature | Onde |
 | --- | --- | --- |
-| 03–05/11 | vertical slice completa com `Mediator` | `api/` |
+| 02–03/11 | vertical slice completa com `Mediator` (construída em 02/11; verificação em andamento) | `api/` |
+| 03–05/11 | domínio rico e contratos por caso de uso (AD-024) | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
@@ -235,6 +236,39 @@ antes de 04/11.
 - mediator: **`Mediator` (martinothamar), decidido em 02/11**, no lugar do MediatR, que ficou comercial em 2025. É MIT, gerado em compilação, com pipeline behaviors, 10,7 mi de downloads e versão de 03/2026. A 3.0.2 roda no .NET 10: testado em 02/11 com request, handler e pipeline behavior. Um request sem handler dá o aviso `MSG0005` no build, e `MSG0005` entra no `WarningsAsErrors`. Descartado: `Balta.Mediator` (André Baltieri, MIT), que hoje tem 1 commit, ~500 downloads, alvo .NET 8, resolve o handler por reflexão e só oferece `SendAsync`.
 - o pipeline `Agir` (permissões dos chamados) vira um pipeline behavior, para continuar em um lugar só.
 - planejar com `tlc-spec-lean` (feature `vertical-slice-completa`, plano e checks antes do código), mantendo as regras do `ArquiteturaTests` e o CA1502.
+
+**Domínio rico e contratos por caso de uso (AD-024)**
+
+Decisão do usuário em 02/11/2026: a vertical slice não basta se as entidades ficam todas num
+arquivo, sem regra, e as respostas são objetos anônimos. Entra logo depois da verificação da vertical
+slice e antes do MinIO, para que MinIO e SignalR já nasçam no formato novo. Princípios, das fontes
+abaixo:
+
+- **cada caso de uso é dono do seu request e da sua resposta**: um `record` de entrada e um de saída
+  nomeados no arquivo do caso de uso, sem objetos anônimos nem DTO compartilhado entre fatias (um DTO
+  compartilhado acumula campos que ficam vazios metade do tempo). O retrato das respostas que a
+  vertical slice já grava prova que o JSON não muda;
+- **as fatias compartilham o modelo de domínio**, e a regra de negócio desce para ele: as transições de
+  estado do `Chamado` (assumir, responder, resolver, rejeitar, cancelar, encaminhar…) e as de
+  `Artigo`/`Documento` viram métodos da entidade, com setters privados; o handler só faz o trabalho
+  "sujo" (ler e gravar, chamar e-mail e IA). Hoje essas regras estão em helpers estáticos
+  (`AcoesChamado.Mudar`, `Atribuir`);
+- **uma entidade por arquivo**, agrupadas por agregado em `api/Dados/` (hoje são 24 classes em
+  `Entidades.cs`, 366 linhas);
+- **regra de dependência da arquitetura limpa dentro do projeto**: o domínio não referencia ASP.NET
+  Core, Mediator nem os handlers, e isso vira regra do `ArquiteturaTests`;
+- **teste de unidade no domínio, de integração nos handlers e na API**;
+- **compartilhar só depois do terceiro uso**; nada de pasta `Common`/`Utils`; o que duas fatias da
+  mesma família usam fica numa pasta `Shared` da fatia;
+- **sem** projetos separados Domain/Application/Infrastructure nem repositórios sobre o EF Core: o EF
+  já é a unidade de trabalho, e as camadas desfariam a coesão por fatia (opção rejeitada pelo usuário
+  em 02/11).
+
+Fontes: [Jimmy Bogard, Vertical Slice Architecture](https://jimmybogard.com/vertical-slice-architecture/);
+[Bogard, slides do dotNET 2022](https://cdn.plainconcepts.com/wp-content/uploads/2022/08/dotNET-2022-Vertical-Slice-Architecture.pdf)
+("push behavior down", "encapsulating data", "unit test domain");
+[Milan Jovanović, onde mora a lógica compartilhada](https://milanjovanovic.tech/blog/vertical-slice-architecture-where-does-the-shared-logic-live);
+[Jovanović, vertical slice vs clean architecture](https://milanjovanovic.tech/blog/vertical-slice-vs-clean-architecture).
 
 **Arquivos no MinIO (AD-021)**
 
