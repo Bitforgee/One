@@ -19,6 +19,29 @@ function daEquipe(parcial: Partial<Chamado> = {}): Chamado {
 const equipe = me({ papeis: ['ATENDENTE'], matriculas: [] })
 
 describe('chamado', () => {
+  // C39: os três estados do detalhe antes de haver conversa para mostrar
+  it('detalhe do chamado carregando, erro e sem respostas', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => new Promise(() => {}) })
+    const carregando = abrir('/univag/chamados/ONE-1')
+    await screen.findByRole('navigation')
+    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('spinner-border')
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+    carregando.unmount()
+
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [404, { status: 404, detail: 'Chamado não encontrado.' }] })
+    const comErro = abrir('/univag/chamados/ONE-1')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chamado não encontrado.')
+    expect(screen.getByRole('alert')).toHaveClass('alert', 'alert-danger')
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    comErro.unmount()
+
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado({ mensagens: [] })] })
+    abrir('/univag/chamados/ONE-1')
+    expect(await screen.findByText('Nenhuma resposta ainda.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'ONE-1 · preciso do boleto' })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('detalhe rotula Resumo gerado por IA', async () => {
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe()] })
     abrir('/univag/chamados/ONE-1')

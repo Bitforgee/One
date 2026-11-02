@@ -8,16 +8,16 @@ export class ErroApi extends Error {
   }
 }
 
+// Corpo da requisição: FormData vai como multipart (mensagens de chamado); o resto, como JSON.
+function envio(corpo: unknown): RequestInit {
+  if (corpo === undefined) return {}
+  if (corpo instanceof FormData) return { body: corpo }
+  return { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) }
+}
+
 // Toda chamada à API passa por aqui: erro vira ErroApi com o `detail` do ProblemDetails.
-// FormData vai como multipart (mensagens de chamado); o resto, como JSON.
 export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?: 'PUT'): Promise<T> {
-  const formulario = corpo instanceof FormData
-  const r = await fetch(caminho, {
-    method: metodo ?? (corpo === undefined ? 'GET' : 'POST'),
-    credentials: 'same-origin',
-    headers: corpo === undefined || formulario ? undefined : { 'Content-Type': 'application/json' },
-    body: corpo === undefined ? undefined : formulario ? corpo : JSON.stringify(corpo),
-  })
+  const r = await fetch(caminho, { method: metodo ?? (corpo === undefined ? 'GET' : 'POST'), credentials: 'same-origin', ...envio(corpo) })
   const texto = await r.text()
   const json = texto ? JSON.parse(texto) : undefined
   if (!r.ok) throw new ErroApi(r.status, json?.detail ?? 'Não foi possível concluir a requisição.', json)

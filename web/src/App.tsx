@@ -1,11 +1,15 @@
 import { Container } from 'react-bootstrap'
 import { Route, Routes } from 'react-router'
 import { DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
-import { Cadastros, Matriculas, Usuarios } from './administracao/Admin'
+import { Cadastros } from './administracao/Cadastros'
+import { Matriculas } from './administracao/Matriculas'
+import { Usuarios } from './administracao/Usuarios'
 import { Assistente } from './assistente/Assistente'
 import { Autenticado } from './Autenticado'
-import { ChamadoDetalhe, Fila, Solicitacoes } from './chamados/Chamados'
-import { Artigos, Documentos } from './conhecimento/Conhecimento'
+import { ChamadoDetalhe } from './chamados/ChamadoDetalhe'
+import { Fila, Solicitacoes } from './chamados/Chamados'
+import { Artigos } from './conhecimento/Artigos'
+import { Documentos } from './conhecimento/Documentos'
 import { Indicadores } from './indicadores/Indicadores'
 
 export function App() {
