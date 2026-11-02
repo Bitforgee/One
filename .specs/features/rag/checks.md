@@ -149,13 +149,13 @@ Proof: `npm --prefix web run test -- -t "fonte de documento no detalhe"`
 
 ### S4 - O grupo mede a busca com perguntas reais antes do piloto (P1) · ~3 files · ~20 KB · ~5k
 
-**C41** - `instituicao avaliar-busca` com 3 perguntas (duas que acham a fonte esperada nas posições 1 e 3 e uma longe de todas) imprime "acerto 1", "acerto 3", "erro" com os títulos buscados e "2/3", e sai com código 0 (AC 25)
+**C41** - [x] `instituicao avaliar-busca` com 3 perguntas (duas que acham a fonte esperada nas posições 1 e 3 e uma longe de todas) imprime "acerto 1", "acerto 3", "erro" com os títulos buscados e "2/3", e sai com código 0 (AC 25)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests.Avaliacao_valida_sai_0"`
 
-**C42** - Durante o `avaliar-busca`, o chat do provedor falso recebe 0 chamadas, `/embeddings` recebe uma por pergunta, e o banco tem as mesmas linhas antes e depois (AC 26)
+**C42** - [x] Durante o `avaliar-busca`, o chat do provedor falso recebe 0 chamadas, `/embeddings` recebe uma por pergunta, e o banco tem as mesmas linhas antes e depois (AC 26)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests.Nao_chama_chat_nem_grava"`
 
-**C43** - `avaliar-busca` com slug inexistente, arquivo que não é JSON, pergunta vazia ou `fonte` que não é título de artigo ou documento ativo imprime o caminho e o motivo na saída de erro e sai com código 1 (AC 27)
+**C43** - [x] `avaliar-busca` com slug inexistente, arquivo que não é JSON, pergunta vazia ou `fonte` que não é título de artigo ou documento ativo imprime o caminho e o motivo na saída de erro e sai com código 1 (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests.Arquivo_invalido_sai_1"`
 
 **C44** - [x] As 4 rotas `/api/admin/documentos*` e `GET /api/documentos/versoes/{id}` respondem erros em `application/problem+json` com `detail` em português (door 8 do `mvp-one`)
@@ -247,6 +247,6 @@ que o construtor precisa ler (`Assistente.cs`, `Agendador.cs`, `ChamadoRotas.cs`
   contexto fixo e o código existente: 60k + 14k + 40k = 114k, abaixo do budget de 150k - um
   construtor
 - Mechanism: um construtor (cabe no budget, sem pergunta)
-- **Boundary:** S1 e S2 (C1 a C25 e C46) fechados em `9c0a7a3` e no commit seguinte; S3 (documentos: C26 a C40, C44 e C45) fechado no commit seguinte; S4 (`avaliar-busca`) aberto
+- **Boundary:** S1 e S2 (C1 a C25 e C46) fechados em `9c0a7a3` e no commit seguinte; S3 (documentos: C26 a C40, C44 e C45) fechado em `cf83134`; S4 (`avaliar-busca`: C41 a C43) fechado no commit seguinte. Todas as 46 checks com prova verde; falta a verificação independente
 - **Settled mid-build:** tag `pgvector/pgvector:0.8.7-pg18-trixie` (door R8, decidida com o usuário por causa do desencontro de collation). O modelo cita fontes por `fonteIds` e `trechos[].fonteId` (ids de `trecho_fonte`), no lugar de `artigoIds`; o log da chamada continua com os ids dos artigos citados (AC 47 do `mvp-one`), derivados do trecho. Nos testes, o trecho de um artigo semeado tem id fixo `1_000_000 + id do artigo` (`Semente.Fonte`), para citar sem consultar o banco e sem colisão entre classes em paralelo
 - **Abandoned:** nada

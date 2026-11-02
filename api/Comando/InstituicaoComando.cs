@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
+using One.Api.Assistente;
 
 namespace One.Api.Comando;
 
@@ -20,7 +21,8 @@ public static partial class InstituicaoComando
         {
             "criar" => await Criar(sp, opcoes, saida),
             "carga" => await Carga(sp, opcoes, saida),
-            _ => ["uso: instituicao criar --slug --nome --fuso --admin-cpf --admin-nome --admin-email | instituicao carga --slug --arquivo"],
+            "avaliar-busca" => await AvaliarBusca(sp, opcoes, saida),
+            _ => ["uso: instituicao criar --slug --nome --fuso --admin-cpf --admin-nome --admin-email | instituicao carga --slug --arquivo | instituicao avaliar-busca --slug --arquivo"],
         };
         foreach (var e in erros) erro.WriteLine(e);
         return erros.Count == 0 ? 0 : 1;
@@ -168,6 +170,55 @@ public static partial class InstituicaoComando
         saida.WriteLine($"categorias: {novasCategorias.Count}");
         saida.WriteLine($"regras: {regras.Count}");
         saida.WriteLine($"artigos: {artigos.Count}");
+        return [];
+    }
+
+    record PerguntaAvaliacao(string? Pergunta, string? Fonte);
+
+    // RAG S4, AC 25 a 27: mede a busca do assistente com perguntas reais; não chama o chat e não grava nada.
+    static async Task<List<string>> AvaliarBusca(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
+    {
+        var db = sp.GetRequiredService<OneDb>();
+        var slug = o.GetValueOrDefault("slug") ?? "";
+        var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == slug);
+        if (instituicao is null) return [$"--slug: instituição \"{slug}\" não existe"];
+        if (!File.Exists(o.GetValueOrDefault("arquivo"))) return [$"--arquivo: arquivo \"{o.GetValueOrDefault("arquivo")}\" não encontrado"];
+
+        List<PerguntaAvaliacao>? perguntas;
+        try { perguntas = JsonSerializer.Deserialize<List<PerguntaAvaliacao>>(await File.ReadAllTextAsync(o["arquivo"]), JsonSerializerOptions.Web); }
+        catch (JsonException e) { return [$"--arquivo: JSON inválido ({e.Message})"]; }
+        if (perguntas is null || perguntas.Count == 0) return ["--arquivo: nenhuma pergunta"];
+
+        db.InstituicaoAtual = instituicao.Id;
+        var artigos = await db.Artigos.Where(a => a.Estado == EstadosArtigo.Ativo)
+            .Select(a => a.Versoes.OrderByDescending(v => v.Numero).Select(v => v.Titulo).First()).ToListAsync();
+        var titulos = artigos.Concat(await db.Documentos.Where(d => d.Estado == EstadosDocumento.Ativo).Select(d => d.Titulo).ToListAsync()).ToHashSet();
+        var erros = new List<string>();
+        foreach (var (p, i) in perguntas.Select((p, i) => (p, i)))
+        {
+            if (string.IsNullOrWhiteSpace(p?.Pergunta)) erros.Add($"[{i}].pergunta: obrigatória");
+            if (p?.Fonte is not { } fonte || !titulos.Contains(fonte)) erros.Add($"[{i}].fonte: \"{p?.Fonte}\" não é título de artigo ou documento ativo");
+        }
+        if (erros.Count > 0) return erros;
+
+        var embeddings = sp.GetRequiredService<Embeddings>();
+        var assistente = sp.GetRequiredService<Assistente.Assistente>();
+        var acertos = 0;
+        foreach (var p in perguntas)
+        {
+            float[] vetor;
+            try { vetor = (await embeddings.Gerar([Mascara.Aplicar(p.Pergunta!)]))[0]; }
+            catch (Exception e) when (e is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+            {
+                return [$"embeddings: falha ao gerar o vetor da pergunta \"{p.Pergunta}\" ({e.Message})"];
+            }
+            var buscadas = await assistente.Buscar(vetor, instituicao.Id);
+            var posicao = buscadas.FindIndex(f => f.Titulo == p.Fonte) + 1;
+            var lista = string.Join(" | ", buscadas.Select(f => $"{f.Titulo} ({f.Distancia.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)})"));
+            if (posicao > 0) acertos++;
+            saida.WriteLine(posicao > 0 ? $"acerto {posicao}: {p.Pergunta} -> {lista}" : $"erro: {p.Pergunta} (esperado \"{p.Fonte}\") -> {lista}");
+        }
+        saida.WriteLine($"{acertos}/{perguntas.Count}");
         return [];
     }
 }
