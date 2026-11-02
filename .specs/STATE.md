@@ -21,10 +21,9 @@
 
 ## Handoff
 
-**Feature**: mvp-one
-**Where**: os 4 lotes verdes (S1 a S13) e as telas de administração; 195 de 195 checks marcados em `checks.md`; decisões tomadas no build em `checks.md` `## Handoff`
+**Feature**: mvp-one fechada: verificação independente PASS na rodada 9 (`verification.md`, gate `validate_verification.py` exit 0), 195/195 checks; as rodadas 1 a 8 reprovaram só por testes faltando, mais uma correção de código (curso repetido na carga). Próxima feature: `rag` (plano e 46 checks aprovados em `.specs/features/rag/`)
 **In progress**: none
-**Next step**: Verifier independente do perfil `standard` (recalcular a cobertura e injetar uma falha por superfície de asserção, AD-013); depois, a carga real da Univag e as perguntas `blocks go-live`
-**Blockers**: none para o build; as seis perguntas `blocks go-live` do plano continuam abertas
+**Next step**: build do `rag` no `main` (decisão do usuário: antes da banca de 20/11, sem versão anterior para voltar), lendo `.specs/features/rag/plan.md` e `checks.md`; depois, o ensaio com a chave real da OpenAI
+**Blockers**: none para o build; a chave da OpenAI no `.env` e as perguntas `blocks go-live` dos dois planos seguem abertas
 **Uncommitted**: nothing
 **Branch**: main

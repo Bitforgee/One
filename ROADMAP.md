@@ -102,8 +102,9 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 - [x] Lote 2: transferência, atendimento e importação (S4, S5, S8), mais as rotas do S6.
 - [x] Lote 3: tela do S6, artigos (S7), prazos (S9) e indicadores (S11).
 - [x] Lote 4: e-mail e anexos (S10), extras do GLPI (S13) e as telas de administração.
-- [ ] Verificação independente aprovada. Rodadas 1 a 5 reprovaram só por testes faltando (o
-      código não mudou de comportamento); a correção da rodada 5 está pronta e espera a rodada 6.
+- [x] Verificação independente aprovada em 02/11/2026, na rodada 9 (`verification.md`). As rodadas
+      1 a 8 reprovaram por testes faltando e um teste que mascarava três regras do link de senha;
+      a única mudança de código foi recusar curso repetido na carga.
 
 ### Etapa 4: RAG com OpenAI (03–09/11), construído no `main`
 
