@@ -8,7 +8,7 @@ namespace One.Api.Tests;
 
 public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C7: rotas com {id} ou {numero}. Faltam as de anexo (S10) e duplicado (S13).
+    // C7: as 27 rotas da Surface com {id} ou {numero}.
     [Fact]
     public async Task Recurso_de_outra_instituicao_404()
     {
@@ -19,6 +19,8 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var alunoUnivag = await f.AlunoLogado(univag);
         var conversaId = (await (await alunoUnivag.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })).Json()).GetProperty("conversaId").GetInt64();
         var numero = (await (await alunoUnivag.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "oi" })).Json()).GetProperty("numero").GetString()!;
+        var anexo = (await (await Balcao.ComAnexos(alunoUnivag.Cliente, numero, "segue", "PUBLICA", ("a.pdf", Balcao.Arquivo(Balcao.Pdf, 100)))).Json())
+            .GetProperty("mensagens")[0].GetProperty("anexos")[0].GetProperty("id").GetInt64();
         var (setor, categoria, curso) = await f.Db(univag.Id, async db => (await db.Setores.SingleAsync(), await db.Categorias.SingleAsync(c => c.Padrao), await db.Cursos.SingleAsync()));
         var boleto = await f.Categoria(univag, "Boleto");
         var regra = await f.Regra(univag, boleto, setor);
@@ -37,6 +39,8 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
             (alunoDemo.Cliente, HttpMethod.Post, $"/api/conversas/{conversaId}/encerrar", null),
             (alunoDemo.Cliente, HttpMethod.Post, $"/api/conversas/{conversaId}/transferir", new { }),
             (equipeDemo, HttpMethod.Get, $"/api/artigos/versoes/{versaoId}", null),
+            (alunoDemo.Cliente, HttpMethod.Get, $"/api/anexos/{anexo}", null),
+            (equipeDemo, HttpMethod.Post, $"/api/chamados/{numero}/duplicado", new { numeroOriginal = numero }),
             (equipeDemo, HttpMethod.Put, $"/api/admin/usuarios/{alunoUnivag.Usuario.Id}", usuario),
             (equipeDemo, HttpMethod.Post, $"/api/admin/usuarios/{alunoUnivag.Usuario.Id}/desativar", new { }),
             (equipeDemo, HttpMethod.Put, $"/api/admin/setores/{setor.Id}", new { nome = "Invadido", triagem = true }),
@@ -65,7 +69,7 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Null(conversa.Desfecho);
         Assert.Equal(2, conversa.Mensagens.Count);
         Assert.Equal("ABERTO", (await f.Db(univag.Id, db => db.Chamados.SingleAsync(c => c.Numero == numero))).Estado);
-        Assert.Equal(0, await f.Db(univag.Id, db => db.MensagensChamado.CountAsync()));
+        Assert.Equal(1, await f.Db(univag.Id, db => db.MensagensChamado.CountAsync()));
         var nomes = await f.Db(univag.Id, async db =>
             (await db.Setores.Select(x => x.Nome).ToListAsync()).Concat(await db.Categorias.Select(x => x.Nome).ToListAsync())
             .Concat(await db.Cursos.Select(x => x.Nome).ToListAsync()).Concat(await db.RespostasProntas.Select(x => x.Titulo).ToListAsync()).ToList());
@@ -76,7 +80,7 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("ATIVO", 1), (artigoDepois.Estado, artigoDepois.Versoes.Count));
     }
 
-    // C8: categoriaId, setorId e matriculaId de outra instituição no corpo valem o mesmo que um id inexistente. numeroOriginal chega com o S13.
+    // C8: categoriaId, setorId, matriculaId e numeroOriginal de outra instituição no corpo valem o mesmo que um id inexistente.
     [Fact]
     public async Task Id_de_outra_instituicao_no_corpo_400()
     {
@@ -87,9 +91,15 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var numero = await demo.Chamado(EstadosChamado.EmAtendimento);
         var conversa = (await (await demo.ClienteAluno.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })).Json()).GetProperty("conversaId").GetInt64();
         var antes = await demo.Ler(numero);
+        // a numeração é por instituição: ONE-3 existe só na univag (a demo tem só ONE-1)
+        await univag.Chamado();
+        await univag.Chamado();
+        var daUnivag = await univag.Chamado();
+        Assert.False(await f.Db(demo.Instituicao.Id, db => db.Chamados.AnyAsync(c => c.Numero == daUnivag)));
 
         var respostas = new[]
         {
+            await demo.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/duplicado", new { numeroOriginal = daUnivag }),
             await demo.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/reclassificar", new { categoriaId = categoriaUnivag.Id }),
             await demo.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = univag.Outro.Id, motivo = "outro" }),
             await demo.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { matriculaId = matriculaUnivag }),

@@ -47,7 +47,10 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
     {
         var modelo = cfg["Llm:Modelo"] ?? "deepseek-flash";
         // shortcut: o catálogo inteiro vai no prompt; acima de ~100 artigos por instituição, pré-filtrar por busca textual (door 4)
-        var artigos = await db.Artigos.Where(a => a.Estado == EstadosArtigo.Ativo)
+        // AC 150: só artigos dentro da validade, em dias do fuso da instituição
+        var fuso = await db.Instituicoes.Where(i => i.Id == conversa.InstituicaoId).Select(i => i.Fuso).SingleAsync();
+        var hoje = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(relogio.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(fuso)));
+        var artigos = await db.Artigos.Where(a => a.Estado == EstadosArtigo.Ativo && (a.VisivelDe == null || a.VisivelDe <= hoje) && (a.VisivelAte == null || a.VisivelAte >= hoje))
             .Select(a => a.Versoes.OrderByDescending(v => v.Numero).First()).ToListAsync();
         var categorias = await db.Categorias.Where(c => c.Ativa).OrderBy(c => c.Id).Select(c => new { id = c.Id, nome = c.Nome }).ToListAsync();
         var historico = conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10)

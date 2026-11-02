@@ -80,7 +80,7 @@ public class VisibilidadeTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(fonte.GetProperty("atualizado").GetBoolean());
         Assert.Equal(["NOTA", "PUBLICA"], j.GetProperty("mensagens").EnumerateArray().Select(m => m.GetProperty("tipo").GetString()));
         Assert.Equal(["CRIACAO", "NOTA", "RESPOSTA", "ATRIBUICAO", "TRANSICAO"], j.GetProperty("eventos").EnumerateArray().Select(e => e.GetProperty("tipo").GetString()));
-        Assert.Equal(["responder", "nota", "resolver", "encaminhar", "reclassificar"], j.GetProperty("acoes").EnumerateArray().Select(a => a.GetString()));
+        Assert.Equal(["responder", "nota", "resolver", "encaminhar", "reclassificar", "duplicado"], j.GetProperty("acoes").EnumerateArray().Select(a => a.GetString()));
     }
 
     [Fact]
@@ -242,7 +242,6 @@ public class ConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory>
 
 public class EventosTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C120: o tipo ANEXO chega com os anexos (S10).
     [Fact]
     public async Task Cada_acao_grava_evento()
     {
@@ -255,6 +254,7 @@ public class EventosTests(OneFactory f) : IClassFixture<OneFactory>
             (() => Balcao.Mensagem(b.A.Cliente, numero, "Resposta"), "RESPOSTA", b.A.Usuario.Id),
             (() => Balcao.Mensagem(b.A.Cliente, numero, "Nota", "NOTA"), "NOTA", b.A.Usuario.Id),
             (() => b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/reclassificar", new { categoriaId = categoria.Id }), "RECLASSIFICACAO", b.A.Usuario.Id),
+            (() => Balcao.ComAnexos(b.A.Cliente, numero, "Segue o boleto", "PUBLICA", ("boleto.pdf", Balcao.Arquivo(Balcao.Pdf, 100))), "ANEXO", b.A.Usuario.Id),
             (() => b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = b.Outro.Id, motivo = "Financeiro" }), "ENCAMINHAMENTO", b.A.Usuario.Id),
         };
         var criacao = Assert.Single(await b.Eventos(numero));

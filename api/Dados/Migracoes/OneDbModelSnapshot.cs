@@ -32,6 +32,11 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<byte[]>("Conteudo")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("conteudo");
+
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
@@ -39,6 +44,20 @@ namespace One.Api.Dados.Migracoes
                     b.Property<long>("MensagemChamadoId")
                         .HasColumnType("bigint")
                         .HasColumnName("mensagem_chamado_id");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<long>("Tamanho")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
 
                     b.HasKey("Id")
                         .HasName("pk_anexo");
@@ -73,6 +92,14 @@ namespace One.Api.Dados.Migracoes
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
+
+                    b.Property<DateOnly?>("VisivelAte")
+                        .HasColumnType("date")
+                        .HasColumnName("visivel_ate");
+
+                    b.Property<DateOnly?>("VisivelDe")
+                        .HasColumnType("date")
+                        .HasColumnName("visivel_de");
 
                     b.HasKey("Id")
                         .HasName("pk_artigo");
@@ -167,6 +194,10 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime?>("AguardandoDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("aguardando_desde");
+
                     b.Property<long>("CategoriaId")
                         .HasColumnType("bigint")
                         .HasColumnName("categoria_id");
@@ -200,6 +231,10 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
 
+                    b.Property<DateTime?>("LembreteEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lembrete_em");
+
                     b.Property<long>("MatriculaId")
                         .HasColumnType("bigint")
                         .HasColumnName("matricula_id");
@@ -213,6 +248,10 @@ namespace One.Api.Dados.Migracoes
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("numero");
+
+                    b.Property<string>("NumeroOriginal")
+                        .HasColumnType("text")
+                        .HasColumnName("numero_original");
 
                     b.Property<string>("OrigemCategoria")
                         .IsRequired()
@@ -1061,7 +1100,7 @@ namespace One.Api.Dados.Migracoes
                         .HasConstraintName("fk_anexo_instituicoes_instituicao_id");
 
                     b.HasOne("One.Api.Dados.MensagemChamado", null)
-                        .WithMany()
+                        .WithMany("Anexos")
                         .HasForeignKey("MensagemChamadoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -1449,6 +1488,11 @@ namespace One.Api.Dados.Migracoes
             modelBuilder.Entity("One.Api.Dados.Conversa", b =>
                 {
                     b.Navigation("Mensagens");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.MensagemChamado", b =>
+                {
+                    b.Navigation("Anexos");
                 });
 
             modelBuilder.Entity("One.Api.Dados.MensagemConversa", b =>

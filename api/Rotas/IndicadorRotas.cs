@@ -43,7 +43,8 @@ public static class IndicadorRotas
             bool NoPeriodo(DateTime t) => t >= inicio && t < fim;
 
             // shortcut: calcula em memória sobre os chamados do escopo; com milhares de chamados por instituição, agregar em SQL
-            var todos = await db.Chamados.Select(c => new ChamadoLido(c.Id, c.CriadoEm, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)).ToListAsync();
+            // AC 148: chamado duplicado não conta
+            var todos = await db.Chamados.Where(c => c.MotivoFechamento != "DUPLICADO" || c.MotivoFechamento == null).Select(c => new ChamadoLido(c.Id, c.CriadoEm, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)).ToListAsync();
             var eventos = (await db.EventosChamado.Where(e => e.Tipo == "TRANSICAO" || e.Tipo == "ENCAMINHAMENTO").OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
                 .ToLookup(e => e.ChamadoId);
             if (setores is not null)

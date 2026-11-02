@@ -11,7 +11,7 @@ public class ProblemDetailsTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static readonly string[] Ingles = ["One or more validation errors occurred.", "Unauthorized", "Forbidden", "Not Found", "Conflict", "Too Many Requests", "Bad Request", "An error occurred", "Internal Server Error"];
 
-    // Uma resposta de cada status que existe neste lote; 413 e 415 chegam com os anexos (S10).
+    // Uma resposta de cada status de erro da API.
     async Task<List<(int esperado, HttpResponseMessage r)>> Erros()
     {
         var c = await Cenario.Criar(f);
@@ -32,6 +32,10 @@ public class ProblemDetailsTests(OneFactory f) : IClassFixture<OneFactory>
             (409, await c.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null)),
             (500, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf, "explode-500")),
         };
+
+        var numero = (await (await c.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "oi" })).Json()).GetProperty("numero").GetString()!;
+        lista.Add((413, await Balcao.ComAnexos(c.Cliente, numero, "segue", "PUBLICA", ("a.pdf", Balcao.Arquivo(Balcao.Pdf, 10 * 1024 * 1024 + 1)))));
+        lista.Add((415, await Balcao.ComAnexos(c.Cliente, numero, "segue", "PUBLICA", ("a.pdf", Balcao.Arquivo(Balcao.Exe, 100)))));
 
         await using var limitado = new OneFactoryComLimites();
         await limitado.InitializeAsync();

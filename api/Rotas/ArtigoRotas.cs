@@ -3,7 +3,7 @@ using One.Api.Dados;
 
 namespace One.Api.Rotas;
 
-public record ArtigoIn(string? Titulo, string[]? Perguntas, long? CategoriaId, string? Resposta, string[]? Links);
+public record ArtigoIn(string? Titulo, string[]? Perguntas, long? CategoriaId, string? Resposta, string[]? Links, DateOnly? VisivelDe = null, DateOnly? VisivelAte = null);
 
 public static class ArtigoRotas
 {
@@ -36,6 +36,8 @@ public static class ArtigoRotas
             estado = a.Estado,
             categoriaId = a.CategoriaId,
             categoria,
+            visivelDe = a.VisivelDe,
+            visivelAte = a.VisivelAte,
             versao = new { id = v.Id, numero = v.Numero, titulo = v.Titulo, perguntas = v.Perguntas, resposta = v.Resposta, links = v.Links, criadaEm = v.CriadaEm },
         };
     }
@@ -49,6 +51,7 @@ public static class ArtigoRotas
         if (string.IsNullOrWhiteSpace(i.Resposta) || i.Resposta.Length > 8000) return Problemas.Invalido("Informe a resposta, com até 8000 caracteres.", "resposta");
         if ((i.Links ?? []).Any(l => !Uri.TryCreate(l, UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https")))
             return Problemas.Invalido("Todo link deve começar com https:// ou http://.", "links");
+        if (i.VisivelDe > i.VisivelAte) return Problemas.Invalido("O início da validade deve ser anterior ou igual ao fim.", "visivelDe"); // AC 150
         return null;
     }
 
@@ -83,7 +86,7 @@ public static class ArtigoRotas
         admin.MapPost("/artigos", async (ArtigoIn i, OneDb db, TimeProvider relogio) =>
         {
             if (await Validar(db, i) is { } erro) return erro;
-            var a = new Artigo { CategoriaId = i.CategoriaId!.Value, Versoes = [Versao(i, 1, relogio.GetUtcNow().UtcDateTime)] };
+            var a = new Artigo { CategoriaId = i.CategoriaId!.Value, VisivelDe = i.VisivelDe, VisivelAte = i.VisivelAte, Versoes = [Versao(i, 1, relogio.GetUtcNow().UtcDateTime)] };
             db.Artigos.Add(a);
             await db.SaveChangesAsync();
             return await Responder(db, a, 201);
@@ -95,6 +98,7 @@ public static class ArtigoRotas
             if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
             if (await Validar(db, i) is { } erro) return erro;
             a.CategoriaId = i.CategoriaId!.Value;
+            (a.VisivelDe, a.VisivelAte) = (i.VisivelDe, i.VisivelAte);
             a.Versoes.Add(Versao(i, a.Versoes.Max(v => v.Numero) + 1, relogio.GetUtcNow().UtcDateTime));
             await db.SaveChangesAsync();
             return await Responder(db, a);

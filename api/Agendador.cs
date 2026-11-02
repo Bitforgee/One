@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Chamados;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -11,6 +12,9 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
 
     TimeSpan Abandono => TimeSpan.FromMinutes(cfg.GetValue("Prazos:AbandonoMinutos", 30));
     TimeSpan Confirmacao => TimeSpan.FromDays(cfg.GetValue("Prazos:ConfirmacaoDias", 7));
+    TimeSpan Lembrete => TimeSpan.FromDays(cfg.GetValue("Prazos:LembreteAguardandoDias", 3));
+    TimeSpan ResolverAguardando => TimeSpan.FromDays(cfg.GetValue("Prazos:ResolverAguardandoDias", 7));
+    public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
     const int MaxTentativas = 5;
 
     protected override async Task ExecuteAsync(CancellationToken parar)
@@ -37,6 +41,11 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(c => new Item("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
             .Select(c => new Item("chamado", c.Id, c.InstituicaoId)).ToListAsync());
+        var (limiteResolver, limiteLembrete) = (agora - ResolverAguardando, agora - Lembrete);
+        itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.AguardandoDesde <= limiteResolver)
+            .Select(c => new Item("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
+        itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limiteLembrete && c.AguardandoDesde > limiteResolver)
+            .Select(c => new Item("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
         itens.AddRange(await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
             .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync());
         return itens;
@@ -57,6 +66,8 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
                 {
                     case "conversa": await Abandonar(db, item.Id, agora); break;
                     case "chamado": await FecharResolvido(db, item.Id, agora); break;
+                    case "lembrete": await Lembrar(db, item.Id, agora); break;
+                    case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
                     case "email": await Enviar(db, escopo.ServiceProvider.GetRequiredService<Email>(), item.Id, agora); break;
                 }
             }
@@ -88,6 +99,37 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
+    }
+
+    // AC 145: um único lembrete por período em AGUARDANDO_ALUNO
+    async Task Lembrar(OneDb db, long id, DateTime agora)
+    {
+        var limite = agora - Lembrete;
+        await using var tx = await db.Database.BeginTransactionAsync();
+        var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limite)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.LembreteEm, agora));
+        if (n == 0) return;
+        var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
+        await Avisos.AguardaResposta(db, cfg, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, agora);
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = "LEMBRETE", Detalhe = "Lembrete ao aluno: 3 dias aguardando resposta", CriadoEm = agora });
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
+    }
+
+    // AC 146: depois de 7 dias sem resposta o Sistema resolve; daí em diante valem a rejeição e o fechamento automático
+    async Task ResolverSemResposta(OneDb db, long id, DateTime agora)
+    {
+        var limite = agora - ResolverAguardando;
+        await using var tx = await db.Database.BeginTransactionAsync();
+        var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.AguardandoDesde <= limite)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Resolvido).SetProperty(c => c.ResolvidoEm, agora).SetProperty(c => c.AguardandoDesde, (DateTime?)null));
+        if (n == 0) return;
+        var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
+        db.MensagensChamado.Add(new MensagemChamado { ChamadoId = id, Tipo = "PUBLICA", Texto = TextoSemResposta, CriadaEm = agora });
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = "TRANSICAO", De = AguardandoAluno, Para = Resolvido, CriadoEm = agora });
+        await Avisos.Resolvido(db, cfg, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, TextoSemResposta, agora);
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
     }
 
     // door 11 e AC 126: remetente com o nome da instituição do e-mail; falha soma tentativa e espera 2^n minutos.

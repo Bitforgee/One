@@ -246,6 +246,7 @@ public static class AdminRotas
                 {
                     db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = "TRANSICAO", AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
                     c.Estado = Aberto;
+                    c.AguardandoDesde = null;
                 }
             }
             await db.SaveChangesAsync();

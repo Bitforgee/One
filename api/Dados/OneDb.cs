@@ -102,7 +102,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AutorId);
         });
-        mb.Entity<Anexo>().HasOne<MensagemChamado>().WithMany().HasForeignKey(x => x.MensagemChamadoId);
+        mb.Entity<Anexo>().HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
         mb.Entity<EventoChamado>(e =>
         {
             e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);

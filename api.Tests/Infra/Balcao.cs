@@ -47,6 +47,23 @@ public record Balcao(OneFactory F, Instituicao Instituicao, Aluno Aluno, Setor T
             ["aguardaAluno"] = aguardaAluno ? "true" : "false",
         }));
 
+    public static Task<HttpResponseMessage> ComAnexos(HttpClient c, string numero, string texto, string tipo, params (string nome, byte[] bytes)[] arquivos)
+    {
+        var form = new MultipartFormDataContent { { new StringContent(tipo), "tipo" }, { new StringContent(texto), "texto" } };
+        foreach (var (nome, bytes) in arquivos) form.Add(new ByteArrayContent(bytes), "anexos", nome);
+        return c.PostAsync($"/api/chamados/{numero}/mensagens", form);
+    }
+
+    public static byte[] Arquivo(byte[] assinatura, int tamanho)
+    {
+        var b = new byte[tamanho];
+        Random.Shared.NextBytes(b);
+        assinatura.CopyTo(b, 0);
+        return b;
+    }
+
+    public static readonly byte[] Pdf = "%PDF"u8.ToArray(), Jpg = [0xFF, 0xD8, 0xFF], Png = [0x89, 0x50, 0x4E, 0x47], Exe = "MZ"u8.ToArray();
+
     // Volta no tempo só o chamado: avançar o relógio 7 dias venceria também o cookie de 8 h das sessões.
     public Task Recuar(string numero, TimeSpan quanto) =>
         F.Db(Instituicao.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s

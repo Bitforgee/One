@@ -31,7 +31,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.NotEmpty(privadas);
+        Assert.Equal(49, privadas.Count);
 
         foreach (var (metodo, padrao) in privadas)
         {

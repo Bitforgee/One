@@ -115,6 +115,8 @@ public class Artigo : IDaInstituicao
     public long InstituicaoId { get; set; }
     public long CategoriaId { get; set; }
     public string Estado { get; set; } = EstadosArtigo.Rascunho;
+    public DateOnly? VisivelDe { get; set; } // AC 150: dias no fuso da instituição
+    public DateOnly? VisivelAte { get; set; }
     public List<VersaoArtigo> Versoes { get; set; } = [];
 }
 
@@ -220,6 +222,9 @@ public class Chamado : IDaInstituicao
     public DateTime CriadoEm { get; set; }
     public DateTime? ResolvidoEm { get; set; }
     public DateTime? FechadoEm { get; set; }
+    public DateTime? AguardandoDesde { get; set; } // AC 145 e 146: prazos em AGUARDANDO_ALUNO
+    public DateTime? LembreteEm { get; set; }
+    public string? NumeroOriginal { get; set; } // AC 148
     public uint Xmin { get; set; } // door 14: coluna de sistema do PostgreSQL como token de concorrência
 }
 
@@ -232,6 +237,7 @@ public class MensagemChamado : IDaInstituicao
     public string Tipo { get; set; } = ""; // PUBLICA ou NOTA
     public string Texto { get; set; } = "";
     public DateTime CriadaEm { get; set; }
+    public List<Anexo> Anexos { get; set; } = [];
 }
 
 public class Anexo : IDaInstituicao
@@ -239,6 +245,11 @@ public class Anexo : IDaInstituicao
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public long MensagemChamadoId { get; set; }
+    public string Nome { get; set; } = "";
+    public string Tipo { get; set; } = ""; // Content-Type conferido pela assinatura (door 13)
+    public long Tamanho { get; set; }
+    // shortcut: conteúdo em bytea (door 13), lido inteiro na memória; com GBs de anexos ou muitos downloads simultâneos, mover para armazenamento de objetos (S3/MinIO) com streaming
+    public byte[] Conteudo { get; set; } = [];
 }
 
 public class EventoChamado : IDaInstituicao
