@@ -106,4 +106,21 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Mensagem, (await r.Json()).GetProperty("mensagem").GetString());
         Assert.Contains(fora.Logs.Entradas, l => l.Nivel == LogLevel.Error && Equals(l.Campos.GetValueOrDefault("InstituicaoId"), i.Id));
     }
+
+    // vertical-slice-completa C22: o log do SMTP fora continua na categoria de hoje
+    [Fact]
+    public async Task Smtp_fora_loga_na_categoria_Email()
+    {
+        await using var fora = new OneFactorySmtpFora();
+        await fora.InitializeAsync();
+        var i = await fora.Instituicao();
+        var u = await fora.Usuario(i, [Papeis.Aluno], senha: null);
+
+        var r = await fora.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+
+        Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
+        // o EF também loga um Error na partida (o banco do teste ainda não existe); o do SMTP é o que leva a instituição
+        var log = Assert.Single(fora.Logs.Entradas, l => l.Nivel == LogLevel.Error && Equals(l.Campos.GetValueOrDefault("InstituicaoId"), i.Id));
+        Assert.Equal("One.Api.Email", log.Categoria);
+    }
 }
