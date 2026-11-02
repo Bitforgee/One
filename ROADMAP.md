@@ -7,7 +7,7 @@
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
   - `.specs/features/rag/plan.md` e `checks.md`: o RAG (Etapa 4), 46 checks;
   - `.specs/features/refatoracao-solid/plan.md` e `checks.md`: a refatoração (Etapa 4b), 36 critérios, 39 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-018;
+  - `.specs/STATE.md`: decisões AD-001 a AD-022;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -43,10 +43,10 @@ hospedagem e ensaio.
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
 | Código | 31 commits em `main` (`8c0cb43..a92daae`), 5 deles do RAG |
-| Testes | API 237, web 35, e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Testes | API 267 (237 antes da refatoração), web 99 (35 antes da refatoração), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
-| Refatoração (`refatoracao-solid`) | Plano aprovado e 39 checks escritos em 02/11; build do lote 1 (`api/`) começando |
+| Refatoração (`refatoracao-solid`) | Lote 1 (`api/`, C1 a C34) verde em 02/11 (`69fd9ab..d6cb69a`): API 267 testes, CA1502 de 18 métodos para 0. Lote 2 (`web/`, C35 a C39) verde em 02/11 (`6912b5f..b7ca20d`): web 99 testes, pior CRAP de 120,9 para 9,0, 282 mutantes mortos e 0 sobreviventes. Verificação independente em andamento |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -94,10 +94,11 @@ hospedagem e ensaio.
 ## Etapas até a banca
 
 ```text
- Etapa 0      Etapa 1–3                 Etapa 4            Etapa 4b          Etapa 5                     Banca    Piloto
- Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI  →  Refatoração   →   Dados, IA real e ensaio  →  20/11 →  Univag
- 01–03/11                                código 02/11       até 08/11         09–19/11 (código congelado a partir de 13/11)
-                       ▲ 13/11 AVA: já atendido pelo código
+ Etapa 0      Etapa 1–3                 Etapa 4          Etapa 4b        Etapa 4c                       Etapa 5                   Banca    Piloto
+ Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI → Refatoração → Arquitetura, interface,   →  Dados, IA real e ensaio → 20/11 →  Univag
+ 01–03/11                                código 02/11     até 03/11      arquivos e tempo real         09–19/11 (ensaio 17–19/11)
+                                                                         03–16/11 (congelado a partir de 17/11)
+                       ▲ 13/11 AVA: a versão do `main` verde nesse dia
 ```
 
 ### Etapa 0: preparar
@@ -190,20 +191,64 @@ injeção de falhas do Verifier.
 - [x] Mecanismo do build: handoff em 2 lotes, `api/` (S1 a S4) e depois `web/` (S5), porque a
       estimativa (180k) passa do budget de 150k.
 - [x] Verificação do `rag` aprovada (rodada 3, 02/11).
-- [ ] S1: rede de segurança e medição (nenhuma asserção existente pode sumir; CA1502; cobertura
+- [x] S1: rede de segurança e medição (nenhuma asserção existente pode sumir; CA1502; cobertura
       do `web/`).
-- [ ] S2: uma decisão em um lugar (prazos, literais gravados, consultas repetidas, glossário).
-- [ ] S3: regras de negócio puras, com teste sem banco.
-- [ ] S4: `api/` em fatias verticais; `ChamadoRotas`, `AdminRotas` e `Assistente` com uma
+- [x] S2: uma decisão em um lugar (prazos, literais gravados, consultas repetidas, glossário).
+- [x] S3: regras de negócio puras, com teste sem banco.
+- [x] S4: `api/` em fatias verticais; `ChamadoRotas`, `AdminRotas` e `Assistente` com uma
       responsabilidade cada.
-- [ ] S5: `web/` em fatias verticais; telas abaixo de CRAP 10.
+- [x] S5: `web/` em fatias verticais; telas abaixo de CRAP 10.
 - [ ] Verificação independente aprovada.
 
 **Saída (meta 08/11, limite 12/11):** S1 a S5 no `main` com a suíte inteira verde, nenhuma
 asserção existente removida, e a verificação aprovada.
-**Congelamento de código de 13/11 a 20/11:** só correção de bug, para o ensaio da Etapa 5 rodar
-uma semana sobre o código que vai à banca. Se o limite de 12/11 estiver em risco, o grupo decide
+**Congelamento de código de 17/11 a 20/11** (era 13/11; mudou em 02/11 porque a Etapa 4c entrou
+antes da banca): só correção de bug, para o ensaio da Etapa 5 rodar sobre o código que vai à banca. Se o limite de 12/11 estiver em risco, o grupo decide
 antes o que corta; a decisão de 02/11 é que a refatoração entra antes da banca.
+
+### Etapa 4c: arquitetura completa, interface nova, arquivos e tempo real (antes da banca, 03–16/11)
+
+Decisão do usuário em 02/11/2026: **todos os assuntos discutidos em 02/11 entram antes da banca**
+(AD-019 a AD-022). Cada item é uma feature própria do `tlc-spec-lean` (plano e checks aprovados
+antes do código, verificação independente depois), e a próxima só começa com a anterior verde. No
+`api/` uma feature por vez; a interface nova, que só mexe no `web/`, corre em paralelo.
+
+| Quando | Feature | Onde |
+| --- | --- | --- |
+| 03–05/11 | vertical slice completa com `Mediator` | `api/` |
+| 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
+| 06–07/11 | tempo real com SignalR | `api/`, `web/` |
+| 07–08/11 | Web Push | `api/`, `web/` (service worker) |
+| 04–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca | `web/` |
+| 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
+| 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
+
+O tema sobre o Bootstrap (`tema.css`) que estava previsto aqui foi descartado: com a interface nova
+antes da banca, ele seria jogado fora. Logo e cores do One: o grupo fornece ou aprova a proposta
+antes de 04/11.
+
+**Vertical slice completa com `Mediator` (AD-019)**
+
+- hoje são ~50 rotas em 12 arquivos (`Chamados/AcoesChamado.cs` tem 9); cada rota vira um arquivo com request, handler e validação, dentro das 7 fatias que já existem.
+- mediator: **`Mediator` (martinothamar), decidido em 02/11**, no lugar do MediatR, que ficou comercial em 2025. É MIT, gerado em compilação, com pipeline behaviors, 10,7 mi de downloads e versão de 03/2026. A 3.0.2 roda no .NET 10: testado em 02/11 com request, handler e pipeline behavior. Um request sem handler dá o aviso `MSG0005` no build, e `MSG0005` entra no `WarningsAsErrors`. Descartado: `Balta.Mediator` (André Baltieri, MIT), que hoje tem 1 commit, ~500 downloads, alvo .NET 8, resolve o handler por reflexão e só oferece `SendAsync`.
+- o pipeline `Agir` (permissões dos chamados) vira um pipeline behavior, para continuar em um lugar só.
+- planejar com `tlc-spec-lean` (feature `vertical-slice-completa`, plano e checks antes do código), mantendo as regras do `ArquiteturaTests` e o CA1502.
+
+**Arquivos no MinIO (AD-021)**
+
+- **arquivos em armazenamento de objetos (MinIO/S3)**: hoje os anexos (até 10 MB) e os PDFs da instituição (até 20 MB) ficam no PostgreSQL em `bytea` (door 13), lidos inteiros na memória no download (`shortcut:` em `api/Dados/Entidades.cs`). Foi escolhido no lugar do disco local, que some em hospedagem efêmera e fica fora do backup. Assim há um só backup, e o filtro por instituição e o append-only valem para os arquivos. Na troca: o banco guarda só a chave, o hash e o tamanho; o download passa a ser por streaming ou URL pré-assinada; o caminho é prefixado pela instituição; o bucket tem versionamento ou object lock para manter o append-only. Decisão revista em 02/11: troca antes da banca.
+
+**Tempo real com SignalR (AD-022)**
+
+- **tempo real (SignalR)**: hoje a tela do chamado aberta pergunta à API a cada 15 s (door 18), e o SignalR foi rejeitado no plano. Motivos: o atendente responde em minutos ou horas; a resposta da IA não pode chegar aos poucos, porque o servidor confere os trechos antes de mostrar (AD-012); com mais de um servidor, o SignalR pede sessão fixa e backplane (Redis ou Azure SignalR Service); e a conexão cai com a PWA em segundo plano. Decisão revista em 02/11: entra antes da banca, com os limites abaixo.
+- Antes da banca, o SignalR substitui o polling de 15 s (door 18 do `mvp-one`) para avisar a tela
+  do chamado e a fila do atendente que algo mudou. **A resposta da IA continua indo inteira, só
+  depois da conferência dos trechos** (AD-012): nada de texto chegando aos poucos.
+- Uma só instância da API na banca, então sem backplane; o Redis entra quando houver mais de uma.
+
+**Web Push (AD-022)**
+
+- **aviso com o app fechado**: Web Push pelo service worker que a Vite PWA já registra, não SignalR. Hoje esse papel é do e-mail (`email_saida`).
 
 ### Etapa 5: dados, IA real e ensaio (09–19/11)
 
@@ -276,11 +321,41 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Fase | Objetivo | Itens |
 | --- | --- | --- |
 | Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>roda no RAG (Etapa 4), já usado na banca;</li><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite da OpenAI pela LGPD, sem região de dados no Brasil, e SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
-| Escala | aguentar o volume de mais alunos | <ul><li>consultas N+1 em `AdminRotas` e `DocumentoRotas`;</li><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
+| Escala | aguentar o volume de mais alunos | <ul><li>consultas N+1 em `AdminRotas` e `DocumentoRotas`;</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
 | Qualidade da IA | aprender com o que falhou | <ul><li>relatório de perguntas sem base;</li><li>revisão das respostas da IA pelo administrador;</li><li>botão "reportar resposta errada";</li><li>atendente sugere artigo a partir da resolução</li></ul> |
 | Segunda instituição | provar o produto multi-instituição | <ul><li>tela do operador;</li><li>provedor de IA, prazos e marca por instituição;</li><li>subdomínio próprio</li></ul> |
 | Integrações | tirar o CSV do caminho | <ul><li>API dos ERPs acadêmicos;</li><li>Moodle com botão "Preciso de ajuda";</li><li>WhatsApp como primeiro canal extra</li></ul> |
 | Produto comercial | vender | <ul><li>cobrança por resolução ou por aluno ativo;</li><li>LGPD completa;</li><li>observabilidade;</li><li>busca no INPI pelo nome "One"</li></ul> |
+
+### Interface nova (Etapa 4c, antes da banca)
+
+Decisão do usuário em 02/11/2026 (AD-020): o `web/` troca o Bootstrap por esta stack antes da banca, tela a tela,
+dentro das 6 fatias do AD-017. Planejar com `tlc-spec-lean` perfil `ui`, e a migração não pode
+mudar nenhum teste de comportamento.
+
+| Categoria | Biblioteca | Onde entra no One | Observação |
+| --- | --- | --- | --- |
+| Componentes UI | [shadcn/ui](https://ui.shadcn.com) | todas as telas | substitui o `react-bootstrap` |
+| Estilização | [Tailwind CSS](https://tailwindcss.com) | todas as telas | substitui o CSS do Bootstrap |
+| Ícones | [Lucide React](https://lucide.dev) | todas as telas | substitui o `bootstrap-icons` |
+| Componentes acessíveis | [Radix UI](https://www.radix-ui.com) | base do shadcn/ui | vem junto, não é escolha à parte |
+| Animações | [Motion](https://motion.dev) | chat e transições | só onde ajuda a entender o estado |
+| Navegação mobile | [Vaul](https://vaul.emilkowal.ski) (drawer) | menu e ações em 360 px | |
+| Gráficos | [Recharts](https://recharts.org) | indicadores | |
+| Tabelas responsivas | [TanStack Table](https://tanstack.com/table) | filas de chamados, cadastros, usuários | |
+| Formulários | [React Hook Form](https://react-hook-form.com) | login, cadastros, artigos | |
+| Validação | [Zod](https://zod.dev) | formulários | a API continua sendo a fonte da validação (Problem Details); o Zod só antecipa o erro na tela |
+| Notificações visuais | [Sonner](https://sonner.emilkowal.ski) | resultado das ações | |
+| Calendário | [React DayPicker](https://daypicker.dev) | período dos indicadores | só se houver campo de data |
+| Editor de texto | [Tiptap](https://tiptap.dev) | edição de artigo | o texto do artigo é a fonte da conferência literal de trechos (AD-012): o editor não pode gravar marcação que mude o texto conferido |
+| Upload de arquivos | [React Dropzone](https://react-dropzone.js.org) | anexos e documentos | a API continua conferindo tipo e tamanho |
+| Chat | [AI Elements](https://ui.shadcn.com/docs/ai-elements) | Assistente | foi feito para o `useChat` do Vercel AI SDK. No One a resposta passa pela API, que confere os trechos (AD-012), então entram só os componentes visuais, sem AI SDK no navegador |
+| Fontes | [Inter](https://fonts.google.com/specimen/Inter) | todas as telas | |
+| Temas claro/escuro | [next-themes](https://github.com/pacocoursey/next-themes) | todas as telas | é pensado para Next.js; no Vite o shadcn/ui documenta um `ThemeProvider` próprio, que é o que entra |
+| PWA / Service Worker | [Vite PWA](https://vite-pwa-org.netlify.app) | app instalável | já em uso |
+| Cache e sincronização | [TanStack Query](https://tanstack.com/query) | chamadas à API | substitui o `useAcao` e as buscas manuais |
+| Armazenamento offline | [Dexie.js](https://dexie.org) | a decidir no plano | guardar conversas e chamados no aparelho é questão de LGPD, e o assistente precisa de rede; só dado não sensível |
+| Listas virtualizadas | [TanStack Virtual](https://tanstack.com/virtual) | listas longas | só se uma lista real passar de algumas centenas de itens |
 
 ## Decisões e bloqueios
 
@@ -310,5 +385,6 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Internet ou API de IA fora do ar na banca | "não encontrei" com transferência continua funcionando; ensaiar sem rede |
 | Aluno preso no robô | "Falar com atendente" sempre visível, inclusive antes da primeira mensagem |
 | Expectativa inflada de autoatendimento | meta do piloto de 20 a 40% (Gartner), não os 65 a 98% dos fornecedores |
-| A refatoração quebra algo às vésperas da banca | nenhuma asserção existente pode sumir (C2); verificação com injeção de falhas; meta 08/11, limite 12/11 e congelamento de 13/11 a 20/11 |
+| A refatoração quebra algo às vésperas da banca | nenhuma asserção existente pode sumir (C2); verificação com injeção de falhas; congelamento de 17/11 a 20/11 |
+| A Etapa 4c (5 features em 14 dias) não cabe ou quebra algo antes da banca | uma feature por vez no `api/`, cada uma verificada antes da próxima; nenhuma asserção existente pode sumir; a versão do AVA em 13/11 é o `main` verde; em 16/11 o que não estiver verificado sai da banca |
 | Crescimento de escopo | a seção `Out of scope` do plano decide; item novo entra lá antes de entrar no código |
