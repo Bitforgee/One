@@ -51,6 +51,8 @@ describe('conversa com o assistente', () => {
     await screen.findByText('É do semestre atual?')
     await enviar('sim')
     await screen.findByText('Está no portal.')
+    // a avaliação segue a última resposta, não a primeira
+    expect(screen.getByText('Isso resolveu?')).toBeInTheDocument()
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => [c.url, c.corpo])).toEqual([
       ['/api/conversas', { mensagem: 'boleto' }],
       ['/api/conversas/7/mensagens', { mensagem: 'sim' }],
