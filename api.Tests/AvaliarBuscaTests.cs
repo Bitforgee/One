@@ -121,6 +121,7 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
             ("não é JSON", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo("isto não é json")], ["--arquivo: JSON inválido"]),
             ("arquivo inexistente", ["avaliar-busca", "--slug", i.Slug, "--arquivo", "nao-existe.json"], ["--arquivo: arquivo \"nao-existe.json\" não encontrado"]),
             ("lista vazia", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo("[]")], ["--arquivo: nenhuma pergunta"]),
+            ("JSON null", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo("null")], ["--arquivo: nenhuma pergunta"]),
             ("pergunta vazia", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo(new object[] { Perguntas[0], new { pergunta = " ", fonte = "Rematricula prazo" } })], ["[1].pergunta: obrigatória"]),
             ("fonte que não é título ativo", ["avaliar-busca", "--slug", i.Slug, "--arquivo", Arquivo(new object[] { new { pergunta = "x", fonte = "Artigo arquivado" }, new { pergunta = "y", fonte = "Não existe" } })],
                 ["[0].fonte: \"Artigo arquivado\" não é título de artigo ou documento ativo", "[1].fonte: \"Não existe\" não é título de artigo ou documento ativo"]),

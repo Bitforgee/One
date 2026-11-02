@@ -207,6 +207,8 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
 
         // exatamente 20 MB é aceito
         Assert.Equal(HttpStatusCode.Created, (await m.Admin.Subir("No limite", m.Categoria, Pdfs.ComTamanho(valido, 20 * 1024 * 1024))).StatusCode);
+        // título com exatamente 200 caracteres é aceito
+        Assert.Equal(HttpStatusCode.Created, (await m.Admin.Subir(new string('t', 200), m.Categoria, valido)).StatusCode);
     }
 
     // C29

@@ -120,6 +120,7 @@ public class LlmFalso : HttpMessageHandler
     public List<string> Corpos { get; } = [];
     public List<HttpRequestMessage> Pedidos { get; } = [];
     public List<string> CorposEmbeddings { get; } = [];
+    public List<Uri> UrisEmbeddings { get; } = [];
     public Func<string, CancellationToken, Task<HttpResponseMessage>>? ResponderEmbeddings { get; set; }
 
     // Vetor determinístico: cada palavra (sem acento, 3+ letras) soma 1 numa posição fixa; textos com palavras em comum ficam próximos.
@@ -166,7 +167,7 @@ public class LlmFalso : HttpMessageHandler
         var corpo = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
         if (request.RequestUri!.AbsolutePath.EndsWith("/embeddings"))
         {
-            lock (CorposEmbeddings) CorposEmbeddings.Add(corpo);
+            lock (CorposEmbeddings) { CorposEmbeddings.Add(corpo); UrisEmbeddings.Add(request.RequestUri); }
             if (ResponderEmbeddings is { } r) return await r(corpo, cancellationToken);
             return RespostaEmbeddings(JsonDocument.Parse(corpo).RootElement.GetProperty("input").EnumerateArray().Select(e => e.GetString()!));
         }
