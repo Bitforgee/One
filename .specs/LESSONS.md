@@ -8,7 +8,11 @@
 
 Corroborated across multiple features. Safe to apply as guidance.
 
-_none_
+### L-013 - Conte os membros da Coverage por condição e não por linha de recusa; uma linha com || ou else if esconde casos sem teste.
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `specs/coverage` · harmful: 0
+- features: mvp-one, rag
+- evidence: .specs/features/mvp-one/checks.md:710 (specs/coverage) (+1 more)
+- last seen: 2026-11-02T18:30:24Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -86,12 +90,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api/Agendador.cs:16 (api/agendador)
 - last seen: 2026-11-02T16:26:35Z
 
-### L-013 - Conte os membros da Coverage por condição e não por linha de recusa; uma linha com || ou else if esconde casos sem teste.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/coverage` · harmful: 0
-- features: mvp-one
-- evidence: .specs/features/mvp-one/checks.md:710 (specs/coverage)
-- last seen: 2026-11-02T16:26:36Z
-
 ### L-014 - Injete falhas só num worktree: git checkout de um arquivo mutado num tree com mudanças não commitadas apaga também a correção.
 - signal: `gate_fail` · recurrence: 1 feature(s) · scope: `processo` · harmful: 0
 - features: mvp-one
@@ -115,6 +113,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: mvp-one
 - evidence: api.Tests/DefinirSenhaTests.cs:64 (api/auth)
 - last seen: 2026-11-02T16:55:12Z
+
+### L-018 - Um falso HTTP que responde a qualquer caminho não prova a URL: grave a URI de cada chamada no falso e afirme a URL completa montada da configuração.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api.Tests/falsos` · harmful: 0
+- features: rag
+- evidence: api/Assistente/Embeddings.cs:19 (F2url, rodada 2) (api.Tests/falsos)
+- last seen: 2026-11-02T18:30:23Z
+
+### L-019 - Limite máximo pede o caso do valor exato aceito além do primeiro recusado; só o recusado deixa > virar >= sem falha.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/rotas` · harmful: 0
+- features: rag
+- evidence: api/Rotas/DocumentoRotas.cs:102 (T199, rodada 2) (api/rotas)
+- last seen: 2026-11-02T18:30:24Z
 
 ## Quarantined (failed when applied - ignore)
 

@@ -84,7 +84,8 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.All(f.Llm.CorposEmbeddings.Skip(antes).Select(c => JsonDocument.Parse(c).RootElement), c =>
             Assert.Equal(("text-embedding-3-small", "float"), (c.GetProperty("model").GetString(), c.GetProperty("encoding_format").GetString())));
         // door R1: a URL sai de Llm:BaseUrl (https://llm.teste/v1 no OneFactory)
-        Assert.All(f.Llm.UrisEmbeddings.Skip(antes), u => Assert.Equal("https://llm.teste/v1/embeddings", u.ToString()));
+        Assert.Equal(["https://llm.teste/v1/embeddings", "https://llm.teste/v1/embeddings", "https://llm.teste/v1/embeddings"],
+            f.Llm.UrisEmbeddings.Skip(antes).Select(u => u.ToString()).ToList());
         foreach (var i in instituicoes)
         {
             var vetores = await f.Db(i.Id, db => db.TrechosFonte.Select(t => t.Embedding).ToListAsync());
