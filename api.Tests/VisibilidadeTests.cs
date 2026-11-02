@@ -350,6 +350,7 @@ public class EncaminharTests(OneFactory f) : IClassFixture<OneFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, (await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = b.Triagem.Id, motivo = "x" })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = b.Outro.Id, motivo = " " })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = b.Outro.Id, motivo = new string('m', 4001) })).StatusCode);
 
         var depois = await b.Ler(numero);
         Assert.Equal((antes.Estado, antes.SetorId, antes.ResponsavelId, antes.Encaminhamentos), (depois.Estado, depois.SetorId, depois.ResponsavelId, depois.Encaminhamentos));

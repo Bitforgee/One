@@ -97,6 +97,10 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, async db => { db.Cursos.Add(new Curso { Nome = "ADS" }); await db.SaveChangesAsync(); });
         var dono = await f.Usuario(i, [Papeis.Aluno], matricula: "2000000099");
         var valida = $"{Semente.NovoCpf()};Ana;ana@aluno.com;2000000001;ADS;3;ATIVA";
+        // sem o arquivo no formulário
+        var semArquivo = await admin.PostAsync("/api/admin/matriculas/importacao", new MultipartFormDataContent { { new StringContent("x"), "outro" } });
+        Assert.Equal(HttpStatusCode.BadRequest, semArquivo.StatusCode);
+        Assert.True((await semArquivo.Json()).GetProperty("errors").TryGetProperty("arquivo", out _));
         var ruins = new (string linha, string motivo)[]
         {
             ("12345678900;Bia;bia@aluno.com;2000000002;ADS;3;ATIVA", "CPF inválido"),

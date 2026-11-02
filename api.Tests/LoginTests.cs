@@ -72,6 +72,13 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal("CPF inválido.", (await r.Json()).GetProperty("detail").GetString());
             Assert.Equal(antes, f.Hasher.Verificacoes);
         }
+
+        // CPF válido com senha vazia: 400 sem consultar a senha
+        var semSenha = f.Hasher.Verificacoes;
+        var vazia = await f.Cliente().Login(i.Slug, cpf, "");
+        Assert.Equal(HttpStatusCode.BadRequest, vazia.StatusCode);
+        Assert.Equal("Informe a senha.", (await vazia.Json()).GetProperty("detail").GetString());
+        Assert.Equal(semSenha, f.Hasher.Verificacoes);
     }
 
     [Fact]

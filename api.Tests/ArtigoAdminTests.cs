@@ -48,10 +48,13 @@ public class ArtigoAdminTests(OneFactory f) : IClassFixture<OneFactory>
             Corpo(categoria, perguntas: [""]),
             Corpo(999999),
             Corpo(categoria, resposta: ""),
+            Corpo(categoria, titulo: new string('t', 201)),
+            Corpo(categoria, resposta: new string('r', 8001)),
         })
             Assert.Equal(HttpStatusCode.BadRequest, (await admin.PostAsJsonAsync("/api/admin/artigos", corpo)).StatusCode);
 
         Assert.Equal(0, await f.Db(i.Id, db => db.Artigos.CountAsync()));
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/artigos", Corpo(categoria, titulo: new string('t', 200), resposta: new string('r', 8000)))).StatusCode);
     }
 
     [Fact]

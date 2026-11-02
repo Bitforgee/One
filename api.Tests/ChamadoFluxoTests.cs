@@ -136,7 +136,7 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         var b = await Balcao.Criar(f);
         var numero = await b.Chamado(Resolvido);
 
-        foreach (var corpo in new object[] { new { }, new { motivo = " " } })
+        foreach (var corpo in new object[] { new { }, new { motivo = " " }, new { motivo = new string('m', 4001) } })
             Assert.Equal(HttpStatusCode.BadRequest, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{numero}/rejeitar", corpo)).StatusCode);
 
         Assert.Equal(Resolvido, (await b.Ler(numero)).Estado);
@@ -207,6 +207,12 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         }
         var semMotivo = await b.Chamado();
         Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{semMotivo}/cancelar", new { })).StatusCode);
+
+        // justificativa: 4001 recusada sem mudar o chamado, 4000 aceita
+        var longo = await b.Chamado();
+        Assert.Equal(HttpStatusCode.BadRequest, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{longo}/cancelar", new { motivo = new string('j', 4001) })).StatusCode);
+        Assert.Equal(Aberto, (await b.Ler(longo)).Estado);
+        Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{longo}/cancelar", new { motivo = new string('j', 4000) })).StatusCode);
     }
 
     [Fact]

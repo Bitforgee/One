@@ -211,6 +211,7 @@ public class IndicadoresTests(OneFactory f) : IClassFixture<OneFactory>
         var m = await Criar();
         Assert.Equal(HttpStatusCode.BadRequest, (await m.Admin.GetAsync("/api/indicadores?de=2026-11-10&ate=2026-11-09")).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await m.Admin.GetAsync("/api/indicadores")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await m.Admin.GetAsync("/api/indicadores?de=2026-11-10&ate=2026-11-10&setorId=999999")).StatusCode);
     }
 
     [Fact]
