@@ -23,12 +23,12 @@ contrato com o construtor.
 
 ### S1 - Rede de segurança e medição antes de mexer (P1) · ~6 files · ~20 KB · ~5k
 
-**C1** - A suíte inteira que existe em `<base>` passa em cada commit desta feature: API, web e e2e (AC 1)
+**C1** - [x] A suíte inteira que existe em `<base>` passa em cada commit desta feature: API, web e e2e (AC 1)
 Proof: `dotnet test api.Tests`
 Proof: `npm --prefix web run test`
 Proof: `npm --prefix web run e2e`
 
-**C2** - Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
+**C2** - [x] Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
 Proof: `python .specs/features/refatoracao-solid/asserts_preservados.py <base>`
 
 **C3** - [x] `npm --prefix web run coverage` sai 0 e grava `web/coverage/lcov.info` não vazio, com `@vitest/coverage-v8` na versão exata do `vitest` (5.0.5) (AC 2, door 1)
@@ -247,3 +247,7 @@ este `plan.md` (~22 KB) e este `checks.md` (~25 KB), cerca de 12k, e a infraestr
 - Mechanism: handoff em 2 lotes sequenciais (lote 1 = S1 a S4, lote 2 = S5, só com o lote 1
   verde) - escolha do usuário em 02/11/2026
 - Feature base (`<base>`): `c267db8` (docs: plano e checks congelados), no `main`, depois de a verificação do `rag` aprovar
+
+**Boundary:** C1-C34 closed at e510bed (lote 1: S1 a S4, `api/`; a infraestrutura de cobertura do `web/` de C3 e C4 incluída). Lote 2 = S5, C35-C39, a partir daqui.
+**Settled mid-build:** (1) pergunta aberta 1: sim, o CA1502 soma ao método os lambdas e as funções locais (`ChamadoRotas.Mapear` 41, `AuthRotas.Mapear` 28 só com `Map*`); toda rota acima de 10 virou método estático nomeado. Baseline 18 métodos acima de 10, final 0; o CA1502 entrou como aviso no S1 e o `WarningsAsErrors` no commit do S4 que zerou, para cada commit ficar verde. (2) A prova de C17 `FullyQualifiedName~EmailAnexoTests` não casava classe nenhuma (o arquivo tem `EmailTests`, `EmailFalhaTests` e `AnexoTests`); entrou a classe `EmailAnexoTests` com o 413 e o 415 do anexo e os 10 MB exatos. (3) C21 fala em 11 ações x 2 papéis x 5 estados = 110 células, mas são 10 ações distintas em 11 pares ação/papel: o teste afirma a grade inteira de 100 células e o caso do responsável. (4) C32 cita `POST /api/admin/matriculas/importar`; a rota real, que não muda, é `/api/admin/matriculas/importacao`, e o teste usa ela. (5) Para C30, o `Program.cs` deixou as instruções de nível superior (sem namespace) e virou `One.Api.Program` com `Main`. (6) O limite de 20 s do cliente `"llm"` continua no `CancellationTokenSource` do relógio injetado (`Embeddings.TempoLimite`); o `Program` dá base e chave; `App:UrlBase` é lido em `Tokens.UrlBase` (hop 5 do `Flow` atualizado). (7) Um grupo de métodos `(HttpContext) -> Task<IResult>` casa com `RequestDelegate` e perde o resultado: o logout usa `(Delegate)Logout`. (8) Ambiente: o Smart App Control do Windows bloqueou um build do `One.Api.dll` (CodeIntegrity 3033) e o `dotnet test` travou em vez de falhar; mudar o fonte (hash novo) liberou; rode as suítes com `timeout`.
+**Abandoned:** nada.
