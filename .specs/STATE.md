@@ -31,9 +31,9 @@
 
 ## Handoff
 
-**Feature**: `refatoracao-solid` fechado: verificação independente PASS na rodada 2 (`verification.md`, `validate_verification.py` exit 0). `vertical-slice-completa`: plano escrito, perguntas respondidas, aguardando aprovação. `interface-nova`: plano em escrita
-**In progress**: aprovação do plano `vertical-slice-completa`; plano `interface-nova`
-**Next step**: com o plano aprovado, checks do `vertical-slice-completa` e build (03–05/11); depois MinIO, SignalR, Web Push (Etapa 4c)
-**Blockers**: logo e cores do One (até 04/11) para a interface; chave da OpenAI no `.env`; perguntas `blocks go-live`
-**Uncommitted**: nothing
+**Feature**: `vertical-slice-completa` fechado: verificação PASS na rodada 2 (`verification.md`, `validate_verification.py` exit 0); `refatoracao-solid` e `rag` fechados. `interface-nova`: lote 1 (S0-S2) em build. `dominio-e-contratos`: plano em escrita
+**In progress**: `interface-nova` lote 1; plano `dominio-e-contratos`
+**Next step**: aprovar o plano `dominio-e-contratos`, checks e build (03–05/11); depois MinIO, SignalR, Web Push; lotes 2 e 3 da interface
+**Blockers**: chave da OpenAI no `.env`; perguntas `blocks go-live`
+**Uncommitted**: o lote 1 da `interface-nova` (do construtor, em `web/`)
 **Branch**: main

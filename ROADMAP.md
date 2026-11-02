@@ -217,7 +217,7 @@ antes do código, verificação independente depois), e a próxima só começa c
 
 | Quando | Feature | Onde |
 | --- | --- | --- |
-| 02–03/11 | vertical slice completa com `Mediator` (construída em 02/11; verificação em andamento) | `api/` |
+| 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 03–05/11 | domínio rico e contratos por caso de uso (AD-024) | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
