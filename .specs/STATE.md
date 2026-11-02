@@ -25,5 +25,5 @@
 **In progress**: none
 **Next step**: lote 3 (S6 na tela, S7, S9, S11), lendo `checks.md` e o diff do lote 2; telas de administração do S8 ainda faltam para a banca
 **Blockers**: none para o build; as seis perguntas `blocks go-live` do plano continuam abertas
-**Uncommitted**: lote 2 inteiro (api, api.Tests, web, migração `Lote2`, `checks.md`, este arquivo)
+**Uncommitted**: nothing (lote 2 em e63e552 e 8746e74)
 **Branch**: main
