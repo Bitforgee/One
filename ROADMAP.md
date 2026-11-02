@@ -78,9 +78,9 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 ## Etapas até a banca
 
 ```text
- Etapa 0      Etapa 1–3                Etapa 4                       Banca
- Preparar  →  Código (feito 01–02/11) → Dados, IA real e ensaio   →  20/11
- 01–03/11                               03–19/11
+ Etapa 0      Etapa 1–3                Etapa 4                       Banca     Etapa 5          Piloto
+ Preparar  →  Código (feito 01–02/11) → Dados, IA real e ensaio   →  20/11  →  RAG          →   Univag
+ 01–03/11                               03–19/11                               (plano + build)
                        ▲ 13/11 AVA: já atendido pelo código
 ```
 
@@ -126,6 +126,32 @@ deixou de ser código: são dados reais, chave de IA, hospedagem e ensaio.
 
 **Saída (20/11):** demonstração ensaiada, hospedada, com a verificação aprovada.
 
+### Etapa 5: RAG, próxima etapa de construção (pré-requisito do piloto)
+
+Decisão do grupo em 02/11/2026 (AD-014): o piloto na Univag só começa com o assistente usando
+RAG. Hoje o catálogo inteiro de artigos ativos vai no prompt (door 4), sem busca nem embeddings.
+Essa forma serve para 10 a 30 artigos e deixa de servir com a base real de uma instituição.
+
+Como toda feature, começa por `plan.md` e `checks.md` (skill `tlc-spec-lean`), aprovados antes de
+qualquer código. As decisões abaixo ficam para esse plano; nenhuma está tomada.
+
+| Decisão em aberto | Opções | Ponto de atenção |
+| --- | --- | --- |
+| O que entra na base consultada | só os artigos aprovados, como hoje, ou também documentos da instituição (estatuto, regulamentos, calendário em PDF) quebrados em trechos | documento bruto sem revisão humana enfraquece a regra de que a IA só fala o que a instituição aprovou (AD-012); uma saída é o PDF virar rascunhos de artigo que alguém revisa e ativa |
+| Como buscar | busca textual em português do PostgreSQL (`to_tsvector('portuguese')`); embeddings com `pgvector`; ou as duas juntas (busca híbrida) | a busca textual não pede dependência nova; embeddings acham paráfrases, mas pedem um modelo de embeddings e reindexar quando um artigo muda |
+| Quem gera os embeddings | API externa ou modelo local | é mais um envio de dados para fora: a mesma questão de LGPD da pergunta 2. Conferir antes se o DeepSeek oferece embeddings; não está confirmado |
+| Quantos trechos vão ao modelo | os *k* mais próximos, com nota mínima | se a busca não trouxer o artigo certo, o aluno recebe "não encontrei" mesmo com a resposta existindo; isso precisa ser medido |
+
+O que não muda com o RAG:
+- a conferência literal dos trechos e dos links no servidor (door 19);
+- o "não encontrei" quando algo não confere;
+- o filtro por instituição (door 16), que vale também para a busca e para os vetores;
+- nenhum dado de artigo chega ao aluno (AD-012).
+
+**Saída:** com a base real da Univag, a taxa de "não encontrei" com RAG fica igual ou menor que
+com o catálogo inteiro, medida sobre as mesmas perguntas, e todos os checks do plano novo verdes
+com a verificação independente aprovada.
+
 ## Depois da banca (21–27/11): entrega final
 
 O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está pronto. Sobra:
@@ -140,8 +166,8 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 
 | Fase | Objetivo | Itens |
 | --- | --- | --- |
-| Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite do DeepSeek pela LGPD ou troca de provedor, SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
-| Escala | aguentar o volume de mais alunos | <ul><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`);</li><li>catálogo de artigos pré-filtrado por busca textual acima de cerca de 100 artigos (door 4)</li></ul> |
+| Piloto na Univag | provar o resultado com alunos reais de ADS | <ul><li>começa só com a Etapa 5 (RAG) concluída;</li><li>resolver as perguntas 1, 2 e 4 (CSV real, aceite do DeepSeek pela LGPD ou troca de provedor, SMTP);</li><li>medir autoatendimento, transferência e tempo de resolução contra a linha de base do Quadro 5</li></ul> |
+| Escala | aguentar o volume de mais alunos | <ul><li>anexos em armazenamento de objetos (S3/MinIO) com streaming, quando o banco crescer (`shortcut:` em `Anexo.Conteudo`);</li><li>indicadores agregados em SQL (`shortcut:` em `IndicadorRotas.cs`)</li></ul> |
 | Qualidade da IA | aprender com o que falhou | <ul><li>relatório de perguntas sem base;</li><li>revisão das respostas da IA pelo administrador;</li><li>botão "reportar resposta errada";</li><li>atendente sugere artigo a partir da resolução</li></ul> |
 | Segunda instituição | provar o produto multi-instituição | <ul><li>tela do operador;</li><li>provedor de IA, prazos e marca por instituição;</li><li>subdomínio próprio</li></ul> |
 | Integrações | tirar o CSV do caminho | <ul><li>API dos ERPs acadêmicos;</li><li>Moodle com botão "Preciso de ajuda";</li><li>WhatsApp como primeiro canal extra</li></ul> |
