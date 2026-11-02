@@ -21,23 +21,23 @@ com o builder.
 
 ### S1 - Instituições separadas no mesmo sistema (P1) · ~14 files · ~60 KB · ~15k
 
-**C1** - `instituicao criar --slug univag --nome Univag --fuso America/Cuiaba` com CPF, nome e e-mail válidos cria a instituição ativa, um setor "Triagem" com `triagem` verdadeiro, a categoria "Não classificado" e um administrador sem senha, imprime um link `/univag/definir-senha?token=` que vence em 60 minutos e sai com código 0 (AC 1)
+**C1** - [x] `instituicao criar --slug univag --nome Univag --fuso America/Cuiaba` com CPF, nome e e-mail válidos cria a instituição ativa, um setor "Triagem" com `triagem` verdadeiro, a categoria "Não classificado" e um administrador sem senha, imprime um link `/univag/definir-senha?token=` que vence em 60 minutos e sai com código 0 (AC 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Criar_valido_sai_0"`
 
-**C2** - `instituicao criar` com slug `Uni` (fora de `^[a-z0-9-]{3,30}$`), slug já existente, fuso `Cuiaba`, CPF com dígito errado ou e-mail sem `@` imprime o motivo na saída de erro, deixa o banco sem nenhuma linha nova e sai com código 1 (AC 2)
+**C2** - [x] `instituicao criar` com slug `Uni` (fora de `^[a-z0-9-]{3,30}$`), slug já existente, fuso `Cuiaba`, CPF com dígito errado ou e-mail sem `@` imprime o motivo na saída de erro, deixa o banco sem nenhuma linha nova e sai com código 1 (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Criar_invalido_sai_1"`
 
-**C3** - `instituicao carga` com um arquivo válido cria setores, cursos, categorias, regras e artigos `ATIVO`, imprime a quantidade de cada tipo e sai com código 0 (AC 3)
+**C3** - [x] `instituicao carga` com um arquivo válido cria setores, cursos, categorias, regras e artigos `ATIVO`, imprime a quantidade de cada tipo e sai com código 0 (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Carga_valida_sai_0"`
 
-**C4** - `instituicao carga` com um arquivo em que só `artigos[2]` aponta uma categoria inexistente grava 0 itens de qualquer tipo, imprime `artigos[2].categoria` com o motivo e sai com código 1 (AC 4)
+**C4** - [x] `instituicao carga` com um arquivo em que só `artigos[2]` aponta uma categoria inexistente grava 0 itens de qualquer tipo, imprime `artigos[2].categoria` com o motivo e sai com código 1 (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Carga_invalida_nao_grava_nada"`
 
-**C5** - `GET /api/instituicoes/univag` responde 200 com `nome` "Univag", e a tela de login em `/univag` mostra "Univag" (AC 5)
+**C5** - [x] `GET /api/instituicoes/univag` responde 200 com `nome` "Univag", e a tela de login em `/univag` mostra "Univag" (AC 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoRotaTests.Slug_ativo_200"`
 Proof: `npm --prefix web run test -- -t "login mostra o nome da instituição"`
 
-**C6** - `GET /api/instituicoes/{slug}` responde 404 para slug inexistente e para instituição inativa, e a SPA mostra "Instituição não encontrada." (AC 6)
+**C6** - [x] `GET /api/instituicoes/{slug}` responde 404 para slug inexistente e para instituição inativa, e a SPA mostra "Instituição não encontrada." (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoRotaTests.Slug_inexistente_ou_inativo_404"`
 Proof: `npm --prefix web run test -- -t "slug desconhecido mostra Instituição não encontrada"`
 
@@ -47,13 +47,13 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Recur
 **C8** - `categoriaId`, `setorId`, `matriculaId` ou `numeroOriginal` de outra instituição no corpo da requisição recebem 400, o mesmo de um id inexistente (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Id_de_outra_instituicao_no_corpo_400"`
 
-**C9** - O mesmo CPF, o mesmo e-mail e o mesmo número de matrícula são gravados na `univag` e na `demo` sem erro, como contas e matrículas distintas (AC 8)
+**C9** - [x] O mesmo CPF, o mesmo e-mail e o mesmo número de matrícula são gravados na `univag` e na `demo` sem erro, como contas e matrículas distintas (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Mesmo_cpf_email_matricula_em_duas_instituicoes"`
 
 **C10** - `POST /api/admin/usuarios` com CPF ou e-mail que já existe na mesma instituição responde 409 e não cria conta (AC 8, AC 109)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Cpf_ou_email_repetido_409"`
 
-**C11** - A SPA mostra o instante `2026-11-02T02:30:00Z` como `01/11/2026 22:30` numa instituição com fuso `America/Cuiaba` (AC 9)
+**C11** - [x] A SPA mostra o instante `2026-11-02T02:30:00Z` como `01/11/2026 22:30` numa instituição com fuso `America/Cuiaba` (AC 9)
 Proof: `npm --prefix web run test -- -t "formata data no fuso da instituição"`
 
 **C12** - Um chamado criado em `2026-11-02T02:30:00Z` conta no dia 01/11/2026 dos indicadores da `univag` (`America/Cuiaba`) (AC 9)
@@ -62,97 +62,97 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Dia_
 **C13** - Numa execução do agendador com e-mails pendentes da `univag` e da `demo`, cada e-mail sai com o nome da sua instituição no assunto e no nome do remetente (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Item_usa_fuso_nome_e_remetente_da_sua_instituicao"`
 
-**C14** - Depois de a instituição ser marcada inativa, a requisição seguinte com um cookie dela responde 401 (AC 11)
+**C14** - [x] Depois de a instituição ser marcada inativa, a requisição seguinte com um cookie dela responde 401 (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Instituicao_inativa_401"`
 
-**C15** - `SaveChanges` lança exceção e não grava nada quando uma entidade nova traz `InstituicaoId` diferente da instituição da sessão, e preenche `InstituicaoId` quando ele vem vazio (door 16)
+**C15** - [x] `SaveChanges` lança exceção e não grava nada quando uma entidade nova traz `InstituicaoId` diferente da instituição da sessão, e preenche `InstituicaoId` quando ele vem vazio (door 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.SaveChanges_recusa_outra_instituicao"`
 
-**C16** - As 20 entidades do modelo além de `Instituicao` têm `instituicao_id` não nulo com chave estrangeira e filtro global por instituição (door 16, Relations)
+**C16** - [x] As 20 entidades do modelo além de `Instituicao` têm `instituicao_id` não nulo com chave estrangeira e filtro global por instituição (door 16, Relations)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 
-**C17** - `IgnoreQueryFilters` aparece no código de `api/` só no agendador e no comando `instituicao` (door 16)
+**C17** - [x] `IgnoreQueryFilters` aparece no código de `api/` só no agendador e no comando `instituicao` (door 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.IgnoreQueryFilters_so_no_agendador_e_no_comando"`
 
-**C18** - Alterar o `slug` de uma instituição existente lança exceção, e o banco mantém o valor original (door 17)
+**C18** - [x] Alterar o `slug` de uma instituição existente lança exceção, e o banco mantém o valor original (door 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Slug_nao_muda"`
 
-**C19** - `docker-compose.yml` declara os serviços com as imagens `postgres:18` e `axllent/mailpit`, e a solução tem os projetos `api/`, `api.Tests/` e `web/` (door 1)
+**C19** - [x] `docker-compose.yml` declara os serviços com as imagens `postgres:18` e `axllent/mailpit`, e a solução tem os projetos `api/`, `api.Tests/` e `web/` (door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Layout_e_compose"`
 
-**C20** - Toda tabela e coluna do modelo EF está em `snake_case`, e toda coluna de data é `timestamptz` (door 2)
+**C20** - [x] Toda tabela e coluna do modelo EF está em `snake_case`, e toda coluna de data é `timestamptz` (door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Tabelas_snake_case_e_datas_timestamptz"`
 
 ### S2 - Entrar com o CPF na instituição (P1) · ~12 files · ~55 KB · ~14k
 
-**C21** - `POST /api/auth/login` com instituição, CPF `123.456.789-09` (com máscara) e senha corretos responde 200 com `id`, `nome`, `papeis`, `deveTrocarSenha` e `instituicao{slug, nome}`, e emite `one.auth` com `HttpOnly`, `Secure` e `SameSite=Strict` (AC 12, door 3)
+**C21** - [x] `POST /api/auth/login` com instituição, CPF `123.456.789-09` (com máscara) e senha corretos responde 200 com `id`, `nome`, `papeis`, `deveTrocarSenha` e `instituicao{slug, nome}`, e emite `one.auth` com `HttpOnly`, `Secure` e `SameSite=Strict` (AC 12, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Login_valido_200_com_cookie"`
 
-**C22** - O cookie `one.auth` vence 8 horas depois da última requisição autenticada: uma requisição 7 h 59 min depois da anterior passa, e uma 8 h 01 min depois responde 401 (door 3)
+**C22** - [x] O cookie `one.auth` vence 8 horas depois da última requisição autenticada: uma requisição 7 h 59 min depois da anterior passa, e uma 8 h 01 min depois responde 401 (door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Cookie_expira_8h_deslizante"`
 
-**C23** - `usuario.senha_hash` é o formato V3 do `PasswordHasher` (PBKDF2, primeiro byte `0x01`) e nunca contém a senha em texto (door 3)
+**C23** - [x] `usuario.senha_hash` é o formato V3 do `PasswordHasher` (PBKDF2, primeiro byte `0x01`) e nunca contém a senha em texto (door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SenhaTests.Hash_e_pbkdf2_v3"`
 
-**C24** - CPF com 10 dígitos, com 12 dígitos ou com dígito verificador errado responde 400 com `detail` "CPF inválido." e não chama o verificador de senha (AC 13)
+**C24** - [x] CPF com 10 dígitos, com 12 dígitos ou com dígito verificador errado responde 400 com `detail` "CPF inválido." e não chama o verificador de senha (AC 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Cpf_invalido_400_sem_consultar_senha"`
 
-**C25** - Instituição inexistente, CPF não cadastrado e senha errada respondem 401 com o mesmo `detail` "CPF ou senha inválidos." (AC 14)
+**C25** - [x] Instituição inexistente, CPF não cadastrado e senha errada respondem 401 com o mesmo `detail` "CPF ou senha inválidos." (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Tres_falhas_mesmo_401"`
 
-**C26** - Conta desativada e conta sem senha respondem 401 com "CPF ou senha inválidos." e sem `Set-Cookie` (AC 15)
+**C26** - [x] Conta desativada e conta sem senha respondem 401 com "CPF ou senha inválidos." e sem `Set-Cookie` (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Conta_desativada_ou_sem_senha_401_sem_cookie"`
 
-**C27** - Do mesmo IP, 3 logins e 2 primeiros acessos em 60 s passam, e o 6º pedido de qualquer dos dois responde 429 (AC 16)
+**C27** - [x] Do mesmo IP, 3 logins e 2 primeiros acessos em 60 s passam, e o 6º pedido de qualquer dos dois responde 429 (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RateLimitTests.Login_e_primeiro_acesso_somam_5_por_minuto"`
 
-**C28** - `POST /api/auth/primeiro-acesso` com CPF válido responde 202 com "Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição." para CPF cadastrado e para CPF não cadastrado (AC 17)
+**C28** - [x] `POST /api/auth/primeiro-acesso` com CPF válido responde 202 com "Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição." para CPF cadastrado e para CPF não cadastrado (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Resposta_202_igual_com_ou_sem_cpf"`
 
-**C29** - `POST /api/auth/primeiro-acesso` com CPF de dígito verificador errado responde 400 com "CPF inválido." (Surface)
+**C29** - [x] `POST /api/auth/primeiro-acesso` com CPF de dígito verificador errado responde 400 com "CPF inválido." (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Cpf_invalido_400"`
 
-**C30** - Para CPF de conta ativa, o e-mail cadastrado recebe o assunto "[Univag] Crie sua senha" com o link `/univag/definir-senha?token=`; `token_acesso` guarda o SHA-256 do token e vence 60 minutos depois (AC 18, door 3)
+**C30** - [x] Para CPF de conta ativa, o e-mail cadastrado recebe o assunto "[Univag] Crie sua senha" com o link `/univag/definir-senha?token=`; `token_acesso` guarda o SHA-256 do token e vence 60 minutos depois (AC 18, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Envia_link_e_guarda_so_o_hash"`
 
-**C31** - O primeiro acesso envia o e-mail sem gravar nenhuma linha em `email_saida` (door 11)
+**C31** - [x] O primeiro acesso envia o e-mail sem gravar nenhuma linha em `email_saida` (door 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Nao_usa_email_saida"`
 
-**C32** - Com o SMTP fora do ar, o primeiro acesso ainda responde 202 e registra a falha de envio no log com a instituição (dependency failure)
+**C32** - [x] Com o SMTP fora do ar, o primeiro acesso ainda responde 202 e registra a falha de envio no log com a instituição (dependency failure)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.Smtp_fora_202_e_log"`
 
-**C33** - `POST /api/auth/definir-senha` com token válido e senha de 8 ou de 128 caracteres responde 204, grava o hash e marca o token como usado (AC 19)
+**C33** - [x] `POST /api/auth/definir-senha` com token válido e senha de 8 ou de 128 caracteres responde 204, grava o hash e marca o token como usado (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DefinirSenhaTests.Token_valido_204"`
 
-**C34** - Senha nova de 7 ou de 129 caracteres em `definir-senha` responde 400 e deixa o token sem uso (AC 19)
+**C34** - [x] Senha nova de 7 ou de 129 caracteres em `definir-senha` responde 400 e deixa o token sem uso (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DefinirSenhaTests.Senha_fora_de_8_a_128_400"`
 
-**C35** - Token já usado, token emitido há 61 minutos e token inexistente respondem 400 com "Link inválido ou vencido." (AC 20)
+**C35** - [x] Token já usado, token emitido há 61 minutos e token inexistente respondem 400 com "Link inválido ou vencido." (AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DefinirSenhaTests.Link_usado_vencido_ou_inexistente_400"`
 
 **C36** - Sem cookie, as 49 rotas `/api/*` registradas fora de instituição, login, primeiro acesso, definir senha e logout respondem 401 (AC 21)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Sem_cookie_401_em_toda_rota_privada"`
 
-**C37** - `POST /api/auth/logout` responde 204 e devolve `one.auth` vencido, com ou sem sessão (Surface)
+**C37** - [x] `POST /api/auth/logout` responde 204 e devolve `one.auth` vencido, com ou sem sessão (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Logout_204_expira_cookie"`
 
-**C38** - `GET /api/auth/me` responde 200 com `cpfMascarado`, `papeis`, `deveTrocarSenha`, `instituicao` e as matrículas do usuário (Surface)
+**C38** - [x] `GET /api/auth/me` responde 200 com `cpfMascarado`, `papeis`, `deveTrocarSenha`, `instituicao` e as matrículas do usuário (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Me_200_com_matriculas"`
 
-**C39** - Com `deveTrocarSenha` verdadeiro, toda rota fora de login, logout, `me` e `senha` responde 403, e a SPA abre a tela "Trocar senha" (AC 22)
+**C39** - [x] Com `deveTrocarSenha` verdadeiro, toda rota fora de login, logout, `me` e `senha` responde 403, e a SPA abre a tela "Trocar senha" (AC 22)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Deve_trocar_senha_403_fora_de_4_rotas"`
 Proof: `npm --prefix web run test -- -t "deveTrocarSenha abre Trocar senha"`
 
-**C40** - `POST /api/auth/senha` com a senha atual correta e uma nova de 8 caracteres responde 204, e a sessão seguinte tem `deveTrocarSenha` falso (AC 23)
+**C40** - [x] `POST /api/auth/senha` com a senha atual correta e uma nova de 8 caracteres responde 204, e a sessão seguinte tem `deveTrocarSenha` falso (AC 23)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SenhaTests.Troca_valida_204"`
 
-**C41** - Senha atual errada e senha nova de 7 caracteres respondem 400, e o login com a senha anterior continua passando (AC 24)
+**C41** - [x] Senha atual errada e senha nova de 7 caracteres respondem 400, e o login com a senha anterior continua passando (AC 24)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SenhaTests.Atual_errada_ou_nova_curta_400"`
 
-**C42** - Depois do login a SPA abre Assistente para aluno, Fila para atendente e Artigos para administrador, e um usuário atendente e administrador vê no menu os itens dos dois papéis (AC 25)
+**C42** - [x] Depois do login a SPA abre Assistente para aluno, Fila para atendente e Artigos para administrador, e um usuário atendente e administrador vê no menu os itens dos dois papéis (AC 25)
 Proof: `npm --prefix web run test -- -t "tela inicial por papel"`
 
-**C43** - Depois de o administrador desativar uma conta com sessão aberta, a requisição seguinte dessa sessão responde 401 (AC 26)
+**C43** - [x] Depois de o administrador desativar uma conta com sessão aberta, a requisição seguinte dessa sessão responde 401 (AC 26)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Conta_desativada_401_na_proxima_requisicao"`
 
 **C44** - Nenhuma resposta fora de `/api/admin/*` traz um CPF de 11 dígitos; `me` traz `***.456.789-**` (AC 27)
@@ -160,99 +160,99 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CpfTests.Respostas_fo
 
 ### S3 - O assistente conversa e resolve com a base interna (P1) · ~14 files · ~80 KB · ~20k
 
-**C45** - A tela Assistente mostra o aviso "Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde." sem conversa e com conversa aberta (AC 28)
+**C45** - [x] A tela Assistente mostra o aviso "Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde." sem conversa e com conversa aberta (AC 28)
 Proof: `npm --prefix web run test -- -t "Assistente mostra o aviso de IA externa"`
 
-**C46** - O botão "Falar com atendente" aparece na tela Assistente antes da primeira mensagem e em conversa sem desfecho (AC 29)
+**C46** - [x] O botão "Falar com atendente" aparece na tela Assistente antes da primeira mensagem e em conversa sem desfecho (AC 29)
 Proof: `npm --prefix web run test -- -t "Falar com atendente visível sem conversa e em conversa aberta"`
 
-**C47** - Aluno com matrícula ativa envia primeira mensagem de 1 e de 1000 caracteres: `POST /api/conversas` responde 201 com `conversaId` e `resposta{tipo, texto}`, e a conversa fica gravada com a mensagem (AC 30)
+**C47** - [x] Aluno com matrícula ativa envia primeira mensagem de 1 e de 1000 caracteres: `POST /api/conversas` responde 201 com `conversaId` e `resposta{tipo, texto}`, e a conversa fica gravada com a mensagem (AC 30)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Primeira_mensagem_201"`
 
-**C48** - Outra mensagem numa conversa própria sem desfecho responde 200 com `resposta{tipo, texto}` e fica gravada (AC 31)
+**C48** - [x] Outra mensagem numa conversa própria sem desfecho responde 200 com `resposta{tipo, texto}` e fica gravada (AC 31)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Mensagem_seguinte_200"`
 
-**C49** - Mensagem vazia, só com espaços ou com 1001 caracteres responde 400 nas duas rotas de mensagem e não grava nada (AC 32)
+**C49** - [x] Mensagem vazia, só com espaços ou com 1001 caracteres responde 400 nas duas rotas de mensagem e não grava nada (AC 32)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Mensagem_vazia_espacos_ou_1001_400"`
 
-**C50** - Usuário sem o papel aluno e aluno só com matrículas `INATIVA` recebem 403 em `POST /api/conversas` (AC 33)
+**C50** - [x] Usuário sem o papel aluno e aluno só com matrículas `INATIVA` recebem 403 em `POST /api/conversas` (AC 33)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Sem_papel_aluno_ou_matricula_ativa_403"`
 
-**C51** - No corpo enviado ao provedor, `2000567890`, `123.456.789-09`, `2000 5678 90` e `65 99999-8888` viram `[número removido]`, `aluno@x.com` vira `[e-mail removido]` e `1234567` (7 dígitos) fica igual (AC 34)
+**C51** - [x] No corpo enviado ao provedor, `2000567890`, `123.456.789-09`, `2000 5678 90` e `65 99999-8888` viram `[número removido]`, `aluno@x.com` vira `[e-mail removido]` e `1234567` (7 dígitos) fica igual (AC 34)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Mascara_numeros_e_emails"`
 
-**C52** - O corpo enviado ao provedor não contém nome, CPF, matrícula nem curso do aluno, traz só artigos `ATIVO` e categorias ativas da instituição da sessão e só as 10 últimas mensagens de uma conversa com 12 (AC 34)
+**C52** - [x] O corpo enviado ao provedor não contém nome, CPF, matrícula nem curso do aluno, traz só artigos `ATIVO` e categorias ativas da instituição da sessão e só as 10 últimas mensagens de uma conversa com 12 (AC 34)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Corpo_so_traz_o_permitido"`
 
-**C53** - A requisição vai para `POST {Llm:BaseUrl}/chat/completions` com `model` `deepseek-flash`, `response_format` `{"type":"json_object"}`, `temperature` 0, `max_tokens` 800, sem `thinking`, e as mensagens na ordem regras fixas, artigos, categorias, conversa (door 4)
+**C53** - [x] A requisição vai para `POST {Llm:BaseUrl}/chat/completions` com `model` `deepseek-flash`, `response_format` `{"type":"json_object"}`, `temperature` 0, `max_tokens` 800, sem `thinking`, e as mensagens na ordem regras fixas, artigos, categorias, conversa (door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Parametros_e_ordem_do_prompt"`
 
-**C54** - Para uma `resposta` com trecho que confere, a API devolve `tipo` `resposta` e o texto do modelo, e a SPA mostra o texto, "Resposta gerada por IA com base nas orientações da instituição." e "Isso resolveu?" com Sim e Não (AC 35)
+**C54** - [x] Para uma `resposta` com trecho que confere, a API devolve `tipo` `resposta` e o texto do modelo, e a SPA mostra o texto, "Resposta gerada por IA com base nas orientações da instituição." e "Isso resolveu?" com Sim e Não (AC 35)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Resposta_conferida_devolve_tipo_e_texto"`
 Proof: `npm --prefix web run test -- -t "resposta mostra aviso de IA e Isso resolveu"`
 
-**C55** - O trecho "PRAZO   de  pagamento" confere com o artigo que contém "prazo de pagamento" (maiúsculas e espaços repetidos ignorados) (door 19)
+**C55** - [x] O trecho "PRAZO   de  pagamento" confere com o artigo que contém "prazo de pagamento" (maiúsculas e espaços repetidos ignorados) (door 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Normaliza_maiusculas_e_espacos"`
 
-**C56** - O trecho "faltas nao sao abonadas" não confere com o artigo que contém "faltas não são abonadas", e "faltas, não" não confere com "faltas não" (door 19)
+**C56** - [x] O trecho "faltas nao sao abonadas" não confere com o artigo que contém "faltas não são abonadas", e "faltas, não" não confere com "faltas não" (door 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Acento_e_pontuacao_contam"`
 
-**C57** - Trechos de 20 e de 400 caracteres presentes no artigo conferem; de 19 e de 401 caracteres presentes no artigo falham (door 19)
+**C57** - [x] Trechos de 20 e de 400 caracteres presentes no artigo conferem; de 19 e de 401 caracteres presentes no artigo falham (door 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Trecho_de_20_a_400"`
 
-**C58** - Uma `resposta` com um trecho ausente do artigo citado, ou com um artigo citado sem trecho, chega ao aluno como `sem_base` e grava `trecho_invalido` no log (AC 36)
+**C58** - [x] Uma `resposta` com um trecho ausente do artigo citado, ou com um artigo citado sem trecho, chega ao aluno como `sem_base` e grava `trecho_invalido` no log (AC 36)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Trecho_invalido_vira_sem_base_e_log"`
 
-**C59** - Uma `resposta` com `artigoIds` vazio, com id inexistente, com id de artigo da outra instituição ou com id de artigo `RASCUNHO` ou `ARQUIVADO` chega ao aluno como `sem_base` (AC 37)
+**C59** - [x] Uma `resposta` com `artigoIds` vazio, com id inexistente, com id de artigo da outra instituição ou com id de artigo `RASCUNHO` ou `ARQUIVADO` chega ao aluno como `sem_base` (AC 37)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Artigo_invalido_vira_sem_base"`
 
-**C60** - Uma `resposta` cujo texto tem `https://falso.exemplo` fora dos links dos artigos citados chega como `sem_base` e grava `link_invalido` no log; com um link `http://` ou `https://` que está nos links do artigo ela chega como `resposta` (AC 38)
+**C60** - [x] Uma `resposta` cujo texto tem `https://falso.exemplo` fora dos links dos artigos citados chega como `sem_base` e grava `link_invalido` no log; com um link `http://` ou `https://` que está nos links do artigo ela chega como `resposta` (AC 38)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Link_fora_dos_artigos_vira_sem_base_e_log"`
 
-**C61** - Depois de rodar os cenários de C54 e C58 a C60, toda `mensagem_conversa` com tipo final `resposta` tem ao menos um trecho confirmado para cada artigo citado (AC 39)
+**C61** - [x] Depois de rodar os cenários de C54 e C58 a C60, toda `mensagem_conversa` com tipo final `resposta` tem ao menos um trecho confirmado para cada artigo citado (AC 39)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Nenhuma_resposta_exibida_sem_trecho_por_artigo"`
 
 **C62** - Nas respostas de `POST /api/conversas`, mensagens, `GET /api/conversas/{id}`, `GET /api/chamados` e `GET /api/chamados/{numero}` para o aluno não aparecem título, resposta, links nem trechos dos artigos usados, nem as chaves `artigoId`, `versaoArtigoId`, `trechos` ou `fontes` (AC 40)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SigiloTests.Aluno_nao_recebe_dado_de_artigo"`
 
-**C63** - `GET /api/artigos/versoes/{id}` pedido por aluno responde 404 (AC 40)
+**C63** - [x] `GET /api/artigos/versoes/{id}` pedido por aluno responde 404 (AC 40)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SigiloTests.Aluno_pede_versao_de_artigo_404"`
 
-**C64** - Uma `pergunta` de 200 caracteres terminada em "?" chega como `tipo` `pergunta`, e a SPA mostra a pergunta sem "Isso resolveu?" (AC 41)
+**C64** - [x] Uma `pergunta` de 200 caracteres terminada em "?" chega como `tipo` `pergunta`, e a SPA mostra a pergunta sem "Isso resolveu?" (AC 41)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Pergunta_devolve_tipo_pergunta"`
 Proof: `npm --prefix web run test -- -t "pergunta sem Isso resolveu"`
 
-**C65** - A terceira `pergunta` seguida, uma `pergunta` de 201 caracteres e uma `pergunta` sem "?" no fim chegam como `sem_base` (AC 42)
+**C65** - [x] A terceira `pergunta` seguida, uma `pergunta` de 201 caracteres e uma `pergunta` sem "?" no fim chegam como `sem_base` (AC 42)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Pergunta_fora_da_regra_vira_sem_base"`
 
-**C66** - `sem_base` devolve o texto "Não encontrei isso nas orientações da instituição. Posso transferir você para um atendente." sem o texto do modelo, e a SPA mostra "Falar com atendente" com a variante de destaque (AC 43)
+**C66** - [x] `sem_base` devolve o texto "Não encontrei isso nas orientações da instituição. Posso transferir você para um atendente." sem o texto do modelo, e a SPA mostra "Falar com atendente" com a variante de destaque (AC 43)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Sem_base_texto_fixo"`
 Proof: `npm --prefix web run test -- -t "sem_base destaca Falar com atendente"`
 
-**C67** - `transferir` devolve "Vou transferir você para um atendente." e não cria chamado, e a SPA mostra o botão de confirmação (AC 44)
+**C67** - [x] `transferir` devolve "Vou transferir você para um atendente." e não cria chamado, e a SPA mostra o botão de confirmação (AC 44)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Transferir_nao_cria_chamado"`
 Proof: `npm --prefix web run test -- -t "transferir pede confirmação"`
 
-**C68** - Provedor respondendo 500, sem resposta em 20 s, com `content` vazio, com JSON inválido ou com `tipo` `outro` faz a API devolver o texto de `sem_base` e gravar o motivo no log (AC 45)
+**C68** - [x] Provedor respondendo 500, sem resposta em 20 s, com `content` vazio, com JSON inválido ou com `tipo` `outro` faz a API devolver o texto de `sem_base` e gravar o motivo no log (AC 45)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Falha_do_provedor_vira_sem_base_e_log"`
 
-**C69** - Cada mensagem exibida do assistente grava o texto exato exibido, o tipo devolvido, o tipo final, os trechos confirmados, as versões de artigo citadas, o modelo e a data e hora (AC 46)
+**C69** - [x] Cada mensagem exibida do assistente grava o texto exato exibido, o tipo devolvido, o tipo final, os trechos confirmados, as versões de artigo citadas, o modelo e a data e hora (AC 46)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Grava_o_que_foi_exibido"`
 
-**C70** - Cada chamada ao provedor grava um log com instituição, modelo, duração, tokens de entrada com e sem cache, tokens de saída, tipo devolvido, tipo final e artigos citados, e o log não contém o texto da mensagem do aluno (AC 47)
+**C70** - [x] Cada chamada ao provedor grava um log com instituição, modelo, duração, tokens de entrada com e sem cache, tokens de saída, tipo devolvido, tipo final e artigos citados, e o log não contém o texto da mensagem do aluno (AC 47)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AssistenteTests.Log_da_chamada_sem_texto"`
 
-**C71** - `POST /api/conversas/{id}/avaliacao` com `resolveu` verdadeiro responde 200 com desfecho `RESOLVIDA_AUTOATENDIMENTO` e não cria chamado (AC 48)
+**C71** - [x] `POST /api/conversas/{id}/avaliacao` com `resolveu` verdadeiro responde 200 com desfecho `RESOLVIDA_AUTOATENDIMENTO` e não cria chamado (AC 48)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Sim_resolve_sem_chamado"`
 
-**C72** - `resolveu` falso responde 200, a conversa fica sem desfecho, e a SPA mostra "Quer explicar melhor ou falar com um atendente?" com o botão em destaque (AC 49)
+**C72** - [x] `resolveu` falso responde 200, a conversa fica sem desfecho, e a SPA mostra "Quer explicar melhor ou falar com um atendente?" com o botão em destaque (AC 49)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Nao_mantem_aberta"`
 Proof: `npm --prefix web run test -- -t "Não mostra Quer explicar melhor"`
 
-**C73** - `POST /api/conversas/{id}/encerrar` responde 200 com desfecho `ENCERRADA_PELO_ALUNO` (AC 50)
+**C73** - [x] `POST /api/conversas/{id}/encerrar` responde 200 com desfecho `ENCERRADA_PELO_ALUNO` (AC 50)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Encerrar_200"`
 
-**C74** - A 11ª mensagem do aluno numa conversa responde 409, e a SPA passa a mostrar só "Falar com atendente" e "Encerrar" (AC 51)
+**C74** - [x] A 11ª mensagem do aluno numa conversa responde 409, e a SPA passa a mostrar só "Falar com atendente" e "Encerrar" (AC 51)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Decima_primeira_mensagem_409"`
 Proof: `npm --prefix web run test -- -t "limite oferece só dois botões"`
 
@@ -262,17 +262,17 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Convers
 **C76** - As 5 rotas de `/api/conversas/{id}` usadas por outro aluno da mesma instituição respondem 404 (AC 53)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Conversa_de_outro_aluno_404"`
 
-**C77** - `GET /api/conversas/{id}` responde 200 com as mensagens em ordem cronológica, o texto exibido de cada resposta, o desfecho e, depois da transferência, `chamadoNumero` (Surface)
+**C77** - [x] `GET /api/conversas/{id}` responde 200 com as mensagens em ordem cronológica, o texto exibido de cada resposta, o desfecho e, depois da transferência, `chamadoNumero` (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Get_conversa_200_com_mensagens_e_chamado"`
 
-**C78** - `POST /api/conversas/{id}/avaliacao` sem `resolveu` responde 400 (Surface)
+**C78** - [x] `POST /api/conversas/{id}/avaliacao` sem `resolveu` responde 400 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests.Avaliacao_sem_resolveu_400"`
 
 **C79** - Depois de editar o artigo citado, o aluno continua vendo o mesmo texto exibido; `GET /api/artigos/versoes/{id}` responde 200 ao atendente com a versão citada e `versaoAtivaAtualId` da nova, e o detalhe do atendente mostra "Este artigo foi atualizado depois desta resposta." (AC 54)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VersaoCitadaTests.Edicao_nao_muda_o_exibido_e_avisa_a_equipe"`
 Proof: `npm --prefix web run test -- -t "aviso de artigo atualizado"`
 
-**C80** - A 11ª mensagem de um mesmo aluno em 60 s, em qualquer conversa, responde 429 (AC 55)
+**C80** - [x] A 11ª mensagem de um mesmo aluno em 60 s, em qualquer conversa, responde 429 (AC 55)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RateLimitTests.Onze_mensagens_em_60s_429"`
 
 ### S4 - Transferência para um atendente (P1) · ~8 files · ~45 KB · ~11k
@@ -594,13 +594,13 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IndicadoresTests.Sem_
 
 ### S12 - Plataforma e interface (P1) · ~10 files · ~40 KB · ~10k
 
-**C180** - No app rodando pelo `docker compose`, o manifesto tem `name` "One" e ícones de 192 e 512 px, o service worker registra, e depois de uma chamada a `/api/auth/me` o cache do service worker não tem nenhuma entrada `/api/` (AC 139)
+**C180** - [x] No app rodando pelo `docker compose`, o manifesto tem `name` "One" e ícones de 192 e 512 px, o service worker registra, e depois de uma chamada a `/api/auth/me` o cache do service worker não tem nenhuma entrada `/api/` (AC 139)
 Proof: `npm --prefix web run e2e -- -g "manifesto e service worker"`
 
 **C181** - A 360 px de largura, as telas Login, Assistente, Minhas solicitações, Fila, Detalhe do chamado, Artigos e Indicadores têm `scrollWidth` menor ou igual a 360 (AC 140)
 Proof: `npm --prefix web run e2e -- -g "sem rolagem horizontal a 360 px"`
 
-**C182** - `web/package.json` fixa `bootstrap` 5.3.8, `react-bootstrap` 2.10.10, `bootstrap-icons` 1.13.2, `react-router` 8 e `vite-plugin-pwa` 2.0.0 (door 9)
+**C182** - [x] `web/package.json` fixa `bootstrap` 5.3.8, `react-bootstrap` 2.10.10, `bootstrap-icons` 1.13.2, `react-router` 8 e `vite-plugin-pwa` 2.0.0 (door 9)
 Proof: `npm --prefix web run test -- -t "dependências do kit de interface"`
 
 **C183** - As respostas 400, 401, 403, 404, 409, 413, 415 e 429 trazem `title` e `detail` em português e nenhuma traz "One or more validation errors occurred." (AC 141)
@@ -610,13 +610,13 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProblemDetailsTests.D
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProblemDetailsTests.Erros_sao_problem_json"`
 Proof: `npm --prefix web run test -- -t "erro mostra detail num Alert"`
 
-**C185** - Enquanto uma requisição está pendente, a SPA mostra um `Spinner` e o botão que a disparou fica `disabled` (AC 143)
+**C185** - [x] Enquanto uma requisição está pendente, a SPA mostra um `Spinner` e o botão que a disparou fica `disabled` (AC 143)
 Proof: `npm --prefix web run test -- -t "requisição pendente mostra Spinner e desabilita o botão"`
 
-**C186** - O cabeçalho das telas autenticadas mostra o nome da instituição da sessão (AC 144)
+**C186** - [x] O cabeçalho das telas autenticadas mostra o nome da instituição da sessão (AC 144)
 Proof: `npm --prefix web run test -- -t "cabeçalho mostra a instituição"`
 
-**C187** - `GET /univag/assistente` responde 200 com o `index.html` da SPA servido de `wwwroot`, e `GET /api/inexistente` responde 404 em `application/problem+json`, não o `index.html` (door 10)
+**C187** - [x] `GET /univag/assistente` responde 200 com o `index.html` da SPA servido de `wwwroot`, e `GET /api/inexistente` responde 404 em `application/problem+json`, não o `index.html` (door 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SpaTests.Spa_em_slug_e_api_404_em_problem_json"`
 
 ### S13 - Extras inspirados no GLPI (P3) · ~6 files · ~30 KB · ~8k
@@ -773,3 +773,7 @@ estimado em 30k.
   - Lote 3, P2 (S6, S7, S9, S11): 3k + 9k + 4k + 10k = 26k + 35k + 30k = 91k
   - Lote 4, P3 (S10, S13): 10k + 8k = 18k + 35k + 30k = 83k
 - Mechanism: handoff, 4 lotes sequenciais, cada um só começa com as provas do anterior verdes (escolha do usuário em 01/11/2026)
+- Lote 1 (S1, S2, S12, S3) fechado em verde: 74 checks marcados `[x]`. Ficam abertos 14 checks do lote 1 cuja prova depende de rotas ou telas dos lotes seguintes; o teste de cada um já existe e cobre o que o lote 1 entrega, e quem criar a parte que falta estende a mesma tabela do teste (comentário no teste indica onde): C7 (`IsolamentoTests`, faltam as rotas de chamado, anexo e administração até 27), C8 (teste não escrito: os ids no corpo chegam com S4, S6 e S13), C10 (S8, `UsuarioAdminTests`), C12 (S11), C13 (agendador e `email_saida`, S10; o agendador deve ficar em `api/Agendador.cs`, o único arquivo além do comando que C17 aceita com `IgnoreQueryFilters`), C36 (`SessaoTests` lê as rotas do próprio app; falta conferir que são 49), C44 (`CpfTests`, faltam as respostas de chamado, fila e indicadores), C62 (`SigiloTests`, faltam `GET /api/chamados` e `GET /api/chamados/{numero}`), C75 e C76 (`ConversaTests`, falta a transferência), C79 (API pronta em `VersaoCitadaTests`; falta o aviso no detalhe do atendente, S5, e o teste Vitest "aviso de artigo atualizado"), C181 (faltam 5 das 7 telas na lista do e2e), C183 e C184 (`ProblemDetailsTests.Erros()`, faltam 413 e 415 do S10). As tabelas `chamado`, `mensagem_chamado`, `anexo`, `evento_chamado`, `resposta_pronta`, `atendente_setor` e `email_saida` já existem com chave e `instituicao_id` (C16); os lotes seguintes acrescentam colunas por migração nova
+- Decidido no meio do build, sem o usuário: chave do provedor em `Llm:ChaveApi` como diz a door 4 (o pedido ao builder dizia `Llm:ApiKey`); o token de primeiro acesso é `<slug>.<32 bytes base64url>` para achar a instituição sem sair do filtro global, e o SHA-256 guardado é o do token inteiro; o tamanho de 20 a 400 do trecho vale para o texto como o modelo devolveu (C55 só passa assim) e a busca vale para os textos normalizados; os limites de taxa leem `Limites:AuthPorMinuto` e `Limites:MensagensPorMinuto` (padrão 5 e 10) para os testes subirem o teto; formato do arquivo de carga na nova linha 20 de `Landing`, registrada no commit do código e não antes dele
+- Abandonado: nada
+

@@ -21,9 +21,9 @@
 ## Handoff
 
 **Feature**: mvp-one
-**Where**: plan approved 2026-11-01; `checks.md` written (195 checks, validate_checks 0 errors, profile standard, AD-013); build not started
+**Where**: lote 1 (S1, S2, S12, S3) verde; 74 dos 88 checks do lote marcados em `checks.md`, os 14 abertos dependem de rotas e telas dos lotes 2 a 4 (lista em `checks.md` `## Handoff`)
 **In progress**: none
-**Next step**: `git init`, then batch 1 (S1, S2, S12, S3) per checks.md Handoff
-**Blockers**: none for planning; six go-live questions listed in the plan
-**Uncommitted**: everything (directory is not a git repository yet)
-**Branch**: none
+**Next step**: lote 2 (S4, S5, S8), lendo `checks.md` e o diff do lote 1
+**Blockers**: none para o build; as seis perguntas `blocks go-live` do plano continuam abertas
+**Uncommitted**: nothing
+**Branch**: main
