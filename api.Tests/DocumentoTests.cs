@@ -308,6 +308,22 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
+    // refatoracao-solid C28: o aviso "versão atualizada" do detalhe vale para documento como para artigo
+    [Fact]
+    public async Task Documento_citado_com_versao_nova_avisa_a_equipe()
+    {
+        var (m, _, atendente, numero, versao, _) = await Transferido();
+        async Task<bool> Atualizado() =>
+            Assert.Single((await (await atendente.Cliente.GetAsync($"/api/chamados/{numero}")).Json()).GetProperty("transcricao")[1].GetProperty("fontes").EnumerateArray(),
+                x => x.GetProperty("tipo").GetString() == "DOCUMENTO").GetProperty("atualizado").GetBoolean();
+        Assert.False(await Atualizado());
+
+        var id = await f.Db(m.I.Id, db => db.VersoesDocumento.Where(v => v.Id == versao).Select(v => v.DocumentoId).SingleAsync());
+        Assert.Equal(HttpStatusCode.Created, (await m.Admin.NovaVersao(id, Pdfs.Criar("A carga horaria minima do estagio supervisionado passou a 320 horas."))).StatusCode);
+
+        Assert.True(await Atualizado());
+    }
+
     // C33
     [Fact]
     public async Task Categoria_do_documento_no_chamado()
