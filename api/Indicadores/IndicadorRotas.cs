@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
+using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -44,22 +45,22 @@ public static class IndicadorRotas
 
             // shortcut: calcula em memória sobre os chamados do escopo; com milhares de chamados por instituição, agregar em SQL
             // AC 148: chamado duplicado não conta
-            var todos = await db.Chamados.Where(c => c.MotivoFechamento != "DUPLICADO" || c.MotivoFechamento == null).Select(c => new ChamadoLido(c.Id, c.CriadoEm, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)).ToListAsync();
-            var eventos = (await db.EventosChamado.Where(e => e.Tipo == "TRANSICAO" || e.Tipo == "ENCAMINHAMENTO").OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
+            var todos = await db.Chamados.Where(c => c.MotivoFechamento != MotivosFechamento.Duplicado || c.MotivoFechamento == null).Select(c => new ChamadoLido(c.Id, c.CriadoEm, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)).ToListAsync();
+            var eventos = (await db.EventosChamado.Where(e => e.Tipo == TiposEvento.Transicao || e.Tipo == TiposEvento.Encaminhamento).OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
                 .ToLookup(e => e.ChamadoId);
             if (setores is not null)
             {
                 // "estão ou estiveram": o setor atual ou o de origem de algum encaminhamento (o evento guarda o nome do setor)
                 var nomes = await db.Setores.Where(s => setores.Contains(s.Id)).Select(s => s.Nome).ToListAsync();
-                todos = todos.Where(c => setores.Contains(c.SetorId) || eventos[c.Id].Any(e => e.Tipo == "ENCAMINHAMENTO" && nomes.Contains(e.De!))).ToList();
+                todos = todos.Where(c => setores.Contains(c.SetorId) || eventos[c.Id].Any(e => e.Tipo == TiposEvento.Encaminhamento && nomes.Contains(e.De!))).ToList();
             }
             var ids = todos.Select(c => c.Id).ToList();
-            var primeiraResposta = (await db.MensagensChamado.Where(m => ids.Contains(m.ChamadoId) && m.Tipo == "PUBLICA")
+            var primeiraResposta = (await db.MensagensChamado.Where(m => ids.Contains(m.ChamadoId) && m.Tipo == TiposMensagem.Publica)
                     .Select(m => new { m.ChamadoId, m.AutorId, m.CriadaEm }).ToListAsync())
                 .Where(m => m.AutorId != todos.First(c => c.Id == m.ChamadoId).SolicitanteId)
                 .GroupBy(m => m.ChamadoId).ToDictionary(g => g.Key, g => g.Min(m => m.CriadaEm));
 
-            IEnumerable<EventoChamado> Resolucoes(long id) => eventos[id].Where(e => e.Tipo == "TRANSICAO" && e.Para == Resolvido);
+            IEnumerable<EventoChamado> Resolucoes(long id) => eventos[id].Where(e => e.Tipo == TiposEvento.Transicao && e.Para == Resolvido);
             var criados = todos.Where(c => NoPeriodo(c.CriadoEm)).ToList();
             var resolvidos = todos.Where(c => Resolucoes(c.Id).Any(e => NoPeriodo(e.CriadoEm))).ToList();
 
@@ -69,7 +70,7 @@ public static class IndicadorRotas
                 var fimResolucao = Resolucoes(c.Id).Last().CriadoEm;
                 var aguardando = TimeSpan.Zero;
                 DateTime? desde = null;
-                foreach (var e in eventos[c.Id].Where(e => e.Tipo == "TRANSICAO" && e.CriadoEm <= fimResolucao))
+                foreach (var e in eventos[c.Id].Where(e => e.Tipo == TiposEvento.Transicao && e.CriadoEm <= fimResolucao))
                 {
                     if (e.Para == AguardandoAluno) desde = e.CriadoEm;
                     else if (e.De == AguardandoAluno && desde is not null) { aguardando += e.CriadoEm - desde.Value; desde = null; }
@@ -86,21 +87,14 @@ public static class IndicadorRotas
                 .Select(c => new { c.AlunoId, c.Desfecho, SemBase = db.MensagensConversa.Any(m => m.ConversaId == c.Id && m.TipoFinal == Tipos.SemBase) })
                 .ToListAsync();
             var categoriasDasConversas = setores is not null ? [] : await (
-                from ci in db.Citacoes
+                from ci in db.CategoriasCitadas()
                 join m in db.MensagensConversa on ci.MensagemConversaId equals m.Id
                 join c in db.Conversas on m.ConversaId equals c.Id
                 where c.CriadaEm >= inicio && c.CriadaEm < fim
-                select new
-                {
-                    c.Id,
-                    CategoriaId = ci.TrechoFonteId != null
-                        ? db.TrechosFonte.Where(t => t.Id == ci.TrechoFonteId)
-                            .Select(t => t.VersaoArtigoId != null ? t.VersaoArtigo!.Artigo!.CategoriaId : t.VersaoDocumento!.Documento!.CategoriaId).First()
-                        : db.VersoesArtigo.Where(v => v.Id == ci.VersaoArtigoId).Select(v => v.Artigo!.CategoriaId).First(),
-                }).Distinct().ToListAsync();
+                select new { c.Id, ci.CategoriaId }).Distinct().ToListAsync();
             var comDesfecho = conversas.Count(c => c.Desfecho != null);
             int Desfecho(string d) => conversas.Count(c => c.Desfecho == d);
-            var confirmadosSemReabertura = criados.Count(c => c.Estado == Fechado && c.MotivoFechamento is "CONFIRMADO" or "FECHADO_AUTOMATICAMENTE" && c.Reaberturas == 0);
+            var confirmadosSemReabertura = criados.Count(c => c.Estado == Fechado && c.MotivoFechamento is MotivosFechamento.Confirmado or MotivosFechamento.FechadoAutomaticamente && c.Reaberturas == 0);
             var semDados = conversas.Count == 0 && criados.Count == 0 && resolvidos.Count == 0;
             var porConversa = setores is null;
 

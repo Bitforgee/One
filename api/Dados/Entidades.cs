@@ -250,6 +250,34 @@ public static class EstadosChamado
     public const string Fechado = "FECHADO";
 }
 
+// Valores gravados em evento_chamado.tipo, mensagem_chamado.tipo e chamado.motivo_fechamento (.specs/GLOSSARIO.md).
+public static class TiposEvento
+{
+    public const string Criacao = "CRIACAO";
+    public const string Transicao = "TRANSICAO";
+    public const string Atribuicao = "ATRIBUICAO";
+    public const string Lembrete = "LEMBRETE";
+    public const string Nota = "NOTA";
+    public const string Resposta = "RESPOSTA";
+    public const string Anexo = "ANEXO";
+    public const string Encaminhamento = "ENCAMINHAMENTO";
+    public const string Reclassificacao = "RECLASSIFICACAO";
+}
+
+public static class TiposMensagem
+{
+    public const string Publica = "PUBLICA";
+    public const string Nota = "NOTA";
+}
+
+public static class MotivosFechamento
+{
+    public const string Confirmado = "CONFIRMADO";
+    public const string Cancelado = "CANCELADO";
+    public const string Duplicado = "DUPLICADO";
+    public const string FechadoAutomaticamente = "FECHADO_AUTOMATICAMENTE";
+}
+
 public class Chamado : IDaInstituicao
 {
     public long Id { get; set; }

@@ -92,4 +92,19 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.StartsWith("Categorias", m[2].GetProperty("content").GetString());
         Assert.Equal("onde tiro o boleto?", m[3].GetProperty("content").GetString());
     }
+
+    // refatoracao-solid C16: o cliente "llm" registrado uma vez dá a URL base e a chave também aos embeddings
+    [Fact]
+    public async Task Embeddings_usam_a_url_base()
+    {
+        var c = await Cenario.Criar(f);
+        var antes = f.Llm.UrisEmbeddings.Count;
+
+        await c.Primeira("onde tiro o boleto?");
+
+        Assert.Equal(["https://llm.teste/v1/embeddings"], f.Llm.UrisEmbeddings.Skip(antes).Select(u => u.ToString()));
+        Assert.Equal("Bearer chave-teste", f.Llm.AutorizacoesEmbeddings[^1]);
+        Assert.Equal("https://llm.teste/v1/chat/completions", f.Llm.Pedidos[^1].RequestUri!.ToString());
+        Assert.Equal("Bearer chave-teste", f.Llm.Pedidos[^1].Headers.Authorization?.ToString());
+    }
 }

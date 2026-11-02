@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -15,7 +16,6 @@ public static class ChamadoRotas
 {
     const string Aluno = "ALUNO";
     const string Atendente = "ATENDENTE";
-    const int PrazoRejeicaoDias = 7;
 
     static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
     static readonly string[] NaoFechados = [.. Abertos, Resolvido];
@@ -38,16 +38,7 @@ public static class ChamadoRotas
 
     const long MaxAnexo = 10 * 1024 * 1024;
 
-    // door 13: o tipo vem da assinatura do arquivo, não do nome nem do Content-Type enviado.
-    static string? TipoPelaAssinatura(byte[] b) => b switch
-    {
-        [0x25, 0x50, 0x44, 0x46, ..] => "application/pdf",
-        [0xFF, 0xD8, 0xFF, ..] => "image/jpeg",
-        [0x89, 0x50, 0x4E, 0x47, ..] => "image/png",
-        _ => null,
-    };
-
-    record Acesso(Chamado Chamado, string Papel, Usuario Usuario, DateTime Agora, Instituicao Instituicao, IConfiguration Cfg);
+    record Acesso(Chamado Chamado, string Papel, Usuario Usuario, DateTime Agora, Instituicao Instituicao, IConfiguration Cfg, Prazos Prazos);
 
     static IResult NaoEncontrado() => Problemas.Erro(404, "Chamado não encontrado.");
 
@@ -72,7 +63,7 @@ public static class ChamadoRotas
     static void Mudar(OneDb db, Acesso a, string estado)
     {
         if (a.Chamado.Estado == estado) return;
-        Evento(db, a, "TRANSICAO", a.Chamado.Estado, estado);
+        Evento(db, a, TiposEvento.Transicao, a.Chamado.Estado, estado);
         a.Chamado.Estado = estado;
         a.Chamado.AguardandoDesde = estado == AguardandoAluno ? a.Agora : null;
         a.Chamado.LembreteEm = null;
@@ -82,7 +73,7 @@ public static class ChamadoRotas
     {
         if (a.Chamado.ResponsavelId == responsavelId) return;
         var nomes = await db.Usuarios.Where(u => u.Id == a.Chamado.ResponsavelId || u.Id == responsavelId).ToDictionaryAsync(u => u.Id, u => u.Nome);
-        Evento(db, a, "ATRIBUICAO", a.Chamado.ResponsavelId is { } de ? nomes[de] : null, responsavelId is { } para ? nomes[para] : null);
+        Evento(db, a, TiposEvento.Atribuicao, a.Chamado.ResponsavelId is { } de ? nomes[de] : null, responsavelId is { } para ? nomes[para] : null);
         a.Chamado.ResponsavelId = responsavelId;
     }
 
@@ -90,7 +81,7 @@ public static class ChamadoRotas
     {
         var m = new MensagemChamado { ChamadoId = a.Chamado.Id, AutorId = a.Usuario.Id, Tipo = tipo, Texto = texto, CriadaEm = a.Agora };
         db.MensagensChamado.Add(m);
-        Evento(db, a, tipo == "NOTA" ? "NOTA" : "RESPOSTA");
+        Evento(db, a, tipo == TiposMensagem.Nota ? TiposEvento.Nota : TiposEvento.Resposta);
         return m;
     }
 
@@ -99,23 +90,23 @@ public static class ChamadoRotas
         foreach (var anexo in anexos)
         {
             m.Anexos.Add(anexo);
-            Evento(db, a, "ANEXO", detalhe: anexo.Nome);
+            Evento(db, a, TiposEvento.Anexo, detalhe: anexo.Nome);
         }
     }
 
     // AC 122: resposta pública de atendente avisa o aluno por e-mail
     static async Task RespostaDaEquipe(OneDb db, Acesso a, string texto, List<Anexo>? anexos = null)
     {
-        Anexar(db, a, Mensagem(db, a, "PUBLICA", texto), anexos ?? []);
+        Anexar(db, a, Mensagem(db, a, TiposMensagem.Publica, texto), anexos ?? []);
         await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, a.Chamado, a.Agora);
     }
 
     // AC 84 a 87: volta ao responsável ativo, ou à fila do setor se ele não existe mais.
     static async Task<IResult?> Rejeitar(OneDb db, Acesso a, string motivo, List<Anexo>? anexos = null)
     {
-        if (a.Agora > a.Chamado.ResolvidoEm!.Value.AddDays(PrazoRejeicaoDias))
-            return Problemas.Erro(409, "O prazo de 7 dias para rejeitar a resolução terminou.");
-        Anexar(db, a, Mensagem(db, a, "PUBLICA", motivo), anexos ?? []);
+        if (a.Agora > a.Chamado.ResolvidoEm!.Value + a.Prazos.Rejeicao)
+            return Problemas.Erro(409, $"O prazo de {a.Prazos.RejeicaoDias} dias para rejeitar a resolução terminou.");
+        Anexar(db, a, Mensagem(db, a, TiposMensagem.Publica, motivo), anexos ?? []);
         var ativo = a.Chamado.ResponsavelId is { } r && await db.Usuarios.AnyAsync(u => u.Id == r && u.Ativo);
         if (!ativo) await Atribuir(db, a, null);
         Mudar(db, a, ativo ? EmAtendimento : Aberto);
@@ -130,7 +121,7 @@ public static class ChamadoRotas
         var u = ctx.Usuario();
         var (chamado, papel) = await Carregar(db, u, numero);
         if (chamado is null) return NaoEncontrado();
-        var a = new Acesso(chamado, papel!, u, relogio.GetUtcNow().UtcDateTime, ctx.Instituicao(), ctx.RequestServices.GetRequiredService<IConfiguration>());
+        var a = new Acesso(chamado, papel!, u, relogio.GetUtcNow().UtcDateTime, ctx.Instituicao(), ctx.RequestServices.GetRequiredService<IConfiguration>(), ctx.RequestServices.GetRequiredService<Prazos>());
         if (!Permitidas.TryGetValue((acao, papel!), out var estados)) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
         if (await validar(a) is { } invalido) return invalido;
         if (!estados.Contains(chamado.Estado)) return Problemas.Erro(409, "A ação não é permitida no estado atual do chamado.");
@@ -185,36 +176,34 @@ public static class ChamadoRotas
         api.MapPost("/chamados/{numero}/mensagens", async (string numero, HttpRequest req, HttpContext ctx, OneDb db, TimeProvider relogio) =>
         {
             var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
-            var tipo = form["tipo"].ToString() is "NOTA" ? "NOTA" : "PUBLICA";
+            var tipo = form["tipo"].ToString() is TiposMensagem.Nota ? TiposMensagem.Nota : TiposMensagem.Publica;
             var texto = form["texto"].ToString();
             var aguardaAluno = bool.TryParse(form["aguardaAluno"], out var x) && x;
             var arquivos = form.Files.GetFiles("anexos");
             var anexos = new List<Anexo>();
 
-            return await Agir(ctx, db, relogio, numero, tipo == "NOTA" ? "nota" : "responder",
+            return await Agir(ctx, db, relogio, numero, tipo == TiposMensagem.Nota ? "nota" : "responder",
                 async a =>
                 {
                     if (Texto(texto, "texto", "A mensagem deve ter de 1 a 4000 caracteres.") is { } erro) return erro;
-                    if (arquivos.Count > 0 && tipo == "NOTA") return Problemas.Invalido("Nota interna não aceita anexos.", "anexos");
+                    if (arquivos.Count > 0 && tipo == TiposMensagem.Nota) return Problemas.Invalido("Nota interna não aceita anexos.", "anexos");
                     // AC 127 e 128: PDF, JPG ou PNG de até 10 MB, conferidos pela assinatura
                     foreach (var f in arquivos)
                     {
-                        if (f.Length > MaxAnexo) return Problemas.Erro(413, $"O arquivo {f.FileName} passa de 10 MB.");
-                        using var ms = new MemoryStream();
-                        await f.CopyToAsync(ms);
-                        var bytes = ms.ToArray();
-                        if (TipoPelaAssinatura(bytes) is not { } tipoArquivo) return Problemas.Erro(415, $"O arquivo {f.FileName} não é PDF, JPG nem PNG.");
-                        anexos.Add(new Anexo { Nome = Path.GetFileName(f.FileName), Tipo = tipoArquivo, Tamanho = bytes.Length, Conteudo = bytes });
+                        var (lido, recusa) = await Arquivos.Ler(f, MaxAnexo, [Arquivos.Pdf, Arquivos.Jpeg, Arquivos.Png],
+                            $"O arquivo {f.FileName} passa de 10 MB.", $"O arquivo {f.FileName} não é PDF, JPG nem PNG.");
+                        if (lido is null) return recusa;
+                        anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Conteudo = lido.Bytes });
                     }
                     return null;
                 },
                 async a =>
                 {
-                    if (tipo == "NOTA") { Mensagem(db, a, "NOTA", texto); return null; }
+                    if (tipo == TiposMensagem.Nota) { Mensagem(db, a, TiposMensagem.Nota, texto); return null; }
                     if (a.Papel == Aluno)
                     {
                         if (a.Chamado.Estado == Resolvido) return await Rejeitar(db, a, texto, anexos); // AC 86
-                        Anexar(db, a, Mensagem(db, a, "PUBLICA", texto), anexos);
+                        Anexar(db, a, Mensagem(db, a, TiposMensagem.Publica, texto), anexos);
                         if (a.Chamado.Estado == AguardandoAluno) Mudar(db, a, EmAtendimento);
                         return null;
                     }
@@ -239,18 +228,18 @@ public static class ChamadoRotas
                 _ => Task.FromResult(Texto(i.Texto, "texto", "Escreva a resolução, com até 4000 caracteres.")),
                 async a =>
                 {
-                    Mensagem(db, a, "PUBLICA", i.Texto!);
+                    Mensagem(db, a, TiposMensagem.Publica, i.Texto!);
                     if (a.Chamado.ResponsavelId is null) await Atribuir(db, a, a.Usuario.Id);
                     Mudar(db, a, Resolvido);
                     a.Chamado.ResolvidoEm = a.Agora;
-                    await Avisos.Resolvido(db, a.Cfg, a.Instituicao, a.Chamado, i.Texto!, a.Agora); // AC 123
+                    await Avisos.Resolvido(db, a.Cfg, a.Prazos, a.Instituicao, a.Chamado, i.Texto!, a.Agora); // AC 123
                     return null;
                 }));
 
         api.MapPost("/chamados/{numero}/confirmar", (string numero, HttpContext ctx, OneDb db, TimeProvider relogio) =>
             Agir(ctx, db, relogio, numero, "confirmar", Nada, a =>
             {
-                Fechar(db, a, "CONFIRMADO", null);
+                Fechar(db, a, MotivosFechamento.Confirmado, null);
                 return Task.FromResult<IResult?>(null);
             }));
 
@@ -264,7 +253,7 @@ public static class ChamadoRotas
                 _ => Task.FromResult(i?.Motivo is { Length: > 4000 } ? Problemas.Invalido("A justificativa pode ter até 4000 caracteres.", "motivo") : null),
                 a =>
                 {
-                    Fechar(db, a, "CANCELADO", string.IsNullOrWhiteSpace(i?.Motivo) ? null : i.Motivo);
+                    Fechar(db, a, MotivosFechamento.Cancelado, string.IsNullOrWhiteSpace(i?.Motivo) ? null : i.Motivo);
                     return Task.FromResult<IResult?>(null);
                 }));
 
@@ -280,8 +269,8 @@ public static class ChamadoRotas
                 async a =>
                 {
                     var nomes = await db.Setores.Where(s => s.Id == a.Chamado.SetorId || s.Id == i.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
-                    Mensagem(db, a, "NOTA", i.Motivo!);
-                    Evento(db, a, "ENCAMINHAMENTO", nomes[a.Chamado.SetorId], nomes[i.SetorId!.Value]);
+                    Mensagem(db, a, TiposMensagem.Nota, i.Motivo!);
+                    Evento(db, a, TiposEvento.Encaminhamento, nomes[a.Chamado.SetorId], nomes[i.SetorId!.Value]);
                     await Atribuir(db, a, null);
                     Mudar(db, a, Aberto);
                     a.Chamado.SetorId = i.SetorId.Value;
@@ -295,7 +284,7 @@ public static class ChamadoRotas
                 async a =>
                 {
                     var nomes = await db.Categorias.Where(c => c.Id == a.Chamado.CategoriaId || c.Id == i.CategoriaId).ToDictionaryAsync(c => c.Id, c => c.Nome);
-                    Evento(db, a, "RECLASSIFICACAO", nomes[a.Chamado.CategoriaId], nomes[i.CategoriaId!.Value]);
+                    Evento(db, a, TiposEvento.Reclassificacao, nomes[a.Chamado.CategoriaId], nomes[i.CategoriaId!.Value]);
                     a.Chamado.CategoriaId = i.CategoriaId.Value;
                     return null;
                 }));
@@ -314,7 +303,7 @@ public static class ChamadoRotas
                 {
                     await RespostaDaEquipe(db, a, $"Este pedido continua em {i.NumeroOriginal}.");
                     a.Chamado.NumeroOriginal = i.NumeroOriginal;
-                    Fechar(db, a, "DUPLICADO", null);
+                    Fechar(db, a, MotivosFechamento.Duplicado, null);
                     return null;
                 }));
 
@@ -341,7 +330,7 @@ public static class ChamadoRotas
 
     static void Fechar(OneDb db, Acesso a, string motivo, string? justificativa)
     {
-        Evento(db, a, "TRANSICAO", a.Chamado.Estado, Fechado, justificativa);
+        Evento(db, a, TiposEvento.Transicao, a.Chamado.Estado, Fechado, justificativa);
         a.Chamado.Estado = Fechado;
         a.Chamado.MotivoFechamento = motivo;
         a.Chamado.FechadoEm = a.Agora;
@@ -359,7 +348,7 @@ public static class ChamadoRotas
             .ToDictionaryAsync(x => x.Id, x => x.Nome);
         var transcricao = await db.MensagensConversa.Where(m => m.ConversaId == c.ConversaId).OrderBy(m => m.Id)
             .Select(m => new { m.Id, m.Autor, m.Texto, m.CriadaEm, m.Citacoes }).ToListAsync();
-        var mensagens = await db.MensagensChamado.Where(m => m.ChamadoId == c.Id && (equipe || m.Tipo == "PUBLICA")).OrderBy(m => m.Id).ToListAsync();
+        var mensagens = await db.MensagensChamado.Where(m => m.ChamadoId == c.Id && (equipe || m.Tipo == TiposMensagem.Publica)).OrderBy(m => m.Id).ToListAsync();
         var idsMensagens = mensagens.Select(m => m.Id).ToList();
         var anexos = (await db.Anexos.Where(x => idsMensagens.Contains(x.MensagemChamadoId)).OrderBy(x => x.Id)
             .Select(x => new { x.Id, x.MensagemChamadoId, x.Nome, x.Tipo, x.Tamanho }).ToListAsync()).ToLookup(x => x.MensagemChamadoId);
@@ -367,35 +356,9 @@ public static class ChamadoRotas
         var fontes = new Dictionary<long, object>();
         if (equipe)
         {
-            // citação nova aponta para o trecho de fonte (artigo ou documento); as anteriores ao RAG, para a versão de artigo
-            var citacoes = transcricao.SelectMany(m => m.Citacoes).ToList();
-            var idsTrecho = citacoes.Where(x => x.TrechoFonteId != null).Select(x => x.TrechoFonteId!.Value).Distinct().ToList();
-            var trechos = await db.TrechosFonte.Where(t => idsTrecho.Contains(t.Id)).ToDictionaryAsync(t => t.Id, t => (t.VersaoArtigoId, t.VersaoDocumentoId));
-            long? VersaoArtigo(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoArtigoId : x.VersaoArtigoId;
-            long? VersaoDocumento(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoDocumentoId : null;
-            var idsArtigo = citacoes.Select(VersaoArtigo).OfType<long>().Distinct().ToList();
-            var idsDocumento = citacoes.Select(VersaoDocumento).OfType<long>().Distinct().ToList();
-            var artigos = await db.VersoesArtigo.Where(v => idsArtigo.Contains(v.Id))
-                .Select(v => new
-                {
-                    v.Id,
-                    v.Titulo,
-                    v.Numero,
-                    Atual = v.Artigo!.Estado == EstadosArtigo.Ativo ? db.VersoesArtigo.Where(x => x.ArtigoId == v.ArtigoId).OrderByDescending(x => x.Numero).Select(x => x.Id).First() : v.Id,
-                }).ToDictionaryAsync(v => v.Id);
-            var documentos = await db.VersoesDocumento.Where(v => idsDocumento.Contains(v.Id))
-                .Select(v => new
-                {
-                    v.Id,
-                    v.Documento!.Titulo,
-                    v.Numero,
-                    Atual = v.Documento.Estado == EstadosDocumento.Ativo ? db.VersoesDocumento.Where(x => x.DocumentoId == v.DocumentoId).OrderByDescending(x => x.Numero).Select(x => x.Id).First() : v.Id,
-                }).ToDictionaryAsync(v => v.Id);
-            object Fonte(CitacaoArtigo x) => VersaoDocumento(x) is { } d
-                ? new { tipo = "DOCUMENTO", versaoArtigoId = (long?)null, versaoDocumentoId = (long?)d, titulo = documentos[d].Titulo, numero = documentos[d].Numero, trechos = x.Trechos, atualizado = documentos[d].Atual != d }
-                : new { tipo = "ARTIGO", versaoArtigoId = VersaoArtigo(x), versaoDocumentoId = (long?)null, titulo = artigos[VersaoArtigo(x)!.Value].Titulo, numero = artigos[VersaoArtigo(x)!.Value].Numero, trechos = x.Trechos, atualizado = artigos[VersaoArtigo(x)!.Value].Atual != VersaoArtigo(x) };
+            var fonte = await Fontes.Citadas(db, transcricao.SelectMany(m => m.Citacoes).ToList());
             foreach (var m in transcricao.Where(m => m.Citacoes.Count > 0))
-                fontes[m.Id] = m.Citacoes.Select(Fonte);
+                fontes[m.Id] = m.Citacoes.Select(fonte);
         }
 
         return new

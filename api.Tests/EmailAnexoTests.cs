@@ -191,3 +191,27 @@ public class AnexoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await b.ClienteAluno.GetAsync("/api/anexos/999999")).StatusCode);
     }
 }
+
+// refatoracao-solid C17: com a leitura e a assinatura do arquivo num helper só, o anexo continua com 413 acima de 10 MB
+// e 415 com tipo errado, com o mesmo detail; 10 MB exatos continuam aceitos.
+public class EmailAnexoTests(OneFactory f) : IClassFixture<OneFactory>
+{
+    const int DezMb = 10 * 1024 * 1024;
+
+    [Fact]
+    public async Task Anexo_413_e_415_pelo_helper()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+
+        var grande = await Balcao.ComAnexos(b.ClienteAluno, numero, "Segue", "PUBLICA", ("grande.pdf", Balcao.Arquivo(Balcao.Pdf, DezMb + 1)));
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, grande.StatusCode);
+        Assert.Equal("O arquivo grande.pdf passa de 10 MB.", (await grande.Json()).GetProperty("detail").GetString());
+
+        var errado = await Balcao.ComAnexos(b.ClienteAluno, numero, "Segue", "PUBLICA", ("comprovante.pdf", Balcao.Arquivo(Balcao.Exe, 4000)));
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, errado.StatusCode);
+        Assert.Equal("O arquivo comprovante.pdf não é PDF, JPG nem PNG.", (await errado.Json()).GetProperty("detail").GetString());
+
+        Assert.Equal(HttpStatusCode.Created, (await Balcao.ComAnexos(b.ClienteAluno, numero, "Segue", "PUBLICA", ("limite.pdf", Balcao.Arquivo(Balcao.Pdf, DezMb)))).StatusCode);
+    }
+}

@@ -8,14 +8,10 @@ using static One.Api.Dados.EstadosChamado;
 namespace One.Api;
 
 // door 12: um laço para todas as instituições; cada item é gravado na instituição dele, numa transação própria.
-public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, ILogger<Agendador> log) : BackgroundService
+public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, ILogger<Agendador> log) : BackgroundService
 {
     public record Item(string Tipo, long Id, long InstituicaoId);
 
-    TimeSpan Abandono => TimeSpan.FromMinutes(cfg.GetValue("Prazos:AbandonoMinutos", 30));
-    TimeSpan Confirmacao => TimeSpan.FromDays(cfg.GetValue("Prazos:ConfirmacaoDias", 7));
-    TimeSpan Lembrete => TimeSpan.FromDays(cfg.GetValue("Prazos:LembreteAguardandoDias", 3));
-    TimeSpan ResolverAguardando => TimeSpan.FromDays(cfg.GetValue("Prazos:ResolverAguardandoDias", 7));
     public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
     const int MaxTentativas = 5;
 
@@ -38,18 +34,30 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         using var escopo = escopos.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var (limiteConversa, limiteChamado) = (agora - Abandono, agora - Confirmacao);
+        var itens = await LerAtendimento(db, agora);
+        itens.AddRange(await LerFilas(db, agora));
+        return itens;
+    }
+
+    async Task<List<Item>> LerAtendimento(OneDb db, DateTime agora)
+    {
+        var (limiteConversa, limiteChamado) = (agora - prazos.Abandono, agora - prazos.Confirmacao);
         var itens = await db.Conversas.IgnoreQueryFilters().Where(c => c.Desfecho == null && c.UltimaMensagemEm <= limiteConversa)
             .Select(c => new Item("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
             .Select(c => new Item("chamado", c.Id, c.InstituicaoId)).ToListAsync());
-        var (limiteResolver, limiteLembrete) = (agora - ResolverAguardando, agora - Lembrete);
+        var (limiteResolver, limiteLembrete) = (agora - prazos.ResolverAguardando, agora - prazos.Lembrete);
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.AguardandoDesde <= limiteResolver)
             .Select(c => new Item("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limiteLembrete && c.AguardandoDesde > limiteResolver)
             .Select(c => new Item("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
-        itens.AddRange(await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
-            .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync());
+        return itens;
+    }
+
+    async Task<List<Item>> LerFilas(OneDb db, DateTime agora)
+    {
+        var itens = await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
+            .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync();
         // RAG, AC 5: trechos de fonte sem embedding, de todas as instituições
         itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
             .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
@@ -127,7 +135,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     // AC 118
     async Task Abandonar(OneDb db, long id, DateTime agora)
     {
-        var limite = agora - Abandono;
+        var limite = agora - prazos.Abandono;
         var n = await db.Conversas.Where(c => c.Id == id && c.Desfecho == null && c.UltimaMensagemEm <= limite)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.Desfecho, Desfechos.Abandonada).SetProperty(c => c.DesfechoEm, agora));
         if (n == 1) log.LogInformation("Conversa {ConversaId} abandonada (instituição {InstituicaoId})", id, db.InstituicaoAtual);
@@ -136,12 +144,12 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     // AC 119: só fecha se continua RESOLVIDO e vencido no momento da gravação.
     async Task FecharResolvido(OneDb db, long id, DateTime agora)
     {
-        var limite = agora - Confirmacao;
+        var limite = agora - prazos.Confirmacao;
         await using var tx = await db.Database.BeginTransactionAsync();
         var n = await db.Chamados.Where(c => c.Id == id && c.Estado == Resolvido && c.ResolvidoEm <= limite)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Fechado).SetProperty(c => c.MotivoFechamento, "FECHADO_AUTOMATICAMENTE").SetProperty(c => c.FechadoEm, agora));
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Fechado).SetProperty(c => c.MotivoFechamento, MotivosFechamento.FechadoAutomaticamente).SetProperty(c => c.FechadoEm, agora));
         if (n == 0) return;
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = "TRANSICAO", De = Resolvido, Para = Fechado, Detalhe = "Fechado automaticamente: 7 dias sem confirmação", CriadoEm = agora });
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Transicao, De = Resolvido, Para = Fechado, Detalhe = $"Fechado automaticamente: {prazos.ConfirmacaoDias} dias sem confirmação", CriadoEm = agora });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
@@ -150,30 +158,30 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     // AC 145: um único lembrete por período em AGUARDANDO_ALUNO
     async Task Lembrar(OneDb db, long id, DateTime agora)
     {
-        var limite = agora - Lembrete;
+        var limite = agora - prazos.Lembrete;
         await using var tx = await db.Database.BeginTransactionAsync();
         var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limite)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.LembreteEm, agora));
         if (n == 0) return;
         var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
         await Avisos.AguardaResposta(db, cfg, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, agora);
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = "LEMBRETE", Detalhe = "Lembrete ao aluno: 3 dias aguardando resposta", CriadoEm = agora });
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Lembrete, Detalhe = $"Lembrete ao aluno: {prazos.LembreteAguardandoDias} dias aguardando resposta", CriadoEm = agora });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
     }
 
-    // AC 146: depois de 7 dias sem resposta o Sistema resolve; daí em diante valem a rejeição e o fechamento automático
+    // AC 146: depois do prazo (Prazos:ResolverAguardandoDias) sem resposta o Sistema resolve; daí em diante valem a rejeição e o fechamento automático
     async Task ResolverSemResposta(OneDb db, long id, DateTime agora)
     {
-        var limite = agora - ResolverAguardando;
+        var limite = agora - prazos.ResolverAguardando;
         await using var tx = await db.Database.BeginTransactionAsync();
         var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.AguardandoDesde <= limite)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Resolvido).SetProperty(c => c.ResolvidoEm, agora).SetProperty(c => c.AguardandoDesde, (DateTime?)null));
         if (n == 0) return;
         var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
-        db.MensagensChamado.Add(new MensagemChamado { ChamadoId = id, Tipo = "PUBLICA", Texto = TextoSemResposta, CriadaEm = agora });
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = "TRANSICAO", De = AguardandoAluno, Para = Resolvido, CriadoEm = agora });
-        await Avisos.Resolvido(db, cfg, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, TextoSemResposta, agora);
+        db.MensagensChamado.Add(new MensagemChamado { ChamadoId = id, Tipo = TiposMensagem.Publica, Texto = TextoSemResposta, CriadaEm = agora });
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Transicao, De = AguardandoAluno, Para = Resolvido, CriadoEm = agora });
+        await Avisos.Resolvido(db, cfg, prazos, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, TextoSemResposta, agora);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
     }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Acesso;
 using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
@@ -177,7 +178,7 @@ public static class AdminRotas
             var setores = i.Setores ?? [];
             if (i.Papeis.Contains(Papeis.Atendente) && setores.Length == 0) return Problemas.Invalido("Escolha ao menos um setor para o atendente.", "setores");
             if (await db.Setores.CountAsync(s => setores.Contains(s.Id)) != setores.Distinct().Count()) return Problemas.Invalido("Setor inexistente.", "setores");
-            if (i.SenhaTemporaria is not null and not { Length: >= 8 and <= 128 }) return Problemas.Invalido("A senha temporária deve ter de 8 a 128 caracteres.", "senhaTemporaria");
+            if (i.SenhaTemporaria is not null && !Senha.Valida(i.SenhaTemporaria)) return Problemas.Invalido($"A senha temporária deve ter de {Senha.Minimo} a {Senha.Maximo} caracteres.", "senhaTemporaria");
             if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return Repetido("Já existe um usuário com este CPF na instituição.");
             if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == i.Email)) return Repetido("Já existe um usuário com este e-mail na instituição.");
             return null;
@@ -242,11 +243,11 @@ public static class AdminRotas
             u.Ativo = false;
             foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
             {
-                db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = "ATRIBUICAO", AtorId = adminId, De = u.Nome, Detalhe = "Responsável desativado", CriadoEm = agora });
+                db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Atribuicao, AtorId = adminId, De = u.Nome, Detalhe = "Responsável desativado", CriadoEm = agora });
                 c.ResponsavelId = null;
                 if (c.Estado is EmAtendimento or AguardandoAluno)
                 {
-                    db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = "TRANSICAO", AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
+                    db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Transicao, AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
                     c.Estado = Aberto;
                     c.AguardandoDesde = null;
                 }

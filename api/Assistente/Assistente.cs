@@ -2,9 +2,8 @@ using System.Net.Http.Json;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Conhecimento;
 using One.Api.Dados;
-using Pgvector;
-using Pgvector.EntityFrameworkCore;
 
 namespace One.Api.Assistente;
 
@@ -24,9 +23,6 @@ public static class Textos
 
 public record Trecho(long FonteId, string? Texto);
 public record SaidaModelo(string? Tipo, string? Texto, List<long>? FonteIds, List<Trecho>? Trechos, long? CategoriaId, string? Resumo);
-
-// Trecho de fonte devolvido pela busca, com o que o modelo e a conferência precisam (door R3).
-public record Fonte(long Id, string Titulo, string Texto, List<string> Links, double Distancia, long? ArtigoId);
 
 public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db, Embeddings embeddings)
 {
@@ -57,29 +53,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         var k = cfg.GetValue("Rag:K", 5);
         var fuso = await db.Instituicoes.Where(i => i.Id == instituicaoId).Select(i => i.Fuso).SingleAsync();
         var hoje = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(relogio.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(fuso)));
-        var consulta = new Vector(vetor);
-        var achados = await db.TrechosFonte
-            .Where(t => t.Embedding != null && (
-                (t.VersaoArtigoId != null && t.VersaoArtigo!.Artigo!.Estado == EstadosArtigo.Ativo
-                    && (t.VersaoArtigo.Artigo.VisivelDe == null || t.VersaoArtigo.Artigo.VisivelDe <= hoje)
-                    && (t.VersaoArtigo.Artigo.VisivelAte == null || t.VersaoArtigo.Artigo.VisivelAte >= hoje)
-                    && t.VersaoArtigo.Numero == db.VersoesArtigo.Where(x => x.ArtigoId == t.VersaoArtigo.ArtigoId).Max(x => x.Numero))
-                || (t.VersaoDocumentoId != null && t.VersaoDocumento!.Documento!.Estado == EstadosDocumento.Ativo
-                    && t.VersaoDocumento.Numero == db.VersoesDocumento.Where(x => x.DocumentoId == t.VersaoDocumento.DocumentoId).Max(x => x.Numero))))
-            .OrderBy(t => t.Embedding!.CosineDistance(consulta)).ThenBy(t => t.Id)
-            .Take(k)
-            .Select(t => new
-            {
-                t.Id,
-                t.Texto,
-                Distancia = t.Embedding!.CosineDistance(consulta),
-                Titulo = t.VersaoArtigoId != null ? t.VersaoArtigo!.Titulo : t.VersaoDocumento!.Documento!.Titulo,
-                t.VersaoArtigoId,
-                ArtigoId = t.VersaoArtigoId != null ? t.VersaoArtigo!.ArtigoId : (long?)null,
-            }).ToListAsync();
-        var idsArtigo = achados.Where(a => a.VersaoArtigoId != null).Select(a => a.VersaoArtigoId!.Value).ToList();
-        var links = await db.VersoesArtigo.Where(v => idsArtigo.Contains(v.Id)).ToDictionaryAsync(v => v.Id, v => v.Links);
-        return achados.Select(a => new Fonte(a.Id, a.Titulo, a.Texto, a.VersaoArtigoId is { } v ? links[v] : [], a.Distancia, a.ArtigoId)).ToList();
+        return await Fontes.Buscar(db, vetor, hoje, k);
     }
 
     // Recebe a conversa com a mensagem nova do aluno já gravada e devolve a mensagem do assistente a gravar.
@@ -201,13 +175,11 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
 
     async Task<(SaidaModelo?, string?, Uso)> Chamar(object corpo)
     {
-        using var limite = new CancellationTokenSource(TimeSpan.FromSeconds(20), relogio);
+        using var limite = new CancellationTokenSource(Embeddings.TempoLimite, relogio);
         var uso = new Uso();
         try
         {
-            var url = (cfg["Llm:BaseUrl"] ?? "https://api.openai.com/v1").TrimEnd('/') + "/chat/completions";
-            using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(corpo, options: Json) };
-            if (!string.IsNullOrEmpty(cfg["Llm:ChaveApi"])) req.Headers.Authorization = new("Bearer", cfg["Llm:ChaveApi"]);
+            using var req = new HttpRequestMessage(HttpMethod.Post, "chat/completions") { Content = JsonContent.Create(corpo, options: Json) };
             using var resp = await http.CreateClient("llm").SendAsync(req, limite.Token);
             if (!resp.IsSuccessStatusCode) return (null, $"provedor_http_{(int)resp.StatusCode}", uso);
 

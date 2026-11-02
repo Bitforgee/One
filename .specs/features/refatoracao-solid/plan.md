@@ -68,8 +68,9 @@ código (já faz isso com `IgnoreQueryFilters`).
    assistente - sem `OneDb`, sem `HttpContext`
 4. fatia `Conhecimento` (door 3) - dona única de "última versão" e de "artigo ou documento", usada
    por `Chamados`, `Assistente`, `Indicadores` e `Instituicoes`
-5. `Program.cs` (exists) - registra uma vez os prazos (`Prazos:*`), a URL base e o cliente `"llm"`
-   com base, chave e timeout, e chama o `Mapear` de cada fatia
+5. `Program.cs` (exists) - registra uma vez os prazos (`Prazos:*`, lidos em `api/Prazos.cs`) e o cliente
+   `"llm"` com base e chave (o limite de 20 s continua no relógio injetado, `Embeddings.TempoLimite`), e
+   chama o `Mapear` de cada fatia; a URL base (`App:UrlBase`) é lida uma vez em `Tokens.UrlBase`
 6. `Agendador`, `Avisos` (exists) - leem os prazos do mesmo lugar que as rotas
 7. `api/One.Api.csproj` (exists) + `api/CodeMetricsConfig.txt` (door 2) - o build barra
    complexidade acima de 10

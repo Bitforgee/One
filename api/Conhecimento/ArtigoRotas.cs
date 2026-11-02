@@ -16,7 +16,7 @@ public static class ArtigoRotas
             if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Versão de artigo não encontrada.");
             var v = await db.VersoesArtigo.Include(x => x.Artigo).FirstOrDefaultAsync(x => x.Id == id);
             if (v is null) return Problemas.Erro(404, "Versão de artigo não encontrada.");
-            var atual = await db.VersoesArtigo.Where(x => x.ArtigoId == v.ArtigoId).OrderByDescending(x => x.Numero).Select(x => x.Id).FirstAsync();
+            var atual = await db.VersoesAtuais().Where(x => x.ArtigoId == v.ArtigoId).Select(x => x.Id).FirstAsync();
             return Results.Ok(new
             {
                 titulo = v.Titulo,
@@ -27,15 +27,9 @@ public static class ArtigoRotas
         });
     }
 
-    // RAG, AC 6 e Surface: estado da indexação do trecho da versão atual; nulo quando o artigo nunca foi ativado nessa versão
-    public static async Task<Dictionary<long, string>> Indexacao(OneDb db, List<long> versoes) =>
-        (await db.TrechosFonte.Where(t => t.VersaoArtigoId != null && versoes.Contains(t.VersaoArtigoId.Value))
-            .Select(t => new { Versao = t.VersaoArtigoId!.Value, Indexado = t.Embedding != null, t.Tentativas }).ToListAsync())
-        .ToDictionary(t => t.Versao, t => t.Indexado ? "INDEXADO" : t.Tentativas >= 5 ? "FALHOU" : "PENDENTE");
-
     static object Saida(Artigo a, string categoria, Dictionary<long, string> indexacao)
     {
-        var v = a.Versoes.OrderByDescending(x => x.Numero).First();
+        var v = a.Ultima();
         return new
         {
             id = a.Id,
@@ -77,7 +71,7 @@ public static class ArtigoRotas
     static async Task<IResult> Responder(OneDb db, Artigo a, int status = 200)
     {
         var atual = a.Versoes.Max(v => v.Id);
-        var corpo = Saida(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync(), await Indexacao(db, [atual]));
+        var corpo = Saida(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync(), await Fontes.Indexacao(db, [atual]));
         return status == 201 ? Results.Created($"/api/admin/artigos/{a.Id}", corpo) : Results.Ok(corpo);
     }
 
@@ -88,7 +82,7 @@ public static class ArtigoRotas
         {
             var categorias = await db.Categorias.ToDictionaryAsync(c => c.Id, c => c.Nome);
             var artigos = await db.Artigos.Include(a => a.Versoes).OrderBy(a => a.Id).ToListAsync();
-            var indexacao = await Indexacao(db, artigos.Select(a => a.Versoes.OrderByDescending(v => v.Numero).First().Id).ToList());
+            var indexacao = await Fontes.Indexacao(db, artigos.Select(a => a.Ultima().Id).ToList());
             return Results.Ok(artigos.Select(a => Saida(a, categorias[a.CategoriaId], indexacao)));
         });
 
@@ -109,7 +103,7 @@ public static class ArtigoRotas
             a.CategoriaId = i.CategoriaId!.Value;
             (a.VisivelDe, a.VisivelAte) = (i.VisivelDe, i.VisivelAte);
             var agora = relogio.GetUtcNow().UtcDateTime;
-            var nova = Versao(i, a.Versoes.Max(v => v.Numero) + 1, agora);
+            var nova = Versao(i, a.Ultima().Numero + 1, agora);
             a.Versoes.Add(nova);
             if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(Fontes.DoArtigo(nova, agora));
             await db.SaveChangesAsync();
@@ -126,7 +120,7 @@ public static class ArtigoRotas
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (a.Estado == estado) return Problemas.Erro(409, estado == EstadosArtigo.Ativo ? "O artigo já está ativo." : "O artigo já está arquivado.");
         a.Estado = estado;
-        var atual = a.Versoes.OrderByDescending(v => v.Numero).First();
+        var atual = a.Ultima();
         // reativar um artigo arquivado reaproveita o trecho que a versão atual já tem
         if (estado == EstadosArtigo.Ativo && !await db.TrechosFonte.AnyAsync(t => t.VersaoArtigoId == atual.Id))
             db.TrechosFonte.Add(Fontes.DoArtigo(atual, relogio.GetUtcNow().UtcDateTime));

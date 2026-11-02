@@ -56,4 +56,34 @@ public class SenhaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.BadRequest, longa.StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, u.Cpf, Semente.Senha)).StatusCode);
     }
+
+    // refatoracao-solid C18: 7 e 129 recusadas, 8 e 128 aceitas, na troca de senha e no cadastro de usuário
+    [Fact]
+    public async Task Limites_7_8_128_129()
+    {
+        var i = await f.Instituicao();
+        var u = await f.Usuario(i, [Papeis.Aluno]);
+        var c = await f.Entrar(i, u);
+        Task<HttpResponseMessage> Trocar(string atual, string nova) => c.PostAsJsonAsync("/api/auth/senha", new { senhaAtual = atual, novaSenha = nova });
+        var (oito, cento28) = (new string('8', 8), new string('x', 128));
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await Trocar(Semente.Senha, new string('7', 7))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await Trocar(Semente.Senha, new string('9', 129))).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await Trocar(Semente.Senha, oito)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await Trocar(oito, cento28)).StatusCode);
+
+        var admin = await f.Entrar(i, await f.Usuario(i, [Papeis.Administrador]));
+        Task<HttpResponseMessage> Cadastrar(string senha) => admin.PostAsJsonAsync("/api/admin/usuarios", new
+        {
+            cpf = Semente.NovoCpf(), nome = "Aluno Novo", email = $"{Guid.NewGuid():N}@univag.edu.br", senhaTemporaria = senha, papeis = new[] { Papeis.Aluno },
+        });
+        foreach (var recusada in new[] { new string('7', 7), new string('9', 129) })
+        {
+            var r = await Cadastrar(recusada);
+            Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+            Assert.True((await r.Json()).GetProperty("errors").TryGetProperty("senhaTemporaria", out _));
+        }
+        Assert.Equal(HttpStatusCode.Created, (await Cadastrar(oito)).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await Cadastrar(cento28)).StatusCode);
+    }
 }

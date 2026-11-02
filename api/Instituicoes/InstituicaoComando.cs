@@ -191,8 +191,7 @@ public static partial class InstituicaoComando
         if (perguntas is null || perguntas.Count == 0) return ["--arquivo: nenhuma pergunta"];
 
         db.InstituicaoAtual = instituicao.Id;
-        var artigos = await db.Artigos.Where(a => a.Estado == EstadosArtigo.Ativo)
-            .Select(a => a.Versoes.OrderByDescending(v => v.Numero).Select(v => v.Titulo).First()).ToListAsync();
+        var artigos = await db.VersoesAtuais().Where(v => v.Artigo!.Estado == EstadosArtigo.Ativo).Select(v => v.Titulo).ToListAsync();
         var titulos = artigos.Concat(await db.Documentos.Where(d => d.Estado == EstadosDocumento.Ativo).Select(d => d.Titulo).ToListAsync()).ToHashSet();
         var erros = new List<string>();
         foreach (var (p, i) in perguntas.Select((p, i) => (p, i)))

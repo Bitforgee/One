@@ -24,9 +24,17 @@ builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 builder.Services.AddSingleton<Email>();
 builder.Services.AddScoped<Assistente>();
 builder.Services.AddSingleton<Embeddings>();
+builder.Services.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddSingleton<Agendador>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Agendador>());
-builder.Services.AddHttpClient("llm", c => c.Timeout = Timeout.InfiniteTimeSpan);
+// RAG door R1: chat e embeddings pelo mesmo cliente; o limite de 20 s é do relógio injetado (Embeddings.TempoLimite)
+builder.Services.AddHttpClient("llm", (sp, c) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    c.BaseAddress = new Uri((cfg["Llm:BaseUrl"] ?? "https://api.openai.com/v1").TrimEnd('/') + "/");
+    if (cfg["Llm:ChaveApi"] is { Length: > 0 } chave) c.DefaultRequestHeaders.Authorization = new("Bearer", chave);
+    c.Timeout = Timeout.InfiniteTimeSpan;
+});
 builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
 
 builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = c =>

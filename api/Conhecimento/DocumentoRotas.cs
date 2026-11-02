@@ -40,17 +40,14 @@ public static class DocumentoRotas
     static async Task<(Pdf?, IResult?)> LerPdf(IFormFile? arquivo)
     {
         if (arquivo is null) return (null, Problemas.Invalido("Envie o PDF no campo arquivo.", "arquivo"));
-        if (arquivo.Length > MaxPdf) return (null, Problemas.Erro(413, "O PDF passa de 20 MB."));
-        using var ms = new MemoryStream();
-        await arquivo.CopyToAsync(ms);
-        var bytes = ms.ToArray();
-        if (bytes is not [0x25, 0x50, 0x44, 0x46, ..]) return (null, Problemas.Erro(415, "O arquivo não é PDF."));
+        var (lido, recusa) = await Arquivos.Ler(arquivo, MaxPdf, [Arquivos.Pdf], "O PDF passa de 20 MB.", "O arquivo não é PDF.");
+        if (lido is null) return (null, recusa);
         try
         {
-            using var doc = PdfDocument.Open(bytes);
+            using var doc = PdfDocument.Open(lido.Bytes);
             var texto = string.Join("\n\n", doc.GetPages().Select(p => ContentOrderTextExtractor.GetText(p))).Trim();
             if (texto.Length == 0) return (null, Problemas.Invalido(SemTexto, "arquivo"));
-            return (new Pdf(bytes, texto, doc.NumberOfPages, Path.GetFileName(arquivo.FileName)), null);
+            return (new Pdf(lido.Bytes, texto, doc.NumberOfPages, lido.Nome), null);
         }
         catch (Exception e) when (e is not OutOfMemoryException)
         {
@@ -68,7 +65,7 @@ public static class DocumentoRotas
 
     static async Task<object> Saida(OneDb db, Documento d)
     {
-        var v = d.Versoes.OrderByDescending(x => x.Numero).First();
+        var v = d.Ultima();
         var trechos = await db.TrechosFonte.Where(t => t.VersaoDocumentoId == v.Id).Select(t => new { Indexado = t.Embedding != null, t.Tentativas }).ToListAsync();
         return new
         {
@@ -83,14 +80,14 @@ public static class DocumentoRotas
     }
 
     static Task<Documento?> Ler(OneDb db, long id) =>
-        db.Documentos.Include(d => d.Versoes.OrderByDescending(v => v.Numero).Take(1)).FirstOrDefaultAsync(d => d.Id == id);
+        db.Documentos.ComUltimaVersao().FirstOrDefaultAsync(d => d.Id == id);
 
     public static void MapearAdmin(RouteGroupBuilder admin)
     {
         admin.MapGet("/documentos", async (OneDb db) =>
         {
             var lista = new List<object>();
-            foreach (var d in await db.Documentos.Include(d => d.Versoes.OrderByDescending(v => v.Numero).Take(1)).OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
+            foreach (var d in await db.Documentos.ComUltimaVersao().OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
                 lista.Add(await Saida(db, d));
             return Results.Ok(lista);
         });
@@ -122,8 +119,7 @@ public static class DocumentoRotas
             if (erro is not null) return erro;
             if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento está arquivado.");
 
-            var numero = await db.VersoesDocumento.Where(v => v.DocumentoId == id).MaxAsync(v => v.Numero) + 1;
-            d.Versoes.Add(Versao(db, pdf!, numero, relogio.GetUtcNow().UtcDateTime));
+            d.Versoes.Add(Versao(db, pdf!, d.Ultima().Numero + 1, relogio.GetUtcNow().UtcDateTime));
             await db.SaveChangesAsync();
             return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, id) ?? d));
         });

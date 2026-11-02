@@ -18,6 +18,8 @@ public static class Tokens
 
     public static string Hash(string token) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    public static string Link(IConfiguration cfg, string slug, string token) =>
-        $"{(cfg["App:UrlBase"] ?? "http://localhost:8080").TrimEnd('/')}/{slug}/definir-senha?token={token}";
+    // Única leitura de App:UrlBase: links de e-mail e do comando apontam para o mesmo endereço.
+    public static string UrlBase(IConfiguration cfg) => (cfg["App:UrlBase"] ?? "http://localhost:8080").TrimEnd('/');
+
+    public static string Link(IConfiguration cfg, string slug, string token) => $"{UrlBase(cfg)}/{slug}/definir-senha?token={token}";
 }

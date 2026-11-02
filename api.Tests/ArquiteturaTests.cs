@@ -116,4 +116,120 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.All(colunas.Where(c => c.tipo.StartsWith("timestamp")), c => Assert.Equal("timestamp with time zone", c.tipo));
         Assert.Contains(colunas, c => c.tipo == "timestamp with time zone");
     }
+
+    // refatoracao-solid: regras de texto sobre o código de api/, sem bin, obj nem Dados/Migracoes.
+    static string Api => Path.Combine(Raiz(), "api");
+
+    static IEnumerable<string> CodigoApi()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        return Directory.EnumerateFiles(Api, "*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}") && !p.Contains($"{sep}Dados{sep}Migracoes{sep}"));
+    }
+
+    static string Relativo(string p) => Path.GetRelativePath(Api, p).Replace('\\', '/');
+
+    // Código sem os comentários de linha; o // de uma URL (precedido de ":") fica.
+    static string SemComentarios(string p) => Regex.Replace(File.ReadAllText(p), @"(?m)(?<![:""/])//.*$", "");
+
+    static List<string> ArquivosQue(Regex padrao, IEnumerable<string>? arquivos = null) =>
+        (arquivos ?? CodigoApi()).Where(p => padrao.IsMatch(SemComentarios(p))).Select(Relativo).Order().ToList();
+
+    static readonly Dictionary<Type, string[]> LiteraisGravados = new()
+    {
+        [typeof(TiposEvento)] = ["CRIACAO", "TRANSICAO", "ATRIBUICAO", "LEMBRETE", "NOTA", "RESPOSTA", "ANEXO", "ENCAMINHAMENTO", "RECLASSIFICACAO"],
+        [typeof(TiposMensagem)] = ["PUBLICA", "NOTA"],
+        [typeof(MotivosFechamento)] = ["CONFIRMADO", "CANCELADO", "DUPLICADO", "FECHADO_AUTOMATICAMENTE"],
+    };
+
+    // C12
+    [Fact]
+    public void Literais_gravados_so_nas_constantes()
+    {
+        foreach (var (grupo, literais) in LiteraisGravados)
+        {
+            var valores = grupo.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .Where(c => c.IsLiteral).Select(c => (string)c.GetRawConstantValue()!).Order().ToList();
+            Assert.Equal(literais.Order(), valores);
+        }
+        foreach (var literal in LiteraisGravados.Values.SelectMany(l => l).Distinct())
+            Assert.Equal(["Dados/Entidades.cs"], ArquivosQue(new Regex($"\"{literal}\"")));
+    }
+
+    // C13
+    [Fact]
+    public void Ultima_versao_em_um_arquivo()
+    {
+        var arquivos = ArquivosQue(new Regex(@"(OrderByDescending|MaxAsync|Max)\(\s*(\w+)\s*=>\s*\2\.Numero\s*\)"));
+        Assert.Single(arquivos);
+        Assert.StartsWith("Conhecimento/", arquivos[0]);
+    }
+
+    // C14
+    [Fact]
+    public void Artigo_ou_documento_em_um_arquivo()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var arquivos = ArquivosQue(new Regex(@"(VersaoArtigoId|VersaoDocumentoId)\s*(==\s*null|!=\s*null|is\s*\{|is\s+null|is\s+not\s+null)"),
+            CodigoApi().Where(p => !p.Contains($"{sep}Dados{sep}")));
+        Assert.Single(arquivos);
+        Assert.StartsWith("Conhecimento/", arquivos[0]);
+    }
+
+    // C15
+    [Fact]
+    public void Configuracao_lida_em_um_lugar()
+    {
+        int Leituras(string chave) => CodigoApi().Sum(p => Regex.Matches(File.ReadAllText(p), Regex.Escape($"\"{chave}\"")).Count);
+        foreach (var chave in new[] { "Llm:BaseUrl", "Llm:ChaveApi", "App:UrlBase" })
+            Assert.True(Leituras(chave) == 1, $"{chave} lida {Leituras(chave)} vezes");
+        var registro = Regex.Match(File.ReadAllText(Path.Combine(Api, "Program.cs")), @"AddHttpClient\(""llm"".*?\}\);", RegexOptions.Singleline).Value;
+        Assert.Contains("\"Llm:BaseUrl\"", registro);
+        Assert.Contains("\"Llm:ChaveApi\"", registro);
+    }
+
+    // C17
+    [Fact]
+    public void Assinatura_de_arquivo_em_um_lugar() =>
+        Assert.Single(ArquivosQue(new Regex(@"0x25,\s*0x50,\s*0x44,\s*0x46")));
+
+    // C18
+    [Fact]
+    public void Limites_de_senha_em_um_lugar()
+    {
+        var arquivos = ArquivosQue(new Regex(@"\b128\b"));
+        Assert.Single(arquivos);
+        var texto = File.ReadAllText(Path.Combine(Api, arquivos[0]));
+        Assert.Matches(@"const int \w+ = 8;", texto);
+        Assert.Matches(@"const int \w+ = 128;", texto);
+        Assert.Empty(ArquivosQue(new Regex(@"Length:\s*>=\s*8\b")));
+    }
+
+    // C19
+    [Fact]
+    public void Sem_DateTime_Now() =>
+        Assert.Empty(ArquivosQue(new Regex(@"DateTime\.(UtcNow|Now)\b")));
+
+    // C20
+    [Fact]
+    public void Glossario_lista_os_termos()
+    {
+        var linhas = File.ReadAllLines(Path.Combine(Raiz(), ".specs", "GLOSSARIO.md")).Where(l => l.StartsWith('|')).ToList();
+        static string Significado(string linha) => linha.Trim().Trim('|').Split('|')[^1].Trim();
+        var grupos = new Dictionary<Type, string>
+        {
+            [typeof(TiposEvento)] = "tipo de evento",
+            [typeof(TiposMensagem)] = "tipo de mensagem",
+            [typeof(MotivosFechamento)] = "motivo de fechamento",
+        };
+        foreach (var (tipo, literais) in LiteraisGravados)
+            foreach (var literal in literais)
+                Assert.True(linhas.Any(l => l.Contains($"`{literal}`") && l.Contains(grupos[tipo]) && Significado(l).Length >= 10), $"{literal} ({grupos[tipo]})");
+        foreach (var (prazo, chave, padrao) in new[]
+        {
+            ("abandono", "Prazos:AbandonoMinutos", "30 min"), ("confirmação", "Prazos:ConfirmacaoDias", "7 dias"), ("rejeição", "Prazos:ConfirmacaoDias", "7 dias"),
+            ("lembrete", "Prazos:LembreteAguardandoDias", "3 dias"), ("resolver aguardando", "Prazos:ResolverAguardandoDias", "7 dias"),
+        })
+            Assert.True(linhas.Any(l => l.Contains($"prazo de {prazo}") && l.Contains($"`{chave}`") && l.Contains(padrao) && Significado(l).Length >= 10), prazo);
+    }
 }

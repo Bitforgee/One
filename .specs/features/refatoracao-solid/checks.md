@@ -48,49 +48,49 @@ Proof: `python .specs/features/refatoracao-solid/baseline_antes.py <base>`
 
 ### S2 - Uma decisão em um lugar (P1) · ~22 files · ~130 KB · ~38k
 
-**C8** - Com `Prazos:ConfirmacaoDias` = 10: um chamado resolvido há 9 dias e 23 h continua `RESOLVIDO`; com 10 dias ele fecha, o evento traz "Fechado automaticamente: 10 dias sem confirmação" e o e-mail de resolução traz "(até 10 dias)" (AC 6)
+**C8** - [x] Com `Prazos:ConfirmacaoDias` = 10: um chamado resolvido há 9 dias e 23 h continua `RESOLVIDO`; com 10 dias ele fecha, o evento traz "Fechado automaticamente: 10 dias sem confirmação" e o e-mail de resolução traz "(até 10 dias)" (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrazosTests.Confirmacao_de_10_dias_fecha_no_10o_e_textos_dizem_10"`
 
-**C9** - Com `Prazos:ConfirmacaoDias` = 10: rejeitar com 10 dias exatos depois da resolução é aceito; com 10 dias e 1 min a API responde 409 com detail "O prazo de 10 dias para rejeitar a resolução terminou." (AC 7)
+**C9** - [x] Com `Prazos:ConfirmacaoDias` = 10: rejeitar com 10 dias exatos depois da resolução é aceito; com 10 dias e 1 min a API responde 409 com detail "O prazo de 10 dias para rejeitar a resolução terminou." (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrazosTests.Rejeicao_segue_prazo_de_confirmacao"`
 
-**C10** - Com `Prazos:LembreteAguardandoDias` = 4: o lembrete não sai com 3 dias e 23 h; sai com 4 dias, e o evento traz "Lembrete ao aluno: 4 dias aguardando resposta" (AC 8)
+**C10** - [x] Com `Prazos:LembreteAguardandoDias` = 4: o lembrete não sai com 3 dias e 23 h; sai com 4 dias, e o evento traz "Lembrete ao aluno: 4 dias aguardando resposta" (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrazosTests.Lembrete_de_4_dias_no_texto"`
 
-**C11** - Sem nenhuma chave `Prazos:*`, valem 30 min de abandono, 7 dias de confirmação e de rejeição, 3 dias de lembrete e 7 dias para resolver aguardando, e os textos dizem "7 dias" e "3 dias" como hoje (AC 9)
+**C11** - [x] Sem nenhuma chave `Prazos:*`, valem 30 min de abandono, 7 dias de confirmação e de rejeição, 3 dias de lembrete e 7 dias para resolver aguardando, e os textos dizem "7 dias" e "3 dias" como hoje (AC 9)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrazosTests.Padroes_sem_configuracao"`
 
-**C12** - Fora do arquivo que declara as constantes de cada grupo, o código de `api/` (sem `Dados/Migracoes`) não contém, entre aspas, nenhum dos 15 literais gravados: tipos de evento `CRIACAO`, `TRANSICAO`, `ATRIBUICAO`, `LEMBRETE`, `NOTA`, `RESPOSTA`, `ANEXO`, `ENCAMINHAMENTO`, `RECLASSIFICACAO`; tipos de mensagem `PUBLICA`, `NOTA`; motivos de fechamento `CONFIRMADO`, `CANCELADO`, `DUPLICADO`, `FECHADO_AUTOMATICAMENTE`; e cada um é declarado uma vez no seu grupo, com o valor de hoje (AC 10)
+**C12** - [x] Fora do arquivo que declara as constantes de cada grupo, o código de `api/` (sem `Dados/Migracoes`) não contém, entre aspas, nenhum dos 15 literais gravados: tipos de evento `CRIACAO`, `TRANSICAO`, `ATRIBUICAO`, `LEMBRETE`, `NOTA`, `RESPOSTA`, `ANEXO`, `ENCAMINHAMENTO`, `RECLASSIFICACAO`; tipos de mensagem `PUBLICA`, `NOTA`; motivos de fechamento `CONFIRMADO`, `CANCELADO`, `DUPLICADO`, `FECHADO_AUTOMATICAMENTE`; e cada um é declarado uma vez no seu grupo, com o valor de hoje (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Literais_gravados_so_nas_constantes"`
 
-**C13** - A expressão "última versão" (`OrderByDescending(... .Numero)` ou `Max(... .Numero)` sobre versões de artigo ou documento) aparece em exatamente 1 arquivo de `api/`, dentro de `api/Conhecimento` (AC 11)
+**C13** - [x] A expressão "última versão" (`OrderByDescending(... .Numero)` ou `Max(... .Numero)` sobre versões de artigo ou documento) aparece em exatamente 1 arquivo de `api/`, dentro de `api/Conhecimento` (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Ultima_versao_em_um_arquivo"`
 
-**C14** - O teste de "é artigo ou documento" (`VersaoArtigoId`/`VersaoDocumentoId` comparado a `null`, `is { }`, `is null`, `is not null`) aparece em exatamente 1 arquivo de `api/` fora de `api/Dados`, dentro de `api/Conhecimento` (AC 12)
+**C14** - [x] O teste de "é artigo ou documento" (`VersaoArtigoId`/`VersaoDocumentoId` comparado a `null`, `is { }`, `is null`, `is not null`) aparece em exatamente 1 arquivo de `api/` fora de `api/Dados`, dentro de `api/Conhecimento` (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Artigo_ou_documento_em_um_arquivo"`
 
-**C15** - As chaves `Llm:BaseUrl` e `Llm:ChaveApi` são lidas em exatamente 1 lugar, o registro do cliente `"llm"`, e `App:UrlBase` em exatamente 1 lugar (AC 13)
+**C15** - [x] As chaves `Llm:BaseUrl` e `Llm:ChaveApi` são lidas em exatamente 1 lugar, o registro do cliente `"llm"`, e `App:UrlBase` em exatamente 1 lugar (AC 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Configuracao_lida_em_um_lugar"`
 
-**C16** - Com o cliente `"llm"` configurado uma vez, o chat continua chamando `https://llm.teste/v1/chat/completions` e os embeddings `https://llm.teste/v1/embeddings`, com `Authorization: Bearer` da chave e timeout de 20 s (AC 13; fecha também a URL de embeddings que a rodada 2 do `rag` achou sem prova)
+**C16** - [x] Com o cliente `"llm"` configurado uma vez, o chat continua chamando `https://llm.teste/v1/chat/completions` e os embeddings `https://llm.teste/v1/embeddings`, com `Authorization: Bearer` da chave e timeout de 20 s (AC 13; fecha também a URL de embeddings que a rodada 2 do `rag` achou sem prova)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Parametros_e_ordem_do_prompt"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Embeddings_usam_a_url_base"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ProvedorTests.Falhas_do_chat_viram_sem_base"`
 
-**C17** - A assinatura de arquivo (`0x25 0x50 0x44 0x46` do PDF) aparece em exatamente 1 arquivo de `api/`, e anexos e documentos continuam respondendo 413 acima do limite e 415 com tipo errado (AC 14)
+**C17** - [x] A assinatura de arquivo (`0x25 0x50 0x44 0x46` do PDF) aparece em exatamente 1 arquivo de `api/`, e anexos e documentos continuam respondendo 413 acima do limite e 415 com tipo errado (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Assinatura_de_arquivo_em_um_lugar"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailAnexoTests"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests"`
 
-**C18** - Os limites de senha 8 e 128 são declarados em exatamente 1 lugar, e a senha de 7 e a de 129 caracteres continuam recusadas na troca de senha e no cadastro de usuário, a de 8 e a de 128 aceitas (AC 15)
+**C18** - [x] Os limites de senha 8 e 128 são declarados em exatamente 1 lugar, e a senha de 7 e a de 129 caracteres continuam recusadas na troca de senha e no cadastro de usuário, a de 8 e a de 128 aceitas (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Limites_de_senha_em_um_lugar"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SenhaTests.Limites_7_8_128_129"`
 
-**C19** - O código de `api/` não contém `DateTime.UtcNow` nem `DateTime.Now` (AC 16)
+**C19** - [x] O código de `api/` não contém `DateTime.UtcNow` nem `DateTime.Now` (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Sem_DateTime_Now"`
 
-**C20** - `.specs/GLOSSARIO.md` lista cada um dos 15 literais do C12 com o grupo e o significado, e os 5 prazos do C11 com a chave `Prazos:*` e o padrão (AC 17)
+**C20** - [x] `.specs/GLOSSARIO.md` lista cada um dos 15 literais do C12 com o grupo e o significado, e os 5 prazos do C11 com a chave `Prazos:*` e o padrão (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Glossario_lista_os_termos"`
 
 ### S3 - Regras de negócio puras, testadas sem banco (P1) · ~12 files · ~90 KB · ~30k

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Conhecimento;
 using One.Api.Dados;
 
 namespace One.Api.Chamados;
@@ -36,10 +37,7 @@ public static class Transferencia
         else if (assistente.FirstOrDefault(m => m.Citacoes.Count > 0) is { } citou)
         {
             var ultima = citou.Citacoes.OrderBy(c => c.Id).Last();
-            categoriaId = ultima.TrechoFonteId is { } trecho
-                ? await db.TrechosFonte.Where(t => t.Id == trecho)
-                    .Select(t => t.VersaoArtigoId != null ? t.VersaoArtigo!.Artigo!.CategoriaId : t.VersaoDocumento!.Documento!.CategoriaId).SingleAsync()
-                : await db.VersoesArtigo.Where(v => v.Id == ultima.VersaoArtigoId).Select(v => v.Artigo!.CategoriaId).SingleAsync();
+            categoriaId = await db.CategoriasCitadas().Where(x => x.CitacaoId == ultima.Id).Select(x => x.CategoriaId).SingleAsync();
             origem = OrigemArtigo;
         }
         var categoria = categoriaId is null ? categoriasAtivas.Single(c => c.Padrao) : await db.Categorias.SingleAsync(c => c.Id == categoriaId);
@@ -68,7 +66,7 @@ public static class Transferencia
         chamado.Numero = $"ONE-{numero.Single()}";
         db.Chamados.Add(chamado);
         await db.SaveChangesAsync();
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = chamado.Id, Tipo = "CRIACAO", Para = chamado.Estado, CriadoEm = agora });
+        db.EventosChamado.Add(new EventoChamado { ChamadoId = chamado.Id, Tipo = TiposEvento.Criacao, Para = chamado.Estado, CriadoEm = agora });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         return chamado;

@@ -16,13 +16,10 @@ public static class AuthRotas
     const string CpfInvalido = "CPF inválido.";
     const string CredenciaisInvalidas = "CPF ou senha inválidos.";
     const string LinkInvalido = "Link inválido ou vencido.";
-    const string SenhaForaDoTamanho = "A senha deve ter de 8 a 128 caracteres.";
     public const string MensagemPrimeiroAcesso = "Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição.";
 
     // Hash de uma senha qualquer: o login com CPF desconhecido gasta o mesmo tempo que o de CPF existente.
     static readonly string HashFicticio = new PasswordHasher<Usuario>().HashPassword(new Usuario(), "senha-ficticia");
-
-    static bool SenhaValida(string? s) => s is { Length: >= 8 and <= 128 };
 
     public static void Mapear(RouteGroupBuilder api)
     {
@@ -95,7 +92,7 @@ public static class AuthRotas
             var u = token is null ? null : await db.Usuarios.FirstOrDefaultAsync(x => x.Id == token.UsuarioId && x.Ativo);
             if (token is null || token.UsadoEm is not null || token.ExpiraEm <= agora || u is null)
                 return Problemas.Erro(400, LinkInvalido);
-            if (!SenhaValida(i.NovaSenha)) return Problemas.Invalido(SenhaForaDoTamanho, "novaSenha");
+            if (!Senha.Valida(i.NovaSenha)) return Problemas.Invalido(Senha.ForaDoTamanho, "novaSenha");
 
             u.SenhaHash = hasher.HashPassword(u, i.NovaSenha!);
             u.DeveTrocarSenha = false;
@@ -135,7 +132,7 @@ public static class AuthRotas
             if (u.SenhaHash is null || string.IsNullOrEmpty(i.SenhaAtual) ||
                 hasher.VerifyHashedPassword(u, u.SenhaHash, i.SenhaAtual) == PasswordVerificationResult.Failed)
                 return Problemas.Invalido("A senha atual está incorreta.", "senhaAtual");
-            if (!SenhaValida(i.NovaSenha)) return Problemas.Invalido(SenhaForaDoTamanho, "novaSenha");
+            if (!Senha.Valida(i.NovaSenha)) return Problemas.Invalido(Senha.ForaDoTamanho, "novaSenha");
 
             u.SenhaHash = hasher.HashPassword(u, i.NovaSenha!);
             u.DeveTrocarSenha = false;

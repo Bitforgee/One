@@ -36,6 +36,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Smtp:Porta", PortaSmtp.ToString());
         builder.UseSetting("App:UrlBase", "http://localhost:8080");
         builder.UseSetting("Llm:BaseUrl", "https://llm.teste/v1");
+        builder.UseSetting("Llm:ChaveApi", "chave-teste");
         builder.UseSetting("Llm:Modelo", "gpt-6-luna");
         builder.UseSetting("Agendador:Ativo", "false"); // os testes chamam Agendador.Executar com o relógio falso
         if (!LimitesReais)
@@ -121,6 +122,7 @@ public class LlmFalso : HttpMessageHandler
     public List<HttpRequestMessage> Pedidos { get; } = [];
     public List<string> CorposEmbeddings { get; } = [];
     public List<Uri> UrisEmbeddings { get; } = [];
+    public List<string?> AutorizacoesEmbeddings { get; } = [];
     public Func<string, CancellationToken, Task<HttpResponseMessage>>? ResponderEmbeddings { get; set; }
 
     // Vetor determinístico: cada palavra (sem acento, 3+ letras) soma 1 numa posição fixa; textos com palavras em comum ficam próximos.
@@ -167,7 +169,7 @@ public class LlmFalso : HttpMessageHandler
         var corpo = request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken);
         if (request.RequestUri!.AbsolutePath.EndsWith("/embeddings"))
         {
-            lock (CorposEmbeddings) { CorposEmbeddings.Add(corpo); UrisEmbeddings.Add(request.RequestUri); }
+            lock (CorposEmbeddings) { CorposEmbeddings.Add(corpo); UrisEmbeddings.Add(request.RequestUri); AutorizacoesEmbeddings.Add(request.Headers.Authorization?.ToString()); }
             if (ResponderEmbeddings is { } r) return await r(corpo, cancellationToken);
             return RespostaEmbeddings(JsonDocument.Parse(corpo).RootElement.GetProperty("input").EnumerateArray().Select(e => e.GetString()!));
         }
@@ -194,5 +196,16 @@ public class LogCapturado : ILoggerProvider
             var campos = state is IEnumerable<KeyValuePair<string, object?>> kv ? kv.ToDictionary(x => x.Key, x => x.Value) : [];
             dono.Entradas.Enqueue(new Log(categoria, logLevel, formatter(state, exception) + (exception is null ? "" : " " + exception.Message), campos));
         }
+    }
+}
+
+// refatoracao-solid C8 a C10: prazos diferentes do padrão, lidos de Prazos:*
+public class OneFactoryPrazos : OneFactory
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseSetting("Prazos:ConfirmacaoDias", "10");
+        builder.UseSetting("Prazos:LembreteAguardandoDias", "4");
     }
 }

@@ -7,7 +7,7 @@ namespace One.Api.Chamados;
 public static class Avisos
 {
     public static string Link(IConfiguration cfg, Instituicao i, Chamado c) =>
-        $"{(cfg["App:UrlBase"] ?? "http://localhost:8080").TrimEnd('/')}/{i.Slug}/chamados/{c.Numero}";
+        $"{Tokens.UrlBase(cfg)}/{i.Slug}/chamados/{c.Numero}";
 
     static async Task Enfileirar(OneDb db, Chamado c, DateTime agora, string assunto, string corpo)
     {
@@ -21,9 +21,9 @@ public static class Avisos
             $"Sua solicitação {c.Numero} recebeu uma nova resposta.\n\nPara ler e responder, abra:\n{Link(cfg, i, c)}\n");
 
     // AC 123
-    public static Task Resolvido(OneDb db, IConfiguration cfg, Instituicao i, Chamado c, string texto, DateTime agora) =>
+    public static Task Resolvido(OneDb db, IConfiguration cfg, Prazos prazos, Instituicao i, Chamado c, string texto, DateTime agora) =>
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero} foi resolvido",
-            $"Sua solicitação {c.Numero} foi resolvida:\n\n{texto}\n\nPara confirmar ou rejeitar a resolução (até 7 dias), abra:\n{Link(cfg, i, c)}\n");
+            $"Sua solicitação {c.Numero} foi resolvida:\n\n{texto}\n\nPara confirmar ou rejeitar a resolução (até {prazos.RejeicaoDias} dias), abra:\n{Link(cfg, i, c)}\n");
 
     // AC 10: datas no fuso da instituição do item, no formato dd/mm/aaaa hh:mm
     public static string DataLocal(Instituicao i, DateTime utc) =>
