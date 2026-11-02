@@ -75,6 +75,7 @@ public static class AdminRotas
 
         Regras(admin);
         ArtigoRotas.MapearAdmin(admin);
+        DocumentoRotas.MapearAdmin(admin);
     }
 
     // GET lista, POST cria, PUT {id} altera; validar devolve 400/409 ou null.

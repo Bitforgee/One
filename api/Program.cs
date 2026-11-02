@@ -83,6 +83,7 @@ ChamadoRotas.Mapear(api);
 ArtigoRotas.Mapear(api);
 AdminRotas.Mapear(api);
 IndicadorRotas.Mapear(api);
+DocumentoRotas.Mapear(api);
 
 app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
 app.MapFallbackToFile("index.html");

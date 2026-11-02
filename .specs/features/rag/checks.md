@@ -102,49 +102,49 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.D
 
 ### S3 - Documentos da instituição viram fonte do assistente (P1) · ~12 files · ~100 KB · ~25k
 
-**C26** - `POST /api/admin/documentos` com um PDF de 2 páginas com texto, título e categoria ativa responde 201 com o documento `ATIVO`, versão 1, `paginas` 2, e grava na mesma transação o texto extraído e os trechos pendentes (AC 16)
+**C26** - [x] `POST /api/admin/documentos` com um PDF de 2 páginas com texto, título e categoria ativa responde 201 com o documento `ATIVO`, versão 1, `paginas` 2, e grava na mesma transação o texto extraído e os trechos pendentes (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Subir_pdf_201"`
 
-**C27** - A divisão de um texto em trechos produz trechos de no máximo 1500 caracteres, corta no fim de parágrafo quando há um antes do limite, senão no fim de frase, e repete os últimos 200 caracteres do trecho anterior no começo do seguinte; um texto de 1500 caracteres vira 1 trecho e um de 1501 vira 2 (AC 17)
+**C27** - [x] A divisão de um texto em trechos produz trechos de no máximo 1500 caracteres, corta no fim de parágrafo quando há um antes do limite, senão no fim de frase, e repete os últimos 200 caracteres do trecho anterior no começo do seguinte; um texto de 1500 caracteres vira 1 trecho e um de 1501 vira 2 (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DivisaoTests.Trechos_de_ate_1500_com_sobreposicao"`
 
-**C28** - Em `POST /api/admin/documentos` e em `POST /api/admin/documentos/{id}/versoes`: arquivo sem `%PDF` responde 415; PDF de 20 MB + 1 byte responde 413 e de exatamente 20 MB é aceito; PDF sem texto responde 400 com `detail` "O PDF não tem texto. Exporte o documento com texto, não digitalizado."; sem título, com categoria inativa, inexistente ou de outra instituição responde 400; em nenhum caso grava documento, versão ou trecho (AC 18)
+**C28** - [x] Em `POST /api/admin/documentos` e em `POST /api/admin/documentos/{id}/versoes`: arquivo sem `%PDF` responde 415; PDF de 20 MB + 1 byte responde 413 e de exatamente 20 MB é aceito; PDF sem texto responde 400 com `detail` "O PDF não tem texto. Exporte o documento com texto, não digitalizado."; sem título, com categoria inativa, inexistente ou de outra instituição responde 400; em nenhum caso grava documento, versão ou trecho (AC 18)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Recusas_do_upload"`
 
-**C29** - `POST /api/admin/documentos/{id}/versoes` responde 201 com a versão 2, a versão 1 continua legível, e depois da indexação a busca devolve só trechos da versão 2 (AC 19)
+**C29** - [x] `POST /api/admin/documentos/{id}/versoes` responde 201 com a versão 2, a versão 1 continua legível, e depois da indexação a busca devolve só trechos da versão 2 (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Nova_versao"`
 
-**C30** - Arquivar responde 200 e tira os trechos do documento da busca seguinte, mantendo a conversa que o citou; arquivar de novo responde 409; nova versão de documento arquivado responde 409; `versoes` e `arquivar` com id inexistente respondem 404 (AC 20, Surface)
+**C30** - [x] Arquivar responde 200 e tira os trechos do documento da busca seguinte, mantendo a conversa que o citou; arquivar de novo responde 409; nova versão de documento arquivado responde 409; `versoes` e `arquivar` com id inexistente respondem 404 (AC 20, Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Arquivar"`
 
-**C31** - No detalhe do chamado, a equipe vê cada fonte com `tipo` (`ARTIGO` com o título e a versão do artigo; `DOCUMENTO` com o título, a versão e o trecho confirmado do documento), e `GET /api/documentos/versoes/{id}` responde 200 com o PDF (mesmos bytes, `application/pdf`) a atendente e a administrador (AC 21, Surface)
+**C31** - [x] No detalhe do chamado, a equipe vê cada fonte com `tipo` (`ARTIGO` com o título e a versão do artigo; `DOCUMENTO` com o título, a versão e o trecho confirmado do documento), e `GET /api/documentos/versoes/{id}` responde 200 com o PDF (mesmos bytes, `application/pdf`) a atendente e a administrador (AC 21, Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Fonte_documento_no_detalhe"`
 
-**C32** - Para o aluno, as respostas de `POST /api/conversas`, mensagens, `GET /api/conversas/{id}`, `GET /api/chamados` e `GET /api/chamados/{numero}` não trazem título, texto, trechos, ids nem nome de arquivo do documento citado, nem as chaves `trechoFonteId`, `trechos` ou `fontes`, e `GET /api/documentos/versoes/{id}` responde 404 (AC 22)
+**C32** - [x] Para o aluno, as respostas de `POST /api/conversas`, mensagens, `GET /api/conversas/{id}`, `GET /api/chamados` e `GET /api/chamados/{numero}` não trazem título, texto, trechos, ids nem nome de arquivo do documento citado, nem as chaves `trechoFonteId`, `trechos` ou `fontes`, e `GET /api/documentos/versoes/{id}` responde 404 (AC 22)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SigiloRagTests.Aluno_nao_recebe_dado_de_documento"`
 
-**C33** - Numa conversa cuja última citação é de um documento da categoria "Estágio", o chamado transferido fica na categoria "Estágio" com origem `ARTIGO`; com a última citação de artigo depois do documento, fica na categoria do artigo (AC 23)
+**C33** - [x] Numa conversa cuja última citação é de um documento da categoria "Estágio", o chamado transferido fica na categoria "Estágio" com origem `ARTIGO`; com a última citação de artigo depois do documento, fica na categoria do artigo (AC 23)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Categoria_do_documento_no_chamado"`
 
-**C34** - A tela Documentos lista título, categoria, estado, versão, páginas e indexação; sem documentos mostra "Nenhum item cadastrado."; "Arquivar" abre um `Modal` e só chama a API depois de confirmar (AC 24)
+**C34** - [x] A tela Documentos lista título, categoria, estado, versão, páginas e indexação; sem documentos mostra "Nenhum item cadastrado."; "Arquivar" abre um `Modal` e só chama a API depois de confirmar (AC 24)
 Proof: `npm --prefix web run test -- -t "tela Documentos lista, vazio e confirma arquivar"`
 
-**C35** - Aluno e atendente sem o papel administrador recebem 403 nas 29 rotas `/api/admin/*`, agora com as 4 de documentos (Surface, AC 104 do `mvp-one`; substitui a contagem do C137)
+**C35** - [x] Aluno e atendente sem o papel administrador recebem 403 nas 29 rotas `/api/admin/*`, agora com as 4 de documentos (Surface, AC 104 do `mvp-one`; substitui a contagem do C137)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AdminTests.Sem_papel_admin_403"`
 
-**C36** - Um administrador da `demo` recebe 404 em `POST /api/admin/documentos/{id}/versoes`, `POST /api/admin/documentos/{id}/arquivar` e `GET /api/documentos/versoes/{id}` com ids que só existem na `univag`, e o documento da `univag` fica igual (AC 7 do `mvp-one`, door 16)
+**C36** - [x] Um administrador da `demo` recebe 404 em `POST /api/admin/documentos/{id}/versoes`, `POST /api/admin/documentos/{id}/arquivar` e `GET /api/documentos/versoes/{id}` com ids que só existem na `univag`, e o documento da `univag` fica igual (AC 7 do `mvp-one`, door 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Documento_de_outra_instituicao_404"`
 
-**C37** - Sem cookie, as 54 rotas `/api/*` privadas respondem 401, agora com as 5 de documentos (Surface; substitui a contagem do nº 36 do `mvp-one`)
+**C37** - [x] Sem cookie, as 54 rotas `/api/*` privadas respondem 401, agora com as 5 de documentos (Surface; substitui a contagem do nº 36 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Sem_cookie_401_em_toda_rota_privada"`
 
-**C38** - `GET /api/admin/documentos` responde 200 com cada documento, a categoria, o estado, a versão atual com `nomeArquivo` e `paginas`, e `indexacao`, em ordem de título (Surface)
+**C38** - [x] `GET /api/admin/documentos` responde 200 com cada documento, a categoria, o estado, a versão atual com `nomeArquivo` e `paginas`, e `indexacao`, em ordem de título (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Listar_200"`
 
-**C39** - A tela Artigos mostra o estado da indexação de cada artigo ("Indexado", "Indexando" ou "Falhou") (Observable)
+**C39** - [x] A tela Artigos mostra o estado da indexação de cada artigo ("Indexado", "Indexando" ou "Falhou") (Observable)
 Proof: `npm --prefix web run test -- -t "artigos mostram a indexação"`
 
-**C40** - O detalhe do chamado na SPA mostra, numa fonte de documento, o título com o ícone de documento, o trecho confirmado e o link para o PDF da versão citada (AC 21)
+**C40** - [x] O detalhe do chamado na SPA mostra, numa fonte de documento, o título com o ícone de documento, o trecho confirmado e o link para o PDF da versão citada (AC 21)
 Proof: `npm --prefix web run test -- -t "fonte de documento no detalhe"`
 
 ### S4 - O grupo mede a busca com perguntas reais antes do piloto (P1) · ~3 files · ~20 KB · ~5k
@@ -158,10 +158,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests.Nao
 **C43** - `avaliar-busca` com slug inexistente, arquivo que não é JSON, pergunta vazia ou `fonte` que não é título de artigo ou documento ativo imprime o caminho e o motivo na saída de erro e sai com código 1 (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests.Arquivo_invalido_sai_1"`
 
-**C44** - As 4 rotas `/api/admin/documentos*` e `GET /api/documentos/versoes/{id}` respondem erros em `application/problem+json` com `detail` em português (door 8 do `mvp-one`)
+**C44** - [x] As 4 rotas `/api/admin/documentos*` e `GET /api/documentos/versoes/{id}` respondem erros em `application/problem+json` com `detail` em português (door 8 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Erros_em_problem_json"`
 
-**C45** - `GET /api/chamados/{numero}` responde 404 a atendente de outro setor também num chamado com fonte de documento, e o aluno dono continua recebendo 200 (Surface, AC 72 do `mvp-one`)
+**C45** - [x] `GET /api/chamados/{numero}` responde 404 a atendente de outro setor também num chamado com fonte de documento, e o aluno dono continua recebendo 200 (Surface, AC 72 do `mvp-one`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Detalhe_com_documento_segue_visibilidade"`
 
 ## Coverage
@@ -247,6 +247,6 @@ que o construtor precisa ler (`Assistente.cs`, `Agendador.cs`, `ChamadoRotas.cs`
   contexto fixo e o código existente: 60k + 14k + 40k = 114k, abaixo do budget de 150k - um
   construtor
 - Mechanism: um construtor (cabe no budget, sem pergunta)
-- **Boundary:** S1 e S2 (C1 a C25 e C46) fechados em `9c0a7a3` e no commit seguinte; S3 (documentos) e S4 (`avaliar-busca`) abertos
+- **Boundary:** S1 e S2 (C1 a C25 e C46) fechados em `9c0a7a3` e no commit seguinte; S3 (documentos: C26 a C40, C44 e C45) fechado no commit seguinte; S4 (`avaliar-busca`) aberto
 - **Settled mid-build:** tag `pgvector/pgvector:0.8.7-pg18-trixie` (door R8, decidida com o usuário por causa do desencontro de collation). O modelo cita fontes por `fonteIds` e `trechos[].fonteId` (ids de `trecho_fonte`), no lugar de `artigoIds`; o log da chamada continua com os ids dos artigos citados (AC 47 do `mvp-one`), derivados do trecho. Nos testes, o trecho de um artigo semeado tem id fixo `1_000_000 + id do artigo` (`Semente.Fonte`), para citar sem consultar o banco e sem colisão entre classes em paralelo
 - **Abandoned:** nada

@@ -156,7 +156,7 @@ describe('chamado', () => {
   })
 
   it('aviso de artigo atualizado', async () => {
-    const fonte = (versaoArtigoId: number, titulo: string, atualizado: boolean) => ({ versaoArtigoId, titulo, trechos: ['fica no Portal do Aluno'], atualizado })
+    const fonte = (versaoArtigoId: number, titulo: string, atualizado: boolean) => ({ tipo: 'ARTIGO' as const, versaoArtigoId, versaoDocumentoId: null, titulo, numero: 1, trechos: ['fica no Portal do Aluno'], atualizado })
     api({
       'GET /api/auth/me': () => [200, equipe],
       'GET /api/chamados/ONE-1': () => [
@@ -178,6 +178,40 @@ describe('chamado', () => {
     expect(within(antiga).getByText('Este artigo foi atualizado depois desta resposta.')).toBeInTheDocument()
     expect(within(nova).queryByText('Este artigo foi atualizado depois desta resposta.')).not.toBeInTheDocument()
     expect(within(nova).getByText('“fica no Portal do Aluno”')).toBeInTheDocument()
+  })
+
+  // RAG C40
+  it('fonte de documento no detalhe', async () => {
+    api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () => [
+        200,
+        daEquipe({
+          transcricao: [
+            { autor: 'ALUNO', texto: 'quantas horas de estágio?', criadaEm: '2026-11-02T12:00:00Z' },
+            {
+              autor: 'ASSISTENTE',
+              texto: 'O estágio exige 300 horas.',
+              criadaEm: '2026-11-02T12:00:05Z',
+              fontes: [
+                { tipo: 'DOCUMENTO', versaoArtigoId: null, versaoDocumentoId: 42, titulo: 'Regulamento de estágio', numero: 2, trechos: ['mínima do estágio supervisionado é de 300 horas'], atualizado: false },
+                { tipo: 'ARTIGO', versaoArtigoId: 7, versaoDocumentoId: null, titulo: 'Estágio obrigatório', numero: 1, trechos: ['termo de compromisso'], atualizado: false },
+              ],
+            },
+          ],
+        }),
+      ],
+    })
+    abrir('/univag/chamados/ONE-1')
+
+    const resposta = (await screen.findByText('O estágio exige 300 horas.')).closest('.card') as HTMLElement
+    const doc = within(resposta).getByText('Regulamento de estágio').closest('div.border-top') as HTMLElement
+    expect(within(doc).getByRole('img', { name: 'Documento' })).toHaveClass('bi-file-earmark-pdf')
+    expect(within(doc).getByText('“mínima do estágio supervisionado é de 300 horas”')).toBeInTheDocument()
+    expect(within(doc).getByRole('link', { name: 'Abrir o PDF (versão 2)' })).toHaveAttribute('href', '/api/documentos/versoes/42')
+    const art = within(resposta).getByText('Estágio obrigatório').closest('div.border-top') as HTMLElement
+    expect(within(art).getByRole('img', { name: 'Artigo' })).toHaveClass('bi-journal-text')
+    expect(within(art).queryByRole('link')).not.toBeInTheDocument()
   })
 
   it('eventos em ordem no fuso', async () => {

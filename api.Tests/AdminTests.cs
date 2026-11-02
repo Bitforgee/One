@@ -39,7 +39,7 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(25, rotas.Count);
+        Assert.Equal(29, rotas.Count); // RAG C35: mais as 4 de documentos
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)

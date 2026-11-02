@@ -9,6 +9,7 @@ const Menu = [
   { papeis: ['ALUNO'], caminho: 'solicitacoes', rotulo: 'Minhas solicitações', icone: 'bi-list-check' },
   { papeis: ['ATENDENTE'], caminho: 'fila', rotulo: 'Fila', icone: 'bi-inbox' },
   { papeis: ['ADMINISTRADOR'], caminho: 'artigos', rotulo: 'Artigos', icone: 'bi-journal-text' },
+  { papeis: ['ADMINISTRADOR'], caminho: 'documentos', rotulo: 'Documentos', icone: 'bi-file-earmark-pdf' },
   { papeis: ['ATENDENTE', 'ADMINISTRADOR'], caminho: 'indicadores', rotulo: 'Indicadores', icone: 'bi-bar-chart' },
   { papeis: ['ADMINISTRADOR'], caminho: 'usuarios', rotulo: 'Usuários', icone: 'bi-people' },
   { papeis: ['ADMINISTRADOR'], caminho: 'matriculas', rotulo: 'Matrículas', icone: 'bi-upload' },

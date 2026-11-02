@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
 
-export type Fonte = { versaoArtigoId: number; titulo: string; trechos: string[]; atualizado: boolean }
+// RAG: a fonte citada é um artigo ou um documento (PDF) da instituição; só a equipe recebe
+export type Fonte = { tipo: 'ARTIGO' | 'DOCUMENTO'; versaoArtigoId: number | null; versaoDocumentoId: number | null; titulo: string; numero: number; trechos: string[]; atualizado: boolean }
 export type Anexo = { id: number; nome: string; tipo: string; tamanho: number }
 export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string; anexos?: Anexo[] }
 export type Evento = { tipo: string; ator: string; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }

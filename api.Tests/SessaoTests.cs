@@ -31,7 +31,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.Equal(49, privadas.Count);
+        Assert.Equal(54, privadas.Count); // RAG C37: mais as 5 de documentos
 
         foreach (var (metodo, padrao) in privadas)
         {

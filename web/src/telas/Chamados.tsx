@@ -176,9 +176,9 @@ export function ChamadoDetalhe() {
             <Card.Body className="py-2 px-3">
               <div style={quebra}>{m.texto}</div>
               {m.fontes?.map((f) => (
-                <div key={f.versaoArtigoId} className="small border-top mt-2 pt-1">
+                <div key={`${f.tipo}-${f.versaoArtigoId ?? f.versaoDocumentoId}`} className="small border-top mt-2 pt-1">
                   <div className="fw-semibold">
-                    <i className="bi bi-journal-text me-1" aria-hidden="true" />
+                    <i className={`bi ${f.tipo === 'DOCUMENTO' ? 'bi-file-earmark-pdf' : 'bi-journal-text'} me-1`} aria-label={f.tipo === 'DOCUMENTO' ? 'Documento' : 'Artigo'} role="img" />
                     {f.titulo}
                   </div>
                   {f.trechos.map((t, j) => (
@@ -186,7 +186,12 @@ export function ChamadoDetalhe() {
                       “{t}”
                     </blockquote>
                   ))}
-                  {f.atualizado && <div className="text-warning-emphasis">Este artigo foi atualizado depois desta resposta.</div>}
+                  {f.tipo === 'DOCUMENTO' && (
+                    <a href={`/api/documentos/versoes/${f.versaoDocumentoId}`} target="_blank" rel="noreferrer">
+                      Abrir o PDF (versão {f.numero})
+                    </a>
+                  )}
+                  {f.atualizado && <div className="text-warning-emphasis">{f.tipo === 'DOCUMENTO' ? 'Este documento' : 'Este artigo'} foi atualizado depois desta resposta.</div>}
                 </div>
               ))}
               <div className="small text-body-secondary text-end">{formatarData(m.criadaEm, fuso)}</div>
