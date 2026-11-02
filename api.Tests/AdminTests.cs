@@ -195,6 +195,35 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
     }
 
+    // Test policy, entrada que não decide: cada recusa do cadastro de usuário
+    [Fact]
+    public async Task Campos_invalidos_400()
+    {
+        var (i, admin) = await Admin.Criar(f);
+        var triagem = await f.Db(i.Id, db => db.Setores.SingleAsync());
+        var antes = await f.Db(i.Id, db => db.Usuarios.CountAsync());
+        var cpf = Semente.NovoCpf();
+        var recusas = new (string campo, object corpo)[]
+        {
+            ("cpf", new { cpf = "12345678900", nome = "X", email = "x@x.com", papeis = new[] { Papeis.Administrador } }),
+            ("nome", new { cpf, nome = " ", email = "x@x.com", papeis = new[] { Papeis.Administrador } }),
+            ("email", new { cpf, nome = "X", email = "sem-arroba", papeis = new[] { Papeis.Administrador } }),
+            ("papeis", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { "DIRETOR" } }),
+            ("setores", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Atendente }, setores = new[] { 999999L } }),
+            ("senhaTemporaria", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Administrador }, senhaTemporaria = "1234567" }),
+            ("senhaTemporaria", new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Administrador }, senhaTemporaria = new string('s', 129) }),
+        };
+        foreach (var (campo, corpo) in recusas)
+        {
+            var r = await admin.PostAsJsonAsync("/api/admin/usuarios", corpo);
+            Assert.True(r.StatusCode == HttpStatusCode.BadRequest, $"{campo}: {(int)r.StatusCode}");
+            Assert.True((await r.Json()).GetProperty("errors").TryGetProperty(campo, out _), campo);
+        }
+        Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/usuarios",
+            new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Atendente }, setores = new[] { triagem.Id }, senhaTemporaria = new string('s', 128) })).StatusCode);
+    }
+
     // C10
     [Fact]
     public async Task Cpf_ou_email_repetido_409()
@@ -350,6 +379,39 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         var id = (await (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "minha nota" })).Json()).GetProperty("conversaId").GetInt64();
         var transferido = await (await aluno.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json();
         Assert.Equal("Coordenação ADS", transferido.GetProperty("setor").GetString());
+    }
+
+    // Test policy, entrada que não decide: cada recusa dos cadastros de curso, regra e resposta pronta
+    [Fact]
+    public async Task Recusas_dos_cadastros_400()
+    {
+        var (i, admin) = await Admin.Criar(f);
+        var setor = await f.Setor(i, "Financeiro");
+        var categoria = await f.Categoria(i, "Boleto");
+        var padrao = await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
+        var recusas = new (string rota, string campo, object corpo)[]
+        {
+            ("cursos", "nome", new { nome = "" }),
+            ("cursos", "setorCoordenacaoId", new { nome = "Direito", setorCoordenacaoId = 999999 }),
+            ("regras", "categoriaId", new { categoriaId = 999999, destino = "COORDENACAO_CURSO" }),
+            ("regras", "categoriaId", new { categoriaId = padrao.Id, destino = "COORDENACAO_CURSO" }),
+            ("regras", "destino", new { categoriaId = categoria.Id, destino = "QUALQUER" }),
+            ("regras", "setorId", new { categoriaId = categoria.Id, destino = "SETOR", setorId = 999999 }),
+            ("respostas-prontas", "setorId", new { setorId = 999999, titulo = "Boleto", texto = "x" }),
+            ("respostas-prontas", "titulo", new { setorId = setor.Id, titulo = " ", texto = "x" }),
+            ("respostas-prontas", "texto", new { setorId = setor.Id, titulo = "Boleto", texto = "" }),
+            ("respostas-prontas", "texto", new { setorId = setor.Id, titulo = "Boleto", texto = new string('t', 4001) }),
+        };
+        foreach (var (rota, campo, corpo) in recusas)
+        {
+            var r = await admin.PostAsJsonAsync($"/api/admin/{rota}", corpo);
+            Assert.True(r.StatusCode == HttpStatusCode.BadRequest, $"{rota}.{campo}: {(int)r.StatusCode}");
+            Assert.True((await r.Json()).GetProperty("errors").TryGetProperty(campo, out _), $"{rota}.{campo}");
+        }
+        Assert.Equal(0, await f.Db(i.Id, db => db.Regras.CountAsync()));
+        Assert.Equal(0, await f.Db(i.Id, db => db.RespostasProntas.CountAsync()));
+        Assert.Equal(0, await f.Db(i.Id, db => db.Cursos.CountAsync()));
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/respostas-prontas", new { setorId = setor.Id, titulo = "Boleto", texto = new string('t', 4000) })).StatusCode);
     }
 
     [Fact]

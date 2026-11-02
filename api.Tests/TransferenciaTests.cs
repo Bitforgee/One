@@ -81,10 +81,13 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var c = await Cenario.Criar(f);
         var primeira = new string('p', 121);
-        f.Llm.Devolver(new { tipo = "pergunta", texto = "É o boleto deste semestre?", resumo = new string('r', 600) });
+        // três respostas: o resumo que vale é o último não vazio (o segundo), nem o primeiro nem o vazio
+        f.Llm.Devolver(new { tipo = "pergunta", texto = "É o boleto deste semestre?", resumo = "resumo antigo" });
         var (id, _) = await c.Primeira(primeira);
-        f.Llm.Devolver(new { tipo = "sem_base", texto = "", resumo = "" });
+        f.Llm.Devolver(new { tipo = "sem_base", texto = "", resumo = new string('r', 600) });
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "sim" });
+        f.Llm.Devolver(new { tipo = "sem_base", texto = "", resumo = "" });
+        await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "e agora?" });
 
         var numero = (await (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
         // uma importação posterior muda o semestre da matrícula; o chamado guarda o do momento da transferência
@@ -182,17 +185,29 @@ public class CategoriaOrigemTests(OneFactory f) : IClassFixture<OneFactory>
         var secretaria = await f.Categoria(c.Instituicao, "Secretaria");
         var declaracao = await f.Artigo(c.Instituicao, "Declaração de matrícula", "A declaração de matrícula é emitida pelo Portal do Aluno, no menu Documentos.", categoriaId: secretaria.Id);
         const string trecho = "emitida pelo Portal do Aluno, no menu Documentos";
+        var boleto2 = await f.Artigo(c.Instituicao, "Boleto do financeiro", Cenario.RespostaBoleto, categoriaId: financeiro.Id);
 
-        var casos = new (object saida, string categoria, string origem)[]
+        object Cita(Artigo a, string t, long? categoriaId = null) => new { tipo = "resposta", texto = "Peça pelo portal.", artigoIds = new[] { a.Id }, trechos = new[] { new { artigoId = a.Id, texto = t } }, categoriaId };
+
+        // cada caso é uma conversa com várias respostas; vale sempre a última sugestão válida ou o último artigo citado (AC 60, AC 61)
+        var casos = new (object[] saidas, string categoria, string origem)[]
         {
-            (new { tipo = "pergunta", texto = "É o boleto deste semestre?", categoriaId = financeiro.Id }, "Financeiro", "IA"),
-            (new { tipo = "resposta", texto = "Peça pelo portal.", artigoIds = new[] { declaracao.Id }, trechos = new[] { new { artigoId = declaracao.Id, texto = trecho } }, categoriaId = inativa.Id }, "Secretaria", "ARTIGO"),
-            (new { tipo = "sem_base", texto = "" }, "Não classificado", "PADRAO"),
+            ([new { tipo = "pergunta", texto = "É o boleto deste semestre?", categoriaId = financeiro.Id }], "Financeiro", "IA"),
+            ([new { tipo = "pergunta", texto = "É o boleto?", categoriaId = financeiro.Id }, new { tipo = "pergunta", texto = "É a declaração?", categoriaId = secretaria.Id }, new { tipo = "sem_base", texto = "", categoriaId = inativa.Id }], "Secretaria", "IA"),
+            ([Cita(declaracao, trecho, inativa.Id)], "Secretaria", "ARTIGO"),
+            ([Cita(c.Boleto, Cenario.TrechoBoleto), Cita(declaracao, trecho)], "Secretaria", "ARTIGO"),
+            ([Cita(declaracao, trecho), Cita(boleto2, Cenario.TrechoBoleto)], "Financeiro", "ARTIGO"),
+            ([new { tipo = "sem_base", texto = "" }], "Não classificado", "PADRAO"),
         };
-        foreach (var (saida, categoria, origem) in casos)
+        foreach (var (saidas, categoria, origem) in casos)
         {
-            f.Llm.Devolver(saida);
+            f.Llm.Devolver(saidas[0]);
             var (id, _) = await c.Primeira("preciso de um documento");
+            foreach (var saida in saidas.Skip(1))
+            {
+                f.Llm.Devolver(saida);
+                Assert.Equal(HttpStatusCode.OK, (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "mais detalhes" })).StatusCode);
+            }
             Assert.Equal(HttpStatusCode.Created, (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).StatusCode);
 
             var (ch, atual, original) = await f.Db(c.Instituicao.Id, async db =>

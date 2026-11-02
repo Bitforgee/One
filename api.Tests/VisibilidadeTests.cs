@@ -23,6 +23,7 @@ public class VisibilidadeTests(OneFactory f) : IClassFixture<OneFactory>
         (HttpMethod.Post, $"/api/chamados/{numero}/cancelar", JsonContent.Create(new { motivo = "não" })),
         (HttpMethod.Post, $"/api/chamados/{numero}/encaminhar", JsonContent.Create(new { setorId, motivo = "outro setor" })),
         (HttpMethod.Post, $"/api/chamados/{numero}/reclassificar", JsonContent.Create(new { categoriaId })),
+        (HttpMethod.Post, $"/api/chamados/{numero}/duplicado", JsonContent.Create(new { numeroOriginal = numero })),
     ];
 
     [Fact]

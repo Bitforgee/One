@@ -476,6 +476,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Cri
 
 **C143** - [x] Criar usuário sem papel, ou atendente sem setor, responde 400 (AC 109)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Sem_papel_ou_setor_400"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Campos_invalidos_400"`
 
 **C144** - [x] `PUT /api/admin/usuarios/{id}` com `senhaTemporaria` responde 200 e deixa `deveTrocarSenha` verdadeiro (AC 110)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~UsuarioAdminTests.Senha_temporaria_obriga_troca"`
@@ -509,6 +510,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Renomea
 
 **C154** - [x] Em setores, categorias, cursos, regras e respostas prontas: `POST` responde 201, `GET` 200, `PUT` 200 e `PUT` com id inexistente 404 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Crud_dos_cadastros"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Recusas_dos_cadastros_400"`
 
 **C155** - [x] Nome repetido na instituição para setor, categoria e curso, e título repetido no mesmo setor para resposta pronta, respondem 409 (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~CadastroTests.Nome_repetido_409"`
@@ -542,7 +544,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Nota_inter
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Email_na_transacao_da_acao"`
 
 **C164** - [x] Com o SMTP falhando, cada uma das 5 tentativas soma 1 a `tentativas`, marca a próxima para 2^`tentativas` minutos e grava a falha no log; depois da 5ª o agendador para, grava a desistência no log, e a ação continua gravada (AC 126)
-Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Retry_2_a_n_e_desiste_em_5"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailFalhaTests.Retry_2_a_n_e_desiste_em_5"`
 
 **C165** - [x] Uma resposta pública com um PDF, um JPG e um PNG, o maior com exatamente 10 MB, responde 201 e lista os três anexos na mensagem (AC 127)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Pdf_jpg_png_ate_10mb"`
@@ -805,4 +807,11 @@ estimado em 30k.
   - o lembrete grava um evento `LEMBRETE`, tipo a mais além dos 8 do AC 92
   - o detalhe do chamado traz `setorId` (para as respostas prontas) e `numeroOriginal`; cada mensagem traz a lista de anexos
 - Telas de administração feitas depois do lote 4, sem check próprio no plano: Usuários, Matrículas (importação com confirmação e tabela de erros por linha) e Cadastros (setores, categorias, cursos, regras e respostas prontas, em abas); testes Vitest para a importação, o atendente novo e a regra por coordenação, e as três telas entraram no e2e de 360 px
+- Verificação, rodada 1 (FAIL, `verification.md`), corrigida na rodada 2 com autorização do usuário em 02/11/2026:
+  - mutante F5 sobrevivente (`Transferencia.cs:30`, primeiro em vez do último): `Chamado_guarda_contexto` (C88) passou a ter três resumos e `Origem_da_categoria` (C89), conversas com várias sugestões e vários artigos citados; o mutante agora derruba os dois testes
+  - C164: o filtro da prova apontava `EmailTests`, que não tem esse teste; corrigido para `EmailFalhaTests.Retry_2_a_n_e_desiste_em_5` (correção de seletor autorizada pelo usuário; a afirmação não mudou)
+  - Test policy, linha "entrada que não decide": provas novas `UsuarioAdminTests.Campos_invalidos_400` (em C143) e `CadastroTests.Recusas_dos_cadastros_400` (em C154), uma recusa por campo
+  - 429 em `POST /api/conversas/{id}/mensagens`: asserção a mais em `RateLimitTests.Onze_mensagens_em_60s_429` (C80)
+  - `duplicado` por atendente de outro setor: rota a mais em `VisibilidadeTests.RotasDoChamado` (C97, e por tabela C7)
+  - AC 10, fuso no agendador: o lembrete do 3º dia passa a trazer "desde dd/mm/aaaa hh:mm (horário da instituição)" no fuso da instituição do item, e `AgendadorTests.Item_usa_fuso_nome_e_remetente_da_sua_instituicao` (C13) confere isso em Cuiabá (UTC-4) e São Paulo (UTC-3)
 - Abandonado: nada

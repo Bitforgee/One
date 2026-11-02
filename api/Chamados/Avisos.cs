@@ -25,8 +25,12 @@ public static class Avisos
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero} foi resolvido",
             $"Sua solicitação {c.Numero} foi resolvida:\n\n{texto}\n\nPara confirmar ou rejeitar a resolução (até 7 dias), abra:\n{Link(cfg, i, c)}\n");
 
+    // AC 10: datas no fuso da instituição do item, no formato dd/mm/aaaa hh:mm
+    public static string DataLocal(Instituicao i, DateTime utc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.FindSystemTimeZoneById(i.Fuso)).ToString("dd/MM/yyyy HH:mm");
+
     // AC 145
     public static Task AguardaResposta(OneDb db, IConfiguration cfg, Instituicao i, Chamado c, DateTime agora) =>
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero} aguarda sua resposta",
-            $"O atendimento da solicitação {c.Numero} está esperando uma resposta sua.\n\nPara responder, abra:\n{Link(cfg, i, c)}\n");
+            $"O atendimento da solicitação {c.Numero} está esperando uma resposta sua desde {DataLocal(i, c.AguardandoDesde ?? agora)} (horário da instituição).\n\nPara responder, abra:\n{Link(cfg, i, c)}\n");
 }

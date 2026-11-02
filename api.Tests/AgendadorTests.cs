@@ -122,8 +122,24 @@ public class AgendadorTests(OneFactory f) : IClassFixture<OneFactory>
             });
         }
 
+        // um chamado em AGUARDANDO_ALUNO há 3 dias em cada instituição: o lembrete traz a data no fuso dela
+        var desde = f.Relogio.GetUtcNow().UtcDateTime.AddDays(-3);
+        var lembretes = new List<(Balcao b, string numero, string esperado)>();
+        foreach (var (i, horas) in new[] { (univag, -4), (demo, -3) }) // Cuiabá UTC-4 e São Paulo UTC-3, sem horário de verão desde 2019
+        {
+            var b = await Balcao.Criar(f, i);
+            var numero = await b.Chamado(EstadosChamado.AguardandoAluno);
+            await f.Db(i.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s.SetProperty(c => c.AguardandoDesde, desde)));
+            lembretes.Add((b, numero, desde.AddHours(horas).ToString("dd/MM/yyyy HH:mm")));
+        }
+
         await Agendador.Executar();
 
+        foreach (var (b, numero, esperado) in lembretes)
+        {
+            var corpo = await f.Db(b.Instituicao.Id, db => db.EmailsSaida.Where(e => e.Assunto == $"[{b.Instituicao.Nome}] {numero} aguarda sua resposta").Select(e => e.Corpo).SingleAsync());
+            Assert.Contains($"desde {esperado} (horário da instituição)", corpo);
+        }
         foreach (var (para, i) in destinos)
         {
             var msg = await PrimeiroAcessoTests.EmailNoMailpit(para);
