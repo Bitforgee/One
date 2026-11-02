@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>One.Api</RootNamespace>
     <UserSecretsId>one-api</UserSecretsId>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1502</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

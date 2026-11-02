@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using One.Api;
 using One.Api.Acesso;
 using One.Api.Administracao;
 using One.Api.Assistente;
@@ -14,96 +13,116 @@ using One.Api.Dados;
 using One.Api.Indicadores;
 using One.Api.Instituicoes;
 
-var comando = args is ["instituicao", ..];
-var builder = WebApplication.CreateBuilder(args);
-if (comando) builder.Logging.ClearProviders();
+namespace One.Api;
 
-builder.Services.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()));
-builder.Services.TryAddSingleton(TimeProvider.System);
-builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
-builder.Services.AddSingleton<Email>();
-builder.Services.AddScoped<Assistente>();
-builder.Services.AddSingleton<Embeddings>();
-builder.Services.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));
-builder.Services.AddSingleton<Agendador>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<Agendador>());
-// RAG door R1: chat e embeddings pelo mesmo cliente; o limite de 20 s é do relógio injetado (Embeddings.TempoLimite)
-builder.Services.AddHttpClient("llm", (sp, c) =>
+public class Program
 {
-    var cfg = sp.GetRequiredService<IConfiguration>();
-    c.BaseAddress = new Uri((cfg["Llm:BaseUrl"] ?? "https://api.openai.com/v1").TrimEnd('/') + "/");
-    if (cfg["Llm:ChaveApi"] is { Length: > 0 } chave) c.DefaultRequestHeaders.Authorization = new("Bearer", chave);
-    c.Timeout = Timeout.InfiniteTimeSpan;
-});
-builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
+    public static async Task<int> Main(string[] args)
+    {
+        var comando = args is ["instituicao", ..];
+        var builder = WebApplication.CreateBuilder(args);
+        if (comando) builder.Logging.ClearProviders();
+        Servicos(builder.Services);
+        Seguranca(builder.Services);
 
-builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = c =>
-{
-    var status = c.ProblemDetails.Status ?? c.HttpContext.Response.StatusCode;
-    c.ProblemDetails.Title = Problemas.Titulo(status);
-    if (c.Exception is not null && Problemas.Conflito(c.Exception)) c.ProblemDetails.Detail = Problemas.AlteradoPorOutro;
-    c.ProblemDetails.Detail ??= Problemas.Detalhe(status);
-    c.ProblemDetails.Type ??= $"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/{status}";
-});
+        var app = builder.Build();
 
-// door 14: xmin divergente ou chave única violada por pedido simultâneo viram 409, sem mudar nada
-builder.Services.AddExceptionHandler(o => o.StatusCodeSelector = e => Problemas.Conflito(e) ? 409 : 500);
+        using (var scope = app.Services.CreateScope())
+            scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
-{
-    o.Cookie.Name = "one.auth";
-    o.Cookie.HttpOnly = true;
-    o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    o.Cookie.SameSite = SameSiteMode.Strict;
-    o.ExpireTimeSpan = TimeSpan.FromHours(8);
-    o.SlidingExpiration = true;
-    o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
-    o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
-    o.Events.OnValidatePrincipal = Sessao.Validar;
-});
-builder.Services.AddAuthorization();
+        if (comando)
+            return await InstituicaoComando.Executar(app.Services, args[1..], Console.Out, Console.Error);
 
-builder.Services.AddRateLimiter(o =>
-{
-    o.RejectionStatusCode = 429;
-    o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "",
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:AuthPorMinuto", 5), Window = TimeSpan.FromSeconds(60) }));
-    o.AddPolicy("mensagens", c => RateLimitPartition.GetFixedWindowLimiter(c.User.FindFirstValue("sub") ?? "",
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:MensagensPorMinuto", 10), Window = TimeSpan.FromSeconds(60) }));
-});
+        app.UseExceptionHandler();
+        app.UseStatusCodePages();
+        app.UseStaticFiles();
+        app.UseAuthentication();
+        app.Use(Sessao.ExigirTrocaDeSenha);
+        app.UseAuthorization();
+        app.UseRateLimiter();
+        Rotas(app);
 
-var app = builder.Build();
+        app.Run();
+        return 0;
+    }
 
-using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
+    static void Servicos(IServiceCollection s)
+    {
+        s.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()));
+        s.TryAddSingleton(TimeProvider.System);
+        s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
+        s.AddSingleton<Email>();
+        s.AddScoped<Assistente.Assistente>();
+        s.AddSingleton<Embeddings>();
+        s.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));
+        s.AddSingleton<Agendador>();
+        s.AddHostedService(sp => sp.GetRequiredService<Agendador>());
+        s.AddHttpClient("llm", Llm);
+        s.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
 
-if (comando)
-    return await InstituicaoComando.Executar(app.Services, args[1..], Console.Out, Console.Error);
+        s.AddProblemDetails(o => o.CustomizeProblemDetails = c =>
+        {
+            var status = c.ProblemDetails.Status ?? c.HttpContext.Response.StatusCode;
+            c.ProblemDetails.Title = Problemas.Titulo(status);
+            if (c.Exception is not null && Problemas.Conflito(c.Exception)) c.ProblemDetails.Detail = Problemas.AlteradoPorOutro;
+            c.ProblemDetails.Detail ??= Problemas.Detalhe(status);
+            c.ProblemDetails.Type ??= $"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/{status}";
+        });
 
-app.UseExceptionHandler();
-app.UseStatusCodePages();
-app.UseStaticFiles();
-app.UseAuthentication();
-app.Use(Sessao.ExigirTrocaDeSenha);
-app.UseAuthorization();
-app.UseRateLimiter();
+        // door 14: xmin divergente ou chave única violada por pedido simultâneo viram 409, sem mudar nada
+        s.AddExceptionHandler(o => o.StatusCodeSelector = e => Problemas.Conflito(e) ? 409 : 500);
+    }
 
-var api = app.MapGroup("/api").RequireAuthorization();
-AuthRotas.Mapear(api);
-InstituicaoRotas.Mapear(api);
-ConversaRotas.Mapear(api);
-ChamadoRotas.Mapear(api);
-ArtigoRotas.Mapear(api);
-AdminRotas.Mapear(api);
-IndicadorRotas.Mapear(api);
-DocumentoRotas.Mapear(api);
+    // RAG door R1: chat e embeddings pelo mesmo cliente; o limite de 20 s é do relógio injetado (Embeddings.TempoLimite)
+    static void Llm(IServiceProvider sp, HttpClient c)
+    {
+        var cfg = sp.GetRequiredService<IConfiguration>();
+        c.BaseAddress = new Uri((cfg["Llm:BaseUrl"] ?? "https://api.openai.com/v1").TrimEnd('/') + "/");
+        if (cfg["Llm:ChaveApi"] is { Length: > 0 } chave) c.DefaultRequestHeaders.Authorization = new("Bearer", chave);
+        c.Timeout = Timeout.InfiniteTimeSpan;
+    }
 
-app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
-app.MapFallbackToFile("index.html");
+    static void Seguranca(IServiceCollection s)
+    {
+        s.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
+        {
+            o.Cookie.Name = "one.auth";
+            o.Cookie.HttpOnly = true;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            o.Cookie.SameSite = SameSiteMode.Strict;
+            o.ExpireTimeSpan = TimeSpan.FromHours(8);
+            o.SlidingExpiration = true;
+            o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
+            o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
+            o.Events.OnValidatePrincipal = Sessao.Validar;
+        });
+        s.AddAuthorization();
 
-app.Run();
-return 0;
+        s.AddRateLimiter(o =>
+        {
+            o.RejectionStatusCode = 429;
+            o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:AuthPorMinuto", 5), Window = TimeSpan.FromSeconds(60) }));
+            o.AddPolicy("mensagens", c => RateLimitPartition.GetFixedWindowLimiter(c.User.FindFirstValue("sub") ?? "",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:MensagensPorMinuto", 10), Window = TimeSpan.FromSeconds(60) }));
+        });
+    }
 
-static int Limite(HttpContext c, string chave, int padrao) => c.RequestServices.GetRequiredService<IConfiguration>().GetValue(chave, padrao);
+    static int Limite(HttpContext c, string chave, int padrao) => c.RequestServices.GetRequiredService<IConfiguration>().GetValue(chave, padrao);
 
-public partial class Program;
+    static void Rotas(WebApplication app)
+    {
+        var api = app.MapGroup("/api").RequireAuthorization();
+        AuthRotas.Mapear(api);
+        InstituicaoRotas.Mapear(api);
+        ConversaRotas.Mapear(api);
+        ChamadoRotas.Mapear(api);
+        ArtigoRotas.Mapear(api);
+        AdminRotas.Mapear(api);
+        IndicadorRotas.Mapear(api);
+        DocumentoRotas.Mapear(api);
+
+        app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
+        app.MapFallbackToFile("index.html");
+    }
+}

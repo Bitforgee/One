@@ -31,19 +31,19 @@ Proof: `npm --prefix web run e2e`
 **C2** - Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
 Proof: `python .specs/features/refatoracao-solid/asserts_preservados.py <base>`
 
-**C3** - `npm --prefix web run coverage` sai 0 e grava `web/coverage/lcov.info` não vazio, com `@vitest/coverage-v8` na versão exata do `vitest` (5.0.5) (AC 2, door 1)
+**C3** - [x] `npm --prefix web run coverage` sai 0 e grava `web/coverage/lcov.info` não vazio, com `@vitest/coverage-v8` na versão exata do `vitest` (5.0.5) (AC 2, door 1)
 Proof: `npm --prefix web run coverage && test -s web/coverage/lcov.info`
 
-**C4** - O `crapper` rodado em `web/` depois da cobertura mostra `ChamadoDetalhe` com cobertura acima de 0.0% (AC 3)
+**C4** - [x] O `crapper` rodado em `web/` depois da cobertura mostra `ChamadoDetalhe` com cobertura acima de 0.0% (AC 3)
 Proof: `cd web && crapper --use-existing-coverage -s src | grep -E "^ChamadoDetalhe +[^ ]+ +[0-9]+ +([1-9][0-9.]*|0\.[0-9]*[1-9][0-9]*)%"`
 
-**C5** - Um método plantado com complexidade ciclomática 11 em `api/` faz o `dotnet build` falhar com `CA1502` com o nome do método, e o mesmo método com complexidade 10 compila sem `CA1502` (AC 4, door 2)
+**C5** - [x] Um método plantado com complexidade ciclomática 11 em `api/` faz o `dotnet build` falhar com `CA1502` com o nome do método, e o mesmo método com complexidade 10 compila sem `CA1502` (AC 4, door 2)
 Proof: `bash .specs/features/refatoracao-solid/ca1502_barra.sh`
 
-**C6** - `api/CodeMetricsConfig.txt` contém `CA1502(Method): 10`, o `api/One.Api.csproj` o inclui como `AdditionalFiles` e põe `CA1502` em `WarningsAsErrors`, e o `.editorconfig` da raiz tem `dotnet_diagnostic.CA1502.severity = warning` (door 2)
+**C6** - [x] `api/CodeMetricsConfig.txt` contém `CA1502(Method): 10`, o `api/One.Api.csproj` o inclui como `AdditionalFiles` e põe `CA1502` em `WarningsAsErrors`, e o `.editorconfig` da raiz tem `dotnet_diagnostic.CA1502.severity = warning` (door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Barreira_de_complexidade_configurada"`
 
-**C7** - `.specs/features/refatoracao-solid/baseline.md` existe, foi adicionado num commit anterior ao primeiro commit que move ou altera código de `api/` ou `web/src/`, e traz a contagem de `CA1502` por arquivo no limite 10 e o top 10 do `crapper` do `web/src` com cobertura (AC 5)
+**C7** - [x] `.specs/features/refatoracao-solid/baseline.md` existe, foi adicionado num commit anterior ao primeiro commit que move ou altera código de `api/` ou `web/src/`, e traz a contagem de `CA1502` por arquivo no limite 10 e o top 10 do `crapper` do `web/src` com cobertura (AC 5)
 Proof: `python .specs/features/refatoracao-solid/baseline_antes.py <base>`
 
 ### S2 - Uma decisão em um lugar (P1) · ~22 files · ~130 KB · ~38k
@@ -121,26 +121,26 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Test
 
 ### S4 - O `api/` em fatias verticais, um arquivo por responsabilidade (P1) · ~25 files · ~175 KB · ~30k
 
-**C28** - Nenhum arquivo de `api/Chamados` usa `VersoesArtigo` nem `VersoesDocumento`, e o detalhe do chamado continua mostrando à equipe a fonte citada (artigo ou documento, com o link do PDF da versão citada) e o aviso de versão atualizada (AC 25)
+**C28** - [x] Nenhum arquivo de `api/Chamados` usa `VersoesArtigo` nem `VersoesDocumento`, e o detalhe do chamado continua mostrando à equipe a fonte citada (artigo ou documento, com o link do PDF da versão citada) e o aviso de versão atualizada (AC 25)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Chamados_nao_consulta_versoes"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VersaoCitadaTests"`
 
-**C29** - As pastas de `api/` (sem `bin`, `obj`, `Properties`, `wwwroot`) são exatamente `Acesso`, `Assistente`, `Chamados`, `Conhecimento`, `Indicadores`, `Administracao`, `Instituicoes` e `Dados`; `api/Rotas` e `api/Comando` não existem; na raiz de `api/` só ficam `Program`, `Problemas`, `Sessao`, `Cpf`, `Tokens`, `Email`, `Agendador` e o arquivo dos prazos (AC 26, door 3)
+**C29** - [x] As pastas de `api/` (sem `bin`, `obj`, `Properties`, `wwwroot`) são exatamente `Acesso`, `Assistente`, `Chamados`, `Conhecimento`, `Indicadores`, `Administracao`, `Instituicoes` e `Dados`; `api/Rotas` e `api/Comando` não existem; na raiz de `api/` só ficam `Program`, `Problemas`, `Sessao`, `Cpf`, `Tokens`, `Email`, `Agendador` e o arquivo dos prazos (AC 26, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fatias_do_api"`
 
-**C30** - Cada `.cs` de `api/` fora de `Dados/Migracoes` declara `namespace One.Api` na raiz e `namespace One.Api.<Pasta>` nas pastas (AC 27, door 3)
+**C30** - [x] Cada `.cs` de `api/` fora de `Dados/Migracoes` declara `namespace One.Api` na raiz e `namespace One.Api.<Pasta>` nas pastas (AC 27, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Namespace_igual_a_pasta"`
 
-**C31** - Todo `using One.Api.<Fatia>` dentro de outra fatia está na lista fechada de pares do teste, e a lista só traz pares que existem no código (a lista não pode ter sobra) (AC 28, door 3)
+**C31** - [x] Todo `using One.Api.<Fatia>` dentro de outra fatia está na lista fechada de pares do teste, e a lista só traz pares que existem no código (a lista não pode ter sobra) (AC 28, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Referencias_entre_fatias"`
 
-**C32** - O arquivo de `api/Administracao` que mapeia `POST /api/admin/matriculas/importar` não mapeia nenhuma outra rota (AC 29)
+**C32** - [x] O arquivo de `api/Administracao` que mapeia `POST /api/admin/matriculas/importar` não mapeia nenhuma outra rota (AC 29)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Importacao_em_arquivo_proprio"`
 
-**C33** - Criar um atendente com 2 setores e editar um usuário trocando papéis e setores fazem exatamente 1 `SaveChanges` cada, contados por um interceptor do EF no teste (AC 30)
+**C33** - [x] Criar um atendente com 2 setores e editar um usuário trocando papéis e setores fazem exatamente 1 `SaveChanges` cada, contados por um interceptor do EF no teste (AC 30)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AdminTests.Usuario_grava_uma_vez"`
 
-**C34** - `dotnet build api` termina com 0 avisos e 0 erros `CA1502` no limite 10 (AC 31)
+**C34** - [x] `dotnet build api` termina com 0 avisos e 0 erros `CA1502` no limite 10 (AC 31)
 Proof: `dotnet build api -warnaserror:CA1502`
 
 ### S5 - O `web/` em fatias verticais, telas com CRAP abaixo de 10 (P1) · ~25 files · ~130 KB · ~55k

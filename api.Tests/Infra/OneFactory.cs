@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public LlmFalso Llm { get; } = new();
     public LogCapturado Logs { get; } = new();
     public HasherEspiao Hasher { get; } = new();
+    public ContadorDeGravacoes Gravacoes { get; } = new();
     protected virtual bool LimitesReais => false;
     protected virtual int PortaSmtp => 1025;
     public string? WebRoot { get; set; }
@@ -58,6 +61,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.RemoveAll<IPasswordHasher<Usuario>>();
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
+            s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes));
         });
     }
 
@@ -90,6 +94,26 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     }
 
     public Task Db(long? instituicaoId, Func<OneDb, Task> acao) => Db(instituicaoId, async db => { await acao(db); return 0; });
+}
+
+// refatoracao-solid C33: conta as chamadas de SaveChanges de todos os DbContext do host.
+public class ContadorDeGravacoes : SaveChangesInterceptor
+{
+    int total;
+    public int Total => total;
+    public void Zerar() => Interlocked.Exchange(ref total, 0);
+
+    public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
+    {
+        Interlocked.Increment(ref total);
+        return base.SavingChanges(eventData, result);
+    }
+
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+    {
+        Interlocked.Increment(ref total);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
 }
 
 public class OneFactoryComLimites : OneFactory

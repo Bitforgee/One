@@ -50,6 +50,38 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             }
         Assert.Equal(["Triagem"], await f.Db(i.Id, db => db.Setores.Select(s => s.Nome).ToListAsync()));
     }
+
+    // refatoracao-solid C33: criar um atendente com 2 setores e editar papéis e setores gravam com um SaveChanges cada
+    [Fact]
+    public async Task Usuario_grava_uma_vez()
+    {
+        var (i, admin) = await Admin.Criar(f);
+        var triagem = await f.Db(i.Id, db => db.Setores.SingleAsync());
+        var financeiro = await f.Setor(i, "Financeiro");
+        var secretaria = await f.Setor(i, "Secretaria");
+        var cpf = Semente.NovoCpf();
+        object Corpo(string[] papeis, long[] setores) => new { cpf, nome = "Atendente Novo", email = $"{Guid.NewGuid():N}@univag.edu.br", papeis, setores };
+        Task<(string[], long[])> Gravado(long id) => f.Db(i.Id, async db => (
+            (await db.Usuarios.Include(u => u.Papeis).SingleAsync(u => u.Id == id)).Papeis.Select(p => p.Papel).Order().ToArray(),
+            (await db.AtendenteSetores.Where(a => a.UsuarioId == id).Select(a => a.SetorId).ToListAsync()).Order().ToArray()));
+
+        f.Gravacoes.Zerar();
+        var criado = await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo([Papeis.Atendente], [triagem.Id, financeiro.Id]));
+        Assert.Equal(HttpStatusCode.Created, criado.StatusCode);
+        Assert.Equal(1, f.Gravacoes.Total);
+        var id = (await criado.Json()).GetProperty("id").GetInt64();
+        var (papeis, setores) = await Gravado(id);
+        Assert.Equal([Papeis.Atendente], papeis);
+        Assert.Equal(new[] { triagem.Id, financeiro.Id }.Order(), setores);
+
+        f.Gravacoes.Zerar();
+        var editado = await admin.PutAsJsonAsync($"/api/admin/usuarios/{id}", Corpo([Papeis.Administrador, Papeis.Atendente], [financeiro.Id, secretaria.Id]));
+        Assert.Equal(HttpStatusCode.OK, editado.StatusCode);
+        Assert.Equal(1, f.Gravacoes.Total);
+        (papeis, setores) = await Gravado(id);
+        Assert.Equal(new[] { Papeis.Administrador, Papeis.Atendente }.Order(), papeis);
+        Assert.Equal(new[] { financeiro.Id, secretaria.Id }.Order(), setores);
+    }
 }
 
 public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>

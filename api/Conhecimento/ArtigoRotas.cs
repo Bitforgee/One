@@ -46,15 +46,28 @@ public static class ArtigoRotas
     // AC 99 e 100: título, ao menos uma pergunta, categoria e resposta; links só http(s).
     static async Task<IResult?> Validar(OneDb db, ArtigoIn i)
     {
+        if (TituloEPerguntas(i) is { } erro) return erro;
+        if (!await db.Categorias.AnyAsync(c => c.Id == i.CategoriaId)) return Problemas.Invalido("Escolha uma categoria.", "categoriaId");
+        return RespostaLinksEValidade(i);
+    }
+
+    static IResult? TituloEPerguntas(ArtigoIn i)
+    {
         if (string.IsNullOrWhiteSpace(i.Titulo) || i.Titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
         if (i.Perguntas is null || !i.Perguntas.Any(p => !string.IsNullOrWhiteSpace(p))) return Problemas.Invalido("Informe ao menos uma pergunta relacionada.", "perguntas");
-        if (!await db.Categorias.AnyAsync(c => c.Id == i.CategoriaId)) return Problemas.Invalido("Escolha uma categoria.", "categoriaId");
+        return null;
+    }
+
+    static IResult? RespostaLinksEValidade(ArtigoIn i)
+    {
         if (string.IsNullOrWhiteSpace(i.Resposta) || i.Resposta.Length > 8000) return Problemas.Invalido("Informe a resposta, com até 8000 caracteres.", "resposta");
-        if ((i.Links ?? []).Any(l => !Uri.TryCreate(l, UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https")))
+        if ((i.Links ?? []).Any(LinkInvalido))
             return Problemas.Invalido("Todo link deve começar com https:// ou http://.", "links");
         if (i.VisivelDe > i.VisivelAte) return Problemas.Invalido("O início da validade deve ser anterior ou igual ao fim.", "visivelDe"); // AC 150
         return null;
     }
+
+    static bool LinkInvalido(string l) => !Uri.TryCreate(l, UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https");
 
     static VersaoArtigo Versao(ArtigoIn i, int numero, DateTime agora) => new()
     {

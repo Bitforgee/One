@@ -84,66 +84,73 @@ public static class DocumentoRotas
 
     public static void MapearAdmin(RouteGroupBuilder admin)
     {
-        admin.MapGet("/documentos", async (OneDb db) =>
-        {
-            var lista = new List<object>();
-            foreach (var d in await db.Documentos.ComUltimaVersao().OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
-                lista.Add(await Saida(db, d));
-            return Results.Ok(lista);
-        });
-
-        admin.MapPost("/documentos", async (HttpRequest req, OneDb db, TimeProvider relogio) =>
-        {
-            var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
-            var titulo = form["titulo"].ToString();
-            if (string.IsNullOrWhiteSpace(titulo) || titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
-            if (!long.TryParse(form["categoriaId"], out var categoriaId) || !await db.Categorias.AnyAsync(c => c.Id == categoriaId && c.Ativa))
-                return Problemas.Invalido("Escolha uma categoria ativa.", "categoriaId");
-            var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
-            if (erro is not null) return erro;
-
-            var d = new Documento { Titulo = titulo, CategoriaId = categoriaId };
-            d.Versoes.Add(Versao(db, pdf!, 1, relogio.GetUtcNow().UtcDateTime));
-            db.Documentos.Add(d);
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, d));
-        });
-
+        admin.MapGet("/documentos", Listar);
+        admin.MapPost("/documentos", Criar);
         // AC 19 e AC 20: versão nova só em documento ATIVO; as anteriores ficam guardadas
-        admin.MapPost("/documentos/{id:long}/versoes", async (long id, HttpRequest req, OneDb db, TimeProvider relogio) =>
-        {
-            var d = await Ler(db, id);
-            if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
-            var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
-            var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
-            if (erro is not null) return erro;
-            if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento está arquivado.");
+        admin.MapPost("/documentos/{id:long}/versoes", NovaVersao);
+        admin.MapPost("/documentos/{id:long}/arquivar", Arquivar);
+    }
 
-            d.Versoes.Add(Versao(db, pdf!, d.Ultima().Numero + 1, relogio.GetUtcNow().UtcDateTime));
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, id) ?? d));
-        });
+    static async Task<IResult> Listar(OneDb db)
+    {
+        var lista = new List<object>();
+        foreach (var d in await db.Documentos.ComUltimaVersao().OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
+            lista.Add(await Saida(db, d));
+        return Results.Ok(lista);
+    }
 
-        admin.MapPost("/documentos/{id:long}/arquivar", async (long id, OneDb db) =>
-        {
-            var d = await Ler(db, id);
-            if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
-            if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento já está arquivado.");
-            d.Estado = EstadosDocumento.Arquivado;
-            await db.SaveChangesAsync();
-            return Results.Ok(await Saida(db, d));
-        });
+    static async Task<IResult> Criar(HttpRequest req, OneDb db, TimeProvider relogio)
+    {
+        var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
+        var titulo = form["titulo"].ToString();
+        if (string.IsNullOrWhiteSpace(titulo) || titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
+        if (!long.TryParse(form["categoriaId"], out var categoriaId) || !await db.Categorias.AnyAsync(c => c.Id == categoriaId && c.Ativa))
+            return Problemas.Invalido("Escolha uma categoria ativa.", "categoriaId");
+        var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
+        if (erro is not null) return erro;
+
+        var d = new Documento { Titulo = titulo, CategoriaId = categoriaId };
+        d.Versoes.Add(Versao(db, pdf!, 1, relogio.GetUtcNow().UtcDateTime));
+        db.Documentos.Add(d);
+        await db.SaveChangesAsync();
+        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, d));
+    }
+
+    static async Task<IResult> NovaVersao(long id, HttpRequest req, OneDb db, TimeProvider relogio)
+    {
+        var d = await Ler(db, id);
+        if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
+        var form = req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty;
+        var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
+        if (erro is not null) return erro;
+        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento está arquivado.");
+
+        d.Versoes.Add(Versao(db, pdf!, d.Ultima().Numero + 1, relogio.GetUtcNow().UtcDateTime));
+        await db.SaveChangesAsync();
+        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, id) ?? d));
+    }
+
+    static async Task<IResult> Arquivar(long id, OneDb db)
+    {
+        var d = await Ler(db, id);
+        if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
+        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento já está arquivado.");
+        d.Estado = EstadosDocumento.Arquivado;
+        await db.SaveChangesAsync();
+        return Results.Ok(await Saida(db, d));
+    }
+
+    static async Task<IResult> Baixar(long id, HttpContext ctx, OneDb db)
+    {
+        var u = ctx.Usuario();
+        if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Documento não encontrado.");
+        var v = await db.VersoesDocumento.Where(x => x.Id == id).Select(x => new { x.Conteudo, x.NomeArquivo }).FirstOrDefaultAsync();
+        return v is null ? Problemas.Erro(404, "Documento não encontrado.") : Results.File(v.Conteudo, "application/pdf", v.NomeArquivo);
     }
 
     // AC 21 e AC 22: só atendente e administrador baixam a versão citada; para os demais ela "não existe"
     public static void Mapear(RouteGroupBuilder api)
     {
-        api.MapGet("/documentos/versoes/{id:long}", async (long id, HttpContext ctx, OneDb db) =>
-        {
-            var u = ctx.Usuario();
-            if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Documento não encontrado.");
-            var v = await db.VersoesDocumento.Where(x => x.Id == id).Select(x => new { x.Conteudo, x.NomeArquivo }).FirstOrDefaultAsync();
-            return v is null ? Problemas.Erro(404, "Documento não encontrado.") : Results.File(v.Conteudo, "application/pdf", v.NomeArquivo);
-        });
+        api.MapGet("/documentos/versoes/{id:long}", Baixar);
     }
 }

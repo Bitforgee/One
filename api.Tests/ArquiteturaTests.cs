@@ -183,7 +183,11 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         int Leituras(string chave) => CodigoApi().Sum(p => Regex.Matches(File.ReadAllText(p), Regex.Escape($"\"{chave}\"")).Count);
         foreach (var chave in new[] { "Llm:BaseUrl", "Llm:ChaveApi", "App:UrlBase" })
             Assert.True(Leituras(chave) == 1, $"{chave} lida {Leituras(chave)} vezes");
-        var registro = Regex.Match(File.ReadAllText(Path.Combine(Api, "Program.cs")), @"AddHttpClient\(""llm"".*?\}\);", RegexOptions.Singleline).Value;
+        // o registro do cliente "llm" passa um método nomeado; as duas chaves são lidas dentro dele
+        var program = File.ReadAllText(Path.Combine(Api, "Program.cs"));
+        var metodo = Regex.Match(program, @"AddHttpClient\(""llm"", (\w+)\)").Groups[1].Value;
+        Assert.NotEqual("", metodo);
+        var registro = Regex.Match(program, $@"static void {metodo}\(IServiceProvider \w+, HttpClient \w+\)\s*\{{.*?\n    \}}", RegexOptions.Singleline).Value;
         Assert.Contains("\"Llm:BaseUrl\"", registro);
         Assert.Contains("\"Llm:ChaveApi\"", registro);
     }
@@ -244,5 +248,83 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             ("lembrete", "Prazos:LembreteAguardandoDias", "3 dias"), ("resolver aguardando", "Prazos:ResolverAguardandoDias", "7 dias"),
         })
             Assert.True(linhas.Any(l => l.Contains($"prazo de {prazo}") && l.Contains($"`{chave}`") && l.Contains(padrao) && Significado(l).Length >= 10), prazo);
+    }
+
+    // C6: door 2, a barreira de complexidade 10 no build do api/
+    [Fact]
+    public void Barreira_de_complexidade_configurada()
+    {
+        Assert.Contains("CA1502(Method): 10", File.ReadAllLines(Path.Combine(Api, "CodeMetricsConfig.txt")).Select(l => l.Trim()));
+        var projeto = System.Xml.Linq.XDocument.Load(Path.Combine(Api, "One.Api.csproj"));
+        Assert.Contains(projeto.Descendants("AdditionalFiles"), e => (string?)e.Attribute("Include") == "CodeMetricsConfig.txt");
+        Assert.Contains(projeto.Descendants("WarningsAsErrors"), e => e.Value.Split(';').Select(x => x.Trim()).Contains("CA1502"));
+        Assert.Matches(@"(?m)^\s*dotnet_diagnostic\.CA1502\.severity\s*=\s*warning\s*$", File.ReadAllText(Path.Combine(Raiz(), ".editorconfig")));
+    }
+
+    static readonly string[] Fatias = ["Acesso", "Assistente", "Chamados", "Conhecimento", "Indicadores", "Administracao", "Instituicoes"];
+
+    static IEnumerable<string> DaPasta(string pasta) => Directory.EnumerateFiles(Path.Combine(Api, pasta), "*.cs", SearchOption.AllDirectories);
+
+    // C28
+    [Fact]
+    public void Chamados_nao_consulta_versoes() =>
+        Assert.Empty(ArquivosQue(new Regex(@"\bVersoes(Artigo|Documento)\b"), DaPasta("Chamados")));
+
+    // C29: door 3, as 7 fatias e o compartilhado (Dados e os arquivos da raiz)
+    [Fact]
+    public void Fatias_do_api()
+    {
+        var pastas = Directory.GetDirectories(Api).Select(Path.GetFileName).Except(["bin", "obj", "Properties", "wwwroot"]).Order();
+        Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
+        Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
+        Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
+        Assert.Equal(["Agendador", "Cpf", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
+            Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
+    }
+
+    // C30
+    [Fact]
+    public void Namespace_igual_a_pasta()
+    {
+        foreach (var arquivo in CodigoApi())
+        {
+            var pasta = Path.GetRelativePath(Api, Path.GetDirectoryName(arquivo)!);
+            var esperado = pasta == "." ? "One.Api" : "One.Api." + pasta.Replace(Path.DirectorySeparatorChar, '.');
+            var declarados = Regex.Matches(SemComentarios(arquivo), @"^namespace\s+([\w.]+)\s*[;{]", RegexOptions.Multiline).Select(m => m.Groups[1].Value);
+            Assert.True(declarados.SequenceEqual([esperado]), $"{Relativo(arquivo)}: [{string.Join(", ", declarados)}], esperado {esperado}");
+        }
+    }
+
+    // C31: door 3, uma fatia só usa outra pelos pares desta lista, e a lista não tem par que o código não usa
+    static readonly (string de, string para)[] ReferenciasEntreFatias =
+    [
+        ("Administracao", "Acesso"), ("Administracao", "Conhecimento"),
+        ("Assistente", "Chamados"), ("Assistente", "Conhecimento"),
+        ("Chamados", "Assistente"), ("Chamados", "Conhecimento"),
+        ("Indicadores", "Assistente"), ("Indicadores", "Conhecimento"),
+        ("Instituicoes", "Assistente"), ("Instituicoes", "Conhecimento"),
+    ];
+
+    [Fact]
+    public void Referencias_entre_fatias()
+    {
+        var usadas = new HashSet<(string, string)>();
+        foreach (var de in Fatias)
+            foreach (var arquivo in DaPasta(de))
+            {
+                var codigo = SemComentarios(arquivo);
+                foreach (var para in Fatias.Where(f => f != de))
+                    if (Regex.IsMatch(codigo, $@"using\s+(static\s+)?One\.Api\.{para}\b|(?<![\w.])(One\.Api\.)?{para}\.[A-Z]"))
+                        usadas.Add((de, para));
+            }
+        Assert.Equal(ReferenciasEntreFatias.Order(), usadas.Order());
+    }
+
+    // C32: a rota de importação de matrículas (POST /api/admin/matriculas/importacao) mora num arquivo que não mapeia outra
+    [Fact]
+    public void Importacao_em_arquivo_proprio()
+    {
+        var arquivo = Assert.Single(DaPasta("Administracao"), p => File.ReadAllText(p).Contains("\"/matriculas/importacao\""));
+        Assert.Single(Regex.Matches(SemComentarios(arquivo), @"\.Map\w*\("));
     }
 }

@@ -77,12 +77,43 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             string.Join(",", fontes.Select(f => f.Distancia.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))),
             (long)relogio.GetElapsedTime(inicioBusca).TotalMilliseconds);
 
+        var corpo = await Corpo(conversa, modelo, fontes);
+        var inicio = relogio.GetTimestamp();
+        var (saida, motivoDoProvedor, uso) = await Chamar(corpo);
+        var (tipoFinal, motivo, citacoes) = motivoDoProvedor is null ? Classificar(saida!, fontes, conversa) : (Tipos.SemBase, motivoDoProvedor, []);
+
+        if (motivo is not null)
+            log.LogWarning("Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", motivo, conversa.InstituicaoId, conversa.Id);
+        log.LogInformation(
+            "Chamada ao provedor de IA: instituicao={InstituicaoId} modelo={Modelo} duracaoMs={DuracaoMs} entradaComCache={EntradaComCache} entradaSemCache={EntradaSemCache} saida={TokensSaida} tipoDevolvido={TipoDevolvido} tipoFinal={TipoFinal} artigos={Artigos}",
+            conversa.InstituicaoId, modelo, (long)relogio.GetElapsedTime(inicio).TotalMilliseconds, uso.ComCache, uso.SemCache, uso.Saida,
+            saida?.Tipo, tipoFinal, ArtigosCitados(saida, fontes));
+
+        return new MensagemConversa
+        {
+            Autor = Autor,
+            Texto = TextoFinal(tipoFinal, saida),
+            TipoDevolvido = saida?.Tipo,
+            TipoFinal = tipoFinal,
+            Modelo = modelo,
+            CategoriaIdSugerida = saida?.CategoriaId,
+            Resumo = saida?.Resumo,
+            CriadaEm = relogio.GetUtcNow().UtcDateTime,
+            Citacoes = citacoes,
+            TrechosBuscados = fontes.Select(f => f.Id).ToList(),
+        };
+    }
+
+    static string ArtigosCitados(SaidaModelo? saida, List<Fonte> fontes) =>
+        string.Join(",", (saida?.FonteIds ?? []).Select(id => fontes.FirstOrDefault(f => f.Id == id)?.ArtigoId).OfType<long>());
+
+    // RAG, door R1: corpo do Chat Completions da OpenAI, sem max_tokens nem temperature (pergunta 1 do plano)
+    async Task<object> Corpo(Conversa conversa, string modelo, List<Fonte> fontes)
+    {
         var categorias = await db.Categorias.Where(c => c.Ativa).OrderBy(c => c.Id).Select(c => new { id = c.Id, nome = c.Nome }).ToListAsync();
         var historico = conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10)
             .Select(m => new { role = m.Autor == Autor ? "assistant" : "user", content = Mascara.Aplicar(m.Texto) });
-
-        // RAG, door R1: corpo do Chat Completions da OpenAI, sem max_tokens nem temperature (pergunta 1 do plano)
-        var corpo = new
+        return new
         {
             model = modelo,
             messages = new object[]
@@ -95,59 +126,33 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             max_completion_tokens = 800,
             reasoning_effort = "none",
         };
-
-        var inicio = relogio.GetTimestamp();
-        var (saida, motivo, uso) = await Chamar(corpo);
-
-        var citacoes = new List<CitacaoArtigo>();
-        var tipoFinal = Tipos.SemBase;
-        if (motivo is null)
-        {
-            switch (saida!.Tipo)
-            {
-                case Tipos.Resposta:
-                    (citacoes, motivo) = Conferir(saida, fontes);
-                    if (motivo is null) tipoFinal = Tipos.Resposta;
-                    break;
-                case Tipos.Pergunta:
-                    var ultimas = conversa.Mensagens.Where(m => m.Autor == Autor).OrderByDescending(m => m.Id).Take(2).Select(m => m.TipoFinal).ToList();
-                    if (Pergunta.Aceita(saida.Texto, ultimas))
-                        tipoFinal = Tipos.Pergunta;
-                    else motivo = "pergunta_invalida";
-                    break;
-                case Tipos.Transferir:
-                    tipoFinal = Tipos.Transferir;
-                    break;
-            }
-        }
-
-        if (motivo is not null)
-            log.LogWarning("Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", motivo, conversa.InstituicaoId, conversa.Id);
-        log.LogInformation(
-            "Chamada ao provedor de IA: instituicao={InstituicaoId} modelo={Modelo} duracaoMs={DuracaoMs} entradaComCache={EntradaComCache} entradaSemCache={EntradaSemCache} saida={TokensSaida} tipoDevolvido={TipoDevolvido} tipoFinal={TipoFinal} artigos={Artigos}",
-            conversa.InstituicaoId, modelo, (long)relogio.GetElapsedTime(inicio).TotalMilliseconds, uso.ComCache, uso.SemCache, uso.Saida,
-            saida?.Tipo, tipoFinal, string.Join(",", (saida?.FonteIds ?? []).Select(id => fontes.FirstOrDefault(f => f.Id == id)?.ArtigoId).OfType<long>()));
-
-        return new MensagemConversa
-        {
-            Autor = Autor,
-            Texto = tipoFinal switch
-            {
-                Tipos.Resposta => saida!.Texto!,
-                Tipos.Pergunta => saida!.Texto!.Trim(),
-                Tipos.Transferir => Textos.Transferir,
-                _ => Textos.SemBase,
-            },
-            TipoDevolvido = saida?.Tipo,
-            TipoFinal = tipoFinal,
-            Modelo = modelo,
-            CategoriaIdSugerida = saida?.CategoriaId,
-            Resumo = saida?.Resumo,
-            CriadaEm = relogio.GetUtcNow().UtcDateTime,
-            Citacoes = citacoes,
-            TrechosBuscados = fontes.Select(f => f.Id).ToList(),
-        };
     }
+
+    // O tipo que o aluno vê para uma saída válida do provedor; com motivo, ela vira sem_base.
+    static (string, string?, List<CitacaoArtigo>) Classificar(SaidaModelo saida, List<Fonte> fontes, Conversa conversa)
+    {
+        switch (saida.Tipo)
+        {
+            case Tipos.Resposta:
+                var (citacoes, motivo) = Conferir(saida, fontes);
+                return (motivo is null ? Tipos.Resposta : Tipos.SemBase, motivo, citacoes);
+            case Tipos.Pergunta:
+                var ultimas = conversa.Mensagens.Where(m => m.Autor == Autor).OrderByDescending(m => m.Id).Take(2).Select(m => m.TipoFinal).ToList();
+                return Pergunta.Aceita(saida.Texto, ultimas) ? (Tipos.Pergunta, null, []) : (Tipos.SemBase, "pergunta_invalida", []);
+            case Tipos.Transferir:
+                return (Tipos.Transferir, null, []);
+            default:
+                return (Tipos.SemBase, null, []);
+        }
+    }
+
+    static string TextoFinal(string tipoFinal, SaidaModelo? saida) => tipoFinal switch
+    {
+        Tipos.Resposta => saida!.Texto!,
+        Tipos.Pergunta => saida!.Texto!.Trim(),
+        Tipos.Transferir => Textos.Transferir,
+        _ => Textos.SemBase,
+    };
 
     // door 19 contra o trecho de fonte citado (AC 11 e AC 12): só fontes buscadas; trecho literal no texto da fonte; links do artigo de origem
     static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<Fonte> buscadas)
@@ -158,9 +163,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         if (string.IsNullOrWhiteSpace(saida.Texto)) return ([], "texto_vazio");
 
         var trechos = saida.Trechos ?? [];
-        var trechosConferem = trechos.All(t => citadas.FirstOrDefault(f => f!.Id == t.FonteId) is { } f && Conferencia.TrechoConfere(t.Texto, f.Texto))
-            && citadas.All(f => trechos.Any(t => t.FonteId == f!.Id));
-        if (!trechosConferem) return ([], "trecho_invalido");
+        if (!TrechosConferem(trechos, citadas!)) return ([], "trecho_invalido");
         if (!Conferencia.LinksConferem(saida.Texto, citadas.SelectMany(f => f!.Links))) return ([], "link_invalido");
 
         return (citadas.Select(f => new CitacaoArtigo
@@ -169,6 +172,11 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             Trechos = trechos.Where(t => t.FonteId == f.Id).Select(t => t.Texto!).ToList(),
         }).ToList(), null);
     }
+
+    // Todo trecho é literal numa fonte citada, e toda fonte citada tem trecho.
+    static bool TrechosConferem(List<Trecho> trechos, List<Fonte> citadas) =>
+        trechos.All(t => citadas.FirstOrDefault(f => f.Id == t.FonteId) is { } f && Conferencia.TrechoConfere(t.Texto, f.Texto))
+            && citadas.All(f => trechos.Any(t => t.FonteId == f.Id));
 
     record struct Uso(int ComCache, int SemCache, int Saida);
 
