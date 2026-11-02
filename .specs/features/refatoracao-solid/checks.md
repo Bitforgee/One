@@ -246,5 +246,4 @@ este `plan.md` (~22 KB) e este `checks.md` (~25 KB), cerca de 12k, e a infraestr
   S5 (`web/`, 55k + 22k = 77k), só depois do lote 1 verde
 - Mechanism: handoff em 2 lotes sequenciais (lote 1 = S1 a S4, lote 2 = S5, só com o lote 1
   verde) - escolha do usuário em 02/11/2026
-- Feature base (`<base>`): pendente - o commit do `main` em que o build começar, depois de a
-  verificação do `rag` aprovar
+- Feature base (`<base>`): `c267db8` (docs: plano e checks congelados), no `main`, depois de a verificação do `rag` aprovar
