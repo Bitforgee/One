@@ -232,6 +232,26 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("já tem regra", repetida.erro);
         Assert.Equal(depois, await Contagens());
 
+        // curso e categoria que já existem na instituição (door 20: contra o arquivo e o que já existe)
+        var comCurso = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
+        File.WriteAllText(comCurso, "{\"cursos\":[{\"nome\":\"Direito\"}]}");
+        Assert.Equal(0, (await Rodar("carga", "--slug", slug, "--arquivo", comCurso)).codigo);
+        var antesDosRepetidos = await Contagens();
+        foreach (var (json, caminho) in new[]
+        {
+            ("{\"cursos\":[{\"nome\":\"Direito\"}]}", "cursos[0].nome"),
+            ("{\"categorias\":[{\"nome\":\"Não classificado\"}]}", "categorias[0].nome"),
+        })
+        {
+            var arquivo = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
+            File.WriteAllText(arquivo, json);
+            var (codigo, _, erro) = await Rodar("carga", "--slug", slug, "--arquivo", arquivo);
+            Assert.True(codigo == 1, $"{caminho}: saiu {codigo}");
+            Assert.StartsWith(caminho, erro);
+            Assert.Contains("repetid", erro);
+        }
+        Assert.Equal(antesDosRepetidos, await Contagens());
+
         // subcomando desconhecido ou ausente: uso e código 1
         foreach (var args in new[] { new[] { "apagar" }, Array.Empty<string>() })
         {

@@ -98,6 +98,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: sessão 02/11, git checkout depois de mutação (processo)
 - last seen: 2026-11-02T16:30:36Z
 
+### L-015 - Recusa de nome repetido que confere o arquivo e o que já existe na instituição precisa de um caso para cada origem; o caso só dentro do arquivo deixa a semente do banco sem teste.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/comando` · harmful: 0
+- features: mvp-one
+- evidence: api/Comando/InstituicaoComando.cs:111 (api/comando)
+- last seen: 2026-11-02T16:43:25Z
+
+### L-016 - Ao corrigir uma recusa num laço da carga, aplique o mesmo caso às recusas irmãs do mesmo formato (setor, categoria, curso) contra o que já existe na instituição.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `api/comando` · harmful: 0
+- features: mvp-one
+- evidence: api/Comando/InstituicaoComando.cs:107 (api/comando)
+- last seen: 2026-11-02T16:43:25Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

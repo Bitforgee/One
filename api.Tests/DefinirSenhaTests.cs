@@ -58,10 +58,12 @@ public class DefinirSenhaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NoContent, (await f.Cliente().PostAsJsonAsync("/api/auth/definir-senha", new { token = usado, novaSenha = "primeira-senha" })).StatusCode);
         var (iDesativado, uDesativado, deContaDesativada) = await ComToken();
         await f.Db(iDesativado.Id, db => db.Usuarios.Where(u => u.Id == uDesativado.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.Ativo, false)));
+        var (iInativa, _, deInstituicaoInativa) = await ComToken();
+        await f.Db(null, db => db.Instituicoes.Where(x => x.Id == iInativa.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativa, false)));
         var (iVencido, _, vencido) = await ComToken();
         f.Relogio.Advance(TimeSpan.FromMinutes(61));
 
-        foreach (var token in new[] { usado, vencido, iVencido.Slug + ".nao-existe", "qualquer-coisa", deContaDesativada })
+        foreach (var token in new[] { usado, vencido, iVencido.Slug + ".nao-existe", "qualquer-coisa", deContaDesativada, deInstituicaoInativa })
         {
             var r = await f.Cliente().PostAsJsonAsync("/api/auth/definir-senha", new { token, novaSenha = "outra-senha-boa" });
             Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);

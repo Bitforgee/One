@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 15,
+  "next_id": 17,
   "lessons": [
     {
       "id": "L-001",
@@ -256,6 +256,42 @@
       ],
       "created": "2026-11-02T16:30:36Z",
       "last_seen": "2026-11-02T16:30:36Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::recusa de nome repetido que confere o arquivo e o que ja existe na instituicao precisa de um caso para cada origem o caso so dentro do arquivo deixa a semente do banco sem teste",
+      "text": "Recusa de nome repetido que confere o arquivo e o que já existe na instituição precisa de um caso para cada origem; o caso só dentro do arquivo deixa a semente do banco sem teste.",
+      "signal": "surviving_mutant",
+      "scope": "api/comando",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Comando/InstituicaoComando.cs:111 (api/comando)"
+      ],
+      "created": "2026-11-02T16:43:25Z",
+      "last_seen": "2026-11-02T16:43:25Z"
+    },
+    {
+      "id": "L-016",
+      "key": "ac_gap::ao corrigir uma recusa num laco da carga aplique o mesmo caso as recusas irmas do mesmo formato setor categoria curso contra o que ja existe na instituicao",
+      "text": "Ao corrigir uma recusa num laço da carga, aplique o mesmo caso às recusas irmãs do mesmo formato (setor, categoria, curso) contra o que já existe na instituição.",
+      "signal": "ac_gap",
+      "scope": "api/comando",
+      "status": "candidate",
+      "features": [
+        "mvp-one"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Comando/InstituicaoComando.cs:107 (api/comando)"
+      ],
+      "created": "2026-11-02T16:43:25Z",
+      "last_seen": "2026-11-02T16:43:25Z"
     }
   ]
 }
