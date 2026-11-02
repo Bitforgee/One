@@ -27,11 +27,11 @@ que cada `--filter` desta lista executa pelo menos 1 teste. Os 3 scripts novos f
 
 ### S1 - Rede de segurança antes de mexer (P1) · ~10 files · ~45 KB · ~11k
 
-**C1** - A suíte da API e a suíte e2e que existem em `<base>` passam em cada commit desta feature (AC 1)
+**C1** - [x] A suíte da API e a suíte e2e que existem em `<base>` passam em cada commit desta feature (AC 1)
 Proof: `dotnet test api.Tests`
 Proof: `npm --prefix web run e2e`
 
-**C2** - Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
+**C2** - [x] Nenhuma asserção existente em `<base>` foi removida, alterada ou pulada: toda linha removida com `Assert`, `expect(` ou `toBe`/`toHave` em `api.Tests/**/*.cs`, `web/src/**/*.test.tsx` e `web/e2e/**` reaparece idêntica (espaços normalizados) como linha adicionada, e nenhuma linha adicionada traz `Skip =`, `.skip(` nem `.only(` (AC 1)
 Proof: `python .specs/features/refatoracao-solid/asserts_preservados.py <base>`
 
 **C3** - [x] O retrato `api.Tests/Retratos/rotas.txt` tem 61 linhas, uma por endpoint do `EndpointDataSource` na ordem de registro, cada uma com o método HTTP, o `RoutePattern.RawText`, a presença de `IAllowAnonymous`, a presença de `IAuthorizeData` e o nome da política de `EnableRateLimitingAttribute`: 59 rotas com exatamente 1 método, mais os 2 fallbacks de `Program.Rotas` (`/api/{**resto}` e o do `MapFallbackToFile`); 5 com `IAllowAnonymous` (`/api/auth/login`, `/api/auth/primeiro-acesso`, `/api/auth/definir-senha`, `/api/auth/logout`, `/api/instituicoes/{slug}`); 59 com `IAuthorizeData`; política `auth` em 2 (`/api/auth/login`, `/api/auth/primeiro-acesso`) e `mensagens` em 3 (`/api/conversas`, `/api/conversas/{id:long}/mensagens`, `/api/atendimento-direto`). A tabela viva do app é igual ao retrato linha a linha, na mesma sequência (AC 2)
@@ -56,26 +56,26 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Medi
 **C8** - [x] Um arquivo plantado em `api/` com `public sealed record MensagemPlantada : Mediator.IRequest<IResult>` e sem handler faz `dotnet build api --no-incremental` sair com código diferente de 0 e a saída conter `error MSG0005`; o mesmo arquivo com um `MensagemPlantadaHandler : IRequestHandler<MensagemPlantada, IResult>` compila com código 0 e sem `MSG0005`; o arquivo plantado sai no fim (AC 6, door 1)
 Proof: `bash .specs/features/vertical-slice-completa/msg0005_barra.sh`
 
-**C9** - Com o app do teste: `IMediator` resolvido 2 vezes no mesmo escopo de `f.Services` é a mesma instância, e resolvido em 2 escopos diferentes são 2 instâncias diferentes; `AcessoChamado` segue a mesma regra (AC 7, door 2)
+**C9** - [x] Com o app do teste: `IMediator` resolvido 2 vezes no mesmo escopo de `f.Services` é a mesma instância, e resolvido em 2 escopos diferentes são 2 instâncias diferentes; `AcessoChamado` segue a mesma regra (AC 7, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MediatorTests.Um_mediator_por_escopo"`
 
-**C10** - Um aluno e uma equipe da instituição Demo recebem 404 em cada uma das 30 rotas com `{id}` ou `{numero}` quando o id ou número existe só na Univag, e nada da Univag muda; `numeroOriginal`, `categoriaId`, `setorId` e `matriculaId` (transferir e atendimento direto) de outra instituição no corpo continuam 400 (AC 8)
+**C10** - [x] Um aluno e uma equipe da instituição Demo recebem 404 em cada uma das 30 rotas com `{id}` ou `{numero}` quando o id ou número existe só na Univag, e nada da Univag muda; `numeroOriginal`, `categoriaId`, `setorId` e `matriculaId` (transferir e atendimento direto) de outra instituição no corpo continuam 400 (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Recurso_de_outra_instituicao_404"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Documento_de_outra_instituicao_404"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~IsolamentoTests.Id_de_outra_instituicao_no_corpo_400"`
 
 ### S3 - Um arquivo por caso de uso (P1) · ~70 files · ~213 KB · ~53k
 
-**C11** - Os tipos concretos do assembly `One.Api` que implementam `Mediator.IRequest<T>` (qualquer `T`, direto ou por `IAcaoChamado`) são exatamente 58: `Acesso` 6, `Assistente` 7, `Chamados` 13, `Conhecimento` 11, `Indicadores` 1, `Administracao` 20, `Instituicoes` 0. Cada tipo `X` tem namespace `One.Api.<Fatia>` e o arquivo `api/<Fatia>/X.cs` existe, declara exatamente 1 tipo com `IRequest<` ou `IAcaoChamado` na lista de bases e declara `public static void Mapear(RouteGroupBuilder`; nenhum `X` tem o nome de uma das 7 fatias (AC 9, door 3)
+**C11** - [x] Os tipos concretos do assembly `One.Api` que implementam `Mediator.IRequest<T>` (qualquer `T`, direto ou por `IAcaoChamado`) são exatamente 58: `Acesso` 6, `Assistente` 7, `Chamados` 13, `Conhecimento` 11, `Indicadores` 1, `Administracao` 20, `Instituicoes` 0. Cada tipo `X` tem namespace `One.Api.<Fatia>` e o arquivo `api/<Fatia>/X.cs` existe, declara exatamente 1 tipo com `IRequest<` ou `IAcaoChamado` na lista de bases e declara `public static void Mapear(RouteGroupBuilder`; nenhum `X` tem o nome de uma das 7 fatias (AC 9, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Um_arquivo_por_caso_de_uso"`
 
-**C12** - Os tipos concretos de `One.Api` que implementam `Mediator.IRequestHandler<TMsg, T>` são exatamente 58, um para cada tipo de C11, cada um chamado `<X>Handler` e declarado no mesmo arquivo `api/<Fatia>/X.cs` da sua mensagem (AC 10, door 3)
+**C12** - [x] Os tipos concretos de `One.Api` que implementam `Mediator.IRequestHandler<TMsg, T>` são exatamente 58, um para cada tipo de C11, cada um chamado `<X>Handler` e declarado no mesmo arquivo `api/<Fatia>/X.cs` da sua mensagem (AC 10, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Um_handler_por_mensagem_no_mesmo_arquivo"`
 
-**C13** - O código de `api/` (sem `bin`, `obj`, `Dados/Migracoes`) tem exatamente 61 chamadas `.MapGet(`, `.MapPost(`, `.MapPut(`, `.MapDelete(`, `.MapPatch(`, `.MapMethods(` ou `.MapFallback*(` (`MapGroup` não conta): 1 em cada um dos 58 arquivos de C11, 1 (a de `"/auth/logout"`) no arquivo que mapeia o logout e 2 em `Program.cs` (`MapFallback` e `MapFallbackToFile`); nenhum outro arquivo tem uma delas (AC 11)
+**C13** - [x] O código de `api/` (sem `bin`, `obj`, `Dados/Migracoes`) tem exatamente 61 chamadas `.MapGet(`, `.MapPost(`, `.MapPut(`, `.MapDelete(`, `.MapPatch(`, `.MapMethods(` ou `.MapFallback*(` (`MapGroup` não conta): 1 em cada um dos 58 arquivos de C11, 1 (a de `"/auth/logout"`) no arquivo que mapeia o logout e 2 em `Program.cs` (`MapFallback` e `MapFallbackToFile`); nenhum outro arquivo tem uma delas (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Map_so_nos_casos_de_uso"`
 
-**C14** - `api/Agendador.cs`, `api/Sessao.cs`, `api/Instituicoes/InstituicaoComando.cs` e o arquivo de `api/` que contém `"/auth/logout"` não contêm `IMediator`, `ISender` nem `using Mediator`; `POST /api/auth/logout` continua 204 e expira o cookie (AC 12)
+**C14** - [x] `api/Agendador.cs`, `api/Sessao.cs`, `api/Instituicoes/InstituicaoComando.cs` e o arquivo de `api/` que contém `"/auth/logout"` não contêm `IMediator`, `ISender` nem `using Mediator`; `POST /api/auth/logout` continua 204 e expira o cookie (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fora_do_mediator"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~SessaoTests.Logout_204_expira_cookie"`
 
@@ -91,7 +91,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.
 **C18** - [x] Com id 999999 (inexistente) e corpo inválido, um administrador recebe 404 em 8 rotas: `PUT /api/admin/setores/{id}`, `PUT /api/admin/categorias/{id}`, `PUT /api/admin/cursos/{id}`, `PUT /api/admin/respostas-prontas/{id}`, `PUT /api/admin/regras/{id}` e `PUT /api/admin/usuarios/{id}` com `{}` e `detail` "Item não encontrado."; `PUT /api/admin/artigos/{id}` com `{}` e `detail` "Artigo não encontrado."; `POST /api/admin/documentos/{id}/versoes` com um arquivo que não é PDF e `detail` "Documento não encontrado." (door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Id_inexistente_404_mesmo_com_corpo_invalido"`
 
-**C19** - Nenhum dos 58 tipos de mensagem de C11 tem propriedade do tipo `HttpContext`, `HttpRequest` ou `IHttpContextAccessor`; nenhum dos 58 handlers de C12 nem `AgirNoChamado<,>` tem parâmetro de construtor desses tipos; `DetalheChamado.Montar` não tem parâmetro `HttpContext`; o texto `IHttpContextAccessor` não aparece em `api/`. O login válido continua 200 com o cookie `one.auth`, o anexo PDF enviado em `multipart/form-data` continua aceito e o upload de documento continua 201 (door 6)
+**C19** - [x] Nenhum dos 58 tipos de mensagem de C11 tem propriedade do tipo `HttpContext`, `HttpRequest` ou `IHttpContextAccessor`; nenhum dos 58 handlers de C12 nem `AgirNoChamado<,>` tem parâmetro de construtor desses tipos; `DetalheChamado.Montar` não tem parâmetro `HttpContext`; o texto `IHttpContextAccessor` não aparece em `api/`. O login válido continua 200 com o cookie `one.auth`, o anexo PDF enviado em `multipart/form-data` continua aceito e o upload de documento continua 201 (door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Handler_sem_HttpContext"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LoginTests.Login_valido_200_com_cookie"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Pdf_jpg_png_ate_10mb"`
@@ -104,7 +104,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fati
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Namespace_igual_a_pasta"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.IgnoreQueryFilters_so_no_agendador_e_no_comando"`
 
-**C21** - `dotnet build api` termina com 0 `CA1502` no limite 10, e a barreira continua ativa: complexidade 11 plantada quebra o build e 10 compila (AC 16)
+**C21** - [x] `dotnet build api` termina com 0 `CA1502` no limite 10, e a barreira continua ativa: complexidade 11 plantada quebra o build e 10 compila (AC 16)
 Proof: `dotnet build api -warnaserror:CA1502`
 Proof: `bash .specs/features/refatoracao-solid/ca1502_barra.sh`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Barreira_de_complexidade_configurada"`
@@ -114,36 +114,36 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PrimeiroAcessoTests.S
 
 ### S4 - Permissão das ações do chamado em um lugar (P1) · ~20 files · ~97 KB · ~24k
 
-**C23** - A chamada `Estados(` de `PermissoesChamado` (escrita `PermissoesChamado.Estados(` ou `Estados(` com `using static One.Api.Chamados.PermissoesChamado`) aparece em exatamente 1 arquivo de `api/` fora de `api/Chamados/PermissoesChamado.cs`, e esse arquivo declara `class AgirNoChamado<` (AC 17, door 5)
+**C23** - [x] A chamada `Estados(` de `PermissoesChamado` (escrita `PermissoesChamado.Estados(` ou `Estados(` com `using static One.Api.Chamados.PermissoesChamado`) aparece em exatamente 1 arquivo de `api/` fora de `api/Chamados/PermissoesChamado.cs`, e esse arquivo declara `class AgirNoChamado<` (AC 17, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Permissao_so_no_AgirNoChamado"`
 
-**C24** - Exatamente 9 tipos concretos de `One.Api` implementam `IAcaoChamado`, todos em `api/Chamados`; construindo cada um (o de `/mensagens` uma vez com tipo `PUBLICA` e uma com tipo `NOTA`), o conjunto dos valores de `Acao` é exatamente `responder`, `nota`, `assumir`, `resolver`, `confirmar`, `rejeitar`, `cancelar`, `encaminhar`, `reclassificar`, `duplicado`; as matrizes ação × estado e ação × papel continuam respondendo como em `<base>` (AC 18)
+**C24** - [x] Exatamente 9 tipos concretos de `One.Api` implementam `IAcaoChamado`, todos em `api/Chamados`; construindo cada um (o de `/mensagens` uma vez com tipo `PUBLICA` e uma com tipo `NOTA`), o conjunto dos valores de `Acao` é exatamente `responder`, `nota`, `assumir`, `resolver`, `confirmar`, `rejeitar`, `cancelar`, `encaminhar`, `reclassificar`, `duplicado`; as matrizes ação × estado e ação × papel continuam respondendo como em `<base>` (AC 18)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Nove_acoes_do_chamado"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_estado"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_papel"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ExtrasTests.Duplicado_por_aluno_403_e_em_fechado_409"`
 
-**C25** - Num chamado que o chamador não vê, cada uma das 9 rotas de ação com corpo inválido (`/mensagens` com `texto` vazio, uma vez `PUBLICA` e uma `NOTA`; `/resolver` com `{}`; `/rejeitar` com `{}`; `/cancelar` com `motivo` de 4001 caracteres; `/encaminhar` com `{}`; `/reclassificar` com `categoriaId` 999999; `/duplicado` com `{}`; `/assumir` e `/confirmar` sem corpo) responde 404 com `detail` "Chamado não encontrado.", para um atendente de outro setor e para outro aluno, e o chamado não muda (AC 19, door 5)
+**C25** - [x] Num chamado que o chamador não vê, cada uma das 9 rotas de ação com corpo inválido (`/mensagens` com `texto` vazio, uma vez `PUBLICA` e uma `NOTA`; `/resolver` com `{}`; `/rejeitar` com `{}`; `/cancelar` com `motivo` de 4001 caracteres; `/encaminhar` com `{}`; `/reclassificar` com `categoriaId` 999999; `/duplicado` com `{}`; `/assumir` e `/confirmar` sem corpo) responde 404 com `detail` "Chamado não encontrado.", para um atendente de outro setor e para outro aluno, e o chamado não muda (AC 19, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Acao_invisivel_404_mesmo_com_corpo_invalido"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Atendente_de_outro_setor_404"`
 
-**C26** - Num chamado `FECHADO` visível ao chamador, o papel que nunca pode a ação recebe 403 com `detail` "Seu papel neste chamado não permite esta ação." mesmo com o corpo inválido de C25, em 9 pares: `nota`/`ALUNO` (`/mensagens` com tipo `NOTA`), `assumir`/`ALUNO`, `resolver`/`ALUNO`, `confirmar`/`ATENDENTE`, `rejeitar`/`ATENDENTE`, `cancelar`/`ATENDENTE`, `encaminhar`/`ALUNO`, `reclassificar`/`ALUNO`, `duplicado`/`ALUNO`; o chamado não muda (AC 20, door 5)
+**C26** - [x] Num chamado `FECHADO` visível ao chamador, o papel que nunca pode a ação recebe 403 com `detail` "Seu papel neste chamado não permite esta ação." mesmo com o corpo inválido de C25, em 9 pares: `nota`/`ALUNO` (`/mensagens` com tipo `NOTA`), `assumir`/`ALUNO`, `resolver`/`ALUNO`, `confirmar`/`ATENDENTE`, `rejeitar`/`ATENDENTE`, `cancelar`/`ATENDENTE`, `encaminhar`/`ALUNO`, `reclassificar`/`ALUNO`, `duplicado`/`ALUNO`; o chamado não muda (AC 20, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Acao_por_papel_errado_403_mesmo_com_corpo_invalido"`
 
-**C27** - Com o papel que pode a ação, o corpo inválido de C25 num estado em que a ação não vale responde 400, não 409, em 9 casos: `responder`/`ALUNO` em `FECHADO`, `responder`/`ATENDENTE` em `FECHADO`, `nota`/`ATENDENTE` em `FECHADO`, `resolver` em `RESOLVIDO`, `rejeitar` em `ABERTO`, `cancelar` em `FECHADO`, `encaminhar` em `RESOLVIDO`, `reclassificar` em `FECHADO`, `duplicado` em `RESOLVIDO`; o chamado não muda (AC 21, door 5)
+**C27** - [x] Com o papel que pode a ação, o corpo inválido de C25 num estado em que a ação não vale responde 400, não 409, em 9 casos: `responder`/`ALUNO` em `FECHADO`, `responder`/`ATENDENTE` em `FECHADO`, `nota`/`ATENDENTE` em `FECHADO`, `resolver` em `RESOLVIDO`, `rejeitar` em `ABERTO`, `cancelar` em `FECHADO`, `encaminhar` em `RESOLVIDO`, `reclassificar` em `FECHADO`, `duplicado` em `RESOLVIDO`; o chamado não muda (AC 21, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Acao_com_corpo_invalido_em_estado_errado_400"`
 
-**C28** - Cada ação aplicada com corpo válido num estado em que vale faz exatamente 1 `SaveChanges` contado por `f.Gravacoes` e devolve o detalhe do chamado (`numero` igual ao da rota): 201 para `responder`/`ALUNO`, `responder`/`ATENDENTE` e `nota`/`ATENDENTE` em `/mensagens`, e 200 para `assumir`, `resolver`, `confirmar`, `rejeitar`, `cancelar`, `encaminhar`, `reclassificar` e `duplicado` (AC 22, door 5)
+**C28** - [x] Cada ação aplicada com corpo válido num estado em que vale faz exatamente 1 `SaveChanges` contado por `f.Gravacoes` e devolve o detalhe do chamado (`numero` igual ao da rota): 201 para `responder`/`ALUNO`, `responder`/`ATENDENTE` e `nota`/`ATENDENTE` em `/mensagens`, e 200 para `assumir`, `resolver`, `confirmar`, `rejeitar`, `cancelar`, `encaminhar`, `reclassificar` e `duplicado` (AC 22, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AcoesDoChamadoTests.Uma_gravacao_e_status_por_acao"`
 
-**C29** - Resolvendo `IEnumerable<IPipelineBehavior<X, T>>` de um escopo de `f.Services` com o `T` de cada mensagem: para cada um dos 9 tipos de C24 há exatamente 1 `AgirNoChamado<X, T>`, e para cada um dos outros 49 tipos de C11 não há nenhum (AC 23, door 5)
+**C29** - [x] Resolvendo `IEnumerable<IPipelineBehavior<X, T>>` de um escopo de `f.Services` com o `T` de cada mensagem: para cada um dos 9 tipos de C24 há exatamente 1 `AgirNoChamado<X, T>`, e para cada um dos outros 49 tipos de C11 não há nenhum (AC 23, door 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MediatorTests.AgirNoChamado_so_nas_9_acoes"`
 
-**C30** - Uma `DbUpdateConcurrencyException` e uma chave única violada lançadas dentro de um handler atravessam o mediator sem embrulho e continuam virando 409: dois `POST /api/chamados/{numero}/resolver` simultâneos dão 200 e 409, e dois `POST /api/conversas/{id}/transferir` simultâneos dão 201 e 409 com 1 chamado (Assumption "Exceções no handler")
+**C30** - [x] Uma `DbUpdateConcurrencyException` e uma chave única violada lançadas dentro de um handler atravessam o mediator sem embrulho e continuam virando 409: dois `POST /api/chamados/{numero}/resolver` simultâneos dão 200 e 409, e dois `POST /api/conversas/{id}/transferir` simultâneos dão 201 e 409 com 1 chamado (Assumption "Exceções no handler")
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConcorrenciaTests.Segunda_alteracao_simultanea_409"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~TransferenciaTests.Transferencia_dupla_um_chamado_e_409"`
 
-**C31** - Em `.specs/STATE.md`, a linha de AD-019 tem status `active` e a linha de AD-017 cita AD-019 como a decisão que supera a parte "No per-use-case handler, no MediatR" (Impact, decisões)
+**C31** - [x] Em `.specs/STATE.md`, a linha de AD-019 tem status `active` e a linha de AD-017 cita AD-019 como a decisão que supera a parte "No per-use-case handler, no MediatR" (Impact, decisões)
 Proof: `grep -E "^\| AD-019 \|.*\| active \|" .specs/STATE.md && grep -E "^\| AD-017 \|.*superseded.*AD-019" .specs/STATE.md`
 
 ## Coverage
@@ -248,3 +248,7 @@ cerca de 72 KB = ~18k.
 - Mechanism: um builder, num subagente (a estimativa cabe no budget; o pedido do usuário de 02/11/2026
   "use subagentes" fica atendido pelo builder e pelo Verifier, cada um num subagente próprio)
 - Feature base (`<base>`): `65adab5` (docs: checks congelados sobre o plano aprovado), no `main`; o commit que congela `plan.md` e `checks.md`
+
+**Boundary:** C1-C31 closed at d84707e (um builder, S1 a S4, `api/`); o commit seguinte só traz `STATE.md` (C31) e estas linhas. C1 e C2 verdes no fim: `dotnet test api.Tests` 290 aprovados (268 na base + 22 novos), `npm --prefix web run e2e` 11 aprovados com a imagem do `api` de d84707e, `asserts_preservados.py 65adab5` com 0 problemas; `retratos_antes.py`, `listas_fixas.py`, `msg0005_barra.sh` e `ca1502_barra.sh` ok; os 42 filtros de prova executam 1 teste cada (L-002). O `web/` não foi tocado. Faltas injetadas pelo construtor, todas mortas: 409 antes do `Validar`, `Validar` antes do 403, `/assumir` sem `IAcaoChamado`, mediator `Singleton`, segundo `Map*` num caso, handler com outro nome, `Estados(` fora do behavior, `HttpContext` numa mensagem, `/mensagens` com 200, 404 da conversa depois da validação, `validar` do cadastro antes do 404.
+**Settled mid-build:** (1) C3: o fallback do `MapFallbackToFile` traz `HttpMethodMetadata` `GET,HEAD`, então "59 rotas com exatamente 1 método, mais os 2 fallbacks" vale, mas os fallbacks são achados pela ordem `int.MaxValue` e não pela falta de método; a linha dele no retrato é `GET,HEAD {*path:nonfile}`. (2) C22: o `OneFactorySmtpFora` também grava um `Error` do EF na partida (o banco do teste ainda não existe); o teste afirma que o único `Error` com `InstituicaoId` tem a categoria `One.Api.Email`. (3) `/mensagens`: o `Validar` confere os anexos e o handler os lê de novo do `IFormCollection` (o `IFormFile` reabre o corpo já em buffer), porque a mensagem é imutável e o `AcessoChamado` só é preenchido pelo behavior. (4) Os `*Rotas` ficaram como a lista de `Mapear` da fatia (os de uma rota só, como `IndicadorRotas`, `InstituicaoRotas` e `ImportacaoRotas`, repassam ao caso), para o `Program.Rotas` não mudar; os records `*In` não mudaram de arquivo, e `AuthRotas.MensagemPrimeiroAcesso`, sem uso fora dali, virou `PrimeiroAcessoHandler.Mensagem`. (5) Os 12 cadastros: a projeção, o `Validar` e o `Aplicar` de cada entidade são membros estáticos do record `Criar<Entidade>`, e `CadastroRotas` guarda `Listar`, `Criar` e `Alterar` genéricos. (6) Ambiente: durante o build outra sessão deixou mudanças não commitadas em `web/` (dependências do Tailwind e do shadcn, `main.tsx`, `vite.config.ts`, `tsconfig.json`, `src/index.css`) e commitou `b2e7e79` (docs do `interface-nova`) entre os commits desta feature; como o `Dockerfile` compila o `web/` da árvore de trabalho, a imagem do e2e saiu de um worktree limpo em d84707e (`docker build -t one-system-api` e depois `docker compose up -d api`), e as specs do e2e não mudaram. O Smart App Control não travou nenhum `dotnet test` nesta feature.
+**Abandoned:** nada.
