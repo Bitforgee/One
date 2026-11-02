@@ -7,7 +7,6 @@ namespace One.Api.Tests;
 
 public class SigiloTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C62: o lote 2 acrescenta GET /api/chamados e GET /api/chamados/{numero} do aluno.
     [Fact]
     public async Task Aluno_nao_recebe_dado_de_artigo()
     {
@@ -19,12 +18,15 @@ public class SigiloTests(OneFactory f) : IClassFixture<OneFactory>
         var id = (await primeira.Json()).GetProperty("conversaId").GetInt64();
         var seguinte = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "de novo" });
         var leitura = await c.Cliente.GetAsync($"/api/conversas/{id}");
+        var numero = (await (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
+        var lista = await c.Cliente.GetAsync("/api/chamados?escopo=meus");
+        var detalhe = await c.Cliente.GetAsync($"/api/chamados/{numero}");
 
-        foreach (var r in new[] { primeira, seguinte, leitura })
+        foreach (var r in new[] { primeira, seguinte, leitura, lista, detalhe })
         {
             Assert.True(r.IsSuccessStatusCode);
             var corpo = await r.Content.ReadAsStringAsync();
-            Assert.Contains("resposta", corpo);
+            Assert.Contains(r == lista ? "boleto e faltas" : "Você encontra isso na área do aluno.", corpo);
             foreach (var proibido in new[]
             {
                 "Como emitir o boleto do semestre", "Faltas não são abonadas", Cenario.RespostaBoleto, Cenario.RespostaFaltas,

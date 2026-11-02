@@ -1,6 +1,6 @@
 namespace One.Api.Dados;
 
-public interface IDaInstituicao
+public interface  IDaInstituicao
 {
     long InstituicaoId { get; set; }
 }
@@ -13,6 +13,7 @@ public class Instituicao
     public string Fuso { get; set; } = "";
     public bool Ativa { get; set; } = true;
     public DateTime CriadaEm { get; set; }
+    public long UltimoNumeroChamado { get; set; } // door 5: incrementado com UPDATE ... RETURNING
 }
 
 public static class Papeis
@@ -187,13 +188,39 @@ public class CitacaoArtigo : IDaInstituicao
     public List<string> Trechos { get; set; } = [];
 }
 
-// As entidades abaixo existem para o isolamento (door 16); os lotes seguintes acrescentam as colunas.
+public static class EstadosChamado
+{
+    public const string Aberto = "ABERTO";
+    public const string EmAtendimento = "EM_ATENDIMENTO";
+    public const string AguardandoAluno = "AGUARDANDO_ALUNO";
+    public const string Resolvido = "RESOLVIDO";
+    public const string Fechado = "FECHADO";
+}
+
 public class Chamado : IDaInstituicao
 {
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public string Numero { get; set; } = "";
     public long ConversaId { get; set; }
+    public long SolicitanteId { get; set; }
+    public long MatriculaId { get; set; }
+    public int Semestre { get; set; } // semestre da matrícula na transferência (AC 59)
+    public string Titulo { get; set; } = "";
+    public string? Resumo { get; set; }
+    public long CategoriaId { get; set; }
+    public long CategoriaOriginalId { get; set; }
+    public string OrigemCategoria { get; set; } = ""; // IA, ARTIGO ou PADRAO
+    public long SetorId { get; set; }
+    public long? ResponsavelId { get; set; }
+    public string Estado { get; set; } = EstadosChamado.Aberto;
+    public string? MotivoFechamento { get; set; } // CONFIRMADO, CANCELADO, FECHADO_AUTOMATICAMENTE, DUPLICADO
+    public int Reaberturas { get; set; }
+    public int Encaminhamentos { get; set; }
+    public DateTime CriadoEm { get; set; }
+    public DateTime? ResolvidoEm { get; set; }
+    public DateTime? FechadoEm { get; set; }
+    public uint Xmin { get; set; } // door 14: coluna de sistema do PostgreSQL como token de concorrência
 }
 
 public class MensagemChamado : IDaInstituicao
@@ -201,6 +228,10 @@ public class MensagemChamado : IDaInstituicao
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public long ChamadoId { get; set; }
+    public long? AutorId { get; set; }
+    public string Tipo { get; set; } = ""; // PUBLICA ou NOTA
+    public string Texto { get; set; } = "";
+    public DateTime CriadaEm { get; set; }
 }
 
 public class Anexo : IDaInstituicao
@@ -215,6 +246,12 @@ public class EventoChamado : IDaInstituicao
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public long ChamadoId { get; set; }
+    public string Tipo { get; set; } = ""; // CRIACAO, TRANSICAO, ATRIBUICAO, ENCAMINHAMENTO, RECLASSIFICACAO, RESPOSTA, NOTA, ANEXO
+    public long? AtorId { get; set; } // vazio = Sistema
+    public string? De { get; set; }
+    public string? Para { get; set; }
+    public string? Detalhe { get; set; }
+    public DateTime CriadoEm { get; set; }
 }
 
 public class RespostaPronta : IDaInstituicao
@@ -222,6 +259,8 @@ public class RespostaPronta : IDaInstituicao
     public long Id { get; set; }
     public long InstituicaoId { get; set; }
     public long SetorId { get; set; }
+    public string Titulo { get; set; } = "";
+    public string Texto { get; set; } = "";
 }
 
 public class EmailSaida : IDaInstituicao

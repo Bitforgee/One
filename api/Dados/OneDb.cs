@@ -45,13 +45,22 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasIndex(x => new { x.InstituicaoId, x.Email }).IsUnique();
         });
         mb.Entity<UsuarioPapel>().HasIndex(x => new { x.UsuarioId, x.Papel }).IsUnique();
-        mb.Entity<Setor>().HasIndex(x => x.InstituicaoId).IsUnique().HasFilter("triagem").HasDatabaseName("ux_setor_triagem");
+        mb.Entity<Setor>(e =>
+        {
+            e.HasIndex(x => x.InstituicaoId).IsUnique().HasFilter("triagem").HasDatabaseName("ux_setor_triagem");
+            e.HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
+        });
+        mb.Entity<Categoria>().HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
         mb.Entity<AtendenteSetor>(e =>
         {
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
             e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
         });
-        mb.Entity<Curso>().HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorCoordenacaoId);
+        mb.Entity<Curso>(e =>
+        {
+            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorCoordenacaoId);
+            e.HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
+        });
         mb.Entity<Matricula>(e =>
         {
             e.Property(x => x.Numero).HasMaxLength(20);
@@ -78,11 +87,32 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.Property(x => x.Numero).HasMaxLength(20);
             e.HasIndex(x => new { x.InstituicaoId, x.Numero }).IsUnique();
             e.HasOne<Conversa>().WithOne().HasForeignKey<Chamado>(x => x.ConversaId);
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.SolicitanteId);
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.ResponsavelId);
+            e.HasOne<Matricula>().WithMany().HasForeignKey(x => x.MatriculaId);
+            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
+            e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
+            e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaOriginalId);
+            e.Property(x => x.Titulo).HasMaxLength(120);
+            e.Property(x => x.Resumo).HasMaxLength(500);
+            e.Property(x => x.Xmin).IsRowVersion();
         });
-        mb.Entity<MensagemChamado>().HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+        mb.Entity<MensagemChamado>(e =>
+        {
+            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AutorId);
+        });
         mb.Entity<Anexo>().HasOne<MensagemChamado>().WithMany().HasForeignKey(x => x.MensagemChamadoId);
-        mb.Entity<EventoChamado>().HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
-        mb.Entity<RespostaPronta>().HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
+        mb.Entity<EventoChamado>(e =>
+        {
+            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AtorId);
+        });
+        mb.Entity<RespostaPronta>(e =>
+        {
+            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
+            e.HasIndex(x => new { x.SetorId, x.Titulo }).IsUnique();
+        });
 
         var configurar = GetType().GetMethod(nameof(DaInstituicao), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
         foreach (var tipo in mb.Model.GetEntityTypes().Select(e => e.ClrType).Where(t => typeof(IDaInstituicao).IsAssignableFrom(t)).ToList())

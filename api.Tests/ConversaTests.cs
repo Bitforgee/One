@@ -68,7 +68,6 @@ public class ConversaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(10, (await Ler(c, id)).Mensagens.Count(m => m.Autor == "ALUNO"));
     }
 
-    // C75: o lote 2 acrescenta a transferência a esta lista.
     [Fact]
     public async Task Conversa_com_desfecho_409()
     {
@@ -81,16 +80,17 @@ public class ConversaTests(OneFactory f) : IClassFixture<OneFactory>
             await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "oi" }),
             await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/avaliacao", new { resolveu = true }),
             await c.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null),
+            await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { }),
         };
 
         Assert.All(respostas, r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+        Assert.Equal(0, await f.Db(c.Instituicao.Id, db => db.Chamados.CountAsync()));
         var depois = await Ler(c, id);
         Assert.Equal(antes.Desfecho, depois.Desfecho);
         Assert.Equal(antes.DesfechoEm, depois.DesfechoEm);
         Assert.Equal(antes.Mensagens.Count, depois.Mensagens.Count);
     }
 
-    // C76: o lote 2 acrescenta a transferência a esta lista (5 rotas).
     [Fact]
     public async Task Conversa_de_outro_aluno_404()
     {
@@ -103,9 +103,11 @@ public class ConversaTests(OneFactory f) : IClassFixture<OneFactory>
             await outro.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "oi" }),
             await outro.Cliente.PostAsJsonAsync($"/api/conversas/{id}/avaliacao", new { resolveu = true }),
             await outro.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null),
+            await outro.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { }),
         };
 
         Assert.All(respostas, r => Assert.Equal(HttpStatusCode.NotFound, r.StatusCode));
+        Assert.Equal(0, await f.Db(c.Instituicao.Id, db => db.Chamados.CountAsync()));
         var conversa = await Ler(c, id);
         Assert.Null(conversa.Desfecho);
         Assert.Equal(2, conversa.Mensagens.Count);
@@ -131,13 +133,7 @@ public class ConversaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(JsonValueKindNull, j.GetProperty("desfecho").ValueKind);
         Assert.Equal(JsonValueKindNull, j.GetProperty("chamadoNumero").ValueKind);
 
-        // a transferência (lote 2) grava o chamado da conversa; aqui ele é gravado direto
-        await f.Db(c.Instituicao.Id, async db =>
-        {
-            db.Chamados.Add(new Chamado { Numero = "ONE-1", ConversaId = id });
-            await db.Conversas.Where(x => x.Id == id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Desfecho, "TRANSFERIDA"));
-            await db.SaveChangesAsync();
-        });
+        Assert.Equal(HttpStatusCode.Created, (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).StatusCode);
         var depois = await (await c.Cliente.GetAsync($"/api/conversas/{id}")).Json();
         Assert.Equal("ONE-1", depois.GetProperty("chamadoNumero").GetString());
         Assert.Equal("TRANSFERIDA", depois.GetProperty("desfecho").GetString());

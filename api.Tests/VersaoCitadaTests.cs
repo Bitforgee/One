@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
@@ -40,5 +41,13 @@ public class VersaoCitadaTests(OneFactory f) : IClassFixture<OneFactory>
 
         var atual = await (await atendente.GetAsync($"/api/artigos/versoes/{v2.Id}")).Json();
         Assert.Equal(System.Text.Json.JsonValueKind.Null, atual.GetProperty("versaoAtivaAtualId").ValueKind);
+
+        // o detalhe do chamado avisa a equipe que a fonte citada mudou
+        var numero = (await (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
+        var triagem = await f.Db(c.Instituicao.Id, db => db.Setores.SingleAsync(s => s.Triagem));
+        var equipe = await f.Atendente(c.Instituicao, triagem);
+        var detalhe = await (await equipe.Cliente.GetAsync($"/api/chamados/{numero}")).Json();
+        var fonte = Assert.Single(detalhe.GetProperty("transcricao")[1].GetProperty("fontes").EnumerateArray());
+        Assert.Equal((v1.Id, "Como emitir o boleto do semestre", true), (fonte.GetProperty("versaoArtigoId").GetInt64(), fonte.GetProperty("titulo").GetString(), fonte.GetProperty("atualizado").GetBoolean()));
     }
 }

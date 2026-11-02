@@ -25,9 +25,13 @@ builder.Services.AddProblemDetails(o => o.CustomizeProblemDetails = c =>
 {
     var status = c.ProblemDetails.Status ?? c.HttpContext.Response.StatusCode;
     c.ProblemDetails.Title = Problemas.Titulo(status);
+    if (c.Exception is not null && Problemas.Conflito(c.Exception)) c.ProblemDetails.Detail = Problemas.AlteradoPorOutro;
     c.ProblemDetails.Detail ??= Problemas.Detalhe(status);
     c.ProblemDetails.Type ??= $"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/{status}";
 });
+
+// door 14: xmin divergente ou chave única violada por pedido simultâneo viram 409, sem mudar nada
+builder.Services.AddExceptionHandler(o => o.StatusCodeSelector = e => Problemas.Conflito(e) ? 409 : 500);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
 {
@@ -72,7 +76,9 @@ var api = app.MapGroup("/api").RequireAuthorization();
 AuthRotas.Mapear(api);
 InstituicaoRotas.Mapear(api);
 ConversaRotas.Mapear(api);
+ChamadoRotas.Mapear(api);
 ArtigoRotas.Mapear(api);
+AdminRotas.Mapear(api);
 
 app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
 app.MapFallbackToFile("index.html");

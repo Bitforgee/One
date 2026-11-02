@@ -43,4 +43,17 @@ public class RateLimitTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.TooManyRequests, (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "décima primeira" })).StatusCode);
     }
+
+    [Fact]
+    public async Task Atendimento_direto_conta_no_limite_do_aluno()
+    {
+        var aluno = await f.AlunoLogado();
+        for (var n = 1; n <= 5; n++)
+            Assert.Equal(HttpStatusCode.Created, (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = $"mensagem {n}" })).StatusCode);
+        for (var n = 6; n <= 10; n++)
+            Assert.Equal(HttpStatusCode.Created, (await aluno.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = $"pedido {n}" })).StatusCode);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await aluno.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "décimo primeiro" })).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "décima segunda" })).StatusCode);
+    }
 }

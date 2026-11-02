@@ -1,7 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+
 namespace One.Api;
 
 public static class Problemas
 {
+    public const string AlteradoPorOutro = "O registro foi alterado por outra pessoa ao mesmo tempo. Recarregue e tente de novo.";
+
+    public static bool Conflito(Exception e) =>
+        e is DbUpdateConcurrencyException || e is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
+
     public static string Titulo(int status) => status switch
     {
         400 => "Requisição inválida",

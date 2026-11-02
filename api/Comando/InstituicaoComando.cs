@@ -27,7 +27,6 @@ public static partial class InstituicaoComando
     }
 
     [GeneratedRegex("^[a-z0-9-]{3,30}$")] private static partial Regex SlugValido();
-    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")] private static partial Regex EmailValido();
 
     static async Task<List<string>> Criar(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
     {
@@ -43,7 +42,7 @@ public static partial class InstituicaoComando
         if (!(TimeZoneInfo.TryFindSystemTimeZoneById(fuso, out var tz) && tz.HasIanaId)) erros.Add($"--fuso: \"{fuso}\" não é um fuso IANA (ex.: America/Cuiaba)");
         if (cpf is null) erros.Add("--admin-cpf: CPF inválido");
         if (adminNome == "") erros.Add("--admin-nome: obrigatório");
-        if (!EmailValido().IsMatch(email)) erros.Add($"--admin-email: \"{email}\" não é um e-mail válido");
+        if (!Email.Valido().IsMatch(email)) erros.Add($"--admin-email: \"{email}\" não é um e-mail válido");
         if (erros.Count > 0) return erros;
 
         await using var tx = await db.Database.BeginTransactionAsync();

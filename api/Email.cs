@@ -1,11 +1,14 @@
 using MailKit.Net.Smtp;
 using MailKit.Security;
+using System.Text.RegularExpressions;
 using MimeKit;
 
 namespace One.Api;
 
-public class Email(IConfiguration cfg)
+public partial class Email(IConfiguration cfg)
 {
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")] public static partial Regex Valido();
+
     public async Task Enviar(string nomeRemetente, string para, string assunto, string corpo)
     {
         var msg = new MimeMessage();

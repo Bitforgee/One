@@ -18,7 +18,7 @@ namespace One.Api.Dados.Migracoes
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -151,8 +151,9 @@ namespace One.Api.Dados.Migracoes
                     b.HasKey("Id")
                         .HasName("pk_categoria");
 
-                    b.HasIndex("InstituicaoId")
-                        .HasDatabaseName("ix_categoria_instituicao_id");
+                    b.HasIndex("InstituicaoId", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_categoria_instituicao_id_nome");
 
                     b.ToTable("categoria");
                 });
@@ -166,13 +167,46 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("CategoriaId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<long>("CategoriaOriginalId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("categoria_original_id");
+
                     b.Property<long>("ConversaId")
                         .HasColumnType("bigint")
                         .HasColumnName("conversa_id");
 
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<int>("Encaminhamentos")
+                        .HasColumnType("integer")
+                        .HasColumnName("encaminhamentos");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime?>("FechadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fechado_em");
+
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
+
+                    b.Property<long>("MatriculaId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("matricula_id");
+
+                    b.Property<string>("MotivoFechamento")
+                        .HasColumnType("text")
+                        .HasColumnName("motivo_fechamento");
 
                     b.Property<string>("Numero")
                         .IsRequired()
@@ -180,12 +214,76 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("character varying(20)")
                         .HasColumnName("numero");
 
+                    b.Property<string>("OrigemCategoria")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("origem_categoria");
+
+                    b.Property<int>("Reaberturas")
+                        .HasColumnType("integer")
+                        .HasColumnName("reaberturas");
+
+                    b.Property<DateTime?>("ResolvidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolvido_em");
+
+                    b.Property<long?>("ResponsavelId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("responsavel_id");
+
+                    b.Property<string>("Resumo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("resumo");
+
+                    b.Property<int>("Semestre")
+                        .HasColumnType("integer")
+                        .HasColumnName("semestre");
+
+                    b.Property<long>("SetorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("setor_id");
+
+                    b.Property<long>("SolicitanteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("solicitante_id");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("titulo");
+
+                    b.Property<uint>("Xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_chamado");
+
+                    b.HasIndex("CategoriaId")
+                        .HasDatabaseName("ix_chamado_categoria_id");
+
+                    b.HasIndex("CategoriaOriginalId")
+                        .HasDatabaseName("ix_chamado_categoria_original_id");
 
                     b.HasIndex("ConversaId")
                         .IsUnique()
                         .HasDatabaseName("ix_chamado_conversa_id");
+
+                    b.HasIndex("MatriculaId")
+                        .HasDatabaseName("ix_chamado_matricula_id");
+
+                    b.HasIndex("ResponsavelId")
+                        .HasDatabaseName("ix_chamado_responsavel_id");
+
+                    b.HasIndex("SetorId")
+                        .HasDatabaseName("ix_chamado_setor_id");
+
+                    b.HasIndex("SolicitanteId")
+                        .HasDatabaseName("ix_chamado_solicitante_id");
 
                     b.HasIndex("InstituicaoId", "Numero")
                         .IsUnique()
@@ -305,11 +403,12 @@ namespace One.Api.Dados.Migracoes
                     b.HasKey("Id")
                         .HasName("pk_curso");
 
-                    b.HasIndex("InstituicaoId")
-                        .HasDatabaseName("ix_curso_instituicao_id");
-
                     b.HasIndex("SetorCoordenacaoId")
                         .HasDatabaseName("ix_curso_setor_coordenacao_id");
+
+                    b.HasIndex("InstituicaoId", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_curso_instituicao_id_nome");
 
                     b.ToTable("curso");
                 });
@@ -372,16 +471,44 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("AtorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("ator_id");
+
                     b.Property<long>("ChamadoId")
                         .HasColumnType("bigint")
                         .HasColumnName("chamado_id");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("De")
+                        .HasColumnType("text")
+                        .HasColumnName("de");
+
+                    b.Property<string>("Detalhe")
+                        .HasColumnType("text")
+                        .HasColumnName("detalhe");
 
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
 
+                    b.Property<string>("Para")
+                        .HasColumnType("text")
+                        .HasColumnName("para");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
                     b.HasKey("Id")
                         .HasName("pk_evento_chamado");
+
+                    b.HasIndex("AtorId")
+                        .HasDatabaseName("ix_evento_chamado_ator_id");
 
                     b.HasIndex("ChamadoId")
                         .HasDatabaseName("ix_evento_chamado_chamado_id");
@@ -424,6 +551,10 @@ namespace One.Api.Dados.Migracoes
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("slug");
+
+                    b.Property<long>("UltimoNumeroChamado")
+                        .HasColumnType("bigint")
+                        .HasColumnName("ultimo_numero_chamado");
 
                     b.HasKey("Id")
                         .HasName("pk_instituicao");
@@ -496,16 +627,37 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("AutorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("autor_id");
+
                     b.Property<long>("ChamadoId")
                         .HasColumnType("bigint")
                         .HasColumnName("chamado_id");
+
+                    b.Property<DateTime>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
 
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
 
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
                     b.HasKey("Id")
                         .HasName("pk_mensagem_chamado");
+
+                    b.HasIndex("AutorId")
+                        .HasDatabaseName("ix_mensagem_chamado_autor_id");
 
                     b.HasIndex("ChamadoId")
                         .HasDatabaseName("ix_mensagem_chamado_chamado_id");
@@ -638,14 +790,25 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("bigint")
                         .HasColumnName("setor_id");
 
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("texto");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("titulo");
+
                     b.HasKey("Id")
                         .HasName("pk_resposta_pronta");
 
                     b.HasIndex("InstituicaoId")
                         .HasDatabaseName("ix_resposta_pronta_instituicao_id");
 
-                    b.HasIndex("SetorId")
-                        .HasDatabaseName("ix_resposta_pronta_setor_id");
+                    b.HasIndex("SetorId", "Titulo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_resposta_pronta_setor_id_titulo");
 
                     b.ToTable("resposta_pronta");
                 });
@@ -683,6 +846,10 @@ namespace One.Api.Dados.Migracoes
                         .IsUnique()
                         .HasDatabaseName("ux_setor_triagem")
                         .HasFilter("triagem");
+
+                    b.HasIndex("InstituicaoId", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_setor_instituicao_id_nome");
 
                     b.ToTable("setor");
                 });
@@ -954,6 +1121,20 @@ namespace One.Api.Dados.Migracoes
 
             modelBuilder.Entity("One.Api.Dados.Chamado", b =>
                 {
+                    b.HasOne("One.Api.Dados.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chamado_categoria_categoria_id");
+
+                    b.HasOne("One.Api.Dados.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaOriginalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chamado_categoria_categoria_original_id");
+
                     b.HasOne("One.Api.Dados.Conversa", null)
                         .WithOne()
                         .HasForeignKey("One.Api.Dados.Chamado", "ConversaId")
@@ -967,6 +1148,32 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_chamado_instituicoes_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Matricula", null)
+                        .WithMany()
+                        .HasForeignKey("MatriculaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chamado_matriculas_matricula_id");
+
+                    b.HasOne("One.Api.Dados.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsavelId")
+                        .HasConstraintName("fk_chamado_usuarios_responsavel_id");
+
+                    b.HasOne("One.Api.Dados.Setor", null)
+                        .WithMany()
+                        .HasForeignKey("SetorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chamado_setores_setor_id");
+
+                    b.HasOne("One.Api.Dados.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("SolicitanteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_chamado_usuarios_solicitante_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.CitacaoArtigo", b =>
@@ -1037,6 +1244,11 @@ namespace One.Api.Dados.Migracoes
 
             modelBuilder.Entity("One.Api.Dados.EventoChamado", b =>
                 {
+                    b.HasOne("One.Api.Dados.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AtorId")
+                        .HasConstraintName("fk_evento_chamado_usuarios_ator_id");
+
                     b.HasOne("One.Api.Dados.Chamado", null)
                         .WithMany()
                         .HasForeignKey("ChamadoId")
@@ -1080,6 +1292,11 @@ namespace One.Api.Dados.Migracoes
 
             modelBuilder.Entity("One.Api.Dados.MensagemChamado", b =>
                 {
+                    b.HasOne("One.Api.Dados.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .HasConstraintName("fk_mensagem_chamado_usuarios_autor_id");
+
                     b.HasOne("One.Api.Dados.Chamado", null)
                         .WithMany()
                         .HasForeignKey("ChamadoId")
