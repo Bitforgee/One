@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 20,
+  "next_id": 22,
   "lessons": [
     {
       "id": "L-001",
@@ -348,6 +348,42 @@
       ],
       "created": "2026-11-02T18:30:24Z",
       "last_seen": "2026-11-02T18:30:24Z"
+    },
+    {
+      "id": "L-020",
+      "key": "surviving_mutant::ao mover ou reescrever um ramo que existe para artigo e para documento afirme cada campo derivado nos dois ramos um teste so do artigo deixa o mesmo campo do documento sem prova",
+      "text": "Ao mover ou reescrever um ramo que existe para artigo e para documento, afirme cada campo derivado nos dois ramos; um teste só do artigo deixa o mesmo campo do documento sem prova.",
+      "signal": "surviving_mutant",
+      "scope": "api/conhecimento",
+      "status": "candidate",
+      "features": [
+        "refatoracao-solid"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Conhecimento/Fontes.cs:89 (verification.md F-C28doc) (api/conhecimento)"
+      ],
+      "created": "2026-11-02T22:06:05Z",
+      "last_seen": "2026-11-02T22:06:05Z"
+    },
+    {
+      "id": "L-021",
+      "key": "spec_precision_gap::tire de codigo a contagem de celulas e o caminho de rota escritos num check nao da memoria numero ou rota errados no texto deixam o check sem prova literal",
+      "text": "Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "refatoracao-solid"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C21, C32 (verification.md precision gaps) (specs/checks)"
+      ],
+      "created": "2026-11-02T22:06:05Z",
+      "last_seen": "2026-11-02T22:06:05Z"
     }
   ]
 }

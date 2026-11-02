@@ -126,6 +126,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api/Rotas/DocumentoRotas.cs:102 (T199, rodada 2) (api/rotas)
 - last seen: 2026-11-02T18:30:24Z
 
+### L-020 - Ao mover ou reescrever um ramo que existe para artigo e para documento, afirme cada campo derivado nos dois ramos; um teste só do artigo deixa o mesmo campo do documento sem prova.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/conhecimento` · harmful: 0
+- features: refatoracao-solid
+- evidence: api/Conhecimento/Fontes.cs:89 (verification.md F-C28doc) (api/conhecimento)
+- last seen: 2026-11-02T22:06:05Z
+
+### L-021 - Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: refatoracao-solid
+- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks)
+- last seen: 2026-11-02T22:06:05Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
