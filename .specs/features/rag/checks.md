@@ -3,7 +3,7 @@
 Profile: standard
 Plan: `.specs/features/rag/plan.md`
 
-45 checks em 4 slices · 6 one-way doors · 5 perguntas abertas, 1 bloqueia (a 1, só a chamada real; nenhum check depende dela) e 4 bloqueiam só o uso real
+46 checks em 4 slices · 7 one-way doors · 5 perguntas abertas, 1 bloqueia (a 1, só a chamada real; nenhum check depende dela) e 4 bloqueiam só o uso real
 
 **Como as provas rodam.** Mesmas ferramentas do `mvp-one`:
 
@@ -93,6 +93,9 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.C
 
 **C24** - `documento`, `versao_documento` e `trecho_fonte` têm `instituicao_id` não nulo com FK e filtro global, como as outras 20 tabelas (Relations, door 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
+
+**C46** - `api/One.Api.csproj` não referencia nenhum pacote `Microsoft.Agents.AI*` nem `Microsoft.Extensions.AI*`, e o chat e os embeddings saem pelo `HttpClient` nomeado `llm` (door R7, adicionada com a decisão do usuário de 02/11/2026)
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Sem_framework_de_agentes"`
 
 **C25** - `.specs/STATE.md` tem as entradas ativas do provedor OpenAI e da busca por trechos, e a AD-006 está marcada como substituída (door R6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaRagTests.Decisoes_registradas"`
@@ -188,7 +191,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~DocumentoTests.Detalh
 | `indexacao` (3) | `PENDENTE` C9 · `INDEXADO` C9 · `FALHOU` C8 | - |
 | saídas do `avaliar-busca` (2) | 0 C41 · 1 C43 | - |
 | erros do `avaliar-busca` (4) | C43, table-driven over all 4 | - |
-| one-way doors (6) | R1 C1 · R2 C22 · R3 C19 · R4 C26 · R5 C18 · R6 C25 | - |
+| one-way doors (7) | R1 C1 · R2 C22 · R3 C19 · R4 C26 · R5 C18 · R6 C25 · R7 C46 | - |
 | entidades de Relations (5) | `documento` C24 · `versao_documento` C19 · `trecho_fonte` C23 · citação C18 · trechos buscados C18 | - |
 | restrições de Relations (5) | um tipo de versão por trecho C23 · citação com fonte C23 · append-only C19 · 1536 dimensões C22 · instituição C24 | - |
 | checks do `mvp-one` substituídos (8) | nº 19 do mvp -> C22 · nº 36 do mvp -> C37 · nº 52 do mvp -> C5 · nº 53 do mvp -> C1 · nº 133 do mvp -> C10 · nº 134 do mvp -> C14 · nº 137 do mvp -> C35 · nº 195 do mvp -> C13 | - |
@@ -219,7 +222,7 @@ Evidence:
 - agendador de embeddings: lote, tentativa, desistência -> decide, própria camada pelo agendador (C7, C8)
 - análogo no repositório: `AgendadorTests` e `EmailFalhaTests` (mesma forma de tentativas), `ImportacaoTests` (recusas tabeladas)
 
-Cost: 0 provas além das 45 escritas; as tabelas de decisão já estão nas provas tabeladas.
+Cost: 0 provas além das 46 escritas; as tabelas de decisão já estão nas provas tabeladas.
 
 ## Swept
 
