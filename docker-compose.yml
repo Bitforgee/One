@@ -21,10 +21,30 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  minio:
+    image: cgr.dev/chainguard/minio@sha256:090010a3f73f6aa2dff606c61cd0de3640b22748abe19f4e48cce6dc9de7a53f
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: one
+      MINIO_ROOT_PASSWORD: one-minio-dev
+      MC_HOST_local: "http://one:one-minio-dev@localhost:9000"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   api:
     build: .
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
       mailpit:
         condition: service_started
@@ -34,8 +54,13 @@ services:
       Smtp__Porta: "1025"
       App__UrlBase: "http://localhost:8080"
       Llm__ChaveApi: ${LLM_CHAVE_API:-}
+      Armazenamento__Endpoint: "http://minio:9000"
+      Armazenamento__Chave: one
+      Armazenamento__Segredo: one-minio-dev
+      Armazenamento__Bucket: one
     ports:
       - "8080:8080"
 
 volumes:
   pgdata:
+  miniodata:
