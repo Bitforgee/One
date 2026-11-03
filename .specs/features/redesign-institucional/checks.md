@@ -103,7 +103,7 @@ Proof: `cd web && npx playwright test e2e/plataforma.spec.ts -g "sem rolagem hor
 Proof: `cd web && npx vitest run`
 Proof: `cd web && npx playwright test`
 
-**C25** - Cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD, exceto o teste da base que a linha de `## Test policy` reescreveu (`avisos > no(a) Mais o item de avisos mostra o texto visível`), que pode faltar no HEAD; se ainda existir, é comparado (AC 24; exceção por decisão do usuário de 03/11/2026 após a verificação rodada 1)
+**C25** - [x] Cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD, exceto o teste da base que a linha de `## Test policy` reescreveu (`avisos > no(a) Mais o item de avisos mostra o texto visível`), que pode faltar no HEAD; se ainda existir, é comparado (AC 24; exceção por decisão do usuário de 03/11/2026 após a verificação rodada 1)
 Proof: `python .specs/features/redesign-institucional/chamadas_iguais.py --autoteste`
 Proof: `python .specs/features/redesign-institucional/chamadas_iguais.py <base>`
 
