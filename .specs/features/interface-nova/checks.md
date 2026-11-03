@@ -569,3 +569,11 @@ Decisão do usuário em 02/11/2026: "Nomes sempre visíveis, com 'Mais'" (regist
 - **Lacuna 7 (F7a, C48)** -> `indicadores em 2 e 4 colunas` afirma que os 12 cartões restantes têm a mesma largura (±1 px) em 360, 767, 768 e 1024 px; com `grid-cols-1` no lugar de `grid-cols-2` falha com "151,169,...".
 - **Lacuna 8 (C6/C7)**: o texto de C6 diz "os 7 arquivos da raiz" e a linha Proof é congelada; não a alterei. Nota para o Verifier: a prova vale também com os 11 arquivos compartilhados (`Balao`, `Cabecalho`, `Campo`, `CampoArquivo`, `Confirmar`, `Editor`, `ErroDe`, `Marca`, `Periodo`, `Situacao`, `acao`) acrescentados à lista, e `dryer` sai "No duplicate candidates found" assim. A lista do `mutator_web.sh` (C7) não foi tocada (mutação suspensa, AD-025).
 - Provas após a correção: Vitest 168/168; Playwright 44/44 contra o contêiner reconstruído; `crapper` sai 0 (pior: `Periodo` 8.1); `dryer` sem candidato (lista da door 4 e com os 11 arquivos); `seletores_conferem.py`, `consultas_preservadas.py` (389) e `chamadas_iguais.py` (99) com 0 problema contra b2e7e79; `ui_isolada.sh` sai 0; `recharts_separado.py` e `precache_completo.py` (17 URLs) com 0 problema.
+
+### Decisão do usuário sobre o C19 (02/11/2026, depois da verificação rodada 1)
+
+- Aceita a barra a partir de 1024 px: gaveta abaixo de 1024 px; acima, links com nome (3 a partir de 1024 px, 5 a
+  partir de 1280 px, 7 a partir de 1536 px) e o resto no menu "Mais". O texto do C19 ("640 px", "os 9 links") fica
+  congelado e não vale mais literalmente; o teste que o prova passa a ser `cabeçalho a 1024 px mostra os links na
+  barra`, junto com `barra a 768/1024/1280/1920 px sem sobreposição, com todos os links ao alcance`. Consequência da
+  escolha "Nomes sempre visíveis, com 'Mais'" feita pelo usuário na mesma data.
