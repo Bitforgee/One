@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/layout-painel/plan.md`
 
-48 checks em 7 slices · 5 one-way doors · 0 perguntas abertas
+53 checks em 8 slices · 5 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`.
 Playwright: `cd web && npx playwright test <arquivo> -g "<nome>"` contra o contêiner `api` da porta 8080 reconstruído com
@@ -194,12 +194,31 @@ Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "Consul
 **C46** - [x] Os dois lados de cada quebra de `## Screens` que nenhum check media: recuo do cabeçalho 16 px (±1) a 768 px e 24 px a 1024 px; recuo do cartão de acesso 24 px a 360 px e 40 px a 768 px; valor dos destaques de Indicadores 24 px com o cartão abaixo de 250 px (1328 px aberta) e 30 px com 250 px ou mais (1440 px aberta) (`## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "quebras medidas dos dois lados"`
 
-**C47** - [x] Enquanto uma ação de linha grava (Ativar, Arquivar, Desativar, Nova versão), o botão "Ações de <nome>" mostra o Spinner e fica desabilitado, como os botões soltos de hoje (AC 27)
+**C47** - Enquanto uma ação de linha grava, o botão "Ações de <nome>" mostra o Spinner e fica desabilitado, nas 3 telas: Artigos (Ativar), Usuários (Desativar) e Documentos (Arquivar). Em `dac2832` só "Ativar" mostrava Spinner; as outras ações só desabilitavam, ou nem isso (Usuários): o retorno visual igual nas 3 é a forma de AC 27 sob o menu (texto corrigido após a verificação rodada 2) (AC 27)
 Proof: `cd web && npx vitest run src/conhecimento/artigos.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
+Proof: `cd web && npx vitest run src/administracao/usuarios.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
+Proof: `cd web && npx vitest run src/conhecimento/documentos.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
 
 **C48** - [x] As asserções exatas de antes continuam exatas: em `usuarios.test.tsx` o papel "Aluno" é conferido com `/^Aluno$/` na célula; em `listas.test.tsx` o número e o título são conferidos com âncora `$` na célula (verification.md rodada 1, ponto 5)
 Proof: `cd web && npx vitest run src/administracao/usuarios.test.tsx -t "lista papéis, setores e o selo de desativado"`
 Proof: `cd web && npx vitest run src/chamados/listas.test.tsx -t "colunas das listas de chamados"`
+
+### S7 - Correção da verificação rodada 2 (P1) · derivado de `## Screens` já aprovado
+
+**C49** - Lista vazia: o texto da linha única fica centralizado (`text-align: center`) e a linha tem 96 px (±1) de altura, na Fila a 360 e 1280 px (AC 24, `## Screens` "tabela vazia")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "lista vazia centralizada"`
+
+**C50** - Trocar senha a 360 e 1280 px: o centro horizontal do cartão fica no centro do bloco de conteúdo (±1) (`## Screens`, "área principal")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "Trocar senha até 384 px"`
+
+**C51** - Cabeçalho a 360 e 1280 px: borda inferior de 1 px; o `h1` fica numa linha (`white-space: nowrap`, `text-overflow: ellipsis`) e um título longo não passa de "Tema"; os botões-ícone Tema e Avisos têm 36 × 36 px (±1) (`## Screens`, "cabeçalho")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cabeçalho: borda, título numa linha e botões de 36 px"`
+
+**C52** - Barra a 1280 px: com a janela de 600 px de altura, a área dos grupos rola (`overflow-y: auto`, `scrollHeight` > `clientHeight`) e o botão do usuário continua visível embaixo; recolhida, as iniciais ficam num quadrado de 32 × 32 px (±1) dentro dos 48 px (`## Screens`, casca aberta e recolhida)
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos rolam e iniciais na barra recolhida"`
+
+**C53** - Valores de tipo e bordas, por tabela a 1440 px com a barra aberta: rodapé dos destaques 14 px, cor `--muted-foreground`, uma linha (`-webkit-line-clamp: 1` ou `white-space: nowrap`); valor dos destaques e dos compactos com `font-weight` 600; rótulo dos compactos 14 px; valor dos compactos com `tabular-nums`; cabeçalho de tabela 14 px peso 500; caixa da tabela com borda de 1 px e raio de 8 px; linhas do corpo separadas por borda inferior de 1 px (Fila) (`## Screens`)
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "valores de tipo e bordas"`
 
 ## Exempted
 
