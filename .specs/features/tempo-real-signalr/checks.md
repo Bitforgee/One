@@ -360,3 +360,14 @@ Tamanho estimado pelo código que cada slice lê e escreve (`wc -c` em `HEAD` / 
   tem 35 `SaveChangesAsync`, não ~40 como o Impact do plano diz — o construtor corrige o número no Impact;
   (7) "nunca devolvido a quem chama" = os métodos do hub não ecoam dados; "30 s no máximo" = espera de nova
   tentativa limitada a 30 s.
+
+### Decisões do usuário depois do build (03/11/2026)
+
+- **C28:** aceito sem o caso "reclassificar avisa a fila antiga e a nova". Reclassificar só troca a categoria e nunca
+  o setor (mvp-one AC 97), então o caso não existe; o C28 vale pelas outras três provas.
+- **`SessaoTests`:** aceita a mudança: o endpoint WebSocket do hub, que não declara método, é lido como `GET` na
+  enumeração, e a contagem de rotas privadas vai de 54 para 56 (as duas rotas novas do hub). A afirmação continua a
+  mesma: toda rota privada exige sessão.
+- **Nota do coordenador sobre a base:** o commit `f996d30` congelou os checks antes do build do `arquivos-minio`, então
+  as provas por diff (C4, C17) comparam com `c1a2a56`, o HEAD quando este build começou; o intervalo da feature para o
+  Verifier é `c1a2a56..dfa2573`.
