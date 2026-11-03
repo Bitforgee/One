@@ -17,6 +17,7 @@ type Opcoes = { sw?: boolean; push?: boolean; notif?: boolean; chave?: number; p
 function ambiente({ sw = true, push = true, notif = true, chave = 200, permissao = 'granted', existente = false, papeis = ['ALUNO'], rotas = {} }: Opcoes = {}) {
   const nova = inscricao()
   let atual: ReturnType<typeof inscricao> | null = existente ? nova : null
+  nova.unsubscribe = vi.fn(async () => ((atual = null), true)) // desinscrever de verdade: getSubscription passa a devolver null
   const subscribe = vi.fn(async () => (atual = nova))
   const requestPermission = vi.fn(async () => permissao)
   if (sw) Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => atual, subscribe } }) } })
@@ -108,6 +109,32 @@ describe('avisos', () => {
     await userEvent.click(await botao('Desativar avisos'))
     await waitFor(() => expect(nova.unsubscribe).toHaveBeenCalledTimes(1))
     expect(chamadas.some((c) => c.metodo === 'DELETE' && c.url === `/api/push/subscricao?endpoint=${encodeURIComponent(Endpoint)}`)).toBe(true)
+    expect(await botao(Ativar)).toBeInTheDocument()
+  })
+
+  it('POST que falha depois do subscribe desfaz a inscrição e o botão volta a Ativar', async () => {
+    const { nova, subscribe } = ambiente({ rotas: { 'POST /api/push/subscricao': () => [500, { title: 'Erro', status: 500, detail: 'Falha no servidor' }] } })
+    abrir('/univag/assistente')
+    await userEvent.click(await botao(Ativar))
+    expect(await screen.findByText('Falha no servidor')).toBeInTheDocument()
+    expect(subscribe).toHaveBeenCalledTimes(1)
+    expect(nova.unsubscribe).toHaveBeenCalledTimes(1)
+    expect(await botao(Ativar)).toBeEnabled()
+  })
+
+  it.each([
+    ['gaveta', 'Menu', ['ALUNO']],
+    ['Mais', 'Mais', ['ALUNO', 'ATENDENTE']],
+  ])('no(a) %s o item de avisos mostra o texto visível', async (_, abre, papeis) => {
+    Element.prototype.setPointerCapture ??= () => undefined // o vaul (gaveta) usa no toque; o jsdom não tem
+    ambiente({ papeis })
+    abrir('/univag/assistente')
+    await botao(Ativar)
+    await userEvent.click(screen.getByRole('button', { name: abre }))
+    const item = (await screen.findAllByRole('button', { name: Ativar })).find((b) => b.textContent === Ativar)
+    expect(item).toBeDefined()
+    await userEvent.click(item!)
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Desativar avisos' }).some((b) => b.textContent === 'Desativar avisos')).toBe(true))
   })
 
   it.each([

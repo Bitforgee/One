@@ -73,4 +73,24 @@ describe('service worker', () => {
     expect(nega('/api/push/chave')).toBe(true)
     expect(nega('/univag/chamados/ONE-12')).toBe(false)
   })
+
+  it('fallback de navegação nega a API (rota registrada no worker)', async () => {
+    vi.resetModules()
+    const registerRoute = vi.fn()
+    const NavigationRoute = vi.fn()
+    vi.doMock('workbox-routing', () => ({ registerRoute, NavigationRoute }))
+    vi.doMock('workbox-precaching', () => ({ cleanupOutdatedCaches: vi.fn(), createHandlerBoundToURL: vi.fn(() => 'h'), precacheAndRoute: vi.fn() }))
+    vi.doMock('workbox-core', () => ({ clientsClaim: vi.fn() }))
+    Object.assign(self, { skipWaiting: vi.fn(), addEventListener: vi.fn(), __WB_MANIFEST: [] }) // o jsdom vira "worker" só aqui
+    try {
+      const { Negados: lista } = await import('./sw')
+      expect(registerRoute).toHaveBeenCalledTimes(1)
+      expect(NavigationRoute).toHaveBeenCalledWith('h', { denylist: lista })
+    } finally {
+      Reflect.deleteProperty(self, 'skipWaiting')
+      vi.doUnmock('workbox-routing')
+      vi.doUnmock('workbox-precaching')
+      vi.doUnmock('workbox-core')
+    }
+  })
 })

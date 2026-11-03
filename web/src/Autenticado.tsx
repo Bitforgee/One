@@ -84,7 +84,12 @@ function Links({ itens, slug, gaveta, aoEscolher }: { itens: Item[]; slug?: stri
 }
 
 // Os links que a barra não comporta na largura atual.
-function Mais({ itens, slug }: { itens: Item[]; slug?: string }) {
+// Os avisos são só do aluno.
+function Avisos({ aluno, item }: { aluno: boolean; item?: string }) {
+  return aluno ? <AvisosPush item={item} /> : null
+}
+
+function Mais({ itens, slug, aluno }: { itens: Item[]; slug?: string; aluno: boolean }) {
   const [aberto, setAberto] = useState(false)
   const fora = itens.slice(3)
   if (!fora.length) return null
@@ -107,6 +112,7 @@ function Mais({ itens, slug }: { itens: Item[]; slug?: string }) {
             {rotulo}
           </NavLink>
         ))}
+        <Avisos aluno={aluno} item="flex h-9 items-center gap-2 rounded-md px-2 text-sm text-foreground hover:bg-accent disabled:opacity-50" />
       </PopoverContent>
     </Popover>
   )
@@ -132,6 +138,7 @@ export function Autenticado() {
   if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return <Navigate to={`/${slug}/trocar-senha`} replace />
 
   const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
+  const aluno = me.papeis.includes('ALUNO')
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
 
   async function sair() {
@@ -150,9 +157,9 @@ export function Autenticado() {
           </span>
           <div className="flex items-center gap-1">
             <Links itens={itens} slug={slug} />
-            <Mais itens={itens} slug={slug} />
+            <Mais itens={itens} slug={slug} aluno={aluno} />
           </div>
-          {me.papeis.includes('ALUNO') && <AvisosPush />}
+          <Avisos aluno={aluno} />
           <Tema />
           <Drawer open={aberto} onOpenChange={setAberto}>
             <DrawerTrigger asChild>
@@ -166,6 +173,7 @@ export function Autenticado() {
               </DrawerHeader>
               <div className="flex flex-col pb-4">
                 <Links itens={itens} slug={slug} gaveta aoEscolher={() => setAberto(false)} />
+                <Avisos aluno={aluno} item="flex h-12 items-center gap-3 px-4 text-start disabled:opacity-50" />
                 <button type="button" onClick={sair} className="flex h-12 items-center gap-3 px-4 text-start">
                   <LogOut aria-hidden="true" className="size-4" />
                   Sair

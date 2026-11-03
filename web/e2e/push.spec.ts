@@ -63,3 +63,11 @@ test('barra com o botão de avisos sem sobreposição', async ({ page }) => {
       for (let j = i + 1; j < itens.length; j++) expect(sobrepoe(itens[i], itens[j]), `${largura} px: "${itens[i].texto}" x "${itens[j].texto}"`).toBe(false)
   }
 })
+
+test('na gaveta o item de avisos mostra o texto visível', async ({ page }) => {
+  await comChave(page, 200)
+  await page.setViewportSize({ width: 360, height: 740 })
+  await page.goto('/univag/assistente')
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await expect(page.getByRole('dialog').getByText(Ativar, { exact: true })).toBeVisible()
+})
