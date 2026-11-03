@@ -117,10 +117,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Du
 
 ### S6 - A migração não perde dado em silêncio (P2) · ~6 files · ~50 KB · ~14k
 
-**C22** - [ ] Em banco descartável migrado até `Rag` sem linha em `Anexos` nem `VersoesDocumento`, aplicar `ArquivosMinio` passa e deixa `Chave` e `Hash` `NOT NULL` com índice único em `Chave` nas duas tabelas, `Tamanho` em `VersoesDocumento` e nenhuma coluna `Conteudo` (AC 20, door 1)
+**C22** - [x] Em banco descartável migrado até `Rag` sem linha em `Anexos` nem `VersoesDocumento`, aplicar `ArquivosMinio` passa e deixa `Chave` e `Hash` `NOT NULL` com índice único em `Chave` nas duas tabelas, `Tamanho` em `VersoesDocumento` e nenhuma coluna `Conteudo` (AC 20, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MigracaoArquivosMinioTests.Migracao_aplica_em_banco_sem_linha"`
 
-**C23** - [ ] Com 1 linha em `Anexos` (caso 1) ou 1 linha em `VersoesDocumento` (caso 2), aplicar `ArquivosMinio` lança erro cuja mensagem contém `docker compose down -v`, `Conteudo` continua existindo nas duas tabelas e `__EFMigrationsHistory` não registra `ArquivosMinio` (AC 21, door 1)
+**C23** - [x] Com 1 linha em `Anexos` (caso 1) ou 1 linha em `VersoesDocumento` (caso 2), aplicar `ArquivosMinio` lança erro cuja mensagem contém `docker compose down -v`, `Conteudo` continua existindo nas duas tabelas e `__EFMigrationsHistory` não registra `ArquivosMinio` (AC 21, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MigracaoArquivosMinioTests.Migracao_aborta_com_linha_em_anexo_ou_versao"`
 
 **C24** - [ ] O modelo do `OneDb` não tem mudança pendente em relação ao `OneDbModelSnapshot`, e `dotnet ef migrations has-pending-model-changes --project api` sai com 0 (AC 22)
