@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 63,
+  "next_id": 66,
   "lessons": [
     {
       "id": "L-001",
@@ -1134,6 +1134,60 @@
       ],
       "created": "2026-11-03T19:03:24Z",
       "last_seen": "2026-11-03T19:03:24Z"
+    },
+    {
+      "id": "L-063",
+      "key": "ac_gap::when a check lists a position for a state on several screens measure that state on each screen proving it on one screen repeats l 059",
+      "text": "When a check lists a position for a state on several screens, measure that state on each screen; proving it on one screen repeats L-059",
+      "signal": "ac_gap",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "login-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C7; web/e2e/arranjo.spec.ts:1437-1442 (Criar senha success Alert unmeasured) (web-tests)"
+      ],
+      "created": "2026-11-03T20:25:41Z",
+      "last_seen": "2026-11-03T20:25:41Z"
+    },
+    {
+      "id": "L-064",
+      "key": "spec_precision_gap::when screens says centred for an element write both the horizontal and the vertical claim or say which one and name every text the centrado covers not only the h1",
+      "text": "When Screens says 'centred' for an element, write both the horizontal and the vertical claim (or say which one) and name every text the 'centrado' covers, not only the h1",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "login-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C15, C6; plan.md:83,89 (specs/checks)"
+      ],
+      "created": "2026-11-03T20:25:41Z",
+      "last_seen": "2026-11-03T20:25:41Z"
+    },
+    {
+      "id": "L-065",
+      "key": "ac_gap::a text check that promises every state of every screen must enumerate the error states of each form screen not only the ones the old test already had",
+      "text": "A text check that promises every state of every screen must enumerate the error states of each form screen, not only the ones the old test already had",
+      "signal": "ac_gap",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "login-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C18; web/src/acesso/textos.test.tsx:95-117 (web-tests)"
+      ],
+      "created": "2026-11-03T20:25:41Z",
+      "last_seen": "2026-11-03T20:25:41Z"
     }
   ]
 }

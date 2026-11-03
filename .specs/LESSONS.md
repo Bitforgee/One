@@ -384,6 +384,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: C47 (rewritten after round 2) (specs/checks)
 - last seen: 2026-11-03T19:03:24Z
 
+### L-063 - When a check lists a position for a state on several screens, measure that state on each screen; proving it on one screen repeats L-059
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: login-institucional
+- evidence: C7; web/e2e/arranjo.spec.ts:1437-1442 (Criar senha success Alert unmeasured) (web-tests)
+- last seen: 2026-11-03T20:25:41Z
+
+### L-064 - When Screens says 'centred' for an element, write both the horizontal and the vertical claim (or say which one) and name every text the 'centrado' covers, not only the h1
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: login-institucional
+- evidence: C15, C6; plan.md:83,89 (specs/checks)
+- last seen: 2026-11-03T20:25:41Z
+
+### L-065 - A text check that promises every state of every screen must enumerate the error states of each form screen, not only the ones the old test already had
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: login-institucional
+- evidence: C18; web/src/acesso/textos.test.tsx:95-117 (web-tests)
+- last seen: 2026-11-03T20:25:41Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
