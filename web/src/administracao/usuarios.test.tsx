@@ -119,4 +119,17 @@ describe('usuários', () => {
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Desativar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Usuário desativado.'))
   })
+
+  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
+  it('ações de linha mostram o Spinner enquanto gravam', async () => {
+    let responder!: () => void
+    usuarios({ 'POST /api/admin/usuarios/1/desativar': () => new Promise((resolve) => (responder = () => resolve([200, {}]))) })
+    await escolher('Carla', 'Desativar')
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Desativar' }))
+    const gatilho = await screen.findByRole('button', { name: 'Ações de Carla' })
+    await waitFor(() => expect(gatilho).toBeDisabled())
+    expect(within(gatilho).getByRole('status')).toBeInTheDocument()
+    responder()
+    await waitFor(() => expect(within(gatilho).queryByRole('status')).not.toBeInTheDocument())
+  })
 })

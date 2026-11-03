@@ -878,7 +878,11 @@ test.describe('painel', () => {
       await page.setViewportSize({ width: w, height: 800 })
       await page.goto('/univag/trocar-senha')
       await page.getByRole('heading', { level: 1, name: 'Trocar senha' }).waitFor()
-      expect((await caixa(page.locator('main > div > div').first())).width, `${w} px`).toBeLessThanOrEqual(384)
+      const cartao = await caixa(page.locator('main > div > div').first())
+      expect(cartao.width, `${w} px`).toBeLessThanOrEqual(384)
+      // C50: centrado no bloco de conteúdo
+      const bloco = await caixa(page.locator('main > div').first())
+      expect(Math.abs(cartao.x + cartao.width / 2 - (bloco.x + bloco.width / 2)), `${w} px: centro do cartão`).toBeLessThanOrEqual(1)
     }
   })
 
@@ -1145,5 +1149,117 @@ test.describe('painel', () => {
       expect(Math.abs(bloco.x - (main.x + lado)), `${w} px: recuo esquerdo`).toBeLessThanOrEqual(1)
       expect(Math.abs(bloco.y - (cabecalho.y + cabecalho.height + topo)), `${w} px: distância ao cabeçalho`).toBeLessThanOrEqual(1)
     }
+  })
+
+  // C49
+  test('lista vazia centralizada', async ({ page }) => {
+    await simularApi(page)
+    await page.route((url) => url.pathname === '/api/chamados' && url.search.includes('escopo=fila'), (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
+    for (const w of [360, 1280]) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag/fila')
+      const celula = page.getByRole('cell', { name: 'Nenhum chamado na fila dos seus setores.' })
+      await celula.waitFor()
+      expect(await celula.evaluate((e) => getComputedStyle(e).textAlign), `${w} px: alinhamento`).toBe('center')
+      expect(Math.abs((await caixa(page.locator('tbody tr'))).height - 96), `${w} px: altura da linha`).toBeLessThanOrEqual(1)
+    }
+  })
+
+  // C51
+  test.describe('cabeçalho medido', () => {
+    test.use({ serviceWorkers: 'allow' })
+
+    test('cabeçalho: borda, título numa linha e botões de 36 px', async ({ page }) => {
+      await simularApi(page)
+      await page.route('**/api/push/chave', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ chavePublica: 'BAEC' }) }))
+      for (const w of [360, 1280]) {
+        await page.setViewportSize({ width: w, height: 800 })
+        await page.goto('/univag/fila')
+        const cabecalho = page.locator('main > header')
+        const avisos = cabecalho.getByRole('button', { name: 'Ativar avisos neste aparelho' })
+        await avisos.waitFor()
+        expect(await cabecalho.evaluate((e) => getComputedStyle(e).borderBottomWidth), `${w} px: borda inferior`).toBe('1px')
+        const h1 = cabecalho.getByRole('heading', { level: 1 })
+        expect(await h1.evaluate((e) => [getComputedStyle(e).whiteSpace, getComputedStyle(e).textOverflow]), `${w} px: h1`).toEqual(['nowrap', 'ellipsis'])
+        await h1.evaluate((e) => (e.textContent = 'Um título de tela muito mais longo do que cabe ao lado dos botões do cabeçalho, para forçar o corte'))
+        const tema = cabecalho.getByRole('button', { name: 'Tema' })
+        const [t, h] = [await caixa(tema), await caixa(h1)]
+        expect(h.x + h.width, `${w} px: título longo não passa de Tema`).toBeLessThanOrEqual(t.x + 1)
+        expect(h.height, `${w} px: título numa linha`).toBeLessThanOrEqual(24)
+        for (const [nome, b] of [['Tema', t], ['Avisos', await caixa(avisos)]] as const) {
+          expect([Math.abs(b.width - 36) <= 1, Math.abs(b.height - 36) <= 1], `${w} px: ${nome} 36 x 36`).toEqual([true, true])
+        }
+      }
+    })
+  })
+
+  // C52
+  test('grupos rolam e iniciais na barra recolhida', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 1280, height: 600 })
+    await page.goto('/univag/fila')
+    const barra = page.locator(Conteiner)
+    const grupos = barra.locator('[data-slot=sidebar-content]')
+    const usuario = barra.getByRole('button', { name: /Ana/ })
+    await usuario.waitFor()
+    expect(await grupos.evaluate((e) => [getComputedStyle(e).overflowY, e.scrollHeight > e.clientHeight]), 'grupos rolam').toEqual(['auto', true])
+    const u = await caixa(usuario)
+    expect(u.y + u.height, 'botão do usuário dentro da janela').toBeLessThanOrEqual(600 + 1)
+    expect(u.y, 'botão do usuário embaixo').toBeGreaterThan(300)
+
+    await recolhida(page)
+    await page.goto('/univag/fila')
+    await expect.poll(() => largura(page)).toBe(48)
+    const iniciais = await caixa(barra.getByText('A', { exact: true }))
+    expect([Math.abs(iniciais.width - 32) <= 1, Math.abs(iniciais.height - 32) <= 1], 'quadrado de 32 x 32').toEqual([true, true])
+    expect(iniciais.x, 'iniciais dentro da barra').toBeGreaterThanOrEqual(-1)
+    expect(iniciais.x + iniciais.width, 'iniciais dentro da barra').toBeLessThanOrEqual(49)
+  })
+
+  // C53
+  test('valores de tipo e bordas', async ({ page }) => {
+    await simularApi(page, undefined, true) // com 2 linhas na Fila: a última linha não leva borda
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/univag/indicadores')
+    await page.getByText('Indicador principal').waitFor()
+    const mudo = await page.evaluate(() => {
+      const p = document.createElement('i')
+      p.style.color = 'var(--muted-foreground)'
+      document.body.append(p)
+      return getComputedStyle(p).color
+    })
+    const estilo = (l: Locator) =>
+      l.evaluate((e) => {
+        const c = getComputedStyle(e)
+        return { tam: c.fontSize, peso: c.fontWeight, cor: c.color, num: c.fontVariantNumeric, quebra: c.whiteSpace, grampo: c.getPropertyValue('-webkit-line-clamp') }
+      })
+    const rodapes = [
+      'Resolvidas sem reabertura, sobre as conversas com desfecho',
+      'Chamados não fechados neste momento',
+      'Resolvidas pelo assistente, sobre as conversas com desfecho',
+      'Da abertura à primeira resposta pública',
+    ]
+    for (const texto of rodapes) {
+      const l = page.getByText(texto, { exact: true })
+      const e = await estilo(l)
+      expect([e.tam, e.cor], `rodapé "${texto}"`).toEqual(['14px', mudo])
+      expect(e.grampo === '1' || e.quebra === 'nowrap', `rodapé "${texto}" numa linha`).toBe(true)
+      expect((await caixa(l)).height, `rodapé "${texto}" renderiza numa linha`).toBeLessThanOrEqual(24)
+    }
+    expect((await estilo(page.locator('[data-slot=card-title]').first())).peso, 'valor do destaque').toBe('600')
+    // compactos: os cartões sem nenhum filho com data-slot
+    const compacto = page.locator('[data-slot=card]').filter({ hasNot: page.locator('[data-slot]') }).first()
+    const [rotulo, valor] = [await estilo(compacto.locator('> div').nth(0)), await estilo(compacto.locator('> div').nth(1))]
+    expect(rotulo.tam, 'rótulo do compacto').toBe('14px')
+    expect(valor.peso, 'valor do compacto').toBe('600')
+    expect(valor.num, 'valor do compacto').toContain('tabular-nums')
+
+    await page.goto('/univag/fila')
+    await page.getByText('ONE-123').waitFor()
+    const cabecalho = await estilo(page.getByRole('columnheader', { name: 'Número' }))
+    expect([cabecalho.tam, cabecalho.peso], 'cabeçalho da tabela').toEqual(['14px', '500'])
+    const caixaTabela = page.locator('[data-slot=table-container]').locator('..')
+    expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['1px', '1px', '8px'])
+    expect(await page.locator('tbody tr').first().evaluate((e) => getComputedStyle(e).borderBottomWidth), 'borda entre linhas').toBe('1px')
   })
 })

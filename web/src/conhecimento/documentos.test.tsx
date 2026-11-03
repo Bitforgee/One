@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, acoesDe, api, escolher, me } from '../test/util'
@@ -83,5 +83,24 @@ describe('documentos', () => {
     await screen.findByText('No ar')
     expect(await acoesDe('No ar')).toEqual(['Nova versão', 'Arquivar!'])
     expect(screen.queryByRole('button', { name: 'Ações de Guardado' })).not.toBeInTheDocument()
+  })
+
+  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
+  it('ações de linha mostram o Spinner enquanto gravam', async () => {
+    let responder!: () => void
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/documentos': () => [200, [documento(1, 'Regulamento de estágio', 'INDEXADO', 12)]],
+      'GET /api/admin/categorias': () => [200, categorias],
+      'POST /api/admin/documentos/1/arquivar': () => new Promise((resolve) => (responder = () => resolve([200, {}]))),
+    })
+    abrir('/univag/documentos')
+    await escolher('Regulamento de estágio', 'Arquivar')
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
+    const gatilho = await screen.findByRole('button', { name: 'Ações de Regulamento de estágio' })
+    await waitFor(() => expect(gatilho).toBeDisabled())
+    expect(within(gatilho).getByRole('status')).toBeInTheDocument()
+    responder()
+    await waitFor(() => expect(within(gatilho).queryByRole('status')).not.toBeInTheDocument())
   })
 })
