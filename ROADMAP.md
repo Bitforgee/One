@@ -1,7 +1,7 @@
 # One: roadmap
 
 - **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  interface nova em build, lote 1 de 3; domínio rico e contratos com plano aprovado)
+  interface nova em build, lote 2 de 3; domínio rico e contratos em build, lote 1 de 3)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -9,7 +9,7 @@
   - `.specs/features/refatoracao-solid/plan.md` e `checks.md`: a refatoração (Etapa 4b), 36 critérios, 39 checks;
   - `.specs/features/vertical-slice-completa/`: um arquivo por caso de uso com `Mediator` (Etapa 4c), 31 checks;
   - `.specs/features/interface-nova/`: shadcn/ui e Tailwind no `web/` (Etapa 4c), 61 critérios, 94 checks;
-  - `.specs/features/dominio-e-contratos/plan.md`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios;
+  - `.specs/features/dominio-e-contratos/`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios, 41 checks;
   - `.specs/STATE.md`: decisões AD-001 a AD-024;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
@@ -45,14 +45,14 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 68 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 292 (237 antes da refatoração), web 99 (35 antes da refatoração; o lote 1 da interface nova ainda vai mudar esse número), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
+| Testes | API 292 (237 antes da refatoração), web 118 (35 antes da refatoração, 99 antes da interface nova), e2e 23 (11 de antes mais 12 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
-| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. Lote 1 (S0 a S2: portões, fundação Tailwind/shadcn/TanStack Query e o chat do Assistente) com 3 commits, fechando a mutação |
-| Domínio rico e contratos (`dominio-e-contratos`) | Plano aprovado em 02/11 (`066ca62`): 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo; checks em escrita |
+| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. Lote 2 (detalhe do chamado, Indicadores, listas) em build |
+| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes: S1 rede de segurança (em build) → S5+S3+S4 estrutura e entidades ricas → S2 contratos |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -224,11 +224,11 @@ antes do código, verificação independente depois), e a próxima só começa c
 | Quando | Feature | Onde |
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
-| 03–05/11 | domínio rico e contratos por caso de uso (AD-024): plano aprovado em 02/11, checks em escrita | `api/` |
+| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): plano e checks aprovados em 02/11; build começou em 02/11, lote 1 de 3 | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
-| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: build começou em 02/11; lote 1 (Assistente) quase pronto, lotes 2 (detalhe do chamado, Indicadores, listas) e 3 (demais telas e saída do Bootstrap) a seguir | `web/` |
+| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: lote 1 (fundação e Assistente) verde em 02/11; lote 2 (detalhe do chamado, Indicadores, listas) em build; lote 3 (demais telas e saída do Bootstrap) a seguir | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
 
@@ -244,6 +244,14 @@ antes de 04/11.
 - planejar com `tlc-spec-lean` (feature `vertical-slice-completa`, plano e checks antes do código), mantendo as regras do `ArquiteturaTests` e o CA1502.
 
 **Domínio rico e contratos por caso de uso (AD-024)**
+
+Plano e checks aprovados em 02/11. Build em 3 lotes, cada um só com o anterior verde:
+- [ ] Lote 1 (S1): rede de segurança gravada contra o código de antes: JSON de sucesso de 59 chamadas,
+      importação, o que cada ação grava (colunas, mensagens, eventos) e a ordem de recusa de cada handler.
+- [ ] Lote 2 (S5, S3, S4): uma entidade por arquivo em pastas por agregado, regra de dependência no
+      `ArquiteturaTests`, `Chamado` rico (12 transições e `Abrir`), `Artigo` e `Documento` ricos.
+- [ ] Lote 3 (S2): 41 respostas nomeadas e 29 `Entrada`, um por caso de uso.
+- [ ] Verificação independente aprovada.
 
 Decisão do usuário em 02/11/2026: a vertical slice não basta se as entidades ficam todas num
 arquivo, sem regra, e as respostas são objetos anônimos. Entra logo depois da verificação da vertical
@@ -370,6 +378,14 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 | Produto comercial | vender | <ul><li>cobrança por resolução ou por aluno ativo;</li><li>LGPD completa;</li><li>observabilidade;</li><li>busca no INPI pelo nome "One"</li></ul> |
 
 ### Interface nova (Etapa 4c, antes da banca)
+
+- [x] Lote 1 (S0 a S2, C1 a C38): portões, fundação (Tailwind v4, shadcn/ui, TanStack Query) e o chat do
+      Assistente. Vitest 118, e2e 23, 300 mutantes mortos. Achado: as classes utilitárias do Bootstrap
+      usam `!important` e vencem as do Tailwind com o mesmo nome; um bloco provisório em `index.css`
+      corrige até a S9 apagar o Bootstrap.
+- [ ] Lote 2 (S3 a S5, C39 a C59): detalhe do chamado, Indicadores (Recharts carregado sob demanda) e listas.
+- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento, administração e a saída do Bootstrap.
+- [ ] Verificação independente aprovada (perfil `ui`).
 
 Decisão do usuário em 02/11/2026 (AD-020): o `web/` troca o Bootstrap por esta stack antes da banca, tela a tela,
 dentro das 6 fatias do AD-017. Planejar com `tlc-spec-lean` perfil `ui`, e a migração não pode
