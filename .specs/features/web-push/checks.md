@@ -362,3 +362,13 @@ total 22,6k.
 - **Settled mid-build:** C33 (troca para `Lib.Net.Http.WebPush` 3.3.1, nota na door 1); `ParVapid` (chaves por `ECDsa`, a biblioteca não gera); `DELETE` leva `?endpoint=` (lote 1), então C48 afirma a query e não o corpo `{ endpoint }`; o botão é um sino com `aria-label`/`title` (cabe em 360 px), não texto visível; `interface.test.ts` (`navigateFallbackDenylist` em `vite.config.ts`) passou a ler a mesma lista em `sw.ts`, porque a opção deixou de existir com `injectManifest`; C24 e o teste 404/410 do C33 mudaram só nome do pacote/versão e tipo da exceção; C51: o Chromium headless informa `Notification.permission` "denied" sem decisão, então o e2e afirma `permissions.query` = "prompt" e 0 chamadas a `requestPermission`.
 - **Abandoned:** nada de código; `WebPush` 1.0.13 removido. Limites conhecidos: se o `POST` falha depois do `subscribe`, a subscrição local fica (o botão mostra "Desativar avisos"); C44 afirma a lista `Negados` e o texto `denylist: Negados` no `sw.ts`, não a rota registrada no Workbox. A entrega real com a chave VAPID de verdade segue manual (go-live).
 
+
+### Decisões do usuário depois da verificação rodada 1 (03/11/2026)
+
+- **C45/C46 (botão):** na barra, o sino com `aria-label` e `title`; na gaveta (abaixo de 1024 px) e no menu "Mais", o
+  item mostra o texto visível ("Ativar avisos neste aparelho" / "Desativar avisos"). Testes medem o texto visível
+  nesses dois lugares.
+- **C48 (DELETE):** aceito `DELETE /api/push/subscricao?endpoint=<url-encoded>` no lugar do corpo `{ endpoint }`. O teste
+  que mostra o botão voltando para "Ativar avisos neste aparelho" depois de desativar continua obrigatório.
+- **Estado de erro do botão:** se o `POST` da inscrição falhar depois do `subscribe`, o navegador desfaz a inscrição
+  (`unsubscribe`), mostra a mensagem de erro e o botão volta para "Ativar avisos neste aparelho"; um teste prova esse caminho.
