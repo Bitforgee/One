@@ -18,54 +18,54 @@ Regra do arranjo e regra dos textos: as da `interface-nova` (`checks.md`, cabeç
 
 ### S1 - Casca com a barra lateral do template (P1) · ~12 files · ~170 KB · ~60k
 
-**C1** - A 768, 1024, 1280 e 1440 px com a barra aberta: a barra fica em x = 0 com 256 px (±1) de largura e a altura da janela; "One" e a instituição ficam no topo, acima do primeiro título de grupo; o botão do usuário fica embaixo, com o fundo a até 16 px do fim da barra; o `main` começa em x = 256 (±1) (AC 1)
+**C1** - [x] A 768, 1024, 1280 e 1440 px com a barra aberta: a barra fica em x = 0 com 256 px (±1) de largura e a altura da janela; "One" e a instituição ficam no topo, acima do primeiro título de grupo; o botão do usuário fica embaixo, com o fundo a até 16 px do fim da barra; o `main` começa em x = 256 (±1) (AC 1)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel barra aberta"`
 
-**C2** - A 1280 px, clicar em "Alternar barra lateral" deixa a barra com 48 px (±1), o `main` começando em x = 48 (±1) e `localStorage['one-barra'] === 'recolhida'`; clicar de novo volta a 256 px (±1) e grava `aberta` (AC 2)
+**C2** - [x] A 1280 px, clicar em "Alternar barra lateral" deixa a barra com 48 px (±1), o `main` começando em x = 48 (±1) e `localStorage['one-barra'] === 'recolhida'`; clicar de novo volta a 256 px (±1) e grava `aberta` (AC 2)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel recolher e expandir"`
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "alternar barra grava one-barra"`
 
-**C3** - Ao carregar uma tela autenticada, a barra começa recolhida com `one-barra` = `recolhida` e aberta com `aberta`, ausente ou `xyz` (4 casos, por tabela) (AC 3)
+**C3** - [x] Ao carregar uma tela autenticada, a barra começa recolhida com `one-barra` = `recolhida` e aberta com `aberta`, ausente ou `xyz` (4 casos, por tabela) (AC 3)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "estado inicial da barra por one-barra"`
 
-**C4** - Recolhida a 1280 px: os 9 links do administrador mantêm o nome acessível do rótulo e só o ícone é visível (rótulo, títulos de grupo e instituição sem caixa visível ou com largura ≤ 1 px); passar o mouse num link e focar outro pelo teclado mostram uma dica com o rótulo (AC 4)
+**C4** - [x] Recolhida a 1280 px: os 9 links do administrador mantêm o nome acessível do rótulo e só o ícone é visível (rótulo, títulos de grupo e instituição sem caixa visível ou com largura ≤ 1 px); passar o mouse num link e focar outro pelo teclado mostram uma dica com o rótulo (AC 4)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel barra recolhida"`
 
-**C5** - A 360, 390 e 767 px nenhuma parte da barra fica visível na janela; "Alternar barra lateral" abre um painel em x = 0 com min(288, largura da janela) px (±1), com a instituição, os 3 grupos e os 9 links do administrador e o botão do usuário (AC 5)
+**C5** - [x] A 360, 390 e 767 px nenhuma parte da barra fica visível na janela; "Alternar barra lateral" abre um painel em x = 0 com min(288, largura da janela) px (±1), com a instituição, os 3 grupos e os 9 links do administrador e o botão do usuário (AC 5)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel no celular"`
 
-**C6** - A 360 px, escolher "Fila" no painel fecha o painel (nenhum `role="dialog"` visível) e o `h1` do cabeçalho passa a "Fila" (AC 6)
+**C6** - [x] A 360 px, escolher "Fila" no painel fecha o painel (nenhum `role="dialog"` visível) e o `h1` do cabeçalho passa a "Fila" (AC 6)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel no celular"`
 
-**C7** - Ctrl+B (e Meta+B) alterna a barra: de aberta para recolhida e de volta (AC 7)
+**C7** - [x] Ctrl+B (e Meta+B) alterna a barra: de aberta para recolhida e de volta (AC 7)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "Ctrl+B alterna a barra"`
 
-**C8** - A 360 e 1280 px o cabeçalho tem 49 px (±1) de altura e continua em y = 0 depois de rolar a página 400 px; da esquerda para a direita: "Alternar barra lateral", um separador vertical (`data-orientation="vertical"`), o `h1` (`font-size` 16 px, `font-weight` 500), e na ponta direita "Tema"; para o aluno com a chave de push, o botão de avisos fica à esquerda de "Tema", na mesma linha (AC 8)
+**C8** - [x] A 360 e 1280 px o cabeçalho tem 49 px (±1) de altura e continua em y = 0 depois de rolar a página 400 px; da esquerda para a direita: "Alternar barra lateral", um separador vertical (`data-orientation="vertical"`), o `h1` (`font-size` 16 px, `font-weight` 500), e na ponta direita "Tema"; para o aluno com a chave de push, o botão de avisos fica à esquerda de "Tema", na mesma linha (AC 8)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel cabeçalho"`
 Proof: `cd web && npx playwright test e2e/push.spec.ts -g "avisos no cabeçalho"`
 
-**C9** - O `h1` do cabeçalho, por tabela sobre 11 rotas: os 9 caminhos de `Menu` dão o rótulo do link; `chamados/ONE-7` dá "ONE-7"; `trocar-senha` dá "Trocar senha"; em cada uma há exatamente 1 `h1` na página (AC 9)
+**C9** - [x] O `h1` do cabeçalho, por tabela sobre 11 rotas: os 9 caminhos de `Menu` dão o rótulo do link; `chamados/ONE-7` dá "ONE-7"; `trocar-senha` dá "Trocar senha"; em cada uma há exatamente 1 `h1` na página (AC 9)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "título do cabeçalho por rota"`
 
-**C10** - O botão do usuário abre um menu com o `nome`, o papel e "Sair"; o papel por tabela: [ADMINISTRADOR, ATENDENTE, ALUNO] → "Administrador", [ALUNO, ATENDENTE] → "Atendente", [ALUNO] → "Aluno"; "Sair" faz `POST /api/auth/logout` e leva a `/{slug}` (AC 10)
+**C10** - [x] O botão do usuário abre um menu com o `nome`, o papel e "Sair"; o papel por tabela: [ADMINISTRADOR, ATENDENTE, ALUNO] → "Administrador", [ALUNO, ATENDENTE] → "Atendente", [ALUNO] → "Aluno"; "Sair" faz `POST /api/auth/logout` e leva a `/{slug}` (AC 10)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "menu do usuário"`
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "papel do usuário por precedência"`
 
-**C11** - Com `prefers-reduced-motion: reduce`, alternar a barra a 1280 px não tem transição: a largura já é a final no quadro seguinte ao clique (`transition-duration` 0s no contêiner da barra) (AC 11)
+**C11** - [x] Com `prefers-reduced-motion: reduce`, alternar a barra a 1280 px não tem transição: a largura já é a final no quadro seguinte ao clique (`transition-duration` 0s no contêiner da barra) (AC 11)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "movimento reduzido na barra lateral"`
 
-**C12** - Depois de alternar a barra 2 vezes, `document.cookie` não contém `sidebar_state`, e nenhum arquivo de `web/src` contém `document.cookie` (AC 12)
+**C12** - [x] Depois de alternar a barra 2 vezes, `document.cookie` não contém `sidebar_state`, e nenhum arquivo de `web/src` contém `document.cookie` (AC 12)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "sem cookie sidebar_state"`
 
 ### S2 - Conteúdo responsivo (P1) · ~4 files · ~60 KB · ~20k
 
-**C13** - Sem rolagem horizontal (`document.documentElement.scrollWidth` ≤ `innerWidth`) em 15 telas (Assistente, Minhas solicitações, Detalhe do chamado, Fila, Indicadores com dados, Artigos, Documentos, Usuários, Matrículas com erros, Cadastros, Trocar senha, Login, Primeiro acesso, Definir senha, raiz) a 360, 390, 768, 1024, 1280 e 1440 px; nas autenticadas a partir de 768 px, com a barra aberta e recolhida; com os textos longos da simulada (título de 120 caracteres sem espaço em Fila, Artigos e Documentos, e-mail de 60 caracteres em Usuários) (AC 13)
+**C13** - [x] Sem rolagem horizontal (`document.documentElement.scrollWidth` ≤ `innerWidth`) em 15 telas (Assistente, Minhas solicitações, Detalhe do chamado, Fila, Indicadores com dados, Artigos, Documentos, Usuários, Matrículas com erros, Cadastros, Trocar senha, Login, Primeiro acesso, Definir senha, raiz) a 360, 390, 768, 1024, 1280 e 1440 px; nas autenticadas a partir de 768 px, com a barra aberta e recolhida; com os textos longos da simulada (título de 120 caracteres sem espaço em Fila, Artigos e Documentos, e-mail de 60 caracteres em Usuários) (AC 13)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "sem rolagem horizontal"`
 
 **C14** - O elemento que envolve o conteúdo de cada tela tem `container-type: inline-size` e `container-name: main`; a 900 px a Fila mostra só Número, Título e Estado com a barra aberta e as 6 colunas recolhida (a mesma janela, o arranjo muda com a largura do `main`) (AC 14)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "colunas pela largura do main"`
 
-**C15** - Na Fila, o primeiro bloco do conteúdo começa 16 px (±1) depois da borda esquerda do `main` e 16 px abaixo do cabeçalho a 360 px; 16 px à esquerda e 24 px abaixo a 768 px recolhida; 24 px e 24 px a 1280 px (AC 15)
+**C15** - [x] Na Fila, o primeiro bloco do conteúdo começa 16 px (±1) depois da borda esquerda do `main` e 16 px abaixo do cabeçalho a 360 px; 16 px à esquerda e 24 px abaixo a 768 px recolhida; 24 px e 24 px a 1280 px (AC 15)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "recuos do conteúdo"`
 
 ### S3 - Indicadores com hierarquia (P1) · ~5 files · ~45 KB · ~18k
@@ -233,3 +233,7 @@ Somando ≈ 15k de escrita e ≈ 10k de suítes, dá **~68k**. Total **~258k**, 
 - S5 (detalhe, Assistente, acesso) = ~68k; o lote final roda de novo C33-C38 sobre a feature inteira
 - Mechanism: handoff em 3 lotes sequenciais (lote 1: S1 + S2 + S0; lote 2: S3 + S4; lote 3: S5 e S0 de novo sobre a feature inteira), cada um só depois do verde do anterior - escolha do usuário em 03/11; construtores no Sonnet (memória do projeto)
 - Feature base (`<base>`): `dac2832` (`docs(layout-painel): plan, checks and AD-029`)
+
+- **Boundary:** C1-C13 and C15 closed at the `feat(web)` and `test(web)` commits after `8b9e5dc`; C14 stays open: its container half is proven ("colunas pela largura do main" checks `container-type`/`container-name`), the Fila columns half needs the table of batch 2. Provas no HEAD: Vitest 259/259; Playwright 58/58 contra o contêiner `api` reconstruído; `chamadas_iguais.py dac2832` 238 testes, 0 problema (com o `vaul` reinstalado só em `node_modules`, `--no-save`, porque a base ainda importa `ui/drawer`); `crapper` 0 (pior: `Sidebar` 9.8); `dryer` sem candidato; `mutator` não rodou (AD-025)
+- **Settled mid-build:** (1) Vitest reescritos (entradas em `REESCRITOS`): `rodapé da barra lateral por papel (...)` x3 -> `botões do cabeçalho por papel (...)`; `nome do usuário na gaveta` -> `nome do usuário no painel do celular`; `recolher e expandir gravam one-barra` -> `alternar barra grava one-barra`; `one-barra desconhecido começa aberta (null/x)` -> `estado inicial da barra por one-barra (...)`; `avisos > na barra lateral ...` e `avisos > no(a) gaveta ...` -> `no cabeçalho o botão de avisos é um ícone com nome acessível e alterna`. (2) Mantidos pelo nome mas adaptados à casca: `dependências do kit de interface` (vaul agora ausente), `títulos de página` (h1 só em `Autenticado` e `Acesso`), textos de `cabeçalho`, `Trocar senha`, `Matrículas` e `detalhe do chamado`, o filtro de botões de `limite oferece só dois botões`, o título `h2` nos testes do detalhe, o passo de abrir o menu do usuário em `sair encerra a conexão...`, a classe `@3xl/main:` no teste dos cartões de Indicadores. (3) e2e: sai todo teste da barra de 240/64 px, da gaveta e de `grupos`; `push.spec` troca `na gaveta...` e `barra recolhida esconde...` por `avisos no cabeçalho`; `arranjo.spec` mede o `main > div > div` (o `main` é o `SidebarInset`, o contêiner é `main > div`). (4) O contêiner `@container/main` é um bloco com os recuos nele mesmo (o `mx-auto` de filho num `flex-col` encolhia a tela ao conteúdo); as listas de chamados perderam o `max-w-3xl` e Indicadores trocou `md:` por `@3xl/main:` para passar C13. (5) `SidebarMenuAction` e `SidebarMenuSub*` saíram do `sidebar.tsx` copiado (CRAP 20 e 12 sem uso). (6) A barra tem `role="navigation"` no `SidebarContent`. (7) `Telas` de `simulada.ts` é compartilhada com `plataforma.spec.ts`; `simularApi(page, papeis, extremos)` acrescenta os textos longos de C13. (8) Medidas depois de redimensionar esperam as transições (`assentar`)
+- **Abandoned:** `Cabecalho` com título (o h1 é do cabeçalho da casca); `drawer.tsx` e o pacote `vaul`
