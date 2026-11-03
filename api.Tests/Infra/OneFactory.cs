@@ -29,6 +29,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public LogCapturado Logs { get; } = new();
     public HasherEspiao Hasher { get; } = new();
     public ContadorDeGravacoes Gravacoes { get; } = new();
+    public AtrasoDoCommit Commit { get; } = new();
     protected virtual bool LimitesReais => false;
     protected virtual int PortaSmtp => 1025;
     protected virtual int PortaMinio => 9000;
@@ -81,7 +82,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.RemoveAll<IPasswordHasher<Usuario>>();
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
-            s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes));
+            s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes, Commit));
             s.RemoveAll<Armazenamento>();
             s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, new ContaLeituras(this)));
         });
@@ -187,6 +188,18 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
     {
         Interlocked.Increment(ref total);
         return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+}
+
+// tempo-real-signalr C23: segura cada commit pelo tempo dado (zero por padrão), para provar o que acontece entre o SaveChanges e o commit.
+public class AtrasoDoCommit : DbTransactionInterceptor
+{
+    public TimeSpan Atraso { get; set; }
+
+    public override async ValueTask<InterceptionResult> TransactionCommittingAsync(System.Data.Common.DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+    {
+        if (Atraso > TimeSpan.Zero) await Task.Delay(Atraso, cancellationToken);
+        return result;
     }
 }
 

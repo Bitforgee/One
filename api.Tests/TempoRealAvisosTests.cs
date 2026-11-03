@@ -115,7 +115,11 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True((await b.Ler(lembrar)).LembreteEm is not null);
         Assert.Equal(Resolvido, (await b.Ler(voltar)).Estado);
         foreach (var n in new[] { fechar, lembrar, voltar }) Assert.True(await aluno.Receber($"ChamadoMudou:{n}"), n);
-        Assert.True(await fila.Receber("FilaMudou"));
+        // cada uma das 3 tarefas manda o seu FilaMudou (o setor é o mesmo): 3 no total, nem menos nem mais
+        var fim = DateTime.UtcNow.AddSeconds(5);
+        while (fila.Recebidos.Count(e => e == "FilaMudou") < 3 && DateTime.UtcNow < fim) await Task.Delay(20);
+        await Task.Delay(300);
+        Assert.Equal(3, fila.Recebidos.Count(e => e == "FilaMudou"));
     }
 
     [Fact]
@@ -129,7 +133,10 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
 
         f.Llm.Devolver(c.RespostaBoletoValida());
         var (id, _) = await c.Primeira();
-        var r = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { });
+        f.Commit.Atraso = TimeSpan.FromMilliseconds(800); // o aviso, se saísse no SaveChanges, chegaria e leria a fila durante esta espera
+        HttpResponseMessage r;
+        try { r = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { }); }
+        finally { f.Commit.Atraso = TimeSpan.Zero; }
         var numero = (await r.Json()).GetProperty("numero").GetString()!;
 
         Assert.True(await fila.Receber("FilaMudou"));
