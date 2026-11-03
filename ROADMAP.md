@@ -1,7 +1,8 @@
 # One: roadmap
 
-- **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  domínio rico e contratos verificado; interface nova concluída com o C7 de mutação aberto por decisão do usuário)
+- **Data:** 03/11/2026, madrugada (RAG, refatoração, vertical slice completa, domínio rico e contratos e
+  arquivos no MinIO verificados no `main`; interface nova concluída com o C7 de mutação aberto por decisão do
+  usuário; tempo real com SignalR em build)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -45,12 +46,14 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 329 (237 antes da refatoração), web 168 (35 antes da refatoração, 99 antes da interface nova), e2e 45 (11 de antes mais 34 de tela e de arranjo de 360 a 1920 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Código | 131 commits em `main`, só nesta máquina; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58`, o MinIO de `9ca2325` a `e84ca8d` |
+| Testes | API 367 (237 antes da refatoração), web 168 (35 antes da refatoração, 99 antes da interface nova), e2e 46 (11 de antes, 34 de tela e de arranjo de 360 a 1920 px, 1 com anexo real contra o contêiner), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
+| Arquivos no MinIO (`arquivos-minio`) | 30 checks provados; verificação independente **aprovada** em 03/11 (rodada 3). Anexos e PDFs saíram do `bytea` para o MinIO (`cgr.dev/chainguard/minio` fixada por digest), download por streaming com o mesmo `Content-Length`, chave com a instituição, bucket versionado sem exclusão, 503 quando o armazenamento cai. A verificação achou e o build corrigiu: erro do S3 virando 500, objetos órfãos em dois 409 |
+| Tempo real com SignalR (`tempo-real-signalr`) | Plano e 51 checks aprovados em 02/11 (`f996d30`); build começou em 03/11, um construtor no Sonnet |
 | Interface nova (`interface-nova`) | **Concluída em 02/11** (`2aa8a9a..bd7d7ce`): 15 telas em shadcn/ui e Tailwind, Bootstrap removido, cabeçalho com nomes sempre visíveis e menu "Mais". Verificação: rodada 1 reprovou por sobreposição no cabeçalho e lacunas de teste, rodada 2 pela contagem de links da barra, rodada 3 só pelo C7 (mutação suspensa, AD-025). Decisão do usuário (AD-026): fechar com o C7 aberto. Vitest 168, e2e 45 |
 | Domínio rico e contratos (`dominio-e-contratos`) | 41 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só pelo C27 (`Agendador.cs` mudou só nos comentários removidos a pedido do usuário), aceito pelo usuário. 28 falhas injetadas, todas pegas; API 329, nenhuma migração |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
