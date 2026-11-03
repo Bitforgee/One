@@ -1,7 +1,7 @@
 # One: roadmap
 
 - **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  interface nova em build, lote 2 de 3; domínio rico e contratos em build, lote 1 de 3)
+  interface nova em build, lote 2 de 3; domínio rico e contratos em build, lote 2 de 3)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -46,13 +46,13 @@ hospedagem e ensaio.
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
 | Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 292 (237 antes da refatoração), web 118 (35 antes da refatoração, 99 antes da interface nova), e2e 23 (11 de antes mais 12 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Testes | API 303 (237 antes da refatoração), web 118 (35 antes da refatoração, 99 antes da interface nova), e2e 23 (11 de antes mais 12 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
 | Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. Lote 2 (detalhe do chamado, Indicadores, listas) em build |
-| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes: S1 rede de segurança (em build) → S5+S3+S4 estrutura e entidades ricas → S2 contratos |
+| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes. **Lote 1 verde** (`2a2ba2e..3d6ee69`): retratos gravados contra o código de antes, API 303, e2e 23, `api/` sem mudança. Lote 2 (estrutura e entidades ricas) em build; lote 3 (contratos) a seguir |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -224,7 +224,7 @@ antes do código, verificação independente depois), e a próxima só começa c
 | Quando | Feature | Onde |
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
-| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): plano e checks aprovados em 02/11; build começou em 02/11, lote 1 de 3 | `api/` |
+| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): plano e checks aprovados em 02/11; lote 1 verde em 02/11, lote 2 em build | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
@@ -246,8 +246,9 @@ antes de 04/11.
 **Domínio rico e contratos por caso de uso (AD-024)**
 
 Plano e checks aprovados em 02/11. Build em 3 lotes, cada um só com o anterior verde:
-- [ ] Lote 1 (S1): rede de segurança gravada contra o código de antes: JSON de sucesso de 59 chamadas,
-      importação, o que cada ação grava (colunas, mensagens, eventos) e a ordem de recusa de cada handler.
+- [x] Lote 1 (S1): rede de segurança gravada contra o código de antes: JSON de sucesso de 59 chamadas
+      (`sucessos.txt`), importação, o que cada ação grava (`gravacoes.txt`: colunas, mensagens, eventos)
+      e a ordem de recusa de cada handler reescrito. API 303, e2e 23; `api/` sem mudança.
 - [ ] Lote 2 (S5, S3, S4): uma entidade por arquivo em pastas por agregado, regra de dependência no
       `ArquiteturaTests`, `Chamado` rico (12 transições e `Abrir`), `Artigo` e `Documento` ricos.
 - [ ] Lote 3 (S2): 41 respostas nomeadas e 29 `Entrada`, um por caso de uso.
@@ -426,6 +427,13 @@ mudar nenhum teste de comportamento.
 | 5 | Onde hospedar a banca, e com qual domínio? | grupo | **16/11** | `docker compose` num notebook |
 | 6 | A coordenação fornece setores, atendentes e textos dos artigos? | coordenação Univag | **06/11** | carga de exemplo escrita pelo grupo |
 | 7 | A "exigência do MEC" são os indicadores 3.10, 3.11 e 2.3? | coordenadora | 27/11 | vale o padrão: nada é apagado, sem relatório para o MEC |
+
+## Custo do build com subagentes
+
+Em 02/11 os subagentes desta etapa (planos, checks, construtores e Verifiers) somaram cerca de 4 milhões
+de tokens: um construtor gasta de 340 a 410 mil, um Verifier de 90 a 270 mil. Decisão do usuário em
+02/11: daqui em diante os construtores rodam no Sonnet, com briefing curto e saída de testes filtrada; o
+Verifier continua no modelo mais forte, porque é ele que tenta provar que os testes podem falhar.
 
 ## Riscos
 
