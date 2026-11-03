@@ -144,6 +144,82 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(leiturasAntes, f.LeiturasDeObjeto);
     }
 
+    // C7 (rodada 1): o Content-Length que vai no fio, lido com ResponseHeadersRead (GetAsync calcula do corpo em memória)
+    [Fact]
+    public async Task Content_length_do_anexo_e_da_versao_vai_no_cabecalho()
+    {
+        var (b, _, _, id) = await ComAnexo(5000);
+        using var anexo = await b.ClienteAluno.GetAsync($"/api/anexos/{id}", HttpCompletionOption.ResponseHeadersRead);
+        Assert.Equal(5000, anexo.Content.Headers.ContentLength);
+
+        var (i, admin, categoria) = await Mundo();
+        var pdf = Pdfs.Criar("Regulamento de estagio supervisionado.");
+        var versao = (await Versoes(i, await IdDoDocumento(await admin.Subir("Regulamento", categoria, pdf)))).Single();
+        using var d = await admin.GetAsync($"/api/documentos/versoes/{versao.Id}", HttpCompletionOption.ResponseHeadersRead);
+        Assert.Equal(pdf.Length, d.Content.Headers.ContentLength);
+    }
+
+    // C8 (rodada 1): o contador enxerga a leitura pela URL assinada, senão "zero leituras" seria vazio
+    [Fact]
+    public async Task Contador_de_leituras_ve_o_download_pela_url_assinada()
+    {
+        var (b, _, _, id) = await ComAnexo();
+        var antes = f.LeiturasDeObjeto;
+        Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.GetAsync($"/api/anexos/{id}")).StatusCode);
+        Assert.Equal(antes + 1, f.LeiturasDeObjeto);
+    }
+
+    // AC 13 (rodada 1): erro de serviço do bucket (S3 responde com erro) vira 503, não só porta fechada
+    [Fact]
+    public async Task Erro_do_bucket_responde_503_e_nada_fica()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+        var antes = string.Join(",", await f.Chaves()) + "|" + await f.Db(b.Instituicao.Id, db => db.Anexos.CountAsync());
+        var s3 = (AmazonS3Client)f.Services.GetRequiredService<IAmazonS3>();
+        void Troca(object? _, Amazon.Runtime.RequestEventArgs e)
+        {
+            // o MinIO recusa a gravação com um erro de serviço (AmazonS3Exception): o resumo MD5 declarado não confere
+            if (e is Amazon.Runtime.WebServiceRequestEventArgs { Request: PutObjectRequest } w) w.Headers["Content-MD5"] = "AAAAAAAAAAAAAAAAAAAAAA==";
+        }
+        s3.BeforeRequestEvent += Troca;
+        HttpResponseMessage r;
+        try { r = await Balcao.ComAnexos(b.A.Cliente, numero, "Veja a tela.", "PUBLICA", ("tela.png", Balcao.Arquivo(Balcao.Png, 100))); }
+        finally { s3.BeforeRequestEvent -= Troca; }
+
+        await Indisponivel(r, "erro de serviço do bucket");
+        Assert.Equal(antes, string.Join(",", await f.Chaves()) + "|" + await f.Db(b.Instituicao.Id, db => db.Anexos.CountAsync()));
+    }
+
+    // C4/C13 (rodada 1): a recusa de estado vem antes da gravação, nenhum objeto órfão
+    [Fact]
+    public async Task Rejeitar_resolucao_vencida_com_anexo_nao_deixa_objeto()
+    {
+        var b = await Balcao.Criar(f);
+        var vencido = await b.Chamado(EstadosChamado.Resolvido);
+        await b.Recuar(vencido, TimeSpan.FromDays(7) + TimeSpan.FromMinutes(1));
+        var antes = await f.Chaves();
+
+        var r = await Balcao.ComAnexos(b.ClienteAluno, vencido, "Não resolveu.", "PUBLICA", ("tela.png", Balcao.Arquivo(Balcao.Png, 100)));
+
+        Assert.Equal(HttpStatusCode.Conflict, r.StatusCode);
+        Assert.Equal(antes, await f.Chaves());
+    }
+
+    [Fact]
+    public async Task Nova_versao_de_documento_arquivado_nao_deixa_objeto()
+    {
+        var (_, admin, categoria) = await Mundo();
+        var id = await IdDoDocumento(await admin.Subir("Regulamento", categoria, Pdfs.Criar("Regulamento de estagio supervisionado.")));
+        Assert.Equal(HttpStatusCode.OK, (await admin.PostAsync($"/api/admin/documentos/{id}/arquivar", null)).StatusCode);
+        var antes = await f.Chaves();
+
+        var r = await admin.NovaVersao(id, Pdfs.Criar("Segunda versao do regulamento."));
+
+        Assert.Equal(HttpStatusCode.Conflict, r.StatusCode);
+        Assert.Equal(antes, await f.Chaves());
+    }
+
     // C9
     [Fact]
     public async Task Download_usa_so_a_chave_da_linha()

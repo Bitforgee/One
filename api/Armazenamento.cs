@@ -8,9 +8,9 @@ namespace One.Api;
 // O único código que fala com o MinIO (API S3). Nunca apaga objeto: o bucket é versionado e as chaves são novas a cada gravação.
 public sealed class ArmazenamentoIndisponivel(Exception causa) : Exception("Armazenamento de arquivos indisponível.", causa);
 
-public class Armazenamento(IAmazonS3 s3, string bucket)
+public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? handler = null)
 {
-    readonly HttpClient http = new();
+    readonly HttpClient http = new(handler ?? new HttpClientHandler()); // handler: só os testes passam um, para contar leituras
     string Bucket => bucket;
 
     public async Task Preparar()
@@ -27,13 +27,23 @@ public class Armazenamento(IAmazonS3 s3, string bucket)
         }
     }
 
+    public static string NovaChave(long instituicaoId, string tipo) => $"{instituicaoId}/{tipo}/{Guid.NewGuid():N}";
+
+    public static string Hash(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
+
     public async Task<(string Chave, string Hash)> Gravar(long instituicaoId, string tipo, byte[] bytes)
     {
-        var chave = $"{instituicaoId}/{tipo}/{Guid.NewGuid():N}";
+        var chave = NovaChave(instituicaoId, tipo);
+        await Gravar(chave, bytes);
+        return (chave, Hash(bytes));
+    }
+
+    // Quem precisa recusar por estado antes de gravar sorteia a chave com NovaChave, deixa o domínio decidir e só então grava.
+    public async Task Gravar(string chave, byte[] bytes)
+    {
         using var corpo = new MemoryStream(bytes);
         try { await s3.PutObjectAsync(new PutObjectRequest { BucketName = Bucket, Key = chave, InputStream = corpo }); }
-        catch (Exception e) when (e is AmazonClientException or HttpRequestException) { throw new ArmazenamentoIndisponivel(e); }
-        return (chave, Convert.ToHexStringLower(SHA256.HashData(bytes)));
+        catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException) { throw new ArmazenamentoIndisponivel(e); }
     }
 
     // O ResponseStream do SDK passa por um MD5Stream que aloca ~1,4 vezes o tamanho do objeto (medido: 14,5 MB para 10 MiB). A URL

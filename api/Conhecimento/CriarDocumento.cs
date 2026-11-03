@@ -26,7 +26,9 @@ public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio, Armaze
         if (erro is not null) return erro;
 
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var d = Documento.Criar(titulo, categoriaId, await Versao(armazenamento, db.InstituicaoAtual!.Value, pdf!, 1, agora));
+        var primeira = Versao(db.InstituicaoAtual!.Value, pdf!, 1, agora);
+        await armazenamento.Gravar(primeira.Chave, pdf!.Conteudo);
+        var d = Documento.Criar(titulo, categoriaId, primeira);
         Trechos(db, d.Versoes.Single(), agora);
         db.Documentos.Add(d);
         await db.SaveChangesAsync();

@@ -34,7 +34,16 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected virtual int PortaMinio => 9000;
     public string Bucket { get; } = "one-teste-" + Guid.NewGuid().ToString("N")[..12];
     int leituras;
-    public int LeiturasDeObjeto => leituras;
+    public int LeiturasDeObjeto => leituras; // GetObject do SDK + leituras por URL assinada (Landing linha 6)
+
+    sealed class ContaLeituras(OneFactory f) : DelegatingHandler(new HttpClientHandler())
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage r, CancellationToken ct)
+        {
+            Interlocked.Increment(ref f.leituras);
+            return base.SendAsync(r, ct);
+        }
+    }
     public string? WebRoot { get; set; }
 
     public string ConnectionString => $"{Servidor};Database={Banco}";
@@ -73,6 +82,8 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
             s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes));
+            s.RemoveAll<Armazenamento>();
+            s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, new ContaLeituras(this)));
         });
     }
 

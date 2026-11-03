@@ -51,11 +51,9 @@ public static class DocumentoRotas
         }
     }
 
-    public static async Task<VersaoDocumento> Versao(Armazenamento armazenamento, long instituicaoId, Pdf pdf, int numero, DateTime agora)
-    {
-        var (chave, hash) = await armazenamento.Gravar(instituicaoId, "documentos", pdf.Conteudo);
-        return new() { Numero = numero, NomeArquivo = pdf.Nome, Chave = chave, Hash = hash, Tamanho = pdf.Conteudo.Length, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
-    }
+    // A chave é sorteada aqui e o objeto só é gravado depois da decisão do domínio: um 409 não deixa objeto órfão.
+    public static VersaoDocumento Versao(long instituicaoId, Pdf pdf, int numero, DateTime agora) =>
+        new() { Numero = numero, NomeArquivo = pdf.Nome, Chave = Armazenamento.NovaChave(instituicaoId, "documentos"), Hash = Armazenamento.Hash(pdf.Conteudo), Tamanho = pdf.Conteudo.Length, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
 
     public static void Trechos(OneDb db, VersaoDocumento v, DateTime agora) =>
         db.TrechosFonte.AddRange(Dividir(v.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));

@@ -22,8 +22,9 @@ public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio, A
         if (erro is not null) return erro;
 
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var versao = await Versao(armazenamento, db.InstituicaoAtual!.Value, pdf!, d.Ultima().Numero + 1, agora);
+        var versao = Versao(db.InstituicaoAtual!.Value, pdf!, d.Ultima().Numero + 1, agora);
         if (d.NovaVersao(versao) is { } recusa) return Problemas.Erro(409, recusa.Motivo);
+        await armazenamento.Gravar(versao.Chave, pdf!.Conteudo);
         Trechos(db, versao, agora);
         await db.SaveChangesAsync();
         return Results.Created($"/api/admin/documentos/{d.Id}", await DocumentoResposta.De(db, await Ler(db, m.Id) ?? d));

@@ -40,20 +40,33 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenam
     {
         var c = a.Chamado;
         if (m.Tipo == TiposMensagem.Nota) { c.Anotar(a.Usuario.Id, m.Texto, a.Agora); return Results.Empty; }
+        // As chaves são sorteadas já, mas os objetos só são gravados depois que o domínio aceita a ação: um 409 não deixa objeto órfão.
+        var lidos = new List<Arquivos.Lido>();
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)
         {
             var lido = (await ResponderChamado.LerAnexo(f)).Item1!;
-            var (chave, hash) = await armazenamento.Gravar(a.Instituicao.Id, "anexos", lido.Bytes);
-            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = chave, Hash = hash });
+            lidos.Add(lido);
+            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = Armazenamento.NovaChave(a.Instituicao.Id, "anexos"), Hash = Armazenamento.Hash(lido.Bytes) });
+        }
+        async Task Guardar()
+        {
+            for (var i = 0; i < anexos.Count; i++) await armazenamento.Gravar(anexos[i].Chave, lidos[i].Bytes);
         }
         if (a.Papel == PermissoesChamado.Aluno)
         {
-            if (c.Estado == Resolvido) return await RejeitarResolucao(db, a, m.Texto, anexos);
+            if (c.Estado == Resolvido)
+            {
+                var r = await RejeitarResolucao(db, a, m.Texto, anexos);
+                if (ReferenceEquals(r, Results.Empty)) await Guardar();
+                return r;
+            }
             c.ResponderComoAluno(a.Usuario.Id, m.Texto, anexos, a.Agora);
+            await Guardar();
             return Results.Empty;
         }
         c.ResponderComoEquipe(a.Usuario.Id, a.Usuario.Nome, m.Texto, anexos, m.AguardaAluno, a.Agora);
+        await Guardar();
         await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, c, a.Agora);
         return Results.Empty;
     }
