@@ -15,10 +15,10 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-11-02T18:30:24Z
 
 ### L-021 - Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.
-- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `specs/checks` · harmful: 0
-- features: refatoracao-solid, dominio-e-contratos
-- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+1 more)
-- last seen: 2026-11-03T01:27:33Z
+- signal: `spec_precision_gap` · recurrence: 3 feature(s) · scope: `specs/checks` · harmful: 0
+- features: refatoracao-solid, dominio-e-contratos, arquivos-minio
+- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+2 more)
+- last seen: 2026-11-03T03:21:42Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -203,6 +203,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: interface-nova
 - evidence: verification.md F11 / web/e2e/arranjo.spec.ts:157 (responsive-ui)
 - last seen: 2026-11-03T01:53:43Z
+
+### L-033 - Afirme Content-Length numa resposta lida com ResponseHeadersRead; com GetAsync o HttpClient calcula o tamanho do corpo em buffer e a asserção passa sem o cabeçalho.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api.Tests/download` · harmful: 0
+- features: arquivos-minio
+- evidence: verification.md F5; api.Tests/ArmazenamentoTests.cs:119 (api.Tests/download)
+- last seen: 2026-11-03T03:21:42Z
+
+### L-034 - Conte leituras no caminho que o código de fato usa; um contador de eventos do SDK fica sempre em zero quando a leitura passa por URL assinada e HttpClient.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api.Tests/falsos` · harmful: 0
+- features: arquivos-minio
+- evidence: verification.md F8; api.Tests/ArmazenamentoTests.cs:144 (api.Tests/falsos)
+- last seen: 2026-11-03T03:21:42Z
+
+### L-035 - Dê um caso a cada tipo de exceção que um catch converte em status; a porta fechada só exercita a falha de rede e deixa o erro devolvido pelo serviço sem prova.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/armazenamento` · harmful: 0
+- features: arquivos-minio
+- evidence: verification.md F9; api/Armazenamento.cs:35 (api/armazenamento)
+- last seen: 2026-11-03T03:21:42Z
+
+### L-036 - Liste toda recusa que acontece depois de um efeito externo (gravar no bucket, enviar e-mail) e dê a cada uma um caso que confere o efeito; recusa do domínio depois da gravação deixa resíduo sem check.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `api/armazenamento` · harmful: 0
+- features: arquivos-minio
+- evidence: api/Conhecimento/NovaVersaoDocumento.cs:25; api/Chamados/ResponderChamado.cs:47 (api/armazenamento)
+- last seen: 2026-11-03T03:21:42Z
+
+### L-037 - Antes de citar o e2e como prova de um fluxo, ache no spec a rota ou o seletor desse fluxo; uma suíte que simula a API não envia nem baixa nada.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: arquivos-minio
+- evidence: checks.md C29; web/e2e/arranjo.spec.ts:664 (specs/checks)
+- last seen: 2026-11-03T03:21:42Z
 
 ## Quarantined (failed when applied - ignore)
 

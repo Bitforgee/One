@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 33,
+  "next_id": 38,
   "lessons": [
     {
       "id": "L-001",
@@ -376,16 +376,18 @@
       "status": "confirmed",
       "features": [
         "refatoracao-solid",
-        "dominio-e-contratos"
+        "dominio-e-contratos",
+        "arquivos-minio"
       ],
-      "recurrence": 2,
+      "recurrence": 3,
       "harmful": 0,
       "evidence": [
         "checks.md C21, C32 (verification.md precision gaps) (specs/checks)",
-        "verification.md C17 (14 vs 16 assinaturas object) (specs/checks)"
+        "verification.md C17 (14 vs 16 assinaturas object) (specs/checks)",
+        "checks.md C5 (verification.md) (specs/checks)"
       ],
       "created": "2026-11-02T22:06:05Z",
-      "last_seen": "2026-11-03T01:27:33Z"
+      "last_seen": "2026-11-03T03:21:42Z"
     },
     {
       "id": "L-022",
@@ -584,6 +586,96 @@
       ],
       "created": "2026-11-03T01:53:43Z",
       "last_seen": "2026-11-03T01:53:43Z"
+    },
+    {
+      "id": "L-033",
+      "key": "surviving_mutant::afirme content length numa resposta lida com responseheadersread com getasync o httpclient calcula o tamanho do corpo em buffer e a assercao passa sem o cabecalho",
+      "text": "Afirme Content-Length numa resposta lida com ResponseHeadersRead; com GetAsync o HttpClient calcula o tamanho do corpo em buffer e a asserção passa sem o cabeçalho.",
+      "signal": "surviving_mutant",
+      "scope": "api.Tests/download",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F5; api.Tests/ArmazenamentoTests.cs:119 (api.Tests/download)"
+      ],
+      "created": "2026-11-03T03:21:42Z",
+      "last_seen": "2026-11-03T03:21:42Z"
+    },
+    {
+      "id": "L-034",
+      "key": "surviving_mutant::conte leituras no caminho que o codigo de fato usa um contador de eventos do sdk fica sempre em zero quando a leitura passa por url assinada e httpclient",
+      "text": "Conte leituras no caminho que o código de fato usa; um contador de eventos do SDK fica sempre em zero quando a leitura passa por URL assinada e HttpClient.",
+      "signal": "surviving_mutant",
+      "scope": "api.Tests/falsos",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F8; api.Tests/ArmazenamentoTests.cs:144 (api.Tests/falsos)"
+      ],
+      "created": "2026-11-03T03:21:42Z",
+      "last_seen": "2026-11-03T03:21:42Z"
+    },
+    {
+      "id": "L-035",
+      "key": "surviving_mutant::de um caso a cada tipo de excecao que um catch converte em status a porta fechada so exercita a falha de rede e deixa o erro devolvido pelo servico sem prova",
+      "text": "Dê um caso a cada tipo de exceção que um catch converte em status; a porta fechada só exercita a falha de rede e deixa o erro devolvido pelo serviço sem prova.",
+      "signal": "surviving_mutant",
+      "scope": "api/armazenamento",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F9; api/Armazenamento.cs:35 (api/armazenamento)"
+      ],
+      "created": "2026-11-03T03:21:42Z",
+      "last_seen": "2026-11-03T03:21:42Z"
+    },
+    {
+      "id": "L-036",
+      "key": "ac_gap::liste toda recusa que acontece depois de um efeito externo gravar no bucket enviar e mail e de a cada uma um caso que confere o efeito recusa do dominio depois da gravacao deixa residuo sem check",
+      "text": "Liste toda recusa que acontece depois de um efeito externo (gravar no bucket, enviar e-mail) e dê a cada uma um caso que confere o efeito; recusa do domínio depois da gravação deixa resíduo sem check.",
+      "signal": "ac_gap",
+      "scope": "api/armazenamento",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Conhecimento/NovaVersaoDocumento.cs:25; api/Chamados/ResponderChamado.cs:47 (api/armazenamento)"
+      ],
+      "created": "2026-11-03T03:21:42Z",
+      "last_seen": "2026-11-03T03:21:42Z"
+    },
+    {
+      "id": "L-037",
+      "key": "ac_gap::antes de citar o e2e como prova de um fluxo ache no spec a rota ou o seletor desse fluxo uma suite que simula a api nao envia nem baixa nada",
+      "text": "Antes de citar o e2e como prova de um fluxo, ache no spec a rota ou o seletor desse fluxo; uma suíte que simula a API não envia nem baixa nada.",
+      "signal": "ac_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C29; web/e2e/arranjo.spec.ts:664 (specs/checks)"
+      ],
+      "created": "2026-11-03T03:21:42Z",
+      "last_seen": "2026-11-03T03:21:42Z"
     }
   ]
 }
