@@ -42,6 +42,16 @@ describe('chamado', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
+  // layout-painel C30 (AC 30)
+  it('título do chamado em h2', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
+    abrir('/univag/chamados/ONE-1')
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'preciso do boleto' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('ONE-1')
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  })
+
   it('detalhe rotula Resumo gerado por IA', async () => {
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe()] })
     abrir('/univag/chamados/ONE-1')

@@ -147,6 +147,7 @@ describe('textos', () => {
     api({ 'GET /api/auth/me': () => [200, admin], ...leituras(true) })
     let montada = abrir('/univag/cadastros')
     await screen.findByText('Nenhum item cadastrado.')
+    expect(screen.getByRole('combobox', { name: 'Cadastro' })).toBeInTheDocument() // nome acessível novo, não é texto visível
     t.conferir(tela())
     montada.unmount()
 

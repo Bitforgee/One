@@ -19,6 +19,7 @@ const Detalhe = [
   'Financeiro · Boleto · Carla',
   'Ana · matrícula 2000567890 · ADS · 3º semestre',
   'Resumo gerado por IA',
+  'Ações',
   'Conversa com o assistente',
   '“mínima de 300 horas”',
   'Abrir o PDF (versão 2)',

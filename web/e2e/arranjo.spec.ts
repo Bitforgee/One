@@ -82,6 +82,8 @@ test.describe('Assistente', () => {
     expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(740)
     for (const ate of ['topo', 'fim']) {
       await page.evaluate((fim) => window.scrollTo(0, fim ? document.documentElement.scrollHeight : 0), ate === 'fim')
+      const falar = await caixa(page.getByRole('button', { name: /Falar com atendente/ })) // a última linha do compositor
+      expect(740 - (falar.y + falar.height), `${ate} compositor perto do fundo`).toBeLessThanOrEqual(16)
       for (const nome of [/Enviar/, /Falar com atendente/]) {
         const c = await caixa(page.getByRole('button', { name: nome }))
         expect(c.y, `${ate} ${nome}`).toBeGreaterThanOrEqual(0)
@@ -153,18 +155,55 @@ test.describe('Assistente', () => {
     expect(await dialogo.locator('button').evaluateAll((bs) => bs.map((b) => b.textContent?.trim()).filter((t) => t === 'Cancelar' || t === 'Confirmar'))).toEqual(['Cancelar', 'Confirmar'])
     await dialogo.getByRole('button', { name: 'Cancelar' }).click()
 
-    await page.setViewportSize({ width: 1024, height: 740 })
+    await page.setViewportSize({ width: 1440, height: 740 })
     await assentar(page)
     const coluna = await caixa(page.locator('main > div > div').first())
+    const main = await caixa(page.locator('main'))
     expect(coluna.width).toBeLessThanOrEqual(768)
-    const largura = await page.evaluate(() => document.documentElement.clientWidth)
-    // redesign-institucional (door 3a): a barra lateral ocupa a esquerda; a coluna centraliza no espaço à direita dela
-    const inicio = (await caixa(page.locator('[data-slot=sidebar-container]'))).width
-    expect(Math.abs(coluna.x - inicio - (largura - coluna.x - coluna.width))).toBeLessThanOrEqual(1)
+    // C31: as sobras à esquerda e à direita dentro do main diferem em no máximo 1 px
+    expect(Math.abs(coluna.x - main.x - (main.x + main.width - coluna.x - coluna.width))).toBeLessThanOrEqual(1)
   })
 })
 
 test.describe('Detalhe do chamado', () => {
+  const abrirDetalhe = async (page: Page, largura: number) => {
+    await page.setViewportSize({ width: largura, height: 900 })
+    await simularApi(page)
+    await page.goto('/univag/chamados/ONE-123')
+    await page.getByText('Resumo gerado por IA').waitFor()
+    await assentar(page)
+  }
+  const cartaoAcoes = (page: Page) => page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })
+
+  test('detalhe em duas colunas', async ({ page }) => {
+    await abrirDetalhe(page, 1440)
+    const acoes = await caixa(cartaoAcoes(page))
+    const historico = await caixa(page.locator('[data-slot=card]').filter({ has: page.getByRole('heading', { name: 'Histórico' }) }))
+    const titulo = await caixa(page.getByRole('heading', { level: 2 }).first())
+    const resposta = await caixa(page.getByLabel('Responder'))
+    expect(Math.abs(acoes.width - 320)).toBeLessThanOrEqual(1)
+    expect(Math.abs(historico.width - 320)).toBeLessThanOrEqual(1)
+    expect(acoes.x).toBeGreaterThanOrEqual(Math.max(titulo.x + titulo.width, resposta.x + resposta.width) - 1)
+    expect(historico.y).toBeGreaterThanOrEqual(acoes.y + acoes.height - 1)
+    await expect(cartaoAcoes(page).getByRole('button', { name: 'Assumir' })).toBeVisible()
+  })
+
+  for (const largura of [360, 1280])
+    test(`detalhe em uma coluna a ${largura} px`, async ({ page }) => {
+      await abrirDetalhe(page, largura)
+      const topos = [
+        page.getByRole('heading', { level: 2 }).first(),
+        page.getByRole('heading', { name: 'Conversa com o assistente' }),
+        page.getByRole('heading', { name: 'Atendimento' }),
+        page.getByLabel('Responder'),
+        cartaoAcoes(page),
+        page.getByRole('heading', { name: 'Histórico' }),
+      ]
+      const ys = []
+      for (const t of topos) ys.push((await caixa(t)).y)
+      for (let i = 1; i < ys.length; i++) expect(ys[i], JSON.stringify(ys)).toBeGreaterThan(ys[i - 1])
+    })
+
   test('arranjo Detalhe do chamado', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 })
     await simularApi(page)
@@ -309,13 +348,13 @@ test.describe('acesso', () => {
       const cartao = page.locator('[data-slot=card]')
       await cartao.waitFor()
       const c = await caixa(cartao)
-      expect(Math.abs(c.x - 16), caminho).toBeLessThanOrEqual(1)
-      expect(c.x + c.width, caminho).toBeGreaterThanOrEqual(344 - 1)
+      expect(Math.abs(c.x - 24), caminho).toBeLessThanOrEqual(1)
+      expect(c.x + c.width, caminho).toBeGreaterThanOrEqual(336 - 1)
       expect(c.x + c.width, caminho).toBeLessThanOrEqual(360)
 
       await page.setViewportSize({ width: 1024, height: 740 })
       const g = await caixa(cartao)
-      expect(g.width, caminho).toBeLessThanOrEqual(420)
+      expect(g.width, caminho).toBeLessThanOrEqual(384)
       expect(Math.abs(g.x - (await largura() - g.x - g.width)), caminho).toBeLessThanOrEqual(1)
     }
 
@@ -334,6 +373,23 @@ test.describe('acesso', () => {
     await page.getByRole('heading', { name: 'Trocar senha' }).waitFor()
     expect((await caixa(page.locator('main > div > div').first())).width).toBeLessThanOrEqual(420)
   })
+
+  // C32: as 4 telas de acesso, nas 2 larguras
+  for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t', '/'])
+    test(`telas de acesso centralizadas ${caminho}`, async ({ page }) => {
+      await simularApi(page)
+      for (const largura of [360, 1280]) {
+        await page.setViewportSize({ width: largura, height: 740 })
+        await page.goto(caminho)
+        const cartao = page.locator('[data-slot=card]')
+        await cartao.waitFor()
+        const c = await caixa(cartao)
+        const rotulo = `${caminho} a ${largura}`
+        expect(c.width, rotulo).toBeLessThanOrEqual(384)
+        expect(Math.abs(c.x + c.width / 2 - largura / 2), rotulo).toBeLessThanOrEqual(1)
+        if (c.height < 740) expect(Math.abs(c.y + c.height / 2 - 370), rotulo).toBeLessThanOrEqual(1)
+      }
+    })
 })
 
 const naMesmaLinha = (a: { y: number }, b: { y: number }) => Math.abs(a.y - b.y) <= 4
