@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 43,
+  "next_id": 48,
   "lessons": [
     {
       "id": "L-001",
@@ -377,17 +377,19 @@
       "features": [
         "refatoracao-solid",
         "dominio-e-contratos",
-        "arquivos-minio"
+        "arquivos-minio",
+        "web-push"
       ],
-      "recurrence": 3,
+      "recurrence": 4,
       "harmful": 0,
       "evidence": [
         "checks.md C21, C32 (verification.md precision gaps) (specs/checks)",
         "verification.md C17 (14 vs 16 assinaturas object) (specs/checks)",
-        "checks.md C5 (verification.md) (specs/checks)"
+        "checks.md C5 (verification.md) (specs/checks)",
+        "verification.md C53 (N + 5 contra 4 testes) (specs/checks)"
       ],
       "created": "2026-11-02T22:06:05Z",
-      "last_seen": "2026-11-03T03:21:42Z"
+      "last_seen": "2026-11-03T06:10:38Z"
     },
     {
       "id": "L-022",
@@ -524,16 +526,18 @@
       "status": "confirmed",
       "features": [
         "interface-nova",
-        "tempo-real-signalr"
+        "tempo-real-signalr",
+        "web-push"
       ],
-      "recurrence": 2,
+      "recurrence": 3,
       "harmful": 0,
       "evidence": [
         "verification.md F5; web/src/test/interface.test.ts:95 (web)",
-        "verification.md F4 vs C23; api.Tests/TempoRealAvisosTests.cs:135 (api)"
+        "verification.md F4 vs C23; api.Tests/TempoRealAvisosTests.cs:135 (api)",
+        "verification.md W4; web/src/sw.ts:64 (web)"
       ],
       "created": "2026-11-03T01:28:01Z",
-      "last_seen": "2026-11-03T05:07:14Z"
+      "last_seen": "2026-11-03T06:10:38Z"
     },
     {
       "id": "L-030",
@@ -768,6 +772,96 @@
       ],
       "created": "2026-11-03T05:07:14Z",
       "last_seen": "2026-11-03T05:07:14Z"
+    },
+    {
+      "id": "L-043",
+      "key": "ac_gap::quando um check afirma o estado da tela depois de uma acao faca o falso mudar o que a tela rele e afirme o estado final um falso que nao muda nada deixa o retorno sem prova",
+      "text": "Quando um check afirma o estado da tela depois de uma ação, faça o falso mudar o que a tela relê e afirme o estado final; um falso que não muda nada deixa o retorno sem prova.",
+      "signal": "ac_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "web-push"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C48; web/src/assistente/avisos.test.tsx:105 (web)"
+      ],
+      "created": "2026-11-03T06:10:38Z",
+      "last_seen": "2026-11-03T06:10:38Z"
+    },
+    {
+      "id": "L-044",
+      "key": "ac_gap::de a cada estado de uma linha observable erro e negado um ac e um check proprios um ac que cobre so um deles deixa a falha da api sem prova",
+      "text": "Dê a cada estado de uma linha Observable (erro e negado) um AC e um check próprios; um AC que cobre só um deles deixa a falha da API sem prova.",
+      "signal": "ac_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "web-push"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md Coverage: estado de erro do botão; web/src/AvisosPush.tsx:23 (specs/checks)"
+      ],
+      "created": "2026-11-03T06:10:38Z",
+      "last_seen": "2026-11-03T06:10:38Z"
+    },
+    {
+      "id": "L-045",
+      "key": "spec_deviation::desvio de um valor fixado num check transporte de um campo texto visivel de um botao pede decisao do usuario antes do commit anotar no handoff como decisao do construtor nao amenda o check",
+      "text": "Desvio de um valor fixado num check (transporte de um campo, texto visível de um botão) pede decisão do usuário antes do commit; anotar no Handoff como decisão do construtor não amenda o check.",
+      "signal": "spec_deviation",
+      "scope": "build",
+      "status": "candidate",
+      "features": [
+        "web-push"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C45, C46, C48 (build)"
+      ],
+      "created": "2026-11-03T06:10:38Z",
+      "last_seen": "2026-11-03T06:10:38Z"
+    },
+    {
+      "id": "L-046",
+      "key": "spec_precision_gap::antes de fixar num check e2e um valor do navegador confira o no chromium headless notification permission vem denied la e so permissions query mostra prompt",
+      "text": "Antes de fixar num check e2e um valor do navegador, confira-o no Chromium headless; Notification.permission vem denied lá e só permissions.query mostra prompt.",
+      "signal": "spec_precision_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "web-push"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C51; web/e2e/push.spec.ts:38 (e2e)"
+      ],
+      "created": "2026-11-03T06:10:38Z",
+      "last_seen": "2026-11-03T06:10:38Z"
+    },
+    {
+      "id": "L-047",
+      "key": "spec_precision_gap::quando uma decisao do usuario troca uma dependencia reescreva no mesmo commit o texto dos checks que nomeiam a antiga",
+      "text": "Quando uma decisão do usuário troca uma dependência, reescreva no mesmo commit o texto dos checks que nomeiam a antiga.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "web-push"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C24, C34 (specs/checks)"
+      ],
+      "created": "2026-11-03T06:10:38Z",
+      "last_seen": "2026-11-03T06:10:38Z"
     }
   ]
 }

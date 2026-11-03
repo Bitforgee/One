@@ -15,16 +15,16 @@ Corroborated across multiple features. Safe to apply as guidance.
 - last seen: 2026-11-02T18:30:24Z
 
 ### L-021 - Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.
-- signal: `spec_precision_gap` · recurrence: 3 feature(s) · scope: `specs/checks` · harmful: 0
-- features: refatoracao-solid, dominio-e-contratos, arquivos-minio
-- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+2 more)
-- last seen: 2026-11-03T03:21:42Z
+- signal: `spec_precision_gap` · recurrence: 4 feature(s) · scope: `specs/checks` · harmful: 0
+- features: refatoracao-solid, dominio-e-contratos, arquivos-minio, web-push
+- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+3 more)
+- last seen: 2026-11-03T06:10:38Z
 
 ### L-029 - Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.
-- signal: `surviving_mutant` · recurrence: 2 feature(s) · scope: `web` · harmful: 0
-- features: interface-nova, tempo-real-signalr
-- evidence: verification.md F5; web/src/test/interface.test.ts:95 (web) (+1 more)
-- last seen: 2026-11-03T05:07:14Z
+- signal: `surviving_mutant` · recurrence: 3 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova, tempo-real-signalr, web-push
+- evidence: verification.md F5; web/src/test/interface.test.ts:95 (web) (+2 more)
+- last seen: 2026-11-03T06:10:38Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -263,6 +263,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: tempo-real-signalr
 - evidence: C49 vs C41; web/src/test/estrutura.test.ts:10 (web)
 - last seen: 2026-11-03T05:07:14Z
+
+### L-043 - Quando um check afirma o estado da tela depois de uma ação, faça o falso mudar o que a tela relê e afirme o estado final; um falso que não muda nada deixa o retorno sem prova.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: web-push
+- evidence: verification.md C48; web/src/assistente/avisos.test.tsx:105 (web)
+- last seen: 2026-11-03T06:10:38Z
+
+### L-044 - Dê a cada estado de uma linha Observable (erro e negado) um AC e um check próprios; um AC que cobre só um deles deixa a falha da API sem prova.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: web-push
+- evidence: verification.md Coverage: estado de erro do botão; web/src/AvisosPush.tsx:23 (specs/checks)
+- last seen: 2026-11-03T06:10:38Z
+
+### L-045 - Desvio de um valor fixado num check (transporte de um campo, texto visível de um botão) pede decisão do usuário antes do commit; anotar no Handoff como decisão do construtor não amenda o check.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `build` · harmful: 0
+- features: web-push
+- evidence: verification.md C45, C46, C48 (build)
+- last seen: 2026-11-03T06:10:38Z
+
+### L-046 - Antes de fixar num check e2e um valor do navegador, confira-o no Chromium headless; Notification.permission vem denied lá e só permissions.query mostra prompt.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: web-push
+- evidence: verification.md C51; web/e2e/push.spec.ts:38 (e2e)
+- last seen: 2026-11-03T06:10:38Z
+
+### L-047 - Quando uma decisão do usuário troca uma dependência, reescreva no mesmo commit o texto dos checks que nomeiam a antiga.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: web-push
+- evidence: verification.md C24, C34 (specs/checks)
+- last seen: 2026-11-03T06:10:38Z
 
 ## Quarantined (failed when applied - ignore)
 
