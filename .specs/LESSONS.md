@@ -234,6 +234,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md C29; web/e2e/arranjo.spec.ts:664 (specs/checks)
 - last seen: 2026-11-03T03:21:42Z
 
+### L-038 - When a fix makes a side effect conditional on a domain decision, test the accepted branch's side effect as well as the refused branch's absence
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `storage` · harmful: 0
+- features: arquivos-minio
+- evidence: verification.md round 2 N4, api/Chamados/ResponderChamado.cs:61 (storage)
+- last seen: 2026-11-03T04:04:35Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

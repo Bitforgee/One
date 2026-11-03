@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 38,
+  "next_id": 39,
   "lessons": [
     {
       "id": "L-001",
@@ -676,6 +676,24 @@
       ],
       "created": "2026-11-03T03:21:42Z",
       "last_seen": "2026-11-03T03:21:42Z"
+    },
+    {
+      "id": "L-038",
+      "key": "surviving_mutant::when a fix makes a side effect conditional on a domain decision test the accepted branch s side effect as well as the refused branch s absence",
+      "text": "When a fix makes a side effect conditional on a domain decision, test the accepted branch's side effect as well as the refused branch's absence",
+      "signal": "surviving_mutant",
+      "scope": "storage",
+      "status": "candidate",
+      "features": [
+        "arquivos-minio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md round 2 N4, api/Chamados/ResponderChamado.cs:61 (storage)"
+      ],
+      "created": "2026-11-03T04:04:35Z",
+      "last_seen": "2026-11-03T04:04:35Z"
     }
   ]
 }
