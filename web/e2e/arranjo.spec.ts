@@ -140,8 +140,10 @@ test.describe('Assistente', () => {
 
     const falar = await caixa(page.getByRole('button', { name: /Falar com atendente/ }))
     const encerrar = await caixa(page.getByRole('button', { name: 'Encerrar' }))
+    // compositor no estilo do ChatGPT: as ações à esquerda e o enviar à direita, na mesma linha, embaixo do campo
     expect(Math.abs(falar.y - encerrar.y)).toBeLessThanOrEqual(4)
-    expect(falar.y).toBeGreaterThanOrEqual(enviarBotao.y + enviarBotao.height - 1)
+    expect(Math.abs(falar.y + falar.height - (enviarBotao.y + enviarBotao.height))).toBeLessThanOrEqual(1)
+    expect(encerrar.x + encerrar.width).toBeLessThan(enviarBotao.x)
 
     await page.getByRole('button', { name: 'Encerrar' }).click()
     const dialogo = page.getByRole('dialog')
@@ -365,7 +367,7 @@ test.describe('acesso', () => {
     const link = await caixa(page.getByRole('link', { name: 'Primeiro acesso ou esqueci minha senha' }))
     const bloco = await caixa(page.locator('h1').locator('xpath=..'))
     expect(link.y).toBeGreaterThanOrEqual(entrar.y + entrar.height - 1)
-    expect(Math.abs(link.x + link.width / 2 - (bloco.x + bloco.width / 2))).toBeLessThanOrEqual(1)
+    expect(Math.abs(link.x - bloco.x)).toBeLessThanOrEqual(1)
 
     await page.setViewportSize({ width: 1024, height: 740 })
     await page.goto('/univag/trocar-senha')
@@ -508,13 +510,17 @@ test.describe('arranjo restante', () => {
   })
 
   // C38 (linha 6)
-  test('Assistente: data pequena à direita, campo de 2 linhas e erro abaixo do compositor', async ({ page }) => {
+  test('Assistente: data pequena à direita, campo que cresce e erro abaixo do compositor', async ({ page }) => {
     await simularApi(page)
     await page.goto('/univag/assistente')
     const campo = page.getByLabel('Mensagem')
     const linha = await campo.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
-    expect(await campo.evaluate((e) => (e as HTMLTextAreaElement).rows)).toBe(2)
-    expect((await caixa(campo)).height).toBeGreaterThanOrEqual(2 * linha - 1)
+    // começa numa linha, como no ChatGPT, e cresce com o texto
+    expect(await campo.evaluate((e) => (e as HTMLTextAreaElement).rows)).toBe(1)
+    const vazio = (await caixa(campo)).height
+    await campo.fill('1\n2\n3\n4')
+    expect((await caixa(campo)).height).toBeGreaterThanOrEqual(vazio + 2 * linha - 1)
+    await campo.fill('')
 
     await enviar(page, 'preciso do boleto do semestre')
     const balao = page.locator('.is-assistant').first()
@@ -746,12 +752,16 @@ test.describe('redesign institucional', () => {
     await simularApi(page)
     await page.goto('/univag/indicadores')
     await page.getByText('Indicador principal').waitFor()
-    // layout-painel: os 4 destaques levam shadow-xs, como no template; os outros cartões seguem sem sombra
+    // nenhum cartão com sombra; os 13 números são células de canto reto em 2 quadros de canto 8 px, e os rankings são cartões de 8 px
     const sombras = await page.locator('[data-slot=card]').evaluateAll((els) => els.map((e) => getComputedStyle(e).boxShadow))
     expect(sombras.length).toBeGreaterThanOrEqual(13)
-    expect(sombras.filter((x) => x === 'none').length).toBe(sombras.length - 4)
-    const cantos = await page.locator('[data-slot=card]').evaluateAll((els) => els.map((e) => getComputedStyle(e).borderTopLeftRadius))
-    expect(new Set(cantos), 'rounded-lg = --radius 0.5rem').toEqual(new Set(['8px']))
+    expect(sombras.filter((x) => x !== 'none')).toEqual([])
+    const cantos = (l: Locator) => l.evaluateAll((els) => els.map((e) => getComputedStyle(e).borderTopLeftRadius))
+    const celula = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
+    const quadros = [celula('Indicador principal').locator('xpath=..'), celula('Alunos ativos').locator('xpath=..')]
+    for (const q of quadros) expect(await cantos(q), 'quadro rounded-lg').toEqual(['8px'])
+    expect(await cantos(celula('Alunos ativos')), 'célula reta').toEqual(['0px'])
+    for (const t of ['Categorias por conversas', 'Categorias por chamados']) expect(await cantos(celula(t)), `${t} rounded-lg`).toEqual(['8px'])
   })
 })
 
@@ -983,15 +993,14 @@ test.describe('painel', () => {
       await coluna.waitFor()
       expect(await padding(coluna), `acesso a ${w} px`).toBe(esperado)
     }
-    // 1328 px aberta: cartão de 244 px; 1440 px aberta: 272 px
-    for (const [w, fonte] of [[1328, '24px'], [1440, '30px']] as const) {
+    // os destaques ficam num quadro com divisórias de 1 px: a célula tem 250 px ou mais em qualquer coluna, e o valor fica em 30 px
+    for (const w of [360, 1328, 1440]) {
       await page.setViewportSize({ width: w, height: 800 })
       await page.goto('/univag/indicadores')
       const cartao = page.getByRole('main').getByText('Autoatendimento', { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
       await cartao.waitFor()
-      const largura = (await caixa(cartao)).width
-      expect(w === 1328 ? largura < 250 : largura >= 250, `cartão de ${largura} px a ${w}`).toBe(true)
-      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe(fonte)
+      expect((await caixa(cartao)).width, `cartão a ${w}`).toBeGreaterThanOrEqual(250)
+      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('30px')
     }
   })
 
@@ -1360,25 +1369,17 @@ test.describe('entrada institucional', () => {
 
   test('linha da marca na entrada', async ({ page }) => {
     for (const caminho of Entradas)
-      for (const w of [360, 767, 768, 1280]) {
+      for (const [w, recuo] of [[360, 24], [767, 24], [768, 40], [1280, 40]] as const) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
-        const [linha, icone, one] = [marca(page), marca(page).locator('svg.lucide-graduation-cap'), marca(page).getByText('One', { exact: true })]
-        const [i, o, l, c] = [await caixa(icone), await caixa(one), await caixa(linha), await caixa(coluna(page))]
-        perto(i.width, 24, `${r}: largura do ícone`)
-        perto(i.height, 24, `${r}: altura do ícone`)
-        expect((await estilo(icone, 'color'))[0], `${r}: cor do ícone`).toBe(await cor(page, '--primary'))
-        expect(await estilo(one, 'font-size', 'font-weight', 'color'), `${r}: "One"`).toEqual(['16px', '600', await cor(page, '--primary')])
-        perto(o.x, i.x + i.width + 8, `${r}: espaço entre ícone e "One"`)
-        perto(o.y + o.height / 2, i.y + i.height / 2, `${r}: mesma linha`, 2)
-        expect(await icone.locator('xpath=ancestor::a | ancestor::button').count(), `${r}: sem link nem botão`).toBe(0)
-        if (w < 768) {
-          perto(l.x + l.width / 2, c.x + c.width / 2, `${r}: centro da linha`)
-          perto(Math.min(i.y, o.y), 24, `${r}: topo`)
-        } else {
-          perto(i.x, 40, `${r}: x da linha`)
-          perto(Math.min(i.y, o.y), 40, `${r}: topo`)
-        }
+        const one = marca(page).getByText('One', { exact: true })
+        const o = await caixa(one)
+        // a palavra no lugar do ícone de capelo: sem svg, sem link nem botão, no canto do recuo
+        expect(await marca(page).locator('svg').count(), `${r}: sem ícone`).toBe(0)
+        expect(await estilo(one, 'font-size', 'font-weight', 'color'), `${r}: "One"`).toEqual(['18px', '700', await cor(page, '--foreground')])
+        expect(await one.locator('xpath=ancestor-or-self::a | ancestor-or-self::button').count(), `${r}: sem link nem botão`).toBe(0)
+        perto(o.x, recuo, `${r}: x da linha`)
+        perto(o.y, recuo, `${r}: topo`)
       }
   })
 
@@ -1405,7 +1406,7 @@ test.describe('entrada institucional', () => {
       const r = `Login a ${w}`
       expect(await page.locator('h1').count(), `${r}: um só h1`).toBe(1)
       expect(await page.locator('h1').textContent(), `${r}: nome`).toBe(NomeSimulado)
-      expect(await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(['24px', '600', 'center'])
+      expect(await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(['24px', '600', 'start'])
       const frase = page.getByText('Entre com seu CPF e sua senha.', { exact: true })
       expect(await estilo(frase, 'font-size', 'color'), `${r}: frase`).toEqual(['14px', await cor(page, '--muted-foreground')])
       const [h, f, cpf] = [await caixa(page.locator('h1')), await caixa(frase), await caixa(campo(page.getByLabel('CPF')))]
@@ -1433,7 +1434,7 @@ test.describe('entrada institucional', () => {
         perto(b.width, (await caixa(page.getByLabel(primeiro))).width, `${r}: botão`)
         if (caminho.includes('primeiro')) {
           const voltar = await caixa(page.getByRole('link', { name: 'Voltar para o login' }))
-          perto(voltar.x + voltar.width / 2, blocoCaixa.x + blocoCaixa.width / 2, `${r}: voltar`)
+          perto(voltar.x, blocoCaixa.x, `${r}: voltar à esquerda`)
           await page.getByLabel('CPF').fill('12345678909')
           await page.route('**/api/auth/primeiro-acesso', (rota) => rota.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ mensagem: 'Link enviado.' }) }))
           await page.getByRole('button', { name: botao }).click()
@@ -1455,7 +1456,7 @@ test.describe('entrada institucional', () => {
       perto(e.y, s.y + s.height + 24, `${r}: Entrar`)
       perto(e.width, (await caixa(cpf)).width, `${r}: largura de Entrar`)
       expect(l.y, `${r}: link abaixo`).toBeGreaterThanOrEqual(e.y + e.height - 1)
-      perto(l.x + l.width / 2, bb.x + bb.width / 2, `${r}: centro do link`)
+      perto(l.x, bb.x, `${r}: link à esquerda`)
       await cpf.focus()
       for (const alvo of [senha, entrar, link]) {
         await page.keyboard.press('Tab')
@@ -1478,13 +1479,13 @@ test.describe('entrada institucional', () => {
       for (const w of [1024, 1440]) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
+        // fundo neutro (--muted), sem o tom de azul
         const esperado = await page.evaluate(() => {
           const p = document.createElement('i')
-          p.className = 'bg-primary/5'
+          p.style.backgroundColor = 'var(--muted)'
           document.body.append(p)
           return getComputedStyle(p).backgroundColor
         })
-        expect(esperado, `${r}: prova com alfa`).not.toMatch(/^rgb\(|rgba\([^)]*,\s*0\)|\/\s*0\)/)
         const [fundo, largura, corBorda, p1, p2, p3, p4] = await estilo(painel(page), 'background-color', 'border-left-width', 'border-left-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left')
         expect(fundo, `${r}: fundo`).toBe(esperado)
         expect([largura, corBorda], `${r}: borda`).toEqual(['1px', await cor(page, '--border')])
@@ -1505,20 +1506,16 @@ test.describe('entrada institucional', () => {
     perto(l.y, f.y + f.height + 24, 'lista')
     const itens = lista.locator('> li')
     expect(await itens.count(), 'itens').toBe(3)
-    const Itens = [['message-circle', 'Tire dúvidas com o assistente a qualquer hora'], ['list-checks', 'Acompanhe suas solicitações até a resposta'], ['users', 'Fale com a equipe da instituição quando precisar']]
+    const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
+    expect(await lista.locator('svg').count(), 'sem ícones').toBe(0)
+    expect(await estilo(lista, 'border-top-width'), 'linha acima da lista').toEqual(['1px'])
     let anterior: { y: number; height: number } | undefined
-    for (const [i, [icone, texto]] of Itens.entries()) {
+    for (const [i, texto] of Itens.entries()) {
       const item = itens.nth(i)
+      const caixaItem = await caixa(item)
       expect(await item.textContent(), `item ${i}`).toBe(texto)
-      const svg = item.locator(`svg.lucide-${icone}`)
-      const [s, caixaItem] = [await caixa(svg), await caixa(item)]
-      perto(s.width, 20, `ícone ${i}`)
-      perto(s.height, 20, `ícone ${i}`)
-      expect((await estilo(svg, 'color'))[0], `cor do ícone ${i}`).toBe(await cor(page, '--primary'))
-      expect(await estilo(item, 'font-size', 'color'), `texto ${i}`).toEqual(['16px', await cor(page, '--foreground')])
-      const textoX = await item.evaluate((e) => { const r = document.createRange(); r.selectNodeContents(e.lastChild!); return r.getBoundingClientRect().x })
-      perto(textoX, s.x + s.width + 12, `espaço do item ${i}`)
-      if (anterior) perto(caixaItem.y, anterior.y + anterior.height + 16, `espaço entre itens ${i}`)
+      expect(await estilo(item, 'font-size', 'color', 'border-bottom-width', 'padding-top'), `item ${i}`).toEqual(['16px', await cor(page, '--foreground'), '1px', '12px'])
+      if (anterior) perto(caixaItem.y, anterior.y + anterior.height, `itens colados, separados pela linha ${i}`)
       anterior = caixaItem
     }
     for (const caminho of Entradas.slice(1)) {
@@ -1594,13 +1591,13 @@ test.describe('entrada institucional', () => {
   })
 
   // C25
-  test('frase do Login centrada', async ({ page }) => {
+  test('frase do Login à esquerda', async ({ page }) => {
     for (const w of [360, 1280]) {
       await ir(page, '/univag', w)
       const frase = page.getByText('Entre com seu CPF e sua senha.', { exact: true })
-      expect(await estilo(frase, 'text-align'), `${w}: text-align`).toEqual(['center'])
+      expect(await estilo(frase, 'text-align'), `${w}: text-align`).toEqual(['start'])
       const [f, b] = [await caixa(frase), await caixa(bloco(page))]
-      perto(f.x + f.width / 2, b.x + b.width / 2, `${w}: centro da frase`)
+      perto(f.x, b.x, `${w}: frase à esquerda`)
     }
   })
 })

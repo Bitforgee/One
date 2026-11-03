@@ -5,7 +5,7 @@ import { api } from '../api'
 import { dia, Periodo } from '../Periodo'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
@@ -131,30 +131,29 @@ function Painel({ dados }: { dados: Indicadores }) {
   ] as const
   const todos = cartoes(dados)
   const valores = new Map(todos)
+  const compactos = todos.filter(([rotulo]) => !Destaques.some(([d]) => d === rotulo))
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      {/* um quadro só, com linhas de 1 px entre as células (gap-px sobre bg-border), em vez de cartões soltos */}
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border bg-border @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         {Destaques.map(([rotulo, rodape]) => (
-          <Card key={rotulo} className="@container/card">
-            <CardHeader>
+          <Card key={rotulo} className="gap-3 rounded-none border-0 p-5">
+            <div className="flex flex-col gap-1">
               <CardDescription>{rotulo}</CardDescription>
-              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{valores.get(rotulo)}</CardTitle>
-            </CardHeader>
-            <CardFooter className="text-sm text-muted-foreground">
-              <div className="line-clamp-1">{rodape}</div>
-            </CardFooter>
+              <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</CardTitle>
+            </div>
+            <div className="line-clamp-1 text-sm text-muted-foreground">{rodape}</div>
           </Card>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-4 @3xl/main:grid-cols-3">
-        {todos
-          .filter(([rotulo]) => !Destaques.some(([d]) => d === rotulo))
-          .map(([rotulo, valor]) => (
-            <Card key={rotulo} className="gap-1 px-4 py-3">
-              <div className="text-sm text-muted-foreground">{rotulo}</div>
-              <div className="text-xl font-semibold tabular-nums">{valor}</div>
-            </Card>
-          ))}
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border @3xl/main:grid-cols-3">
+        {compactos.map(([rotulo, valor], i) => (
+          // o último de uma lista ímpar ocupa a linha toda em 2 colunas, para não sobrar célula vazia
+          <Card key={rotulo} className={`gap-1 rounded-none border-0 px-5 py-4 ${i === compactos.length - 1 && compactos.length % 2 ? 'col-span-2 @3xl/main:col-span-1' : ''}`}>
+            <div className="text-sm text-muted-foreground">{rotulo}</div>
+            <div className="text-xl font-semibold tabular-nums">{valor}</div>
+          </Card>
+        ))}
       </div>
       <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-2">
         {rankings

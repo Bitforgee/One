@@ -129,4 +129,18 @@ describe('assistente', () => {
     expect(falar()).toHaveClass('bg-primary')
     expect(falar()).not.toHaveClass('bg-background')
   })
+
+  // compositor no estilo do ChatGPT: Enter envia, Shift+Enter quebra a linha, e Enter com o campo em branco não envia
+  it('Enter envia e Shift+Enter quebra a linha', async () => {
+    const chamadas = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })
+    const campo = await screen.findByLabelText('Mensagem')
+    await userEvent.type(campo, '   {Enter}')
+    expect(chamadas.filter((c) => c.url === '/api/conversas')).toHaveLength(0)
+    await userEvent.clear(campo)
+    await userEvent.type(campo, 'linha 1{Shift>}{Enter}{/Shift}linha 2')
+    expect(campo).toHaveValue('linha 1\nlinha 2')
+    await userEvent.type(campo, '{Enter}')
+    expect(await screen.findByText('É do semestre atual?')).toBeInTheDocument()
+    expect(chamadas.filter((c) => c.url === '/api/conversas').map((c) => c.corpo)).toEqual([{ mensagem: 'linha 1\nlinha 2' }])
+  })
 })

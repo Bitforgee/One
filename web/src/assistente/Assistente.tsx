@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { Hand, Send, ShieldAlert } from 'lucide-react'
+import { ArrowUp, Hand, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
@@ -138,33 +138,51 @@ type EntradaProps = {
   confirmar: (qual: Confirmar) => void
 }
 
+// Compositor no estilo do ChatGPT: uma caixa arredondada com o campo que cresce com o texto e, embaixo, as ações à esquerda e o enviar redondo à direita.
 function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar }: EntradaProps) {
-  return (
-    <>
-      {!noLimite && (
-        <form onSubmit={enviar} className="mb-2 flex items-end gap-2">
-          <Label htmlFor="mensagem" className="sr-only">
-            Mensagem
-          </Label>
-          <Textarea id="mensagem" rows={2} maxLength={1000} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Escreva sua dúvida" className="field-sizing-fixed min-h-0 resize-none" />
-          <Button type="submit" disabled={pendente || !texto.trim()}>
-            {pendente ? <Spinner /> : <Send aria-hidden="true" />}
-            Enviar
-          </Button>
-        </form>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <Button variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
-          <Hand aria-hidden="true" />
-          Falar com atendente
+  const vazio = pendente || !texto.trim()
+  // type="button": dentro do form, o padrão "submit" enviaria a mensagem
+  const acoes = (
+    <div className="flex flex-wrap gap-1.5">
+      <Button type="button" size="sm" className="rounded-full" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
+        <Hand aria-hidden="true" />
+        Falar com atendente
+      </Button>
+      {emConversa && (
+        <Button type="button" size="sm" className="rounded-full" variant="outline" onClick={() => confirmar('encerrar')}>
+          Encerrar
         </Button>
-        {emConversa && (
-          <Button variant="outline" onClick={() => confirmar('encerrar')}>
-            Encerrar
-          </Button>
-        )}
+      )}
+    </div>
+  )
+  if (noLimite) return acoes
+  return (
+    <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
+      <Label htmlFor="mensagem" className="sr-only">
+        Mensagem
+      </Label>
+      <Textarea
+        id="mensagem"
+        rows={1}
+        maxLength={1000}
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        onKeyDown={(e) => {
+          // Enter envia e Shift+Enter quebra a linha; durante a composição de acentos (IME) o Enter é do teclado
+          if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
+          e.preventDefault()
+          if (!vazio) e.currentTarget.form?.requestSubmit()
+        }}
+        placeholder="Escreva sua dúvida"
+        className="max-h-52 min-h-10 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
+      />
+      <div className="flex items-end justify-between gap-1.5">
+        {acoes}
+        <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
+          {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
+        </Button>
       </div>
-    </>
+    </form>
   )
 }
 
@@ -303,9 +321,10 @@ export function Assistente() {
   }
 
   return (
-    <div className="mx-auto -mb-4 flex max-w-3xl flex-col md:-mb-6">
-      <p className="my-2 flex gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-        <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+    // a tela tem pelo menos a altura da janela (menos o cabeçalho de 49 px e o recuo de cima do main), para o compositor ficar no fundo mesmo sem conversa
+    <div className="mx-auto -mb-4 flex min-h-[calc(100svh-49px-1rem)] w-full max-w-3xl flex-col md:-mb-6 md:min-h-[calc(100svh-49px-1.5rem)]">
+      <p className="my-2 flex gap-2 text-xs text-muted-foreground">
+        <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />
         {AvisoExterno}
       </p>
       {mensagens.length === 0 && (
@@ -318,7 +337,7 @@ export function Assistente() {
       ) : desfecho ? (
         <Encerrada desfecho={desfecho} />
       ) : (
-        <div className="sticky bottom-0 z-10 bg-background py-2">
+        <div className="sticky bottom-0 z-10 mt-auto bg-background pt-2 pb-1.5">
           <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} />
         </div>
       )}

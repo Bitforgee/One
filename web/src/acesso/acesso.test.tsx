@@ -35,14 +35,12 @@ describe('acesso', () => {
   })
 
   // login-institucional C13: o jsdom não aplica lg:, o painel existe no DOM em qualquer largura
-  it('painel de entrada sem foco e com ícones escondidos', async () => {
+  it('painel de entrada sem foco e sem ícones', async () => {
     api({ ...instituicao, 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'x' }] })
     for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']) {
       const { unmount } = abrir(caminho)
       const painel = (await screen.findByRole('heading', { name: 'Atendimento ao estudante', hidden: true })).parentElement!.parentElement!
-      const icones = [...painel.querySelectorAll('svg')]
-      expect(icones, caminho).toHaveLength(3)
-      for (const i of icones) expect(i, caminho).toHaveAttribute('aria-hidden', 'true')
+      expect(painel.querySelectorAll('svg'), caminho).toHaveLength(0)
       expect(painel.querySelectorAll('a, button, input, select, textarea, [tabindex]'), caminho).toHaveLength(0)
       unmount()
     }

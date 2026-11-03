@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type ComponentProps, type ReactNode } from 'react'
-import { GraduationCap, ListChecks, MessageCircle, Users } from 'lucide-react'
 import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { z } from 'zod'
@@ -25,37 +24,29 @@ export function Centro({ children }: { children: ReactNode }) {
   )
 }
 
-const Itens = [
-  [MessageCircle, 'Tire dúvidas com o assistente a qualquer hora'],
-  [ListChecks, 'Acompanhe suas solicitações até a resposta'],
-  [Users, 'Fale com a equipe da instituição quando precisar'],
-] as const
+const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 
-// Bloco login-02 do shadcn (AD-030): formulário à esquerda com a marca no topo, painel institucional à direita a partir de 1024 px.
+// Duas colunas a partir de 1024 px: o formulário à esquerda, alinhado à esquerda; à direita um painel neutro só com texto, sem ícones nem degradê.
 function Entrada({ titulo, descricao, children }: { titulo: ReactNode; descricao?: string; children: ReactNode }) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex items-center justify-center gap-2 font-semibold text-primary md:justify-start">
-          <GraduationCap className="size-6" />
-          <span>One</span>
-        </div>
+        <div className="text-lg leading-6 font-bold tracking-tight">One</div>
         <div className="flex flex-1 items-center justify-center">
           <div className="flex w-full max-w-xs flex-col gap-6">
-            <h1 className="text-center text-2xl font-semibold tracking-tight">{titulo}</h1>
-            {descricao && <p className="-mt-5 text-center text-sm text-muted-foreground">{descricao}</p>}
+            <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
+            {descricao && <p className="-mt-5 text-sm text-muted-foreground">{descricao}</p>}
             {children}
           </div>
         </div>
       </div>
-      <div className="relative hidden flex-col border-l bg-primary/5 p-10 lg:flex">
+      <div className="relative hidden flex-col border-l bg-muted p-10 lg:flex">
         <div className="mt-auto max-w-md">
           <h2 className="text-3xl font-semibold tracking-tight">Atendimento ao estudante</h2>
           <p className="mt-2 text-muted-foreground">Dúvidas, solicitações e respostas da sua instituição em um só lugar.</p>
-          <ul className="mt-6 flex flex-col gap-4">
-            {Itens.map(([Icone, texto]) => (
-              <li key={texto} className="flex items-center gap-3">
-                <Icone aria-hidden="true" className="size-5 shrink-0 text-primary" />
+          <ul className="mt-6 border-t">
+            {Itens.map((texto) => (
+              <li key={texto} className="border-b py-3">
                 {texto}
               </li>
             ))}
@@ -139,9 +130,9 @@ export function Login() {
           </>
         )}
       </Formulario>
-      <div className="text-center">
-        <Link to={`/${slug}/primeiro-acesso`}>Primeiro acesso ou esqueci minha senha</Link>
-      </div>
+      <Link to={`/${slug}/primeiro-acesso`} className="self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+        Primeiro acesso ou esqueci minha senha
+      </Link>
     </Entrada>
   )
 }
@@ -163,9 +154,9 @@ export function PrimeiroAcesso() {
           {(form) => <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" dica="Enviaremos um link para criar a senha no e-mail registrado na instituição." />}
         </Formulario>
       )}
-      <div className="text-center">
-        <Link to={`/${slug}`}>Voltar para o login</Link>
-      </div>
+      <Link to={`/${slug}`} className="self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+        Voltar para o login
+      </Link>
     </Entrada>
   )
 }

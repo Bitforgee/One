@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, ChartColumn, ChevronsUpDown, FileText, GraduationCap, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, ChartColumn, ChevronsUpDown, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
@@ -164,12 +164,15 @@ function Barra({ me, itens, slug, sair }: { me: Me; itens: Item[]; slug?: string
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 p-1.5">
-          <GraduationCap aria-hidden="true" className="size-6 shrink-0 text-primary" />
+          {/* as iniciais da instituição no lugar de um ícone genérico; recolhida, é o que fica */}
+          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground text-xs font-bold text-background">
+            {iniciais(me.instituicao.nome)}
+          </span>
           <div className="grid min-w-0 text-sm leading-tight">
-            <span className="text-base font-semibold text-primary group-data-[collapsible=icon]:sr-only">One</span>
-            <span className="text-muted-foreground group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
+            <span className="font-semibold group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
               {me.instituicao.nome}
             </span>
+            <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:sr-only">One</span>
           </div>
         </div>
       </SidebarHeader>
