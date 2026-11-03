@@ -1417,14 +1417,16 @@ test.describe('entrada institucional', () => {
   test('cabeçalho de Primeiro acesso e Criar senha', async ({ page }) => {
     for (const w of [360, 1280]) {
       await ir(page, '/univag', w)
-      const [login, estiloLogin] = [await caixa(page.locator('h1')), await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align')]
+      const [login, estiloLogin, blocoLogin] = [await caixa(page.locator('h1')), await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), await caixa(bloco(page))]
+      perto(login.y, blocoLogin.y, `Login a ${w}: h1 no topo do bloco`)
       for (const [caminho, primeiro, botao] of [['/univag/primeiro-acesso', 'CPF', 'Enviar link'], ['/univag/definir-senha?token=t', 'Nova senha', 'Salvar senha']] as const) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
         const h1 = page.locator('h1')
         expect(await estilo(h1, 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(estiloLogin)
         const [h, primeiroCampo, b, blocoCaixa] = [await caixa(h1), await caixa(campo(page.getByLabel(primeiro))), await caixa(page.getByRole('button', { name: botao })), await caixa(bloco(page))]
-        perto(h.y, login.y, `${r}: y do h1`)
+        // C7 emendado (03/11): o h1 no topo do bloco, como no Login; o bloco segue centrado na vertical (C5), então o y muda com a altura do bloco
+        perto(h.y, blocoCaixa.y, `${r}: h1 no topo do bloco`)
         perto(primeiroCampo.y, h.y + h.height + 24, `${r}: primeiro campo`)
         // nada entre o h1 e o campo: o rótulo é o primeiro elemento depois do h1
         expect(await h1.locator('xpath=following-sibling::*[1]//label').count(), `${r}: nada entre o h1 e o campo`).toBe(1)
