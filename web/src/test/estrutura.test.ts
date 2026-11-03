@@ -9,7 +9,7 @@ const texto = (arquivo: string) => fontes[`/src/${arquivo}`]
 const Fatias = ['acesso', 'administracao', 'assistente', 'chamados', 'conhecimento', 'indicadores']
 const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'AvisosPush.tsx', 'datas.ts', 'main.tsx', 'push.ts', 'sessao.ts', 'sw.test.ts', 'sw.ts', 'tempo-real.ts', 'tempo-real.test.ts']
 // Pacotes que só o código copiado dos registros (shadcn/ui, AI Elements) importa (door 3)
-const SoDaUi = /from ['"](?:radix-ui|@radix-ui\/[^'"]+|vaul|class-variance-authority|use-stick-to-bottom|clsx|tailwind-merge)['"]/
+const SoDaUi = /from ['"](?:radix-ui|@radix-ui\/[^'"]+|class-variance-authority|use-stick-to-bottom|clsx|tailwind-merge)['"]/
 const ForaDaUi = /(?:from|import)\s*['"](?:\.\.\/|@\/(?!ui\/))/
 const pasta = (arquivo: string) => (arquivo.includes('/') ? arquivo.split('/')[0] : '')
 

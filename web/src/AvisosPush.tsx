@@ -6,9 +6,9 @@ import { api } from './api'
 import { alternar, subscricaoLocal, suportado } from './push'
 import { Button } from './ui/button'
 
-// Botão da barra do aluno: só aparece com suporte do navegador e a chave do servidor (404 = push desligado).
-// Na barra de topo é um sino (rótulo em aria-label/title, cabe em 360 px); na barra lateral e na gaveta, com o texto visível.
-export function AvisosPush({ item }: { item?: string }) {
+// Botão do cabeçalho do aluno: só aparece com suporte do navegador e a chave do servidor (404 = push desligado).
+// É um sino (rótulo em aria-label/title, cabe em 360 px).
+export function AvisosPush() {
   const chave = useQuery({ queryKey: ['push-chave'], queryFn: () => api<{ chavePublica: string }>('/api/push/chave'), enabled: suportado(), retry: false })
   const local = useQuery({ queryKey: ['push-local'], queryFn: subscricaoLocal, enabled: !!chave.data })
   const [ocupado, setOcupado] = useState(false)
@@ -29,17 +29,9 @@ export function AvisosPush({ item }: { item?: string }) {
 
   const rotulo = inscrito ? 'Desativar avisos' : 'Ativar avisos neste aparelho'
   const Icone = inscrito ? BellOff : Bell
-  if (item)
-    return (
-      <button type="button" className={item} disabled={ocupado} onClick={aoClicar}>
-        <Icone aria-hidden="true" className="size-4" />
-        {rotulo}
-      </button>
-    )
   return (
-    <Button variant="ghost" size="icon" className="lg:w-full lg:justify-start lg:px-2 recolhida:w-9 recolhida:justify-center" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
+    <Button variant="ghost" size="icon" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
       <Icone aria-hidden="true" />
-      <span className="hidden lg:inline recolhida:sr-only">{rotulo}</span>
     </Button>
   )
 }

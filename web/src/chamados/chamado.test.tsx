@@ -25,7 +25,7 @@ describe('chamado', () => {
     const carregando = abrir('/univag/chamados/ONE-1')
     await screen.findByRole('navigation')
     expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')
-    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
     carregando.unmount()
 
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [404, { status: 404, detail: 'Chamado não encontrado.' }] })
@@ -38,7 +38,7 @@ describe('chamado', () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado({ mensagens: [] })] })
     abrir('/univag/chamados/ONE-1')
     expect(await screen.findByText('Nenhuma resposta ainda.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'ONE-1 · preciso do boleto' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'preciso do boleto' })).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
@@ -149,7 +149,7 @@ describe('chamado', () => {
     try {
       const chamadas = api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
       abrir('/univag/chamados/ONE-1')
-      await screen.findByRole('heading', { name: 'ONE-1 · preciso do boleto' })
+      await screen.findByRole('heading', { name: 'preciso do boleto' })
       const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
       expect(leituras()).toBe(1)
       await vi.advanceTimersByTimeAsync(14_999)

@@ -174,7 +174,6 @@ export function TrocarSenha() {
   const { me, setMe } = useSessao()
   return (
     <div className="mx-auto flex max-w-[420px] flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Trocar senha</h1>
       {me.deveTrocarSenha && <Alert>Troque a senha temporária para continuar.</Alert>}
       <Formulario
         schema={z.object({ senhaAtual: obrigatorio, novaSenha: obrigatorio })}

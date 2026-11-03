@@ -163,11 +163,40 @@ describe('interface nova', () => {
     expect(arquivos.filter((a) => CorLiteral.test(texto(a)))).toEqual([])
   })
 
-  // redesign-institucional C22 (AC 22): todo título de página fora dos testes
+  // redesign-institucional C22 (AC 22), layout-painel door 3: o h1 das telas de acesso é o de sempre; o das telas autenticadas é um só, no cabeçalho
   it('títulos de página', () => {
     const titulos = arquivos.filter((a) => !a.includes('.test.')).flatMap((a) => [...texto(a).matchAll(/<h1[^>]*>/g)].map((m) => [a, m[0]]))
-    expect(titulos.length).toBeGreaterThanOrEqual(8)
-    for (const [arquivo, h1] of titulos) expect(h1, arquivo).toMatch(/className="(?:[^"]* )?text-2xl font-semibold tracking-tight[ "]/)
+    expect(titulos.map(([arquivo]) => arquivo).sort()).toEqual(['Autenticado.tsx', 'acesso/Acesso.tsx'])
+    for (const [arquivo, h1] of titulos)
+      expect(h1, arquivo).toMatch(arquivo === 'Autenticado.tsx' ? /className="(?:[^"]* )?text-base font-medium[ "]/ : /className="(?:[^"]* )?text-2xl font-semibold tracking-tight[ "]/)
+  })
+
+  // layout-painel C35 (AC 35): os tokens de ## Visual não mudaram nos 3 temas
+  it('tokens de Visual', () => {
+    const t = temas()
+    const colunas = { ':root': 1, '.dark': 2, '.dark.black': 3 } as const
+    for (const [seletor, coluna] of Object.entries(colunas))
+      for (const linha of Tokens) {
+        const esperado = linha[coluna] === '=' ? linha[2] : linha[coluna]
+        expect(t[seletor as keyof typeof t][linha[0]], `${seletor} ${linha[0]}`).toBe(esperado)
+      }
+  })
+
+  // layout-painel C35 (AC 35): o texto e o item ativo da barra legíveis nos 3 temas
+  it('contraste dos tokens da barra', () => {
+    for (const [seletor, t] of Object.entries(temas()))
+      for (const [frente, fundo] of [
+        ['--sidebar-foreground', '--sidebar'],
+        ['--sidebar-accent-foreground', '--sidebar-accent'],
+      ])
+        expect(contraste(t[frente], t[fundo]), `${seletor} ${frente}/${fundo}`).toBeGreaterThanOrEqual(4.5)
+  })
+
+  // layout-painel C38: a gaveta Vaul saiu, com o pacote
+  it('sem gaveta Vaul', () => {
+    expect(arquivos.filter((a) => a === 'ui/drawer.tsx')).toEqual([])
+    expect(arquivos.filter((a) => /ui\/drawer['"]|from 'vaul'/.test(texto(a)) && !a.includes('interface.test'))).toEqual([])
+    expect(todas).not.toHaveProperty(['vaul'])
   })
 
   it('provedores dentro do App', () => {

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -8,6 +8,10 @@ import { iniciais } from '../Autenticado'
 import { abrir, api, me } from '../test/util'
 import { Toaster } from '../ui/sonner'
 import { ThemeProvider } from '../ui/theme-provider'
+
+// a barra lateral do shadcn (desktop ou painel do celular): nem sempre é um <nav>
+const barra = () => document.querySelector('[data-sidebar=sidebar]') as HTMLElement
+const alternarBarra = () => screen.findByRole('button', { name: 'Alternar barra lateral' })
 
 const instituicao = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univag' }] as [number, unknown] }
 
@@ -122,8 +126,8 @@ describe('acesso', () => {
   it('cabeçalho mostra a instituição', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/assistente')
-    const cabecalho = await screen.findByRole('navigation')
-    expect(within(cabecalho).getByText('Univag')).toBeInTheDocument()
+    await screen.findByRole('navigation')
+    expect(within(barra()).getByText('Univag')).toBeInTheDocument()
   })
 
   it('dependências do kit de interface', () => {
@@ -140,7 +144,7 @@ describe('acesso', () => {
     expect(todas['@tailwindcss/vite']).toBe('4.3.4')
     expect(todas['lucide-react']).toBe('1.66.0')
     expect(todas['@tanstack/react-query']).toBe('5.105.3')
-    expect(todas['vaul']).toBe('1.1.2')
+    expect(todas['vaul']).toBeUndefined() // layout-painel C38: a gaveta Vaul saiu
     for (const proibido of ['next-themes', 'ai', '@ai-sdk/react', 'streamdown']) expect(todas[proibido], proibido).toBeUndefined()
   })
 
@@ -185,29 +189,25 @@ describe('acesso', () => {
     for (const link of links) {
       const ativo = link.textContent === 'Fila'
       expect(link.getAttribute('aria-current'), link.textContent!).toBe(ativo ? 'page' : null)
-      expect(link.classList.contains('bg-primary-subtle'), link.textContent!).toBe(ativo)
+      expect(link.getAttribute('data-active'), link.textContent!).toBe(String(ativo))
     }
   })
 
-  // redesign-institucional C14 (AC 14): depois dos links, avisos (só aluno), Tema e Sair; "Menu" é da barra de topo e some a partir de 1024 px
+  // layout-painel C8 (AC 8): no cabeçalho, da esquerda para a direita, o botão da barra, avisos (só aluno) e Tema
   it.each([
-    [['ALUNO'], ['Ativar avisos neste aparelho', 'Tema', 'Sair']],
-    [['ATENDENTE'], ['Tema', 'Sair']],
-    [['ADMINISTRADOR'], ['Tema', 'Sair']],
-  ])('rodapé da barra lateral por papel (%j)', async (papeis, rodape) => {
+    [['ALUNO'], ['Alternar barra lateral', 'Ativar avisos neste aparelho', 'Tema']],
+    [['ATENDENTE'], ['Alternar barra lateral', 'Tema']],
+    [['ADMINISTRADOR'], ['Alternar barra lateral', 'Tema']],
+  ])('botões do cabeçalho por papel (%j)', async (papeis, botoes) => {
     Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null } }) } })
     vi.stubGlobal('PushManager', class {})
     vi.stubGlobal('Notification', { requestPermission: async () => 'granted' })
     api({ 'GET /api/auth/me': () => [200, me({ papeis })], 'GET /api/push/chave': () => [200, { chavePublica: 'BAEC' }] })
     abrir('/univag/trocar-senha')
-    const nav = await screen.findByRole('navigation')
-    if (papeis.includes('ALUNO')) await within(nav).findByRole('button', { name: rodape[0] })
+    const cabecalho = (await screen.findByRole('heading', { level: 1, name: 'Trocar senha' })).closest('header') as HTMLElement
+    if (papeis.includes('ALUNO')) await within(cabecalho).findByRole('button', { name: botoes[1] })
     else await new Promise((r) => setTimeout(r, 50))
-    const itens = [...nav.querySelectorAll('a, button')]
-    const depois = itens.slice(itens.findLastIndex((e) => e.tagName === 'A') + 1)
-    const menu = depois.find((e) => e.getAttribute('aria-label') === 'Menu')!
-    expect(menu).toHaveClass('lg:hidden')
-    expect(depois.filter((e) => e !== menu).map((e) => e.getAttribute('aria-label') ?? e.textContent)).toEqual(rodape)
+    expect([...cabecalho.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(botoes)
     Reflect.deleteProperty(navigator, 'serviceWorker')
     vi.unstubAllGlobals()
   })
@@ -238,10 +238,10 @@ describe('acesso', () => {
       const navs = screen.getAllByRole('navigation')
       expect(navs, papel).toHaveLength(1)
       const nav = within(navs[0])
-      expect(nav.getByText('Univag')).toBeInTheDocument()
+      expect(within(barra()).getByText('Univag')).toBeInTheDocument()
       expect(nav.getAllByRole('link').map((l) => l.textContent)).toEqual(links)
-      expect(nav.getByRole('button', { name: 'Menu' })).toBeInTheDocument()
-      expect(nav.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Alternar barra lateral' })).toBeInTheDocument()
+      expect(within(barra()).getByRole('button', { name: new RegExp(me().nome) })).toBeInTheDocument()
       unmount()
     }
   })
@@ -266,14 +266,13 @@ describe('acesso', () => {
       expect(svg, rotulo).toHaveClass(classe)
       expect(svg, rotulo).toHaveAttribute('aria-hidden', 'true')
     }
-    for (const [nome, classe] of [
-      ['Sair', 'lucide-log-out'],
-      ['Menu', 'lucide-menu'],
-    ]) {
-      const svg = icone(nav.getByRole('button', { name: nome }))
-      expect(svg, nome).toHaveClass(classe)
-      expect(svg, nome).toHaveAttribute('aria-hidden', 'true')
-    }
+    const botao = icone(await alternarBarra())
+    expect(botao, 'Alternar barra lateral').toHaveClass('lucide-panel-left')
+    expect(botao, 'Alternar barra lateral').toHaveAttribute('aria-hidden', 'true')
+    await userEvent.click(within(barra()).getByRole('button', { name: new RegExp(me().nome) }))
+    const sair = icone(await screen.findByRole('menuitem', { name: 'Sair' }))
+    expect(sair, 'Sair').toHaveClass('lucide-log-out')
+    expect(sair, 'Sair').toHaveAttribute('aria-hidden', 'true')
   })
 
   it('QueryClient por montagem sem nova tentativa nem releitura no foco', async () => {
@@ -399,7 +398,10 @@ describe('tema (redesign-institucional)', () => {
 
 // barra-lateral-grupos: grupos, nome do usuário e a preferência de recolher
 describe('barra lateral com grupos', () => {
-  afterEach(() => localStorage.clear())
+  afterEach(() => {
+    localStorage.clear()
+    window.innerWidth = 1024
+  })
 
   const Todos = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR']
   const Esperado = [
@@ -417,7 +419,10 @@ describe('barra lateral com grupos', () => {
     const nav = await screen.findByRole('navigation')
     expect(grupos(nav)).toEqual(Esperado)
     for (const [nome] of Esperado) expect(within(nav).getByRole('group', { name: nome as string })).toBeInTheDocument()
-    await userEvent.click(within(nav).getByRole('button', { name: 'Menu' }))
+    cleanup()
+    window.innerWidth = 500 // o painel lateral do celular
+    abrir('/univag/trocar-senha')
+    await userEvent.click(await alternarBarra())
     const gaveta = await screen.findByRole('dialog', { name: 'Menu' })
     expect(grupos(gaveta)).toEqual(Esperado)
     for (const [nome] of Esperado) expect(within(gaveta).getByRole('group', { name: nome as string })).toBeInTheDocument()
@@ -434,16 +439,17 @@ describe('barra lateral com grupos', () => {
     expect(grupos(await screen.findByRole('navigation'))).toEqual(esperado)
   })
 
-  // C6 (AC 5)
-  it('nome do usuário na gaveta', async () => {
+  // layout-painel C5 (AC 5): o painel do celular leva a instituição, os links e o botão do usuário
+  it('nome do usuário no painel do celular', async () => {
+    window.innerWidth = 500
     api({ 'GET /api/auth/me': () => [200, me({ nome: 'Ana Beatriz Souza' })] })
     abrir('/univag/trocar-senha')
-    await userEvent.click(await screen.findByRole('button', { name: 'Menu' }))
-    const gaveta = await screen.findByRole('dialog', { name: 'Menu' })
-    const titulo = within(gaveta).getByText('Menu')
-    const nome = within(gaveta).getByText('Ana Beatriz Souza')
-    expect(titulo.compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(nome.compareDocumentPosition(within(gaveta).getAllByRole('link')[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await userEvent.click(await alternarBarra())
+    const painel = await screen.findByRole('dialog', { name: 'Menu' })
+    const nome = within(painel).getByText('Ana Beatriz Souza')
+    expect(within(painel).getByText('Aluno')).toBeInTheDocument()
+    expect(within(painel).getByText('Univag')).toBeInTheDocument()
+    expect(within(painel).getAllByRole('link')[0].compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   // C7 (AC 6)
@@ -453,28 +459,101 @@ describe('barra lateral com grupos', () => {
     expect(iniciais('  Carla  Regina ')).toBe('CR')
   })
 
-  // C11, C14 (AC 9, AC 12): alternar troca o botão e grava a preferência
-  it('recolher e expandir gravam one-barra', async () => {
+  const estado = () => document.querySelector('[data-slot=sidebar]')!.getAttribute('data-state')
+
+  // layout-painel C2 (AC 2)
+  it('alternar barra grava one-barra', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
-    const nav = await screen.findByRole('navigation')
-    await userEvent.click(within(nav).getByRole('button', { name: 'Recolher barra lateral' }))
-    expect(nav.getAttribute('data-recolhida')).toBe('true')
+    await userEvent.click(await alternarBarra())
+    expect(estado()).toBe('collapsed')
     expect(localStorage.getItem('one-barra')).toBe('recolhida')
-    const expandir = within(nav).getByRole('button', { name: 'Expandir barra lateral' })
-    expect(expandir).toHaveAttribute('aria-expanded', 'false')
-    await userEvent.click(expandir)
-    expect(nav.getAttribute('data-recolhida')).toBe('false')
+    await userEvent.click(await alternarBarra())
+    expect(estado()).toBe('expanded')
     expect(localStorage.getItem('one-barra')).toBe('aberta')
   })
 
-  // C15 (AC 13)
-  it.each([[null], ['x']])('one-barra desconhecido começa aberta (%s)', async (valor) => {
+  // layout-painel C3 (AC 3): recolhida só com o valor exato
+  it.each([
+    ['recolhida', 'collapsed'],
+    ['aberta', 'expanded'],
+    [null, 'expanded'],
+    ['xyz', 'expanded'],
+  ])('estado inicial da barra por one-barra (%s)', async (valor, esperado) => {
     if (valor !== null) localStorage.setItem('one-barra', valor)
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
-    const nav = await screen.findByRole('navigation')
-    expect(nav.getAttribute('data-recolhida')).toBe('false')
-    expect(within(nav).getByRole('button', { name: 'Recolher barra lateral' })).toHaveAttribute('aria-expanded', 'true')
+    await alternarBarra()
+    expect(estado()).toBe(esperado)
+  })
+
+  // layout-painel C7 (AC 7)
+  it('Ctrl+B alterna a barra', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    await alternarBarra()
+    for (const tecla of ['{Control>}b{/Control}', '{Meta>}b{/Meta}']) {
+      await userEvent.keyboard(tecla)
+      expect(estado()).toBe('collapsed')
+      await userEvent.keyboard(tecla)
+      expect(estado()).toBe('expanded')
+    }
+  })
+
+  // layout-painel C12 (AC 12): o nome do documento vai em pedaços para este arquivo não se acusar
+  it('sem cookie sidebar_state', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    await userEvent.click(await alternarBarra())
+    await userEvent.click(await alternarBarra())
+    expect(document.cookie).not.toContain('sidebar_state')
+    const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+    expect(Object.keys(fontes).filter((a) => fontes[a].includes('document' + '.cookie'))).toEqual([])
+  })
+
+  // layout-painel C9 (AC 9): um h1 por tela, o rótulo do link, o número ou "Trocar senha"
+  it.each([
+    ['assistente', 'Assistente'],
+    ['solicitacoes', 'Minhas solicitações'],
+    ['fila', 'Fila'],
+    ['indicadores', 'Indicadores'],
+    ['artigos', 'Artigos'],
+    ['documentos', 'Documentos'],
+    ['usuarios', 'Usuários'],
+    ['matriculas', 'Matrículas'],
+    ['cadastros', 'Cadastros'],
+    ['chamados/ONE-7', 'ONE-7'],
+    ['trocar-senha', 'Trocar senha'],
+  ])('título do cabeçalho por rota (%s)', async (caminho, titulo) => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: Todos })] })
+    abrir('/univag/' + caminho)
+    await screen.findByRole('heading', { level: 1, name: titulo })
+    await new Promise((r) => setTimeout(r, 50)) // dá tempo de a tela desenhar o que tiver
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  })
+
+  // layout-painel C10 (AC 10)
+  it.each([
+    [['ADMINISTRADOR', 'ATENDENTE', 'ALUNO'], 'Administrador'],
+    [['ALUNO', 'ATENDENTE'], 'Atendente'],
+    [['ALUNO'], 'Aluno'],
+  ])('papel do usuário por precedência (%j)', async (papeis, papel) => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis })] })
+    abrir('/univag/trocar-senha')
+    await userEvent.click(await screen.findByRole('button', { name: new RegExp(me().nome) }))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).getByText(me().nome)).toBeInTheDocument()
+    expect(within(menu).getByText(papel)).toBeInTheDocument()
+  })
+
+  it('menu do usuário', async () => {
+    const chamadas = api({ ...instituicao, 'GET /api/auth/me': () => [200, me()], 'POST /api/auth/logout': () => [204, undefined] })
+    abrir('/univag/trocar-senha')
+    await userEvent.click(await screen.findByRole('button', { name: new RegExp(me().nome) }))
+    const menu = await screen.findByRole('menu')
+    expect(within(menu).getByText('Aluno')).toBeInTheDocument()
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
+    expect(await screen.findByLabelText('CPF')).toBeInTheDocument()
+    expect(chamadas.filter((c) => c.metodo === 'POST' && c.url === '/api/auth/logout')).toHaveLength(1)
   })
 })

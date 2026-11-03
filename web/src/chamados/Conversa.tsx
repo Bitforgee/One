@@ -9,9 +9,7 @@ import { responsavel } from './Chamados'
 export function Cabecalho({ c }: { c: Chamado }) {
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight break-words">
-        {c.numero} · {c.titulo}
-      </h1>
+      <h2 className="text-2xl font-semibold tracking-tight break-words">{c.titulo}</h2>
       <p className="mb-0 flex flex-wrap items-center gap-2">
         <Badge>{Estados[c.estado]}</Badge>
         <span className="text-sm text-muted-foreground">

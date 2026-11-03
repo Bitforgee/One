@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, ChartColumn, FileText, Inbox, ListChecks, LogOut, Menu as IconeMenu, MessageCircle, Monitor, Moon, MoonStar, PanelLeftClose, PanelLeftOpen, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, ChartColumn, ChevronsUpDown, FileText, GraduationCap, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
@@ -7,11 +7,12 @@ import { AvisosPush } from './AvisosPush'
 import type { Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+import { Separator } from './ui/separator'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from './ui/sidebar'
 import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 // Links por grupo (barra-lateral-grupos AC 1), nesta ordem; o grupo sem link para o papel some.
 const Menu = [
@@ -32,9 +33,6 @@ export function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/).filter(Boolean)
   return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
 }
-
-// Largura e recuo animados em 200 ms, só sem movimento reduzido (AC 15).
-const Anima = 'motion-safe:lg:transition-[width,padding] motion-safe:lg:duration-200'
 
 type Item = (typeof Menu)[number]
 
@@ -76,128 +74,150 @@ function Tema() {
   )
 }
 
-// Abaixo de 1024 px os links ficam só na gaveta (uma linha de 48 px por link); a partir de 1024 px, na barra lateral.
-// Recolhida, o rótulo vira sr-only e a dica (Tooltip) mostra o nome.
-const NaBarra = `hidden h-9 shrink-0 items-center gap-2 rounded-md px-2 text-sm text-foreground no-underline hover:bg-accent lg:flex recolhida:justify-center`
+// Título do cabeçalho (layout-painel door 3): o número em chamados/:numero, "Trocar senha", ou o rótulo do link de Menu ativo.
+export function tituloDaRota(pathname: string, numero?: string) {
+  const caminho = pathname.split('/')[2]
+  if (numero) return numero
+  if (caminho === 'trocar-senha') return 'Trocar senha'
+  return Menu.find((m) => m.caminho === caminho)?.rotulo ?? ''
+}
 
-type LinksProps = { itens: Item[]; slug?: string; gaveta?: boolean; dica?: boolean; aoEscolher?: () => void }
+// O primeiro de papeis nesta ordem (AC 10).
+const Papeis = [
+  ['ADMINISTRADOR', 'Administrador'],
+  ['ATENDENTE', 'Atendente'],
+  ['ALUNO', 'Aluno'],
+]
+const papelDe = (papeis: string[]) => Papeis.find(([p]) => papeis.includes(p))?.[1]
 
-function Link({ item: { caminho, rotulo, Icone }, slug, gaveta, dica, aoEscolher }: Omit<LinksProps, 'itens'> & { item: Item }) {
+function Link({ item: { caminho, rotulo, Icone }, slug }: { item: Item; slug?: string }) {
   // o ativo vem do useMatch e a classe é texto: o Slot do Tooltip transformaria a classe-função do NavLink em texto
   const ativo = !!useMatch({ path: `/${slug}/${caminho}`, end: false })
-  const classe = gaveta ? 'flex h-12 items-center gap-3 px-4 text-foreground no-underline aria-[current=page]:font-semibold' : ativo ? `${NaBarra} bg-primary-subtle font-medium` : NaBarra
-  const link = (
-    <NavLink to={`/${slug}/${caminho}`} onClick={aoEscolher} className={classe}>
-      <Icone aria-hidden="true" className="size-4 shrink-0" />
-      <span className={gaveta ? undefined : 'recolhida:sr-only'}>{rotulo}</span>
-    </NavLink>
-  )
-  if (gaveta) return link
+  const { setOpenMobile } = useSidebar()
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{link}</TooltipTrigger>
-      {dica && <TooltipContent side="right">{rotulo}</TooltipContent>}
-    </Tooltip>
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={ativo} tooltip={rotulo}>
+        <NavLink to={`/${slug}/${caminho}`} onClick={() => setOpenMobile(false)}>
+          <Icone aria-hidden="true" />
+          <span className="group-data-[collapsible=icon]:sr-only">{rotulo}</span>
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   )
 }
 
-// Um grupo com título (role="group" nomeado pelo título, AC 3); na barra o título só aparece a partir de 1024 px.
-function Grupo({ nome, itens, ...resto }: LinksProps & { nome: string }) {
+// Um grupo com título (role="group" nomeado pelo título, AD-028 AC 3); recolhida, o título sai da vista.
+function Grupo({ nome, itens, slug }: { nome: string; itens: Item[]; slug?: string }) {
   const id = useId()
-  const caixa = resto.gaveta ? 'flex flex-col' : `contents lg:mt-6 lg:flex lg:flex-col lg:gap-0.5 lg:first:mt-0 recolhida:mt-3 recolhida:border-t recolhida:pt-3 recolhida:first:mt-0 recolhida:first:border-t-0 recolhida:first:pt-0`
-  const titulo = resto.gaveta ? 'flex h-8 items-center px-4 text-xs font-medium text-muted-foreground' : `hidden px-2 pb-1 text-xs font-medium text-muted-foreground lg:block recolhida:sr-only`
   return (
-    <div role="group" aria-labelledby={id} className={caixa}>
-      <span id={id} className={titulo}>
+    <SidebarGroup role="group" aria-labelledby={id}>
+      <SidebarGroupLabel id={id} className="group-data-[collapsible=icon]:sr-only">
         {nome}
-      </span>
-      {itens.map((item) => (
-        <Link key={item.caminho} item={item} {...resto} />
-      ))}
+      </SidebarGroupLabel>
+      <SidebarMenu>
+        {itens.map((item) => (
+          <Link key={item.caminho} item={item} slug={slug} />
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  )
+}
+
+// Iniciais, nome e papel no botão; o menu leva o nome, o papel e "Sair" (AC 10).
+function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
+  const { isMobile } = useSidebar()
+  const dados = (
+    <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
+      <span className="truncate font-medium">{me.nome}</span>
+      <span className="truncate text-xs text-muted-foreground">{papelDe(me.papeis)}</span>
     </div>
   )
-}
-
-function Links({ itens, ...resto }: LinksProps) {
-  return Grupos.map((nome) => ({ nome, doGrupo: itens.filter((i) => i.grupo === nome) }))
-    .filter(({ doGrupo }) => doGrupo.length > 0)
-    .map(({ nome, doGrupo }) => <Grupo key={nome} nome={nome} itens={doGrupo} {...resto} />)
-}
-
-// Nome no rodapé da barra (AC 4); recolhida, as iniciais num círculo com o nome na dica (AC 6).
-function Usuario({ nome }: { nome: string }) {
   return (
-    <div className="hidden lg:flex lg:w-full lg:min-w-0 lg:items-center lg:justify-center lg:px-2 lg:pb-1">
-      <span className={`min-w-0 flex-1 truncate text-sm font-medium whitespace-nowrap recolhida:hidden`}>{nome}</span>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span role="img" aria-label={nome} tabIndex={0} className={`hidden size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold recolhida:flex`}>
-            <span aria-hidden="true">{iniciais(nome)}</span>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="right">{nome}</TooltipContent>
-      </Tooltip>
-    </div>
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold">
+                {iniciais(me.nome)}
+              </span>
+              {dados}
+              <ChevronsUpDown aria-hidden="true" className="ms-auto size-4" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg" side={isMobile ? 'top' : 'right'} align="end" sideOffset={4}>
+            <DropdownMenuLabel className="flex gap-2 p-1.5 font-normal">{dados}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={sair}>
+              <LogOut aria-hidden="true" />
+              Sair
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
   )
 }
 
-// Os avisos são só do aluno.
-function Avisos({ aluno, item }: { aluno: boolean; item?: string }) {
-  return aluno ? <AvisosPush item={item} /> : null
-}
-
-// Barra aberta ou recolhida, gravada em one-barra (door 1); só anima depois de alternar, para mudar a largura da janela não animar.
-function useBarra() {
-  const [recolhida, setRecolhida] = useState(() => localStorage.getItem('one-barra') === 'recolhida')
-  const [animar, setAnimar] = useState(false)
-  function alternar() {
-    localStorage.setItem('one-barra', recolhida ? 'aberta' : 'recolhida')
-    setRecolhida(!recolhida)
-    setAnimar(true)
-  }
-  return { recolhida, alternar, anima: animar ? Anima : '' }
-}
-
-function BotaoBarra({ recolhida, alternar }: { recolhida: boolean; alternar: () => void }) {
-  const Icone = recolhida ? PanelLeftOpen : PanelLeftClose
+function Barra({ me, itens, slug, sair }: { me: Me; itens: Item[]; slug?: string; sair: () => void }) {
   return (
-    <Button variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label={recolhida ? 'Expandir barra lateral' : 'Recolher barra lateral'} aria-expanded={!recolhida} onClick={alternar}>
-      <Icone aria-hidden="true" />
-    </Button>
-  )
-}
-
-// Abaixo de 1024 px: o botão "Menu" e a gaveta de baixo, com o nome, os grupos, os avisos e "Sair".
-function Gaveta({ nome, itens, slug, aluno, sair }: { nome: string; itens: Item[]; slug?: string; aluno: boolean; sair: () => void }) {
-  const [aberto, setAberto] = useState(false)
-  return (
-    <Drawer open={aberto} onOpenChange={setAberto}>
-      <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
-          <IconeMenu aria-hidden="true" />
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent aria-describedby={undefined}>
-        <DrawerHeader>
-          <DrawerTitle>Menu</DrawerTitle>
-          <p className="text-sm text-muted-foreground">{nome}</p>
-        </DrawerHeader>
-        {/* a gaveta tem no máximo 80vh: com os títulos de grupo a lista passa disso a 740 px e rola */}
-        <div className="min-h-0 overflow-y-auto pb-4">
-          <Links itens={itens} slug={slug} gaveta aoEscolher={() => setAberto(false)} />
-          <Avisos aluno={aluno} item="flex h-12 items-center gap-3 px-4 text-start disabled:opacity-50" />
-          <button type="button" onClick={sair} className="flex h-12 items-center gap-3 px-4 text-start">
-            <LogOut aria-hidden="true" className="size-4" />
-            Sair
-          </button>
+    <Sidebar collapsible="icon" variant="sidebar">
+      <SidebarHeader className="border-b">
+        <div className="flex items-center gap-2 p-1.5">
+          <GraduationCap aria-hidden="true" className="size-6 shrink-0 text-primary" />
+          <div className="grid min-w-0 text-sm leading-tight">
+            <span className="text-base font-semibold text-primary group-data-[collapsible=icon]:sr-only">One</span>
+            <span className="text-muted-foreground group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
+              {me.instituicao.nome}
+            </span>
+          </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SidebarHeader>
+      <SidebarContent role="navigation">
+        {Grupos.map((nome) => ({ nome, doGrupo: itens.filter((i) => i.grupo === nome) }))
+          .filter(({ doGrupo }) => doGrupo.length > 0)
+          .map(({ nome, doGrupo }) => (
+            <Grupo key={nome} nome={nome} itens={doGrupo} slug={slug} />
+          ))}
+      </SidebarContent>
+      <SidebarFooter>
+        <MenuUsuario me={me} sair={sair} />
+      </SidebarFooter>
+    </Sidebar>
   )
+}
+
+// Cabeçalho do inset (door 3): botão, separador, o único h1 da tela; à direita, avisos (aluno) e tema.
+function Topo({ titulo, aluno }: { titulo: string; aluno: boolean }) {
+  return (
+    <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background/90 backdrop-blur">
+      <div className="flex w-full min-w-0 items-center gap-1 px-4 lg:gap-2 lg:px-6">
+        <SidebarTrigger className="-ms-1" />
+        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+        <h1 className="truncate text-base font-medium">{titulo}</h1>
+        <div className="ms-auto flex shrink-0 items-center gap-1">
+          {aluno && <AvisosPush />}
+          <Tema />
+        </div>
+      </div>
+    </header>
+  )
+}
+
+// Aberta ou recolhida, gravada em one-barra (door 2): ausente ou outro valor = aberta.
+function useBarra() {
+  const [aberta, setAberta] = useState(() => localStorage.getItem('one-barra') !== 'recolhida')
+  return {
+    aberta,
+    aoMudar(valor: boolean) {
+      localStorage.setItem('one-barra', valor ? 'aberta' : 'recolhida')
+      setAberta(valor)
+    },
+  }
 }
 
 export function Autenticado() {
-  const { slug } = useParams()
+  const { slug, numero } = useParams()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const cliente = useQueryClient()
@@ -216,7 +236,6 @@ export function Autenticado() {
   if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return <Navigate to={`/${slug}/trocar-senha`} replace />
 
   const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
-  const aluno = me.papeis.includes('ALUNO')
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
 
   async function sair() {
@@ -225,41 +244,16 @@ export function Autenticado() {
     cliente.removeQueries({ queryKey: ['me'] }) // o próximo login lê o /me de novo, como antes
   }
 
-  // Um só <nav> (door 3a): barra de topo de 56 px abaixo de 1024 px; barra lateral fixa de 240 px a partir dele, ou de 64 px recolhida.
+  // O main é o SidebarInset; o contêiner de largura (door 5) leva os recuos, para as consultas medirem só a área útil.
   return (
-    <>
-      <nav
-        data-recolhida={barra.recolhida}
-        className={`sticky top-0 z-40 h-14 border-b bg-background lg:fixed lg:inset-y-0 lg:start-0 lg:h-svh lg:w-60 lg:border-e lg:border-b-0 lg:bg-sidebar lg:data-[recolhida=true]:w-16 ${barra.anima}`}
-      >
-        <div className="mx-auto flex h-full max-w-6xl items-center gap-2 px-4 lg:flex-col lg:items-stretch lg:gap-1 lg:px-3 lg:py-4 recolhida:px-2">
-          <div className="contents lg:flex lg:items-center lg:justify-between lg:gap-1 recolhida:flex-col">
-            <span className="shrink-0 text-lg font-semibold text-primary lg:px-2">One</span>
-            <BotaoBarra recolhida={barra.recolhida} alternar={barra.alternar} />
-          </div>
-          <span className="min-w-16 flex-1 truncate text-sm text-muted-foreground lg:flex-none lg:px-2 lg:pb-4 lg:whitespace-normal recolhida:hidden" data-testid="instituicao">
-            {me.instituicao.nome}
-          </span>
-          <div className="contents lg:flex lg:flex-1 lg:flex-col lg:gap-0.5 lg:overflow-y-auto">
-            <Links itens={itens} slug={slug} dica={barra.recolhida} />
-          </div>
-          <div className="contents lg:flex lg:flex-wrap lg:items-center lg:gap-1 lg:border-t lg:pt-3 recolhida:flex-col">
-            <Usuario nome={me.nome} />
-            <Avisos aluno={aluno} />
-            <Tema />
-            <Gaveta nome={me.nome} itens={itens} slug={slug} aluno={aluno} sair={sair} />
-            <Button variant="ghost" size="sm" className="hidden lg:ms-auto lg:inline-flex recolhida:ms-0" onClick={sair}>
-              <LogOut aria-hidden="true" />
-              <span className="recolhida:sr-only">Sair</span>
-            </Button>
-          </div>
-        </div>
-      </nav>
-      <div className={`${barra.recolhida ? 'lg:ps-16' : 'lg:ps-60'} ${barra.anima}`}>
-        <main className="mx-auto w-full max-w-6xl px-4 py-4 lg:px-8 lg:py-8">
+    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar}>
+      <Barra me={me} itens={itens} slug={slug} sair={sair} />
+      <SidebarInset className="min-w-0">
+        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} />
+        <div className="@container/main flex-1 px-4 py-4 md:py-6 lg:px-6">
           <Outlet context={{ me, setMe } satisfies Sessao} />
-        </main>
-      </div>
-    </>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

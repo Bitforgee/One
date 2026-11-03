@@ -62,7 +62,7 @@ describe('indicadores', () => {
     expect(screen.queryByText('Sem dados no período')).not.toBeInTheDocument()
     expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(1)
     // os rankings ficam um embaixo do outro no celular e lado a lado a partir do md
-    expect(conversas.parentElement).toHaveClass('grid-cols-1', 'md:grid-cols-2')
+    expect(conversas.parentElement).toHaveClass('grid-cols-1', '@3xl/main:grid-cols-2')
   })
 
   it('ranking que a API não manda não aparece', async () => {

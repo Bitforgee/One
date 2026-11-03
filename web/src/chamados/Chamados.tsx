@@ -16,12 +16,11 @@ export function Carregando() {
 }
 
 // Fila e Minhas solicitações: a mesma lista de chamados, cada uma com o seu vazio e a sua linha de detalhe.
-function ListaDeChamados<T extends ItemMeu>({ titulo, url, vazio, detalhe }: { titulo: string; url: string; vazio: ReactNode; detalhe?: (c: T) => ReactNode }) {
+function ListaDeChamados<T extends ItemMeu>({ url, vazio, detalhe }: { url: string; vazio: ReactNode; detalhe?: (c: T) => ReactNode }) {
   const { slug } = useParams()
   const { data: itens, error, isPending } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-2">
-      <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
+    <div className="flex flex-col gap-2">
       {error && <Alert variant="destructive">{error.message}</Alert>}
       {isPending && <Carregando />}
       {itens?.length === 0 && vazio}
@@ -56,7 +55,6 @@ export function Fila() {
   useFilaAberta()
   return (
     <ListaDeChamados<ItemFila>
-      titulo="Fila"
       url={UrlDaFila}
       vazio={<p className="mb-0 text-muted-foreground">Nenhum chamado na fila dos seus setores.</p>}
       detalhe={(c) => <DetalheDaFila c={c} />}
@@ -68,7 +66,6 @@ export function Solicitacoes() {
   const { slug } = useParams()
   return (
     <ListaDeChamados
-      titulo="Minhas solicitações"
       url="/api/chamados?escopo=meus"
       vazio={
         <p className="mb-0 text-muted-foreground">

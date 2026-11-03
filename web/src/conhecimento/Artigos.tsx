@@ -137,7 +137,7 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho titulo="Artigos" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
+      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />

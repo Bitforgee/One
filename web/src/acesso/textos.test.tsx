@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
-// Linha 0 de ## Screens (cabeçalho); "Tema" e "Menu" são só nomes acessíveis, conferidos por papel.
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração']
+// Linha 0 de ## Screens (casca); "Tema" e "Alternar barra lateral" são só nomes acessíveis, conferidos por papel.
+const Papeis = ['Administrador', 'Atendente', 'Aluno'] // layout-painel: o papel no botão do usuário (novo)
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
 const Instituicao = 'Univag' // nome da instituição do fixture
 const Nome = me().nome // barra-lateral-grupos: o nome do usuário no rodapé da barra e na gaveta
 
@@ -20,21 +21,26 @@ describe('textos', () => {
     tela.conferir(carregando.container)
     carregando.unmount()
 
+    // barra e cabeçalho da tela (o título "Trocar senha" é o h1 do cabeçalho), por papel
     for (const papel of ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR']) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
-      const nav = await screen.findByRole('navigation')
-      expect(within(nav).getByRole('button', { name: 'Menu' })).toBeInTheDocument()
-      tela.conferir(nav, [Instituicao, Nome])
+      await screen.findByRole('button', { name: 'Alternar barra lateral' })
+      tela.conferir(document.querySelector('[data-sidebar=sidebar]') as HTMLElement, [Instituicao, Nome])
+      tela.conferir(document.querySelector('header') as HTMLElement, ['Trocar senha'])
+      await userEvent.click(screen.getByRole('button', { name: new RegExp(Nome) }))
+      tela.conferir(await screen.findByRole('menu'), [Nome])
       unmount()
     }
 
-    // gaveta aberta, com os links dos 3 papéis
+    // painel lateral aberto no celular, com os links dos 3 papéis
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })] })
+    window.innerWidth = 500
     abrir('/univag/trocar-senha')
-    await userEvent.click(await screen.findByRole('button', { name: 'Menu' }))
-    tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }), [Nome])
+    await userEvent.click(await screen.findByRole('button', { name: 'Alternar barra lateral' }))
+    tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }), [Nome, Instituicao])
     await userEvent.keyboard('{Escape}')
+    window.innerWidth = 1024
 
     // controle de tema aberto: "Claro", "Escuro", "Preto" e "Sistema"
     await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))

@@ -122,7 +122,7 @@ export function Usuarios() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho titulo="Usuários" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
+      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Situacao itens={dados?.usuarios} erro={erro} />

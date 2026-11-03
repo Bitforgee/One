@@ -119,7 +119,7 @@ function Painel({ dados }: { dados: Indicadores }) {
   ] as const
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 @3xl/main:grid-cols-4">
         {cartoes(dados).map(([rotulo, valor], i) => (
           <Card key={rotulo} className={`gap-1 px-3 py-2 ${i === 0 ? 'col-span-2' : ''}`}>
             <div className="text-sm text-muted-foreground">{rotulo}</div>
@@ -127,7 +127,7 @@ function Painel({ dados }: { dados: Indicadores }) {
           </Card>
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 @3xl/main:grid-cols-2">
         {rankings
           .filter(([, r]) => r !== null)
           .map(([titulo, r, cor]) => (
@@ -153,9 +153,8 @@ export function Indicadores() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Indicadores</h1>
       <form
-        className="grid grid-cols-2 gap-2 md:flex md:items-end"
+        className="grid grid-cols-2 gap-2 @3xl/main:flex @3xl/main:items-end"
         onSubmit={(e) => {
           e.preventDefault()
           setConsulta((c) => ({ de, ate, vez: c.vez + 1 }))
@@ -170,7 +169,7 @@ export function Indicadores() {
           <Input id="ate" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
         <div className="col-span-2 flex items-start gap-2">
-          <Periodo rotulo="Escolher período no calendário" className="h-auto min-h-9 flex-1 whitespace-normal md:flex-none" setDe={setDe} setAte={setAte} />
+          <Periodo rotulo="Escolher período no calendário" className="h-auto min-h-9 flex-1 whitespace-normal @3xl/main:flex-none" setDe={setDe} setAte={setAte} />
           <Button type="submit" disabled={isFetching}>
             {isFetching && <Spinner />}
             Consultar

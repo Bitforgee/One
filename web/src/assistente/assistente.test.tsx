@@ -107,7 +107,7 @@ describe('assistente', () => {
     expect(screen.queryByRole('button', { name: /Enviar/ })).not.toBeInTheDocument()
     expect(falar()).toBeVisible()
     expect(screen.getByRole('button', { name: 'Encerrar' })).toBeVisible()
-    const botoes = screen.getAllByRole('button').filter((b) => !b.closest('nav')).map((b) => b.textContent?.trim())
+    const botoes = screen.getAllByRole('button').filter((b) => !b.closest('[data-sidebar=sidebar], header')).map((b) => b.textContent?.trim())
     expect(botoes).toEqual(['Falar com atendente', 'Encerrar'])
   })
 

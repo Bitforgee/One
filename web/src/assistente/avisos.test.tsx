@@ -122,28 +122,16 @@ describe('avisos', () => {
     expect(await botao(Ativar)).toBeEnabled()
   })
 
-  // redesign-institucional (door 3a): o "Mais" saiu; na barra lateral o próprio botão da barra traz o texto
-  it('na barra lateral o botão de avisos traz o texto visível', async () => {
+  // layout-painel (door 3): o botão de avisos é um ícone no cabeçalho, com o nome acessível; fora da barra
+  it('no cabeçalho o botão de avisos é um ícone com nome acessível e alterna', async () => {
     ambiente({ papeis: ['ALUNO', 'ATENDENTE'] })
     abrir('/univag/assistente')
-    const nav = await screen.findByRole('navigation')
-    const item = (await within(nav).findAllByRole('button', { name: Ativar })).find((b) => b.textContent === Ativar)
-    expect(item).toBeDefined()
-    expect(within(item!).getByText(Ativar)).toHaveClass('hidden', 'lg:inline')
-    await userEvent.click(item!)
-    await waitFor(() => expect(within(nav).getAllByRole('button', { name: 'Desativar avisos' }).some((b) => b.textContent === 'Desativar avisos')).toBe(true))
-  })
-
-  it.each([['gaveta', 'Menu', ['ALUNO']]])('no(a) %s o item de avisos mostra o texto visível', async (_, abre, papeis) => {
-    Element.prototype.setPointerCapture ??= () => undefined // o vaul (gaveta) usa no toque; o jsdom não tem
-    ambiente({ papeis })
-    abrir('/univag/assistente')
-    await botao(Ativar)
-    await userEvent.click(screen.getByRole('button', { name: abre }))
-    const item = (await screen.findAllByRole('button', { name: Ativar })).find((b) => b.textContent === Ativar)
-    expect(item).toBeDefined()
-    await userEvent.click(item!)
-    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Desativar avisos' }).some((b) => b.textContent === 'Desativar avisos')).toBe(true))
+    const item = await botao(Ativar)
+    expect(item.closest('header')).not.toBeNull()
+    expect(item.closest('[data-sidebar=sidebar]')).toBeNull()
+    expect(item.textContent).toBe('')
+    await userEvent.click(item)
+    expect(await botao('Desativar avisos')).toBeInTheDocument()
   })
 
   it.each([

@@ -27,7 +27,8 @@ describe('tempo real: sessão', () => {
     expect(primeira.starts).toBe(1)
     expect(primeira.stops).toBe(0)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
+    await userEvent.click(screen.getByRole('button', { name: /Ana/ }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Sair' }))
     await screen.findByLabelText('CPF')
     expect(primeira.stops).toBe(1)
     expect(globalThis.conexoesFalsas).toHaveLength(1)

@@ -10,7 +10,7 @@ const leituras = (chamadas: Chamada[], url: string) => chamadas.filter((c) => c.
 const mensagem = (texto: string) => ({ id: 1, tipo: 'PUBLICA' as const, texto, autor: 'Carla', doAluno: false, criadaEm: '2026-11-02T12:00:00Z' })
 const item = (numero: string, titulo: string) => ({ numero, titulo, estado: 'ABERTO', criadoEm: '2026-11-02T12:00:00Z', categoria: 'Boleto', responsavel: null, dias: 1 })
 const atendente = me({ papeis: ['ATENDENTE'], matriculas: [] })
-const titulo = { name: 'ONE-1 · preciso do boleto' }
+const titulo = { name: 'preciso do boleto' }
 const FILA = '/api/chamados?escopo=fila'
 const MEUS = '/api/chamados?escopo=meus'
 const nav = () => within(screen.getByRole('navigation'))

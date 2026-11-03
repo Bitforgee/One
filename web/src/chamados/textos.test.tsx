@@ -14,7 +14,8 @@ const tela = () => screen.getByRole('main')
 
 // Linha 9 (detalhe do chamado), com o fixture de test/util e os desta suíte
 const Detalhe = [
-  'ONE-1 · preciso do boleto',
+  'ONE-1',
+  'preciso do boleto',
   'Financeiro · Boleto · Carla',
   'Ana · matrícula 2000567890 · ADS · 3º semestre',
   'Resumo gerado por IA',

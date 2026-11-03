@@ -30,7 +30,7 @@ const botao = (nome: string) => screen.queryByRole('button', { name: nome })
 describe('ações do chamado', () => {
   it('cada ação aparece só quando a API a permite', async () => {
     const sem = detalhe(daEquipe({ acoes: [] }))
-    await screen.findByRole('heading', { name: 'ONE-1 · preciso do boleto' })
+    await screen.findByRole('heading', { name: 'preciso do boleto' })
     for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Responder/)).not.toBeInTheDocument()
     expect(enviados(sem)).toEqual([])
@@ -38,7 +38,7 @@ describe('ações do chamado', () => {
 
   it('com todas as ações permitidas, a equipe vê todos os botões', async () => {
     detalhe(daEquipe({ acoes: Todas }))
-    await screen.findByRole('heading', { name: 'ONE-1 · preciso do boleto' })
+    await screen.findByRole('heading', { name: 'preciso do boleto' })
     for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).toBeInTheDocument()
     expect(screen.getByLabelText('Nota interna')).toBeInTheDocument()
     expect(screen.getByLabelText('Aguardando aluno')).toBeInTheDocument()

@@ -196,7 +196,7 @@ export function Cadastros() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho titulo="Cadastros" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })} />
+      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })} />
       <ErroDe erro={erro} />
       <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)}>
         <TabsList className="w-full justify-start overflow-x-auto">

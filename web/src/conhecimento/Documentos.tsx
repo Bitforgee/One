@@ -114,7 +114,7 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho titulo="Documentos" botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })} />
+      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })} />
       <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!envio} />

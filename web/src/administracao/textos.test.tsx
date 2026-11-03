@@ -13,7 +13,7 @@ const Usuarios = [
   'Voltar', 'Usuário salvo.', 'Usuário desativado.',
 ]
 const Matriculas = [
-  'Importar matrículas', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
+  'Matrículas', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
   '. Alunos são atualizados pelo CPF e matrículas pelo número. Se alguma linha tiver erro, nada é importado.', 'Arquivo CSV', 'Importar',
   'Importação concluída: ', ' matrículas criadas e ', ' atualizadas.', 'Linha', 'Motivo',
   'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Voltar',
