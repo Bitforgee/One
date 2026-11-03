@@ -1,5 +1,7 @@
+import { HubConnectionState } from '@microsoft/signalr'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
+import { useChamadoAberto, useEstadoDaConexao } from './tempo-real'
 
 // RAG: a fonte citada é um artigo ou um documento (PDF) da instituição; só a equipe recebe
 export type Fonte = { tipo: 'ARTIGO' | 'DOCUMENTO'; versaoArtigoId: number | null; versaoDocumentoId: number | null; titulo: string; numero: number; trechos: string[]; atualizado: boolean }
@@ -41,16 +43,19 @@ export const Estados: Record<string, string> = {
 }
 
 export const IntervaloAtualizacao = 15_000
+export const IntervaloComConexao = 60_000
 
-// Lê o chamado e o relê a cada 15 s enquanto a tela está aberta (door 18).
+// Lê o chamado e o relê enquanto a tela está aberta: a cada 15 s sem a conexão do tempo real (door 18), a cada 60 s com ela, só como rede de segurança.
 export function useChamado(numero?: string) {
   const cliente = useQueryClient()
   const chave = ['chamado', numero]
+  const conexao = useEstadoDaConexao()
+  useChamadoAberto(numero)
   const { data, error, refetch } = useQuery({
     queryKey: chave,
     queryFn: () => api<Chamado>(`/api/chamados/${numero}`),
     enabled: !!numero,
-    refetchInterval: IntervaloAtualizacao,
+    refetchInterval: conexao === HubConnectionState.Connected ? IntervaloComConexao : IntervaloAtualizacao,
     refetchIntervalInBackground: true, // a aba em segundo plano também relê, como antes
   })
   return {

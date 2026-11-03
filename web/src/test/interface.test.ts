@@ -75,6 +75,20 @@ describe('interface nova', () => {
     for (const proibido of ['ai', '@ai-sdk/react', 'streamdown', 'next-themes']) expect(todas, proibido).not.toHaveProperty([proibido])
   })
 
+  // tempo-real-signalr C44 (door 2): a conexão do navegador é do @microsoft/signalr, em dependencies e com versão exata
+  it('SignalR exato e só no web', () => {
+    expect(pacote.dependencies['@microsoft/signalr']).toMatch(/^\d+\.\d+\.\d+$/)
+    expect(pacote.devDependencies).not.toHaveProperty(['@microsoft/signalr'])
+  })
+
+  // tempo-real-signalr C45: o proxy do dev leva o WebSocket e o service worker não guarda API
+  it('proxy do dev com WebSocket e PWA sem API em cache', () => {
+    expect(semEspacos(vite)).toContain("proxy:{'/api':{target:'http://localhost:5226',ws:true}}")
+    expect(vite).toContain('navigateFallbackDenylist: [/^\\/api\\//]')
+    expect(vite).toContain("globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}']")
+    expect(vite).not.toContain('runtimeCaching')
+  })
+
   // C76 (door 14)
   it('pacotes do Tiptap', () => {
     for (const nome of ['@tiptap/react', '@tiptap/pm', '@tiptap/extension-document', '@tiptap/extension-paragraph', '@tiptap/extension-text', '@tiptap/extensions'])

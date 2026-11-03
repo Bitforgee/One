@@ -1,7 +1,124 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { toast } from 'sonner'
-import { afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
+
+// tempo-real-signalr: o jsdom não tem servidor; toda conexão do app é esta, que nasce fora de Connected (start() fica pendente),
+// de modo que o relê de 15 s dos testes antigos segue valendo. Cada teste dirige a sua: abrir(), cair(), reconectar(), fechar(), emitir().
+class ConexaoFalsa {
+  state = 'Disconnected'
+  starts = 0
+  stops = 0
+  segurarStop = false // stop() fica em Disconnecting até concluirStop()
+  invocacoes: unknown[][] = []
+  private ouvintes = new Map<string, ((...a: any[]) => void)[]>()
+  private aoCair: (() => void)[] = []
+  private aoReconectar: (() => void)[] = []
+  private aoFechar: (() => void)[] = []
+  private resolverStart?: () => void
+  private rejeitarStart?: (e: Error) => void
+  private resolverStop?: () => void
+  constructor(readonly url: string) {}
+  on(nome: string, f: (...a: any[]) => void) {
+    this.ouvintes.set(nome, [...(this.ouvintes.get(nome) ?? []), f])
+  }
+  onreconnecting(f: () => void) {
+    this.aoCair.push(f)
+  }
+  onreconnected(f: () => void) {
+    this.aoReconectar.push(f)
+  }
+  onclose(f: () => void) {
+    this.aoFechar.push(f)
+  }
+  invoke(nome: string, ...args: unknown[]) {
+    this.invocacoes.push([nome, ...args])
+    return Promise.resolve()
+  }
+  start() {
+    this.starts++
+    if (globalThis.recusarConexao) {
+      this.state = 'Disconnected'
+      return Promise.reject(new Error(globalThis.recusarConexao))
+    }
+    this.state = 'Connecting'
+    return new Promise<void>((resolve, reject) => {
+      this.resolverStart = resolve
+      this.rejeitarStart = reject
+    })
+  }
+  stop() {
+    this.stops++
+    this.state = 'Disconnecting'
+    this.rejeitarStart?.(new Error('conexão encerrada durante o start'))
+    if (this.segurarStop) return new Promise<void>((resolve) => (this.resolverStop = resolve))
+    this.state = 'Disconnected'
+    return Promise.resolve()
+  }
+  concluirStop() {
+    this.state = 'Disconnected'
+    this.resolverStop?.()
+    this.aoFechar.forEach((f) => f())
+  }
+  abrir() {
+    this.state = 'Connected'
+    this.resolverStart?.()
+  }
+  cair() {
+    this.state = 'Reconnecting'
+    this.aoCair.forEach((f) => f())
+  }
+  reconectar() {
+    this.state = 'Connected'
+    this.aoReconectar.forEach((f) => f())
+  }
+  fechar() {
+    this.state = 'Disconnected'
+    this.aoFechar.forEach((f) => f())
+  }
+  emitir(nome: string, ...args: unknown[]) {
+    this.ouvintes.get(nome)?.forEach((f) => f(...args))
+  }
+  chamadas(nome: string) {
+    return this.invocacoes.filter(([n]) => n === nome).map(([, ...a]) => a)
+  }
+}
+
+// recusarConexao: o texto do erro com que start() falha (servidor fora, negotiate recusado); false abre normalmente
+declare global {
+  var conexoesFalsas: ConexaoFalsa[]
+  var recusarConexao: string | false
+}
+globalThis.conexoesFalsas = []
+globalThis.recusarConexao = false
+
+vi.mock('@microsoft/signalr', () => ({
+  HubConnectionState: { Disconnected: 'Disconnected', Connecting: 'Connecting', Connected: 'Connected', Disconnecting: 'Disconnecting', Reconnecting: 'Reconnecting' },
+  LogLevel: { None: 6 },
+  HubConnectionBuilder: class {
+    private url = ''
+    withUrl(url: string) {
+      this.url = url
+      return this
+    }
+    withAutomaticReconnect() {
+      return this
+    }
+    configureLogging() {
+      return this
+    }
+    build() {
+      const c = new ConexaoFalsa(this.url)
+      globalThis.conexoesFalsas.push(c)
+      return c
+    }
+  },
+}))
+
+beforeEach(() => {
+  globalThis.conexoesFalsas = []
+  globalThis.recusarConexao = false
+})
 
 // o jsdom não tem ResizeObserver; o use-stick-to-bottom (Conversation) usa
 globalThis.ResizeObserver ??= class {

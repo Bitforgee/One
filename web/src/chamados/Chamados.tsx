@@ -6,6 +6,7 @@ import { Estados } from '../chamado'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
 import { Spinner } from '../ui/spinner'
+import { UrlDaFila, useFilaAberta } from '../tempo-real'
 
 type ItemMeu = { numero: string; titulo: string; estado: string; criadoEm: string }
 type ItemFila = ItemMeu & { categoria: string; responsavel: string | null; dias: number }
@@ -52,10 +53,11 @@ function DetalheDaFila({ c }: { c: ItemFila }) {
 }
 
 export function Fila() {
+  useFilaAberta()
   return (
     <ListaDeChamados<ItemFila>
       titulo="Fila"
-      url="/api/chamados?escopo=fila"
+      url={UrlDaFila}
       vazio={<p className="mb-0 text-muted-foreground">Nenhum chamado na fila dos seus setores.</p>}
       detalhe={(c) => <DetalheDaFila c={c} />}
     />

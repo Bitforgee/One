@@ -35,7 +35,7 @@ export default defineConfig({
   ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   build: { outDir: '../api/wwwroot', emptyOutDir: true },
-  server: { proxy: { '/api': 'http://localhost:5226' } },
+  server: { proxy: { '/api': { target: 'http://localhost:5226', ws: true } } }, // ws: o hub de tempo real
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

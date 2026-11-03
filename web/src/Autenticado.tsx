@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
 import type { Sessao } from './sessao'
+import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -117,6 +118,7 @@ export function Autenticado() {
   const cliente = useQueryClient()
   const [aberto, setAberto] = useState(false)
   const { data: me, isError } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
+  useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
 
   if (isError) return <Navigate to={`/${slug}`} replace />
   if (!me)
