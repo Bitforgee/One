@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
 import { Route, Routes } from 'react-router'
-import { DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
+import { Centro, DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
 import { Cadastros } from './administracao/Cadastros'
 import { Matriculas } from './administracao/Matriculas'
 import { Usuarios } from './administracao/Usuarios'
@@ -13,6 +13,7 @@ import { Fila, Solicitacoes } from './chamados/Chamados'
 import { Artigos } from './conhecimento/Artigos'
 import { Documentos } from './conhecimento/Documentos'
 import { Indicadores } from './indicadores/Indicadores'
+import { Card, CardContent } from './ui/card'
 import { Toaster } from './ui/sonner'
 import { ThemeProvider } from './ui/theme-provider'
 
@@ -42,10 +43,14 @@ export function App() {
 
 function Raiz() {
   return (
-    <div className="px-4 py-12 text-center text-muted-foreground">
-      <p className="text-xl font-semibold text-primary">One</p>
-      <p>Abra o endereço da sua instituição, por exemplo /univag.</p>
-    </div>
+    <Centro>
+      <Card>
+        <CardContent className="text-center text-muted-foreground">
+          <p className="text-xl font-semibold text-primary">One</p>
+          <p className="mb-0">Abra o endereço da sua instituição, por exemplo /univag.</p>
+        </CardContent>
+      </Card>
+    </Centro>
   )
 }
 

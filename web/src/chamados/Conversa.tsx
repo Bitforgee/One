@@ -104,15 +104,19 @@ export function Mensagens({ mensagens, fuso }: { mensagens: MensagemChamado[]; f
 export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: string }) {
   if (!eventos) return null
   return (
-    <section>
-      <h2 className="font-semibold">Histórico</h2>
-      <ol className="mb-0 divide-y ps-0 text-sm" data-testid="eventos">
-        {eventos.map((e, i) => (
-          <li key={i} className="py-1 break-words">
-            <span className="text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span> · {frase(e)}
-          </li>
-        ))}
-      </ol>
-    </section>
+    <Card>
+      <CardContent>
+        <section className="flex flex-col gap-2">
+          <h2 className="leading-none font-semibold">Histórico</h2>
+          <ol className="mb-0 divide-y ps-0 text-sm" data-testid="eventos">
+            {eventos.map((e, i) => (
+              <li key={i} className="py-1 break-words">
+                <span className="text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span> · {frase(e)}
+              </li>
+            ))}
+          </ol>
+        </section>
+      </CardContent>
+    </Card>
   )
 }

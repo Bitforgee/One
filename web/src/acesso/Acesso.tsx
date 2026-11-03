@@ -16,9 +16,18 @@ import { Spinner } from '../ui/spinner'
 // Só o que a tela já exigia (campo preenchido); o resto, quem decide é a API (AC 39, AC 40).
 const obrigatorio = z.string().min(1)
 
+// Área de acesso do bloco de login do shadcn: cartão de até 384 px no centro da janela.
+export function Centro({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">{children}</div>
+    </div>
+  )
+}
+
 function Cartao({ titulo, children }: { titulo: ReactNode; children: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[420px] px-4 py-6">
+    <Centro>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -27,7 +36,7 @@ function Cartao({ titulo, children }: { titulo: ReactNode; children: ReactNode }
         </CardHeader>
         <CardContent className="flex flex-col gap-6">{children}</CardContent>
       </Card>
-    </div>
+    </Centro>
   )
 }
 
@@ -75,15 +84,15 @@ export function Login() {
 
   if (isError)
     return (
-      <div className="mx-auto max-w-[420px] px-4 py-12">
+      <Centro>
         <Alert>Instituição não encontrada.</Alert>
-      </div>
+      </Centro>
     )
   if (isPending)
     return (
-      <div className="flex justify-center py-12">
-        <Spinner className="size-8" />
-      </div>
+      <Centro>
+        <Spinner className="mx-auto size-8" />
+      </Centro>
     )
 
   return (

@@ -9,6 +9,7 @@ import { Opcoes } from '../Opcoes'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -230,6 +231,8 @@ function CampoMotivo({ id, rotulo, valor, setValor }: Campo & { id: string; rotu
   )
 }
 
+const ACOES = ['assumir', 'confirmar', 'encaminhar', 'cancelar', 'resolver', 'reclassificar', 'duplicado', 'rejeitar']
+
 type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
 
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
@@ -263,29 +266,41 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const limparMotivo = () => setMotivo('')
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <Cabecalho c={c} />
-      <Transcricao c={c} fuso={fuso} />
-      <Mensagens mensagens={c.mensagens} fuso={fuso} />
-      <Responder c={c} equipe={equipe} {...acoes} />
-      <BotoesDeAcao {...acoes} abrir={setModal} />
-      <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
-        id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
-      <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
-        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
-        <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
-          <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
-        </NativeSelect>
-      </FormLinha>
-      <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
-        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
-        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
-      </FormLinha>
-      <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
-        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
-      {acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
-      <Historico eventos={c.eventos} fuso={fuso} />
-
+    <div className="mx-auto grid max-w-3xl gap-4 @5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="flex min-w-0 flex-col gap-4">
+        <Cabecalho c={c} />
+        <Transcricao c={c} fuso={fuso} />
+        <Mensagens mensagens={c.mensagens} fuso={fuso} />
+        <Responder c={c} equipe={equipe} {...acoes} />
+      </div>
+      <div className="flex min-w-0 flex-col gap-4">
+        {acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
+        {ACOES.some(pode) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Ações</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <BotoesDeAcao {...acoes} abrir={setModal} />
+              <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
+                id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
+              <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
+                id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
+                <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
+                  <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
+                </NativeSelect>
+              </FormLinha>
+              <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
+                id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
+                <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
+              </FormLinha>
+              <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
+                id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
+            </CardContent>
+          </Card>
+        )}
+        <Historico eventos={c.eventos} fuso={fuso} />
+      </div>
       <Confirmacao aberto={modal === 'encaminhar'} fechar={fechar} titulo="Encaminhar para outro setor?" botao="Encaminhar" pronto={setorId !== '' && motivo.trim() !== ''}
         confirmar={() => executar('encaminhar', { setorId: Number(setorId), motivo }, () => { setMotivo(''); setSetorId('') })}>
         <p className="mb-0 text-sm">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>

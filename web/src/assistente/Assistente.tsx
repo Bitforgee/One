@@ -303,7 +303,7 @@ export function Assistente() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col">
+    <div className="mx-auto -mb-4 flex max-w-3xl flex-col md:-mb-6">
       <p className="my-2 flex gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
         <ShieldAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         {AvisoExterno}
