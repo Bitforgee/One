@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Chamados;
 using Pgvector;
+using WebPush;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -13,6 +14,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
 
     public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
     const int MaxTentativas = 5;
+    static readonly TimeSpan LimiteDoPush = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken parar)
     {
@@ -58,6 +60,10 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
             .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
+        // a subscrição movida para outra instituição (door 2) deixa de receber o item antigo
+        itens.AddRange(await db.PushesSaida.IgnoreQueryFilters().Where(p => p.EnviadoEm == null && p.Tentativas < MaxTentativas && p.ProximaTentativa <= agora
+                && db.SubscricoesPush.IgnoreQueryFilters().Any(s => s.Id == p.SubscricaoId && s.InstituicaoId == p.InstituicaoId))
+            .Select(p => new Item("push", p.Id, p.InstituicaoId)).ToListAsync());
         return itens;
     }
 
@@ -76,20 +82,25 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
                 using var escopo = escopos.CreateScope();
                 var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
                 db.InstituicaoAtual = item.InstituicaoId;
-                var agora = relogio.GetUtcNow().UtcDateTime;
-                switch (item.Tipo)
-                {
-                    case "conversa": await Abandonar(db, item.Id, agora); break;
-                    case "chamado": await FecharResolvido(db, item.Id, agora); break;
-                    case "lembrete": await Lembrar(db, item.Id, agora); break;
-                    case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
-                    case "email": await Enviar(db, escopo.ServiceProvider.GetRequiredService<Email>(), item.Id, agora); break;
-                }
+                await Despachar(db, escopo.ServiceProvider, item, relogio.GetUtcNow().UtcDateTime, parar);
             }
             catch (Exception e) when (e is not OperationCanceledException)
             {
                 log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
             }
+        }
+    }
+
+    async Task Despachar(OneDb db, IServiceProvider sp, Item item, DateTime agora, CancellationToken parar)
+    {
+        switch (item.Tipo)
+        {
+            case "conversa": await Abandonar(db, item.Id, agora); break;
+            case "chamado": await FecharResolvido(db, item.Id, agora); break;
+            case "lembrete": await Lembrar(db, item.Id, agora); break;
+            case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
+            case "email": await Enviar(db, sp.GetRequiredService<Email>(), item.Id, agora); break;
+            case "push": await EnviarPush(db, sp.GetRequiredService<IEnviadorPush>(), item.Id, agora, parar); break;
         }
     }
 
@@ -192,6 +203,33 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             e.ProximaTentativa = agora.AddMinutes(Math.Pow(2, e.Tentativas));
             if (e.Tentativas >= MaxTentativas) log.LogError(falha, "Desistência do e-mail {EmailId} da instituição {InstituicaoId} após {Tentativas} tentativas", id, e.InstituicaoId, e.Tentativas);
             else log.LogWarning(falha, "Falha ao enviar o e-mail {EmailId} da instituição {InstituicaoId}, tentativa {Tentativas}", id, e.InstituicaoId, e.Tentativas);
+        }
+        await db.SaveChangesAsync();
+    }
+
+    async Task EnviarPush(OneDb db, IEnviadorPush envio, long id, DateTime agora, CancellationToken parar)
+    {
+        var p = await db.PushesSaida.SingleOrDefaultAsync(x => x.Id == id && x.EnviadoEm == null && x.Tentativas < MaxTentativas);
+        var s = p is null ? null : await db.SubscricoesPush.SingleOrDefaultAsync(x => x.Id == p.SubscricaoId);
+        if (p is null || s is null) return;
+        var numero = await db.Chamados.Where(c => c.Id == p.ChamadoId).Select(c => c.Numero).SingleAsync();
+        var slug = await db.Instituicoes.Where(i => i.Id == p.InstituicaoId).Select(i => i.Slug).SingleAsync();
+        using var prazo = new CancellationTokenSource(LimiteDoPush, relogio);
+        using var junto = CancellationTokenSource.CreateLinkedTokenSource(parar, prazo.Token);
+        try
+        {
+            await envio.Enviar(s.Endpoint, s.P256dh, s.Auth, PayloadPush.De(slug, numero), junto.Token);
+            p.Concluir(agora);
+        }
+        catch (WebPushException e) when (e.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone)
+        {
+            db.SubscricoesPush.Remove(s);
+        }
+        catch (Exception falha) when (!parar.IsCancellationRequested)
+        {
+            p.RegistrarFalha(agora);
+            if (p.Tentativas >= MaxTentativas) log.LogError(falha, "Desistência do push {PushId} da instituição {InstituicaoId} após {Tentativas} tentativas", id, p.InstituicaoId, p.Tentativas);
+            else log.LogWarning(falha, "Falha ao enviar o push {PushId} da instituição {InstituicaoId}, tentativa {Tentativas}", id, p.InstituicaoId, p.Tentativas);
         }
         await db.SaveChangesAsync();
     }
