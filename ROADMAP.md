@@ -225,9 +225,9 @@ antes do código, verificação independente depois), e a próxima só começa c
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
-| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano pronto em 02/11, aguardando aprovação | `api/`, `docker-compose.yml` |
-| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano pronto em 02/11, aguardando aprovação | `api/`, `web/` |
-| 07–09/11 | Web Push (`web-push`): plano pronto em 02/11, aguardando aprovação | `api/`, `web/` (service worker) |
+| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano e 30 checks aprovados em 02/11 (`8e73913`); build em 2 lotes, lote 1 em andamento | `api/`, `docker-compose.yml` |
+| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano e 51 checks aprovados em 02/11 (`f996d30`); um construtor, depois do MinIO verificado | `api/`, `web/` |
+| 07–09/11 | Web Push (`web-push`): plano e 53 checks aprovados em 02/11 (`f30a358`); 2 lotes, depois do SignalR verificado | `api/`, `web/` (service worker) |
 | 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
@@ -455,6 +455,16 @@ Pedido do usuário em 02/11/2026: seguir com MinIO, SignalR e Web Push em subage
 escritos em paralelo (só documentos); o build segue uma feature por vez no `api/`, nesta ordem: MinIO,
 SignalR, Web Push, cada uma só depois da anterior verificada. Construtores no Sonnet, sem mutação (AD-025),
 Verifier no modelo mais forte.
+
+| Feature | Plano e checks | Decisões do usuário (02/11) | Build |
+| --- | --- | --- | --- |
+| `arquivos-minio` | 25 critérios, 30 checks | imagem `cgr.dev/chainguard/minio` fixada por digest (a `minio/minio` comunitária deixou de ser publicada em 10/2025: o MinIO Community virou só código-fonte, AGPLv3); sem cópia dos `bytea` antigos, o banco de desenvolvimento é recriado | 2 lotes; lote 1 em andamento |
+| `tempo-real-signalr` | 51 checks | recarga de segurança a cada 60 s com o hub aberto (15 s sem conexão); o sinal não leva dados e também chega ao aluno nas notas internas | 1 construtor, depois do MinIO |
+| `web-push` | 29 critérios, 53 checks | push só para o aluno, nos 3 eventos do e-mail; par VAPID gerado uma vez pelo comando `push chaves` e guardado no `.env` do servidor (sem ele o push fica desligado) | 2 lotes, depois do SignalR |
+
+Três asserções antigas mudam por consequência direta do plano do MinIO aprovado (o retrato de erros passa de 8
+para 9 corpos com o novo 503, o anexo é lido do objeto e não da coluna, a lista de arquivos da raiz ganha
+`Armazenamento.cs`); estão numa lista de exceções explícita que o Verifier confere.
 
 ## Custo do build com subagentes
 
