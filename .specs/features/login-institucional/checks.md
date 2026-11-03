@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/login-institucional/plan.md`
 
-22 checks em 3 slices · 1 one-way door · 0 perguntas abertas
+26 checks em 4 slices · 1 one-way door · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`.
 Playwright: `cd web && npx playwright test <arquivo> -g "<nome>"` contra o contêiner `api` da porta 8080 reconstruído com
@@ -100,6 +100,20 @@ Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-covera
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx | grep -q "No duplicate candidates found"`
 Proof: `npm --prefix web run build`
 
+### S3 - Correção da verificação rodada 1 (P1) · derivado de `## Screens` já aprovado
+
+**C23** - [x] Criar senha, a 360 e 1280 px: depois do envio aceito, o `Alert` "Senha criada." começa 24 px (±1) abaixo da base do `h1` (o lado de Criar senha do C7; AC 7, `## Screens` "cabeçalho do corpo, Primeiro acesso e Criar senha")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "alerta de sucesso de Criar senha"`
+
+**C24** - [x] Login a 360 e 1280 px, com `GET /api/instituicoes/univag` em 404: o `Alert` "Instituição não encontrada." tem o centro vertical no centro da janela (±1), além do horizontal do C15 (AC 15, `## Screens` "centrado na janela")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "instituição não encontrada no centro vertical"`
+
+**C25** - [x] Login a 360 e 1280 px: a frase "Entre com seu CPF e sua senha." tem `text-align: center` e o centro horizontal no centro do bloco do formulário (±1) (AC 6, `## Screens` "cabeçalho do corpo, Login", "texto centrado")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "frase do Login centrada"`
+
+**C26** - [x] Textos dos estados de erro dos formulários: com a API recusando o envio, Primeiro acesso mostra só os textos de hoje mais o `detail` da API num `Alert`, e Criar senha com token inválido mostra só os textos de hoje mais o `detail` da API num `Alert`, sem textos fora do C18 (AC 18, `## Observable` linhas de Primeiro acesso e Criar senha)
+Proof: `cd web && npx vitest run src/acesso/textos.test.tsx -t "textos dos erros de Primeiro acesso e Criar senha"`
+
 ## Exempted
 
 Fora do alcance dos checks, por tela; as cores vêm dos tokens, conferidas por C19 e, no painel, por C14:
@@ -175,3 +189,9 @@ Estimativa (`wc -c` / 4): `Acesso.tsx` 7 KB, `arranjo.spec.ts` 73 KB, `textos.te
 - **Settled mid-build**: (1) `simulada.ts` devolve `nome` = "Centro Universitário de Várzea Grande", não "Univag" (C6): os testes e2e comparam com esse nome. (2) "CPF"/"Senha" em C6, C7 e C8 são medidos no `Campo` inteiro (rótulo + campo), pois o espaço de 24 px é entre campos; "Entrar"/botão comparam a largura com o `input`. (3) A frase do Login usa `-mt-5` para ficar a 4 px do `h1` com o `h1` filho direto do bloco (C5 chama o bloco de "o pai do h1"). (4) C15: o `Spinner` gira, então a caixa de `boundingBox()` incha (35 px); o tamanho vem de `getComputedStyle` (32 px) e o centro da caixa. (5) C9 é provado pelo teste existente `sem rolagem horizontal` (já cobre as 3 telas nas 6 larguras). (6) Reescritos: `telas de acesso centralizadas` (3 casos, a raiz `/` com as mesmas asserções), `quebras medidas dos dois lados` e `arranjo telas de acesso`, como o C21 manda; nenhum teste Vitest da base foi renomeado, `REESCRITOS` vazio. `login mostra o nome da instituição` não foi alterado (não contradiz o C6). (7) A marca "One" está num `span` para medir o espaço até o ícone.
 - **Abandoned**: nada.
 - **Emendas após o build (orquestrador, aprovadas pelo usuário em 03/11):** C7 pedia o `h1` de Primeiro acesso e Criar senha no mesmo y do Login, o que contradiz o C5 (bloco centrado na vertical; o do Login é mais alto: 240 contra 285 px a 360 px). Passou a pedir o `h1` no topo do bloco nas 3 telas; o teste mede `h1.y = bloco.y` (±1), também no Login. C6: o exemplo "Univag" virou "Centro Universitário de Várzea Grande", o `nome` que `e2e/simulada.ts` devolve; a exigência (o `h1` é o `nome` da API) não mudou
+
+### Correção após a verificação rodada 1
+
+- **Boundary:** C23-C26 (S3) closed no `test(web)` que segue `05d3052`. Provas no HEAD do autor: Vitest 278/278; os 3 filtros e2e de S3 selecionaram 1 teste cada e passaram contra o contêiner `api`; `npm run build` 0
+- **Settled mid-build:** (1) nenhuma mudança de código: o `Alert` de Criar senha, o centro vertical do "Instituição não encontrada." e a frase centrada do Login já casavam com `## Screens`; só faltava medir. (2) C26 é um teste novo (`textos dos erros de Primeiro acesso e Criar senha`) e não muda os de C18; o token inválido é simulado pela recusa 422 da API (`Recusa`), o mesmo `detail` que o Login recusado usa. (3) Os testes e2e de S3 são novos no describe "entrada institucional"; nenhum teste antigo mudou. (4) A nota do build "90 de 91" e2e: a suíte tem 90 testes; o vermelho era o C7 antes da emenda
+- **Abandoned:** nada
