@@ -24,6 +24,9 @@ export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?
   return json as T
 }
 
+// Cadastro novo é criado em `base`; o que já tem id é substituído em `base/id`.
+export const gravar = (base: string, id: number | undefined, corpo: unknown) => (id ? api(`${base}/${id}`, corpo, 'PUT') : api(base, corpo))
+
 export type Instituicao = { slug: string; nome: string; fuso: string }
 export type Matricula = { id: number; numero: string; curso: string; semestre: number; situacao: string }
 export type Me = {

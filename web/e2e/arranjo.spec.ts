@@ -404,7 +404,8 @@ test.describe('conhecimento', () => {
     expect((await caixa(resposta)).height).toBeGreaterThanOrEqual(6 * alturaDaLinha - 1)
 
     await page.setViewportSize({ width: 1024, height: 740 })
-    expect(Math.abs((await caixa(dialogo)).width - 512)).toBeLessThanOrEqual(1)
+    // a largura assenta no quadro seguinte ao redimensionamento
+    await expect.poll(async () => Math.abs((await caixa(dialogo)).width - 512)).toBeLessThanOrEqual(1)
   })
 })
 

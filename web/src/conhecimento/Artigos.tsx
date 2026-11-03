@@ -1,16 +1,16 @@
 import { Plus } from 'lucide-react'
-import { useState, type ComponentProps, type Dispatch, type SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 import { BotaoAcao, useGravacao } from '../acao'
-import { api } from '../api'
+import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
+import { Campo } from '../Campo'
 import { Editor } from '../Editor'
+import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
 import { Periodo } from '../Periodo'
-import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { Textarea } from '../ui/textarea'
@@ -88,15 +88,6 @@ function ItemArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edita
   )
 }
 
-function Campo({ id, rotulo, ...props }: { id: string; rotulo: string } & ComponentProps<'input'>) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <Label htmlFor={id}>{rotulo}</Label>
-      <Input id={id} {...props} />
-    </div>
-  )
-}
-
 function CamposDoArtigo({ editando, setEditando, categorias }: { editando: Rascunho; setEditando: Dispatch<SetStateAction<Rascunho | undefined>>; categorias: Categoria[] }) {
   const muda = (chave: keyof Rascunho) => (e: { target: { value: string } }) => setEditando((r) => r && { ...r, [chave]: e.target.value })
   return (
@@ -118,7 +109,7 @@ function CamposDoArtigo({ editando, setEditando, categorias }: { editando: Rascu
         <Label htmlFor="links">Links (um por linha, com https://)</Label>
         <Textarea id="links" rows={2} value={editando.links} onChange={muda('links')} />
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 items-end gap-2">
         <Campo id="visivelDe" rotulo="Válido de (opcional)" type="date" value={editando.visivelDe} onChange={muda('visivelDe')} />
         <Campo id="visivelAte" rotulo="Válido até (opcional)" type="date" value={editando.visivelAte} onChange={muda('visivelAte')} />
       </div>
@@ -127,40 +118,35 @@ function CamposDoArtigo({ editando, setEditando, categorias }: { editando: Rascu
   )
 }
 
+const Avisos = { ativar: 'Artigo ativado.', arquivar: 'Artigo arquivado.' }
+const tituloDaJanela = (r?: Rascunho) => (r?.id ? 'Editar artigo' : 'Novo artigo')
+
 // S7: a base interna que o assistente usa como fonte; nunca aparece para o aluno.
 export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
   const [editando, setEditando] = useState<Rascunho>()
   const [arquivar, setArquivar] = useState<Artigo>()
   const acao = useGravacao(recarregar)
-  const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
 
-  function salvar() {
-    const r = editando!
-    acao.mutate({
-      chamar: () => api(r.id ? `/api/admin/artigos/${r.id}` : '/api/admin/artigos', corpo(r), r.id ? 'PUT' : undefined),
-      aviso: 'Artigo salvo.',
-      depois: () => setEditando(undefined),
-    })
-  }
+  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/artigos', editando!.id, corpo(editando!)), aviso: 'Artigo salvo.', depois: () => setEditando(undefined) })
 
   function mudar(a: Artigo, para: 'ativar' | 'arquivar') {
     setArquivar(undefined)
-    acao.mutate({ chamar: () => api(`/api/admin/artigos/${a.id}/${para}`, {}), aviso: para === 'ativar' ? 'Artigo ativado.' : 'Artigo arquivado.' })
+    acao.mutate({ chamar: () => api(`/api/admin/artigos/${a.id}/${para}`, {}), aviso: Avisos[para] })
   }
 
   return (
     <div className="flex flex-col gap-2">
       <Cabecalho titulo="Artigos" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
-      {erro && <Alert variant="destructive">{erro}</Alert>}
-      {!editando && alerta}
+      <ErroDe erro={erro} />
+      <ErroDe erro={acao.error} oculto={!!editando} />
       <Situacao itens={artigos} erro={erro} />
       {artigos?.map((a) => (
         <ItemArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
       ))}
 
-      <Editor titulo={editando?.id ? 'Editar artigo' : 'Novo artigo'} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={alerta}>
+      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} />}
       </Editor>
 

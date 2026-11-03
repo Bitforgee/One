@@ -3,14 +3,14 @@ import { useState } from 'react'
 import { useGravacao } from '../acao'
 import { api } from '../api'
 import { Cabecalho } from '../Cabecalho'
+import { Campo } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
+import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
-import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
@@ -74,10 +74,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias }: { envio: Envio; setEnvio
       </p>
       {!envio.id && (
         <>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="titulo-documento">Título</Label>
-            <Input id="titulo-documento" maxLength={200} value={envio.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
-          </div>
+          <Campo id="titulo-documento" rotulo="Título" maxLength={200} value={envio.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria-documento">Categoria</Label>
             <NativeSelect id="categoria-documento" className="w-full" value={envio.categoriaId} onChange={(e) => setEnvio({ ...envio, categoriaId: e.target.value })}>
@@ -98,22 +95,17 @@ function CamposDoEnvio({ envio, setEnvio, categorias }: { envio: Envio; setEnvio
   )
 }
 
+const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Enviar PDF')
+const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos')
+
 // RAG S3: PDFs da instituição que o assistente consulta; o aluno nunca vê o documento, só a resposta.
 export function Documentos() {
   const { itens: documentos, categorias, erro, recarregar } = useCatalogo<Documento>('/api/admin/documentos')
   const [envio, setEnvio] = useState<Envio>()
   const [arquivar, setArquivar] = useState<Documento>()
   const acao = useGravacao(recarregar)
-  const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
 
-  function enviar() {
-    const r = envio!
-    acao.mutate({
-      chamar: () => api(r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos', formulario(r)),
-      aviso: 'Documento enviado.',
-      depois: () => setEnvio(undefined),
-    })
-  }
+  const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: () => setEnvio(undefined) })
 
   function confirmarArquivar(d: Documento) {
     setArquivar(undefined)
@@ -124,14 +116,14 @@ export function Documentos() {
     <div className="flex flex-col gap-2">
       <Cabecalho titulo="Documentos" botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })} />
       <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
-      {erro && <Alert variant="destructive">{erro}</Alert>}
-      {!envio && alerta}
+      <ErroDe erro={erro} />
+      <ErroDe erro={acao.error} oculto={!!envio} />
       <Situacao itens={documentos} erro={erro} />
       {documentos?.map((d) => (
         <ItemDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
       ))}
 
-      <Editor titulo={envio?.id ? 'Nova versão' : 'Enviar PDF'} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={alerta} botao="Enviar" desabilitado={!envio?.arquivo}>
+      <Editor titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />} botao="Enviar" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} />}
       </Editor>
 

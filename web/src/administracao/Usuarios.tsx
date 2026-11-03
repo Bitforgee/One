@@ -1,17 +1,17 @@
 import { Plus } from 'lucide-react'
-import { useState, type ComponentProps, type Dispatch, type SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
-import { api } from '../api'
+import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
+import { Campo } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
+import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Situacao } from '../Situacao'
-import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import type { Setor, Usuario } from './comum'
 
@@ -27,11 +27,6 @@ type Edicao = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | un
 const Novo: Ficha = { cpf: '', nome: '', email: '', papeis: ['ATENDENTE'], setores: [], senhaTemporaria: '' }
 const ficha = (u: Usuario): Ficha => ({ id: u.id, cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: '' })
 const corpo = (u: Ficha) => ({ cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: u.senhaTemporaria || undefined })
-
-// Usuário novo é criado; o existente é substituído pelo formulário inteiro.
-function gravar(u: Ficha) {
-  return u.id ? api(`/api/admin/usuarios/${u.id}`, corpo(u), 'PUT') : api('/api/admin/usuarios', corpo(u))
-}
 
 function alternar<T>(lista: T[], valor: T) {
   return lista.includes(valor) ? lista.filter((x) => x !== valor) : [...lista, valor]
@@ -90,15 +85,6 @@ function PapeisESetores({ editando, setEditando, setores }: Edicao) {
   )
 }
 
-function Campo({ id, rotulo, ...props }: { id: string; rotulo: string } & ComponentProps<'input'>) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{rotulo}</Label>
-      <Input id={id} {...props} />
-    </div>
-  )
-}
-
 function CamposDoUsuario({ editando, setEditando, setores }: Edicao) {
   const muda = (chave: 'cpf' | 'nome' | 'email' | 'senhaTemporaria') => (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [chave]: e.target.value })
   return (
@@ -115,20 +101,18 @@ function CamposDoUsuario({ editando, setEditando, setores }: Edicao) {
   )
 }
 
+const tituloDaJanela = (f?: Ficha) => (f?.id ? 'Editar usuário' : 'Novo usuário')
+
 // S8: atendentes e administradores; alunos chegam pela importação, mas também podem ser editados aqui.
 export function Usuarios() {
   const { dados, erro, recarregar } = useLeituras<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
   const [editando, setEditando] = useState<Ficha>()
   const [desativar, setDesativar] = useState<Usuario>()
   const acao = useGravacao(recarregar)
-  const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
-  const setores = dados ? dados.setores : []
+  const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
 
-  function salvar() {
-    const u = editando!
-    acao.mutate({ chamar: () => gravar(u), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
-  }
+  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/usuarios', editando!.id, corpo(editando!)), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
 
   function confirmarDesativar() {
     const u = desativar!
@@ -139,14 +123,14 @@ export function Usuarios() {
   return (
     <div className="flex flex-col gap-2">
       <Cabecalho titulo="Usuários" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
-      {erro && <Alert variant="destructive">{erro}</Alert>}
-      {!editando && alerta}
+      <ErroDe erro={erro} />
+      <ErroDe erro={acao.error} oculto={!!editando} />
       <Situacao itens={dados?.usuarios} erro={erro} />
       {dados?.usuarios.map((u) => (
         <ItemUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
       ))}
 
-      <Editor titulo={editando?.id ? 'Editar usuário' : 'Novo usuário'} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={alerta}>
+      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} />}
       </Editor>
 

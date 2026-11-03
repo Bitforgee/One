@@ -1,13 +1,13 @@
 import { Plus } from 'lucide-react'
 import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
-import { api } from '../api'
+import { gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
 import { Editor } from '../Editor'
+import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
-import { Alert } from '../ui/alert'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
@@ -172,6 +172,8 @@ const CamposDaAba: Record<Aba, (c: Campos) => JSX.Element> = {
   prontas: CamposDePronta,
 }
 
+const tituloDaJanela = (aba: Aba, f?: Ficha) => `${f?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`
+
 // Setores, categorias, cursos, regras de roteamento e respostas prontas.
 export function Cadastros() {
   const { dados, erro, recarregar } = useLeituras<Listas>({
@@ -185,29 +187,26 @@ export function Cadastros() {
   const [editando, setEditando] = useState<Ficha>()
   const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
+  const abas = Object.keys(Titulos) as Aba[]
 
   function salvar() {
     const { id, ...resto } = editando!
-    acao.mutate({
-      chamar: () => api(`/api/admin/${Rotas[aba]}${id ? `/${id}` : ''}`, Corpos[aba](resto), id ? 'PUT' : undefined),
-      aviso: 'Cadastro salvo.',
-      depois: () => setEditando(undefined),
-    })
+    acao.mutate({ chamar: () => gravar(`/api/admin/${Rotas[aba]}`, id, Corpos[aba](resto)), aviso: 'Cadastro salvo.', depois: () => setEditando(undefined) })
   }
 
   return (
     <div className="flex flex-col gap-2">
       <Cabecalho titulo="Cadastros" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })} />
-      {erro && <Alert variant="destructive">{erro}</Alert>}
+      <ErroDe erro={erro} />
       <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)}>
         <TabsList className="w-full justify-start overflow-x-auto">
-          {(Object.keys(Titulos) as Aba[]).map((k) => (
+          {abas.map((k) => (
             <TabsTrigger key={k} value={k} className="flex-none">
               {Titulos[k]}
             </TabsTrigger>
           ))}
         </TabsList>
-        {(Object.keys(Titulos) as Aba[]).map((k) => (
+        {abas.map((k) => (
           <TabsContent key={k} value={k} className="flex flex-col gap-2">
             <Situacao itens={dados?.[k]} erro={erro} />
             <ListaDaAba itens={dados?.[k]} linha={(x) => linhas(dados!)[k](x)} editar={(x) => setEditando(ficha(x))} />
@@ -215,14 +214,7 @@ export function Cadastros() {
         ))}
       </Tabs>
 
-      <Editor
-        titulo={`${editando?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`}
-        aberto={!!editando}
-        fechar={() => setEditando(undefined)}
-        salvar={salvar}
-        pendente={acao.isPending}
-        alerta={acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
-      >
+      <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} />}
       </Editor>
     </div>
