@@ -372,3 +372,14 @@ total 22,6k.
   que mostra o botão voltando para "Ativar avisos neste aparelho" depois de desativar continua obrigatório.
 - **Estado de erro do botão:** se o `POST` da inscrição falhar depois do `subscribe`, o navegador desfaz a inscrição
   (`unsubscribe`), mostra a mensagem de erro e o botão volta para "Ativar avisos neste aparelho"; um teste prova esse caminho.
+
+### Correção após a verificação rodada 1
+
+Commit `4f89704`. Cada lacuna: conserto, teste, falha vista em vermelho.
+
+- **C45/C46 texto visível:** `AvisosPush` ganhou a variante `item` (botão com ícone e texto); `Autenticado.tsx` a põe na gaveta e no "Mais" (só aluno), a barra segue com o sino. Testes: `avisos.test.tsx` "no(a) gaveta/Mais o item de avisos mostra o texto visível" (2) e e2e `push.spec.ts` "na gaveta o item de avisos mostra o texto visível" (360 px). Falha: sem os itens, os 2 de Vitest ficam vermelhos. Os testes de arranjo da barra (sem sobreposição, 360 px) seguem verdes.
+- **C48 volta a "Ativar":** o fake `unsubscribe` agora zera a subscrição de verdade; "desativar cancela e apaga a subscrição" ganhou `expect(await botao(Ativar))`. DELETE segue `?endpoint=`.
+- **Estado de erro:** `ativar` (`push.ts`) chama `unsubscribe()` e relança se o `POST` falha. Teste "POST que falha depois do subscribe desfaz a inscrição e o botão volta a Ativar". Falha: sem o `unsubscribe`, vermelho.
+- **C44:** `sw.test.ts` "fallback de navegação nega a API (rota registrada no worker)" importa o `sw.ts` com o Workbox simulado e exige `NavigationRoute(..., { denylist: Negados })` e 1 `registerRoute`. Falha: com `registerRoute` comentado, vermelho (o `-t` do C44 casa os dois).
+- Para manter o `crapper` abaixo de 10, `alternar` saiu do componente para `push.ts` e `Avisos` virou componente de módulo em `Autenticado.tsx`.
+- Contagens: Vitest 213 em 34 arquivos (+4); Playwright 51 verdes na imagem própria (:8083); `crapper`, `dryer`, `seletores_conferem`, `consultas_preservadas`, `chamadas_iguais`, `precache_completo.py` sem problema.
