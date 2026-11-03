@@ -11,6 +11,9 @@
   - `.specs/features/vertical-slice-completa/`: um arquivo por caso de uso com `Mediator` (Etapa 4c), 31 checks;
   - `.specs/features/interface-nova/`: shadcn/ui e Tailwind no `web/` (Etapa 4c), 61 critérios, 94 checks;
   - `.specs/features/dominio-e-contratos/`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios, 41 checks;
+  - `.specs/features/arquivos-minio/`: anexos e PDFs no MinIO (Etapa 4c), 25 critérios, 30 checks;
+  - `.specs/features/tempo-real-signalr/`: telas atualizadas pelo hub SignalR (Etapa 4c), 51 checks;
+  - `.specs/features/web-push/`: aviso ao aluno com o app fechado (Etapa 4c), 29 critérios, 53 checks;
   - `.specs/STATE.md`: decisões AD-001 a AD-026;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
@@ -107,7 +110,7 @@ hospedagem e ensaio.
  Etapa 0      Etapa 1–3                 Etapa 4          Etapa 4b        Etapa 4c                       Etapa 5                   Banca    Piloto
  Preparar  →  Código (feito 01–02/11)  → RAG com OpenAI → Refatoração → Arquitetura, interface,   →  Dados, IA real e ensaio → 20/11 →  Univag
  01–03/11                                código 02/11     até 03/11      arquivos e tempo real         09–19/11 (ensaio 17–19/11)
-                                                                         03–16/11 (congelado a partir de 17/11)
+                                                                         feita em 02–03/11 (congelado a partir de 17/11)
                        ▲ 13/11 AVA: a versão do `main` verde nesse dia
 ```
 
@@ -218,7 +221,7 @@ asserção existente removida, e a verificação aprovada.
 antes da banca): só correção de bug, para o ensaio da Etapa 5 rodar sobre o código que vai à banca. Se o limite de 12/11 estiver em risco, o grupo decide
 antes o que corta; a decisão de 02/11 é que a refatoração entra antes da banca.
 
-### Etapa 4c: arquitetura completa, interface nova, arquivos e tempo real (antes da banca, 03–16/11)
+### Etapa 4c: arquitetura completa, interface nova, arquivos e tempo real (concluída em 03/11)
 
 Decisão do usuário em 02/11/2026: **todos os assuntos discutidos em 02/11 entram antes da banca**
 (AD-019 a AD-024). Cada item é uma feature própria do `tlc-spec-lean` (plano e checks aprovados
@@ -499,5 +502,5 @@ as suítes, o e2e e as falhas injetadas à mão pelo Verifier.
 | Aluno preso no robô | "Falar com atendente" sempre visível, inclusive antes da primeira mensagem |
 | Expectativa inflada de autoatendimento | meta do piloto de 20 a 40% (Gartner), não os 65 a 98% dos fornecedores |
 | A refatoração quebra algo às vésperas da banca | nenhuma asserção existente pode sumir (C2); verificação com injeção de falhas; congelamento de 17/11 a 20/11 |
-| A Etapa 4c (5 features em 14 dias) não cabe ou quebra algo antes da banca | uma feature por vez no `api/`, cada uma verificada antes da próxima; nenhuma asserção existente pode sumir; a versão do AVA em 13/11 é o `main` verde; em 16/11 o que não estiver verificado sai da banca |
+| A Etapa 4c (5 features em 14 dias) não cabe ou quebra algo antes da banca | **resolvido**: as 6 features da Etapa 4c foram construídas e verificadas em 02–03/11, uma por vez no `api/`; nenhuma asserção existente mudou sem decisão do usuário registrada no `## Handoff` de cada uma |
 | Crescimento de escopo | a seção `Out of scope` do plano decide; item novo entra lá antes de entrar no código |
