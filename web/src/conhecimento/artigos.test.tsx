@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, acoesDe, api, cabecalhos, esperaLinhaVazia, me } from '../test/util'
@@ -85,5 +85,27 @@ describe('artigos', () => {
     expect(await acoesDe('Em rascunho')).toEqual(['Editar', 'Ativar', 'Arquivar!'])
     expect(await acoesDe('No ar')).toEqual(['Editar', 'Arquivar!'])
     expect(await acoesDe('Guardado')).toEqual(['Editar', 'Ativar'])
+  })
+
+  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
+  it('ações de linha mostram o Spinner enquanto gravam', async () => {
+    let responder!: () => void
+    const chamadas = api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/artigos': () => [200, [artigo(1, 'Em rascunho', 'RASCUNHO')]],
+      'GET /api/admin/categorias': () => [200, categorias],
+      'POST /api/admin/artigos/1/ativar': () => new Promise((resolve) => (responder = () => resolve([200, {}]))),
+    })
+    abrir('/univag/artigos')
+    await screen.findByText('Em rascunho')
+    await userEvent.click(screen.getByRole('button', { name: 'Ações de Em rascunho' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Ativar' }))
+    const gatilho = await screen.findByRole('button', { name: 'Ações de Em rascunho' })
+    await waitFor(() => expect(gatilho).toBeDisabled())
+    expect(within(gatilho).getByRole('status')).toBeInTheDocument()
+    responder()
+    await waitFor(() => expect(gatilho).toBeEnabled())
+    expect(within(gatilho).queryByRole('status')).not.toBeInTheDocument()
+    expect(chamadas.some((c) => c.url === '/api/admin/artigos/1/ativar')).toBe(true)
   })
 })

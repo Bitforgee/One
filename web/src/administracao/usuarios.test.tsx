@@ -32,6 +32,7 @@ describe('usuários', () => {
     const inativa = await item('Bia')
     expect(within(inativa).getByText('Desativado')).toBeInTheDocument()
     expect(inativa).toHaveTextContent('987.654.321-00 · bia@univag.edu.br · Aluno')
+    expect(within(inativa).getAllByRole('cell')[3]).toHaveTextContent(/^Aluno$/) // coluna Papéis, sem setores
     expect(within(inativa).queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText('Nenhum item cadastrado.')).not.toBeInTheDocument()
   })

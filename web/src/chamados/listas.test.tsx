@@ -43,14 +43,19 @@ describe('listas de chamados', () => {
   it('colunas das listas de chamados', async () => {
     lista('fila', () => [200, [{ numero: 'ONE-1', titulo: 'boleto', categoria: 'Boleto', estado: 'ABERTO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 1 }]])
     const montada = abrir('/univag/fila')
-    await screen.findByText('ONE-1')
+    const linha = (await screen.findByText('ONE-1')).closest('tr') as HTMLElement
     expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
+    const celulas = within(linha).getAllByRole('cell')
+    expect(celulas[0]).toHaveTextContent(/^ONE-1$/)
+    expect(celulas[1]).toHaveTextContent(/^boleto.*1 dia$/) // o título e, no estreito, a linha de detalhe
     montada.unmount()
 
     lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])
     abrir('/univag/solicitacoes')
-    await screen.findByText('ONE-3')
+    const item = (await screen.findByText('ONE-3')).closest('tr') as HTMLElement
     expect(cabecalhos()).toEqual(['Número', 'Título', 'Estado'])
+    expect(within(item).getAllByRole('cell')[0]).toHaveTextContent(/^ONE-3$/)
+    expect(within(item).getAllByRole('cell')[1]).toHaveTextContent(/^histórico$/)
   })
 
   // layout-painel C24 (AC 24)

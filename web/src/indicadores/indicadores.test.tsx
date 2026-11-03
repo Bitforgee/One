@@ -30,6 +30,35 @@ describe('indicadores', () => {
     expect(screen.queryByText('Autoatendimento')).not.toBeInTheDocument()
   })
 
+  // layout-painel C45 (AC 20)
+  it('Consultar mostra o Spinner enquanto busca', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 15, 10, 0))
+    let responder!: () => void
+    const vazio = {
+      semDados: true, alunosAtivos: 0, conversas: 0, taxaAutoatendimento: null, taxaEscalonamento: null, taxaAbandono: null, taxaPerguntasSemArtigo: null,
+      chamadosAbertos: 0, chamadosResolvidos: 0, tempoPrimeiraRespostaHoras: null, tempoResolucaoHoras: null, roteamentoCorreto: null, taxaReabertura: null,
+      principaisCategorias: { porConversas: [], porChamados: [] }, indicadorPrincipal: null,
+    }
+    let vez = 0
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/indicadores?de=2026-11-01&ate=2026-11-15': () => (vez++ === 0 ? [200, vazio] : new Promise((resolve) => (responder = () => resolve([200, vazio])))),
+    })
+    abrir('/univag/indicadores')
+    await screen.findByText('Sem dados no período')
+    const consultar = screen.getByRole('button', { name: 'Consultar' })
+    expect(consultar).toBeEnabled()
+    expect(within(consultar).queryByRole('status')).not.toBeInTheDocument()
+
+    await userEvent.click(consultar)
+    await waitFor(() => expect(consultar).toBeDisabled())
+    expect(within(consultar).getByRole('status')).toBeInTheDocument()
+    responder()
+    await waitFor(() => expect(consultar).toBeEnabled())
+    expect(within(consultar).queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('cartões formatam taxa, horas e número, e o ranking vazio mostra traço', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 15, 10, 0))

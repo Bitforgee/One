@@ -371,7 +371,7 @@ test.describe('acesso', () => {
     await page.setViewportSize({ width: 1024, height: 740 })
     await page.goto('/univag/trocar-senha')
     await page.getByRole('heading', { name: 'Trocar senha' }).waitFor()
-    expect((await caixa(page.locator('main > div > div').first())).width).toBeLessThanOrEqual(420)
+    expect((await caixa(page.locator('main > div > div').first())).width).toBeLessThanOrEqual(384)
   })
 
   // C32: as 4 telas de acesso, nas 2 larguras
@@ -831,6 +831,12 @@ test.describe('painel', () => {
       await expect(painel.getByRole('group')).toHaveCount(3)
       for (const rotulo of Links) await expect(painel.getByRole('link', { name: rotulo }), `${w} px: ${rotulo}`).toBeVisible()
       await expect(painel.getByRole('button', { name: /Ana/ })).toBeVisible()
+      // C43: camada escura atrás do painel, cobrindo a janela
+      const camada = page.locator('[data-slot=sheet-overlay]')
+      await expect(camada, `${w} px: camada`).toBeVisible()
+      const o = await caixa(camada)
+      expect([o.x, o.y, o.width, o.height], `${w} px: camada cobre a janela`).toEqual([0, 0, w, 740])
+      expect(await camada.evaluate((e) => Number(getComputedStyle(e).backgroundColor.match(/[\d.]+/g)![3] ?? 1)), `${w} px: alfa`).toBeGreaterThan(0)
 
       // C6: escolher um link fecha o painel e abre a tela
       await painel.getByRole('link', { name: 'Fila' }).click()
@@ -863,6 +869,134 @@ test.describe('painel', () => {
       expect(c.x + c.width - (tema.x + tema.width), `${w} px: Tema na ponta direita`).toBeLessThanOrEqual(25)
       expect(await h1.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).fontWeight]), `${w} px: h1`).toEqual(['16px', '500'])
     }
+  })
+
+  // C39
+  test('Trocar senha até 384 px', async ({ page }) => {
+    await simularApi(page)
+    for (const w of [360, 1280]) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag/trocar-senha')
+      await page.getByRole('heading', { level: 1, name: 'Trocar senha' }).waitFor()
+      expect((await caixa(page.locator('main > div > div').first())).width, `${w} px`).toBeLessThanOrEqual(384)
+    }
+  })
+
+  // C40
+  test('botão do usuário', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    const botao = page.locator(Conteiner).getByRole('button', { name: /Ana/ })
+    await botao.waitFor()
+    const b = await caixa(botao)
+    const iniciais = await caixa(botao.getByText('A', { exact: true }))
+    expect([Math.round(iniciais.width), Math.round(iniciais.height)], 'quadrado das iniciais').toEqual([32, 32])
+    const nome = botao.getByText('Ana', { exact: true })
+    const papel = botao.getByText('Administrador', { exact: true })
+    const [n, p, seta] = [await caixa(nome), await caixa(papel), await caixa(botao.locator('svg.lucide-chevrons-up-down'))]
+    expect(n.x, 'nome à direita das iniciais').toBeGreaterThanOrEqual(iniciais.x + iniciais.width - 1)
+    expect(p.y, 'papel abaixo do nome').toBeGreaterThanOrEqual(n.y + n.height - 1)
+    for (const t of [nome, papel]) expect(await t.evaluate((e) => getComputedStyle(e).textOverflow)).toBe('ellipsis')
+    expect(seta.x, 'seta à direita dos textos').toBeGreaterThanOrEqual(Math.max(n.x + n.width, p.x + p.width) - 1)
+    expect(seta.x + seta.width).toBeLessThanOrEqual(b.x + b.width + 1)
+  })
+
+  // C41
+  test('menu do usuário abre ao lado', async ({ page }) => {
+    await simularApi(page)
+    const conferir = async (botao: Locator, lado: 'direita' | 'acima') => {
+      const b = await caixa(botao) // antes de abrir: o menu aberto esconde o resto da árvore de acessibilidade
+      await botao.click()
+      const menu = page.getByRole('menu')
+      await menu.waitFor()
+      await assentar(page)
+      const m = await caixa(menu)
+      if (lado === 'direita') expect(m.x, 'à direita do botão').toBeGreaterThanOrEqual(b.x + b.width - 1)
+      else expect(m.y + m.height, 'acima do botão').toBeLessThanOrEqual(b.y + 1)
+      const itens = await menu.locator('> *').evaluateAll((es) => es.map((e) => [e.getAttribute('role'), e.textContent]))
+      expect(itens).toEqual([[null, 'AnaAdministrador'], ['separator', ''], ['menuitem', 'Sair']])
+      const nome = await caixa(menu.getByText('Ana', { exact: true }))
+      expect((await caixa(menu.getByText('Administrador', { exact: true }))).y, 'papel abaixo do nome').toBeGreaterThanOrEqual(nome.y + nome.height - 1)
+      await expect(menu.getByRole('menuitem', { name: 'Sair' }).locator('svg.lucide-log-out')).toBeVisible()
+      await page.keyboard.press('Escape')
+    }
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    await conferir(page.locator(Conteiner).getByRole('button', { name: /Ana/ }), 'direita')
+
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/fila')
+    await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
+    await conferir(page.getByRole('dialog', { name: 'Menu' }).getByRole('button', { name: /Ana/ }), 'acima')
+  })
+
+  // C42
+  test('barra com fundo, borda e instituição', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    const barra = page.locator(Conteiner)
+    const instituicao = barra.getByTestId('instituicao')
+    await instituicao.waitFor()
+    const token = await page.evaluate(() => {
+      const sonda = document.createElement('div')
+      sonda.style.backgroundColor = 'var(--sidebar)'
+      document.body.append(sonda)
+      return getComputedStyle(sonda).backgroundColor
+    })
+    expect(await barra.locator('[data-slot=sidebar-inner]').evaluate((e) => getComputedStyle(e).backgroundColor), 'fundo').toBe(token)
+    expect(await barra.evaluate((e) => getComputedStyle(e).borderRightWidth), 'borda direita').toBe('1px')
+    const [b, i] = [await caixa(barra), await caixa(instituicao)]
+    const linha = parseFloat(await instituicao.evaluate((e) => getComputedStyle(e).lineHeight))
+    expect(i.height, 'até 2 linhas').toBeLessThanOrEqual(2 * linha + 1)
+    expect(i.height, 'quebra em 2 linhas').toBeGreaterThan(linha + 1)
+    expect(i.x + i.width, 'dentro da barra').toBeLessThanOrEqual(b.x + b.width)
+  })
+
+  // C46
+  test('quebras medidas dos dois lados', async ({ page }) => {
+    await simularApi(page)
+    const padding = (l: Locator) => l.evaluate((e) => getComputedStyle(e).paddingLeft)
+    for (const [w, esperado] of [[768, '16px'], [1024, '24px']] as const) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag/fila')
+      expect(await padding(page.locator('main > header > div')), `cabeçalho a ${w} px`).toBe(esperado)
+    }
+    for (const [w, esperado] of [[360, '24px'], [768, '40px']] as const) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag')
+      const cartao = page.locator('[data-slot=card]')
+      await cartao.waitFor()
+      expect(await padding(cartao.locator('xpath=ancestor::div[contains(@class,"min-h-svh")]')), `acesso a ${w} px`).toBe(esperado)
+    }
+    // 1328 px aberta: cartão de 244 px; 1440 px aberta: 272 px
+    for (const [w, fonte] of [[1328, '24px'], [1440, '30px']] as const) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag/indicadores')
+      const cartao = page.getByRole('main').getByText('Autoatendimento', { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
+      await cartao.waitFor()
+      const largura = (await caixa(cartao)).width
+      expect(w === 1328 ? largura < 250 : largura >= 250, `cartão de ${largura} px a ${w}`).toBe(true)
+      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe(fonte)
+    }
+  })
+
+  // C45
+  test('alertas de Indicadores', async ({ page }) => {
+    await simularApi(page)
+    for (const [corpo, status] of [[{ semDados: true, principaisCategorias: { porConversas: [], porChamados: [] } }, 200], [{ status: 500, detail: 'Falha ao consultar.' }, 500]] as const)
+      for (const w of [360, 1280]) {
+        await page.route('**/api/indicadores*', (r) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(corpo) }))
+        await page.setViewportSize({ width: w, height: 800 })
+        await page.goto('/univag/indicadores')
+        const alerta = page.getByRole('main').getByRole('alert')
+        await alerta.waitFor()
+        const rotulo = `${status} a ${w} px`
+        const [a, f, bloco] = [await caixa(alerta), await caixa(page.locator('main form')), await caixa(page.locator('main > div > div').first())]
+        expect(a.y, `${rotulo}: abaixo da linha de ferramentas`).toBeGreaterThanOrEqual(f.y + f.height - 1)
+        expect(Math.abs(a.width - bloco.width), `${rotulo}: largura do bloco`).toBeLessThanOrEqual(1)
+      }
   })
 
   test('movimento reduzido na barra lateral', async ({ page }) => {
@@ -989,6 +1123,11 @@ test.describe('painel', () => {
     await assentar(page)
     await expect(abas).toBeVisible()
     await expect(select).toBeHidden()
+    // C44: as abas à esquerda e "Novo" à direita, na mesma linha
+    const a = await caixa(abas)
+    const novo = await caixa(page.getByRole('button', { name: /Novo/ }))
+    expect(Math.abs(a.y + a.height / 2 - (novo.y + novo.height / 2)), 'mesma linha').toBeLessThanOrEqual(4)
+    expect(novo.x, 'Novo à direita das abas').toBeGreaterThanOrEqual(a.x + a.width - 1)
   })
 
   test('recuos do conteúdo', async ({ page }) => {
