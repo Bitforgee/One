@@ -241,6 +241,67 @@ test.describe('Detalhe do chamado', () => {
   })
 })
 
+test.describe('Indicadores', () => {
+  const Cartoes = ['Indicador principal', 'Alunos ativos', 'Conversas', 'Autoatendimento', 'Escalonamento', 'Abandono', 'Perguntas sem artigo',
+    'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura']
+  const mesmaLinha = (a: { y: number }, b: { y: number }) => Math.abs(a.y - b.y) <= 4
+
+  test('indicadores em 2 e 4 colunas', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/indicadores')
+    await page.getByText('Indicador principal').waitFor()
+    const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=..')
+    for (const [largura, colunas] of [[360, 2], [767, 2], [768, 4], [1024, 4]]) {
+      await page.setViewportSize({ width: largura, height: 740 })
+      const caixas = []
+      for (const rotulo of Cartoes) caixas.push(await caixa(cartao(rotulo)))
+      const xs = new Set(caixas.map((c) => Math.round(c.x)))
+      expect(xs.size, `${largura} px`).toBe(colunas)
+      // "Indicador principal" vem primeiro e ocupa 2 colunas
+      expect(Math.round(caixas[0].x)).toBe(Math.min(...xs))
+      expect(caixas[0].y).toBeLessThanOrEqual(Math.min(...caixas.map((c) => c.y)))
+      const segunda = caixas.find((c) => Math.round(c.x) === [...xs].sort((p, q) => p - q)[1])!
+      expect(Math.abs(caixas[0].x + caixas[0].width - (segunda.x + segunda.width)), `${largura} px`).toBeLessThanOrEqual(1)
+
+      const conversas = await caixa(page.locator('[data-slot=card]').filter({ hasText: 'Categorias por conversas' }))
+      const chamados = await caixa(page.locator('[data-slot=card]').filter({ hasText: 'Categorias por chamados' }))
+      if (colunas === 2) expect(chamados.y, `${largura} px`).toBeGreaterThanOrEqual(conversas.y + conversas.height - 1)
+      else expect(mesmaLinha(conversas, chamados), `${largura} px`).toBe(true)
+    }
+  })
+
+  test('arranjo Indicadores', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/indicadores')
+    await page.getByText('Indicador principal').waitFor()
+    const campos = async () => ({
+      de: await caixa(page.getByLabel('De')),
+      ate: await caixa(page.getByLabel('Até')),
+      calendario: await caixa(page.getByRole('button', { name: 'Escolher período no calendário' })),
+      consultar: await caixa(page.getByRole('button', { name: 'Consultar' })),
+    })
+    let c = await campos()
+    expect(mesmaLinha(c.de, c.ate)).toBe(true)
+    expect(mesmaLinha(c.calendario, c.consultar)).toBe(true)
+    expect(c.calendario.y).toBeGreaterThanOrEqual(c.de.y + c.de.height - 1)
+
+    for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
+      const ranking = page.locator('[data-slot=card]').filter({ hasText: titulo })
+      const grafico = ranking.locator('.recharts-responsive-container')
+      await grafico.waitFor()
+      const g = await caixa(grafico)
+      expect(g.height).toBeGreaterThan(0)
+      expect((await caixa(ranking.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
+    }
+
+    await page.setViewportSize({ width: 1024, height: 740 })
+    c = await campos()
+    for (const outro of [c.ate, c.calendario, c.consultar]) expect(mesmaLinha(c.de, outro), JSON.stringify(c)).toBe(true)
+  })
+})
+
 test.describe('listas de chamados', () => {
   test('arranjo listas de chamados', async ({ page }) => {
     await simularApi(page)

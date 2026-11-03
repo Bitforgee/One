@@ -155,6 +155,15 @@ describe('interface nova', () => {
     for (const proibido of ['Conversation' + 'ScrollButton', 'Message' + 'Response']) expect(arquivos.filter((a) => texto(a).includes(proibido)), proibido).toEqual([])
   })
 
+  // C52 (door 16): o TanStack Table só nas tabelas de 2 colunas, sem ordenação, filtro nem paginação
+  it('TanStack Table só nas 3 tabelas', () => {
+    // os nomes vão em pedaços para este arquivo não se acusar
+    const usam = arquivos.filter((a) => texto(a).includes('useReact' + 'Table('))
+    expect(['indicadores/Indicadores.tsx', 'administracao/Matriculas.tsx']).toEqual(expect.arrayContaining(usam))
+    expect(usam).toContain('indicadores/Indicadores.tsx')
+    for (const recurso of ['getSorted' + 'RowModel', 'getFiltered' + 'RowModel', 'getPagination' + 'RowModel']) expect(arquivos.filter((a) => texto(a).includes(recurso)), recurso).toEqual([])
+  })
+
   it('sem Select do Radix nem AlertDialog', () => {
     const Proibido = /from ['"](?:@\/ui\/|(?:\.\.?\/)+ui\/)(?:select|alert-dialog|date-picker)['"]|from ['"]@radix-ui\/react-(?:select|alert-dialog)['"]|import \{[^}]*\b(?:Select|AlertDialog)\b[^}]*\} from ['"]radix-ui['"]/
     expect(arquivos.filter((a) => Proibido.test(texto(a)))).toEqual([])

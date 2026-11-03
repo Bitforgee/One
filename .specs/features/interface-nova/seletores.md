@@ -19,14 +19,18 @@ Conferido por `seletores_conferem.py <base>`.
 | `web/src/chamados/resposta.test.tsx` | `expect(screen.getByText('Obrigada!').closest('.card')).toHaveClass('ms-auto', 'bg-primary-subtle')` | `expect(screen.getByText('Obrigada!').closest('.is-user, .is-assistant')).toHaveClass('ms-auto', 'bg-primary-subtle')` | a mensagem pública do aluno fica à direita em `bg-primary-subtle`; o balão deixou de ser o `Card` do Bootstrap e passou a ser o `Message` do AI Elements (C39) |
 | `web/src/chamados/resposta.test.tsx` | `expect((await screen.findByText('quantas horas?')).closest('.card')).toHaveClass('ms-auto')` | `expect((await screen.findByText('quantas horas?')).closest('.is-user, .is-assistant')).toHaveClass('ms-auto')` | na transcrição, o aluno fica à direita; mesmo seletor de balão (C39) |
 | `web/src/chamados/listas.test.tsx` | `expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('spinner-border')` | `expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')` | a lista carregando mostra o Spinner; `Spinner` do shadcn (C57, C58) |
+| `web/src/indicadores/indicadores.test.tsx` | `expect(Array.from(conversas.querySelectorAll('.list-group-item')).map((li) => li.textContent)).toEqual(['Boleto3'])` | `expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])` | o ranking por conversas tem um item, categoria e total; o item deixou de ser o `ListGroup.Item` e passou a ser a linha da tabela do TanStack Table (door 16, C51) |
+| `web/src/indicadores/indicadores.test.tsx` | `expect(Array.from(porChamados.querySelectorAll('.list-group-item')).map((li) => li.textContent)).toEqual(['—'])` | `expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])` | o ranking vazio mostra só o traço; a linha da tabela no lugar do item da lista (door 16, C47) |
+| `web/src/indicadores/indicadores.test.tsx` | `expect(conversas.closest('.row')).toHaveClass('row-cols-1', 'row-cols-md-2')` | `expect(conversas.parentElement).toHaveClass('grid-cols-1', 'md:grid-cols-2')` | os rankings ficam um embaixo do outro no celular e lado a lado a partir do md; a grade do Tailwind no lugar do `Row` do Bootstrap (C48 mede o arranjo) |
 
 Linhas auxiliares trocadas pelo mesmo motivo, sem asserção própria (o C2 não as conta): em
 `web/src/assistente/conversa.test.tsx`, `(await screen.findByText('Olá!')).closest('.card')` e
 `screen.getByText('Oi.').closest('.card')` passam a `.closest('.is-user, .is-assistant')`; as asserções que as usam
 (`toHaveClass('me-auto')`, `toHaveClass('ms-auto')`, o autor dentro do balão) não mudam.
 
-Na S3, pelo mesmo motivo: em `web/src/chamados/chamado.test.tsx`, `.closest('.card')` (as respostas antiga, nova e
+Na S3 e na S4, pelo mesmo motivo: em `web/src/chamados/chamado.test.tsx`, `.closest('.card')` (as respostas antiga, nova e
 a do estágio) passa a `.closest('.is-user, .is-assistant')` e `.closest('div.border-top')` (o bloco da fonte) passa a
 `.closest('div.border-t')`, a classe do Tailwind para a mesma borda superior; em `web/src/chamados/resposta.test.tsx`,
 `.closest('.card')` (a mensagem pública, a nota interna e a resposta do assistente) passa a
-`.closest('.is-user, .is-assistant')`. As asserções que usam esses elementos não mudam.
+`.closest('.is-user, .is-assistant')`; em `web/src/indicadores/indicadores.test.tsx`, `.closest('.card')` (os dois
+rankings) passa a `.closest('[data-slot=card]')`, o `Card` do shadcn. As asserções que usam esses elementos não mudam.
