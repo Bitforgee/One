@@ -18,6 +18,7 @@ class ConexaoFalsa {
   private resolverStart?: () => void
   private rejeitarStart?: (e: Error) => void
   private resolverStop?: () => void
+  reconexaoAutomatica = false
   constructor(readonly url: string) {}
   on(nome: string, f: (...a: any[]) => void) {
     this.ouvintes.set(nome, [...(this.ouvintes.get(nome) ?? []), f])
@@ -97,11 +98,13 @@ vi.mock('@microsoft/signalr', () => ({
   LogLevel: { None: 6 },
   HubConnectionBuilder: class {
     private url = ''
+    private automatica = false
     withUrl(url: string) {
       this.url = url
       return this
     }
     withAutomaticReconnect() {
+      this.automatica = true
       return this
     }
     configureLogging() {
@@ -109,6 +112,7 @@ vi.mock('@microsoft/signalr', () => ({
     }
     build() {
       const c = new ConexaoFalsa(this.url)
+      c.reconexaoAutomatica = this.automatica
       globalThis.conexoesFalsas.push(c)
       return c
     }

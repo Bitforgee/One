@@ -7,6 +7,17 @@ const cliente = () => new QueryClient()
 const ultima = () => globalThis.conexoesFalsas.at(-1)!
 const visibilidade = (valor: 'visible' | 'hidden') => Object.defineProperty(document, 'visibilityState', { value: valor, configurable: true })
 
+describe('configuração da conexão', () => {
+  afterEach(() => encerrarTempoReal())
+
+  // o caminho do hub (Surface WS /api/tempo-real) e a reconexão automática do cliente SignalR
+  it('conecta em /api/tempo-real com reconexão automática', () => {
+    abrirTempoReal(cliente())
+    expect(ultima().url).toBe('/api/tempo-real')
+    expect(ultima().reconexaoAutomatica).toBe(true)
+  })
+})
+
 describe('reabrir a conexão (AC 23)', () => {
   afterEach(async () => {
     await encerrarTempoReal()
