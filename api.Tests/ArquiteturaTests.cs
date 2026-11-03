@@ -465,6 +465,184 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("class AgirNoChamado<", SemComentarios(arquivo));
     }
 
+    // dominio-e-contratos C19 e C29: door 3, o agregado não tem construtor público nem setter público além de InstituicaoId, e expõe os filhos só em leitura
+    static bool Init(System.Reflection.PropertyInfo p) =>
+        p.SetMethod!.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(System.Runtime.CompilerServices.IsExternalInit));
+
+    static void AgregadoFechado(Type agregado, string filhos, Type filho)
+    {
+        Assert.Empty(agregado.GetConstructors());
+        Assert.Equal(["InstituicaoId"], agregado.GetProperties().Where(p => p.SetMethod is { IsPublic: true }).Select(p => p.Name));
+        var colecao = agregado.GetProperty(filhos)!;
+        Assert.Equal(typeof(IReadOnlyCollection<>).MakeGenericType(filho), colecao.PropertyType);
+        Assert.Null(colecao.SetMethod);
+    }
+
+    static void FilhoAppendOnly(Type filho)
+    {
+        Assert.Contains(filho.GetProperties(), p => p.Name == "InstituicaoId" && p.SetMethod is { IsPublic: true } && !Init(p));
+        Assert.All(filho.GetProperties().Where(p => p.SetMethod is { IsPublic: true } && p.Name != "InstituicaoId"), p => Assert.True(Init(p), $"{filho.Name}.{p.Name} tem set público"));
+    }
+
+    static void SemPersistenciaNoArquivo(string arquivo) =>
+        Assert.DoesNotMatch(@"OneDb|DbSet|IQueryable|Microsoft\.EntityFrameworkCore", SemComentarios(Path.Combine(Api, "Dados", arquivo)));
+
+    // C19
+    [Fact]
+    public void Chamado_fechado()
+    {
+        AgregadoFechado(typeof(Chamado), "Mensagens", typeof(MensagemChamado));
+        Assert.Equal(typeof(IReadOnlyCollection<EventoChamado>), typeof(Chamado).GetProperty("Eventos")!.PropertyType);
+        Assert.False(typeof(Chamado).GetProperty("Xmin")!.SetMethod is { IsPublic: true });
+        foreach (var filho in new[] { typeof(MensagemChamado), typeof(Anexo), typeof(EventoChamado) }) FilhoAppendOnly(filho);
+        SemPersistenciaNoArquivo("Chamados/Chamado.cs");
+    }
+
+    // C20: fora de Dados e do Agendador ninguém cria mensagem nem evento; as 24 linhas gravadas estão em RetratoTests.Gravacoes_do_chamado_iguais_as_da_base
+    [Fact]
+    public void Chamado_muda_so_pelos_metodos()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var fora = CodigoApi().Where(p => !p.Contains($"{sep}Dados{sep}") && !p.EndsWith($"{sep}Agendador.cs"));
+        Assert.Empty(ArquivosQue(new Regex(@"new\s+(EventoChamado|MensagemChamado)\b|\b(EventosChamado|MensagensChamado)\.Add"), fora));
+    }
+
+    // C29
+    [Fact]
+    public void Artigo_e_documento_fechados()
+    {
+        AgregadoFechado(typeof(Artigo), "Versoes", typeof(VersaoArtigo));
+        AgregadoFechado(typeof(Documento), "Versoes", typeof(VersaoDocumento));
+        FilhoAppendOnly(typeof(VersaoArtigo));
+        FilhoAppendOnly(typeof(VersaoDocumento));
+        SemPersistenciaNoArquivo("Artigos/Artigo.cs");
+        SemPersistenciaNoArquivo("Documentos/Documento.cs");
+    }
+
+    static readonly Dictionary<string, string[]> EntidadesPorPasta = new()
+    {
+        [""] = ["Instituicao"],
+        ["Chamados"] = ["Chamado", "MensagemChamado", "Anexo", "EventoChamado"],
+        ["Conversas"] = ["Conversa", "MensagemConversa", "CitacaoArtigo"],
+        ["Artigos"] = ["Artigo", "VersaoArtigo"],
+        ["Documentos"] = ["Documento", "VersaoDocumento"],
+        ["Trechos"] = ["TrechoFonte"],
+        ["Usuarios"] = ["Usuario", "UsuarioPapel", "Matricula", "TokenAcesso", "AtendenteSetor"],
+        ["Cadastros"] = ["Setor", "Curso", "Categoria", "RegraRoteamento", "RespostaPronta"],
+        ["Emails"] = ["EmailSaida"],
+    };
+
+    static readonly Regex TipoDeTopo = new(@"(?m)^(?:public |internal )?(?:static |sealed |abstract |partial )*(?:class|record|struct|interface|enum)\s+(\w+)");
+
+    // C34: door 5, um tipo por arquivo, na pasta do agregado
+    [Fact]
+    public async Task Uma_entidade_por_arquivo_por_agregado()
+    {
+        var modelo = await f.Db(null, db => Task.FromResult(db.Model));
+        var tipos = modelo.GetEntityTypes().Select(e => e.ClrType).ToList();
+        Assert.Equal(24, tipos.Count);
+        Assert.Equal(EntidadesPorPasta.Values.SelectMany(n => n).Order(), tipos.Select(t => t.Name).Order());
+        foreach (var (pasta, nomes) in EntidadesPorPasta)
+            foreach (var nome in nomes)
+            {
+                var arquivo = Path.Combine(Api, "Dados", pasta, nome + ".cs");
+                Assert.True(File.Exists(arquivo), $"falta Dados/{pasta}/{nome}.cs");
+                Assert.Equal([nome], TipoDeTopo.Matches(SemComentarios(arquivo)).Select(m => m.Groups[1].Value));
+                Assert.Equal(pasta == "" ? "One.Api.Dados" : $"One.Api.Dados.{pasta}", tipos.Single(t => t.Name == nome).Namespace);
+            }
+        Assert.Equal(new[] { "IDaInstituicao", "Papeis", "EstadosArtigo", "Desfechos", "EstadosDocumento", "EstadosChamado", "TiposEvento", "TiposMensagem", "MotivosFechamento" }.Order(),
+            TipoDeTopo.Matches(SemComentarios(Path.Combine(Api, "Dados", "Entidades.cs"))).Select(m => m.Groups[1].Value).Order());
+        foreach (var projeto in new[] { Path.Combine(Api, "One.Api.csproj"), Path.Combine(Raiz(), "api.Tests", "One.Api.Tests.csproj") })
+            foreach (var pasta in EntidadesPorPasta.Keys.Where(p => p != ""))
+                Assert.Contains($"<Using Include=\"One.Api.Dados.{pasta}\" />", File.ReadAllText(projeto));
+    }
+
+    static IEnumerable<Type> TiposUsados(Type t)
+    {
+        const System.Reflection.BindingFlags todos = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance
+            | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly;
+        IEnumerable<Type> assinaturas = t.GetFields(todos).Select(x => x.FieldType)
+            .Concat(t.GetProperties(todos).Select(x => x.PropertyType))
+            .Concat(t.GetMethods(todos).SelectMany(m => m.GetParameters().Select(p => p.ParameterType).Append(m.ReturnType)))
+            .Concat(t.GetConstructors(todos).SelectMany(c => c.GetParameters().Select(p => p.ParameterType)))
+            .Concat(t.GetInterfaces());
+        if (t.BaseType is { } b) assinaturas = assinaturas.Append(b);
+        return assinaturas.SelectMany(Desembrulhar);
+    }
+
+    static IEnumerable<Type> Desembrulhar(Type t) =>
+        t.HasElementType ? Desembrulhar(t.GetElementType()!)
+        : t.IsGenericType ? t.GetGenericArguments().SelectMany(Desembrulhar).Append(t.GetGenericTypeDefinition()) : [t];
+
+    // C35: door 7, o domínio não depende de ASP.NET Core, de Mediator nem de uma fatia (texto e reflexão)
+    [Fact]
+    public void Dominio_sem_AspNetCore_Mediator_nem_fatias()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var dominio = CodigoApi().Where(p => p.Contains($"{sep}Dados{sep}")).ToList();
+        Assert.NotEmpty(dominio);
+        Assert.Empty(ArquivosQue(new Regex(@"using\s+(static\s+)?(Microsoft\.AspNetCore|Mediator)\b"), dominio));
+        Assert.Empty(ArquivosQue(new Regex(@"\b(IResult|Results|HttpContext|HttpRequest|IFormFile|IFormCollection|IMediator|IRequest|Problemas)\b"), dominio));
+        Assert.Empty(ArquivosQue(new Regex(@"(?<![\w.])(One\.Api\.)?(Acesso|Assistente|Chamados|Conhecimento|Indicadores|Administracao|Instituicoes)\.[A-Z]"), dominio));
+
+        var fatias = Fatias.Select(x => "One.Api." + x).ToArray();
+        var tiposDoDominio = typeof(Program).Assembly.GetTypes()
+            .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api.Dados") && !ns.StartsWith("One.Api.Dados.Migracoes") && !t.Name.Contains('<')).ToList();
+        Assert.True(tiposDoDominio.Count > 24);
+        foreach (var tipo in tiposDoDominio)
+            foreach (var usado in TiposUsados(tipo))
+            {
+                var assembly = usado.Assembly.GetName().Name!;
+                Assert.False(assembly.StartsWith("Microsoft.AspNetCore") || assembly.StartsWith("Mediator"), $"{tipo.Name} usa {usado.FullName} ({assembly})");
+                Assert.False(fatias.Any(x => usado.Namespace == x || usado.Namespace?.StartsWith(x + ".") == true), $"{tipo.Name} usa {usado.FullName}");
+            }
+    }
+
+    // C36: os testes das transições não usam banco nem HTTP, e cada método público das entidades aparece neles
+    [Fact]
+    public void Testes_de_dominio_sem_banco()
+    {
+        var publicos = new Dictionary<Type, string[]>
+        {
+            [typeof(Chamado)] = ["Abrir", "Assumir", "ResponderComoAluno", "ResponderComoEquipe", "Anotar", "Resolver", "Confirmar", "Rejeitar", "Cancelar", "Encaminhar", "Reclassificar", "MarcarDuplicado", "DevolverAFila"],
+            [typeof(Artigo)] = ["Criar", "NovaVersao", "Ativar", "Arquivar"],
+            [typeof(Documento)] = ["Criar", "NovaVersao", "Arquivar"],
+        };
+        foreach (var (entidade, metodos) in publicos)
+        {
+            var classe = entidade.Name + "DominioTests";
+            var texto = File.ReadAllText(Path.Combine(Raiz(), "api.Tests", classe + ".cs"));
+            Assert.Contains($"public class {classe}", texto);
+            foreach (var proibido in new[] { "OneFactory", "OneDb", "HttpClient" })
+                Assert.False(texto.Contains(proibido), $"{classe} usa {proibido}");
+            var declarados = entidade.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static
+                | System.Reflection.BindingFlags.DeclaredOnly).Where(m => !m.IsSpecialName).Select(m => m.Name);
+            Assert.Equal(metodos.Order(), declarados.Order());
+            foreach (var metodo in metodos) Assert.Contains($".{metodo}(", texto);
+        }
+    }
+
+    // C37: door 6, nenhuma migração por causa da mudança de pasta e de forma
+    [Fact]
+    public async Task Modelo_sem_mudanca_pendente()
+    {
+        Assert.False(await f.Db(null, db => Task.FromResult(db.Database.HasPendingModelChanges())));
+        foreach (var migracao in Directory.GetFiles(Path.Combine(Api, "Dados", "Migracoes"), "*DominioRico.cs"))
+            Assert.DoesNotContain("migrationBuilder.", SemComentarios(migracao));
+    }
+
+    // C38: door 7, os dois projetos de sempre e nenhum repositório sobre o EF
+    [Fact]
+    public void Dois_projetos_sem_repositorio()
+    {
+        var projetos = Regex.Matches(File.ReadAllText(Path.Combine(Raiz(), "One.slnx")), "<Project Path=\"([^\"]+)\"").Select(m => m.Groups[1].Value);
+        Assert.Equal(["api.Tests/One.Api.Tests.csproj", "api/One.Api.csproj"], projetos.Order(StringComparer.Ordinal));
+        IEnumerable<string> Csproj(string pasta) => Directory.GetFiles(pasta, "*.csproj").Concat(Directory.GetDirectories(pasta)
+            .Where(d => Path.GetFileName(d) is not ("bin" or "obj" or "node_modules" or ".git" or "target")).SelectMany(Csproj));
+        Assert.Equal(2, Csproj(Raiz()).Count());
+        Assert.DoesNotContain(typeof(Program).Assembly.GetTypes(), t => t.Name.Contains("Repositor"));
+    }
+
     // C24: as 9 ações do chamado e os 10 nomes de ação de PermissoesChamado
     [Fact]
     public void Nove_acoes_do_chamado()
