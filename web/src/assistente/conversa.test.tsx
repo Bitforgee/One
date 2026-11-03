@@ -243,6 +243,7 @@ describe('conversa com o assistente', () => {
     expect(caixa(balao('a', { doAluno: true }))).toHaveClass('rounded-2xl', 'rounded-br-sm')
     expect(caixa(balao('b'))).toHaveClass('rounded-2xl', 'rounded-bl-sm')
     expect(caixa(balao('c', { autor: 'Carla' }))).toHaveClass('rounded-2xl', 'rounded-bl-sm')
+    expect(caixa(balao('e', { autor: 'Carla', nota: true }))).toHaveClass('rounded-2xl', 'rounded-bl-sm')
     expect(caixa(balao('d', { doAluno: true }))).not.toHaveClass('rounded-bl-sm')
   })
 

@@ -121,6 +121,27 @@ describe('chamado', () => {
     expect(within(art).queryByRole('link')).not.toBeInTheDocument()
   })
 
+  // redesign-institucional C15 (## Screens linha 9): o trecho da fonte quebra como o balão, depois de / ? & = #
+  it('trecho da fonte quebra depois de / ? & = #', async () => {
+    const Trecho = 'https://portal.univag.edu.br/a?x=1&y=2#topo'
+    api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () => [
+        200,
+        daEquipe({
+          transcricao: [
+            { autor: 'ASSISTENTE', texto: 'Veja o portal.', criadaEm: '2026-11-02T12:00:05Z', fontes: [{ tipo: 'ARTIGO', versaoArtigoId: 7, versaoDocumentoId: null, titulo: 'Boleto', numero: 1, trechos: [Trecho], atualizado: false }] },
+          ],
+        }),
+      ],
+    })
+    abrir('/univag/chamados/ONE-1')
+    const resposta = (await screen.findByText('Veja o portal.')).closest('.is-user, .is-assistant') as HTMLElement
+    const citacao = resposta.querySelector('blockquote')!
+    expect(citacao.textContent).toBe(`“${Trecho}”`)
+    expect([...citacao.querySelectorAll('wbr')].map((w) => w.previousSibling?.textContent?.slice(-1))).toEqual(['/', '/', '/', '?', '=', '&', '=', '#'])
+  })
+
   // C41 (AC 31): o detalhe relê o chamado a cada 15 s; só o relógio dos intervalos é falso
   it('detalhe relê o chamado a cada 15 s', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })

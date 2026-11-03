@@ -81,19 +81,57 @@ test.describe('cabeçalho', () => {
     expect(await aluno.getByRole('dialog', { name: 'Menu' }).locator('a, button').allTextContents()).toEqual(['Assistente', 'Minhas solicitações', 'Sair'])
   })
 
+  // Os itens visíveis da barra (marca, instituição, links e botões) não se sobrepõem; os filhos dos <div> entram no lugar deles.
+  async function semSobreposicao(nav: Locator, onde: string) {
+    const itens = await nav.evaluate((n) => {
+      const abrir = (e: Element): Element[] => (e.tagName === 'DIV' ? [...e.children].flatMap(abrir) : [e])
+      return abrir(n.firstElementChild!).map((e) => ({ texto: e.textContent || e.getAttribute('aria-label'), ...e.getBoundingClientRect().toJSON() })).filter((c) => c.width > 0)
+    })
+    expect(itens.length, onde).toBeGreaterThanOrEqual(4)
+    const sobrepoe = (a: (typeof itens)[number], b: typeof a) => a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5
+    for (let i = 0; i < itens.length; i++)
+      for (let j = i + 1; j < itens.length; j++) expect(sobrepoe(itens[i], itens[j]), `${onde}: "${itens[i].texto}" x "${itens[j].texto}"`).toBe(false)
+  }
+
   // redesign-institucional (AD-027, door 3a): a partir de 1024 px o mesmo <nav> é a barra lateral de 240 px, sem "Mais"
-  for (const largura of [1024, 1280, 1536, 1920]) {
+  for (const [largura, altura] of [[1024, 740], [1280, 800], [1536, 800], [1920, 800]]) {
     test(`barra lateral a ${largura} px`, async ({ page }) => {
       await simularApi(page)
-      await page.setViewportSize({ width: largura, height: 800 })
+      await page.setViewportSize({ width: largura, height: altura })
       await page.goto('/univag/chamados/ONE-123')
       await page.getByText('Resumo gerado por IA').waitFor()
       const nav = page.getByRole('navigation')
       const barra = await caixa(nav)
       expect(Math.abs(barra.x), 'C8 à esquerda').toBeLessThanOrEqual(1)
       expect(Math.abs(barra.width - 240), 'C8 largura').toBeLessThanOrEqual(1)
-      expect(Math.abs(barra.height - 800), 'C8/C9 altura da janela, não 56 px').toBeLessThanOrEqual(1)
+      expect(Math.abs(barra.height - altura), 'C8/C9 altura da janela, não 56 px').toBeLessThanOrEqual(1)
+      // ## Screens linha 0: borda à direita e fundo --sidebar
+      expect(await nav.evaluate((e) => getComputedStyle(e).borderRightWidth), 'borda à direita').toBe('1px')
+      const [fundoBarra, fundoSidebar] = await nav.evaluate((e) => {
+          const amostra = document.createElement('div')
+          amostra.style.background = 'var(--sidebar)'
+          document.body.append(amostra)
+          const cor = getComputedStyle(amostra).backgroundColor
+          amostra.remove()
+          return [getComputedStyle(e).backgroundColor, cor]
+        })
+      expect(fundoBarra, 'fundo --sidebar').toBe(fundoSidebar)
+      expect(fundoBarra, 'o --sidebar não é o fundo da página').not.toBe(await page.evaluate(() => getComputedStyle(document.body).backgroundColor))
+      // marca e instituição no topo; o nome inteiro, em até 2 linhas, sem reticências (decisão do usuário de 03/11)
+      const marca = await caixa(nav.getByText('One', { exact: true }))
+      const nome = nav.getByTestId('instituicao')
+      const caixaNome = await caixa(nome)
+      expect(caixaNome.width, 'instituição visível').toBeGreaterThan(0)
+      expect(marca.y + marca.height, 'marca acima da instituição').toBeLessThanOrEqual(caixaNome.y + 1)
+      expect(await nome.evaluate((e) => e.scrollWidth <= e.clientWidth), 'instituição sem corte na largura').toBe(true)
+      const linhas = await nome.evaluate((e) => {
+        const c = getComputedStyle(e)
+        return Math.round((e.clientHeight - parseFloat(c.paddingTop) - parseFloat(c.paddingBottom)) / parseFloat(c.lineHeight))
+      })
+      expect(linhas, 'instituição em até 2 linhas').toBeLessThanOrEqual(2)
+      expect(await nome.evaluate((e) => getComputedStyle(e).whiteSpace), 'quebra em vez de reticências').toBe('normal')
       let fundoDoUltimo = 0
+      let anterior: { x: number; y: number; height: number } | null = null
       for (const rotulo of Links) {
         const link = nav.getByRole('link', { name: rotulo })
         await expect(link, `C8 ${rotulo}`).toBeVisible()
@@ -101,6 +139,13 @@ test.describe('cabeçalho', () => {
         expect(await link.locator('span').evaluate((e) => e.getBoundingClientRect().width), `C8 rótulo de ${rotulo}`).toBeGreaterThan(10)
         const c = await caixa(link)
         expect(c.x + c.width, `C8 ${rotulo} dentro da barra`).toBeLessThanOrEqual(241)
+        expect(Math.abs(c.height - 36), `${rotulo}: linha de 36 px`).toBeLessThanOrEqual(1)
+        expect(c.y, `${rotulo} abaixo da instituição`).toBeGreaterThanOrEqual(caixaNome.y + caixaNome.height - 1)
+        if (anterior) {
+          expect(Math.abs(c.x - anterior.x), `${rotulo}: mesma coluna`).toBeLessThanOrEqual(1)
+          expect(c.y, `${rotulo}: um por linha`).toBeGreaterThanOrEqual(anterior.y + anterior.height - 1)
+        }
+        anterior = c
         fundoDoUltimo = Math.max(fundoDoUltimo, c.y + c.height)
       }
       for (const nome of ['Tema', 'Sair']) {
@@ -113,9 +158,18 @@ test.describe('cabeçalho', () => {
       await expect(page.getByText('Mais', { exact: true }), 'C11').toHaveCount(0)
       expect(await page.evaluate(() => document.documentElement.scrollWidth), 'sem rolagem horizontal').toBeLessThanOrEqual(largura)
 
+      await semSobreposicao(nav, `${largura} px`)
+
       await page.evaluate(() => window.scrollTo(0, 300))
       expect(await page.evaluate(() => window.scrollY), 'C13 a página rolou').toBe(300)
       expect(Math.abs((await caixa(nav)).y), 'C13 barra fixa no topo').toBeLessThanOrEqual(1)
+
+      // link ativo em bg-primary-subtle e font-medium (## Screens linha 0)
+      await page.goto('/univag/fila')
+      const fila = nav.getByRole('link', { name: 'Fila' })
+      await expect(fila).toHaveAttribute('aria-current', 'page')
+      expect(await fila.evaluate((e) => getComputedStyle(e).fontWeight), 'ativo em font-medium').toBe('500')
+      expect(await nav.getByRole('link', { name: 'Artigos' }).evaluate((e) => getComputedStyle(e).fontWeight), 'inativo').toBe('400')
     })
   }
 
@@ -129,6 +183,8 @@ test.describe('cabeçalho', () => {
       const barra = await caixa(nav)
       expect(Math.abs(barra.width - largura), 'C10 largura da janela').toBeLessThanOrEqual(1)
       expect(Math.abs(barra.height - 56), 'C10 56 px').toBeLessThanOrEqual(1)
+      expect((await caixa(nav.getByTestId('instituicao'))).width, 'nome da instituição').toBeGreaterThan(0)
+      await semSobreposicao(nav, `${largura} px`)
       for (const rotulo of Links) await expect(nav.getByRole('link', { name: rotulo }), `C10 ${rotulo} só na gaveta`).toBeHidden()
       await expect(page.getByText('Mais', { exact: true }), 'C11').toHaveCount(0)
       await nav.getByRole('button', { name: 'Menu' }).click()

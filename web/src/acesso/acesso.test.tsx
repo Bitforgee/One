@@ -148,6 +148,10 @@ describe('acesso', () => {
     localStorage.clear()
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
+    // redesign-institucional (## Screens linha 0): os temas nesta ordem
+    await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
+    expect(within(document.querySelector('[data-slot=popover-content]') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Claro', 'Escuro', 'Preto', 'Sistema'])
+    await userEvent.keyboard('{Escape}')
     // redesign-institucional C3 (AC 3, door 1): Preto grava black e põe dark e black
     for (const [rotulo, valor, classes] of [['Escuro', 'dark', ['dark']], ['Claro', 'light', ['light']], ['Preto', 'black', ['dark', 'black']], ['Sistema', 'system', ['light']]] as const) {
       await escolherTema(rotulo)
