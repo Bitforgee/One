@@ -369,3 +369,41 @@ test.describe('acesso', () => {
     expect((await caixa(page.locator('main > div').first())).width).toBeLessThanOrEqual(420)
   })
 })
+
+const naMesmaLinha = (a: { y: number }, b: { y: number }) => Math.abs(a.y - b.y) <= 4
+
+test.describe('conhecimento', () => {
+  // C80 (## Screens linhas 10 e 11)
+  test('arranjo Artigos e Documentos', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 360, height: 740 })
+    for (const [caminho, titulo, botao, cartao] of [
+      ['/univag/artigos', 'Artigos', /Novo/, 'Como emitir a segunda via'],
+      ['/univag/documentos', 'Documentos', /Enviar PDF/, 'Regulamento do estágio'],
+    ] as const) {
+      await page.goto(caminho)
+      const item = page.locator('[data-slot=card]').filter({ hasText: cartao })
+      await item.waitFor()
+      const h1 = await caixa(page.getByRole('heading', { name: titulo }))
+      expect(naMesmaLinha(h1, await caixa(page.getByRole('button', { name: botao }))), caminho).toBe(true)
+      const nome = await caixa(item.locator('strong'))
+      for (const selo of await item.locator('[data-slot=badge]').all()) expect(naMesmaLinha(nome, await caixa(selo)), caminho).toBe(true)
+    }
+
+    await page.goto('/univag/artigos')
+    await page.getByRole('button', { name: /Novo/ }).click()
+    const dialogo = page.getByRole('dialog')
+    await dialogo.waitFor()
+    const de = await caixa(page.getByLabel('Válido de (opcional)'))
+    const ate = await caixa(page.getByLabel('Válido até (opcional)'))
+    const calendario = await caixa(page.getByRole('button', { name: 'Escolher validade no calendário' }))
+    expect(naMesmaLinha(de, ate)).toBe(true)
+    expect(calendario.y).toBeGreaterThanOrEqual(Math.max(de.y + de.height, ate.y + ate.height) - 1)
+    const resposta = page.getByRole('textbox', { name: 'Resposta' })
+    const alturaDaLinha = await resposta.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
+    expect((await caixa(resposta)).height).toBeGreaterThanOrEqual(6 * alturaDaLinha - 1)
+
+    await page.setViewportSize({ width: 1024, height: 740 })
+    expect(Math.abs((await caixa(dialogo)).width - 512)).toBeLessThanOrEqual(1)
+  })
+})

@@ -1,9 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Paperclip } from 'lucide-react'
 import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
-import { useDropzone } from 'react-dropzone'
 import { useParams } from 'react-router'
 import { api, ErroApi } from '../api'
+import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
 import { Opcoes } from '../Opcoes'
 import { useSessao } from '../sessao'
@@ -56,25 +55,6 @@ function SelecaoPronta({ nota, prontas, setTexto }: { nota: boolean; prontas: Pr
         </NativeSelectOption>
       ))}
     </NativeSelect>
-  )
-}
-
-// Área do Dropzone em volta do campo de arquivo nativo, que continua achado pelo rótulo (door 11).
-function CampoAnexos({ arquivos, setArquivos }: { arquivos: File[]; setArquivos: (a: File[]) => void }) {
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop: (aceitos) => setArquivos(aceitos), noClick: true })
-  return (
-    <div {...getRootProps({ className: `flex flex-col gap-2 rounded-md border border-dashed px-3 py-2 ${isDragActive ? 'bg-accent' : ''}` })}>
-      <Label htmlFor="anexos" className="cursor-pointer">
-        <Paperclip aria-hidden="true" className="size-4" />
-        Anexos (PDF, JPG ou PNG, até 10 MB cada)
-      </Label>
-      <input {...getInputProps({ id: 'anexos', 'aria-label': undefined, style: undefined, className: 'sr-only', accept: '.pdf,.jpg,.jpeg,.png' })} />
-      {arquivos.map((a, i) => (
-        <div key={i} className="text-sm break-all">
-          {a.name}
-        </div>
-      ))}
-    </div>
   )
 }
 
@@ -137,7 +117,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
       <Textarea id="resposta" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
-      {!nota && <CampoAnexos key={String(envio)} arquivos={arquivos} setArquivos={setArquivos} />}
+      {!nota && <CampoArquivo key={String(envio)} id="anexos" rotulo="Anexos (PDF, JPG ou PNG, até 10 MB cada)" accept=".pdf,.jpg,.jpeg,.png" arquivos={arquivos} setArquivos={setArquivos} />}
       <MarcasDaEquipe equipe={equipe} nota={nota} pode={pode} setNota={setNota} aguardaAluno={aguardaAluno} setAguardaAluno={setAguardaAluno} />
       <BotaoAcao type="submit" pendente={pendente} className="self-start" disabled={semEnvio(texto, nota, pode('responder'))}>
         Enviar

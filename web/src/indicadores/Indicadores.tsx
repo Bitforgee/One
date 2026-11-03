@@ -1,17 +1,13 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
-import { CalendarDays } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
-import type { DateRange } from 'react-day-picker'
-import { ptBR } from 'react-day-picker/locale'
 import { api } from '../api'
+import { dia, Periodo } from '../Periodo'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
-import { Calendar } from '../ui/calendar'
 import { Card } from '../ui/card'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Spinner } from '../ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
@@ -38,7 +34,6 @@ type Indicadores = {
   indicadorPrincipal: number | null
 }
 
-const dia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 1000) / 10}%`.replace('.', ','))
 const horas = (v: number | null) => (v === null ? '—' : `${String(v).replace('.', ',')} h`)
 const num = (v: number | null) => (v === null ? '—' : String(v))
@@ -116,30 +111,6 @@ function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[
   )
 }
 
-// O calendário só escreve "De" e "Até"; a consulta continua só no "Consultar" (door 15). Cada abertura começa
-// uma escolha nova: o primeiro dia escolhido é o "De" e o segundo, o "Até".
-function Periodo({ setDe, setAte }: { setDe: (d: string) => void; setAte: (d: string) => void }) {
-  const [faixa, setFaixa] = useState<DateRange>()
-  function escolher(r?: DateRange) {
-    setFaixa(r)
-    if (r?.from) setDe(dia(r.from))
-    if (r?.to) setAte(dia(r.to))
-  }
-  return (
-    <Popover onOpenChange={() => setFaixa(undefined)}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="h-auto min-h-9 flex-1 whitespace-normal md:flex-none">
-          <CalendarDays aria-hidden="true" />
-          Escolher período no calendário
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="range" locale={ptBR} selected={faixa} onSelect={escolher} />
-      </PopoverContent>
-    </Popover>
-  )
-}
-
 // Os 13 cartões, "Indicador principal" primeiro e nas 2 colunas, e os rankings que a API manda.
 function Painel({ dados }: { dados: Indicadores }) {
   const rankings = [
@@ -199,7 +170,7 @@ export function Indicadores() {
           <Input id="ate" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
         <div className="col-span-2 flex items-start gap-2">
-          <Periodo setDe={setDe} setAte={setAte} />
+          <Periodo rotulo="Escolher período no calendário" className="h-auto min-h-9 flex-1 whitespace-normal md:flex-none" setDe={setDe} setAte={setAte} />
           <Button type="submit" disabled={isFetching}>
             {isFetching && <Spinner />}
             Consultar

@@ -31,11 +31,11 @@ describe('documentos', () => {
 
     lista = [documento(1, 'Regulamento de estágio', 'INDEXADO', 12), documento(2, 'Calendário', 'PENDENTE', 1)]
     abrir('/univag/documentos')
-    const item = (await screen.findByText('Regulamento de estágio')).closest('.list-group-item') as HTMLElement
+    const item = (await screen.findByText('Regulamento de estágio')).closest('[data-slot=card]') as HTMLElement
     expect(within(item).getByText('ATIVO')).toBeInTheDocument()
     expect(within(item).getByText('Indexado')).toBeInTheDocument()
     expect(item).toHaveTextContent('Estágio · versão 2 · 12 páginas · Regulamento de estágio.pdf')
-    const outro = screen.getByText('Calendário').closest('.list-group-item') as HTMLElement
+    const outro = screen.getByText('Calendário').closest('[data-slot=card]') as HTMLElement
     expect(within(outro).getByText('Indexando')).toBeInTheDocument()
     expect(outro).toHaveTextContent('1 página')
 
@@ -64,7 +64,7 @@ describe('documentos', () => {
     })
     abrir('/univag/artigos')
 
-    const de = async (titulo: string) => (await screen.findByText(titulo)).closest('.list-group-item') as HTMLElement
+    const de = async (titulo: string) => (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
     expect(within(await de('Indexado já')).getByText('Indexado')).toBeInTheDocument()
     expect(within(await de('Recém ativado')).getByText('Indexando')).toBeInTheDocument()
     expect(within(await de('Sem sucesso')).getByText('Falhou')).toBeInTheDocument()

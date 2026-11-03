@@ -75,6 +75,13 @@ describe('interface nova', () => {
     for (const proibido of ['ai', '@ai-sdk/react', 'streamdown', 'next-themes']) expect(todas, proibido).not.toHaveProperty([proibido])
   })
 
+  // C76 (door 14)
+  it('pacotes do Tiptap', () => {
+    for (const nome of ['@tiptap/react', '@tiptap/pm', '@tiptap/extension-document', '@tiptap/extension-paragraph', '@tiptap/extension-text', '@tiptap/extensions'])
+      expect(todas[nome], nome).toMatch(/^\d+\.\d+\.\d+$/)
+    expect(todas).not.toHaveProperty(['@tiptap/starter-kit'])
+  })
+
   it('configuração do Tailwind e do shadcn', () => {
     expect(semEspacos(vite)).toContain('plugins:[react(),tailwindcss(),VitePWA(')
     expect(vite).toMatch(/alias:\s*\{\s*'@':\s*path\.resolve\(__dirname,\s*'\.\/src'\)\s*\}/)
