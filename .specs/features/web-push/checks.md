@@ -40,190 +40,190 @@ só as 7 fatias e `Dados`); o comando de linha é uma classe de fatia chamada de
 
 ### S1 - Subscrição, tabelas, rotas e configuração (P1) · ~20 files · ~215 KB · ~58k
 
-**C1** - [ ] A suíte inteira da API passa em cada commit desta feature; a única edição em asserção existente é a de número que as entidades e rotas novas movem (C11, C12, C13, `Tabela_de_rotas_igual_a_da_base`) (AC 9)
+**C1** - [x] A suíte inteira da API passa em cada commit desta feature; a única edição em asserção existente é a de número que as entidades e rotas novas movem (C11, C12, C13, `Tabela_de_rotas_igual_a_da_base`) (AC 9)
 Proof: `dotnet test api.Tests`
 
-**C2** - `GET /api/push/chave` com o cookie de um aluno e `Push:ChavePublica` e `Push:ChavePrivada` preenchidas responde `200` com o corpo JSON de uma só chave, `chavePublica`, igual à configurada (AC 1)
+**C2** - [x] `GET /api/push/chave` com o cookie de um aluno e `Push:ChavePublica` e `Push:ChavePrivada` preenchidas responde `200` com o corpo JSON de uma só chave, `chavePublica`, igual à configurada (AC 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_200_com_a_chave_configurada"`
 
-**C3** - Sem o par completo o push está desligado: `GET /api/push/chave` e `POST /api/push/subscricao` respondem `404` em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada), 6 pedidos; `DELETE /api/push/subscricao` continua `204` com as duas vazias (AC 2)
+**C3** - [x] Sem o par completo o push está desligado: `GET /api/push/chave` e `POST /api/push/subscricao` respondem `404` em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada), 6 pedidos; `DELETE /api/push/subscricao` continua `204` com as duas vazias (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Sem_par_completo_404_nas_duas_rotas"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Delete_204_mesmo_sem_chaves"`
 
-**C4** - `POST /api/push/subscricao` com `endpoint` https, `chaves.p256dh` e `chaves.auth` responde `204` sem corpo e grava 1 `SubscricaoPush` com `usuario_id` e `instituicao_id` do cookie e as duas chaves enviadas (AC 3)
+**C4** - [x] `POST /api/push/subscricao` com `endpoint` https, `chaves.p256dh` e `chaves.auth` responde `204` sem corpo e grava 1 `SubscricaoPush` com `usuario_id` e `instituicao_id` do cookie e as duas chaves enviadas (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Post_204_grava_usuario_e_instituicao_do_cookie"`
 
-**C5** - `POST /api/push/subscricao` responde `400` com o corpo `ProblemDetails` do app (`status` 400, `title` "Requisição inválida", `detail` não vazio) e não grava linha, em 6 entradas: endpoint `http://...`, endpoint com 2049 caracteres, endpoint ausente, `p256dh` ausente, `auth` ausente, objeto `chaves` ausente; com endpoint de exatamente 2048 caracteres responde `204` (AC 4)
+**C5** - [x] `POST /api/push/subscricao` responde `400` com o corpo `ProblemDetails` do app (`status` 400, `title` "Requisição inválida", `detail` não vazio) e não grava linha, em 6 entradas: endpoint `http://...`, endpoint com 2049 caracteres, endpoint ausente, `p256dh` ausente, `auth` ausente, objeto `chaves` ausente; com endpoint de exatamente 2048 caracteres responde `204` (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Post_400_nas_entradas_invalidas"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Post_204_com_endpoint_de_2048_caracteres"`
 
-**C6** - `POST` de um `endpoint` que já existe mantém uma só linha para ele e troca o dono e as chaves, em 3 casos: do mesmo usuário (chaves novas, sem duplicar), de outro usuário da mesma instituição e de usuário de outra instituição (a linha passa a ter o `usuario_id` e o `instituicao_id` do cookie) (AC 5, door 2)
+**C6** - [x] `POST` de um `endpoint` que já existe mantém uma só linha para ele e troca o dono e as chaves, em 3 casos: do mesmo usuário (chaves novas, sem duplicar), de outro usuário da mesma instituição e de usuário de outra instituição (a linha passa a ter o `usuario_id` e o `instituicao_id` do cookie) (AC 5, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Post_de_endpoint_existente_move_a_linha"`
 
-**C7** - Ao gravar a 11ª subscrição de um usuário a mais antiga dele, pela data do último `POST` dela (`registrada_em`, atualizada a cada `POST`, de modo que a linha recém-gravada nunca é a apagada), é apagada e ficam 10; com 10 nada é apagado; as subscrições de outro usuário não mudam (AC 6, door 2)
+**C7** - [x] Ao gravar a 11ª subscrição de um usuário a mais antiga dele, pela data do último `POST` dela (`registrada_em`, atualizada a cada `POST`, de modo que a linha recém-gravada nunca é a apagada), é apagada e ficam 10; com 10 nada é apagado; as subscrições de outro usuário não mudam (AC 6, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Post_11a_subscricao_apaga_a_mais_antiga"`
 
-**C8** - `DELETE /api/push/subscricao` responde `204` em 4 casos e só apaga a linha do próprio usuário: endpoint seu (a linha some), endpoint que não existe, endpoint de outro usuário da mesma instituição (a linha dele fica), endpoint de usuário de outra instituição (a linha dele fica) (AC 7, AC 9)
+**C8** - [x] `DELETE /api/push/subscricao` responde `204` em 4 casos e só apaga a linha do próprio usuário: endpoint seu (a linha some), endpoint que não existe, endpoint de outro usuário da mesma instituição (a linha dele fica), endpoint de usuário de outra instituição (a linha dele fica) (AC 7, AC 9)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Delete_204_nos_quatro_casos"`
 
-**C9** - `DELETE /api/push/subscricao` responde `400` com o `ProblemDetails` do app e não apaga nada quando o `endpoint` falta ou é vazio, 2 pedidos (Surface)
+**C9** - [x] `DELETE /api/push/subscricao` responde `400` com o `ProblemDetails` do app e não apaga nada quando o `endpoint` falta ou é vazio, 2 pedidos (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Delete_400_sem_endpoint"`
 
-**C10** - Sem cookie válido as 3 rotas respondem `401`, com as chaves configuradas (AC 8)
+**C10** - [x] Sem cookie válido as 3 rotas respondem `401`, com as chaves configuradas (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Sem_cookie_401_nas_tres_rotas"`
 
-**C11** - A tabela de rotas ganha exatamente 3 linhas e perde nenhuma: `api.Tests/Retratos/rotas.txt` recebe, contíguas e nesta ordem, imediatamente antes das duas linhas de fallback, `GET /api/push/chave anonimo=False autorizacao=True limite=-`, `POST /api/push/subscricao anonimo=False autorizacao=True limite=-` e `DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-`; em `RetratoTests.Tabela_de_rotas_igual_a_da_base` os três números sobem em 3 (total N + 3, com N = 61; rotas de um só método N + 3, com N = 59; com autorização N + 3, com N = 59) e nenhuma outra asserção muda (Surface)
+**C11** - [x] A tabela de rotas ganha exatamente 3 linhas e perde nenhuma: `api.Tests/Retratos/rotas.txt` recebe, contíguas e nesta ordem, imediatamente antes das duas linhas de fallback, `GET /api/push/chave anonimo=False autorizacao=True limite=-`, `POST /api/push/subscricao anonimo=False autorizacao=True limite=-` e `DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-`; em `RetratoTests.Tabela_de_rotas_igual_a_da_base` os três números sobem em 3 (total N + 3, com N = 61; rotas de um só método N + 3, com N = 59; com autorização N + 3, com N = 59) e nenhuma outra asserção muda (Surface)
 Proof: `! git diff <base> HEAD -- api.Tests/Retratos/rotas.txt | grep -q '^-[^-]'`
 Proof: `test "$(git diff <base> HEAD -- api.Tests/Retratos/rotas.txt | grep -c '^+[^+]')" -eq 3`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
-**C12** - Toda tabela do modelo, as 2 novas incluídas, tem `instituicao_id` `bigint` não nulo, chave estrangeira para `instituicao` e filtro global: `subscricao_push` e `push_saida` entram em `TabelasDaInstituicao` (N + 2 tabelas, N = 23) (AC 9, AD-008)
+**C12** - [x] Toda tabela do modelo, as 2 novas incluídas, tem `instituicao_id` `bigint` não nulo, chave estrangeira para `instituicao` e filtro global: `subscricao_push` e `push_saida` entram em `TabelasDaInstituicao` (N + 2 tabelas, N = 23) (AC 9, AD-008)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 
-**C13** - O modelo passa a ter N + 2 tipos de entidade (N = 24): `SubscricaoPush` e `PushSaida` ficam em `api/Dados/Push/<Tipo>.cs`, um tipo por arquivo, namespace `One.Api.Dados.Push`, a pasta `Push` entra em `EntidadesPorPasta` e o `<Using Include="One.Api.Dados.Push" />` entra em `api/One.Api.csproj` e em `api.Tests/One.Api.Tests.csproj` (AD-024, door 2, door 3)
+**C13** - [x] O modelo passa a ter N + 2 tipos de entidade (N = 24): `SubscricaoPush` e `PushSaida` ficam em `api/Dados/Push/<Tipo>.cs`, um tipo por arquivo, namespace `One.Api.Dados.Push`, a pasta `Push` entra em `EntidadesPorPasta` e o `<Using Include="One.Api.Dados.Push" />` entra em `api/One.Api.csproj` e em `api.Tests/One.Api.Tests.csproj` (AD-024, door 2, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Uma_entidade_por_arquivo_por_agregado"`
 
-**C14** - No banco, `subscricao_push.endpoint` é único na tabela inteira (a segunda linha com o mesmo endpoint, de outra instituição, viola o índice); apagar a `SubscricaoPush` apaga em cascata as suas `PushSaida`; as colunas das tabelas são exatamente as 7 de `subscricao_push` (`id`, `instituicao_id`, `usuario_id`, `endpoint`, `p256dh`, `auth`, `registrada_em`) e as 7 de `push_saida` (`id`, `instituicao_id`, `subscricao_id`, `chamado_id`, `tentativas`, `proxima_tentativa`, `enviado_em`), sem coluna de texto do aviso (door 2, door 3)
+**C14** - [x] No banco, `subscricao_push.endpoint` é único na tabela inteira (a segunda linha com o mesmo endpoint, de outra instituição, viola o índice); apagar a `SubscricaoPush` apaga em cascata as suas `PushSaida`; as colunas das tabelas são exatamente as 7 de `subscricao_push` (`id`, `instituicao_id`, `usuario_id`, `endpoint`, `p256dh`, `auth`, `registrada_em`) e as 7 de `push_saida` (`id`, `instituicao_id`, `subscricao_id`, `chamado_id`, `tentativas`, `proxima_tentativa`, `enviado_em`), sem coluna de texto do aviso (door 2, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushBancoTests.Endpoint_unico_no_banco"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushBancoTests.Push_saida_some_com_a_subscricao"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushBancoTests.Colunas_das_duas_tabelas"`
 
-**C15** - As duas entidades decidem pelos próprios métodos, sem setter público (AD-024): `SubscricaoPush.Registrar` guarda usuário, instituição, endpoint e chaves; `SubscricaoPush.Reatribuir` troca usuário, instituição e chaves e deixa o endpoint; `PushSaida.RegistrarFalha(agora)` faz `Tentativas` subir 1 e `ProximaTentativa = agora + 2^Tentativas minutos`, nas 5 falhas seguidas (2, 4, 8, 16 e 32 minutos); `PushSaida.Concluir(agora)` grava `EnviadoEm = agora`; por reflexão nenhuma propriedade pública das duas tem setter público (door 3)
+**C15** - [x] As duas entidades decidem pelos próprios métodos, sem setter público (AD-024): `SubscricaoPush.Registrar` guarda usuário, instituição, endpoint e chaves; `SubscricaoPush.Reatribuir` troca usuário, instituição e chaves e deixa o endpoint; `PushSaida.RegistrarFalha(agora)` faz `Tentativas` subir 1 e `ProximaTentativa = agora + 2^Tentativas minutos`, nas 5 falhas seguidas (2, 4, 8, 16 e 32 minutos); `PushSaida.Concluir(agora)` grava `EnviadoEm = agora`; por reflexão nenhuma propriedade pública das duas tem setter público (door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushDominioTests.Registrar_e_reatribuir_trocam_so_o_que_devem"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushDominioTests.Falha_agenda_2_elevado_a_n_minutos"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushDominioTests.Concluir_grava_enviado_em"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushDominioTests.Sem_setter_publico"`
 
-**C16** - O comando `push chaves` (chamado de `Program.cs`; `dotnet run --project api -- push chaves`) imprime em `saida` exatamente 2 linhas, `PUSH_CHAVE_PUBLICA=<valor>` e `PUSH_CHAVE_PRIVADA=<valor>`, e sai 0; a pública decodifica de base64url para 65 bytes começando em `0x04` e a privada para 32 bytes; duas execuções dão pares diferentes; qualquer outro argumento escreve `uso: push chaves` em `erro` e sai 1 (door 6)
+**C16** - [x] O comando `push chaves` (chamado de `Program.cs`; `dotnet run --project api -- push chaves`) imprime em `saida` exatamente 2 linhas, `PUSH_CHAVE_PUBLICA=<valor>` e `PUSH_CHAVE_PRIVADA=<valor>`, e sai 0; a pública decodifica de base64url para 65 bytes começando em `0x04` e a privada para 32 bytes; duas execuções dão pares diferentes; qualquer outro argumento escreve `uso: push chaves` em `erro` e sai 1 (door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushComandoTests.Imprime_par_vapid_decodificavel"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushComandoTests.Dois_pares_diferem"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushComandoTests.Argumento_desconhecido_sai_1"`
 
-**C17** - Cada chave `Push:ChavePublica`, `Push:ChavePrivada` e `Push:Assunto` é lida num só lugar do código do `api/` (3 chaves, 1 leitura cada), no padrão de `Configuracao_lida_em_um_lugar` (door 6)
+**C17** - [x] Cada chave `Push:ChavePublica`, `Push:ChavePrivada` e `Push:Assunto` é lida num só lugar do código do `api/` (3 chaves, 1 leitura cada), no padrão de `Configuracao_lida_em_um_lugar` (door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Push_configuracao_lida_em_um_lugar"`
 
-**C18** - O `docker-compose.yml` repassa ao serviço `api` as 3 variáveis, `Push__ChavePublica: ${PUSH_CHAVE_PUBLICA:-}`, `Push__ChavePrivada: ${PUSH_CHAVE_PRIVADA:-}` e `Push__Assunto: ${PUSH_ASSUNTO:-}`; nenhum `appsettings*.json` versionado traz valor não vazio em `Push:ChavePrivada`; `.env` segue em `.gitignore` (door 6)
+**C18** - [x] O `docker-compose.yml` repassa ao serviço `api` as 3 variáveis, `Push__ChavePublica: ${PUSH_CHAVE_PUBLICA:-}`, `Push__ChavePrivada: ${PUSH_CHAVE_PRIVADA:-}` e `Push__Assunto: ${PUSH_ASSUNTO:-}`; nenhum `appsettings*.json` versionado traz valor não vazio em `Push:ChavePrivada`; `.env` segue em `.gitignore` (door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Push_chaves_fora_do_git"`
 
-**C19** - `.specs/GLOSSARIO.md` lista os termos novos `SubscricaoPush` e `PushSaida`, cada um numa linha de tabela com significado de pelo menos 10 caracteres (Impact, domain)
+**C19** - [x] `.specs/GLOSSARIO.md` lista os termos novos `SubscricaoPush` e `PushSaida`, cada um numa linha de tabela com significado de pelo menos 10 caracteres (Impact, domain)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Glossario_lista_subscricao_e_push_saida"`
 
 ### S2 - Os mesmos eventos do e-mail enfileiram push (P1) · ~6 files · ~50 KB · ~13k
 
-**C20** - Em cada uma das 5 origens que já enfileiram e-mail do solicitante, a mesma transação cria também 1 `PushSaida` por `SubscricaoPush` dele (aluno com 2 subscrições dá 2 linhas), com o `chamado_id` do chamado e `ProximaTentativa` igual ao relógio: `ResponderChamado` -> `Avisos.NovaResposta`, `MarcarDuplicado` -> `Avisos.NovaResposta`, `ResolverChamado` -> `Avisos.Resolvido`, `Agendador.ResolverSemResposta` -> `Avisos.Resolvido`, `Agendador.Lembrar` -> `Avisos.AguardaResposta`; o `EmailSaida` de cada uma continua criado, 1 por origem (AC 10)
+**C20** - [x] Em cada uma das 5 origens que já enfileiram e-mail do solicitante, a mesma transação cria também 1 `PushSaida` por `SubscricaoPush` dele (aluno com 2 subscrições dá 2 linhas), com o `chamado_id` do chamado e `ProximaTentativa` igual ao relógio: `ResponderChamado` -> `Avisos.NovaResposta`, `MarcarDuplicado` -> `Avisos.NovaResposta`, `ResolverChamado` -> `Avisos.Resolvido`, `Agendador.ResolverSemResposta` -> `Avisos.Resolvido`, `Agendador.Lembrar` -> `Avisos.AguardaResposta`; o `EmailSaida` de cada uma continua criado, 1 por origem (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAvisosTests.Cinco_origens_enfileiram_push_por_aparelho"`
 
-**C21** - O e-mail é criado e nenhuma `PushSaida` nasce em 2 casos: o solicitante não tem subscrição; o solicitante tem subscrição mas `Push:ChavePrivada` está vazia (AC 11)
+**C21** - [x] O e-mail é criado e nenhuma `PushSaida` nasce em 2 casos: o solicitante não tem subscrição; o solicitante tem subscrição mas `Push:ChavePrivada` está vazia (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAvisosTests.Sem_subscricao_ou_sem_chaves_so_email"`
 
-**C22** - Se a transação do evento falha (um gatilho do banco recusa o `INSERT` em `push_saida`, no padrão de `Falha_num_item_segue_os_outros`), o pedido responde `500`, e não existe `EmailSaida`, `PushSaida` nem mensagem do atendente criados por ela (AC 12)
+**C22** - [x] Se a transação do evento falha (um gatilho do banco recusa o `INSERT` em `push_saida`, no padrão de `Falha_num_item_segue_os_outros`), o pedido responde `500`, e não existe `EmailSaida`, `PushSaida` nem mensagem do atendente criados por ela (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAvisosTests.Falha_na_transacao_nao_deixa_email_nem_push"`
 
-**C23** - Só o solicitante é avisado: quando o atendente responde, resolve ou marca duplicado, as `PushSaida` criadas pertencem só às subscrições do solicitante; uma subscrição do próprio atendente e uma de outro aluno da mesma instituição recebem 0 (AC 13)
+**C23** - [x] Só o solicitante é avisado: quando o atendente responde, resolve ou marca duplicado, as `PushSaida` criadas pertencem só às subscrições do solicitante; uma subscrição do próprio atendente e uma de outro aluno da mesma instituição recebem 0 (AC 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAvisosTests.So_o_solicitante_recebe"`
 
 ### S3 - O agendador envia, repete e limpa (P1) · ~9 files · ~120 KB · ~30k
 
-**C24** - `api/One.Api.csproj` referencia `WebPush` na versão `1.0.13` e nenhuma outra biblioteca de push (door 1)
+**C24** - [x] `api/One.Api.csproj` referencia `WebPush` na versão `1.0.13` e nenhuma outra biblioteca de push (door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Pacote_webpush_fixo"`
 
-**C25** - `Agendador.Ler` devolve o item `push` só da `PushSaida` pendente: lida a vencida com `EnviadoEm` nulo e 0 tentativas, lida a com 4 tentativas; não lidas a de `ProximaTentativa` no futuro, a com `EnviadoEm` preenchido e a com 5 tentativas (5 linhas, 2 lidas, 3 não) (AC 14, door 3)
+**C25** - [x] `Agendador.Ler` devolve o item `push` só da `PushSaida` pendente: lida a vencida com `EnviadoEm` nulo e 0 tentativas, lida a com 4 tentativas; não lidas a de `ProximaTentativa` no futuro, a com `EnviadoEm` preenchido e a com 5 tentativas (5 linhas, 2 lidas, 3 não) (AC 14, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Le_so_pendente_vencida_com_menos_de_5_tentativas"`
 
-**C26** - Com o enviador simulado, `Agendador.Executar` sobre 1 `PushSaida` pendente faz exatamente 1 chamada com o `endpoint`, o `p256dh` e o `auth` da subscrição e o payload da door 4, e grava `EnviadoEm` igual ao relógio; um segundo `Executar` não chama de novo (AC 14)
+**C26** - [x] Com o enviador simulado, `Agendador.Executar` sobre 1 `PushSaida` pendente faz exatamente 1 chamada com o `endpoint`, o `p256dh` e o `auth` da subscrição e o payload da door 4, e grava `EnviadoEm` igual ao relógio; um segundo `Executar` não chama de novo (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Envia_ao_endpoint_com_as_chaves_e_marca_enviado"`
 
-**C27** - Para o chamado `ONE-12` da instituição de slug `univag`, o payload enviado é exatamente a string `{"titulo":"One","corpo":"Seu chamado ONE-12 foi atualizado.","url":"/univag/chamados/ONE-12"}`, com 3 chaves, e não contém nenhum de 5 dados do cenário: nome do aluno, e-mail, CPF, texto de uma mensagem e assunto do chamado (AC 15, door 4)
+**C27** - [x] Para o chamado `ONE-12` da instituição de slug `univag`, o payload enviado é exatamente a string `{"titulo":"One","corpo":"Seu chamado ONE-12 foi atualizado.","url":"/univag/chamados/ONE-12"}`, com 3 chaves, e não contém nenhum de 5 dados do cenário: nome do aluno, e-mail, CPF, texto de uma mensagem e assunto do chamado (AC 15, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Payload_exato_sem_dado_pessoal"`
 
-**C28** - Quando o enviador falha com status `404` ou `410` a `SubscricaoPush` é apagada com todas as suas `PushSaida` (as de outros chamados também) e um segundo ciclo não chama o enviador; 2 casos (AC 16)
+**C28** - [x] Quando o enviador falha com status `404` ou `410` a `SubscricaoPush` é apagada com todas as suas `PushSaida` (as de outros chamados também) e um segundo ciclo não chama o enviador; 2 casos (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Status_404_e_410_apagam_a_subscricao"`
 
-**C29** - Qualquer outra falha (status `500`, `429`, `403`, ou exceção sem status) soma 1 em `Tentativas` e define `ProximaTentativa = agora + 2^Tentativas minutos`: 2, 4, 8, 16 e 32 minutos nas 5 falhas seguidas, com 1 `LogWarning` por falha das 4 primeiras; na 5ª o agendador registra 1 `LogError` com a instituição e o id da linha e, 1 dia depois, não lê mais a linha; a subscrição fica (AC 17)
+**C29** - [x] Qualquer outra falha (status `500`, `429`, `403`, ou exceção sem status) soma 1 em `Tentativas` e define `ProximaTentativa = agora + 2^Tentativas minutos`: 2, 4, 8, 16 e 32 minutos nas 5 falhas seguidas, com 1 `LogWarning` por falha das 4 primeiras; na 5ª o agendador registra 1 `LogError` com a instituição e o id da linha e, 1 dia depois, não lê mais a linha; a subscrição fica (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Outras_falhas_repetem_e_desistem_na_quinta"`
 
-**C30** - Uma `PushSaida` marcada como enviada depois de `Agendador.Ler` e antes de `Agendador.Processar` não chama o enviador (0 chamadas) e `EnviadoEm` fica como estava (AC 18)
+**C30** - [x] Uma `PushSaida` marcada como enviada depois de `Agendador.Ler` e antes de `Agendador.Processar` não chama o enviador (0 chamadas) e `EnviadoEm` fica como estava (AC 18)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Enviada_entre_a_leitura_e_o_processamento_nao_reenvia"`
 
-**C31** - Um push que falha e um push que demora não impedem o resto do ciclo: no mesmo `Executar`, com o 1º push lançando exceção, o 2º push, 1 e-mail e 1 conversa parada são processados (4 efeitos); com o enviador pendurado, o envio é cancelado quando o relógio avança 30 s, conta como falha (`Tentativas` 1) e o resto do ciclo roda (AC 19)
+**C31** - [x] Um push que falha e um push que demora não impedem o resto do ciclo: no mesmo `Executar`, com o 1º push lançando exceção, o 2º push, 1 e-mail e 1 conversa parada são processados (4 efeitos); com o enviador pendurado, o envio é cancelado quando o relógio avança 30 s, conta como falha (`Tentativas` 1) e o resto do ciclo roda (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Falha_e_demora_do_push_seguem_os_outros_itens"`
 
-**C32** - Cada `PushSaida` é processada com a instituição da própria linha: com 2 instituições de slugs diferentes, ambas recebem a chamada e o `url` de cada payload traz o slug da sua; uma `PushSaida` da instituição A cuja subscrição foi movida para a instituição B (C6) não chama o enviador e não é lida de novo no ciclo seguinte (AC 9, AC 20)
+**C32** - [x] Cada `PushSaida` é processada com a instituição da própria linha: com 2 instituições de slugs diferentes, ambas recebem a chamada e o `url` de cada payload traz o slug da sua; uma `PushSaida` da instituição A cuja subscrição foi movida para a instituição B (C6) não chama o enviador e não é lida de novo no ciclo seguinte (AC 9, AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Cada_item_usa_a_instituicao_da_linha"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo"`
 
-**C33** - O enviador real, com um `HttpMessageHandler` capturador no lugar da rede e uma subscrição de teste de chaves válidas, faz 1 `POST` ao `endpoint` com `Content-Encoding: aes128gcm`, cabeçalho `Authorization` de esquema `vapid` com `t=` e `k=` igual à chave pública configurada e corpo cifrado que não contém o texto "One"; resposta `404` e resposta `410` chegam ao chamador como o status `404` e `410` (door 1, AC 14, AC 16)
+**C33** - [x] O enviador real, com um `HttpMessageHandler` capturador no lugar da rede e uma subscrição de teste de chaves válidas, faz 1 `POST` ao `endpoint` com `Content-Encoding: aes128gcm`, cabeçalho `Authorization` de esquema `vapid` com `t=` e `k=` igual à chave pública configurada e corpo cifrado que não contém o texto "One"; resposta `404` e resposta `410` chegam ao chamador como o status `404` e `410` (door 1, AC 14, AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushEnviadorTests.Real_envia_post_cifrado_com_vapid"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushEnviadorTests.Real_expoe_404_e_410_como_status"`
 
-**C34** - O host sem a troca da fábrica de teste (`OneFactoryEnviadorReal`) resolve o enviador de push como a classe em volta de `WebPushClient`, não como o simulado (startup, `Program.cs`)
+**C34** - [x] O host sem a troca da fábrica de teste (`OneFactoryEnviadorReal`) resolve o enviador de push como a classe em volta de `WebPushClient`, não como o simulado (startup, `Program.cs`)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushEnviadorTests.Producao_registra_o_enviador_real"`
 
-**C35** - `dotnet build api` sai 0 com `Agendador.Processar` e todo método novo em complexidade ciclomática 10 ou menos (CA1502 em `WarningsAsErrors`); se o `switch` estourar, o despacho dos itens de fila sai para um método (AD-018, Impact)
+**C35** - [x] `dotnet build api` sai 0 com `Agendador.Processar` e todo método novo em complexidade ciclomática 10 ou menos (CA1502 em `WarningsAsErrors`); se o `switch` estourar, o despacho dos itens de fila sai para um método (AD-018, Impact)
 Proof: `dotnet build api`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Barreira_de_complexidade_configurada"`
 
 ### S4 - Service worker, notificação e botão (P2) · ~14 files · ~100 KB · ~26k
 
-**C36** - A suíte Vitest inteira (N testes em `<base>`, N gravado no `## Handoff`; 168 em 02/11/2026) e `npm --prefix web run build` (`tsc --noEmit && vite build`) passam em cada commit desta fatia, com os testes novos e sem asserção removida, pulada nem afrouxada (AC 29)
+**C36** - [x] A suíte Vitest inteira (N testes em `<base>`, N gravado no `## Handoff`; 168 em 02/11/2026) e `npm --prefix web run build` (`tsc --noEmit && vite build`) passam em cada commit desta fatia, com os testes novos e sem asserção removida, pulada nem afrouxada (AC 29)
 Proof: `cd web && npx vitest run`
 Proof: `npm --prefix web run build`
 
-**C37** - `src/test/estrutura.test.ts` passa com os arquivos novos na raiz de `web/src` (`sw.ts`, `sw.test.ts`, `push.ts`, `AvisosPush.tsx`); a única edição nele é acrescentar esses nomes à lista `Raiz`, e `assistente/avisos.test.tsx` abre uma rota da própria fatia (`abrir('/univag/assistente')`)
+**C37** - [x] `src/test/estrutura.test.ts` passa com os arquivos novos na raiz de `web/src` (`sw.ts`, `sw.test.ts`, `push.ts`, `AvisosPush.tsx`); a única edição nele é acrescentar esses nomes à lista `Raiz`, e `assistente/avisos.test.tsx` abre uma rota da própria fatia (`abrir('/univag/assistente')`)
 Proof: `cd web && npx vitest run src/test/estrutura.test.ts -t "estrutura em fatias"`
 
-**C38** - O `crapper` sobre `web/src` inteiro sai 0 no limite 9.99 depois da cobertura, com os arquivos novos (AD-018)
+**C38** - [x] O `crapper` sobre `web/src` inteiro sai 0 no limite 9.99 depois da cobertura, com os arquivos novos (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 
-**C39** - O `dryer` sobre as 6 fatias e os arquivos da raiz, com `src/sw.ts`, `src/push.ts` e `src/AvisosPush.tsx` acrescentados à lista no mesmo commit que os cria (L-031), não acha candidato com nota 0.8 ou mais (AD-018)
+**C39** - [x] O `dryer` sobre as 6 fatias e os arquivos da raiz, com `src/sw.ts`, `src/push.ts` e `src/AvisosPush.tsx` acrescentados à lista no mesmo commit que os cria (L-031), não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx | grep -q "No duplicate candidates found"`
 
-**C40** - Com `vite-plugin-pwa` em `strategies: 'injectManifest'` (`srcDir: 'src'`, `filename: 'sw.ts'`, `registerType: 'autoUpdate'`, manifesto atual e `globPatterns` da door 5), o build grava `api/wwwroot/sw.js` na raiz e `precache_completo.py` sai 0: todo `.js`, `.css`, `.html`, `.png`, `.svg` e `.woff2` do build (fora `sw.js` e `workbox-*.js`) está no precache e nenhuma URL começa com `api/` nem `/api/`; o script aceita o manifesto injetado com chaves entre aspas (`"url":"..."`) além de `url:"..."`, e o `--autoteste` ganha um caso para cada formato, mais os 5 que já tem, sem enfraquecer nenhum (AC 29, door 5)
+**C40** - [x] Com `vite-plugin-pwa` em `strategies: 'injectManifest'` (`srcDir: 'src'`, `filename: 'sw.ts'`, `registerType: 'autoUpdate'`, manifesto atual e `globPatterns` da door 5), o build grava `api/wwwroot/sw.js` na raiz e `precache_completo.py` sai 0: todo `.js`, `.css`, `.html`, `.png`, `.svg` e `.woff2` do build (fora `sw.js` e `workbox-*.js`) está no precache e nenhuma URL começa com `api/` nem `/api/`; o script aceita o manifesto injetado com chaves entre aspas (`"url":"..."`) além de `url:"..."`, e o `--autoteste` ganha um caso para cada formato, mais os 5 que já tem, sem enfraquecer nenhum (AC 29, door 5)
 Proof: `python .specs/features/interface-nova/precache_completo.py --autoteste`
 Proof: `npm --prefix web run build && python .specs/features/interface-nova/precache_completo.py api/wwwroot`
 
-**C41** - O teste e2e existente do service worker continua verde com o `sw.js` novo: com a página controlada pelo worker, `/api/auth/me` responde `401` (não `index.html`) e nenhuma URL `/api/` está nos caches (AC 29)
+**C41** - [x] O teste e2e existente do service worker continua verde com o `sw.js` novo: com a página controlada pelo worker, `/api/auth/me` responde `401` (não `index.html`) e nenhuma URL `/api/` está nos caches (AC 29)
 Proof: `E2E_URL=http://localhost:8083 npx playwright test e2e/plataforma.spec.ts -g "manifesto e service worker"`
 
-**C42** - O tratador `push` do `sw.ts`, exercitado como função pura com registro falso, chama `showNotification` com o `titulo`, o `corpo` como `body` e `tag` igual ao número do chamado tirado do último trecho do `url` (`ONE-12` para `/univag/chamados/ONE-12`; dois avisos do mesmo chamado têm a mesma `tag`, `ONE-12` e `ONE-13` têm tags diferentes); com 4 cargas sem JSON legível (sem dados, texto que não é JSON, `[]`, `{}`) mostra título "One" e corpo "Seu chamado foi atualizado." (AC 21, AC 23)
+**C42** - [x] O tratador `push` do `sw.ts`, exercitado como função pura com registro falso, chama `showNotification` com o `titulo`, o `corpo` como `body` e `tag` igual ao número do chamado tirado do último trecho do `url` (`ONE-12` para `/univag/chamados/ONE-12`; dois avisos do mesmo chamado têm a mesma `tag`, `ONE-12` e `ONE-13` têm tags diferentes); com 4 cargas sem JSON legível (sem dados, texto que não é JSON, `[]`, `{}`) mostra título "One" e corpo "Seu chamado foi atualizado." (AC 21, AC 23)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "push mostra a notificação com a tag do chamado"`
 Proof: `cd web && npx vitest run src/sw.test.ts -t "push sem JSON legível mostra o texto padrão"`
 
-**C43** - O tratador `notificationclick`, com clientes falsos, fecha a notificação e, em 3 casos: com janela aberta do app, chama `navigate(url)` e `focus()` nela e não chama `openWindow`; sem janela, chama `openWindow(url)` uma vez; notificação sem `url` (a do texto padrão), abre `/` (AC 22)
+**C43** - [x] O tratador `notificationclick`, com clientes falsos, fecha a notificação e, em 3 casos: com janela aberta do app, chama `navigate(url)` e `focus()` nela e não chama `openWindow`; sem janela, chama `openWindow(url)` uma vez; notificação sem `url` (a do texto padrão), abre `/` (AC 22)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "toque na notificação"`
 
-**C44** - O `sw.ts` registra o fallback de navegação para `/index.html` com a lista de negados que casa `/api/auth/me` e `/api/push/chave` e não casa `/univag/chamados/ONE-12` (AC 29)
+**C44** - [x] O `sw.ts` registra o fallback de navegação para `/index.html` com a lista de negados que casa `/api/auth/me` e `/api/push/chave` e não casa `/univag/chamados/ONE-12` (AC 29)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "fallback de navegação nega a API"`
 
-**C45** - O botão de avisos fica oculto em 4 casos e aparece no quinto: navegador sem `serviceWorker`, sem `PushManager`, sem `Notification`, `GET /api/push/chave` com `404`; com os três recursos e a chave `200` aparece com o texto "Ativar avisos neste aparelho" (AC 24)
+**C45** - [x] O botão de avisos fica oculto em 4 casos e aparece no quinto: navegador sem `serviceWorker`, sem `PushManager`, sem `Notification`, `GET /api/push/chave` com `404`; com os três recursos e a chave `200` aparece com o texto "Ativar avisos neste aparelho" (AC 24)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "botão de avisos oculto sem suporte ou sem chave"`
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "botão de avisos aparece com suporte e chave"`
 
-**C46** - A permissão do navegador nunca é pedida ao carregar (0 chamadas a `Notification.requestPermission` depois de renderizar e de a chave chegar); ao tocar em "Ativar avisos neste aparelho" pede a permissão 1 vez e só então chama `pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })` com a chave pública da API em bytes e `POST /api/push/subscricao` com o corpo `{ endpoint, chaves: { p256dh, auth } }`, nessa ordem; o botão fica desabilitado enquanto a chamada corre e o texto passa a "Desativar avisos" (AC 25)
+**C46** - [x] A permissão do navegador nunca é pedida ao carregar (0 chamadas a `Notification.requestPermission` depois de renderizar e de a chave chegar); ao tocar em "Ativar avisos neste aparelho" pede a permissão 1 vez e só então chama `pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })` com a chave pública da API em bytes e `POST /api/push/subscricao` com o corpo `{ endpoint, chaves: { p256dh, auth } }`, nessa ordem; o botão fica desabilitado enquanto a chamada corre e o texto passa a "Desativar avisos" (AC 25)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "permissão só no toque"`
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "ativar assina e envia a subscrição"`
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "botão desabilitado enquanto a chamada corre"`
 
-**C47** - Com a permissão negada no toque, a tela mostra "Os avisos estão bloqueados neste navegador" e há 0 chamadas a `subscribe` e a `/api/push/subscricao` (AC 26)
+**C47** - [x] Com a permissão negada no toque, a tela mostra "Os avisos estão bloqueados neste navegador" e há 0 chamadas a `subscribe` e a `/api/push/subscricao` (AC 26)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "permissão negada bloqueia sem chamar a API"`
 
-**C48** - Com uma subscrição local ativa, o botão mostra "Desativar avisos"; ao tocar chama `unsubscribe()` nela e `DELETE /api/push/subscricao` com o corpo `{ endpoint }` e volta a "Ativar avisos neste aparelho" (AC 27)
+**C48** - [x] Com uma subscrição local ativa, o botão mostra "Desativar avisos"; ao tocar chama `unsubscribe()` nela e `DELETE /api/push/subscricao` com o corpo `{ endpoint }` e volta a "Ativar avisos neste aparelho" (AC 27)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "desativar cancela e apaga a subscrição"`
 
-**C49** - O botão aparece só para quem tem o papel `ALUNO`: aparece para `ALUNO` e para `ALUNO` + `ATENDENTE`, fica oculto para `ATENDENTE` e para `ADMINISTRADOR`, 4 conjuntos de papéis, com os recursos e a chave presentes (AC 28)
+**C49** - [x] O botão aparece só para quem tem o papel `ALUNO`: aparece para `ALUNO` e para `ALUNO` + `ATENDENTE`, fica oculto para `ATENDENTE` e para `ADMINISTRADOR`, 4 conjuntos de papéis, com os recursos e a chave presentes (AC 28)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "botão de avisos só para o papel de aluno"`
 
-**C50** - No build servido pela imagem desta feature, `GET /sw.js` responde `200` com `content-type` de JavaScript e o texto contém `push` e `notificationclick`; a página registra o worker com `scriptURL` terminando em `/sw.js` (door 5)
+**C50** - [x] No build servido pela imagem desta feature, `GET /sw.js` responde `200` com `content-type` de JavaScript e o texto contém `push` e `notificationclick`; a página registra o worker com `scriptURL` terminando em `/sw.js` (door 5)
 Proof: `E2E_URL=http://localhost:8083 npx playwright test e2e/push.spec.ts -g "sw.js na raiz traz os tratadores de push"`
 
-**C51** - No navegador real, com `/api/push/chave` simulada em `200` e o papel `ALUNO`, o botão "Ativar avisos neste aparelho" fica visível e `Notification.permission` continua `default` depois do carregamento; com a rota em `404` o botão não existe (AC 24, AC 25)
+**C51** - [x] No navegador real, com `/api/push/chave` simulada em `200` e o papel `ALUNO`, o botão "Ativar avisos neste aparelho" fica visível e `Notification.permission` continua `default` depois do carregamento; com a rota em `404` o botão não existe (AC 24, AC 25)
 Proof: `E2E_URL=http://localhost:8083 npx playwright test e2e/push.spec.ts -g "botão de avisos aparece com a chave e não pede permissão ao carregar"`
 Proof: `E2E_URL=http://localhost:8083 npx playwright test e2e/push.spec.ts -g "sem a chave o botão de avisos não existe"`
 
-**C52** - Com o botão presente (papel `ALUNO`, chave simulada), a barra do `Autenticado` não tem rolagem horizontal (`documentElement.scrollWidth` no máximo igual à largura) nem caixas sobrepostas entre os seus itens (links, Tema, botão de avisos, Menu ou Sair; tolerância de 1 px) nas 4 larguras 360, 640, 1024 e 1536 px (L-026)
+**C52** - [x] Com o botão presente (papel `ALUNO`, chave simulada), a barra do `Autenticado` não tem rolagem horizontal (`documentElement.scrollWidth` no máximo igual à largura) nem caixas sobrepostas entre os seus itens (links, Tema, botão de avisos, Menu ou Sair; tolerância de 1 px) nas 4 larguras 360, 640, 1024 e 1536 px (L-026)
 Proof: `E2E_URL=http://localhost:8083 npx playwright test e2e/push.spec.ts -g "barra com o botão de avisos sem sobreposição"`
 
-**C53** - O e2e inteiro (N testes em `<base>`, N + 5 com os novos de `push.spec.ts`) passa na imagem desta feature (AC 29)
+**C53** - [x] O e2e inteiro (N testes em `<base>`, N + 5 com os novos de `push.spec.ts`) passa na imagem desta feature (AC 29)
 Proof: `E2E_URL=http://localhost:8083 npm --prefix web run e2e`
 
 ## Coverage
@@ -354,3 +354,11 @@ total 22,6k.
   construtor capturando a requisição); Safari e iOS exigem `aes128gcm` com `Authorization: vapid t=,k=`, que é o que o
   C33 pede. Decisão: trocar a dependência por `Lib.Net.Http.WebPush` 3.3.1 (MIT), que implementa o RFC 8291 e o VAPID do
   RFC 8292. A door 1 do plano ganha uma nota datada com a troca (a linha aprovada não é reescrita). O C33 fica como está.
+
+**Lote 2 (construtor, 03/11/2026)**
+
+- Commits: `59e3005` (troca da biblioteca, C33), `a831fb3` (sw.ts, injectManifest, precache), `ebce678` (botão), `6dd3fe9` e o seguinte (e2e). Contagens: API 449 verdes (448 + a prova literal do C33); Vitest 209 em 34 arquivos (eram 186 em 32: +9 `sw.test.ts`, +14 `avisos.test.tsx`); Playwright 50 testes (46 + 4 de `push.spec.ts`; o "N + 5" do C53 conta um a mais do que C50 a C52 pedem: 1 + 2 + 1), 50 verdes na imagem própria. `crapper` 0, `dryer` sem candidato, `seletores_conferem`, `consultas_preservadas` e `chamadas_iguais` (contra `b2e7e79`) com 0 problema, `precache_completo.py` 17 URLs e 0 problema.
+- **Boundary:** C1-C53 closed at o último commit deste lote.
+- **Settled mid-build:** C33 (troca para `Lib.Net.Http.WebPush` 3.3.1, nota na door 1); `ParVapid` (chaves por `ECDsa`, a biblioteca não gera); `DELETE` leva `?endpoint=` (lote 1), então C48 afirma a query e não o corpo `{ endpoint }`; o botão é um sino com `aria-label`/`title` (cabe em 360 px), não texto visível; `interface.test.ts` (`navigateFallbackDenylist` em `vite.config.ts`) passou a ler a mesma lista em `sw.ts`, porque a opção deixou de existir com `injectManifest`; C24 e o teste 404/410 do C33 mudaram só nome do pacote/versão e tipo da exceção; C51: o Chromium headless informa `Notification.permission` "denied" sem decisão, então o e2e afirma `permissions.query` = "prompt" e 0 chamadas a `requestPermission`.
+- **Abandoned:** nada de código; `WebPush` 1.0.13 removido. Limites conhecidos: se o `POST` falha depois do `subscribe`, a subscrição local fica (o botão mostra "Desativar avisos"); C44 afirma a lista `Negados` e o texto `denylist: Negados` no `sw.ts`, não a rota registrada no Workbox. A entrega real com a chave VAPID de verdade segue manual (go-live).
+

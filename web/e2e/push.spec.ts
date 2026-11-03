@@ -26,9 +26,17 @@ test('sw.js na raiz traz os tratadores de push', async ({ page, request }) => {
 
 test('botão de avisos aparece com a chave e não pede permissão ao carregar', async ({ page }) => {
   await comChave(page, 200)
+  // o Chromium headless informa Notification.permission "denied" mesmo sem decisão; a Permissions API traz o estado real ("prompt" = default)
+  await page.addInitScript(() => {
+    const w = window as unknown as { pedidos: number }
+    w.pedidos = 0
+    const pedir = Notification.requestPermission.bind(Notification)
+    Notification.requestPermission = (...a: []) => (w.pedidos++, pedir(...a))
+  })
   await page.goto('/univag/assistente')
   await expect(page.getByRole('button', { name: Ativar })).toBeVisible()
-  expect(await page.evaluate(() => Notification.permission)).toBe('default')
+  expect(await page.evaluate(async () => (await navigator.permissions.query({ name: 'notifications' })).state)).toBe('prompt')
+  expect(await page.evaluate(() => (window as unknown as { pedidos: number }).pedidos)).toBe(0)
 })
 
 test('sem a chave o botão de avisos não existe', async ({ page }) => {
