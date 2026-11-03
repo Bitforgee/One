@@ -13,6 +13,8 @@ não seleciona teste sai com 0 (L-002): conferir com `--list` ou com a contagem 
 
 ## Checks
 
+**Nota de 03/11/2026 (decisão do usuário durante o build, door 3a):** a barra lateral é o mesmo `<nav>` da barra de topo, restilizado a partir de 1024 px, e não um `<aside>` à parte; C8 a C14 foram reescritos só nessa palavra, com os mesmos valores.
+
 ### S1 - Tokens e tema Preto (P1) · 6 files · 38 KB · ~10k
 
 **C1** - `index.css` declara em `:root`, `.dark` e `.black` exatamente os valores da tabela de `## Visual` (o `.black` só com as linhas que não são `=`), `.black` depois de `.dark`, e cada token exposto em `@theme inline` (AC 1, door 2)
@@ -38,13 +40,13 @@ Proof: `cd web && npx vitest run src/test/tema.test.tsx -t "valor antigo de one-
 
 ### S2 - Barra lateral (P1) · 4 files · 63 KB · ~20k
 
-**C8** - A 1024, 1280, 1536 e 1920 px há um `<aside>` com 240 px de largura (±1) e a altura da janela, com os 9 links do administrador visíveis, cada um com ícone e rótulo de largura maior que 10 px (AC 8, door 3)
+**C8** - A 1024, 1280, 1536 e 1920 px o `<nav>` é a barra lateral à esquerda (x = 0), com 240 px de largura (±1) e a altura da janela, com os 9 links do administrador visíveis, cada um com ícone e rótulo de largura maior que 10 px (AC 8, door 3)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C9** - Nas mesmas larguras não há barra de topo nem botão "Menu" visíveis, e o `main` começa à direita do `<aside>` sem sobrepor (AC 9)
+**C9** - Nas mesmas larguras não há barra de topo de 56 px nem botão "Menu" visíveis, e o `main` começa à direita do `<nav>` sem sobrepor (AC 9)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C10** - A 360, 768 e 1023 px não há `<aside>` visível, a barra de topo tem 56 px e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
+**C10** - A 360, 768 e 1023 px o `<nav>` é a barra de topo, com a largura da janela e 56 px de altura, e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cabeçalho a 360 px abre a gaveta Menu"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
@@ -53,13 +55,13 @@ Proof: `cd web && npx vitest run src/acesso/textos.test.tsx`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
-**C12** - O link da rota atual na barra lateral tem `aria-current="page"` e a classe `bg-primary-subtle`; os outros não têm nenhum dos dois (AC 12)
+**C12** - O link da rota atual no `<nav>` tem `aria-current="page"` e a classe `bg-primary-subtle`; os outros não têm nenhum dos dois (AC 12)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "link ativo da barra lateral"`
 
-**C13** - Com a página rolada 300 px, o topo do `<aside>` continua em 0 px (±1) (AC 13)
+**C13** - Com a página rolada 300 px, o topo do `<nav>` lateral continua em 0 px (±1) (AC 13)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C14** - Depois dos links, o `<aside>` tem, em ordem, o controle de avisos, "Tema" e "Sair" para o aluno, e "Tema" e "Sair" para atendente e administrador (AC 14)
+**C14** - Depois dos links, o `<nav>` tem, em ordem, o controle de avisos, "Tema" e "Sair" para o aluno, e "Tema" e "Sair" para atendente e administrador (AC 14)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "rodapé da barra lateral por papel"`
 
 ### S3 - Mensagens que não se partem (P1) · 3 files · 51 KB · ~15k
@@ -124,7 +126,7 @@ Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/c
 | separadores de quebra (5) | `/` C15 · `?` C15 · `&` C15 · `=` C15 · `#` C15 | - |
 | autores de balão (3) | aluno C18 · assistente C18 · atendente C18 | - |
 | bordas do rótulo do gráfico (3) | 17 C20 · 18 C20 · 19 C20 | - |
-| doors do plano (4) | door 1 C3, C7 · door 2 C1 · door 3 C8 · door 4 C15, C19 | - |
+| doors do plano (4) | door 1 C3, C7 · door 2 C1 · door 3/3a C8 · door 4 C15, C19 | - |
 | títulos de página (9) | Acesso.tsx:25 C22 · Acesso.tsx:177 C22 · Matriculas.tsx C22 · Assistente.tsx C22 · Cabecalho.tsx C22 · Chamados.tsx C22 · Conversa.tsx C22 · Indicadores.tsx C22 · todo `h1` novo C22 | - |
 | testes reescritos (5) | `tokens da paleta` C1 · `contraste dos tokens` C2 · textos do cabeçalho C11 · `Tema grava a escolha em one-tema` C3 · e2e da barra de topo C8 | - |
 
