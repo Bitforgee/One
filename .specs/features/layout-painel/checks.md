@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/layout-painel/plan.md`
 
-38 checks em 6 slices · 5 one-way doors · 0 perguntas abertas
+48 checks em 7 slices · 5 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`.
 Playwright: `cd web && npx playwright test <arquivo> -g "<nome>"` contra o contêiner `api` da porta 8080 reconstruído com
@@ -164,6 +164,52 @@ Proof: `cd web && npx vitest run src/test/estrutura.test.ts`
 
 **C38** - [x] Nenhum arquivo importa `ui/drawer`, e `web/src/ui/drawer.tsx` não existe mais; com isso, `vaul` sai de `package.json` (Impact, gaveta Vaul)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "sem gaveta Vaul"`
+
+### S6 - Correção da verificação rodada 1 (P1) · derivado de `## Screens` já aprovado
+
+Checks novos, aditivos: elementos e arranjos que `## Screens` decide e que nenhum check cobria (verification.md rodada 1).
+
+**C39** - Trocar senha a 360 e 1280 px: o cartão tem no máximo 384 px de largura (`## Screens`, linha "área principal")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "Trocar senha até 384 px"`
+
+**C40** - Botão do usuário a 1280 px com a barra aberta: as iniciais ficam num quadrado de 32 × 32 px (±1) à esquerda; nome e papel ficam em 2 linhas à direita dele (topo do papel abaixo do fundo do nome), cada uma com `text-overflow: ellipsis`; há um ícone de seta (`lucide-chevrons-up-down`) à direita dos textos (`## Screens`, "casca, janela ≥ 768 px")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "botão do usuário"`
+
+**C41** - Menu do usuário: no topo o nome e, abaixo, o papel; depois um separador (`role="separator"`); por último "Sair" com o ícone `LogOut`. A 1280 px com a barra aberta, o menu abre à direita do botão (esquerda do menu ≥ direita do botão); a 360 px, dentro do painel, abre acima do botão (fundo do menu ≤ topo do botão) (`## Screens`, "menu do usuário")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "menu do usuário abre ao lado"`
+
+**C42** - Barra aberta a 1280 px: fundo igual ao `--sidebar` do tema, borda direita de 1 px, e a instituição "Centro Universitário de Várzea Grande" quebra em até 2 linhas sem passar da barra (`## Screens`, "casca, janela ≥ 768 px")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra com fundo, borda e instituição"`
+
+**C43** - A 360 px, com o painel aberto, há uma camada escura atrás dele cobrindo a janela (`data-slot="sheet-overlay"` visível, cor de fundo com alfa > 0) (`## Screens`, "casca, janela < 768 px")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "painel no celular"`
+
+**C44** - Cadastros a 1440 px com a barra aberta: a lista de abas e o botão "Novo" ficam na mesma linha, as abas à esquerda e "Novo" à direita (`## Screens`, "Cadastros")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "Cadastros com select no estreito"`
+
+**C45** - Indicadores: o `Alert` de "Sem dados no período" e o de erro ficam abaixo da linha de ferramentas e com a largura do bloco de conteúdo (±1), a 360 e 1280 px; ao clicar em "Consultar", o botão mostra o Spinner (`role="status"`) e fica desabilitado até a resposta (`## Screens`, "Indicadores, vazio / erro / carregando"; AC 20)
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "alertas de Indicadores"`
+Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "Consultar mostra o Spinner enquanto busca"`
+
+**C46** - Os dois lados de cada quebra de `## Screens` que nenhum check media: recuo do cabeçalho 16 px (±1) a 768 px e 24 px a 1024 px; recuo do cartão de acesso 24 px a 360 px e 40 px a 768 px; valor dos destaques de Indicadores 24 px com o cartão abaixo de 250 px (1328 px aberta) e 30 px com 250 px ou mais (1440 px aberta) (`## Screens`)
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "quebras medidas dos dois lados"`
+
+**C47** - Enquanto uma ação de linha grava (Ativar, Arquivar, Desativar, Nova versão), o botão "Ações de <nome>" mostra o Spinner e fica desabilitado, como os botões soltos de hoje (AC 27)
+Proof: `cd web && npx vitest run src/conhecimento/artigos.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
+
+**C48** - As asserções exatas de antes continuam exatas: em `usuarios.test.tsx` o papel "Aluno" é conferido com `/^Aluno$/` na célula; em `listas.test.tsx` o número e o título são conferidos com âncora `$` na célula (verification.md rodada 1, ponto 5)
+Proof: `cd web && npx vitest run src/administracao/usuarios.test.tsx -t "lista papéis, setores e o selo de desativado"`
+Proof: `cd web && npx vitest run src/chamados/listas.test.tsx -t "colunas das listas de chamados"`
+
+## Exempted
+
+Fora do alcance dos checks, por tela (cores vêm dos tokens, conferidos por C35):
+
+- casca: espessura das bordas internas da barra, raio e cor de hover dos links, peso dos títulos de grupo
+- cabeçalho: altura do separador vertical (16 px no `## Screens`) e cor dos botões-ícone
+- Indicadores: gradiente e sombra dos cartões de destaque (classes do template), espaço entre cartões, peso do rótulo
+- tabelas: altura das linhas, cor do hover, raio da caixa; o cabeçalho `bg-muted` é conferido por C22
+- Detalhe, Assistente, acesso: espaço interno dos cartões e distância entre blocos
 
 ## Coverage
 
