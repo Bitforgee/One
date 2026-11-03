@@ -490,3 +490,38 @@ estimados) / 4 + 8k de saída das barreiras e das suítes. Contexto fixo por con
   com `ease: 'easeOut'` para não passar de 0 px; (10) a API simulada do e2e saiu para `e2e/simulada.ts`, com os
   papéis como parâmetro e um documento para a tela Documentos
 - Abandoned: nenhum
+
+### Lote 2 (S3, S4, S5)
+
+- Boundary: C39–C59 closed at 18225eb (commits ad45b53, 18225eb). Provas em 18225eb: Vitest 131/131 (124/124 em
+  ad45b53, num `git worktree`); Playwright 27/27 duas vezes contra o contêiner `api` reconstruído com
+  `docker compose up -d --build api`; `seletores_conferem.py` (também em ad45b53, com o `seletores.md` daquele
+  commit), `consultas_preservadas.py` (389 consultas) e `chamadas_iguais.py` (99 testes) com 0 problema contra
+  b2e7e79; `ui_isolada.sh` sai 0; `recharts_separado.py` e `precache_completo.py` (19 URLs) com 0 problema;
+  `crapper` sai 0 (pior: `Documentos` 9.0, ainda não migrada; `useChamado` 8.1); `dryer` sem candidato
+- Mutação suspensa por decisão do usuário em 02/11/2026 (até segunda ordem); checks de mutator não rodados neste
+  lote. A rodada iniciada foi interrompida (Ctrl+C sem efeito, processo encerrado); o `web/target` foi desmontado
+  junction a junction (`rmdir` sem `/s`), com `git status` e o conteúdo de `web/src` iguais antes e depois
+- Settled mid-build: (1) TanStack Table na 8.21.3, não na 9.3.1: a v9 não tem `useReactTable` nem
+  `getCoreRowModel` (virou `useTable({ features, columns, data })`), e a door 16 e o C52 nomeiam `useReactTable`;
+  a v8 cumpre a forma literal da door com `flexRender`; (2) React DayPicker 10.0.2 continua expondo `ptBR` em
+  `react-day-picker/locale`, já com os rótulos em português; `@daypicker/react` e `date-fns` não entram; (3) o
+  `thead` dos dias da semana do DayPicker é `aria-hidden`: o C50 lê os `th` pelo DOM, e o nome completo
+  ("sábado") vem do `aria-label`, o texto visível é "sab"; (4) o balão saiu para `web/src/Balao.tsx` (raiz, 2
+  fatias importam), com as fontes, os anexos e o aviso do assistente como `children` e a nota interna em
+  `bg-warning-subtle` com o `Badge`; `Balao.tsx` fica fora da lista de caminhos da door 4, então `dryer` e
+  `mutator` não o veem até a lista ganhar o arquivo; (5) o `useChamado` continua com `setInterval`: com
+  `refetchInterval` o teste da base `transferencia.test.tsx` "atualiza chamado a cada 15 s" falha (3ª leitura não
+  sai), porque ele avança o relógio com `vi.advanceTimersByTime` sem `await` e o TanStack Query não dispara uma
+  releitura enquanto a anterior está em voo; o C41 passa com as duas formas (usa `advanceTimersByTimeAsync`). O
+  C94 (lote 3) depende de uma decisão do usuário: trocar as 3 linhas `vi.advanceTimersByTime` daquele teste por
+  `await vi.advanceTimersByTimeAsync` (nenhum `expect` muda, mas muda como a afirmação é exercida) ou manter o
+  `setInterval`; (6) Indicadores: cada "Consultar" é uma chave nova da consulta (`vez` + 1), para reconsultar o
+  mesmo período como na base, com `keepPreviousData`; os rankings vazios mostram uma linha "—" na tabela; o
+  gráfico é `lazy` (chunk próprio); (7) Anexos: o `useDropzone` com `noClick` (o `<label>` abre o seletor), o
+  campo nativo `sr-only` com `accept=".pdf,.jpg,.jpeg,.png"` e sem `aria-label`, e a lista dos nomes escolhidos
+  na área; no e2e o campo de arquivo tem papel `button` no Chromium, então o C44 mede só os `<button>` do `main`;
+  (8) `index.css` ganhou `.bg-warning-subtle` e `.gap-3` no bloco `@layer base` temporário; (9) botões de ação do
+  detalhe com `h-11` (44 px) em toda largura
+- Abandoned: a conversão do `useChamado` para `useQuery` com `refetchInterval` (Flow 5), revertida pelo motivo do
+  item (5); fica para o lote 3 depois da decisão
