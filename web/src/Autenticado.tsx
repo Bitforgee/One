@@ -123,7 +123,7 @@ export function Autenticado() {
       <nav className="sticky top-0 z-40 h-14 border-b bg-background lg:fixed lg:inset-y-0 lg:start-0 lg:h-svh lg:w-60 lg:border-e lg:border-b-0 lg:bg-sidebar">
         <div className="mx-auto flex h-full max-w-6xl items-center gap-2 px-4 lg:flex-col lg:items-stretch lg:gap-1 lg:px-3 lg:py-4">
           <span className="shrink-0 text-lg font-semibold text-primary lg:px-2">One</span>
-          <span className="min-w-16 flex-1 truncate text-sm text-muted-foreground lg:flex-none lg:px-2 lg:pb-4" data-testid="instituicao">
+          <span className="min-w-16 flex-1 truncate text-sm text-muted-foreground lg:flex-none lg:px-2 lg:pb-4 lg:whitespace-normal" data-testid="instituicao">
             {me.instituicao.nome}
           </span>
           <div className="contents lg:flex lg:flex-1 lg:flex-col lg:gap-0.5 lg:overflow-y-auto">

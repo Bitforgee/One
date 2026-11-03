@@ -14,7 +14,7 @@ export default function Grafico({ linhas, cor }: { linhas: { categoria: string; 
           <YAxis
             type="category"
             dataKey="categoria"
-            width={120}
+            width={136}
             // o Text do Recharts quebra o rótulo em linhas pela largura estimada; aqui é uma linha só, já cortada
             tick={({ x, y, payload }) => (
               <text x={x} y={y} dy={4} textAnchor="end" fontSize={12} className="fill-muted-foreground">

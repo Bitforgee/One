@@ -17,99 +17,99 @@ não seleciona teste sai com 0 (L-002): conferir com `--list` ou com a contagem 
 
 ### S1 - Tokens e tema Preto (P1) · 6 files · 38 KB · ~10k
 
-**C1** - `index.css` declara em `:root`, `.dark` e `.black` exatamente os valores da tabela de `## Visual` (o `.black` só com as linhas que não são `=`), `.black` depois de `.dark`, e cada token exposto em `@theme inline` (AC 1, door 2)
+**C1** - [x] `index.css` declara em `:root`, `.dark` e `.black` exatamente os valores da tabela de `## Visual` (o `.black` só com as linhas que não são `=`), `.black` depois de `.dark`, e cada token exposto em `@theme inline` (AC 1, door 2)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens da paleta"`
 
-**C2** - Nos 3 temas (`:root`; `.dark`; `.dark` sobreposto por `.black`) os 8 pares de `## Visual` têm contraste de ao menos 4,5:1: foreground/background, foreground/card, muted-foreground/background, muted-foreground/muted, muted-foreground/primary-subtle, muted-foreground/warning-subtle, primary-foreground/primary, destructive/background (AC 2)
+**C2** - [x] Nos 3 temas (`:root`; `.dark`; `.dark` sobreposto por `.black`) os 8 pares de `## Visual` têm contraste de ao menos 4,5:1: foreground/background, foreground/card, muted-foreground/background, muted-foreground/muted, muted-foreground/primary-subtle, muted-foreground/warning-subtle, primary-foreground/primary, destructive/background (AC 2)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "contraste dos tokens"`
 
-**C3** - Escolher "Preto" em "Tema" grava `black` em `one-tema` e põe `dark` e `black` no `<html>` (AC 3, door 1)
+**C3** - [x] Escolher "Preto" em "Tema" grava `black` em `one-tema` e põe `dark` e `black` no `<html>` (AC 3, door 1)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "Tema grava a escolha em one-tema"`
 
-**C4** - Escolher "Claro", "Escuro" ou "Sistema" depois de "Preto" tira `black` do `<html>` (AC 4)
+**C4** - [x] Escolher "Claro", "Escuro" ou "Sistema" depois de "Preto" tira `black` do `<html>` (AC 4)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "sair do Preto tira a classe black"`
 
-**C5** - Com o tema Preto o `background-color` computado do `<body>` é `rgb(0, 0, 0)` (AC 5)
+**C5** - [x] Com o tema Preto o `background-color` computado do `<body>` é `rgb(0, 0, 0)` (AC 5)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "tema Preto com fundo preto"`
 
-**C6** - Com o tema Preto o Toaster do Sonner é renderizado com `data-sonner-theme="dark"` (AC 6)
+**C6** - [x] Com o tema Preto o Toaster do Sonner é renderizado com `data-sonner-theme="dark"` (AC 6)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "Toaster escuro no tema Preto"`
 
-**C7** - `one-tema` gravado antes desta feature com `light`, `dark` ou `system` aplica o mesmo tema de antes, sem `black` (AC 7)
+**C7** - [x] `one-tema` gravado antes desta feature com `light`, `dark` ou `system` aplica o mesmo tema de antes, sem `black` (AC 7)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "valor antigo de one-tema"`
 
 ### S2 - Barra lateral (P1) · 4 files · 63 KB · ~20k
 
-**C8** - A 1024, 1280, 1536 e 1920 px o `<nav>` é a barra lateral à esquerda (x = 0), com 240 px de largura (±1) e a altura da janela, com os 9 links do administrador visíveis, cada um com ícone e rótulo de largura maior que 10 px (AC 8, door 3)
+**C8** - [x] A 1024, 1280, 1536 e 1920 px o `<nav>` é a barra lateral à esquerda (x = 0), com 240 px de largura (±1) e a altura da janela, com os 9 links do administrador visíveis, cada um com ícone e rótulo de largura maior que 10 px (AC 8, door 3)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C9** - Nas mesmas larguras não há barra de topo de 56 px nem botão "Menu" visíveis, e o `main` começa à direita do `<nav>` sem sobrepor (AC 9)
+**C9** - [x] Nas mesmas larguras não há barra de topo de 56 px nem botão "Menu" visíveis, e o `main` começa à direita do `<nav>` sem sobrepor (AC 9)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C10** - A 360, 768 e 1023 px o `<nav>` é a barra de topo, com a largura da janela e 56 px de altura, e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
+**C10** - [x] A 360, 768 e 1023 px o `<nav>` é a barra de topo, com a largura da janela e 56 px de altura, e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cabeçalho a 360 px abre a gaveta Menu"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
-**C11** - Nenhuma tela autenticada mostra "Mais", em nenhuma largura (AC 11)
+**C11** - [x] Nenhuma tela autenticada mostra "Mais", em nenhuma largura (AC 11)
 Proof: `cd web && npx vitest run src/acesso/textos.test.tsx`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
-**C12** - O link da rota atual no `<nav>` tem `aria-current="page"` e a classe `bg-primary-subtle`; os outros não têm nenhum dos dois (AC 12)
+**C12** - [x] O link da rota atual no `<nav>` tem `aria-current="page"` e a classe `bg-primary-subtle`; os outros não têm nenhum dos dois (AC 12)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "link ativo da barra lateral"`
 
-**C13** - Com a página rolada 300 px, o topo do `<nav>` lateral continua em 0 px (±1) (AC 13)
+**C13** - [x] Com a página rolada 300 px, o topo do `<nav>` lateral continua em 0 px (±1) (AC 13)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C14** - Depois dos links, o `<nav>` tem, em ordem, o controle de avisos, "Tema" e "Sair" para o aluno, e "Tema" e "Sair" para atendente e administrador (AC 14)
+**C14** - [x] Depois dos links, o `<nav>` tem, em ordem, o controle de avisos, "Tema" e "Sair" para o aluno, e "Tema" e "Sair" para atendente e administrador (AC 14)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "rodapé da barra lateral por papel"`
 
 ### S3 - Mensagens que não se partem (P1) · 3 files · 51 KB · ~15k
 
-**C15** - O `Balao` põe um `<wbr>` logo depois de cada `/`, `?`, `&`, `=` e `#` do texto, e o `textContent` do balão é igual ao texto original (AC 15, door 4)
+**C15** - [x] O `Balao` põe um `<wbr>` logo depois de cada `/`, `?`, `&`, `=` e `#` do texto, e o `textContent` do balão é igual ao texto original (AC 15, door 4)
 Proof: `cd web && npx vitest run src/assistente/conversa.test.tsx -t "quebra depois de / ? & = #"`
 
-**C16** - A 360 px, enviando `https://portal.univag.edu.br/financeiro/boletos/segunda-via?matricula=2000567890&semestre=2026-2`, toda quebra de linha do balão cai depois de espaço, `/`, `?`, `&`, `=`, `#` ou `-`, nunca dentro de `financeiro`, `boletos`, `segunda` ou `matricula` (AC 16)
+**C16** - [x] A 360 px, enviando `https://portal.univag.edu.br/financeiro/boletos/segunda-via?matricula=2000567890&semestre=2026-2`, toda quebra de linha do balão cai depois de espaço, `/`, `?`, `&`, `=`, `#` ou `-`, nunca dentro de `financeiro`, `boletos`, `segunda` ou `matricula` (AC 16)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "link longo quebra só nos separadores"`
 
-**C17** - A 360 px, uma palavra de 80 letras sem separador fica dentro do balão (borda direita do balão até 360) e `scrollWidth` da página é 360 (AC 17)
+**C17** - [x] A 360 px, uma palavra de 80 letras sem separador fica dentro do balão (borda direita do balão até 360) e `scrollWidth` da página é 360 (AC 17)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "palavra longa sem separador fica no balão"`
 
-**C18** - O balão do aluno tem `rounded-2xl rounded-br-sm`; o do assistente e o do atendente, `rounded-2xl rounded-bl-sm` (AC 18)
+**C18** - [x] O balão do aluno tem `rounded-2xl rounded-br-sm`; o do assistente e o do atendente, `rounded-2xl rounded-bl-sm` (AC 18)
 Proof: `cd web && npx vitest run src/assistente/conversa.test.tsx -t "cantos do balão"`
 
-**C19** - Uma mensagem com `<b>x</b> & <img src=x>` aparece literal: os filhos do conteúdo do balão são só nós de texto e `<wbr>`, sem `b` nem `img` (AC 19)
+**C19** - [x] Uma mensagem com `<b>x</b> & <img src=x>` aparece literal: os filhos do conteúdo do balão são só nós de texto e `<wbr>`, sem `b` nem `img` (AC 19)
 Proof: `cd web && npx vitest run src/assistente/conversa.test.tsx -t "balão sem HTML"`
 
 ### S4 - Indicadores e superfícies (P2) · 13 files · 60 KB · ~18k
 
-**C20** - O rótulo do eixo do gráfico é a categoria quando tem até 18 caracteres e os 17 primeiros + "…" quando tem mais (17, 18 e 19 caracteres testados); a 360 px o rótulo de "Financeiro > Boletos e mensalidades" é um único `<tspan>` com o texto "Financeiro > Bole…" (AC 20)
+**C20** - [x] O rótulo do eixo do gráfico é a categoria quando tem até 18 caracteres e os 17 primeiros + "…" quando tem mais (17, 18 e 19 caracteres testados); a 360 px o rótulo de "Financeiro > Boletos e mensalidades" é um único `<tspan>` com o texto "Financeiro > Bole…" (AC 20)
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "rótulo do gráfico"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "rótulo do gráfico numa linha"`
 
-**C21** - Todo `[data-slot=card]` de Indicadores a 1280 px tem `box-shadow` computado `none` (AC 21)
+**C21** - [x] Todo `[data-slot=card]` de Indicadores a 1280 px tem `box-shadow` computado `none` (AC 21)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cartões sem sombra"`
 
-**C22** - Todo `<h1` de `web/src` fora dos testes tem `text-2xl font-semibold tracking-tight` na classe (AC 22)
+**C22** - [x] Todo `<h1` de `web/src` fora dos testes tem `text-2xl font-semibold tracking-tight` na classe (AC 22)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "títulos de página"`
 
-**C23** - A 360 px, cada uma das telas de `e2e/plataforma.spec.ts` tem `scrollWidth` de no máximo 360 (AC 23)
+**C23** - [x] A 360 px, cada uma das telas de `e2e/plataforma.spec.ts` tem `scrollWidth` de no máximo 360 (AC 23)
 Proof: `cd web && npx playwright test e2e/plataforma.spec.ts -g "sem rolagem horizontal a 360 px"`
 
 ### S0 - Invariantes (P1) · 0 files novos · ~8k
 
-**C24** - As suítes inteiras passam, sem nenhuma asserção afrouxada fora das reescritas de `## Test policy` (AC 24)
+**C24** - [x] As suítes inteiras passam, sem nenhuma asserção afrouxada fora das reescritas de `## Test policy` (AC 24)
 Proof: `cd web && npx vitest run`
 Proof: `cd web && npx playwright test`
 
 **C25** - Cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD (AC 24)
 Proof: `python .specs/features/interface-nova/chamadas_iguais.py <base>`
 
-**C26** - Nenhum arquivo de `web/src` fora do `index.css` tem cor literal (AC 26); textos visíveis só mudam por "Mais" e "Preto" (AC 25)
+**C26** - [x] Nenhum arquivo de `web/src` fora do `index.css` tem cor literal (AC 26); textos visíveis só mudam por "Mais" e "Preto" (AC 25)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens da paleta"`
 Proof: `cd web && npx vitest run textos`
 
-**C27** - Barreiras do AD-018: `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato 0.8+; o `mutator` segue suspenso (AD-025) e não roda
+**C27** - [x] Barreiras do AD-018: `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato 0.8+; o `mutator` segue suspenso (AD-025) e não roda
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx | grep -q "No duplicate candidates found"`
 
@@ -170,3 +170,10 @@ Estimativa = (bytes lidos dos 21 arquivos que a feature toca, 151 545 B, contado
 
 - S1 a S4 + S0 = ~71k, todas em `web/` - um construtor, sem pergunta
 - Mechanism: one builder
+
+### Build (one builder, S1 a S4 + S0)
+
+- **Boundary:** C1-C24, C26, C27 closed at the `feat(web)` commits after `433418e`; feature base (`<base>`) = `4797744` (`docs(redesign-institucional): plan, checks and AD-027`). Provas no HEAD: Vitest 225/225; Playwright 57/57 contra o contêiner `api` reconstruído com `docker compose up -d --build api`; `crapper` sai 0 (pior: `AvisosPush` 9.0); `dryer` sem candidato; `mutator` não rodou (AD-025)
+- **C25 aberto:** `chamadas_iguais.py 4797744` acusa 1 problema: o teste de base `avisos > no(a) Mais o item de avisos mostra o texto visível` não existe no HEAD. Ele codificava o "Mais" (decisão substituída pela door 3a) e foi trocado, pela linha de `## Test policy`, por `avisos > na barra lateral o botão de avisos traz o texto visível` (mesmo ambiente, mesmo clique, mesma checagem de "Desativar avisos"). As outras 212 de 213 batem
+- **Settled mid-build:** (1) decisão do usuário de 03/11: a barra lateral é o mesmo `<nav>` restilizado (door 3a), não um `<aside>`; C8 a C14 reescritos só nessa palavra (commit `433418e`). (2) As provas de C6 e C7 passaram de `src/test/tema.test.tsx` para `src/acesso/acesso.test.tsx` (`describe('tema (redesign-institucional)')`): o `estrutura em fatias` só aceita `.test.tsx` dentro de uma fatia e que abra uma tela dela. (3) No Chrome a cor computada sai em `oklch(0 0 0)`; o e2e do C5 pinta a cor num canvas e confere o pixel `[0, 0, 0, 255]`. (4) O `Text` do Recharts quebra o rótulo pela largura estimada mesmo cortado; o eixo passou a desenhar o próprio `<text><tspan>` de uma linha e a ter 136 px (com 120 o "A" de "Acadêmico > Notas…" saía cortado a 1280 px). (5) `theme_color` do manifesto e a meta `theme-color` passaram a `#224fa7`, o `--primary` claro novo (teste C93 da `interface-nova`). (6) A coluna do Assistente a 1024 px centraliza no espaço à direita da barra lateral; o e2e "arranjo Assistente" mede a partir da borda do `<nav>`. (7) Na barra lateral o botão de avisos mostra o texto (`hidden lg:inline`), mantendo a regra do `web-push` de texto visível fora da barra de topo
+- **Abandoned:** `tickFormatter` sozinho no gráfico (o Recharts ainda quebrava em 2 `tspan`); teste do tema num arquivo próprio em `src/test/` (barrado pelo `estrutura em fatias`)
