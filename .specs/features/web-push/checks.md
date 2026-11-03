@@ -347,3 +347,10 @@ total 22,6k.
   ficam como estão; (5) os builds são sequenciais, então a porta do e2e (8083) não colide com outro build;
   (6) os pacotes `workbox-*` do `sw.ts` e o ajuste do `precache_completo.py` ao manifesto do `injectManifest`
   entram no lote que constrói o S4, com a mesma afirmação do C10 da `interface-nova` (precache completo).
+
+### Decisão do usuário sobre o C33 (03/11/2026, depois do lote 1)
+
+- A `WebPush` 1.0.13 só envia `Content-Encoding: aesgcm` com `Authorization: WebPush` e `Crypto-Key` (confirmado pelo
+  construtor capturando a requisição); Safari e iOS exigem `aes128gcm` com `Authorization: vapid t=,k=`, que é o que o
+  C33 pede. Decisão: trocar a dependência por `Lib.Net.Http.WebPush` 3.3.1 (MIT), que implementa o RFC 8291 e o VAPID do
+  RFC 8292. A door 1 do plano ganha uma nota datada com a troca (a linha aprovada não é reescrita). O C33 fica como está.
