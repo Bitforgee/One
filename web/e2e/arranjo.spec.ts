@@ -1436,7 +1436,8 @@ test.describe('entrada institucional', () => {
           await page.route('**/api/auth/primeiro-acesso', (rota) => rota.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ mensagem: 'Link enviado.' }) }))
           await page.getByRole('button', { name: botao }).click()
           const alerta = await caixa(page.getByRole('alert').filter({ hasText: 'Link enviado.' }))
-          perto(alerta.y, h.y + h.height + 24, `${r}: alerta de sucesso`)
+          const h2 = await caixa(h1) // o bloco, mais baixo, recentra: o h1 se move
+          perto(alerta.y, h2.y + h2.height + 24, `${r}: alerta de sucesso`)
         }
       }
     }
