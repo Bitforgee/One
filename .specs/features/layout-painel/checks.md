@@ -124,45 +124,45 @@ Proof: `cd web && npx vitest run src/conhecimento/artigos.test.tsx -t "novo arti
 
 ### S5 - Detalhe, Assistente e acesso (P2) · ~10 files · ~170 KB · ~45k
 
-**C28** - Detalhe de um chamado da fila (atendente) a 1440 px aberta: a coluna direita tem 320 px (±1) e começa à direita do fim da coluna esquerda; nela, o cartão com o título "Ações" (com "Assumir" ou outro botão de ação) fica acima do cartão do histórico; a coluna esquerda tem o `h2` do título, as mensagens e o campo de resposta (AC 28)
+**C28** - [x] Detalhe de um chamado da fila (atendente) a 1440 px aberta: a coluna direita tem 320 px (±1) e começa à direita do fim da coluna esquerda; nela, o cartão com o título "Ações" (com "Assumir" ou outro botão de ação) fica acima do cartão do histórico; a coluna esquerda tem o `h2` do título, as mensagens e o campo de resposta (AC 28)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "detalhe em duas colunas"`
 
-**C29** - A 360 px e a 1280 px aberta (`main` < 1024) o detalhe é uma coluna, com os topos crescentes nesta ordem: título, transcrição, mensagens, resposta, ações, histórico (AC 29)
+**C29** - [x] A 360 px e a 1280 px aberta (`main` < 1024) o detalhe é uma coluna, com os topos crescentes nesta ordem: título, transcrição, mensagens, resposta, ações, histórico (AC 29)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "detalhe em uma coluna"`
 
-**C30** - No detalhe, o título do chamado é um `h2` com o texto do título, e o `h1` da página é o número (AC 30)
+**C30** - [x] No detalhe, o título do chamado é um `h2` com o texto do título, e o `h1` da página é o número (AC 30)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "título do chamado em h2"`
 
-**C31** - Assistente a 1440 px aberta: a coluna tem no máximo 768 px e as sobras à esquerda e à direita dentro do `main` diferem em no máximo 1 px; o compositor fica a até 16 px do fundo da janela com a conversa maior que a tela (AC 31)
+**C31** - [x] Assistente a 1440 px aberta: a coluna tem no máximo 768 px e as sobras à esquerda e à direita dentro do `main` diferem em no máximo 1 px; o compositor fica a até 16 px do fundo da janela com a conversa maior que a tela (AC 31)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "arranjo Assistente"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "compositor visível com a conversa maior que a tela"`
 
-**C32** - Login, Primeiro acesso, Definir senha e raiz a 360 e 1280 px: o cartão tem no máximo 384 px, o centro horizontal dele fica no centro da janela (±1), e o centro vertical também (±1) quando o cartão é mais baixo que a janela (AC 32)
+**C32** - [x] Login, Primeiro acesso, Definir senha e raiz a 360 e 1280 px: o cartão tem no máximo 384 px, o centro horizontal dele fica no centro da janela (±1), e o centro vertical também (±1) quando o cartão é mais baixo que a janela (AC 32)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "telas de acesso centralizadas"`
 
 ### S0 - Invariantes (P1) · ~8 files · ~80 KB · ~25k
 
-**C33** - As mesmas requisições à API: `chamadas_iguais.py <base>` sai 0 (todo teste da base existe no alvo com as mesmas chamadas, ou está em `REESCRITOS` com a linha correspondente em `## Handoff`), e as suítes inteiras passam (AC 33)
+**C33** - [x] As mesmas requisições à API: `chamadas_iguais.py <base>` sai 0 (todo teste da base existe no alvo com as mesmas chamadas, ou está em `REESCRITOS` com a linha correspondente em `## Handoff`), e as suítes inteiras passam (AC 33)
 Proof: `python .specs/features/layout-painel/chamadas_iguais.py <base>`
 Proof: `cd web && npx vitest run`
 Proof: `cd web && npx playwright test`
 
-**C34** - Textos: em cada tela, só entram os marcados *(novo)* em `## Screens` ("Alternar barra lateral", os papéis no botão do usuário, os 4 rodapés de Indicadores, os cabeçalhos de coluna, "Ações", "Ações de <nome>", "Cadastro") (AC 34)
+**C34** - [x] Textos: em cada tela, só entram os marcados *(novo)* em `## Screens` ("Alternar barra lateral", os papéis no botão do usuário, os 4 rodapés de Indicadores, os cabeçalhos de coluna, "Ações", "Ações de <nome>", "Cadastro") (AC 34)
 Proof: `cd web && npx vitest run src/acesso/textos.test.tsx src/indicadores/textos.test.tsx src/administracao/textos.test.tsx src/conhecimento/textos.test.tsx src/chamados/textos.test.tsx src/assistente/textos.test.tsx`
 
-**C35** - Os tokens de hoje continuam com os mesmos valores em claro, escuro e preto, e os tokens novos da barra dão contraste ≥ 4,5:1 entre `--sidebar-foreground` e `--sidebar` e entre `--sidebar-accent-foreground` e `--sidebar-accent` nos 3 temas (AC 35)
+**C35** - [x] Os tokens de hoje continuam com os mesmos valores em claro, escuro e preto, e os tokens novos da barra dão contraste ≥ 4,5:1 entre `--sidebar-foreground` e `--sidebar` e entre `--sidebar-accent-foreground` e `--sidebar-accent` nos 3 temas (AC 35)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens de Visual"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "contraste dos tokens da barra"`
 
-**C36** - Barreiras do AD-018: `crapper` 0 no limite 9.99 e `dryer` sem candidato; `mutator` suspenso (AD-025)
+**C36** - [x] Barreiras do AD-018: `crapper` 0 no limite 9.99 e `dryer` sem candidato; `mutator` suspenso (AD-025)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx | grep -q "No duplicate candidates found"`
 
-**C37** - O build passa (`tsc --noEmit` e `vite build`), e o teste de estrutura aceita os arquivos novos de `web/src/ui/` (door 1, door 4)
+**C37** - [x] O build passa (`tsc --noEmit` e `vite build`), e o teste de estrutura aceita os arquivos novos de `web/src/ui/` (door 1, door 4)
 Proof: `npm --prefix web run build`
 Proof: `cd web && npx vitest run src/test/estrutura.test.ts`
 
-**C38** - Nenhum arquivo importa `ui/drawer`, e `web/src/ui/drawer.tsx` não existe mais; com isso, `vaul` sai de `package.json` (Impact, gaveta Vaul)
+**C38** - [x] Nenhum arquivo importa `ui/drawer`, e `web/src/ui/drawer.tsx` não existe mais; com isso, `vaul` sai de `package.json` (Impact, gaveta Vaul)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "sem gaveta Vaul"`
 
 ## Coverage
@@ -240,3 +240,6 @@ Somando ≈ 15k de escrita e ≈ 10k de suítes, dá **~68k**. Total **~258k**, 
 - **Boundary:** C14, C16-C27 closed at the `feat(web)` and `test(web)` commits of batch 2 (the `docs` commit that records this line follows them). Provas no HEAD: Vitest 270/270; Playwright 59/59 contra o contêiner `api` reconstruído (cada filtro das provas selecionou ao menos 1 teste); `chamadas_iguais.py dac2832` 238 testes, 0 problema (com o `vaul` reinstalado só em `node_modules`, `--no-save`, e depois restaurado); `crapper` 0 (pior: `Sidebar` 9.8); `dryer` sem candidato; `npm run build` e `estrutura.test.ts` verdes; `mutator` não rodou (AD-025)
 - **Settled mid-build (lote 2):** (1) nenhum teste Vitest da base mudou de nome, então `REESCRITOS` não ganhou entradas; os que liam cartões ou botões soltos ficaram com o mesmo nome e leem a linha (`closest('tr')`) e o menu "Ações de <nome>" (`escolher` e `acoesDe` em `src/test/util.tsx`). (2) C20: em `cartões formatam taxa, horas e número, e o ranking vazio mostra traço` a classe esperada da grade dos rankings passou de `@3xl/main:grid-cols-2` para `@4xl/main:grid-cols-2` (o breakpoint que `## Screens` manda); as asserções de valores não mudaram. (3) `Tabela.tsx` (caixa com borda, cabeçalho `muted`, vazio de uma linha, `MenuAcoes`, `CelulaLargo`, `Detalhe`) é o único componente compartilhado; `Situacao` só mostra o Spinner e o texto de vazio ("Nenhum item cadastrado.", ou o da tela) é da `Tabela`; `Cabecalho` virou a linha de ferramentas com filhos (texto de ajuda, ou select e abas). (4) o jsdom não aplica `@container`: a coluna "largo" e a linha de `Detalhe` existem juntas no DOM, então os textos das telas aparecem duas vezes nos testes de `textos`, que ganharam os cabeçalhos, os 4 rodapés e `versão`/`válido de`/`válido até` sem o `·` colado. (5) Nos Cadastros as abas ficam em `TabsContent` e o select "Cadastro" só troca o mesmo estado; o editor abre pelo botão do nome (não mais pela linha inteira). (6) e2e reescritos no `arranjo.spec.ts`: `indicadores em 2 e 4 colunas` (sai, vira parte de `arranjo Indicadores`), `abas de Cadastros rolam na própria faixa` (sai: as abas somem no estreito; vira `Cadastros com select no estreito`), `arranjo listas de chamados`, `arranjo Artigos e Documentos`, `arranjo administração`, `botões pequenos em linha em Artigos, Documentos e Usuários` (agora o botão "⋮"), `Cadastros: detalhe pequeno embaixo do nome` e `cartões sem sombra` (os 4 destaques levam `shadow-xs`, como no template; os demais seguem sem sombra). (7) A medição da tabela contra o conteúdo desconta a borda de 1 px de cada lado
 - **Abandoned (lote 2):** `ItemUsuario`, `ItemArtigo`, `ItemDocumento` e a lista de botões de `Cadastros` (cartões por item); `BotaoAcao` com Spinner em "Ativar" (o item do menu só desabilita enquanto a gravação roda)
+- **Boundary:** C28-C38 closed at the `feat(web)` and `test(web)` commits of batch 3 (the `docs` commit that records this line follows them). Provas no HEAD: Vitest 271/271; Playwright 66/66 contra o contêiner `api` reconstruído (cada filtro das provas selecionou ao menos 1 teste: 1 de "detalhe em duas colunas", 2 de "detalhe em uma coluna", 1 de "arranjo Assistente", 1 de "compositor visível...", 4 de "telas de acesso centralizadas"); `chamadas_iguais.py dac2832` 238 testes, 0 problema (com o `vaul` reinstalado só em `node_modules`, `--no-save`, e depois restaurado com `npm install`); `crapper` 0 (pior: `Sidebar` 9.8); `dryer` sem candidato; `npm run build`, `estrutura.test.ts` e `interface.test.ts` verdes; `mutator` não rodou (AD-025)
+- **Settled mid-build (lote 3):** (1) nenhum teste Vitest da base mudou de nome (`REESCRITOS` sem entradas novas); o e2e `arranjo telas de acesso` ficou com o nome e trocou o que mudou: cartão de até 384 px (era 420) e recuo de 24 px a 360 px (era 16), pelo bloco de login do shadcn. O `arranjo Assistente` mede a coluna a 1440 px aberta (era 1024) com sobras iguais dentro do `main`; `compositor visível...` ganhou a distância ao fundo (até 16 px). (2) C20, mantido do lote 2: em `cartões formatam taxa, horas e número, e o ranking vazio mostra traço` a classe esperada dos rankings é `@4xl/main:grid-cols-2` (era `@3xl/main:`) porque `## Screens` moveu essa quebra para 896 px; as asserções de valores não mudaram. (3) `Centro` (em `Acesso.tsx`) é a área `min-h-svh` do bloco de login e também envolve a raiz `/` (agora num `Card`) e os estados "Instituição não encontrada" e carregando do Login. (4) O detalhe é uma grade `@5xl/main:grid-cols-[minmax(0,1fr)_320px]`; a ordem do DOM (esquerda, depois direita) dá a ordem de uma coluna do C29. O `Card` "Ações" só existe quando há alguma ação permitida; o alerta de erro da ação fica fora dele, para não sumir se a ação sair da lista. O `Historico` é um `Card` com o mesmo `section` e `h2` de antes. (5) O `Assistente` leva `-mb-4 md:-mb-6` para o compositor `sticky` encostar no fundo (o recuo do contêiner o deixava a 24 px). (6) "Ações" entrou na lista de literais de `textos detalhe do chamado`, e o select "Cadastro" (nome acessível, não texto visível) é afirmado em `textos Cadastros`
+- **Abandoned (lote 3):** feedback de pendência no "Ativar" do menu da linha de Artigos: o menu fecha ao escolher o item, então um Spinner dentro dele não apareceria, e mostrá-lo no botão "⋮" pediria saber qual linha gravou; o item só desabilita enquanto a gravação roda (registrado, não escondido)
