@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type ComponentProps, type ReactNode } from 'react'
+import { GraduationCap, ListChecks, MessageCircle, Users } from 'lucide-react'
 import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { z } from 'zod'
@@ -8,7 +9,6 @@ import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { telaInicial, useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
@@ -25,18 +25,44 @@ export function Centro({ children }: { children: ReactNode }) {
   )
 }
 
-function Cartao({ titulo, children }: { titulo: ReactNode; children: ReactNode }) {
+const Itens = [
+  [MessageCircle, 'Tire dúvidas com o assistente a qualquer hora'],
+  [ListChecks, 'Acompanhe suas solicitações até a resposta'],
+  [Users, 'Fale com a equipe da instituição quando precisar'],
+] as const
+
+// Bloco login-02 do shadcn (AD-030): formulário à esquerda com a marca no topo, painel institucional à direita a partir de 1024 px.
+function Entrada({ titulo, descricao, children }: { titulo: ReactNode; descricao?: string; children: ReactNode }) {
   return (
-    <Centro>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">{children}</CardContent>
-      </Card>
-    </Centro>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex items-center justify-center gap-2 font-semibold text-primary md:justify-start">
+          <GraduationCap className="size-6" />
+          <span>One</span>
+        </div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex w-full max-w-xs flex-col gap-6">
+            <h1 className="text-center text-2xl font-semibold tracking-tight">{titulo}</h1>
+            {descricao && <p className="-mt-5 text-center text-sm text-muted-foreground">{descricao}</p>}
+            {children}
+          </div>
+        </div>
+      </div>
+      <div className="relative hidden flex-col border-l bg-primary/5 p-10 lg:flex">
+        <div className="mt-auto max-w-md">
+          <h2 className="text-3xl font-semibold tracking-tight">Atendimento ao estudante</h2>
+          <p className="mt-2 text-muted-foreground">Dúvidas, solicitações e respostas da sua instituição em um só lugar.</p>
+          <ul className="mt-6 flex flex-col gap-4">
+            {Itens.map(([Icone, texto]) => (
+              <li key={texto} className="flex items-center gap-3">
+                <Icone aria-hidden="true" className="size-5 shrink-0 text-primary" />
+                {texto}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -96,13 +122,7 @@ export function Login() {
     )
 
   return (
-    <Cartao
-      titulo={
-        <>
-          One <span className="font-normal text-muted-foreground">· {instituicao.nome}</span>
-        </>
-      }
-    >
+    <Entrada titulo={instituicao.nome} descricao="Entre com seu CPF e sua senha.">
       <Formulario
         schema={schemaLogin}
         botao="Entrar"
@@ -122,7 +142,7 @@ export function Login() {
       <div className="text-center">
         <Link to={`/${slug}/primeiro-acesso`}>Primeiro acesso ou esqueci minha senha</Link>
       </div>
-    </Cartao>
+    </Entrada>
   )
 }
 
@@ -130,7 +150,7 @@ export function PrimeiroAcesso() {
   const { slug } = useParams()
   const [mensagem, setMensagem] = useState<string>()
   return (
-    <Cartao titulo="Primeiro acesso">
+    <Entrada titulo="Primeiro acesso">
       {mensagem ? (
         <Alert>{mensagem}</Alert>
       ) : (
@@ -146,7 +166,7 @@ export function PrimeiroAcesso() {
       <div className="text-center">
         <Link to={`/${slug}`}>Voltar para o login</Link>
       </div>
-    </Cartao>
+    </Entrada>
   )
 }
 
@@ -155,7 +175,7 @@ export function DefinirSenha() {
   const [busca] = useSearchParams()
   const [pronto, setPronto] = useState(false)
   return (
-    <Cartao titulo="Criar senha">
+    <Entrada titulo="Criar senha">
       {pronto ? (
         <Alert>
           Senha criada. <Link to={`/${slug}`}>Entre com o CPF e a nova senha.</Link>
@@ -173,7 +193,7 @@ export function DefinirSenha() {
           {(form) => <Campo f={form} nome="novaSenha" rotulo="Nova senha" type="password" autoComplete="new-password" dica="De 8 a 128 caracteres." />}
         </Formulario>
       )}
-    </Cartao>
+    </Entrada>
   )
 }
 
