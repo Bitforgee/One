@@ -33,9 +33,9 @@
 
 ## Handoff
 
-**Feature**: Etapa 4c: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio` (PASS rodada 3, 03/11) verificados; `interface-nova` concluída com o C7 aberto (AD-026)
-**In progress**: build de `tempo-real-signalr` (um construtor, base `f996d30`)
-**Next step**: verificar `tempo-real-signalr`; depois `web-push` (2 lotes, base `f30a358`)
+**Feature**: Etapa 4c: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio`, `tempo-real-signalr` (PASS rodada 2, 03/11) verificados; `interface-nova` concluída com o C7 aberto (AD-026). AD-022 fica `planned` até o Web Push, a outra metade dela
+**In progress**: build de `web-push`, lote 1 (S1–S3, servidor), base `f30a358`; provas por diff comparam com o HEAD do início do build
+**Next step**: lote 2 de `web-push` (S4, service worker e botão), verificação; depois Etapa 5 (dados, IA real, ensaio)
 **Blockers**: chave da OpenAI no `.env`; par VAPID de produção; perguntas `blocks go-live`
 **Uncommitted**: nothing
 **Branch**: main

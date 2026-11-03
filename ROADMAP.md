@@ -2,7 +2,7 @@
 
 - **Data:** 03/11/2026, madrugada (RAG, refatoração, vertical slice completa, domínio rico e contratos e
   arquivos no MinIO verificados no `main`; interface nova concluída com o C7 de mutação aberto por decisão do
-  usuário; tempo real com SignalR construído, em verificação)
+  usuário; tempo real com SignalR verificado; Web Push em build)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -53,7 +53,7 @@ hospedagem e ensaio.
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
 | Arquivos no MinIO (`arquivos-minio`) | 30 checks provados; verificação independente **aprovada** em 03/11 (rodada 3). Anexos e PDFs saíram do `bytea` para o MinIO (`cgr.dev/chainguard/minio` fixada por digest), download por streaming com o mesmo `Content-Length`, chave com a instituição, bucket versionado sem exclusão, 503 quando o armazenamento cai. A verificação achou e o build corrigiu: erro do S3 virando 500, objetos órfãos em dois 409 |
-| Tempo real com SignalR (`tempo-real-signalr`) | Plano e 51 checks aprovados em 02/11. **Construído em 03/11** (`d67ad50..dfa2573`): hub `/api/tempo-real` com o cookie atual, grupos com a instituição no nome e a mesma regra do GET, sinais sem dados (`ChamadoMudou`, `FilaMudou`) disparados depois do commit, recarga de segurança a cada 60 s com o hub e 15 s sem. Decisões do usuário em 03/11: C28 sem o caso impossível (reclassificar não troca setor); `SessaoTests` com o hub na contagem (54 → 56 rotas privadas). Verificação: rodada 1 reprovou só por testes fracos (aviso antes do commit não pego no C23, `FilaMudou` conferido uma vez para 3 tarefas no C22, endereço do hub no `web/` sem teste — um endereço errado deixava tudo verde e caía em silêncio na recarga de 15 s); corrigido só com testes em `6a96420..8793668`; rodada 2 em andamento |
+| Tempo real com SignalR (`tempo-real-signalr`) | Plano e 51 checks aprovados em 02/11. **Construído em 03/11** (`d67ad50..dfa2573`): hub `/api/tempo-real` com o cookie atual, grupos com a instituição no nome e a mesma regra do GET, sinais sem dados (`ChamadoMudou`, `FilaMudou`) disparados depois do commit, recarga de segurança a cada 60 s com o hub e 15 s sem. Decisões do usuário em 03/11: C28 sem o caso impossível (reclassificar não troca setor); `SessaoTests` com o hub na contagem (54 → 56 rotas privadas). Verificação: rodada 1 reprovou só por testes fracos (aviso antes do commit não pego no C23, `FilaMudou` conferido uma vez para 3 tarefas no C22, endereço do hub no `web/` sem teste — um endereço errado deixava tudo verde e caía em silêncio na recarga de 15 s); corrigido só com testes em `6a96420..8793668`; **rodada 2 aprovada** em 03/11 |
 | Interface nova (`interface-nova`) | **Concluída em 02/11** (`2aa8a9a..bd7d7ce`): 15 telas em shadcn/ui e Tailwind, Bootstrap removido, cabeçalho com nomes sempre visíveis e menu "Mais". Verificação: rodada 1 reprovou por sobreposição no cabeçalho e lacunas de teste, rodada 2 pela contagem de links da barra, rodada 3 só pelo C7 (mutação suspensa, AD-025). Decisão do usuário (AD-026): fechar com o C7 aberto. Vitest 168, e2e 45 |
 | Domínio rico e contratos (`dominio-e-contratos`) | 41 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só pelo C27 (`Agendador.cs` mudou só nos comentários removidos a pedido do usuário), aceito pelo usuário. 28 falhas injetadas, todas pegas; API 329, nenhuma migração |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
@@ -229,8 +229,8 @@ antes do código, verificação independente depois), e a próxima só começa c
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
 | 03–05/11 | arquivos no MinIO (`arquivos-minio`): **feito e verificado** (rodada 3, 03/11; `9ca2325..e84ca8d`) | `api/`, `docker-compose.yml` |
-| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): construído em 03/11 (`d67ad50..dfa2573`); rodada 1 reprovou por testes fracos, corrigidos; rodada 2 em andamento | `api/`, `web/` |
-| 07–09/11 | Web Push (`web-push`): plano e 53 checks aprovados em 02/11 (`f30a358`); 2 lotes, depois do SignalR verificado | `api/`, `web/` (service worker) |
+| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): construído em 03/11 (`d67ad50..dfa2573`); **feito e verificado** (rodada 2, 03/11) | `api/`, `web/` |
+| 07–09/11 | Web Push (`web-push`): plano e 53 checks aprovados em 02/11 (`f30a358`); build começou em 03/11, 2 lotes | `api/`, `web/` (service worker) |
 | 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
@@ -462,8 +462,8 @@ Verifier no modelo mais forte.
 | Feature | Plano e checks | Decisões do usuário (02/11) | Build |
 | --- | --- | --- | --- |
 | `arquivos-minio` | 25 critérios, 30 checks; API 367, e2e 46 | imagem `cgr.dev/chainguard/minio` fixada por digest (a `minio/minio` comunitária deixou de ser publicada em 10/2025: o MinIO Community virou só código-fonte, AGPLv3); sem cópia dos `bytea` antigos, o banco de desenvolvimento é recriado; C5 vale pela base (415), C29 com e2e real de anexo | construído; verificação: rodada 1 reprovou (tamanho no cabeçalho, contador de leituras, erro do bucket virando 500, objetos órfãos em dois 409, falta de e2e com anexo), rodada 2 reprovou só pela gravação da rejeição aceita com anexo, corrigida em `e84ca8d`; **rodada 3 aprovada** em 03/11 |
-| `tempo-real-signalr` | 51 checks | recarga de segurança a cada 60 s com o hub aberto (15 s sem conexão); o sinal não leva dados e também chega ao aluno nas notas internas | construído em 03/11 (API 405, Vitest 186, e2e 46); rodada 2 da verificação em andamento |
-| `web-push` | 29 critérios, 53 checks | push só para o aluno, nos 3 eventos do e-mail; par VAPID gerado uma vez pelo comando `push chaves` e guardado no `.env` do servidor (sem ele o push fica desligado) | 2 lotes, depois do SignalR |
+| `tempo-real-signalr` | 51 checks | recarga de segurança a cada 60 s com o hub aberto (15 s sem conexão); o sinal não leva dados e também chega ao aluno nas notas internas | **feito e verificado** em 03/11 (API 405, Vitest 186, e2e 46) |
+| `web-push` | 29 critérios, 53 checks | push só para o aluno, nos 3 eventos do e-mail; par VAPID gerado uma vez pelo comando `push chaves` e guardado no `.env` do servidor (sem ele o push fica desligado) | 2 lotes; lote 1 (servidor) começou em 03/11 |
 
 Três asserções antigas mudam por consequência direta do plano do MinIO aprovado (o retrato de erros passa de 8
 para 9 corpos com o novo 503, o anexo é lido do objeto e não da coluna, a lista de arquivos da raiz ganha
