@@ -14,6 +14,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: .specs/features/mvp-one/checks.md:710 (specs/coverage) (+1 more)
 - last seen: 2026-11-02T18:30:24Z
 
+### L-021 - Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `specs/checks` · harmful: 0
+- features: refatoracao-solid, dominio-e-contratos
+- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+1 more)
+- last seen: 2026-11-03T01:27:33Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -132,12 +138,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api/Conhecimento/Fontes.cs:89 (verification.md F-C28doc) (api/conhecimento)
 - last seen: 2026-11-02T22:06:05Z
 
-### L-021 - Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
-- features: refatoracao-solid
-- evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks)
-- last seen: 2026-11-02T22:06:05Z
-
 ### L-022 - Quando a correção de um check acrescenta um teste em outra classe, acrescente o filtro dele às linhas Proof do check; sem isso o próprio proof do check não exercita a parte corrigida.
 - signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
 - features: refatoracao-solid
@@ -149,6 +149,54 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: vertical-slice-completa
 - evidence: api/Assistente/TransferirConversa.cs:20 (F13) (api/ordem-das-recusas)
 - last seen: 2026-11-02T23:09:00Z
+
+### L-024 - Um check de arquivo igual à base compara o código sem comentários, ou o commit cosmético que toca esse arquivo leva um ruling antes; um diff só de comentários derruba o git diff --exit-code.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: dominio-e-contratos
+- evidence: verification.md C27 (api/Agendador.cs, 0960b70) (specs/checks)
+- last seen: 2026-11-03T01:27:33Z
+
+### L-025 - Cada linha da tabela de um check precisa de um teste citado no Proof; uma linha provada por outro teste da mesma classe fica fora do filtro e o mutante dela passa pela prova do check.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: dominio-e-contratos
+- evidence: verification.md C21 F5 (ChamadoDominioTests.cs:92) (specs/checks)
+- last seen: 2026-11-03T01:27:33Z
+
+### L-026 - Meça o cabeçalho na maior largura e com o conjunto de papéis que mais mostra links; sobreposição só aparece acima da última largura medida.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md gap 1; web/src/Autenticado.tsx:78 (web)
+- last seen: 2026-11-03T01:28:01Z
+
+### L-027 - Classe responsiva que esconde texto (sm:...:sr-only) passa na regra dos textos do jsdom; confira o texto visível no navegador em cada largura do design.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md gap 2; web/src/Autenticado.tsx:78 (web)
+- last seen: 2026-11-03T01:28:01Z
+
+### L-028 - Enumere cada fato de arranjo e cada ícone nomeado de cada linha de Screens num check; uma linha de Coverage tirada de uma só região deixa o resto sem prova.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md gaps 3 and 4 (web)
+- last seen: 2026-11-03T01:28:01Z
+
+### L-029 - Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md F5; web/src/test/interface.test.ts:95 (web)
+- last seen: 2026-11-03T01:28:01Z
+
+### L-030 - Afirme a largura igual das colunas e não só a quantidade de posições x; um col-span no primeiro item cria uma trilha implícita que mantém a contagem.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md F7a; web/src/indicadores/Indicadores.tsx:122 (web)
+- last seen: 2026-11-03T01:28:01Z
+
+### L-031 - Ao mover código compartilhado para a raiz, acrescente o arquivo às listas de caminhos do dryer e do mutator no mesmo commit.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova
+- evidence: verification.md gap 8; checks.md C6, C7 (web)
+- last seen: 2026-11-03T01:28:01Z
 
 ## Quarantined (failed when applied - ignore)
 

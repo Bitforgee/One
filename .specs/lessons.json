@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 24,
+  "next_id": 32,
   "lessons": [
     {
       "id": "L-001",
@@ -373,17 +373,19 @@
       "text": "Tire de código a contagem de células e o caminho de rota escritos num check, não da memória; número ou rota errados no texto deixam o check sem prova literal.",
       "signal": "spec_precision_gap",
       "scope": "specs/checks",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "refatoracao-solid"
+        "refatoracao-solid",
+        "dominio-e-contratos"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "checks.md C21, C32 (verification.md precision gaps) (specs/checks)"
+        "checks.md C21, C32 (verification.md precision gaps) (specs/checks)",
+        "verification.md C17 (14 vs 16 assinaturas object) (specs/checks)"
       ],
       "created": "2026-11-02T22:06:05Z",
-      "last_seen": "2026-11-02T22:06:05Z"
+      "last_seen": "2026-11-03T01:27:33Z"
     },
     {
       "id": "L-022",
@@ -420,6 +422,150 @@
       ],
       "created": "2026-11-02T23:09:00Z",
       "last_seen": "2026-11-02T23:09:00Z"
+    },
+    {
+      "id": "L-024",
+      "key": "spec_deviation::um check de arquivo igual a base compara o codigo sem comentarios ou o commit cosmetico que toca esse arquivo leva um ruling antes um diff so de comentarios derruba o git diff exit code",
+      "text": "Um check de arquivo igual à base compara o código sem comentários, ou o commit cosmético que toca esse arquivo leva um ruling antes; um diff só de comentários derruba o git diff --exit-code.",
+      "signal": "spec_deviation",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "dominio-e-contratos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C27 (api/Agendador.cs, 0960b70) (specs/checks)"
+      ],
+      "created": "2026-11-03T01:27:33Z",
+      "last_seen": "2026-11-03T01:27:33Z"
+    },
+    {
+      "id": "L-025",
+      "key": "spec_precision_gap::cada linha da tabela de um check precisa de um teste citado no proof uma linha provada por outro teste da mesma classe fica fora do filtro e o mutante dela passa pela prova do check",
+      "text": "Cada linha da tabela de um check precisa de um teste citado no Proof; uma linha provada por outro teste da mesma classe fica fora do filtro e o mutante dela passa pela prova do check.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "dominio-e-contratos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md C21 F5 (ChamadoDominioTests.cs:92) (specs/checks)"
+      ],
+      "created": "2026-11-03T01:27:33Z",
+      "last_seen": "2026-11-03T01:27:33Z"
+    },
+    {
+      "id": "L-026",
+      "key": "ac_gap::meca o cabecalho na maior largura e com o conjunto de papeis que mais mostra links sobreposicao so aparece acima da ultima largura medida",
+      "text": "Meça o cabeçalho na maior largura e com o conjunto de papéis que mais mostra links; sobreposição só aparece acima da última largura medida.",
+      "signal": "ac_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md gap 1; web/src/Autenticado.tsx:78 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-027",
+      "key": "spec_deviation::classe responsiva que esconde texto sm sr only passa na regra dos textos do jsdom confira o texto visivel no navegador em cada largura do design",
+      "text": "Classe responsiva que esconde texto (sm:...:sr-only) passa na regra dos textos do jsdom; confira o texto visível no navegador em cada largura do design.",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md gap 2; web/src/Autenticado.tsx:78 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-028",
+      "key": "ac_gap::enumere cada fato de arranjo e cada icone nomeado de cada linha de screens num check uma linha de coverage tirada de uma so regiao deixa o resto sem prova",
+      "text": "Enumere cada fato de arranjo e cada ícone nomeado de cada linha de Screens num check; uma linha de Coverage tirada de uma só região deixa o resto sem prova.",
+      "signal": "ac_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md gaps 3 and 4 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-029",
+      "key": "surviving_mutant::ponha nas linhas proof de um check todo teste que afirma uma parte da afirmacao a parte afirmada so noutro teste sobrevive as provas nomeadas",
+      "text": "Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F5; web/src/test/interface.test.ts:95 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-030",
+      "key": "surviving_mutant::afirme a largura igual das colunas e nao so a quantidade de posicoes x um col span no primeiro item cria uma trilha implicita que mantem a contagem",
+      "text": "Afirme a largura igual das colunas e não só a quantidade de posições x; um col-span no primeiro item cria uma trilha implícita que mantém a contagem.",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F7a; web/src/indicadores/Indicadores.tsx:122 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-031",
+      "key": "spec_precision_gap::ao mover codigo compartilhado para a raiz acrescente o arquivo as listas de caminhos do dryer e do mutator no mesmo commit",
+      "text": "Ao mover código compartilhado para a raiz, acrescente o arquivo às listas de caminhos do dryer e do mutator no mesmo commit.",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md gap 8; checks.md C6, C7 (web)"
+      ],
+      "created": "2026-11-03T01:28:01Z",
+      "last_seen": "2026-11-03T01:28:01Z"
     }
   ]
 }
