@@ -1,7 +1,8 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { onlineManager } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
+import { Balao } from '../Balao'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
 const Exemplo = /Pergunte, por exemplo/
@@ -218,5 +219,39 @@ describe('conversa com o assistente', () => {
     } finally {
       onlineManager.setOnline(true)
     }
+  })
+
+  // redesign-institucional (S3): o texto do balão e onde ele pode quebrar
+  const balao = (texto: string, props: { doAluno?: boolean; autor?: string; nota?: boolean } = {}) => {
+    const { container } = render(<Balao doAluno={false} {...props} texto={texto} em="2026-11-03T12:00:00Z" fuso="America/Cuiaba" />)
+    return container.querySelector('.whitespace-pre-wrap') as HTMLElement
+  }
+
+  // C15 (AC 15, door 4)
+  it('quebra depois de / ? & = #', () => {
+    const Link = 'https://portal.univag.edu.br/a/b?x=1&y=2#topo fim'
+    const conteudo = balao(Link)
+    expect(conteudo.textContent).toBe(Link)
+    const antes = [...conteudo.querySelectorAll('wbr')].map((w) => w.previousSibling?.textContent?.slice(-1))
+    expect(antes).toEqual(['/', '/', '/', '/', '?', '=', '&', '=', '#']) // https:// (2), edu.br/ e a/
+    expect(balao('sem separador').querySelectorAll('wbr')).toHaveLength(0)
+  })
+
+  // C18 (AC 18)
+  it('cantos do balão', () => {
+    const caixa = (el: HTMLElement) => el.closest('.is-user, .is-assistant')!
+    expect(caixa(balao('a', { doAluno: true }))).toHaveClass('rounded-2xl', 'rounded-br-sm')
+    expect(caixa(balao('b'))).toHaveClass('rounded-2xl', 'rounded-bl-sm')
+    expect(caixa(balao('c', { autor: 'Carla' }))).toHaveClass('rounded-2xl', 'rounded-bl-sm')
+    expect(caixa(balao('d', { doAluno: true }))).not.toHaveClass('rounded-bl-sm')
+  })
+
+  // C19 (AC 19, AD-012)
+  it('balão sem HTML', () => {
+    const Texto = '<b>x</b> & <img src=x>'
+    const conteudo = balao(Texto)
+    expect(conteudo.textContent).toBe(Texto)
+    expect(conteudo.querySelector('b, img')).toBeNull()
+    for (const no of conteudo.childNodes) expect(no.nodeType === Node.TEXT_NODE || no.nodeName === 'WBR', no.nodeName).toBe(true)
   })
 })

@@ -1,11 +1,19 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { toast } from 'sonner'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import pacote from '../../package.json'
 import { formatarData } from '../datas'
 import { abrir, api, me } from '../test/util'
+import { Toaster } from '../ui/sonner'
+import { ThemeProvider } from '../ui/theme-provider'
 
 const instituicao = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univag' }] as [number, unknown] }
+
+async function escolherTema(rotulo: string) {
+  await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
+  await userEvent.click(within(document.querySelector('[data-slot=popover-content]') as HTMLElement).getByRole('button', { name: rotulo }))
+}
 
 async function entrar() {
   await userEvent.type(await screen.findByLabelText('CPF'), '123.456.789-09')
@@ -140,13 +148,63 @@ describe('acesso', () => {
     localStorage.clear()
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
-    for (const [rotulo, valor, classe] of [['Escuro', 'dark', 'dark'], ['Claro', 'light', 'light'], ['Sistema', 'system', 'light']]) {
-      await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
-      await userEvent.click(within(document.querySelector('[data-slot=popover-content]') as HTMLElement).getByRole('button', { name: rotulo }))
+    // redesign-institucional C3 (AC 3, door 1): Preto grava black e põe dark e black
+    for (const [rotulo, valor, classes] of [['Escuro', 'dark', ['dark']], ['Claro', 'light', ['light']], ['Preto', 'black', ['dark', 'black']], ['Sistema', 'system', ['light']]] as const) {
+      await escolherTema(rotulo)
       expect(localStorage.getItem('one-tema'), rotulo).toBe(valor)
-      expect(document.documentElement, rotulo).toHaveClass(classe)
+      expect([...document.documentElement.classList].sort(), rotulo).toEqual([...classes].sort())
     }
     expect(document.documentElement).not.toHaveClass('dark')
+  })
+
+  // redesign-institucional C4 (AC 4)
+  it('sair do Preto tira a classe black', async () => {
+    localStorage.clear()
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    for (const rotulo of ['Claro', 'Escuro', 'Sistema']) {
+      await escolherTema('Preto')
+      expect(document.documentElement, rotulo).toHaveClass('black')
+      await escolherTema(rotulo)
+      expect(document.documentElement, rotulo).not.toHaveClass('black')
+    }
+  })
+
+  // redesign-institucional C12 (AC 12): só o link da rota atual fica marcado
+  it('link ativo da barra lateral', async () => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE', 'ADMINISTRADOR'] })], 'GET /api/chamados?escopo=fila': () => [200, []] })
+    abrir('/univag/fila')
+    const nav = await screen.findByRole('navigation')
+    const links = await within(nav).findAllByRole('link')
+    expect(links.length).toBe(7)
+    for (const link of links) {
+      const ativo = link.textContent === 'Fila'
+      expect(link.getAttribute('aria-current'), link.textContent!).toBe(ativo ? 'page' : null)
+      expect(link.classList.contains('bg-primary-subtle'), link.textContent!).toBe(ativo)
+    }
+  })
+
+  // redesign-institucional C14 (AC 14): depois dos links, avisos (só aluno), Tema e Sair; "Menu" é da barra de topo e some a partir de 1024 px
+  it.each([
+    [['ALUNO'], ['Ativar avisos neste aparelho', 'Tema', 'Sair']],
+    [['ATENDENTE'], ['Tema', 'Sair']],
+    [['ADMINISTRADOR'], ['Tema', 'Sair']],
+  ])('rodapé da barra lateral por papel (%j)', async (papeis, rodape) => {
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null } }) } })
+    vi.stubGlobal('PushManager', class {})
+    vi.stubGlobal('Notification', { requestPermission: async () => 'granted' })
+    api({ 'GET /api/auth/me': () => [200, me({ papeis })], 'GET /api/push/chave': () => [200, { chavePublica: 'BAEC' }] })
+    abrir('/univag/trocar-senha')
+    const nav = await screen.findByRole('navigation')
+    if (papeis.includes('ALUNO')) await within(nav).findByRole('button', { name: rodape[0] })
+    else await new Promise((r) => setTimeout(r, 50))
+    const itens = [...nav.querySelectorAll('a, button')]
+    const depois = itens.slice(itens.findLastIndex((e) => e.tagName === 'A') + 1)
+    const menu = depois.find((e) => e.getAttribute('aria-label') === 'Menu')!
+    expect(menu).toHaveClass('lg:hidden')
+    expect(depois.filter((e) => e !== menu).map((e) => e.getAttribute('aria-label') ?? e.textContent)).toEqual(rodape)
+    Reflect.deleteProperty(navigator, 'serviceWorker')
+    vi.unstubAllGlobals()
   })
 
   // C92 (AC 50, door 10)
@@ -287,5 +345,49 @@ describe('acesso', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
     expect(await screen.findByRole('heading', { name: 'Assistente' })).toBeInTheDocument()
     expect(chamadas.find((c) => c.url === '/api/auth/senha')?.corpo).toEqual({ senhaAtual: 'temporaria-1', novaSenha: 'senha-boa-123' })
+  })
+})
+
+// redesign-institucional S1: o tema Preto (door 1) e os valores de one-tema gravados antes dele.
+const montarTema = () =>
+  render(
+    <ThemeProvider defaultTheme="system" storageKey="one-tema">
+      <Toaster containerAriaLabel="Notificações" />
+    </ThemeProvider>,
+  )
+
+afterEach(() => {
+  localStorage.clear()
+  document.documentElement.className = ''
+})
+
+describe('tema (redesign-institucional)', () => {
+  // C6 (AC 6)
+  it('Toaster escuro no tema Preto', async () => {
+    localStorage.setItem('one-tema', 'black')
+    montarTema()
+    act(() => void toast('Artigo salvo.'))
+    const lista = await new Promise<Element>((ok) => {
+      const procurar = () => {
+        const el = document.querySelector('[data-sonner-toaster]')
+        return el ? ok(el) : setTimeout(procurar, 10)
+      }
+      procurar()
+    })
+    expect(lista).toHaveAttribute('data-sonner-theme', 'dark')
+    expect(document.documentElement).toHaveClass('dark', 'black')
+  })
+
+  // C7 (AC 7): matchMedia do jsdom (setup.ts) responde claro, então "system" vira light
+  it('valor antigo de one-tema', () => {
+    for (const [valor, classe] of [['light', 'light'], ['dark', 'dark'], ['system', 'light']]) {
+      localStorage.setItem('one-tema', valor)
+      const { unmount } = montarTema()
+      expect(document.documentElement, valor).toHaveClass(classe)
+      expect(document.documentElement, valor).not.toHaveClass('black')
+      expect(document.documentElement.classList, valor).toHaveLength(1)
+      unmount()
+      document.documentElement.className = ''
+    }
   })
 })

@@ -33,10 +33,10 @@ Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "sair do Preto ti
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "tema Preto com fundo preto"`
 
 **C6** - Com o tema Preto o Toaster do Sonner é renderizado com `data-sonner-theme="dark"` (AC 6)
-Proof: `cd web && npx vitest run src/test/tema.test.tsx -t "Toaster escuro no tema Preto"`
+Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "Toaster escuro no tema Preto"`
 
 **C7** - `one-tema` gravado antes desta feature com `light`, `dark` ou `system` aplica o mesmo tema de antes, sem `black` (AC 7)
-Proof: `cd web && npx vitest run src/test/tema.test.tsx -t "valor antigo de one-tema"`
+Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "valor antigo de one-tema"`
 
 ### S2 - Barra lateral (P1) · 4 files · 63 KB · ~20k
 

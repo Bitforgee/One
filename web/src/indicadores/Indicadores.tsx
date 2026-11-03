@@ -153,7 +153,7 @@ export function Indicadores() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Indicadores</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Indicadores</h1>
       <form
         className="grid grid-cols-2 gap-2 md:flex md:items-end"
         onSubmit={(e) => {

@@ -62,7 +62,7 @@ export function Matriculas() {
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="text-xl font-semibold">Importar matrículas</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Importar matrículas</h1>
       <p className="text-sm text-muted-foreground">
         Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho <code className="break-all font-mono">cpf;nome;email;matricula;curso;semestre;situacao</code>. Alunos são
         atualizados pelo CPF e matrículas pelo número. Se alguma linha tiver erro, nada é importado.

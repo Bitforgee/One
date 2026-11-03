@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
@@ -122,10 +122,19 @@ describe('avisos', () => {
     expect(await botao(Ativar)).toBeEnabled()
   })
 
-  it.each([
-    ['gaveta', 'Menu', ['ALUNO']],
-    ['Mais', 'Mais', ['ALUNO', 'ATENDENTE']],
-  ])('no(a) %s o item de avisos mostra o texto visível', async (_, abre, papeis) => {
+  // redesign-institucional (door 3a): o "Mais" saiu; na barra lateral o próprio botão da barra traz o texto
+  it('na barra lateral o botão de avisos traz o texto visível', async () => {
+    ambiente({ papeis: ['ALUNO', 'ATENDENTE'] })
+    abrir('/univag/assistente')
+    const nav = await screen.findByRole('navigation')
+    const item = (await within(nav).findAllByRole('button', { name: Ativar })).find((b) => b.textContent === Ativar)
+    expect(item).toBeDefined()
+    expect(within(item!).getByText(Ativar)).toHaveClass('hidden', 'lg:inline')
+    await userEvent.click(item!)
+    await waitFor(() => expect(within(nav).getAllByRole('button', { name: 'Desativar avisos' }).some((b) => b.textContent === 'Desativar avisos')).toBe(true))
+  })
+
+  it.each([['gaveta', 'Menu', ['ALUNO']]])('no(a) %s o item de avisos mostra o texto visível', async (_, abre, papeis) => {
     Element.prototype.setPointerCapture ??= () => undefined // o vaul (gaveta) usa no toque; o jsdom não tem
     ambiente({ papeis })
     abrir('/univag/assistente')

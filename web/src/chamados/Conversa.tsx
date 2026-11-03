@@ -1,5 +1,5 @@
 import { BookText, FileText, Paperclip } from 'lucide-react'
-import { Balao } from '../Balao'
+import { Balao, Quebravel } from '../Balao'
 import { Estados, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { Badge } from '../ui/badge'
@@ -9,7 +9,7 @@ import { responsavel } from './Chamados'
 export function Cabecalho({ c }: { c: Chamado }) {
   return (
     <>
-      <h1 className="text-xl font-semibold break-words">
+      <h1 className="text-2xl font-semibold tracking-tight break-words">
         {c.numero} · {c.titulo}
       </h1>
       <p className="mb-0 flex flex-wrap items-center gap-2">
@@ -49,7 +49,7 @@ function FonteCitada({ f }: { f: Fonte }) {
       </div>
       {f.trechos.map((t, j) => (
         <blockquote key={j} className="mb-1 break-words whitespace-pre-wrap italic">
-          “{t}”
+          “<Quebravel texto={t} />”
         </blockquote>
       ))}
       {documento && (

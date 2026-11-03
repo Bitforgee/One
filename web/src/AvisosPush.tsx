@@ -7,7 +7,7 @@ import { alternar, subscricaoLocal, suportado } from './push'
 import { Button } from './ui/button'
 
 // Botão da barra do aluno: só aparece com suporte do navegador e a chave do servidor (404 = push desligado).
-// Na barra é um sino (rótulo em aria-label/title, cabe em 360 px); na gaveta e no "Mais" é um item com o texto visível.
+// Na barra de topo é um sino (rótulo em aria-label/title, cabe em 360 px); na barra lateral e na gaveta, com o texto visível.
 export function AvisosPush({ item }: { item?: string }) {
   const chave = useQuery({ queryKey: ['push-chave'], queryFn: () => api<{ chavePublica: string }>('/api/push/chave'), enabled: suportado(), retry: false })
   const local = useQuery({ queryKey: ['push-local'], queryFn: subscricaoLocal, enabled: !!chave.data })
@@ -37,8 +37,9 @@ export function AvisosPush({ item }: { item?: string }) {
       </button>
     )
   return (
-    <Button variant="ghost" size="icon" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
+    <Button variant="ghost" size="icon" className="lg:w-full lg:justify-start lg:px-2" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
       <Icone aria-hidden="true" />
+      <span className="hidden lg:inline">{rotulo}</span>
     </Button>
   )
 }

@@ -5,7 +5,7 @@ import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
 // Linha 0 de ## Screens (cabeçalho); "Tema" e "Menu" são só nomes acessíveis, conferidos por papel.
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Mais', 'Claro', 'Escuro', 'Sistema']
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Preto', 'Sistema']
 const Instituicao = 'Univag' // nome da instituição do fixture
 
 describe('textos', () => {
@@ -35,7 +35,7 @@ describe('textos', () => {
     tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }))
     await userEvent.keyboard('{Escape}')
 
-    // controle de tema aberto: "Claro", "Escuro" e "Sistema"
+    // controle de tema aberto: "Claro", "Escuro", "Preto" e "Sistema"
     await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
     tela.conferir(document.querySelector('[data-slot=popover-content]') as HTMLElement)
 

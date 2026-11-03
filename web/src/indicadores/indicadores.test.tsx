@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
+import { rotulo } from './Grafico'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 
@@ -164,4 +165,13 @@ describe('indicadores', () => {
       ;['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].forEach((inicio, i) => expect(dias[i], inicio).toMatch(new RegExp(`^${inicio}`)))
     })
   })
+
+  // redesign-institucional C20 (AC 20): bordas 17, 18 e 19 caracteres
+  it('rótulo do gráfico', () => {
+    expect(rotulo('a'.repeat(17))).toBe('a'.repeat(17))
+    expect(rotulo('a'.repeat(18))).toBe('a'.repeat(18))
+    expect(rotulo('b'.repeat(19))).toBe(`${'b'.repeat(17)}…`)
+    expect(rotulo('Financeiro > Boletos e mensalidades')).toBe('Financeiro > Bole…')
+  })
 })
+

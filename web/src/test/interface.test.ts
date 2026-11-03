@@ -48,22 +48,29 @@ const contraste = (x: string, y: string) => {
   return (claro + 0.05) / (escuro + 0.05)
 }
 
-// ## Visual: os 13 tokens, claro e escuro (o oklch sem a função)
-const Tokens: [string, string, string][] = [
-  ['--background', '1 0 0', '0.17 0.02 265'],
-  ['--foreground', '0.21 0.02 265', '0.97 0 0'],
-  ['--primary', '0.49 0.17 262', '0.70 0.14 262'],
-  ['--primary-foreground', '0.985 0 0', '0.17 0.02 265'],
-  ['--primary-subtle', '0.95 0.03 262', '0.28 0.06 262'],
-  ['--muted', '0.967 0.003 265', '0.24 0.02 265'],
-  ['--muted-foreground', '0.50 0.02 265', '0.72 0.02 265'],
-  ['--warning-subtle', '0.96 0.05 90', '0.32 0.06 85'],
-  ['--success', '0.55 0.14 155', '0.70 0.14 155'],
-  ['--destructive', '0.577 0.245 27.325', '0.704 0.191 22.216'],
-  ['--chart-1', 'var(--primary)', 'var(--primary)'],
-  ['--chart-2', '0.65 0.12 200', '0.75 0.11 200'],
-  ['--radius', '0.625rem', '0.625rem'],
+// redesign-institucional ## Visual: cada token em claro, escuro e preto; '=' = o .black não declara e herda do .dark
+const Tokens: [string, string, string, string][] = [
+  ['--background', '1 0 0', '0.17 0 0', '0 0 0'],
+  ['--foreground', '0.145 0 0', '0.95 0 0', '0.92 0 0'],
+  ['--card', '1 0 0', '0.205 0 0', '0.15 0 0'],
+  ['--popover', '1 0 0', '0.205 0 0', '0.15 0 0'],
+  ['--sidebar', '0.985 0 0', '0.15 0 0', '0 0 0'],
+  ['--primary', '0.45 0.15 262', '0.72 0.12 262', '='],
+  ['--primary-foreground', '0.985 0 0', '0.17 0 0', '='],
+  ['--primary-subtle', '0.96 0.02 262', '0.27 0.05 262', '0.24 0.05 262'],
+  ['--muted', '0.97 0 0', '0.24 0 0', '0.20 0 0'],
+  ['--muted-foreground', '0.50 0 0', '0.71 0 0', '0.70 0 0'],
+  ['--warning-subtle', '0.97 0.04 90', '0.30 0.05 85', '0.27 0.05 85'],
+  ['--success', '0.52 0.13 155', '0.72 0.14 155', '='],
+  ['--destructive', '0.577 0.245 27.325', '0.704 0.191 22.216', '='],
+  ['--border', '0.922 0 0', '1 0 0 / 10%', '1 0 0 / 14%'],
+  ['--input', '0.922 0 0', '1 0 0 / 15%', '1 0 0 / 18%'],
+  ['--chart-1', 'var(--primary)', 'var(--primary)', '='],
+  ['--chart-2', '0.60 0.10 200', '0.75 0.10 200', '='],
+  ['--radius', '0.5rem', '0.5rem', '='],
 ]
+// os 3 temas como o navegador os resolve: o Preto é o .dark com o .black por cima
+const temas = () => ({ ':root': bloco(':root'), '.dark': bloco('.dark'), '.dark.black': { ...bloco('.dark'), ...bloco('.black') } })
 
 afterEach(() => {
   document.documentElement.className = ''
@@ -128,28 +135,39 @@ describe('interface nova', () => {
   })
 
   it('contraste dos tokens', () => {
-    for (const seletor of [':root', '.dark']) {
-      const t = bloco(seletor)
+    for (const [seletor, t] of Object.entries(temas()))
       for (const [frente, fundo] of [
         ['--foreground', '--background'],
-        ['--primary-foreground', '--primary'],
+        ['--foreground', '--card'],
         ['--muted-foreground', '--background'],
+        ['--muted-foreground', '--muted'],
+        ['--muted-foreground', '--primary-subtle'],
+        ['--muted-foreground', '--warning-subtle'],
+        ['--primary-foreground', '--primary'],
         ['--destructive', '--background'],
       ])
         expect(contraste(t[frente], t[fundo]), `${seletor} ${frente}/${fundo}`).toBeGreaterThanOrEqual(4.5)
-    }
   })
 
   it('tokens da paleta', () => {
-    const [claro, escuro, tema] = [bloco(':root'), bloco('.dark'), bloco('@theme inline')]
-    for (const [token, valorClaro, valorEscuro] of Tokens) {
+    const [claro, escuro, preto, tema] = [bloco(':root'), bloco('.dark'), bloco('.black'), bloco('@theme inline')]
+    expect(css.indexOf('.black {')).toBeGreaterThan(css.indexOf('.dark {'))
+    for (const [token, valorClaro, valorEscuro, valorPreto] of Tokens) {
       expect(claro[token], `:root ${token}`).toBe(valorClaro)
       expect(escuro[token], `.dark ${token}`).toBe(valorEscuro)
+      expect(preto[token], `.black ${token}`).toBe(valorPreto === '=' ? undefined : valorPreto)
       expect(Object.values(tema), `@theme inline ${token}`).toContain(`var(${token})`)
     }
     expect(tema['--font-sans']).toBe("'Inter Variable', ui-sans-serif, system-ui, sans-serif")
     const CorLiteral = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])|\b(?:oklch|rgb|hsl)\(/
     expect(arquivos.filter((a) => CorLiteral.test(texto(a)))).toEqual([])
+  })
+
+  // redesign-institucional C22 (AC 22): todo título de página fora dos testes
+  it('títulos de página', () => {
+    const titulos = arquivos.filter((a) => !a.includes('.test.')).flatMap((a) => [...texto(a).matchAll(/<h1[^>]*>/g)].map((m) => [a, m[0]]))
+    expect(titulos.length).toBeGreaterThanOrEqual(8)
+    for (const [arquivo, h1] of titulos) expect(h1, arquivo).toMatch(/className="(?:[^"]* )?text-2xl font-semibold tracking-tight[ "]/)
   })
 
   it('provedores dentro do App', () => {

@@ -21,7 +21,7 @@ function ListaDeChamados<T extends ItemMeu>({ titulo, url, vazio, detalhe }: { t
   const { data: itens, error, isPending } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-2">
-      <h1 className="text-xl font-semibold">{titulo}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
       {error && <Alert variant="destructive">{error.message}</Alert>}
       {isPending && <Carregando />}
       {itens?.length === 0 && vazio}

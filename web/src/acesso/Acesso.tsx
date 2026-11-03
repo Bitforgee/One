@@ -22,7 +22,7 @@ function Cartao({ titulo, children }: { titulo: ReactNode; children: ReactNode }
       <Card>
         <CardHeader>
           <CardTitle>
-            <h1 className="text-xl font-semibold">{titulo}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">{children}</CardContent>
@@ -174,7 +174,7 @@ export function TrocarSenha() {
   const { me, setMe } = useSessao()
   return (
     <div className="mx-auto flex max-w-[420px] flex-col gap-6">
-      <h1 className="text-xl font-semibold">Trocar senha</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Trocar senha</h1>
       {me.deveTrocarSenha && <Alert>Troque a senha temporária para continuar.</Alert>}
       <Formulario
         schema={z.object({ senhaAtual: obrigatorio, novaSenha: obrigatorio })}
