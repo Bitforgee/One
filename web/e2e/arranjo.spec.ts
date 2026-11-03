@@ -407,3 +407,47 @@ test.describe('conhecimento', () => {
     expect(Math.abs((await caixa(dialogo)).width - 512)).toBeLessThanOrEqual(1)
   })
 })
+
+test.describe('administração', () => {
+  // C83 (AC 46)
+  test('abas de Cadastros rolam na própria faixa', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/cadastros')
+    const abas = page.getByRole('tablist')
+    await abas.waitFor()
+    expect(await abas.evaluate((e) => getComputedStyle(e).overflowX)).toBe('auto')
+    expect(await abas.evaluate((e) => e.scrollLeft)).toBe(0)
+    await page.getByRole('tab', { name: 'Respostas prontas' }).click()
+    expect(await abas.evaluate((e) => e.scrollLeft)).toBeGreaterThan(0)
+    expect(await page.evaluate(() => window.scrollX)).toBe(0)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360)
+
+    await page.setViewportSize({ width: 1024, height: 740 })
+    expect(await abas.evaluate((e) => e.scrollWidth - e.clientWidth)).toBeLessThanOrEqual(0)
+  })
+
+  // C89 (## Screens linhas 13 a 15)
+  test('arranjo administração', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/usuarios')
+    await page.getByText('Carla Regina de Souza Albuquerque').waitFor()
+    expect(naMesmaLinha(await caixa(page.getByRole('heading', { name: 'Usuários' })), await caixa(page.getByRole('button', { name: /Novo/ })))).toBe(true)
+
+    await page.goto('/univag/matriculas')
+    const importar = page.getByRole('button', { name: 'Importar' })
+    await importar.waitFor()
+    const conteudo = async () => (await caixa(page.locator('main > div').first())).width
+    expect(Math.abs((await caixa(importar)).width - (await conteudo()))).toBeLessThanOrEqual(1)
+    await page.setViewportSize({ width: 1024, height: 740 })
+    expect((await caixa(importar)).width).toBeLessThan(await conteudo())
+
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/cadastros')
+    const linha = page.getByRole('tabpanel').getByRole('button').first()
+    await linha.waitFor()
+    const lista = await caixa(linha.locator('..'))
+    expect(Math.abs((await caixa(linha)).width - lista.width)).toBeLessThanOrEqual(1)
+  })
+})

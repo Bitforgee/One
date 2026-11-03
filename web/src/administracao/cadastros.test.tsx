@@ -177,4 +177,18 @@ describe('cadastros', () => {
     expect(await painel.findByText('Boleto')).toBeInTheDocument()
     expect(painel.queryByText('Nenhum item cadastrado.')).not.toBeInTheDocument()
   })
+
+  // C82 (AC 45, door 13)
+  it('toast de cadastro só no sucesso', async () => {
+    await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
+    let tentativa = 0
+    cadastros({ 'PUT /api/admin/setores/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'Já existe um setor de triagem.' }] : [200, {}]) })
+    const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
+    await userEvent.click(await screen.findByText('Triagem'))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Já existe um setor de triagem.')
+    expect(avisos()).not.toHaveTextContent('Cadastro salvo.')
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
+  })
 })

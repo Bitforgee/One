@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
 
 // RAG: a fonte citada é um artigo ou um documento (PDF) da instituição; só a equipe recebe
@@ -44,25 +44,19 @@ export const IntervaloAtualizacao = 15_000
 
 // Lê o chamado e o relê a cada 15 s enquanto a tela está aberta (door 18).
 export function useChamado(numero?: string) {
-  const [chamado, setChamado] = useState<Chamado>()
-  const [erro, setErro] = useState<string>()
-
-  const carregar = useCallback(async () => {
-    if (!numero) return
-    try {
-      setChamado(await api<Chamado>(`/api/chamados/${numero}`))
-      setErro(undefined)
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Não foi possível carregar o chamado.')
-    }
-  }, [numero])
-
-  useEffect(() => {
-    if (!numero) return
-    carregar()
-    const t = setInterval(carregar, IntervaloAtualizacao)
-    return () => clearInterval(t)
-  }, [numero, carregar])
-
-  return { chamado, erro, carregar, setChamado }
+  const cliente = useQueryClient()
+  const chave = ['chamado', numero]
+  const { data, error, refetch } = useQuery({
+    queryKey: chave,
+    queryFn: () => api<Chamado>(`/api/chamados/${numero}`),
+    enabled: !!numero,
+    refetchInterval: IntervaloAtualizacao,
+    refetchIntervalInBackground: true, // a aba em segundo plano também relê, como antes
+  })
+  return {
+    chamado: data,
+    erro: error?.message,
+    carregar: async () => void (await refetch()),
+    setChamado: (c: Chamado) => cliente.setQueryData(chave, c),
+  }
 }

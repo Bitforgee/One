@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import { api, ErroApi } from '../api'
 import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
+import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
@@ -55,15 +56,6 @@ function SelecaoPronta({ nota, prontas, setTexto }: { nota: boolean; prontas: Pr
         </NativeSelectOption>
       ))}
     </NativeSelect>
-  )
-}
-
-function Marca({ id, rotulo, marcado, mudar }: { id: string; rotulo: string; marcado: boolean; mudar: (v: boolean) => void }) {
-  return (
-    <div className="flex min-h-11 items-center gap-2">
-      <input type="checkbox" id={id} className="size-4 accent-primary" checked={marcado} onChange={(e) => mudar(e.target.checked)} />
-      <Label htmlFor={id}>{rotulo}</Label>
-    </div>
   )
 }
 

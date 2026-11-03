@@ -30,7 +30,7 @@ export function App() {
   const [cliente] = useState(novoCliente)
   return (
     <QueryClientProvider client={cliente}>
-      <ThemeProvider defaultTheme="light" storageKey="one-tema">
+      <ThemeProvider defaultTheme="system" storageKey="one-tema">
         <MotionConfig reducedMotion="user">
           <Rotas />
           <Toaster containerAriaLabel="Notificações" />

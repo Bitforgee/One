@@ -86,11 +86,11 @@ describe('transferência', () => {
     const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
     await waitFor(() => expect(leituras()).toBe(1))
 
-    vi.advanceTimersByTime(14_900)
+    await vi.advanceTimersByTimeAsync(14_900)
     expect(leituras()).toBe(1)
-    vi.advanceTimersByTime(100)
+    await vi.advanceTimersByTimeAsync(100)
     expect(leituras()).toBe(2)
-    vi.advanceTimersByTime(15_000)
+    await vi.advanceTimersByTimeAsync(15_000)
     expect(leituras()).toBe(3)
   })
 })

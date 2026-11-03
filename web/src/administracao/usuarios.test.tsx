@@ -18,7 +18,7 @@ function usuarios(rotas: Record<string, Rota> = {}) {
   return chamadas
 }
 
-const item = async (nome: string) => (await screen.findByText(nome)).closest('.list-group-item') as HTMLElement
+const item = async (nome: string) => (await screen.findByText(nome)).closest('[data-slot=card]') as HTMLElement
 const posts = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
 
 describe('usuários', () => {
@@ -31,7 +31,7 @@ describe('usuários', () => {
     expect(within(ativa).getByRole('button', { name: 'Editar' })).toBeInTheDocument()
     const inativa = await item('Bia')
     expect(within(inativa).getByText('Desativado')).toBeInTheDocument()
-    expect(inativa.querySelectorAll('.small')[1]).toHaveTextContent(/^Aluno$/)
+    expect(inativa.querySelectorAll('.text-sm')[1]).toHaveTextContent(/^Aluno$/)
     expect(within(inativa).queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText('Nenhum item cadastrado.')).not.toBeInTheDocument()
   })
@@ -89,5 +89,25 @@ describe('usuários', () => {
     await userEvent.click(within(await item('Carla')).getByRole('button', { name: 'Desativar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Desativar' }))
     await waitFor(() => expect(posts(chamadas)).toEqual([['POST', '/api/admin/usuarios/1/desativar', {}]]))
+  })
+
+  // C81 (AC 44, door 13)
+  it('toasts de usuário só no sucesso', async () => {
+    await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
+    let tentativa = 0
+    usuarios({
+      'PUT /api/admin/usuarios/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'CPF repetido.' }] : [200, {}]),
+      'POST /api/admin/usuarios/1/desativar': () => [200, {}],
+    })
+    const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
+    await userEvent.click(within(await item('Carla')).getByRole('button', { name: 'Editar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('CPF repetido.')
+    expect(avisos()).not.toHaveTextContent('Usuário salvo.')
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(avisos()).toHaveTextContent('Usuário salvo.'))
+    await userEvent.click(within(await item('Carla')).getByRole('button', { name: 'Desativar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Desativar' }))
+    await waitFor(() => expect(avisos()).toHaveTextContent('Usuário desativado.'))
   })
 })

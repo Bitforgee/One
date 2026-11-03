@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
-// Linha 0 de ## Screens (cabeçalho); "Tema", "Claro", "Escuro" e "Sistema" só entram com a S9.
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu']
+// Linha 0 de ## Screens (cabeçalho); "Tema" e "Menu" são só nomes acessíveis, conferidos por papel.
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Sistema']
 const Instituicao = 'Univag' // nome da instituição do fixture
 
 describe('textos', () => {
@@ -33,6 +33,11 @@ describe('textos', () => {
     abrir('/univag/trocar-senha')
     await userEvent.click(await screen.findByRole('button', { name: 'Menu' }))
     tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }))
+    await userEvent.keyboard('{Escape}')
+
+    // controle de tema aberto: "Claro", "Escuro" e "Sistema"
+    await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
+    tela.conferir(document.querySelector('[data-slot=popover-content]') as HTMLElement)
 
     tela.todos()
   })

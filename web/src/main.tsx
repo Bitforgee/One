@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { registerSW } from 'virtual:pwa-register'
 import '@fontsource-variable/inter'
-import 'bootstrap-icons/font/bootstrap-icons.css'
 import './index.css'
 import { App } from './App'
 

@@ -1,15 +1,25 @@
-import { useState, type JSX } from 'react'
-import { Form, ListGroup, Tab, Tabs } from 'react-bootstrap'
-import { useAcao } from '../acao'
+import { Plus } from 'lucide-react'
+import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from 'react'
+import { useGravacao, useLeituras } from '../acao'
 import { api } from '../api'
+import { Cabecalho } from '../Cabecalho'
+import { Editor } from '../Editor'
+import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
-import { Cabecalho, Editor, useListas, Vazio, type Categoria, type Curso, type Pronta, type Regra, type Setor } from './comum'
+import { Situacao } from '../Situacao'
+import { Alert } from '../ui/alert'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { NativeSelect } from '../ui/native-select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Textarea } from '../ui/textarea'
+import type { Categoria, Curso, Pronta, Regra, Setor } from './comum'
 
 type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; regras: Regra[]; prontas: Pronta[] }
 type Aba = keyof Listas
 // O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
 type Ficha = Record<string, any>
-type Campos = { editando: Ficha; setEditando: (f: Ficha) => void; dados?: Listas }
+type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas }
 
 const Titulos: Record<Aba, string> = { setores: 'Setores', categorias: 'Categorias', cursos: 'Cursos', regras: 'Regras', prontas: 'Respostas prontas' }
 const Rotas: Record<Aba, string> = { setores: 'setores', categorias: 'categorias', cursos: 'cursos', regras: 'regras', prontas: 'respostas-prontas' }
@@ -46,30 +56,42 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
   }
 }
 
+// Cada linha é um botão da largura da lista: o nome e, abaixo, o que distingue o registro.
 function ListaDaAba({ itens, linha, editar }: { itens?: { id: number }[]; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
   return (
-    <ListGroup>
+    <div className="flex flex-col gap-2">
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
-          <ListGroup.Item key={x.id} action onClick={() => editar(x)}>
-            <div style={{ overflowWrap: 'anywhere' }}>{principal}</div>
-            {detalhe && <div className="small text-body-secondary">{detalhe}</div>}
-          </ListGroup.Item>
+          <button key={x.id} type="button" onClick={() => editar(x)} className="w-full rounded-lg border px-3 py-2 text-start hover:bg-accent">
+            <div className="break-words">{principal}</div>
+            {detalhe && <div className="text-sm text-muted-foreground">{detalhe}</div>}
+          </button>
         )
       })}
-    </ListGroup>
+    </div>
   )
 }
 
-const campo = ({ editando, setEditando }: Campos, k: string) => ({ value: editando[k], onChange: (e: { target: { value: string } }) => setEditando({ ...editando, [k]: e.target.value }) })
+const campo = ({ setEditando, editando }: Campos, k: string) => ({
+  value: editando[k],
+  onChange: (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [k]: e.target.value }),
+})
+
+function Rotulado({ id, rotulo, children }: { id: string; rotulo: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={id}>{rotulo}</Label>
+      {children}
+    </div>
+  )
+}
 
 function CampoNome(c: Campos) {
   return (
-    <Form.Group controlId="cad-nome" className="mb-2">
-      <Form.Label>Nome</Form.Label>
-      <Form.Control {...campo(c, 'nome')} />
-    </Form.Group>
+    <Rotulado id="cad-nome" rotulo="Nome">
+      <Input id="cad-nome" {...campo(c, 'nome')} />
+    </Rotulado>
   )
 }
 
@@ -79,7 +101,7 @@ function NomeEMarcas({ c, marcas }: { c: Campos; marcas: [id: string, rotulo: st
     <>
       <CampoNome {...c} />
       {marcas.map(([id, rotulo, chave]) => (
-        <Form.Check key={id} id={id} label={rotulo} checked={c.editando[chave]} onChange={(e) => c.setEditando({ ...c.editando, [chave]: e.target.checked })} />
+        <Marca key={id} id={id} rotulo={rotulo} marcado={c.editando[chave]} mudar={(v) => c.setEditando((f) => f && { ...f, [chave]: v })} />
       ))}
     </>
   )
@@ -97,68 +119,50 @@ const CamposDeSetor = (c: Campos) => (
 
 const CamposDeCategoria = (c: Campos) => <NomeEMarcas c={c} marcas={[['cad-ativa', 'Ativa', 'ativa']]} />
 
-function CamposDeCurso(c: Campos) {
+// Lista nativa de um cadastro (door 5): a primeira opção, vazia, pede a escolha.
+function Escolha({ c, id, rotulo, chave, vazio, itens }: { c: Campos; id: string; rotulo: string; chave: string; vazio: string; itens?: { id: number; nome: string }[] }) {
   return (
-    <>
-      <CampoNome {...c} />
-      <Form.Group controlId="cad-coordenacao">
-        <Form.Label>Setor de coordenação</Form.Label>
-        <Form.Select {...campo(c, 'setorCoordenacaoId')}>
-          <Opcoes vazio="Sem coordenação (vai para a triagem)" itens={c.dados?.setores} />
-        </Form.Select>
-      </Form.Group>
-    </>
+    <Rotulado id={id} rotulo={rotulo}>
+      <NativeSelect id={id} className="w-full" {...campo(c, chave)}>
+        <Opcoes vazio={vazio} itens={itens} />
+      </NativeSelect>
+    </Rotulado>
   )
 }
+
+const CamposDeCurso = (c: Campos) => (
+  <>
+    <CampoNome {...c} />
+    <Escolha c={c} id="cad-coordenacao" rotulo="Setor de coordenação" chave="setorCoordenacaoId" vazio="Sem coordenação (vai para a triagem)" itens={c.dados?.setores} />
+  </>
+)
 
 function CamposDeRegra(c: Campos) {
   return (
     <>
-      <Form.Group controlId="cad-categoria" className="mb-2">
-        <Form.Label>Categoria</Form.Label>
-        <Form.Select {...campo(c, 'categoriaId')}>
-          <Opcoes vazio="Escolha a categoria" itens={c.dados?.categorias.filter((x) => !x.padrao)} />
-        </Form.Select>
-      </Form.Group>
-      <Form.Group controlId="cad-destino" className="mb-2">
-        <Form.Label>Destino</Form.Label>
-        <Form.Select {...campo(c, 'destino')}>
+      <Escolha c={c} id="cad-categoria" rotulo="Categoria" chave="categoriaId" vazio="Escolha a categoria" itens={c.dados?.categorias.filter((x) => !x.padrao)} />
+      <Rotulado id="cad-destino" rotulo="Destino">
+        <NativeSelect id="cad-destino" className="w-full" {...campo(c, 'destino')}>
           <option value="SETOR">Setor fixo</option>
           <option value="COORDENACAO_CURSO">Coordenação do curso da matrícula</option>
-        </Form.Select>
-      </Form.Group>
-      {c.editando.destino === 'SETOR' && (
-        <Form.Group controlId="cad-setor">
-          <Form.Label>Setor</Form.Label>
-          <Form.Select {...campo(c, 'setorId')}>
-            <Opcoes vazio="Escolha o setor" itens={c.dados?.setores} />
-          </Form.Select>
-        </Form.Group>
-      )}
+        </NativeSelect>
+      </Rotulado>
+      {c.editando.destino === 'SETOR' && <Escolha c={c} id="cad-setor" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />}
     </>
   )
 }
 
-function CamposDePronta(c: Campos) {
-  return (
-    <>
-      <Form.Group controlId="cad-setor-pronta" className="mb-2">
-        <Form.Label>Setor</Form.Label>
-        <Form.Select {...campo(c, 'setorId')}>
-          <Opcoes vazio="Escolha o setor" itens={c.dados?.setores} />
-        </Form.Select>
-      </Form.Group>
-      <Form.Group controlId="cad-titulo" className="mb-2">
-        <Form.Label>Título</Form.Label>
-        <Form.Control {...campo(c, 'titulo')} />
-      </Form.Group>
-      <Form.Group controlId="cad-texto">
-        <Form.Label>Texto</Form.Label>
-        <Form.Control as="textarea" rows={4} maxLength={4000} {...campo(c, 'texto')} />
-      </Form.Group>
-    </>
-  )
-}
+const CamposDePronta = (c: Campos) => (
+  <>
+    <Escolha c={c} id="cad-setor-pronta" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />
+    <Rotulado id="cad-titulo" rotulo="Título">
+      <Input id="cad-titulo" {...campo(c, 'titulo')} />
+    </Rotulado>
+    <Rotulado id="cad-texto" rotulo="Texto">
+      <Textarea id="cad-texto" rows={4} maxLength={4000} {...campo(c, 'texto')} />
+    </Rotulado>
+  </>
+)
 
 const CamposDaAba: Record<Aba, (c: Campos) => JSX.Element> = {
   setores: CamposDeSetor,
@@ -170,7 +174,7 @@ const CamposDaAba: Record<Aba, (c: Campos) => JSX.Element> = {
 
 // Setores, categorias, cursos, regras de roteamento e respostas prontas.
 export function Cadastros() {
-  const { dados, carregar, carga } = useListas<Listas>({
+  const { dados, erro, recarregar } = useLeituras<Listas>({
     setores: '/api/admin/setores',
     categorias: '/api/admin/categorias',
     cursos: '/api/admin/cursos',
@@ -179,34 +183,48 @@ export function Cadastros() {
   })
   const [aba, setAba] = useState<Aba>('setores')
   const [editando, setEditando] = useState<Ficha>()
-  const acao = useAcao()
+  const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
 
   function salvar() {
     const { id, ...resto } = editando!
-    acao.executar(async () => {
-      await api(`/api/admin/${Rotas[aba]}${id ? `/${id}` : ''}`, Corpos[aba](resto), id ? 'PUT' : undefined)
-      setEditando(undefined)
-      await carregar()
+    acao.mutate({
+      chamar: () => api(`/api/admin/${Rotas[aba]}${id ? `/${id}` : ''}`, Corpos[aba](resto), id ? 'PUT' : undefined),
+      aviso: 'Cadastro salvo.',
+      depois: () => setEditando(undefined),
     })
   }
 
   return (
-    <>
-      <Cabecalho titulo="Cadastros" novo={() => setEditando({ ...Novos[aba] })} />
-      {carga.alerta}
-      <Tabs activeKey={aba} onSelect={(k) => setAba(k as Aba)} className="mb-3 flex-nowrap overflow-x-auto overflow-y-hidden">
+    <div className="flex flex-col gap-2">
+      <Cabecalho titulo="Cadastros" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })} />
+      {erro && <Alert variant="destructive">{erro}</Alert>}
+      <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)}>
+        <TabsList className="w-full justify-start overflow-x-auto">
+          {(Object.keys(Titulos) as Aba[]).map((k) => (
+            <TabsTrigger key={k} value={k} className="flex-none">
+              {Titulos[k]}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {(Object.keys(Titulos) as Aba[]).map((k) => (
-          <Tab key={k} eventKey={k} title={Titulos[k]}>
-            <Vazio itens={dados?.[k]} />
+          <TabsContent key={k} value={k} className="flex flex-col gap-2">
+            <Situacao itens={dados?.[k]} erro={erro} />
             <ListaDaAba itens={dados?.[k]} linha={(x) => linhas(dados!)[k](x)} editar={(x) => setEditando(ficha(x))} />
-          </Tab>
+          </TabsContent>
         ))}
       </Tabs>
 
-      <Editor titulo={`${editando?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.pendente} alerta={acao.alerta}>
+      <Editor
+        titulo={`${editando?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`}
+        aberto={!!editando}
+        fechar={() => setEditando(undefined)}
+        salvar={salvar}
+        pendente={acao.isPending}
+        alerta={acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
+      >
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} />}
       </Editor>
-    </>
+    </div>
   )
 }

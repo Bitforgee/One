@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import pacote from '../../package.json'
 import { formatarData } from '../datas'
 import { abrir, api, me } from '../test/util'
@@ -119,9 +119,7 @@ describe('acesso', () => {
 
   it('dependências do kit de interface', () => {
     const todas = { ...pacote.dependencies, ...pacote.devDependencies } as Record<string, string>
-    expect(todas['bootstrap']).toBe('5.3.8')
-    expect(todas['react-bootstrap']).toBe('2.10.10')
-    expect(todas['bootstrap-icons']).toBe('1.13.2')
+    for (const saiu of ['bootstrap', 'react-bootstrap', 'bootstrap-icons']) expect(todas[saiu], saiu).toBeUndefined()
     expect(todas['react-router']).toMatch(/^\^?8\./)
     expect(todas['vite-plugin-pwa']).toBe('2.0.0')
     // door 9: a stack nova com versão exata, e nada do AI SDK nem do next-themes
@@ -131,6 +129,34 @@ describe('acesso', () => {
     expect(todas['@tanstack/react-query']).toBe('5.105.3')
     expect(todas['vaul']).toBe('1.1.2')
     for (const proibido of ['next-themes', 'ai', '@ai-sdk/react', 'streamdown']) expect(todas[proibido], proibido).toBeUndefined()
+  })
+
+  // C91 (AC 49, door 10)
+  it('Tema grava a escolha em one-tema', async () => {
+    localStorage.clear()
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    for (const [rotulo, valor, classe] of [['Escuro', 'dark', 'dark'], ['Claro', 'light', 'light'], ['Sistema', 'system', 'light']]) {
+      await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
+      await userEvent.click(within(document.querySelector('[data-slot=popover-content]') as HTMLElement).getByRole('button', { name: rotulo }))
+      expect(localStorage.getItem('one-tema'), rotulo).toBe(valor)
+      expect(document.documentElement, rotulo).toHaveClass(classe)
+    }
+    expect(document.documentElement).not.toHaveClass('dark')
+  })
+
+  // C92 (AC 50, door 10)
+  it('sem tema gravado segue o sistema', async () => {
+    for (const escuro of [true, false]) {
+      localStorage.clear()
+      vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: escuro, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+      api({ 'GET /api/auth/me': () => [200, me()] })
+      const { unmount } = abrir('/univag/trocar-senha')
+      await screen.findByRole('button', { name: 'Tema' })
+      expect(document.documentElement).toHaveClass(escuro ? 'dark' : 'light')
+      expect(document.documentElement).not.toHaveClass(escuro ? 'light' : 'dark')
+      unmount()
+    }
   })
 
   it('cabeçalho num único nav por papel', async () => {

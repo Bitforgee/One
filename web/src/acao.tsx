@@ -1,5 +1,7 @@
-import { useState, type ComponentProps, type ReactNode } from 'react'
-import { Alert as BsAlert, Button as BsButton, Spinner as BsSpinner, type ButtonProps as BsButtonProps } from 'react-bootstrap'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ComponentProps } from 'react'
+import { toast } from 'sonner'
+import { api } from './api'
 import { Button } from './ui/button'
 import { Spinner } from './ui/spinner'
 
@@ -13,36 +15,27 @@ export function BotaoAcao({ pendente, children, ...props }: ComponentProps<typeo
   )
 }
 
-// Legado: sai com a última tela em react-bootstrap (S8).
-
-// Estado de uma ação da tela: pendente (Spinner e botão desabilitado) e erro (detail num Alert).
-export function useAcao() {
-  const [pendente, setPendente] = useState(false)
-  const [erro, setErro] = useState<string>()
-  async function executar(fn: () => Promise<void>) {
-    setPendente(true)
-    setErro(undefined)
-    try {
-      await fn()
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Não foi possível concluir a requisição.')
-    } finally {
-      setPendente(false)
-    }
-  }
-  const alerta = erro ? (
-    <BsAlert variant="danger" className="mt-3">
-      {erro}
-    </BsAlert>
-  ) : null
-  return { pendente, erro, alerta, executar }
+// Lê as listas que a tela usa (uma por url) e dá a função que as relê depois de uma gravação.
+export function useLeituras<T extends Record<string, unknown>>(urls: Record<keyof T, string>) {
+  const cliente = useQueryClient()
+  const chave = ['leituras', ...Object.values(urls)]
+  const { data, error } = useQuery({
+    queryKey: chave,
+    queryFn: async () => Object.fromEntries(await Promise.all(Object.entries(urls).map(async ([k, url]) => [k, await api(url as string)]))) as T,
+  })
+  return { dados: data, erro: error?.message, recarregar: () => cliente.invalidateQueries({ queryKey: chave }) }
 }
 
-export function BotaoBs({ pendente, children, ...props }: BsButtonProps & { pendente: boolean; children: ReactNode }) {
-  return (
-    <BsButton {...props} disabled={pendente || props.disabled}>
-      {pendente && <BsSpinner as="span" animation="border" size="sm" role="status" aria-label="Carregando" className="me-2" />}
-      {children}
-    </BsButton>
-  )
+type Gravacao = { chamar: () => Promise<unknown>; aviso: string; depois?: () => void }
+
+// Uma gravação: o toast só aparece no sucesso (door 13); o erro fica em `error`, para o Alert da tela ou do diálogo.
+export function useGravacao(recarregar: () => Promise<unknown>) {
+  return useMutation({
+    mutationFn: ({ chamar }: Gravacao) => chamar(),
+    onSuccess: async (_, { aviso, depois }) => {
+      depois?.()
+      toast.success(aviso)
+      await recarregar()
+    },
+  })
 }

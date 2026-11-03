@@ -1,5 +1,3 @@
-@layer theme, base, bootstrap, components, utilities;
-@import "bootstrap/dist/css/bootstrap.min.css" layer(bootstrap);
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -88,31 +86,6 @@
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
-}
-
-/* shortcut: os utilitários do Bootstrap têm !important, e !important inverte a ordem das camadas, então .px-4 ou
-   .bg-primary da camada bootstrap ganham das utilidades do Tailwind de mesmo nome. Aqui, na camada base (antes da
-   bootstrap), as classes de mesmo nome e valor diferente que as telas migradas usam voltam ao valor do Tailwind.
-   Só classes de um lado (px, py, pb, mt) ou de um valor: um atalho como .p-4 com !important ganharia do px-0 ao lado.
-   O !important daqui também ganha das variantes (hover:, has-[]:) da mesma classe; é visual e dura até a S9.
-   Quem migrar uma tela e usar outra classe da lista do Bootstrap acrescenta a linha; a S9 apaga o bloco inteiro. */
-@layer base {
-  .bg-primary { background-color: var(--color-primary) !important; }
-  .bg-primary-subtle { background-color: var(--color-primary-subtle) !important; }
-  .bg-secondary { background-color: var(--color-secondary) !important; }
-  .bg-success { background-color: var(--color-success) !important; }
-  .bg-warning-subtle { background-color: var(--color-warning-subtle) !important; }
-  .text-primary { color: var(--color-primary) !important; }
-  .border { border-color: var(--color-border) !important; }
-  .gap-3 { gap: calc(var(--spacing) * 3) !important; }
-  .gap-4 { gap: calc(var(--spacing) * 4) !important; }
-  .mt-3 { margin-top: calc(var(--spacing) * 3) !important; }
-  .mt-4 { margin-top: calc(var(--spacing) * 4) !important; }
-  .pb-4 { padding-bottom: calc(var(--spacing) * 4) !important; }
-  .px-3 { padding-inline: calc(var(--spacing) * 3) !important; }
-  .px-4 { padding-inline: calc(var(--spacing) * 4) !important; }
-  .py-3 { padding-block: calc(var(--spacing) * 3) !important; }
-  .py-4 { padding-block: calc(var(--spacing) * 4) !important; }
 }
 
 @layer base {

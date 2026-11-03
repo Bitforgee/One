@@ -1,8 +1,19 @@
-import { useState } from 'react'
-import { Badge, Button, Form, ListGroup, Modal, Stack } from 'react-bootstrap'
-import { useAcao } from '../acao'
+import { Plus } from 'lucide-react'
+import { useState, type ComponentProps, type Dispatch, type SetStateAction } from 'react'
+import { useGravacao, useLeituras } from '../acao'
 import { api } from '../api'
-import { Cabecalho, Editor, useListas, Vazio, type Setor, type Usuario } from './comum'
+import { Cabecalho } from '../Cabecalho'
+import { Confirmar } from '../Confirmar'
+import { Editor } from '../Editor'
+import { Marca } from '../Marca'
+import { Situacao } from '../Situacao'
+import { Alert } from '../ui/alert'
+import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import type { Setor, Usuario } from './comum'
 
 const Papeis: [string, string][] = [
   ['ALUNO', 'Aluno'],
@@ -12,7 +23,7 @@ const Papeis: [string, string][] = [
 
 // O formulário sempre tem texto e listas; a senha temporária vazia não vai para a API.
 type Ficha = Pick<Usuario, 'cpf' | 'nome' | 'email' | 'papeis' | 'setores'> & { id?: number; senhaTemporaria: string }
-type Edicao = { editando: Ficha; setEditando: (f: Ficha) => void; setores: Setor[] }
+type Edicao = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; setores: Setor[] }
 const Novo: Ficha = { cpf: '', nome: '', email: '', papeis: ['ATENDENTE'], setores: [], senhaTemporaria: '' }
 const ficha = (u: Usuario): Ficha => ({ id: u.id, cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: '' })
 const corpo = (u: Ficha) => ({ cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: u.senhaTemporaria || undefined })
@@ -22,25 +33,6 @@ function gravar(u: Ficha) {
   return u.id ? api(`/api/admin/usuarios/${u.id}`, corpo(u), 'PUT') : api('/api/admin/usuarios', corpo(u))
 }
 
-function ConfirmarDesativar({ u, fechar, confirmar }: { u?: Usuario; fechar: () => void; confirmar: () => void }) {
-  return (
-    <Modal show={!!u} onHide={fechar} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Desativar {u?.nome}?</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>A pessoa perde o acesso na próxima requisição. Conversas, chamados e histórico ficam guardados; os chamados em que ela era responsável voltam para a fila do setor.</Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={fechar}>
-          Voltar
-        </Button>
-        <Button variant="danger" onClick={confirmar}>
-          Desativar
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  )
-}
-
 function alternar<T>(lista: T[], valor: T) {
   return lista.includes(valor) ? lista.filter((x) => x !== valor) : [...lista, valor]
 }
@@ -48,125 +40,119 @@ function alternar<T>(lista: T[], valor: T) {
 function ItemUsuario({ u, setores, editar, desativar }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void }) {
   const papeis = new Map(Papeis)
   return (
-    <ListGroup.Item>
-      <div className="d-flex justify-content-between gap-2 flex-wrap">
-        <strong style={{ overflowWrap: 'anywhere' }}>{u.nome}</strong>
-        {!u.ativo && <Badge bg="secondary">Desativado</Badge>}
+    <Card className="gap-1 px-3 py-3">
+      <div className="flex items-start justify-between gap-2">
+        <strong className="min-w-0 break-words">{u.nome}</strong>
+        {!u.ativo && <Badge variant="secondary">Desativado</Badge>}
       </div>
-      <div className="small text-body-secondary" style={{ overflowWrap: 'anywhere' }}>
+      <div className="text-sm break-words text-muted-foreground">
         CPF {u.cpf} · {u.email}
       </div>
-      <div className="small">
+      <div className="text-sm">
         {u.papeis.map((p) => papeis.get(p)).join(', ')}
         {u.setores.length > 0 && ` · ${u.setores.map((s) => setores.get(s)).join(', ')}`}
       </div>
       {u.ativo && (
-        <Stack direction="horizontal" gap={2} className="mt-2">
-          <Button size="sm" variant="outline-primary" onClick={editar}>
+        <div className="mt-2 flex gap-2">
+          <Button size="sm" variant="outline" onClick={editar}>
             Editar
           </Button>
-          <Button size="sm" variant="outline-danger" onClick={desativar}>
+          <Button size="sm" variant="outline" className="text-destructive" onClick={desativar}>
             Desativar
           </Button>
-        </Stack>
+        </div>
       )}
-    </ListGroup.Item>
+    </Card>
   )
 }
 
 function PapeisESetores({ editando, setEditando, setores }: Edicao) {
+  const marcar = (chave: 'papeis' | 'setores', valor: string | number) => setEditando((f) => f && { ...f, [chave]: alternar(f[chave] as (string | number)[], valor) })
   return (
     <>
-      <Form.Group className="mb-2">
-        <Form.Label>Papéis</Form.Label>
+      <div className="flex flex-col">
+        <Label>Papéis</Label>
         {Papeis.map(([valor, rotulo]) => (
-          <Form.Check key={valor} id={`papel-${valor}`} label={rotulo} checked={editando.papeis.includes(valor)} onChange={() => setEditando({ ...editando, papeis: alternar(editando.papeis, valor) })} />
+          <Marca key={valor} id={`papel-${valor}`} rotulo={rotulo} marcado={editando.papeis.includes(valor)} mudar={() => marcar('papeis', valor)} />
         ))}
-      </Form.Group>
+      </div>
       {editando.papeis.includes('ATENDENTE') && (
-        <Form.Group className="mb-2">
-          <Form.Label>Setores do atendente</Form.Label>
+        <div className="flex flex-col">
+          <Label>Setores do atendente</Label>
           {setores
             .filter((s) => s.ativo)
             .map((s) => (
-              <Form.Check key={s.id} id={`setor-${s.id}`} label={s.nome} checked={editando.setores.includes(s.id)} onChange={() => setEditando({ ...editando, setores: alternar(editando.setores, s.id) })} />
+              <Marca key={s.id} id={`setor-${s.id}`} rotulo={s.nome} marcado={editando.setores.includes(s.id)} mudar={() => marcar('setores', s.id)} />
             ))}
-        </Form.Group>
+        </div>
       )}
     </>
   )
 }
 
+function Campo({ id, rotulo, ...props }: { id: string; rotulo: string } & ComponentProps<'input'>) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={id}>{rotulo}</Label>
+      <Input id={id} {...props} />
+    </div>
+  )
+}
+
 function CamposDoUsuario({ editando, setEditando, setores }: Edicao) {
-  const muda = (chave: 'cpf' | 'nome' | 'email' | 'senhaTemporaria') => (e: { target: { value: string } }) => setEditando({ ...editando, [chave]: e.target.value })
+  const muda = (chave: 'cpf' | 'nome' | 'email' | 'senhaTemporaria') => (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [chave]: e.target.value })
   return (
     <>
-      <Form.Group controlId="cpf" className="mb-2">
-        <Form.Label>CPF</Form.Label>
-        <Form.Control inputMode="numeric" value={editando.cpf} onChange={muda('cpf')} />
-      </Form.Group>
-      <Form.Group controlId="nome" className="mb-2">
-        <Form.Label>Nome</Form.Label>
-        <Form.Control value={editando.nome} onChange={muda('nome')} />
-      </Form.Group>
-      <Form.Group controlId="email" className="mb-2">
-        <Form.Label>E-mail</Form.Label>
-        <Form.Control type="email" value={editando.email} onChange={muda('email')} />
-      </Form.Group>
+      <Campo id="cpf" rotulo="CPF" inputMode="numeric" value={editando.cpf} onChange={muda('cpf')} />
+      <Campo id="nome" rotulo="Nome" value={editando.nome} onChange={muda('nome')} />
+      <Campo id="email" rotulo="E-mail" type="email" value={editando.email} onChange={muda('email')} />
       <PapeisESetores editando={editando} setEditando={setEditando} setores={setores} />
-      <Form.Group controlId="senha">
-        <Form.Label>Senha temporária (opcional)</Form.Label>
-        <Form.Control type="password" autoComplete="new-password" value={editando.senhaTemporaria} onChange={muda('senhaTemporaria')} />
-        <Form.Text>Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.</Form.Text>
-      </Form.Group>
+      <div className="flex flex-col gap-2">
+        <Campo id="senha" rotulo="Senha temporária (opcional)" type="password" autoComplete="new-password" value={editando.senhaTemporaria} onChange={muda('senhaTemporaria')} />
+        <p className="text-sm text-muted-foreground">Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.</p>
+      </div>
     </>
   )
 }
 
 // S8: atendentes e administradores; alunos chegam pela importação, mas também podem ser editados aqui.
 export function Usuarios() {
-  const { dados, carregar, carga } = useListas<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
+  const { dados, erro, recarregar } = useLeituras<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
   const [editando, setEditando] = useState<Ficha>()
   const [desativar, setDesativar] = useState<Usuario>()
-  const acao = useAcao()
+  const acao = useGravacao(recarregar)
+  const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
   const setores = dados ? dados.setores : []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
 
   function salvar() {
     const u = editando!
-    acao.executar(async () => {
-      await gravar(u)
-      setEditando(undefined)
-      await carregar()
-    })
+    acao.mutate({ chamar: () => gravar(u), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
   }
 
   function confirmarDesativar() {
     const u = desativar!
     setDesativar(undefined)
-    acao.executar(async () => {
-      await api(`/api/admin/usuarios/${u.id}/desativar`, {})
-      await carregar()
-    })
+    acao.mutate({ chamar: () => api(`/api/admin/usuarios/${u.id}/desativar`, {}), aviso: 'Usuário desativado.' })
   }
 
   return (
-    <>
-      <Cabecalho titulo="Usuários" novo={() => setEditando({ ...Novo })} />
-      {carga.alerta}
-      {acao.alerta}
-      <Vazio itens={dados?.usuarios} />
-      <ListGroup>
-        {dados?.usuarios.map((u) => (
-          <ItemUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
-        ))}
-      </ListGroup>
+    <div className="flex flex-col gap-2">
+      <Cabecalho titulo="Usuários" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
+      {erro && <Alert variant="destructive">{erro}</Alert>}
+      {!editando && alerta}
+      <Situacao itens={dados?.usuarios} erro={erro} />
+      {dados?.usuarios.map((u) => (
+        <ItemUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
+      ))}
 
-      <Editor titulo={editando?.id ? 'Editar usuário' : 'Novo usuário'} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.pendente} alerta={acao.alerta}>
+      <Editor titulo={editando?.id ? 'Editar usuário' : 'Novo usuário'} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={alerta}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} />}
       </Editor>
 
-      <ConfirmarDesativar u={desativar} fechar={() => setDesativar(undefined)} confirmar={confirmarDesativar} />
-    </>
+      <Confirmar aberto={!!desativar} fechar={() => setDesativar(undefined)} titulo={`Desativar ${desativar?.nome}?`} botao="Desativar" destrutivo confirmar={confirmarDesativar}>
+        A pessoa perde o acesso na próxima requisição. Conversas, chamados e histórico ficam guardados; os chamados em que ela era responsável voltam para a fila do setor.
+      </Confirmar>
+    </div>
   )
 }

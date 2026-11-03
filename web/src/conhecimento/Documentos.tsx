@@ -1,17 +1,19 @@
 import { Upload } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { BotaoAcao } from '../acao'
+import { useState } from 'react'
+import { useGravacao } from '../acao'
 import { api } from '../api'
+import { Cabecalho } from '../Cabecalho'
 import { CampoArquivo } from '../CampoArquivo'
+import { Editor } from '../Editor'
 import { Opcoes } from '../Opcoes'
+import { Situacao } from '../Situacao'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
-import { ConfirmarArquivar, SeloEstado, SeloIndexacao, Situacao, useCatalogo, useGravacao, type Categoria, type Indexacao } from './comum'
+import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
 
 type Documento = {
   id: number
@@ -104,8 +106,7 @@ export function Documentos() {
   const acao = useGravacao(recarregar)
   const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
 
-  function enviar(e: FormEvent) {
-    e.preventDefault()
+  function enviar() {
     const r = envio!
     acao.mutate({
       chamar: () => api(r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos', formulario(r)),
@@ -121,13 +122,7 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Documentos</h1>
-        <Button onClick={() => setEnvio({ titulo: '', categoriaId: '' })}>
-          <Upload aria-hidden="true" />
-          Enviar PDF
-        </Button>
-      </div>
+      <Cabecalho titulo="Documentos" botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })} />
       <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       {erro && <Alert variant="destructive">{erro}</Alert>}
       {!envio && alerta}
@@ -136,25 +131,9 @@ export function Documentos() {
         <ItemDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
       ))}
 
-      <Dialog open={!!envio} onOpenChange={(aberto) => !aberto && setEnvio(undefined)}>
-        <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
-          <form onSubmit={enviar} className="contents">
-            <DialogHeader>
-              <DialogTitle>{envio?.id ? 'Nova versão' : 'Enviar PDF'}</DialogTitle>
-            </DialogHeader>
-            {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} />}
-            {alerta}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEnvio(undefined)}>
-                Cancelar
-              </Button>
-              <BotaoAcao type="submit" pendente={acao.isPending} disabled={!envio?.arquivo}>
-                Enviar
-              </BotaoAcao>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <Editor titulo={envio?.id ? 'Nova versão' : 'Enviar PDF'} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={alerta} botao="Enviar" desabilitado={!envio?.arquivo}>
+        {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} />}
+      </Editor>
 
       <ConfirmarArquivar tipo="documento" titulo={arquivar?.titulo} aberto={!!arquivar} fechar={() => setArquivar(undefined)} arquivar={() => confirmarArquivar(arquivar!)} />
     </div>

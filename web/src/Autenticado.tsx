@@ -1,12 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, ChartColumn, FileText, Inbox, ListChecks, LogOut, Menu as IconeMenu, MessageCircle, Settings, Upload, Users } from 'lucide-react'
+import { BookText, ChartColumn, FileText, Inbox, ListChecks, LogOut, Menu as IconeMenu, MessageCircle, Monitor, Moon, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
 import type { Sessao } from './sessao'
 import { Button } from './ui/button'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './ui/drawer'
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Spinner } from './ui/spinner'
+import { useTheme } from './ui/theme-provider'
 
 const Menu = [
   { papeis: ['ALUNO'], caminho: 'assistente', rotulo: 'Assistente', Icone: MessageCircle },
@@ -21,6 +23,43 @@ const Menu = [
 ]
 
 type Item = (typeof Menu)[number]
+
+const Temas: ['light' | 'dark' | 'system', string, typeof Sun][] = [
+  ['light', 'Claro', Sun],
+  ['dark', 'Escuro', Moon],
+  ['system', 'Sistema', Monitor],
+]
+
+// Claro, Escuro ou o do sistema; o ThemeProvider grava a escolha em one-tema (door 10).
+function Tema() {
+  const { setTheme } = useTheme()
+  const [aberto, setAberto] = useState(false)
+  return (
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="ms-auto" aria-label="Tema">
+          <Sun aria-hidden="true" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="flex w-40 flex-col p-1">
+        {Temas.map(([valor, rotulo, Icone]) => (
+          <Button
+            key={valor}
+            variant="ghost"
+            className="justify-start"
+            onClick={() => {
+              setTheme(valor)
+              setAberto(false)
+            }}
+          >
+            <Icone aria-hidden="true" />
+            {rotulo}
+          </Button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 // Na barra (a partir de 640 px) o rótulo some até 1280 px e fica só o ícone; na gaveta, uma linha de 48 px por link.
 function Links({ itens, slug, gaveta, aoEscolher }: { itens: Item[]; slug?: string; gaveta?: boolean; aoEscolher?: () => void }) {
@@ -79,9 +118,10 @@ export function Autenticado() {
           <div className="hidden items-center gap-1 sm:flex">
             <Links itens={itens} slug={slug} />
           </div>
+          <Tema />
           <Drawer open={aberto} onOpenChange={setAberto}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="ms-auto sm:hidden" aria-label="Menu">
+              <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Menu">
                 <IconeMenu aria-hidden="true" />
               </Button>
             </DrawerTrigger>
@@ -98,7 +138,7 @@ export function Autenticado() {
               </div>
             </DrawerContent>
           </Drawer>
-          <Button variant="ghost" size="sm" className="ms-auto hidden sm:inline-flex" onClick={sair}>
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={sair}>
             <LogOut aria-hidden="true" />
             Sair
           </Button>

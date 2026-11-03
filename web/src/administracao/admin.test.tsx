@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, me } from '../test/util'
@@ -110,5 +110,44 @@ describe('administração', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir a requisição.')
+  })
+
+  // C84 (AC 61, door 16)
+  it('tabela de erros com Linha e Motivo', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'POST /api/admin/matriculas/importacao': () => [400, { status: 400, detail: 'O arquivo tem linhas inválidas.', erros: [{ linha: 3, motivo: 'CPF inválido' }, { linha: 7, motivo: 'Semestre inválido' }] }],
+    })
+    abrir('/univag/matriculas')
+    await userEvent.upload(await screen.findByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
+    const tabela = await screen.findByRole('table')
+    expect(within(tabela).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Linha', 'Motivo'])
+    const corpo = tabela.querySelectorAll('tbody tr')
+    expect(corpo).toHaveLength(2)
+    expect(Array.from(corpo).map((linha) => within(linha as HTMLElement).getAllByRole('cell').map((c) => c.textContent))).toEqual([
+      ['3', 'CPF inválido'],
+      ['7', 'Semestre inválido'],
+    ])
+  })
+
+  // C85 (door 11)
+  it('soltar CSV em Arquivo CSV importa o arquivo', async () => {
+    const chamadas = api({ 'GET /api/auth/me': () => [200, admin], 'POST /api/admin/matriculas/importacao': () => [200, { criados: 1, atualizados: 0 }] })
+    abrir('/univag/matriculas')
+    const campo = await screen.findByLabelText('Arquivo CSV')
+    expect(campo).toHaveAttribute('type', 'file')
+    expect(campo).toHaveAttribute('accept', '.csv,text/csv')
+    expect(campo).not.toHaveAttribute('aria-label')
+    const arquivo = new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' })
+    fireEvent.drop(campo.parentElement as HTMLElement, { dataTransfer: { files: [arquivo], items: [{ kind: 'file', type: arquivo.type, getAsFile: () => arquivo }], types: ['Files'] } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Importar' })).toBeEnabled())
+    await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
+    await screen.findByText('Importação concluída: 1 matrículas criadas e 0 atualizadas.')
+    const enviada = chamadas.find((c) => c.metodo === 'POST')!
+    expect(enviada.url).toBe('/api/admin/matriculas/importacao')
+    expect((enviada.corpo.arquivo as File).name).toBe('alunos.csv')
   })
 })

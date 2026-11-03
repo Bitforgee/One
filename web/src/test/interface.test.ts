@@ -91,6 +91,12 @@ describe('interface nova', () => {
     expect(tsconfig.compilerOptions.paths).toEqual({ '@/*': ['./src/*'] })
   })
 
+  // C90 (AC 47): ninguém importa o Bootstrap nem os ícones dele (os nomes vão em pedaços para este arquivo não se acusar)
+  it('sem Bootstrap nos arquivos', () => {
+    for (const pacote of ['react-' + 'bootstrap', 'bootstrap-' + 'icons']) expect(arquivos.filter((a) => !a.includes('.test.') && texto(a).includes(pacote)), pacote).toEqual([])
+    expect(css).not.toContain('bootstrap')
+  })
+
   it('camada do Bootstrap', () => {
     const Css = 'bootstrap/dist/css/bootstrap.min.css'
     if (comBootstrap()) {
@@ -209,5 +215,22 @@ describe('interface nova', () => {
       await conferir()
       unmount()
     }
+  })
+
+  // C93 (AC 51): o theme_color do manifesto e a meta theme-color são o --primary claro em sRGB de 8 bits
+  it('theme-color é o primary claro', () => {
+    const gama = (x: number) => (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055)
+    const hex = '#' + linear(bloco(':root')['--primary']).map((x) => Math.round(gama(x) * 255).toString(16).padStart(2, '0')).join('')
+    expect(vite.match(/theme_color:\s*'([^']+)'/)![1]).toBe(hex)
+    expect(html.match(/<meta name="theme-color" content="([^"]+)"/)![1]).toBe(hex)
+    expect(hex).not.toBe('#0d6efd')
+  })
+
+  // C94 (door 7, Flow 5): o estado das telas é do TanStack Query
+  it('estado das telas só pelo TanStack Query', () => {
+    // os nomes vão em pedaços para este arquivo não se acusar
+    for (const nome of ['use' + 'Acao', 'use' + 'Lista', 'use' + 'Base', 'use' + 'Listas']) expect(arquivos.filter((a) => !a.includes('.test.') && texto(a).includes(nome)), nome).toEqual([])
+    expect(texto('chamado.ts')).not.toContain('set' + 'Interval')
+    expect(texto('chamado.ts')).toContain('refetchInterval')
   })
 })

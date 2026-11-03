@@ -1,18 +1,20 @@
 import { Plus } from 'lucide-react'
-import { useState, type ComponentProps, type Dispatch, type FormEvent, type SetStateAction } from 'react'
-import { BotaoAcao } from '../acao'
+import { useState, type ComponentProps, type Dispatch, type SetStateAction } from 'react'
+import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
+import { Cabecalho } from '../Cabecalho'
+import { Editor } from '../Editor'
 import { Opcoes } from '../Opcoes'
+import { Situacao } from '../Situacao'
 import { Periodo } from '../Periodo'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { Textarea } from '../ui/textarea'
-import { ConfirmarArquivar, SeloEstado, SeloIndexacao, Situacao, useCatalogo, useGravacao, type Categoria, type Indexacao } from './comum'
+import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
 import { Resposta } from './Resposta'
 
 type Versao = { id: number; numero: number; titulo: string; perguntas: string[]; resposta: string; links: string[] }
@@ -133,8 +135,7 @@ export function Artigos() {
   const acao = useGravacao(recarregar)
   const alerta = acao.error && <Alert variant="destructive">{acao.error.message}</Alert>
 
-  function salvar(e: FormEvent) {
-    e.preventDefault()
+  function salvar() {
     const r = editando!
     acao.mutate({
       chamar: () => api(r.id ? `/api/admin/artigos/${r.id}` : '/api/admin/artigos', corpo(r), r.id ? 'PUT' : undefined),
@@ -150,13 +151,7 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Artigos</h1>
-        <Button onClick={() => setEditando({ ...Novo })}>
-          <Plus aria-hidden="true" />
-          Novo
-        </Button>
-      </div>
+      <Cabecalho titulo="Artigos" botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
       {erro && <Alert variant="destructive">{erro}</Alert>}
       {!editando && alerta}
@@ -165,25 +160,9 @@ export function Artigos() {
         <ItemArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
       ))}
 
-      <Dialog open={!!editando} onOpenChange={(aberto) => !aberto && setEditando(undefined)}>
-        <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
-          <form onSubmit={salvar} className="contents">
-            <DialogHeader>
-              <DialogTitle>{editando?.id ? 'Editar artigo' : 'Novo artigo'}</DialogTitle>
-            </DialogHeader>
-            {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} />}
-            {alerta}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditando(undefined)}>
-                Cancelar
-              </Button>
-              <BotaoAcao type="submit" pendente={acao.isPending}>
-                Salvar
-              </BotaoAcao>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <Editor titulo={editando?.id ? 'Editar artigo' : 'Novo artigo'} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={alerta}>
+        {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} />}
+      </Editor>
 
       <ConfirmarArquivar tipo="artigo" titulo={arquivar?.versao.titulo} aberto={!!arquivar} fechar={() => setArquivar(undefined)} arquivar={() => mudar(arquivar!, 'arquivar')} />
     </div>
