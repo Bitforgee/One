@@ -149,6 +149,21 @@ describe('interface nova', () => {
         expect(contraste(t[frente], t[fundo]), `${seletor} ${frente}/${fundo}`).toBeGreaterThanOrEqual(4.5)
   })
 
+  // login-institucional C14: texto sobre o fundo do painel (5% de --primary sobre --background, em sRGB codificado)
+  it('contraste do painel de entrada', () => {
+    const codificar = (x: number) => (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055)
+    const decodificar = (x: number) => (x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)
+    for (const [seletor, t] of Object.entries(temas())) {
+      const [p, f] = [linear(t['--primary']).map(codificar), linear(t['--background']).map(codificar)]
+      const mistura = p.map((c, i) => decodificar(0.05 * c + 0.95 * f[i]))
+      const luz = 0.2126 * mistura[0] + 0.7152 * mistura[1] + 0.0722 * mistura[2]
+      for (const frente of ['--foreground', '--muted-foreground']) {
+        const l = luminancia(t[frente])
+        expect((Math.max(l, luz) + 0.05) / (Math.min(l, luz) + 0.05), `${seletor} ${frente}`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
   it('tokens da paleta', () => {
     const [claro, escuro, preto, tema] = [bloco(':root'), bloco('.dark'), bloco('.black'), bloco('@theme inline')]
     expect(css.indexOf('.black {')).toBeGreaterThan(css.indexOf('.dark {'))

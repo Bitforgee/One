@@ -52,6 +52,8 @@ describe('textos', () => {
 
 // Linhas 1 a 5 de ## Screens; o `detail` e a mensagem da API vêm do fixture
 const Recusa = [422, { status: 422, title: 'Dados inválidos', detail: 'Dados recusados pela API.' }] as [number, unknown]
+// login-institucional: o painel institucional (novo) das 3 telas de entrada
+const Painel = ['Atendimento ao estudante', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 const Instituicoes = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univag' }] as [number, unknown] }
 
 describe('textos das telas de acesso', () => {
@@ -64,7 +66,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Login', async () => {
-    const t = estados(['One', '·', 'CPF', 'Senha', 'Entrar', 'Primeiro acesso ou esqueci minha senha', 'Instituição não encontrada.'])
+    const t = estados(['One', 'Entre com seu CPF e sua senha.', 'CPF', 'Senha', 'Entrar', 'Primeiro acesso ou esqueci minha senha', 'Instituição não encontrada.', ...Painel])
     // carregando: só o status "Carregando"
     api({ 'GET /api/instituicoes/univag': () => new Promise(() => {}) })
     let montada = abrir('/univag')
@@ -91,7 +93,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Primeiro acesso', async () => {
-    const t = estados(['Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login'])
+    const t = estados(['One', 'Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel])
     api({ 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'Link enviado.' }] })
     const { container } = abrir('/univag/primeiro-acesso')
     t.conferir(container)
@@ -103,7 +105,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Criar senha', async () => {
-    const t = estados(['Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. ', 'Entre com o CPF e a nova senha.'])
+    const t = estados(['One', 'Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. ', 'Entre com o CPF e a nova senha.', ...Painel])
     api({ 'POST /api/auth/definir-senha': () => [204, undefined] })
     const { container } = abrir('/univag/definir-senha?token=t')
     t.conferir(container)
