@@ -35,7 +35,7 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
         ],
         mensagens: [{ id: 1, tipo: 'NOTA', texto: 'Conferir com a tesouraria antes de responder.', autor: 'Carla Regina de Souza', doAluno: false, criadaEm: '2026-11-02T12:10:00Z' }],
         eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
-        acoes: ['responder', 'nota', 'resolver', 'encaminhar', 'reclassificar'],
+        acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
       })
     if (caminho === '/api/admin/usuarios')
       return json(200, [{ id: 1, cpf: '12345678909', nome: 'Carla Regina de Souza Albuquerque', email: 'carla.regina.albuquerque@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ATENDENTE', 'ADMINISTRADOR'], setores: [1] }])

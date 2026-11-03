@@ -5,7 +5,7 @@ import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
 // Linha 0 de ## Screens (cabeçalho); "Tema" e "Menu" são só nomes acessíveis, conferidos por papel.
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Sistema']
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Mais', 'Claro', 'Escuro', 'Sistema']
 const Instituicao = 'Univag' // nome da instituição do fixture
 
 describe('textos', () => {

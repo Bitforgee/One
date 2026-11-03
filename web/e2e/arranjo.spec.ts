@@ -81,27 +81,82 @@ test.describe('cabeçalho', () => {
     expect(await aluno.getByRole('dialog', { name: 'Menu' }).locator('a, button').allTextContents()).toEqual(['Assistente', 'Minhas solicitações', 'Sair'])
   })
 
-  test('cabeçalho a 640 px mostra os links na barra', async ({ page }) => {
+  // Decisão do usuário de 02/11/2026: abaixo de 1024 px a gaveta; de 1024 px em diante os links ficam na barra, com rótulo, e o que não cabe vai para "Mais".
+  test('cabeçalho a 1024 px mostra os links na barra', async ({ page }) => {
     await simularApi(page)
-    await page.setViewportSize({ width: 640, height: 740 })
+    await page.setViewportSize({ width: 1024, height: 740 })
     await page.goto('/univag/fila')
     const nav = page.getByRole('navigation')
     const sair = nav.getByRole('button', { name: 'Sair' })
     await expect(sair).toBeVisible()
+    await expect(nav.getByRole('button', { name: 'Menu' })).toBeHidden()
     const direitaDosLinks = []
-    for (const rotulo of Links) {
+    for (const rotulo of ['Assistente', 'Minhas solicitações', 'Fila']) {
       const link = nav.getByRole('link', { name: rotulo })
       await expect(link).toBeVisible()
       const c = await caixa(link)
       direitaDosLinks.push(c.x + c.width)
     }
     expect((await caixa(sair)).x).toBeGreaterThanOrEqual(Math.max(...direitaDosLinks))
-    await expect(nav.getByRole('button', { name: 'Menu' })).toBeHidden()
 
-    await page.setViewportSize({ width: 639, height: 740 })
+    await page.setViewportSize({ width: 1023, height: 740 })
     await expect(nav.getByRole('button', { name: 'Menu' })).toBeVisible()
     for (const rotulo of Links) await expect(nav.getByRole('link', { name: rotulo })).toBeHidden()
   })
+
+  const sobrepoe = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5
+
+  for (const largura of [768, 1024, 1280, 1920]) {
+    test(`barra a ${largura} px sem sobreposição, com todos os links ao alcance`, async ({ page }) => {
+      await simularApi(page)
+      await page.setViewportSize({ width: largura, height: 740 })
+      await page.goto('/univag/fila')
+      const nav = page.getByRole('navigation')
+      const nome = nav.getByTestId('instituicao')
+      await expect(nome).toBeVisible()
+      expect((await caixa(nome)).width, 'nome da instituição').toBeGreaterThan(0)
+
+      const itens = nav.locator('span:visible, a:visible, button:visible')
+      const caixas = []
+      for (const item of await itens.all()) caixas.push({ texto: (await item.textContent()) || (await item.getAttribute('aria-label')), ...(await caixa(item)) })
+      const raiz = await caixa(nav)
+      for (const c of caixas) {
+        expect(c.x, c.texto ?? '').toBeGreaterThanOrEqual(raiz.x - 1)
+        expect(c.x + c.width, c.texto ?? '').toBeLessThanOrEqual(raiz.x + raiz.width + 1)
+      }
+      // dentro de um link o span do rótulo e o ícone se sobrepõem de propósito: só se comparam os filhos diretos da barra
+      const diretos = await nav.evaluate((n) => {
+        const filhos = [...n.firstElementChild!.children].flatMap((e) => (e.tagName === 'DIV' ? [...e.children] : [e]))
+        return filhos.map((e) => ({ texto: e.textContent || e.getAttribute('aria-label'), ...e.getBoundingClientRect().toJSON() })).filter((c) => c.width > 0)
+      })
+      expect(diretos.length).toBeGreaterThanOrEqual(4)
+      for (let i = 0; i < diretos.length; i++)
+        for (let j = i + 1; j < diretos.length; j++) expect(sobrepoe(diretos[i], diretos[j]), `${largura} px: "${diretos[i].texto}" x "${diretos[j].texto}"`).toBe(false)
+
+      if (largura < 1024) {
+        await nav.getByRole('button', { name: 'Menu' }).click()
+        const gaveta = page.getByRole('dialog', { name: 'Menu' })
+        for (const rotulo of Links) await expect(gaveta.getByRole('link', { name: rotulo })).toBeVisible()
+        return
+      }
+      const naBarra = []
+      for (const rotulo of Links) {
+        const link = nav.getByRole('link', { name: rotulo })
+        if (await link.isVisible()) {
+          naBarra.push(rotulo)
+          expect(await link.locator('span').evaluate((e) => e.getBoundingClientRect().width), `rótulo de ${rotulo}`).toBeGreaterThan(10)
+        }
+      }
+      const mais = nav.getByRole('button', { name: 'Mais' })
+      if (naBarra.length < Links.length) {
+        await mais.click()
+        const menu = page.locator('[data-slot=popover-content]')
+        for (const rotulo of Links.filter((l) => !naBarra.includes(l))) await expect(menu.getByRole('link', { name: rotulo })).toBeVisible()
+      } else await expect(mais).toBeHidden()
+      expect(naBarra.length).toBeGreaterThanOrEqual(3)
+    })
+  }
 
   test('fonte Inter do próprio app', async ({ page, baseURL }) => {
     const origens = new Set<string>()
@@ -258,6 +313,9 @@ test.describe('Indicadores', () => {
       for (const rotulo of Cartoes) caixas.push(await caixa(cartao(rotulo)))
       const xs = new Set(caixas.map((c) => Math.round(c.x)))
       expect(xs.size, `${largura} px`).toBe(colunas)
+      // colunas de largura igual: um col-span no primeiro cartão cria uma trilha implícita que mantém a contagem de x (L-030)
+      const larguras = caixas.slice(1).map((c) => c.width)
+      expect(Math.max(...larguras) - Math.min(...larguras), `${largura} px: larguras ${larguras.map(Math.round)}`).toBeLessThanOrEqual(1)
       // "Indicador principal" vem primeiro e ocupa 2 colunas
       expect(Math.round(caixas[0].x)).toBe(Math.min(...xs))
       expect(caixas[0].y).toBeLessThanOrEqual(Math.min(...caixas.map((c) => c.y)))
@@ -450,5 +508,190 @@ test.describe('administração', () => {
     await linha.waitFor()
     const lista = await caixa(linha.locator('..'))
     expect(Math.abs((await caixa(linha)).width - lista.width)).toBeLessThanOrEqual(1)
+  })
+})
+
+// Fatos de arranjo de ## Screens que nenhum teste acima media (verification.md rodada 1, lacuna 3).
+test.describe('arranjo restante', () => {
+  test.use({ viewport: { width: 360, height: 740 } })
+  const direita = (c: { x: number; width: number }) => c.x + c.width
+  const abaixo = (a: { y: number; height: number }, b: { y: number }) => b.y >= a.y + a.height - 1
+
+  // C18 (linha 0)
+  test('cabeçalho a 360 px: marca e instituição à esquerda, Tema e Menu à direita, gaveta de baixo', async ({ page }) => {
+    await simularApi(page)
+    await page.goto('/univag/fila')
+    const nav = page.getByRole('navigation')
+    const marca = await caixa(nav.getByText('One', { exact: true }))
+    const nome = await caixa(nav.getByTestId('instituicao'))
+    const tema = await caixa(nav.getByRole('button', { name: 'Tema' }))
+    const menu = await caixa(nav.getByRole('button', { name: 'Menu' }))
+    expect(marca.x).toBeLessThan(nome.x)
+    expect(direita(marca)).toBeLessThanOrEqual(nome.x + 1)
+    expect(direita(nome)).toBeLessThanOrEqual(tema.x + 1)
+    expect(direita(tema)).toBeLessThanOrEqual(menu.x + 1)
+    expect(direita(menu)).toBeGreaterThan(360 / 2)
+    expect(tema.x).toBeGreaterThan(360 / 2)
+    await nav.getByRole('button', { name: 'Menu' }).click()
+    const gaveta = page.getByRole('dialog', { name: 'Menu' })
+    // a gaveta sobe até assentar; ancorada embaixo
+    await expect.poll(async () => Math.abs((await caixa(gaveta)).y + (await caixa(gaveta)).height - 740)).toBeLessThanOrEqual(1)
+    expect((await caixa(gaveta)).y).toBeGreaterThan(0)
+  })
+
+  // C66 (linha 1)
+  test('raiz com a marca e o texto centralizados', async ({ page }) => {
+    await page.goto('/')
+    for (const t of [page.getByText('One', { exact: true }), page.getByText('Abra o endereço da sua instituição')]) {
+      const c = await caixa(t)
+      expect(Math.abs(c.x + c.width / 2 - 180)).toBeLessThanOrEqual(1)
+    }
+  })
+
+  // C66 (linha 2)
+  test('Login: campos empilhados e o erro abaixo do formulário', async ({ page }) => {
+    await simularApi(page)
+    await page.route('**/api/auth/login', (r) => r.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ status: 401, detail: 'CPF ou senha inválidos.' }) }))
+    await page.goto('/univag')
+    await page.getByLabel('CPF').fill('12345678909')
+    await page.getByLabel('Senha').fill('senha-errada')
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    const erro = await caixa(page.getByRole('alert'))
+    const cpf = await caixa(page.getByLabel('CPF'))
+    const senha = await caixa(page.getByLabel('Senha'))
+    const entrar = await caixa(page.getByRole('button', { name: 'Entrar' }))
+    expect(abaixo(cpf, senha)).toBe(true)
+    expect(abaixo(senha, entrar)).toBe(true)
+    expect(abaixo(entrar, erro)).toBe(true)
+  })
+
+  // C38 (linha 6)
+  test('Assistente: data pequena à direita, campo de 2 linhas e erro abaixo do compositor', async ({ page }) => {
+    await simularApi(page)
+    await page.goto('/univag/assistente')
+    const campo = page.getByLabel('Mensagem')
+    const linha = await campo.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
+    expect(await campo.evaluate((e) => (e as HTMLTextAreaElement).rows)).toBe(2)
+    expect((await caixa(campo)).height).toBeGreaterThanOrEqual(2 * linha - 1)
+
+    await enviar(page, 'preciso do boleto do semestre')
+    const balao = page.locator('.is-assistant').first()
+    await balao.waitFor()
+    const data = balao.getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)
+    const b = await caixa(balao)
+    const d = await caixa(data)
+    expect(await data.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeLessThan(16)
+    expect(await data.evaluate((e) => getComputedStyle(e).textAlign)).toBe('end')
+    expect(direita(d)).toBeGreaterThan(direita(b) - 16)
+    expect(d.y).toBeGreaterThanOrEqual(b.y + b.height / 2)
+
+    await page.route('**/api/conversas/1/mensagens', (r) => r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ status: 500, detail: 'Falha no serviço.' }) }))
+    await enviar(page, 'outra pergunta')
+    const erro = await caixa(page.getByRole('alert'))
+    expect(abaixo(await caixa(page.getByRole('button', { name: /Enviar/ })), erro)).toBe(true)
+  })
+
+  // C44 (linha 9)
+  test('Detalhe: cartão da equipe antes da conversa e ações que quebram em linhas', async ({ page }) => {
+    await simularApi(page)
+    await page.goto('/univag/chamados/ONE-123')
+    await page.getByText('Resumo gerado por IA').waitFor()
+    const equipe = page.locator('[data-slot=card]').filter({ hasText: 'Resumo gerado por IA' })
+    expect(await equipe.count()).toBe(1)
+    const conversa = await caixa(page.locator('.is-user').first())
+    expect(abaixo(await caixa(equipe), conversa)).toBe(true)
+
+    const acoes = page.getByRole('main').locator('div.flex-wrap').filter({ has: page.getByRole('button', { name: 'Encaminhar' }) })
+    expect(await acoes.evaluate((e) => getComputedStyle(e).flexWrap)).toBe('wrap')
+    const ys = new Set<number>()
+    for (const b of await acoes.getByRole('button').all()) ys.add(Math.round((await caixa(b)).y))
+    for (const b of await acoes.getByRole('button').all()) expect(direita(await caixa(b))).toBeLessThanOrEqual(360)
+    // estreitando a tela, o que não cabe desce para a linha de baixo, sem rolagem
+    await page.setViewportSize({ width: 300, height: 740 })
+    ys.clear()
+    for (const b of await acoes.getByRole('button').all()) ys.add(Math.round((await caixa(b)).y))
+    expect(ys.size, 'as ações quebram em mais de uma linha').toBeGreaterThan(1)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(300)
+  })
+
+  // C80 (linhas 10, 11) e C89 (linha 13)
+  test('botões pequenos em linha em Artigos, Documentos e Usuários', async ({ page }) => {
+    await simularApi(page)
+    for (const [caminho, cartao] of [['/univag/artigos', 'Como emitir'], ['/univag/documentos', 'Regulamento do estágio'], ['/univag/usuarios', 'Carla Regina']] as const) {
+      await page.goto(caminho)
+      const item = page.locator('[data-slot=card]').filter({ hasText: cartao })
+      await item.waitFor()
+      const botoes = await item.getByRole('button').all()
+      expect(botoes.length, caminho).toBeGreaterThanOrEqual(2)
+      const primeiro = await caixa(botoes[0])
+      for (const b of botoes) {
+        const c = await caixa(b)
+        expect(naMesmaLinha(primeiro, c), caminho).toBe(true)
+        expect(c.height, caminho).toBeLessThanOrEqual(36)
+      }
+    }
+  })
+
+  // C80 (estados comuns)
+  test('diálogos a 360 px com margem de 16 px', async ({ page }) => {
+    await simularApi(page)
+    for (const [caminho, botao] of [['/univag/artigos', /Novo/], ['/univag/documentos', /Enviar PDF/], ['/univag/usuarios', /Novo/]] as const) {
+      await page.goto(caminho)
+      await page.getByRole('button', { name: botao }).click()
+      const d = await caixa(page.getByRole('dialog'))
+      expect(Math.abs(d.x - 16), caminho).toBeLessThanOrEqual(1)
+      expect(Math.abs(d.width - 328), caminho).toBeLessThanOrEqual(1)
+    }
+  })
+
+  // C89 (linha 14)
+  test('Matrículas: cabeçalho mono que quebra, resultado em Alert e erros em tabela que quebra o motivo', async ({ page }) => {
+    await simularApi(page)
+    await page.goto('/univag/matriculas')
+    const codigo = page.locator('code')
+    await codigo.waitFor()
+    expect(await codigo.evaluate((e) => getComputedStyle(e).fontFamily)).toMatch(/mono/i)
+    const linha = await codigo.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
+    const cod = await caixa(codigo)
+    expect(cod.height).toBeGreaterThan(linha * 1.5)
+    expect(direita(cod)).toBeLessThanOrEqual(360)
+
+    const arquivo = { name: 'matriculas.csv', mimeType: 'text/csv', buffer: Buffer.from('cpf;nome') }
+    const importar = async () => {
+      await page.locator('input[type=file]').setInputFiles(arquivo)
+      await page.getByRole('button', { name: 'Importar' }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Importar' }).click()
+    }
+    await page.route('**/api/admin/matriculas/importacao', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ criados: 3, atualizados: 2 }) }))
+    await importar()
+    const resultado = page.getByRole('alert').filter({ hasText: 'Importação concluída' })
+    await resultado.waitFor()
+    expect(await resultado.evaluate((e) => e.className)).not.toMatch(/destructive/)
+    expect(abaixo(await caixa(page.getByRole('button', { name: 'Importar' })), await caixa(resultado))).toBe(true)
+
+    const motivo = 'O CPF informado nesta linha não confere com nenhum aluno cadastrado na instituição e por isso a linha foi recusada'
+    await page.route('**/api/admin/matriculas/importacao', (r) =>
+      r.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ status: 400, detail: 'Há erros no arquivo.', erros: [{ linha: 2, motivo }] }) }),
+    )
+    await importar()
+    const celula = page.getByRole('cell', { name: motivo })
+    await celula.waitFor()
+    expect(await page.getByRole('columnheader').allTextContents()).toEqual(['Linha', 'Motivo'])
+    const c = await caixa(celula)
+    expect(direita(c)).toBeLessThanOrEqual(360)
+    expect(c.height).toBeGreaterThan((await celula.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))) * 1.5)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360)
+  })
+
+  // C89 (linha 15)
+  test('Cadastros: detalhe pequeno embaixo do nome', async ({ page }) => {
+    await simularApi(page)
+    await page.route('**/api/admin/setores', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, nome: 'Secretaria', triagem: true, ativo: true }]) }))
+    await page.goto('/univag/cadastros')
+    const linha = page.getByRole('tabpanel').getByRole('button').first()
+    await linha.waitFor()
+    const [nome, detalhe] = await linha.locator('div').all()
+    expect(abaixo(await caixa(nome), await caixa(detalhe))).toBe(true)
+    expect(await detalhe.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeLessThan(await nome.evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
   })
 })

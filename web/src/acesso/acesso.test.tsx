@@ -120,6 +120,10 @@ describe('acesso', () => {
   it('dependências do kit de interface', () => {
     const todas = { ...pacote.dependencies, ...pacote.devDependencies } as Record<string, string>
     for (const saiu of ['bootstrap', 'react-bootstrap', 'bootstrap-icons']) expect(todas[saiu], saiu).toBeUndefined()
+    // C90: nenhum arquivo importa esses pacotes (o import de bootstrap-icons/font/*.css no main.tsx também falha aqui); os nomes em pedaços
+    const importa = new RegExp(`['"](react-)?boot` + `strap(-icons)?[/'"]`)
+    const fontes = import.meta.glob('/src/**/*.{ts,tsx,css}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+    expect(Object.entries(fontes).filter(([nome, texto]) => !nome.includes('.test.') && importa.test(texto)).map(([nome]) => nome)).toEqual([])
     expect(todas['react-router']).toMatch(/^\^?8\./)
     expect(todas['vite-plugin-pwa']).toBe('2.0.0')
     // door 9: a stack nova com versão exata, e nada do AI SDK nem do next-themes

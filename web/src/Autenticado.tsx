@@ -37,7 +37,7 @@ function Tema() {
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="ms-auto" aria-label="Tema">
+        <Button variant="ghost" size="icon" aria-label="Tema">
           <Sun aria-hidden="true" />
         </Button>
       </PopoverTrigger>
@@ -61,23 +61,53 @@ function Tema() {
   )
 }
 
-// Na barra (a partir de 640 px) o rótulo some até 1280 px e fica só o ícone; na gaveta, uma linha de 48 px por link.
+// Na barra (a partir de 1024 px) o rótulo fica sempre visível: os 3 primeiros links desde 1024 px, o 4º e o 5º desde 1280 px,
+// o 6º e o 7º desde 1536 px; o que não cabe vai para "Mais". Abaixo de 1024 px, a gaveta: uma linha de 48 px por link.
+const NaBarra = ['lg:flex', 'lg:flex', 'lg:flex', 'xl:flex', 'xl:flex', '2xl:flex', '2xl:flex']
+const NoMais = ['', '', '', 'xl:hidden', 'xl:hidden', '2xl:hidden', '2xl:hidden']
+const Fixo = 'h-9 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm text-foreground no-underline hover:bg-accent aria-[current=page]:font-semibold'
+
 function Links({ itens, slug, gaveta, aoEscolher }: { itens: Item[]; slug?: string; gaveta?: boolean; aoEscolher?: () => void }) {
-  return itens.map(({ caminho, rotulo, Icone }) => (
+  return itens.map(({ caminho, rotulo, Icone }, i) => (
     <NavLink
       key={caminho}
       to={`/${slug}/${caminho}`}
       onClick={aoEscolher}
-      className={
-        gaveta
-          ? 'flex h-12 items-center gap-3 px-4 text-foreground no-underline aria-[current=page]:font-semibold'
-          : 'flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm text-foreground no-underline hover:bg-accent aria-[current=page]:font-semibold'
-      }
+      className={gaveta ? 'flex h-12 items-center gap-3 px-4 text-foreground no-underline aria-[current=page]:font-semibold' : `hidden ${NaBarra[i] ?? ''} ${Fixo}`}
     >
       <Icone aria-hidden="true" className="size-4" />
-      <span className={gaveta ? undefined : 'sm:max-xl:sr-only'}>{rotulo}</span>
+      <span>{rotulo}</span>
     </NavLink>
   ))
+}
+
+// Os links que a barra não comporta na largura atual.
+function Mais({ itens, slug }: { itens: Item[]; slug?: string }) {
+  const [aberto, setAberto] = useState(false)
+  const fora = itens.slice(3)
+  if (!fora.length) return null
+  return (
+    <Popover open={aberto} onOpenChange={setAberto}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className={`hidden shrink-0 lg:inline-flex ${itens.length > 7 ? '' : itens.length > 5 ? '2xl:hidden' : 'xl:hidden'}`}>
+          Mais
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="flex w-52 flex-col p-1">
+        {fora.map(({ caminho, rotulo, Icone }, i) => (
+          <NavLink
+            key={caminho}
+            to={`/${slug}/${caminho}`}
+            onClick={() => setAberto(false)}
+            className={`flex h-9 items-center gap-2 rounded-md px-2 text-sm text-foreground no-underline hover:bg-accent aria-[current=page]:font-semibold ${NoMais[i + 3]}`}
+          >
+            <Icone aria-hidden="true" className="size-4" />
+            {rotulo}
+          </NavLink>
+        ))}
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export function Autenticado() {
@@ -112,16 +142,17 @@ export function Autenticado() {
       <nav className="sticky top-0 z-40 h-14 border-b bg-background">
         <div className="mx-auto flex h-full max-w-6xl items-center gap-2 px-4">
           <span className="shrink-0 text-lg font-semibold text-primary">One</span>
-          <span className="min-w-0 truncate text-sm text-muted-foreground" data-testid="instituicao">
+          <span className="min-w-16 flex-1 truncate text-sm text-muted-foreground" data-testid="instituicao">
             {me.instituicao.nome}
           </span>
-          <div className="hidden items-center gap-1 sm:flex">
+          <div className="flex items-center gap-1">
             <Links itens={itens} slug={slug} />
+            <Mais itens={itens} slug={slug} />
           </div>
           <Tema />
           <Drawer open={aberto} onOpenChange={setAberto}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Menu">
+              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
                 <IconeMenu aria-hidden="true" />
               </Button>
             </DrawerTrigger>
@@ -138,7 +169,7 @@ export function Autenticado() {
               </div>
             </DrawerContent>
           </Drawer>
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={sair}>
+          <Button variant="ghost" size="sm" className="hidden lg:inline-flex" onClick={sair}>
             <LogOut aria-hidden="true" />
             Sair
           </Button>
