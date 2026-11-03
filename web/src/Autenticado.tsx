@@ -146,14 +146,62 @@ function Avisos({ aluno, item }: { aluno: boolean; item?: string }) {
   return aluno ? <AvisosPush item={item} /> : null
 }
 
+// Barra aberta ou recolhida, gravada em one-barra (door 1); só anima depois de alternar, para mudar a largura da janela não animar.
+function useBarra() {
+  const [recolhida, setRecolhida] = useState(() => localStorage.getItem('one-barra') === 'recolhida')
+  const [animar, setAnimar] = useState(false)
+  function alternar() {
+    localStorage.setItem('one-barra', recolhida ? 'aberta' : 'recolhida')
+    setRecolhida(!recolhida)
+    setAnimar(true)
+  }
+  return { recolhida, alternar, anima: animar ? Anima : '' }
+}
+
+function BotaoBarra({ recolhida, alternar }: { recolhida: boolean; alternar: () => void }) {
+  const Icone = recolhida ? PanelLeftOpen : PanelLeftClose
+  return (
+    <Button variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label={recolhida ? 'Expandir barra lateral' : 'Recolher barra lateral'} aria-expanded={!recolhida} onClick={alternar}>
+      <Icone aria-hidden="true" />
+    </Button>
+  )
+}
+
+// Abaixo de 1024 px: o botão "Menu" e a gaveta de baixo, com o nome, os grupos, os avisos e "Sair".
+function Gaveta({ nome, itens, slug, aluno, sair }: { nome: string; itens: Item[]; slug?: string; aluno: boolean; sair: () => void }) {
+  const [aberto, setAberto] = useState(false)
+  return (
+    <Drawer open={aberto} onOpenChange={setAberto}>
+      <DrawerTrigger asChild>
+        <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
+          <IconeMenu aria-hidden="true" />
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent aria-describedby={undefined}>
+        <DrawerHeader>
+          <DrawerTitle>Menu</DrawerTitle>
+          <p className="text-sm text-muted-foreground">{nome}</p>
+        </DrawerHeader>
+        {/* a gaveta tem no máximo 80vh: com os títulos de grupo a lista passa disso a 740 px e rola */}
+        <div className="min-h-0 overflow-y-auto pb-4">
+          <Links itens={itens} slug={slug} gaveta aoEscolher={() => setAberto(false)} />
+          <Avisos aluno={aluno} item="flex h-12 items-center gap-3 px-4 text-start disabled:opacity-50" />
+          <button type="button" onClick={sair} className="flex h-12 items-center gap-3 px-4 text-start">
+            <LogOut aria-hidden="true" className="size-4" />
+            Sair
+          </button>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
 export function Autenticado() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const cliente = useQueryClient()
-  const [aberto, setAberto] = useState(false)
-  const [barraRecolhida, setBarraRecolhida] = useState(() => localStorage.getItem('one-barra') === 'recolhida')
-  const [animar, setAnimar] = useState(false) // só anima depois de alternar: mudar a largura da janela não deve animar
+  const barra = useBarra()
   const { data: me, isError } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
   useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
 
@@ -171,12 +219,6 @@ export function Autenticado() {
   const aluno = me.papeis.includes('ALUNO')
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
 
-  function alternarBarra() {
-    localStorage.setItem('one-barra', barraRecolhida ? 'aberta' : 'recolhida') // door 1 do barra-lateral-grupos
-    setBarraRecolhida(!barraRecolhida)
-    setAnimar(true)
-  }
-
   async function sair() {
     await api('/api/auth/logout', {}).catch(() => undefined)
     navigate(`/${slug}`)
@@ -184,60 +226,36 @@ export function Autenticado() {
   }
 
   // Um só <nav> (door 3a): barra de topo de 56 px abaixo de 1024 px; barra lateral fixa de 240 px a partir dele, ou de 64 px recolhida.
-  const nomeBotao = barraRecolhida ? 'Expandir barra lateral' : 'Recolher barra lateral'
-  const IconeBarra = barraRecolhida ? PanelLeftOpen : PanelLeftClose
   return (
     <>
       <nav
-        data-recolhida={barraRecolhida}
-        className={`sticky top-0 z-40 h-14 border-b bg-background lg:fixed lg:inset-y-0 lg:start-0 lg:h-svh lg:w-60 lg:border-e lg:border-b-0 lg:bg-sidebar lg:data-[recolhida=true]:w-16 ${animar ? Anima : ''}`}
+        data-recolhida={barra.recolhida}
+        className={`sticky top-0 z-40 h-14 border-b bg-background lg:fixed lg:inset-y-0 lg:start-0 lg:h-svh lg:w-60 lg:border-e lg:border-b-0 lg:bg-sidebar lg:data-[recolhida=true]:w-16 ${barra.anima}`}
       >
-        <div className={`mx-auto flex h-full max-w-6xl items-center gap-2 px-4 lg:flex-col lg:items-stretch lg:gap-1 lg:px-3 lg:py-4 recolhida:px-2`}>
-          <div className={`contents lg:flex lg:items-center lg:justify-between lg:gap-1 recolhida:flex-col`}>
+        <div className="mx-auto flex h-full max-w-6xl items-center gap-2 px-4 lg:flex-col lg:items-stretch lg:gap-1 lg:px-3 lg:py-4 recolhida:px-2">
+          <div className="contents lg:flex lg:items-center lg:justify-between lg:gap-1 recolhida:flex-col">
             <span className="shrink-0 text-lg font-semibold text-primary lg:px-2">One</span>
-            <Button variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label={nomeBotao} aria-expanded={!barraRecolhida} onClick={alternarBarra}>
-              <IconeBarra aria-hidden="true" />
-            </Button>
+            <BotaoBarra recolhida={barra.recolhida} alternar={barra.alternar} />
           </div>
-          <span className={`min-w-16 flex-1 truncate text-sm text-muted-foreground lg:flex-none lg:px-2 lg:pb-4 lg:whitespace-normal recolhida:hidden`} data-testid="instituicao">
+          <span className="min-w-16 flex-1 truncate text-sm text-muted-foreground lg:flex-none lg:px-2 lg:pb-4 lg:whitespace-normal recolhida:hidden" data-testid="instituicao">
             {me.instituicao.nome}
           </span>
           <div className="contents lg:flex lg:flex-1 lg:flex-col lg:gap-0.5 lg:overflow-y-auto">
-            <Links itens={itens} slug={slug} dica={barraRecolhida} />
+            <Links itens={itens} slug={slug} dica={barra.recolhida} />
           </div>
-          <div className={`contents lg:flex lg:flex-wrap lg:items-center lg:gap-1 lg:border-t lg:pt-3 recolhida:flex-col`}>
+          <div className="contents lg:flex lg:flex-wrap lg:items-center lg:gap-1 lg:border-t lg:pt-3 recolhida:flex-col">
             <Usuario nome={me.nome} />
             <Avisos aluno={aluno} />
             <Tema />
-            <Drawer open={aberto} onOpenChange={setAberto}>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
-                  <IconeMenu aria-hidden="true" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent aria-describedby={undefined}>
-                <DrawerHeader>
-                  <DrawerTitle>Menu</DrawerTitle>
-                  <p className="text-sm text-muted-foreground">{me.nome}</p>
-                </DrawerHeader>
-                <div className="min-h-0 overflow-y-auto pb-4">
-                  <Links itens={itens} slug={slug} gaveta aoEscolher={() => setAberto(false)} />
-                  <Avisos aluno={aluno} item="flex h-12 items-center gap-3 px-4 text-start disabled:opacity-50" />
-                  <button type="button" onClick={sair} className="flex h-12 items-center gap-3 px-4 text-start">
-                    <LogOut aria-hidden="true" className="size-4" />
-                    Sair
-                  </button>
-                </div>
-              </DrawerContent>
-            </Drawer>
-            <Button variant="ghost" size="sm" className={`hidden lg:ms-auto lg:inline-flex recolhida:ms-0`} onClick={sair}>
+            <Gaveta nome={me.nome} itens={itens} slug={slug} aluno={aluno} sair={sair} />
+            <Button variant="ghost" size="sm" className="hidden lg:ms-auto lg:inline-flex recolhida:ms-0" onClick={sair}>
               <LogOut aria-hidden="true" />
-              <span className={'recolhida:sr-only'}>Sair</span>
+              <span className="recolhida:sr-only">Sair</span>
             </Button>
           </div>
         </div>
       </nav>
-      <div className={`${barraRecolhida ? 'lg:ps-16' : 'lg:ps-60'} ${animar ? Anima : ''}`}>
+      <div className={`${barra.recolhida ? 'lg:ps-16' : 'lg:ps-60'} ${barra.anima}`}>
         <main className="mx-auto w-full max-w-6xl px-4 py-4 lg:px-8 lg:py-8">
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </main>

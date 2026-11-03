@@ -16,70 +16,71 @@ os testes que precisam de sobrenome trocam o `/me`). Um filtro que não selecion
 
 ### S1 - Grupos (P1) · 4 files · 75 KB · ~20k
 
-**C1** - Para o administrador com os 3 papéis, a barra e a gaveta mostram, nesta ordem, "Atendimento" (Assistente, Minhas solicitações, Fila, Indicadores), "Conhecimento" (Artigos, Documentos) e "Administração" (Usuários, Matrículas, Cadastros), cada link dentro do seu grupo (AC 1)
+**C1** - [x] Para o administrador com os 3 papéis, a barra e a gaveta mostram, nesta ordem, "Atendimento" (Assistente, Minhas solicitações, Fila, Indicadores), "Conhecimento" (Artigos, Documentos) e "Administração" (Usuários, Matrículas, Cadastros), cada link dentro do seu grupo (AC 1)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "grupos por assunto na barra e na gaveta"`
 
-**C2** - Grupo sem link para o papel não aparece: aluno vê só "Atendimento" (Assistente, Minhas solicitações); atendente só "Atendimento" (Fila, Indicadores); administrador "Atendimento" (Indicadores), "Conhecimento" e "Administração" (AC 2)
+**C2** - [x] Grupo sem link para o papel não aparece: aluno vê só "Atendimento" (Assistente, Minhas solicitações); atendente só "Atendimento" (Fila, Indicadores); administrador "Atendimento" (Indicadores), "Conhecimento" e "Administração" (AC 2)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "grupos por papel"`
 
-**C3** - Cada grupo é um `role="group"` cujo nome acessível é o título ("Atendimento", "Conhecimento", "Administração"), na barra e na gaveta (AC 3)
+**C3** - [x] Cada grupo é um `role="group"` cujo nome acessível é o título ("Atendimento", "Conhecimento", "Administração"), na barra e na gaveta (AC 3)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "grupos por assunto na barra e na gaveta"`
 
-**C4** - Arranjo a 1280 px com a barra aberta: cada título acima do primeiro link do seu grupo, em `font-size` 12 px; entre o último link de um grupo e o título seguinte há ao menos 24 px; a 360 px na gaveta cada título tem 32 px (±1) de altura e fica antes dos seus links (`## Screens`)
+**C4** - [x] Arranjo a 1280 px com a barra aberta: cada título acima do primeiro link do seu grupo, em `font-size` 12 px; entre o último link de um grupo e o título seguinte há ao menos 24 px; a 360 px na gaveta cada título tem 32 px (±1) de altura e fica antes dos seus links (`## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos na barra lateral"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos na gaveta"`
 
 ### S2 - Nome do usuário (P1) · 3 files · 70 KB · ~12k
 
-**C5** - Com a barra aberta, o `nome` do `/me` aparece no rodapé, acima de "Tema" e "Sair", numa linha (`white-space: nowrap`, `text-overflow: ellipsis`) e dentro da barra (AC 4)
+**C5** - [x] Com a barra aberta, o `nome` do `/me` aparece no rodapé, acima de "Tema" e "Sair", numa linha (`white-space: nowrap`, `text-overflow: ellipsis`) e dentro da barra (AC 4)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "nome do usuário na barra"`
 
-**C6** - Ao abrir a gaveta, o `nome` aparece abaixo do título "Menu" (AC 5)
+**C6** - [x] Ao abrir a gaveta, o `nome` aparece abaixo do título "Menu" (AC 5)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "nome do usuário na gaveta"`
 
-**C7** - As iniciais são a primeira letra da primeira e da última palavra, em maiúscula: "Ana Beatriz Souza" → "AS", "ana" → "A", "  Carla  Regina " → "CR" (AC 6)
+**C7** - [x] As iniciais são a primeira letra da primeira e da última palavra, em maiúscula: "Ana Beatriz Souza" → "AS", "ana" → "A", "  Carla  Regina " → "CR" (AC 6)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "iniciais do usuário"`
 
-**C8** - Com a barra recolhida, as iniciais ficam num círculo de 32 × 32 px (±1), com o nome inteiro como nome acessível e na dica ao focar (AC 6)
+**C8** - [x] Com a barra recolhida, as iniciais ficam num círculo de 32 × 32 px (±1), com o nome inteiro como nome acessível e na dica ao focar (AC 6)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
-**C9** - A 360, 768 e 1023 px a barra de topo não mostra o nome do usuário (AC 7)
+**C9** - [x] A 360, 768 e 1023 px a barra de topo não mostra o nome do usuário (AC 7)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
 ### S3 - Recolher (P1) · 3 files · 70 KB · ~15k
 
-**C10** - A 1024 e 1280 px, com a barra aberta, há um botão "Recolher barra lateral" com `aria-expanded="true"` na mesma linha da marca (topos com diferença de no máximo 4 px) (AC 8)
+**C10** - [x] A 1024 e 1280 px, com a barra aberta, há um botão "Recolher barra lateral" com `aria-expanded="true"` na mesma linha da marca (topos com diferença de no máximo 4 px) (AC 8)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
-**C11** - Clicar em "Recolher barra lateral" deixa a barra com 64 px (±1), o `main` começando em x ≥ 63 e o botão com nome "Expandir barra lateral" e `aria-expanded="false"`; clicar de novo volta a 240 px (AC 9)
+**C11** - [x] Clicar em "Recolher barra lateral" deixa a barra com 64 px (±1), o `main` começando em x ≥ 63 e o botão com nome "Expandir barra lateral" e `aria-expanded="false"`; clicar de novo volta a 240 px (AC 9)
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
+Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "recolher e expandir gravam one-barra"`
+
+**C12** - [x] Recolhida, os 9 links seguem com o nome acessível do rótulo e só o ícone visível (rótulo com largura de no máximo 1 px), um por linha de 36 px; títulos de grupo, instituição e texto dos avisos não visíveis; nenhum item passa dos 64 px (AC 10)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
-**C12** - Recolhida, os 9 links seguem com o nome acessível do rótulo e só o ícone visível (rótulo com largura de no máximo 1 px), um por linha de 36 px; títulos de grupo, instituição e texto dos avisos não visíveis; nenhum item passa dos 64 px (AC 10)
+**C13** - [x] Recolhida, focar um link pelo teclado mostra um `role="tooltip"` com o rótulo do link (AC 11)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
-**C13** - Recolhida, focar um link pelo teclado mostra um `role="tooltip"` com o rótulo do link (AC 11)
+**C14** - [x] Recolher grava `recolhida` e expandir grava `aberta` em `localStorage['one-barra']`; recarregar a página com `recolhida` começa com 64 px (AC 12, door 1)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
-**C14** - Recolher grava `recolhida` e expandir grava `aberta` em `localStorage['one-barra']`; recarregar a página com `recolhida` começa com 64 px (AC 12, door 1)
-Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
-
-**C15** - Sem `one-barra`, ou com o valor `x`, a barra começa aberta (`data-recolhida` ausente ou `false`, botão "Recolher barra lateral") (AC 13)
+**C15** - [x] Sem `one-barra`, ou com o valor `x`, a barra começa aberta (`data-recolhida` ausente ou `false`, botão "Recolher barra lateral") (AC 13)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "one-barra desconhecido começa aberta"`
 
-**C16** - A 768 px com `one-barra = recolhida` a barra de topo tem 56 px e nenhum botão "Recolher barra lateral" ou "Expandir barra lateral" está visível (AC 14)
+**C16** - [x] A 768 px com `one-barra = recolhida` a barra de topo tem 56 px e nenhum botão "Recolher barra lateral" ou "Expandir barra lateral" está visível (AC 14)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
-**C17** - Com `prefers-reduced-motion: reduce` o `transition-duration` computado do `<nav>` é `0s`; sem ele, maior que `0s` (AC 15)
+**C17** - [x] Com `prefers-reduced-motion: reduce` o `transition-duration` computado do `<nav>` é `0s`; sem ele, maior que `0s` (AC 15)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "movimento reduzido na barra lateral"`
 
 ### S0 - Invariantes (P1) · ~8k
 
-**C18** - As suítes inteiras passam; as asserções mudadas são só as de `## Test policy`; cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD (nenhum teste renomeado) (AC 16)
+**C18** - [x] As suítes inteiras passam; as asserções mudadas são só as de `## Test policy`; cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD (nenhum teste renomeado) (AC 16)
 Proof: `cd web && npx vitest run`
 Proof: `cd web && npx playwright test`
 Proof: `python .specs/features/interface-nova/chamadas_iguais.py <base>`
 
-**C19** - Textos: só entram os marcados *(novo)* em `## Screens` (títulos dos grupos e o nome do fixture); barreiras do AD-018: `crapper` 0 no limite 9.99 e `dryer` sem candidato; `mutator` suspenso (AD-025) (AC 17)
+**C19** - [x] Textos: só entram os marcados *(novo)* em `## Screens` (títulos dos grupos e o nome do fixture); barreiras do AD-018: `crapper` 0 no limite 9.99 e `dryer` sem candidato; `mutator` suspenso (AD-025) (AC 17)
 Proof: `cd web && npx vitest run src/acesso/textos.test.tsx -t "textos cabeçalho"`
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx | grep -q "No duplicate candidates found"`
@@ -140,3 +141,5 @@ Estimativa = arquivos lidos (`Autenticado.tsx` 9 KB, `AvisosPush.tsx` 2 KB, `e2e
 - Feature base (`<base>`): `ff07f05` (`docs(barra-lateral-grupos): plan, checks and AD-028`)
 - **Settled mid-build:** (1) construído numa worktree (`D:\one-system-barra`, branch `barra-lateral-grupos`) enquanto o Verifier do `historico-legivel` usava a árvore principal e o contêiner; os e2e rodaram contra um `vite preview` do build da worktree com `E2E_URL` (os 2 e2e que precisam da API real, `plataforma` e `anexos`, só rodam contra o contêiner). (2) Classes montadas em tempo de execução não geram CSS no Tailwind: a barra recolhida usa a variante literal `recolhida:` (`@custom-variant` em `index.css`). (3) O `Slot` do Tooltip transformava a classe-função do `NavLink` em texto e marcava todos os links como ativos: o ativo vem de `useMatch`. (4) A transição de largura disparava ao redimensionar a janela e quebrava as medidas dos e2e: só anima depois de alternar; o teste do C17 alterna antes de medir. (5) Com títulos e nome, a lista da gaveta passa dos 80vh a 740 px: a lista rola, e "grupos na gaveta" confere que "Sair" fica ao alcance. (6) A instituição recolhida usa `hidden` (o `min-w-16` ganhava do `sr-only`)
 - **Abandoned:** helper `recolhida()` que montava as classes (o Tailwind não as enxerga)
+- (7) O `crapper` reprovou `Autenticado` (CRAP 20.4, complexidade 14): o estado da barra foi para `useBarra`, o botão para `BotaoBarra` e a gaveta para `Gaveta`; um teste Vitest novo ("recolher e expandir gravam one-barra") cobre o alternar, antes só no e2e, e entrou como prova extra do C11
+- **Boundary:** C1-C19 closed (feature base `ff07f05`; a branch foi rebaseada sobre o `historico-legivel` e entrou na `main` por fast-forward). Provas no HEAD: Vitest 238/238; Playwright 64/64 contra o contêiner reconstruído; `chamadas_iguais.py ff07f05` 229 testes, 0 problema; `crapper` 0 (pior: `Autenticado` 9.0); `dryer` sem candidato; `mutator` não rodou (AD-025)

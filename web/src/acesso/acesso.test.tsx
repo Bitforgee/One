@@ -453,6 +453,21 @@ describe('barra lateral com grupos', () => {
     expect(iniciais('  Carla  Regina ')).toBe('CR')
   })
 
+  // C11, C14 (AC 9, AC 12): alternar troca o botão e grava a preferência
+  it('recolher e expandir gravam one-barra', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    const nav = await screen.findByRole('navigation')
+    await userEvent.click(within(nav).getByRole('button', { name: 'Recolher barra lateral' }))
+    expect(nav.getAttribute('data-recolhida')).toBe('true')
+    expect(localStorage.getItem('one-barra')).toBe('recolhida')
+    const expandir = within(nav).getByRole('button', { name: 'Expandir barra lateral' })
+    expect(expandir).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(expandir)
+    expect(nav.getAttribute('data-recolhida')).toBe('false')
+    expect(localStorage.getItem('one-barra')).toBe('aberta')
+  })
+
   // C15 (AC 13)
   it.each([[null], ['x']])('one-barra desconhecido começa aberta (%s)', async (valor) => {
     if (valor !== null) localStorage.setItem('one-barra', valor)
