@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/layout-painel/plan.md`
 
-53 checks em 8 slices · 5 one-way doors · 0 perguntas abertas
+55 checks em 9 slices · 5 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`.
 Playwright: `cd web && npx playwright test <arquivo> -g "<nome>"` contra o contêiner `api` da porta 8080 reconstruído com
@@ -194,7 +194,7 @@ Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "Consul
 **C46** - [x] Os dois lados de cada quebra de `## Screens` que nenhum check media: recuo do cabeçalho 16 px (±1) a 768 px e 24 px a 1024 px; recuo do cartão de acesso 24 px a 360 px e 40 px a 768 px; valor dos destaques de Indicadores 24 px com o cartão abaixo de 250 px (1328 px aberta) e 30 px com 250 px ou mais (1440 px aberta) (`## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "quebras medidas dos dois lados"`
 
-**C47** - [x] Enquanto uma ação de linha grava, o botão "Ações de <nome>" mostra o Spinner e fica desabilitado, nas 3 telas: Artigos (Ativar), Usuários (Desativar) e Documentos (Arquivar). Em `dac2832` só "Ativar" mostrava Spinner; as outras ações só desabilitavam, ou nem isso (Usuários): o retorno visual igual nas 3 é a forma de AC 27 sob o menu (texto corrigido após a verificação rodada 2) (AC 27)
+**C47** - [x] (texto emendado após a verificação rodada 2; emenda aprovada pelo usuário em 03/11 após a verificação rodada 3) Enquanto uma ação de linha grava, o botão "Ações de <nome>" mostra o Spinner e fica desabilitado, nas 3 telas: Artigos (Ativar), Usuários (Desativar) e Documentos (Arquivar). Em `dac2832` só "Ativar" mostrava Spinner; as outras ações só desabilitavam, ou nem isso (Usuários): o retorno visual igual nas 3 é a forma de AC 27 sob o menu (texto corrigido após a verificação rodada 2) (AC 27)
 Proof: `cd web && npx vitest run src/conhecimento/artigos.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
 Proof: `cd web && npx vitest run src/administracao/usuarios.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
 Proof: `cd web && npx vitest run src/conhecimento/documentos.test.tsx -t "ações de linha mostram o Spinner enquanto gravam"`
@@ -219,6 +219,14 @@ Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos rolam e ini
 
 **C53** - [x] Valores de tipo e bordas, por tabela a 1440 px com a barra aberta: rodapé dos destaques 14 px, cor `--muted-foreground`, uma linha (`-webkit-line-clamp: 1` ou `white-space: nowrap`); valor dos destaques e dos compactos com `font-weight` 600; rótulo dos compactos 14 px; valor dos compactos com `tabular-nums`; cabeçalho de tabela 14 px peso 500; caixa da tabela com borda de 1 px e raio de 8 px; linhas do corpo separadas por borda inferior de 1 px (Fila) (`## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "valores de tipo e bordas"`
+
+### S8 - Correção da verificação rodada 3 (P1) · derivado de `## Screens` já aprovado
+
+**C54** - [x] Linhas da tabela: o texto de uma célula do corpo tem 14 px, na Fila a 360 e 1440 px com a barra aberta (`## Screens`, "tabela (padrão das listas)", "Linhas de 14 px")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "texto das linhas de 14 px"`
+
+**C55** - [x] Barra recolhida a 1280 px: o centro horizontal do ícone de cada link de `Links` e o do quadrado das iniciais ficam a 24 px (±1) da borda esquerda, no centro da barra de 48 px (`## Screens`, "casca, barra recolhida", "ícones centralizados")
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "ícones centralizados na barra recolhida"`
 
 ## Exempted
 
@@ -319,4 +327,10 @@ Somando ≈ 15k de escrita e ≈ 10k de suítes, dá **~68k**. Total **~258k**, 
 
 - **Boundary:** C47 (texto corrigido) e C49-C53 closed at af95317 (`fix(web)`: código e testes juntos; o `docs` 6900c95 marca os checks). Provas no HEAD do autor: Vitest 275/275 (34 arquivos); os 5 filtros de S7 selecionaram 1 teste cada e passaram contra `vite preview` com `E2E_URL` (Docker parado na hora; `anexos` e `plataforma` deram 502 por falta da API real, sem relação com a mudança)
 - **Settled mid-build:** (1) C47: Usuários e Documentos já passavam `pendente` ao `MenuAcoes` desde 484942c; faltava a prova. Os testes novos de `usuarios.test.tsx` e `documentos.test.tsx` falham com `pendente` tirado das duas telas (F2 da rodada 2, conferido pelo autor e revertido). (2) Única mudança de código: o rodapé dos destaques de Indicadores em `<div className="line-clamp-1">` dentro do `CardFooter`; sem ela o C53 falha ("rodapé ... numa linha"). (3) C50 estende o e2e "Trocar senha até 384 px" com o centro do cartão; C49, C51, C52 e C53 são testes novos em `arranjo.spec.ts`. Lista vazia, cabeçalho, barra e bordas já casavam com `## Screens`, só faltava medir
+- **Abandoned:** nada
+
+### Correção após a verificação rodada 3
+
+- **Boundary:** C54 e C55 (S8) closed no `test(web)` que segue `e72aaf0`. Provas no HEAD do autor: os 2 filtros de S8 selecionaram 1 teste cada e passaram contra o contêiner `api` reconstruído
+- **Settled mid-build:** (1) nenhuma mudança de código: `text-sm` das células (`web/src/ui/table.tsx`) e o centro dos ícones na barra recolhida já casavam com `## Screens`; só faltava medir. (2) C47: a emenda de texto feita após a rodada 2 foi aprovada pelo usuário em 03/11, depois da rodada 3. (3) Rodada 4 autorizada pelo usuário em 03/11, além do limite de 3, com escopo nas duas lacunas da rodada 3
 - **Abandoned:** nada
