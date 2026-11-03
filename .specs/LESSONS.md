@@ -318,6 +318,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: chamado.test.tsx:207 LEMBRETE sem detalhe (verification rodada 1, gap 1) (specs/coverage)
 - last seen: 2026-11-03T13:15:33Z
 
+### L-052 - Dê um check a cada estado de tela de ## Screens, inclusive os que só existem depois de uma interação, como a barra recolhida.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/ui` · harmful: 0
+- features: barra-lateral-grupos
+- evidence: barra-lateral-grupos verification rodada 1 gaps 1-4 (arranjo recolhido sem check) (specs/ui)
+- last seen: 2026-11-03T13:34:23Z
+
+### L-053 - Confira que o fixture do teste faz o elemento citado no check aparecer antes de afirmar algo sobre ele.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: barra-lateral-grupos
+- evidence: checks.md C12 avisos sem a chave no simularApi (verification rodada 1, gap 2) (web)
+- last seen: 2026-11-03T13:34:23Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

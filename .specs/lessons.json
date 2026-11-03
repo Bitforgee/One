@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 52,
+  "next_id": 54,
   "lessons": [
     {
       "id": "L-001",
@@ -934,6 +934,42 @@
       ],
       "created": "2026-11-03T13:15:33Z",
       "last_seen": "2026-11-03T13:15:33Z"
+    },
+    {
+      "id": "L-052",
+      "key": "ac_gap::de um check a cada estado de tela de screens inclusive os que so existem depois de uma interacao como a barra recolhida",
+      "text": "Dê um check a cada estado de tela de ## Screens, inclusive os que só existem depois de uma interação, como a barra recolhida.",
+      "signal": "ac_gap",
+      "scope": "specs/ui",
+      "status": "candidate",
+      "features": [
+        "barra-lateral-grupos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "barra-lateral-grupos verification rodada 1 gaps 1-4 (arranjo recolhido sem check) (specs/ui)"
+      ],
+      "created": "2026-11-03T13:34:23Z",
+      "last_seen": "2026-11-03T13:34:23Z"
+    },
+    {
+      "id": "L-053",
+      "key": "spec_precision_gap::confira que o fixture do teste faz o elemento citado no check aparecer antes de afirmar algo sobre ele",
+      "text": "Confira que o fixture do teste faz o elemento citado no check aparecer antes de afirmar algo sobre ele.",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "barra-lateral-grupos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C12 avisos sem a chave no simularApi (verification rodada 1, gap 2) (web)"
+      ],
+      "created": "2026-11-03T13:34:23Z",
+      "last_seen": "2026-11-03T13:34:23Z"
     }
   ]
 }
