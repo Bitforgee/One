@@ -461,3 +461,6 @@ estimado). Contexto fixo de cada builder: `plan.md` (32.336 B), este `checks.md`
 - **C1:** o e2e deu 28/29 em `3a4bf6c`; a falha é `arranjo.spec.ts:377`, teste de arranjo da `interface-nova`
   (S7) ainda sem a reconstrução do contêiner do lote dela. A verificação desta feature espera o lote 3 da
   `interface-nova` fechar.
+- **Decisão do usuário em 02/11/2026 sobre o C27 (verificação rodada 1):** aceita a diferença em
+  `api/Agendador.cs` que vem só da remoção de comentários pedida pelo usuário (`0960b70`, 11 linhas de comentário,
+  nenhuma linha de código). O C27 vale para o arquivo sem comentários: o código do agendador continua igual ao da base.
