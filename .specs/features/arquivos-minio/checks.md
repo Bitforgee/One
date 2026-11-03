@@ -129,18 +129,18 @@ Proof: `dotnet ef migrations has-pending-model-changes --project api`
 
 ### S7 - Nada muda para o cliente fora do 503 (P1) · ~11 files · ~75 KB · ~22k
 
-**C25** - [ ] `rotas.txt`, `sucessos.txt`, `gravacoes.txt` e `importacao.txt` são byte a byte os de `<base>`, e as quatro comparações do `RetratoTests` passam (AC 23)
+**C25** - [x] `rotas.txt`, `sucessos.txt`, `gravacoes.txt` e `importacao.txt` são byte a byte os de `<base>`, e as quatro comparações do `RetratoTests` passam (AC 23)
 Proof: `git diff --exit-code <base> HEAD -- api.Tests/Retratos/rotas.txt api.Tests/Retratos/sucessos.txt api.Tests/Retratos/gravacoes.txt api.Tests/Retratos/importacao.txt`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Erros_da_importacao_iguais_aos_da_base"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Gravacoes_do_chamado_iguais_as_da_base"`
 
-**C26** - [ ] `erros.txt` só ganha linhas: nenhuma das 8 linhas de `<base>` é removida nem alterada, e a linha nova é `503 {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.4","title":"Erro interno","status":503,"detail":"Armazenamento de arquivos indisponível."}` (o `title` é o de `Problemas.Titulo(503)` na base); o `RetratoTests` compara as 9 linhas com os corpos vivos (AC 23)
+**C26** - [x] `erros.txt` só ganha linhas: nenhuma das 8 linhas de `<base>` é removida nem alterada, e a linha nova é `503 {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.4","title":"Erro interno","status":503,"detail":"Armazenamento de arquivos indisponível."}` (o `title` é o de `Problemas.Titulo(503)` na base); o `RetratoTests` compara as 9 linhas com os corpos vivos (AC 23)
 Proof: `python .specs/features/arquivos-minio/asserts_minio.py <base> --erros` (confere por `git diff --numstat` 1 linha acrescentada, 0 removidas, e o texto da linha nova)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_erro_iguais_aos_da_base"`
 
-**C27** - [ ] Toda linha removida com `Assert` em `api.Tests/**/*.cs` entre `<base>` e `HEAD` reaparece idêntica como linha adicionada, exceto 3 linhas listadas no script: `Assert.Equal(8, gravados.Length);` (vira 9, C26), `Assert.Equal(png, coluna);` (vira leitura do objeto, C7) e `Assert.Equal(["Agendador", "Cpf", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],` (ganha `Armazenamento`, C28); nenhuma linha adicionada traz `Skip =`; nenhum commit de `<base>..HEAD` mistura `api/` ou `api.Tests/` com `web/`; o script aplica a função `conferir` de `.specs/features/refatoracao-solid/asserts_preservados.py` e acusa as 3 exceções só se a linha nova também faltar (AC 23, AC 24)
+**C27** - [x] Toda linha removida com `Assert` em `api.Tests/**/*.cs` entre `<base>` e `HEAD` reaparece idêntica como linha adicionada, exceto 3 linhas listadas no script: `Assert.Equal(8, gravados.Length);` (vira 9, C26), `Assert.Equal(png, coluna);` (vira leitura do objeto, C7) e `Assert.Equal(["Agendador", "Cpf", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],` (ganha `Armazenamento`, C28); nenhuma linha adicionada traz `Skip =`; nenhum commit de `<base>..HEAD` mistura `api/` ou `api.Tests/` com `web/`; o script aplica a função `conferir` de `.specs/features/refatoracao-solid/asserts_preservados.py` e acusa as 3 exceções só se a linha nova também faltar (AC 23, AC 24)
 Proof: `python .specs/features/arquivos-minio/asserts_minio.py <base>`
 Proof: `python .specs/features/arquivos-minio/asserts_minio.py --autoteste`
 
