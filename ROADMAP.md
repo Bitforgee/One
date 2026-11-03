@@ -10,7 +10,7 @@
   - `.specs/features/vertical-slice-completa/`: um arquivo por caso de uso com `Mediator` (Etapa 4c), 31 checks;
   - `.specs/features/interface-nova/`: shadcn/ui e Tailwind no `web/` (Etapa 4c), 61 critérios, 94 checks;
   - `.specs/features/dominio-e-contratos/`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios, 41 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-024;
+  - `.specs/STATE.md`: decisões AD-001 a AD-025;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -434,6 +434,11 @@ Em 02/11 os subagentes desta etapa (planos, checks, construtores e Verifiers) so
 de tokens: um construtor gasta de 340 a 410 mil, um Verifier de 90 a 270 mil. Decisão do usuário em
 02/11: daqui em diante os construtores rodam no Sonnet, com briefing curto e saída de testes filtrada; o
 Verifier continua no modelo mais forte, porque é ele que tenta provar que os testes podem falhar.
+
+**Mutação suspensa (AD-025, 02/11):** por decisão do usuário, o `mutator` não roda mais até segunda
+ordem; cada rodada levava de 20 a 40 minutos por lote. Os checks de mutação já escritos ficam abertos e
+aparecem como "suspensos por decisão do usuário", não como aprovados. Continuam valendo crapper, dryer,
+as suítes, o e2e e as falhas injetadas à mão pelo Verifier.
 
 ## Riscos
 
