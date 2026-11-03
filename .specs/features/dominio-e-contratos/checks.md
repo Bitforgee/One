@@ -384,3 +384,37 @@ estimado). Contexto fixo de cada builder: `plan.md` (32.336 B), este `checks.md`
   execução da suíte depois de recompilar deu 292 falhas em 1 ms cada e a seguinte, sem recompilar, 303/303
   (o DLL novo, como o aviso do Smart App Control prevê).
 - Abandoned: nada.
+
+### Lote 2 (S5, S3, S4)
+
+- Boundary: C19 a C25, C27 a C41 fechados em e300265 (commits 7b1bfa6 e e300265); C26 fica aberto até o lote 3, porque
+  `ArquiteturaTests.Pipeline_do_chamado_com_a_forma_da_base` exige `DetalheChamado.Montar` devolvendo `Task<DetalheChamado>`
+  (o record é de S2; o filtro hoje executa 0 teste) e `Permissao_so_no_AgirNoChamado` já passa. C1 e C2 abertos até o último
+  lote. `dotnet test api.Tests` 323/323 (303 + 12 de domínio + 8 regras), Playwright 27/27 contra a imagem `one-dominio` de
+  um worktree limpo em e300265 na porta 8082 (container, imagem e worktree removidos), `arquitetura_intacta.py f0a7c9e`
+  43 membros da base iguais (59 em HEAD), `migracao_vazia.py f0a7c9e` 0 arquivo, `ca1502_barra.sh` e `msg0005_barra.sh` ok,
+  `dotnet build api -warnaserror:CA1502` 0 aviso, `git diff --exit-code f0a7c9e HEAD -- api/Agendador.cs
+  api.Tests/Retratos/rotas.txt api.Tests/Retratos/erros.txt` vazio, os 3 testes de S1 e os 3 retratos de S1 iguais a
+  3d6ee69. Os 46 outros filtros de C19 a C41 executam pelo menos 1 teste (L-002). `DocumentoDominioTests` entrou aqui junto
+  com `ChamadoDominioTests` e `ArtigoDominioTests`. Faltas injetadas: nenhuma neste lote (as 18 linhas de C21 são
+  comparadas coluna a coluna; `LembreteEm` fica pelas gravações G7 e G21 de C6, mortas no lote 1).
+- Settled mid-build: (1) Landing 8 e 9 no `plan.md`: o laço de nomes do `OneDb` anda pelo nome simples do tipo, porque o nome
+  de uma FK depende da ordem em que o modelo entrega os tipos e mover as classes para pastas a mudou (o `migrations add`
+  acusou renomeação de constraints); com a ordem antiga `HasPendingModelChanges()` é falso sem migração (a migração
+  temporária `TmpDiff` saiu vazia e foi removida com o snapshot restaurado). Formas de `Artigo.Criar`/`NovaVersao`,
+  `Documento.Criar`/`NovaVersao`, e o número da versão conferido com `Any(v => v.Numero >= novo)` porque a regra da base
+  `Ultima_versao_em_um_arquivo` proíbe `Max(x => x.Numero)` fora de `Conhecimento/`. (2) `DocumentoRotas.Versao` ficou pura;
+  os trechos pendentes saem em `DocumentoRotas.Trechos`. (3) `Transferencia.Criar` grava o chamado e o evento CRIACAO num
+  `SaveChanges` só (o evento entra pela navegação), dentro da mesma transação. (4) Chamado: `DevolverAFila` não passa por
+  `Mudar` (não limpa `LembreteEm`, como a base); `ResponderComoAluno` em RESOLVIDO lança, o handler chama `Rejeitar`;
+  `Assumir`, `ResponderComoEquipe`, `Resolver`, `Cancelar`, `Encaminhar`, `MarcarDuplicado` e `ResponderComoAluno` lançam fora
+  de ABERTO/EM_ATENDIMENTO/AGUARDANDO_ALUNO (mais estreito que o mínimo de C22, igual à tabela de permissões); `Anotar`,
+  `Reclassificar` e `DevolverAFila` aceitam também RESOLVIDO. (5) Fixtures: `IndicadoresTests` monta o chamado com
+  `Chamado.Abrir` e fabrica estado, motivo e contadores por `db.Entry(...).Property(...).CurrentValue` (o chamado ganha o
+  evento CRIACAO que antes não tinha; nenhuma asserção mudou); `VisibilidadeTests.Segunda_alteracao_simultanea_409` escreve
+  por `db.Entry`; `Semente.Artigo` usa `Artigo.Criar` + `Ativar`/`Arquivar`; `ProvedorTests` e `AvaliarBuscaTests` usam as
+  fábricas e os nomes sem `One.Api.Dados.` completo. (6) Os `Proof:` de C20, C28 e outros citam classes (`UsuarioAdminTests`,
+  `EventosTests`, `ConcorrenciaTests`...) que existem com esse nome dentro dos arquivos `AdminTests.cs`/`VisibilidadeTests.cs`;
+  todos os filtros casam. (7) `plan.md` Impact: 14 métodos novos no `ArquiteturaTests` (a conta é: C13 a C17, C19, C20, C26,
+  C29, C34 a C38); 8 entraram neste lote, 5 de S2 e o `Pipeline_do_chamado_com_a_forma_da_base` ficam para o lote 3.
+- Abandoned: nada.
