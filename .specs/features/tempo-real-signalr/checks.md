@@ -371,3 +371,12 @@ Tamanho estimado pelo código que cada slice lê e escreve (`wc -c` em `HEAD` / 
 - **Nota do coordenador sobre a base:** o commit `f996d30` congelou os checks antes do build do `arquivos-minio`, então
   as provas por diff (C4, C17) comparam com `c1a2a56`, o HEAD quando este build começou; o intervalo da feature para o
   Verifier é `c1a2a56..dfa2573`.
+
+### Correção após a verificação rodada 1
+
+Só testes; o código não mudou. Cada falha foi injetada à mão, vista vermelha e restaurada (mutação suspensa, AD-025).
+
+- **C23** (F4, aviso enviado no SaveChanges): `TempoRealAvisosTests.Transferir_avisa_so_depois_do_commit_e_a_fila_ja_traz_o_chamado` agora segura o commit por 800 ms (`OneFactory.Commit`, `AtrasoDoCommit`); um aviso antes do commit leria a fila sem o chamado. Com F4 o teste falhou; sem ela passa.
+- **C22** (FilaMudou uma vez para 3 tarefas): `TempoRealAvisosTests.Agendador_avisa_fechamento_lembrete_e_volta_para_resolvido` exige exatamente 3 `FilaMudou`, um por tarefa. Com o `FilaMudou` de uma tarefa suprimido, falhou (esperado 3, veio 2).
+- **Hub no cliente web** (F9): `tempo-real.test.ts` "conecta em /api/tempo-real com reconexão automática" confere `url` e `withAutomaticReconnect` (o fake de `setup.ts` passou a registrá-los). Com `/api/tempo-reall` falhou; sem `.withAutomaticReconnect()` falhou. O e2e do `negotiate` não foi feito.
+- Contagens: `api.Tests` 405, Vitest 186 (185 + 1).
