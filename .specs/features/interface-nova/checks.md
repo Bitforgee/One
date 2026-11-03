@@ -525,3 +525,34 @@ estimados) / 4 + 8k de saída das barreiras e das suítes. Contexto fixo por con
   detalhe com `h-11` (44 px) em toda largura
 - Abandoned: a conversão do `useChamado` para `useQuery` com `refetchInterval` (Flow 5), revertida pelo motivo do
   item (5); fica para o lote 3 depois da decisão
+
+### Lote 3 (S6, S7, S8, S9)
+
+- Boundary: C60-C94 closed at b43672a (commits 95b8669, 5cc2ac2, f3eb39d, b43672a). Provas em b43672a: Vitest 161/161 (C1-C59 seguem verdes,
+  nenhum `.skip(` nem `.only(` novo); Playwright 31/31 duas vezes contra o contêiner `api` reconstruído com
+  `docker compose up -d --build api` (C66, C80, C83 e C89 incluídos, mais o C8 nas 15 telas); `seletores_conferem.py`,
+  `consultas_preservadas.py` (389 consultas) e `chamadas_iguais.py` (99 testes) com 0 problema contra b2e7e79;
+  `ui_isolada.sh` sai 0; `recharts_separado.py` e `precache_completo.py` (17 URLs) com 0 problema; `crapper` sai 0
+  (pior: `Periodo` 8.1); `dryer` sem candidato; `npm ls bootstrap` vazio
+- Mutação suspensa por decisão do usuário em 02/11/2026; checks de mutator não rodados neste lote.
+- Settled mid-build: (1) a S8 e a S9 entraram no mesmo commit (f3eb39d): quando o último `react-bootstrap` sai,
+  "camada do Bootstrap" e "tema claro enquanto houver react-bootstrap" passam sozinhos para o ramo sem Bootstrap, e
+  esse ramo exige a camada, os pacotes e o controle "Tema" já fora e dentro; (2) o Tiptap digita sob o jsdom com as
+  três APIs falsas que o plano nomeou (`Range.getClientRects`, `Range.getBoundingClientRect` e
+  `document.elementFromPoint`, em `setup.ts`), então a condição de parada do plano não valeu; o teste do C74 leva o
+  cursor ao fim com `getSelection().collapse` antes de digitar, porque o jsdom o põe no começo; (3) o `setup.ts` chama
+  `toast.dismiss()` depois de cada teste (o Sonner guarda os toasts no módulo) e os testes de toast esperam 50 ms antes
+  de montar, porque a gravação de um teste anterior pode terminar depois dele; (4) `useChamado` passou ao
+  `refetchInterval` (com `refetchIntervalInBackground`), e as três linhas `vi.advanceTimersByTime` de "atualiza
+  chamado a cada 15 s" viraram `await vi.advanceTimersByTimeAsync` por decisão do usuário, cada linha em
+  `seletores.md`; (5) peças repetidas entre fatias foram para a raiz: `Periodo` (calendário), `CampoArquivo`
+  (Dropzone), `Cabecalho`, `Editor`, `Confirmar`, `Marca`, `Situacao`, `ErroDe`, `Campo`, e em `acao.tsx` o
+  `BotaoAcao`, o `useLeituras` e o `useGravacao`; esses arquivos ficam fora da lista de caminhos da door 4 (como o
+  `Balao.tsx`), mas o `dryer` rodado com eles também sai sem candidato; (6) o Zod do acesso valida só `min(1)` nos 6
+  campos obrigatórios, com `noValidate` no formulário e `aria-invalid` no campo (sem texto novo); (7) o botão "Tema" é
+  um `Popover` com três botões, não um menu do Radix, e só o nome acessível "Tema" não aparece no texto visível; (8)
+  `theme_color` e a meta `theme-color` passaram a `#2559bf` (o `--primary` claro em sRGB de 8 bits); (9) `chamadas_iguais.py`
+  roda a suíte da base, que importa o Bootstrap: com os três pacotes fora, é preciso `npm i --no-save` deles em
+  `web/node_modules` durante a rodada e `npm prune` depois; (10) `ui/tabs.tsx` foi escrito à mão a partir do
+  registro `new-york-v4` (sem rede)
+- Abandoned: nenhum
