@@ -206,6 +206,23 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Chaves());
     }
 
+    // verificação rodada 2 (N4): a rejeição aceita dentro do prazo grava o objeto do anexo que a linha aponta
+    [Fact]
+    public async Task Rejeitar_resolucao_no_prazo_com_anexo_grava_o_objeto()
+    {
+        var b = await Balcao.Criar(f);
+        var resolvido = await b.Chamado(EstadosChamado.Resolvido);
+        var antes = await f.Chaves();
+        var png = Balcao.Arquivo(Balcao.Png, 100);
+
+        var r = await Balcao.ComAnexos(b.ClienteAluno, resolvido, "Não resolveu.", "PUBLICA", ("tela.png", png));
+
+        Assert.True(r.IsSuccessStatusCode, $"{(int)r.StatusCode}");
+        var anexo = await f.Db(b.Instituicao.Id, db => db.Anexos.OrderByDescending(x => x.Id).FirstAsync());
+        Assert.Equal([anexo.Chave], (await f.Chaves()).Except(antes));
+        Assert.Equal(png, await f.Objeto(anexo.Chave));
+    }
+
     [Fact]
     public async Task Nova_versao_de_documento_arquivado_nao_deixa_objeto()
     {
