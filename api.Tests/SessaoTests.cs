@@ -18,7 +18,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     List<(string metodo, string padrao)> Rotas() =>
         f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/") && !e.RoutePattern.RawText.Contains("{**"))
-            .SelectMany(e => e.Metadata.GetMetadata<Microsoft.AspNetCore.Routing.HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
+            .SelectMany(e => (e.Metadata.GetMetadata<Microsoft.AspNetCore.Routing.HttpMethodMetadata>()?.HttpMethods ?? ["GET"]).Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
 
     static HttpRequestMessage Pedido(string metodo, string padrao) =>
@@ -31,7 +31,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.Equal(54, privadas.Count); // RAG C37: mais as 5 de documentos
+        Assert.Equal(56, privadas.Count); // RAG C37: mais as 5 de documentos; tempo-real-signalr: mais o negotiate e o WebSocket do hub (sem método declarado, o upgrade é GET)
 
         foreach (var (metodo, padrao) in privadas)
         {

@@ -64,9 +64,32 @@ public sealed class Conectado : IAsyncDisposable
     public Conectado(HubConnection con)
     {
         Conexao = con;
-        con.On<string>("ChamadoMudou", n => Recebidos.Enqueue("ChamadoMudou:" + n));
-        con.On("FilaMudou", () => Recebidos.Enqueue("FilaMudou"));
+        con.On<string>("ChamadoMudou", async n => { Recebidos.Enqueue("ChamadoMudou:" + n); await Reler("ChamadoMudou"); });
+        con.On("FilaMudou", async () => { Recebidos.Enqueue("FilaMudou"); await Reler("FilaMudou"); });
         con.On<string>("Sonda", g => Recebidos.Enqueue("Sonda:" + g));
+    }
+
+    // Faz, no instante do aviso, a leitura que a tela faria; o resultado vai para Leituras.
+    public Func<string, Task<string>>? AoReceber { get; set; }
+    public ConcurrentQueue<string> Leituras { get; } = new();
+
+    async Task Reler(string evento)
+    {
+        if (AoReceber is not null) Leituras.Enqueue(await AoReceber(evento));
+    }
+
+    public void Limpar()
+    {
+        Recebidos.Clear();
+        Leituras.Clear();
+    }
+
+    // Espera até o evento (texto exato, como "FilaMudou" ou "ChamadoMudou:ONE-1") chegar; devolve se chegou.
+    public async Task<bool> Receber(string evento, TimeSpan? limite = null)
+    {
+        var fim = DateTime.UtcNow + (limite ?? TimeSpan.FromSeconds(5));
+        while (!Recebidos.Contains(evento) && DateTime.UtcNow < fim) await Task.Delay(20);
+        return Recebidos.Contains(evento);
     }
 
     public Task Entrar(string numero) => Conexao.InvokeAsync("EntrarNoChamado", numero);
