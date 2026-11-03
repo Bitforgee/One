@@ -241,3 +241,8 @@ Tamanho estimado por slice = (2 x bytes dos arquivos existentes que a slice rees
   confere o corpo antes do 409 de estado. O plano exige que nada mude para o usuário, então vale o comportamento
   da base. O C5 fica provado pelo teste do lote 1, que exige 400 (nota com anexo), 415 (`.exe`) e 409 (PNG válido),
   nessa ordem. Erro de texto do check (como L-021), não mudança de comportamento.
+- **Decisão do usuário em 02/11/2026 sobre o C5 (depois da verificação rodada 1):** aceito o comportamento da base,
+  415 para `.exe` em chamado fechado; o C5 vale pelo teste que exige 400 (nota com anexo), 415 (`.exe`) e 409 (PNG
+  válido), nessa ordem.
+- **Decisão do usuário em 02/11/2026 sobre o C29:** criar o e2e real com anexo (Playwright contra o contêiner, usuário
+  criado pelo primeiro acesso com o Mailpit, envio e download de um PDF conferindo os bytes).
