@@ -111,6 +111,7 @@ Evidence:
 
 - `web/e2e/arranjo.spec.ts` constante `Links` (ordem antiga, usada em "cabeçalho a 360 px abre a gaveta Menu", "abaixo de 1024 px sem barra lateral" e "barra lateral a")
 - `web/src/acesso/textos.test.tsx` lista `Cabecalho`, que não tem os títulos de grupo nem o nome
+- `web/src/acesso/acesso.test.tsx` "cabeçalho num único nav por papel": a lista do administrador na ordem antiga (Artigos antes de Indicadores); reescrita para a ordem dos grupos
 - `web/src/acesso/acesso.test.tsx` "rodapé da barra lateral por papel" (redesign C14): o nome entra antes de Tema; o teste lê só `a, button`, então não muda
 
 Cost: 3 testes reescritos, ~10 novos.
@@ -136,3 +137,6 @@ Estimativa = arquivos lidos (`Autenticado.tsx` 9 KB, `AvisosPush.tsx` 2 KB, `e2e
 - S1-S3 + S0 = ~49k, só `web/` - um construtor, sem pergunta
 - Mechanism: one builder
 - Ordem: depois de o Verifier do `historico-legivel` terminar (os dois usam o contêiner da porta 8080)
+- Feature base (`<base>`): `ff07f05` (`docs(barra-lateral-grupos): plan, checks and AD-028`)
+- **Settled mid-build:** (1) construído numa worktree (`D:\one-system-barra`, branch `barra-lateral-grupos`) enquanto o Verifier do `historico-legivel` usava a árvore principal e o contêiner; os e2e rodaram contra um `vite preview` do build da worktree com `E2E_URL` (os 2 e2e que precisam da API real, `plataforma` e `anexos`, só rodam contra o contêiner). (2) Classes montadas em tempo de execução não geram CSS no Tailwind: a barra recolhida usa a variante literal `recolhida:` (`@custom-variant` em `index.css`). (3) O `Slot` do Tooltip transformava a classe-função do `NavLink` em texto e marcava todos os links como ativos: o ativo vem de `useMatch`. (4) A transição de largura disparava ao redimensionar a janela e quebrava as medidas dos e2e: só anima depois de alternar; o teste do C17 alterna antes de medir. (5) Com títulos e nome, a lista da gaveta passa dos 80vh a 740 px: a lista rola, e "grupos na gaveta" confere que "Sair" fica ao alcance. (6) A instituição recolhida usa `hidden` (o `min-w-16` ganhava do `sr-only`)
+- **Abandoned:** helper `recolhida()` que montava as classes (o Tailwind não as enxerga)

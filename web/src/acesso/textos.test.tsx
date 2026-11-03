@@ -5,8 +5,9 @@ import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
 // Linha 0 de ## Screens (cabeçalho); "Tema" e "Menu" são só nomes acessíveis, conferidos por papel.
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Preto', 'Sistema']
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Menu', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração']
 const Instituicao = 'Univag' // nome da instituição do fixture
+const Nome = me().nome // barra-lateral-grupos: o nome do usuário no rodapé da barra e na gaveta
 
 describe('textos', () => {
   it('textos cabeçalho', async () => {
@@ -24,7 +25,7 @@ describe('textos', () => {
       const { unmount } = abrir('/univag/trocar-senha')
       const nav = await screen.findByRole('navigation')
       expect(within(nav).getByRole('button', { name: 'Menu' })).toBeInTheDocument()
-      tela.conferir(nav, [Instituicao])
+      tela.conferir(nav, [Instituicao, Nome])
       unmount()
     }
 
@@ -32,7 +33,7 @@ describe('textos', () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })] })
     abrir('/univag/trocar-senha')
     await userEvent.click(await screen.findByRole('button', { name: 'Menu' }))
-    tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }))
+    tela.conferir(await screen.findByRole('dialog', { name: 'Menu' }), [Nome])
     await userEvent.keyboard('{Escape}')
 
     // controle de tema aberto: "Claro", "Escuro", "Preto" e "Sistema"
@@ -113,7 +114,7 @@ describe('textos das telas de acesso', () => {
       api({ 'GET /api/auth/me': () => [200, me({ deveTrocarSenha })] })
       const { container, unmount } = abrir('/univag/trocar-senha')
       await screen.findByRole('heading', { name: 'Trocar senha' })
-      t.conferir(container, [...Cabecalho, Instituicao])
+      t.conferir(container, [...Cabecalho, Instituicao, Nome])
       unmount()
     }
     t.todos()

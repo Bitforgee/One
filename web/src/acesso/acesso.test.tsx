@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import pacote from '../../package.json'
 import { formatarData } from '../datas'
+import { iniciais } from '../Autenticado'
 import { abrir, api, me } from '../test/util'
 import { Toaster } from '../ui/sonner'
 import { ThemeProvider } from '../ui/theme-provider'
@@ -229,7 +230,7 @@ describe('acesso', () => {
     for (const [papel, links] of [
       ['ALUNO', ['Assistente', 'Minhas solicitações']],
       ['ATENDENTE', ['Fila', 'Indicadores']],
-      ['ADMINISTRADOR', ['Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros']],
+      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros']], // barra-lateral-grupos: ordem dos grupos
     ] as const) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
@@ -393,5 +394,72 @@ describe('tema (redesign-institucional)', () => {
       unmount()
       document.documentElement.className = ''
     }
+  })
+})
+
+// barra-lateral-grupos: grupos, nome do usuário e a preferência de recolher
+describe('barra lateral com grupos', () => {
+  afterEach(() => localStorage.clear())
+
+  const Todos = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR']
+  const Esperado = [
+    ['Atendimento', ['Assistente', 'Minhas solicitações', 'Fila', 'Indicadores']],
+    ['Conhecimento', ['Artigos', 'Documentos']],
+    ['Administração', ['Usuários', 'Matrículas', 'Cadastros']],
+  ]
+  // [título do grupo, rótulos dos links dentro dele], na ordem do DOM
+  const grupos = (raiz: HTMLElement) => within(raiz).getAllByRole('group').map((g) => [g.getAttribute('aria-labelledby') && document.getElementById(g.getAttribute('aria-labelledby')!)?.textContent, within(g).getAllByRole('link').map((l) => l.textContent)])
+
+  // C1, C3 (AC 1, AC 3)
+  it('grupos por assunto na barra e na gaveta', async () => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: Todos })] })
+    abrir('/univag/trocar-senha')
+    const nav = await screen.findByRole('navigation')
+    expect(grupos(nav)).toEqual(Esperado)
+    for (const [nome] of Esperado) expect(within(nav).getByRole('group', { name: nome as string })).toBeInTheDocument()
+    await userEvent.click(within(nav).getByRole('button', { name: 'Menu' }))
+    const gaveta = await screen.findByRole('dialog', { name: 'Menu' })
+    expect(grupos(gaveta)).toEqual(Esperado)
+    for (const [nome] of Esperado) expect(within(gaveta).getByRole('group', { name: nome as string })).toBeInTheDocument()
+  })
+
+  // C2 (AC 2)
+  it.each([
+    [['ALUNO'], [['Atendimento', ['Assistente', 'Minhas solicitações']]]],
+    [['ATENDENTE'], [['Atendimento', ['Fila', 'Indicadores']]]],
+    [['ADMINISTRADOR'], [['Atendimento', ['Indicadores']], ['Conhecimento', ['Artigos', 'Documentos']], ['Administração', ['Usuários', 'Matrículas', 'Cadastros']]]],
+  ])('grupos por papel (%j)', async (papeis, esperado) => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis })] })
+    abrir('/univag/trocar-senha')
+    expect(grupos(await screen.findByRole('navigation'))).toEqual(esperado)
+  })
+
+  // C6 (AC 5)
+  it('nome do usuário na gaveta', async () => {
+    api({ 'GET /api/auth/me': () => [200, me({ nome: 'Ana Beatriz Souza' })] })
+    abrir('/univag/trocar-senha')
+    await userEvent.click(await screen.findByRole('button', { name: 'Menu' }))
+    const gaveta = await screen.findByRole('dialog', { name: 'Menu' })
+    const titulo = within(gaveta).getByText('Menu')
+    const nome = within(gaveta).getByText('Ana Beatriz Souza')
+    expect(titulo.compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(nome.compareDocumentPosition(within(gaveta).getAllByRole('link')[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  // C7 (AC 6)
+  it('iniciais do usuário', () => {
+    expect(iniciais('Ana Beatriz Souza')).toBe('AS')
+    expect(iniciais('ana')).toBe('A')
+    expect(iniciais('  Carla  Regina ')).toBe('CR')
+  })
+
+  // C15 (AC 13)
+  it.each([[null], ['x']])('one-barra desconhecido começa aberta (%s)', async (valor) => {
+    if (valor !== null) localStorage.setItem('one-barra', valor)
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    const nav = await screen.findByRole('navigation')
+    expect(nav.getAttribute('data-recolhida')).toBe('false')
+    expect(within(nav).getByRole('button', { name: 'Recolher barra lateral' })).toHaveAttribute('aria-expanded', 'true')
   })
 })

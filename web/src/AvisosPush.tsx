@@ -37,9 +37,9 @@ export function AvisosPush({ item }: { item?: string }) {
       </button>
     )
   return (
-    <Button variant="ghost" size="icon" className="lg:w-full lg:justify-start lg:px-2" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
+    <Button variant="ghost" size="icon" className="lg:w-full lg:justify-start lg:px-2 recolhida:w-9 recolhida:justify-center" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
       <Icone aria-hidden="true" />
-      <span className="hidden lg:inline">{rotulo}</span>
+      <span className="hidden lg:inline recolhida:sr-only">{rotulo}</span>
     </Button>
   )
 }

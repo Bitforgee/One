@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
+/* barra-lateral-grupos (door 2): a partir de 1024 px, dentro do <nav> recolhido */
+@custom-variant recolhida {
+  @media (width >= 64rem) {
+    &:where([data-recolhida="true"] *) {
+      @slot;
+    }
+  }
+}
 
 /* Tokens de ## Visual (redesign-institucional/plan.md): neutros, um azul de destaque; .black sobrepõe o .dark (door 2) */
 :root {

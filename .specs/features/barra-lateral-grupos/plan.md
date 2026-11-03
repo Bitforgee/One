@@ -24,7 +24,7 @@ a gaveta Vaul abaixo de 1024 px e o padrão de gravar preferência no `localStor
 
 1. `/api/auth/me` (exists) - já devolve `nome`; nada muda na API
 2. `Autenticado` (exists) - `Menu` ganha o grupo de cada link; `Links` desenha um título por grupo que tem link visível para o papel; o nome entra no rodapé da barra e no topo da gaveta
-3. `Autenticado` (exists) - guarda `recolhida` em estado React lido de `localStorage['one-barra']` (door 1) e marca o `<nav>` com `data-recolhida`; as classes de largura, rótulo e título reagem a ele
+3. `Autenticado` (exists) - guarda `recolhida` em estado React lido de `localStorage['one-barra']` (door 1) e marca o `<nav>` com `data-recolhida`; as classes de largura, rótulo e título reagem a ele pela variante `recolhida:` declarada em `web/src/index.css` (exists) com `@custom-variant` (a partir de 1024 px, dentro de `[data-recolhida="true"]`); a transição de largura só vale depois de o usuário alternar, para redimensionar a janela não animar
 4. `web/src/ui/tooltip.tsx` (new, no door - shadcn copiado na pasta `ui/` já aceita pelo AD-023) - mostra o rótulo de cada link quando a barra está recolhida
 5. out: nenhuma requisição nova
 
