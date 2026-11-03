@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 61,
+  "next_id": 63,
   "lessons": [
     {
       "id": "L-001",
@@ -1098,6 +1098,42 @@
       ],
       "created": "2026-11-03T16:30:49Z",
       "last_seen": "2026-11-03T16:30:49Z"
+    },
+    {
+      "id": "L-061",
+      "key": "ac_gap::when writing checks for a gap list re read every value in each screens row the list touches instead of copying only the values the gap list named a verifier s list inherits its own earlier misses",
+      "text": "When writing checks for a gap list, re-read every value in each Screens row the list touches instead of copying only the values the gap list named; a verifier's list inherits its own earlier misses",
+      "signal": "ac_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "plan.md:95 'Linhas de 14 px'; plan.md:85 'ícones centralizados' (specs/checks)"
+      ],
+      "created": "2026-11-03T19:03:24Z",
+      "last_seen": "2026-11-03T19:03:24Z"
+    },
+    {
+      "id": "L-062",
+      "key": "spec_precision_gap::a check reworded after a verification round needs the user s approval recorded in checks md like any amended check even when the new text only narrows it to the real behaviour",
+      "text": "A check reworded after a verification round needs the user's approval recorded in checks.md, like any amended check, even when the new text only narrows it to the real behaviour",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C47 (rewritten after round 2) (specs/checks)"
+      ],
+      "created": "2026-11-03T19:03:24Z",
+      "last_seen": "2026-11-03T19:03:24Z"
     }
   ]
 }

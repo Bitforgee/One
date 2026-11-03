@@ -372,6 +372,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: C47; dac2832 web/src/conhecimento/Artigos.tsx:77 (specs/checks)
 - last seen: 2026-11-03T16:30:49Z
 
+### L-061 - When writing checks for a gap list, re-read every value in each Screens row the list touches instead of copying only the values the gap list named; a verifier's list inherits its own earlier misses
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: layout-painel
+- evidence: plan.md:95 'Linhas de 14 px'; plan.md:85 'ícones centralizados' (specs/checks)
+- last seen: 2026-11-03T19:03:24Z
+
+### L-062 - A check reworded after a verification round needs the user's approval recorded in checks.md, like any amended check, even when the new text only narrows it to the real behaviour
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: layout-painel
+- evidence: C47 (rewritten after round 2) (specs/checks)
+- last seen: 2026-11-03T19:03:24Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
