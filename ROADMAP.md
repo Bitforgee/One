@@ -51,7 +51,7 @@ hospedagem e ensaio.
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
-| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. Lote 2 (detalhe do chamado, Indicadores, listas) em build |
+| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. Lote 2 (detalhe do chamado, Indicadores, listas) em build, sem mutação desde 02/11 (AD-025) |
 | Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes. **Lote 1 verde** (`2a2ba2e..3d6ee69`): retratos gravados contra o código de antes, API 303, e2e 23, `api/` sem mudança. Lote 2 (estrutura e entidades ricas) em build; lote 3 (contratos) a seguir |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
@@ -189,7 +189,7 @@ fazer antes da banca:
 
 **Medição (`ub-mode`):** o `dotnet build` passa a barrar método com complexidade ciclomática acima
 de 10 (CA1502, AD-018); no `web/`, `crapper` abaixo de CRAP 10, `dryer` sem duplicação a partir de
-0.8 e `mutator` sem sobreviventes. As ferramentas do `ub-mode` não leem C#; no `api/` a mutação é a
+0.8 e `mutator` sem sobreviventes (o `mutator` está suspenso desde 02/11, AD-025). As ferramentas do `ub-mode` não leem C#; no `api/` a mutação é a
 injeção de falhas do Verifier.
 
 - [x] Aprovar o `plan.md` (02/11: recomendações aceitas; fatias verticais; tudo antes da banca).
@@ -385,8 +385,11 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
       usam `!important` e vencem as do Tailwind com o mesmo nome; um bloco provisório em `index.css`
       corrige até a S9 apagar o Bootstrap.
 - [ ] Lote 2 (S3 a S5, C39 a C59): detalhe do chamado, Indicadores (Recharts carregado sob demanda) e listas.
-- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento, administração e a saída do Bootstrap.
-- [ ] Verificação independente aprovada (perfil `ui`).
+      A mutação desse lote foi interrompida em 02/11 (AD-025); os checks de mutação ficam abertos.
+- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento, administração e a saída do Bootstrap. Sem
+      mutação (AD-025); construtor no Sonnet.
+- [ ] Verificação independente aprovada (perfil `ui`), com os checks de mutação marcados como suspensos
+      por decisão do usuário.
 
 Decisão do usuário em 02/11/2026 (AD-020): o `web/` troca o Bootstrap por esta stack antes da banca, tela a tela,
 dentro das 6 fatias do AD-017. Planejar com `tlc-spec-lean` perfil `ui`, e a migração não pode
