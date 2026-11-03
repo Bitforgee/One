@@ -13,6 +13,11 @@ from pathlib import Path
 EXTENSOES = {".js", ".css", ".html", ".png", ".svg", ".woff2"}
 
 
+def urls_do_sw(sw):
+    """URLs do manifesto de precache: `url:"x"` (generateSW) ou `"url":"x"` (injectManifest)."""
+    return re.findall(r'[{,]"?url"?\s*:\s*"([^"]+)"', sw)
+
+
 def conferir(arquivos, urls):
     """Devolve os problemas: arquivos fora do precache e URLs da API dentro dele."""
     esperados = {a for a in arquivos if Path(a).suffix in EXTENSOES and a != "sw.js" and not re.fullmatch(r"workbox-[^/]*\.js", a)}
@@ -27,6 +32,8 @@ def autoteste():
     assert conferir(["index.html"], ["index.html", "api/auth/me"]), "URL api/ deve falhar"
     assert conferir(["index.html"], ["index.html", "/api/x"]), "URL /api/ deve falhar"
     assert conferir(["assets/a.woff"], []) == [], ".woff não é exigido"
+    assert urls_do_sw('precacheAndRoute([{url:"index.html",revision:"a"},{url:"assets/a.js",revision:null}])') == ["index.html", "assets/a.js"], "generateSW"
+    assert urls_do_sw('[{"revision":"a","url":"index.html"},{"url":"assets/a.js","revision":null}]') == ["index.html", "assets/a.js"], "injectManifest"
     print("autoteste ok")
 
 
@@ -39,7 +46,7 @@ def main(argv):
         return 2
     pasta = Path(argv[1])
     sw = (pasta / "sw.js").read_text(encoding="utf-8")
-    urls = re.findall(r'url:\s*"([^"]+)"', sw)
+    urls = urls_do_sw(sw)
     arquivos = [p.relative_to(pasta).as_posix() for p in pasta.rglob("*") if p.is_file()]
     problemas = conferir(arquivos, urls)
     for p in problemas:

@@ -84,7 +84,10 @@ describe('interface nova', () => {
   // tempo-real-signalr C45: o proxy do dev leva o WebSocket e o service worker não guarda API
   it('proxy do dev com WebSocket e PWA sem API em cache', () => {
     expect(semEspacos(vite)).toContain("proxy:{'/api':{target:'http://localhost:5226',ws:true}}")
-    expect(vite).toContain('navigateFallbackDenylist: [/^\\/api\\//]')
+    // web-push door 5: com injectManifest o fallback de navegação e a lista de negados moram no sw.ts
+    const sw = readFileSync('src/sw.ts', 'utf8')
+    expect(sw).toContain('denylist: Negados')
+    expect(sw).toContain('export const Negados = [/^\\/api\\//]')
     expect(vite).toContain("globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}']")
     expect(vite).not.toContain('runtimeCaching')
   })

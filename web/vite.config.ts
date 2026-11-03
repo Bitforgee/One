@@ -10,6 +10,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: 'One',
@@ -25,11 +28,9 @@ export default defineConfig({
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
         ],
       },
-      workbox: {
+      injectManifest: {
         // só arquivos estáticos; nada de /api/* em cache
         globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
       },
     }),
   ],
