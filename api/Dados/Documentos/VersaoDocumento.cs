@@ -8,7 +8,9 @@ public class VersaoDocumento : IDaInstituicao
     public Documento? Documento { get; init; }
     public int Numero { get; init; }
     public string NomeArquivo { get; init; } = "";
-    public byte[] Conteudo { get; init; } = [];
+    public string Chave { get; init; } = "";
+    public string Hash { get; init; } = "";
+    public long Tamanho { get; init; }
     public string Texto { get; init; } = "";
     public int Paginas { get; init; }
     public DateTime CriadaEm { get; init; }

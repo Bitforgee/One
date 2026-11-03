@@ -8,5 +8,6 @@ public class Anexo : IDaInstituicao
     public string Nome { get; init; } = "";
     public string Tipo { get; init; } = "";
     public long Tamanho { get; init; }
-    public byte[] Conteudo { get; init; } = [];
+    public string Chave { get; init; } = "";
+    public string Hash { get; init; } = "";
 }

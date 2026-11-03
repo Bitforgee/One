@@ -13,7 +13,7 @@ public sealed record CriarDocumento(IFormCollection Form) : IRequest<IResult>
             await m.Send(new CriarDocumento(req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty)));
 }
 
-public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio) : IRequestHandler<CriarDocumento, IResult>
+public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio, Armazenamento armazenamento) : IRequestHandler<CriarDocumento, IResult>
 {
     public async ValueTask<IResult> Handle(CriarDocumento m, CancellationToken ct)
     {
@@ -26,7 +26,7 @@ public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio) : IReq
         if (erro is not null) return erro;
 
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var d = Documento.Criar(titulo, categoriaId, Versao(pdf!, 1, agora));
+        var d = Documento.Criar(titulo, categoriaId, await Versao(armazenamento, db.InstituicaoAtual!.Value, pdf!, 1, agora));
         Trechos(db, d.Versoes.Single(), agora);
         db.Documentos.Add(d);
         await db.SaveChangesAsync();

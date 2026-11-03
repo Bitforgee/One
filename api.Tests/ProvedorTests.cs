@@ -118,7 +118,7 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         var documento = await f.Db(i.Id, async db =>
         {
             var d = Documento.Criar("Regulamento", (await db.Categorias.FirstAsync()).Id,
-                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Chave = $"1/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
             return d.Versoes.Single().Id;
@@ -175,7 +175,7 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, async db =>
         {
             var d = Documento.Criar("Regulamento", (await db.Categorias.FirstAsync()).Id,
-                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Chave = $"1/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
             // trecho pendente do documento, para a gravação permitida do embedding
@@ -208,7 +208,7 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
 
         // door R4: o número da versão é único por documento
         var repetida = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => new Npgsql.NpgsqlCommand(
-            "INSERT INTO versao_documento (instituicao_id, documento_id, numero, nome_arquivo, conteudo, texto, paginas, criada_em) SELECT instituicao_id, documento_id, numero, nome_arquivo, conteudo, texto, paginas, criada_em FROM versao_documento", con).ExecuteNonQueryAsync());
+            "INSERT INTO versao_documento (instituicao_id, documento_id, numero, nome_arquivo, chave, hash, tamanho, texto, paginas, criada_em) SELECT instituicao_id, documento_id, numero, nome_arquivo, chave || 'x', hash, tamanho, texto, paginas, criada_em FROM versao_documento", con).ExecuteNonQueryAsync());
         Assert.Equal(("23505", "ix_versao_documento_documento_id_numero"), (repetida.SqlState, repetida.ConstraintName));
 
         // o embedding vazio pode ser gravado uma vez

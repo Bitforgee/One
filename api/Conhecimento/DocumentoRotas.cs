@@ -51,8 +51,11 @@ public static class DocumentoRotas
         }
     }
 
-    public static VersaoDocumento Versao(Pdf pdf, int numero, DateTime agora) =>
-        new() { Numero = numero, NomeArquivo = pdf.Nome, Conteudo = pdf.Conteudo, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
+    public static async Task<VersaoDocumento> Versao(Armazenamento armazenamento, long instituicaoId, Pdf pdf, int numero, DateTime agora)
+    {
+        var (chave, hash) = await armazenamento.Gravar(instituicaoId, "documentos", pdf.Conteudo);
+        return new() { Numero = numero, NomeArquivo = pdf.Nome, Chave = chave, Hash = hash, Tamanho = pdf.Conteudo.Length, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
+    }
 
     public static void Trechos(OneDb db, VersaoDocumento v, DateTime agora) =>
         db.TrechosFonte.AddRange(Dividir(v.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));

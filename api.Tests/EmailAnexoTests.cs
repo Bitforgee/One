@@ -150,8 +150,8 @@ public class AnexoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal("image/png", d.Content.Headers.ContentType?.MediaType);
             Assert.Equal(png, await d.Content.ReadAsByteArrayAsync());
         }
-        var coluna = await f.Db(b.Instituicao.Id, db => db.Anexos.Where(x => x.Id == id).Select(x => x.Conteudo).SingleAsync());
-        Assert.Equal(png, coluna);
+        var chave = await f.Db(b.Instituicao.Id, db => db.Anexos.Where(x => x.Id == id).Select(x => x.Chave).SingleAsync());
+        Assert.Equal(png, await f.Objeto(chave));
     }
 
     async Task<(Balcao b, string numero)> SemNovaMensagem(Func<Balcao, string, Task<HttpResponseMessage>> enviar, HttpStatusCode esperado)

@@ -34,7 +34,7 @@ public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuar
         Arquivos.Ler(f, MaxAnexo, [Arquivos.Pdf, Arquivos.Jpeg, Arquivos.Png], $"O arquivo {f.FileName} passa de 10 MB.", $"O arquivo {f.FileName} não é PDF, JPG nem PNG.");
 }
 
-public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a) : IRequestHandler<ResponderChamado, IResult>
+public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenamento armazenamento) : IRequestHandler<ResponderChamado, IResult>
 {
     public async ValueTask<IResult> Handle(ResponderChamado m, CancellationToken ct)
     {
@@ -44,7 +44,8 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a) : IReques
         foreach (var f in m.Anexos)
         {
             var lido = (await ResponderChamado.LerAnexo(f)).Item1!;
-            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Conteudo = lido.Bytes });
+            var (chave, hash) = await armazenamento.Gravar(a.Instituicao.Id, "anexos", lido.Bytes);
+            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = chave, Hash = hash });
         }
         if (a.Papel == PermissoesChamado.Aluno)
         {

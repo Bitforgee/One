@@ -34,7 +34,7 @@ public class ChamadoDominioTests
 
     record Linha(string Nome, Chamado C, Action<Chamado> Age, string Final, string[] Mudam, Evento[] Eventos, (string Tipo, string Texto, int Anexos)[] Mensagens, Action<Chamado>? Extra = null);
 
-    static Anexo Foto => new() { Nome = "foto.png", Tipo = "image/png", Tamanho = 3, Conteudo = [1, 2, 3] };
+    static Anexo Foto => new() { Nome = "foto.png", Tipo = "image/png", Tamanho = 3, Chave = $"1/anexos/{Guid.NewGuid():N}", Hash = new string('a', 64) };
 
     static Linha[] Tabela() =>
     [

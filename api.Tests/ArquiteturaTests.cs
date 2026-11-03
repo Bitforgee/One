@@ -281,7 +281,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Cpf", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
+        Assert.Equal(["Agendador", "Armazenamento", "Cpf", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -909,5 +909,76 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var sep = Path.DirectorySeparatorChar;
         var chamam = CodigoApi().Where(p => !p.EndsWith($"{sep}Chamados{sep}PermissoesChamado.cs")).Where(p => Regex.IsMatch(SemComentarios(p), @"\bEstados\(")).Select(Relativo);
         Assert.Equal(["Chamados/AgirNoChamado.cs"], chamam);
+    }
+
+    // arquivos-minio C2: door 1, o banco guarda chave, hash e tamanho e nenhum byte
+    [Fact]
+    public async Task Anexo_e_VersaoDocumento_nao_guardam_bytes()
+    {
+        var modelo = await f.Db(null, db => Task.FromResult(db.Model));
+        foreach (var tipo in new[] { typeof(Anexo), typeof(VersaoDocumento) })
+        {
+            Assert.DoesNotContain(tipo.GetProperties(), p => p.PropertyType == typeof(byte[]));
+            var e = modelo.FindEntityType(tipo)!;
+            Assert.DoesNotContain(e.GetProperties(), p => p.GetColumnType() == "bytea");
+
+            var chave = e.FindProperty("Chave")!;
+            Assert.False(chave.IsNullable);
+            Assert.Contains(e.GetIndexes(), i => i.IsUnique && i.Properties.SequenceEqual([chave]));
+            var hash = e.FindProperty("Hash")!;
+            Assert.False(hash.IsNullable);
+            Assert.Equal("char(64)", hash.GetColumnType());
+            Assert.Equal(typeof(long), e.FindProperty("Tamanho")!.ClrType);
+        }
+        var colunas = await Colunas();
+        foreach (var tabela in new[] { "anexo", "versao_documento" })
+        {
+            Assert.DoesNotContain(colunas, c => c.tabela == tabela && (c.coluna == "conteudo" || c.tipo == "bytea"));
+            foreach (var coluna in new[] { "chave", "hash", "tamanho" })
+                Assert.Contains(colunas, c => c.tabela == tabela && c.coluna == coluna && !c.nula);
+        }
+    }
+
+    // arquivos-minio C6: door 2, o cliente S3 e as quatro chaves de configuração
+    [Fact]
+    public void Cliente_S3_configurado_como_a_door_2()
+    {
+        var s3 = Assert.IsType<Amazon.S3.AmazonS3Client>(f.Services.GetRequiredService<Amazon.S3.IAmazonS3>());
+        Assert.Equal("http://localhost:9000", s3.Config.ServiceURL.TrimEnd('/'));
+        Assert.True(Assert.IsType<Amazon.S3.AmazonS3Config>(s3.Config).ForcePathStyle);
+        Assert.Equal(Amazon.Runtime.RequestChecksumCalculation.WHEN_REQUIRED, s3.Config.RequestChecksumCalculation);
+        Assert.Equal(Amazon.Runtime.ResponseChecksumValidation.WHEN_REQUIRED, s3.Config.ResponseChecksumValidation);
+
+        var codigos = new[] { File.ReadAllText(Path.Combine(Api, "Program.cs")), File.ReadAllText(Path.Combine(Raiz(), "api.Tests", "Infra", "OneFactory.cs")) };
+        foreach (var chave in new[] { "Endpoint", "Chave", "Segredo", "Bucket" })
+            foreach (var codigo in codigos)
+                Assert.Contains($"\"Armazenamento:{chave}\"", codigo);
+    }
+
+    // arquivos-minio C9: o objeto baixado é sempre o da chave que veio da linha do OneDb
+    [Fact]
+    public void Baixar_so_com_chave_de_coluna_do_banco()
+    {
+        var chamam = CodigoApi().Where(p => Regex.IsMatch(SemComentarios(p), @"\.Baixar\(")).Select(Relativo).Order().ToList();
+        Assert.Equal(["Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs"], chamam);
+        foreach (var arquivo in chamam)
+        {
+            var codigo = SemComentarios(Path.Combine(Api, arquivo));
+            Assert.Matches(@"\.Baixar\(\w+\.Chave\)", codigo);
+            Assert.Matches(@"new \w+\([^;]*x\.Chave", codigo); // o membro Chave sai do Select sobre o OneDb
+        }
+    }
+
+    // arquivos-minio C11: o download entrega o fluxo do bucket, sem array inteiro
+    [Fact]
+    public void Download_em_streaming_sem_array_inteiro()
+    {
+        foreach (var arquivo in new[] { "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs" })
+        {
+            var codigo = SemComentarios(Path.Combine(Api, arquivo));
+            Assert.Contains("Results.Stream(", codigo);
+            Assert.DoesNotContain("Results.File", codigo);
+            Assert.DoesNotContain("byte[]", codigo);
+        }
     }
 }

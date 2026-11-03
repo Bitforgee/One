@@ -1,6 +1,9 @@
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
+using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -28,6 +31,10 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public ContadorDeGravacoes Gravacoes { get; } = new();
     protected virtual bool LimitesReais => false;
     protected virtual int PortaSmtp => 1025;
+    protected virtual int PortaMinio => 9000;
+    public string Bucket { get; } = "one-teste-" + Guid.NewGuid().ToString("N")[..12];
+    int leituras;
+    public int LeiturasDeObjeto => leituras;
     public string? WebRoot { get; set; }
 
     public string ConnectionString => $"{Servidor};Database={Banco}";
@@ -38,6 +45,10 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Smtp:Host", "localhost");
         builder.UseSetting("Smtp:Porta", PortaSmtp.ToString());
         builder.UseSetting("App:UrlBase", "http://localhost:8080");
+        builder.UseSetting("Armazenamento:Endpoint", $"http://localhost:{PortaMinio}");
+        builder.UseSetting("Armazenamento:Chave", "one");
+        builder.UseSetting("Armazenamento:Segredo", "one-minio-dev");
+        builder.UseSetting("Armazenamento:Bucket", Bucket);
         builder.UseSetting("Llm:BaseUrl", "https://llm.teste/v1");
         builder.UseSetting("Llm:ChaveApi", "chave-teste");
         builder.UseSetting("Llm:Modelo", "gpt-6-luna");
@@ -68,18 +79,56 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public ValueTask InitializeAsync()
     {
         _ = Services; // sobe o host e aplica as migrações
+        ((AmazonS3Client)Services.GetRequiredService<IAmazonS3>()).BeforeRequestEvent += (_, e) =>
+        {
+            if (e is WebServiceRequestEventArgs { Request: GetObjectRequest }) Interlocked.Increment(ref leituras);
+        };
         return ValueTask.CompletedTask;
+    }
+
+    // Cliente próprio do teste, sempre na porta real do MinIO: lê o bucket sem passar pela API.
+    public static AmazonS3Client ClienteS3() =>
+        new(new BasicAWSCredentials("one", "one-minio-dev"), new AmazonS3Config { ServiceURL = "http://localhost:9000", ForcePathStyle = true, RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED, ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED });
+
+    public async Task<List<string>> Chaves()
+    {
+        using var s3 = ClienteS3();
+        return (await s3.ListObjectsV2Async(new ListObjectsV2Request { BucketName = Bucket })).S3Objects?.Select(o => o.Key).Order().ToList() ?? [];
+    }
+
+    public async Task<byte[]> Objeto(string chave)
+    {
+        using var s3 = ClienteS3();
+        using var r = await s3.GetObjectAsync(Bucket, chave);
+        using var ms = new MemoryStream();
+        await r.ResponseStream.CopyToAsync(ms);
+        return ms.ToArray();
     }
 
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
+        await ApagarBucket();
         NpgsqlConnection.ClearAllPools();
         await using var con = new NpgsqlConnection(Servidor);
         await con.OpenAsync();
         await using var cmd = new NpgsqlCommand($"DROP DATABASE IF EXISTS {Banco} WITH (FORCE)", con);
         await cmd.ExecuteNonQueryAsync();
         GC.SuppressFinalize(this);
+    }
+
+    // O bucket é versionado: apagar o objeto só põe uma marca, então saem todas as versões antes do bucket.
+    async Task ApagarBucket()
+    {
+        using var s3 = ClienteS3();
+        try
+        {
+            var versoes = await s3.ListVersionsAsync(Bucket);
+            if (versoes.Versions is { Count: > 0 })
+                await s3.DeleteObjectsAsync(new DeleteObjectsRequest { BucketName = Bucket, Objects = [.. versoes.Versions.Select(v => new KeyVersion { Key = v.Key, VersionId = v.VersionId })] });
+            await s3.DeleteBucketAsync(Bucket);
+        }
+        catch (AmazonS3Exception) { } // bucket nunca criado (subida recusada)
     }
 
     public HttpClient Cliente() =>

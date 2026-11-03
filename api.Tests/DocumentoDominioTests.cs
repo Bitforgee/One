@@ -7,7 +7,7 @@ public class DocumentoDominioTests
 {
     static readonly DateTime Agora = new(2026, 11, 2, 12, 0, 0, DateTimeKind.Utc);
 
-    static VersaoDocumento Versao(int numero) => new() { Numero = numero, NomeArquivo = $"r{numero}.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = Agora };
+    static VersaoDocumento Versao(int numero) => new() { Numero = numero, NomeArquivo = $"r{numero}.pdf", Chave = $"1/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = "t", Paginas = 1, CriadaEm = Agora };
 
     static Documento Novo() => Documento.Criar("Regulamento", 10, Versao(1));
 

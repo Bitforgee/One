@@ -12,7 +12,7 @@ public sealed record NovaVersaoDocumento(long Id, IFormCollection Form) : IReque
             await m.Send(new NovaVersaoDocumento(id, req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty)));
 }
 
-public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio) : IRequestHandler<NovaVersaoDocumento, IResult>
+public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio, Armazenamento armazenamento) : IRequestHandler<NovaVersaoDocumento, IResult>
 {
     public async ValueTask<IResult> Handle(NovaVersaoDocumento m, CancellationToken ct)
     {
@@ -22,7 +22,7 @@ public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio) :
         if (erro is not null) return erro;
 
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var versao = Versao(pdf!, d.Ultima().Numero + 1, agora);
+        var versao = await Versao(armazenamento, db.InstituicaoAtual!.Value, pdf!, d.Ultima().Numero + 1, agora);
         if (d.NovaVersao(versao) is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         Trechos(db, versao, agora);
         await db.SaveChangesAsync();

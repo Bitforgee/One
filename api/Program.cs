@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Amazon.Runtime;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +35,8 @@ public class Program
         if (comando)
             return await InstituicaoComando.Executar(app.Services, args[1..], Console.Out, Console.Error);
 
+        await app.Services.GetRequiredService<Armazenamento>().Preparar();
+
         app.UseExceptionHandler();
         app.UseStatusCodePages();
         app.UseStaticFiles();
@@ -52,6 +56,18 @@ public class Program
         s.TryAddSingleton(TimeProvider.System);
         s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
         s.AddSingleton<Email>();
+        s.AddSingleton<IAmazonS3>(sp =>
+        {
+            var c = sp.GetRequiredService<IConfiguration>();
+            return new AmazonS3Client(new BasicAWSCredentials(c["Armazenamento:Chave"], c["Armazenamento:Segredo"]), new AmazonS3Config
+            {
+                ServiceURL = c["Armazenamento:Endpoint"],
+                ForcePathStyle = true,
+                RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+                ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
+            });
+        });
+        s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), sp.GetRequiredService<IConfiguration>()["Armazenamento:Bucket"]!));
         s.AddScoped<Assistente.Assistente>();
         s.AddSingleton<Embeddings>();
         s.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));

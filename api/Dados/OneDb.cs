@@ -93,7 +93,12 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         });
         mb.Entity<Documento>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
         mb.Entity<Documento>().HasMany(d => d.Versoes).WithOne(v => v.Documento).HasForeignKey(v => v.DocumentoId);
-        mb.Entity<VersaoDocumento>().HasIndex(x => new { x.DocumentoId, x.Numero }).IsUnique();
+        mb.Entity<VersaoDocumento>(e =>
+        {
+            e.HasIndex(x => new { x.DocumentoId, x.Numero }).IsUnique();
+            e.Property(x => x.Hash).HasColumnType("char(64)");
+            e.HasIndex(x => x.Chave).IsUnique();
+        });
         mb.Entity<TrechoFonte>(e =>
         {
             e.HasOne(x => x.VersaoArtigo).WithMany().HasForeignKey(x => x.VersaoArtigoId);
@@ -122,7 +127,12 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasOne<Chamado>().WithMany(c => c.Mensagens).HasForeignKey(x => x.ChamadoId);
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AutorId);
         });
-        mb.Entity<Anexo>().HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
+        mb.Entity<Anexo>(e =>
+        {
+            e.HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
+            e.Property(x => x.Hash).HasColumnType("char(64)");
+            e.HasIndex(x => x.Chave).IsUnique();
+        });
         mb.Entity<EventoChamado>(e =>
         {
             e.HasOne<Chamado>().WithMany(c => c.Eventos).HasForeignKey(x => x.ChamadoId);

@@ -40,53 +40,53 @@ Fatos de `<base>` que o plano não cita e que os checks obrigam a tratar:
 
 ### S1 - Anexo vai para o bucket e o banco guarda só a referência (P1) · ~14 files · ~140 KB · ~43k
 
-**C1** - [ ] Uma resposta de chamado com um PNG de 5000 bytes grava um objeto no bucket com a chave `{instituicaoId}/anexos/{32 hexadecimais minúsculos}` e a linha do `Anexo` guarda essa chave, o SHA-256 em hexadecimal minúsculo de 64 caracteres igual ao calculado sobre os bytes e `Tamanho` 5000; os bytes do objeto, lidos direto do bucket pela chave, são os enviados (AC 1, door 1, door 3)
+**C1** - [x] Uma resposta de chamado com um PNG de 5000 bytes grava um objeto no bucket com a chave `{instituicaoId}/anexos/{32 hexadecimais minúsculos}` e a linha do `Anexo` guarda essa chave, o SHA-256 em hexadecimal minúsculo de 64 caracteres igual ao calculado sobre os bytes e `Tamanho` 5000; os bytes do objeto, lidos direto do bucket pela chave, são os enviados (AC 1, door 1, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Anexo_vai_para_o_bucket_com_chave_hash_e_tamanho"`
 
-**C2** - [ ] `Anexo` e `VersaoDocumento` não têm propriedade `byte[]` nem coluna `bytea`; `Chave` é obrigatória com índice único e `Hash` é obrigatório com 64 caracteres, nas duas tabelas; `VersaoDocumento` ganhou `Tamanho` (AC 2, door 1)
+**C2** - [x] `Anexo` e `VersaoDocumento` não têm propriedade `byte[]` nem coluna `bytea`; `Chave` é obrigatória com índice único e `Hash` é obrigatório com 64 caracteres, nas duas tabelas; `VersaoDocumento` ganhou `Tamanho` (AC 2, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Anexo_e_VersaoDocumento_nao_guardam_bytes"`
 
-**C3** - [ ] O anexo no `DetalheChamado` tem exatamente os membros `id`, `nome`, `tipo` e `tamanho` e nenhum `chave` nem `hash`, com os mesmos valores de hoje (AC 3)
+**C3** - [x] O anexo no `DetalheChamado` tem exatamente os membros `id`, `nome`, `tipo` e `tamanho` e nenhum `chave` nem `hash`, com os mesmos valores de hoje (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Detalhe_do_chamado_nao_expoe_chave_nem_hash"`
 
-**C4** - [ ] Quatro recusas de anexo mantêm o status de hoje e não deixam nenhum objeto no bucket nem linha nova: nota com anexo 400, tipo `.exe` 415, arquivo de 10 MB mais 1 byte 413, chamado em estado que não aceita a resposta 409 (AC 4)
+**C4** - [x] Quatro recusas de anexo mantêm o status de hoje e não deixam nenhum objeto no bucket nem linha nova: nota com anexo 400, tipo `.exe` 415, arquivo de 10 MB mais 1 byte 413, chamado em estado que não aceita a resposta 409 (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Recusa_antes_da_gravacao_nao_deixa_objeto"`
 
 **C5** - [ ] Um anexo `.exe` enviado a um chamado em estado que não aceita a resposta recebe 400 (a recusa do corpo vem antes do 409), e a ordem não muda por causa da gravação (L-023, AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Anexo_invalido_em_chamado_fechado_recusa_400_antes_do_409"`
 
-**C6** - [ ] O `IAmazonS3` registrado tem `ServiceURL` igual a `Armazenamento:Endpoint`, `ForcePathStyle` verdadeiro e `RequestChecksumCalculation` e `ResponseChecksumValidation` em `WHEN_REQUIRED`, e `Program.cs` e `OneFactory` leem as quatro chaves `Armazenamento:Endpoint`, `Chave`, `Segredo` e `Bucket` (door 2)
+**C6** - [x] O `IAmazonS3` registrado tem `ServiceURL` igual a `Armazenamento:Endpoint`, `ForcePathStyle` verdadeiro e `RequestChecksumCalculation` e `ResponseChecksumValidation` em `WHEN_REQUIRED`, e `Program.cs` e `OneFactory` leem as quatro chaves `Armazenamento:Endpoint`, `Chave`, `Segredo` e `Bucket` (door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Cliente_S3_configurado_como_a_door_2"`
 
 ### S2 - Download devolve os mesmos bytes pela mesma rota e só a quem já podia (P1) · ~8 files · ~65 KB · ~17k
 
-**C7** - [ ] `GET /api/anexos/{id}` por aluno dono e por atendente da mesma instituição responde 200 com os bytes enviados, `Content-Type` `image/png`, o `Content-Disposition` com o nome de download e o `Content-Length` iguais aos que `Results.File` produz na base (valores capturados em `<base>` e gravados como literais no teste) e `Content-Length` igual a `Tamanho`; `AnexoTests.Download_devolve_os_mesmos_bytes` passa a ler o objeto pela chave no lugar de `x.Conteudo` (AC 5)
+**C7** - [x] `GET /api/anexos/{id}` por aluno dono e por atendente da mesma instituição responde 200 com os bytes enviados, `Content-Type` `image/png`, o `Content-Disposition` com o nome de download e o `Content-Length` iguais aos que `Results.File` produz na base (valores capturados em `<base>` e gravados como literais no teste) e `Content-Length` igual a `Tamanho`; `AnexoTests.Download_devolve_os_mesmos_bytes` passa a ler o objeto pela chave no lugar de `x.Conteudo` (AC 5)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Download_do_anexo_devolve_bytes_tipo_nome_e_content_length"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoTests.Download_devolve_os_mesmos_bytes"`
 
-**C8** - [ ] Três pedidos de download respondem 404 com `detail` "Anexo não encontrado." e o teste conta zero leituras de objeto no bucket: anexo inexistente, anexo de outra instituição, anexo de chamado que o usuário não vê (AC 6)
+**C8** - [x] Três pedidos de download respondem 404 com `detail` "Anexo não encontrado." e o teste conta zero leituras de objeto no bucket: anexo inexistente, anexo de outra instituição, anexo de chamado que o usuário não vê (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Download_negado_e_404_sem_abrir_objeto"`
 
-**C9** - [ ] O download lê o objeto da `Chave` da linha: um pedido com `?chave=` e cabeçalho apontando para o objeto de outra instituição devolve o objeto da linha; e `Armazenamento.Baixar` só é chamado em `BaixarAnexo.cs` e `BaixarVersaoDocumento.cs`, cada um passando um membro `Chave` lido do `OneDb` (AC 7)
+**C9** - [x] O download lê o objeto da `Chave` da linha: um pedido com `?chave=` e cabeçalho apontando para o objeto de outra instituição devolve o objeto da linha; e `Armazenamento.Baixar` só é chamado em `BaixarAnexo.cs` e `BaixarVersaoDocumento.cs`, cada um passando um membro `Chave` lido do `OneDb` (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Download_usa_so_a_chave_da_linha"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Baixar_so_com_chave_de_coluna_do_banco"`
 
-**C10** - [ ] `GET /api/documentos/versoes/{id}` por atendente responde 200 com os bytes do PDF gravado, `Content-Type` `application/pdf`, o nome de download e `Content-Length` iguais aos de hoje, e por aluno continua 404 "Documento não encontrado." (AC 8)
+**C10** - [x] `GET /api/documentos/versoes/{id}` por atendente responde 200 com os bytes do PDF gravado, `Content-Type` `application/pdf`, o nome de download e `Content-Length` iguais aos de hoje, e por aluno continua 404 "Documento não encontrado." (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Download_da_versao_devolve_pdf_e_application_pdf"`
 
-**C11** - [ ] Um download de 10 MiB lido em blocos de 64 KiB aloca menos de 5 MiB no total na API (medido com `GC.GetTotalAllocatedBytes` antes e depois), e `BaixarAnexo.cs` e `BaixarVersaoDocumento.cs` não contêm `Results.File` nem `byte[]` e chamam `Results.Stream` (AC 9)
+**C11** - [x] Um download de 10 MiB lido em blocos de 64 KiB aloca menos de 5 MiB no total na API (medido com `GC.GetTotalAllocatedBytes` antes e depois), e `BaixarAnexo.cs` e `BaixarVersaoDocumento.cs` não contêm `Results.File` nem `byte[]` e chamam `Results.Stream` (AC 9)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Download_de_10_MiB_nao_aloca_o_array_inteiro"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Download_em_streaming_sem_array_inteiro"`
 
 ### S3 - PDFs da instituição vão para o bucket e o texto continua no banco (P1) · ~14 files · ~100 KB · ~28k
 
-**C12** - [ ] `POST /api/admin/documentos` e `POST /api/admin/documentos/{id}/versoes` com PDF válido gravam o objeto em `{instituicaoId}/documentos/{32 hexadecimais}` e a `VersaoDocumento` guarda `Chave`, `Hash` (SHA-256 de 64 caracteres) e `Tamanho`, com `Texto`, `Paginas` e `NomeArquivo` iguais aos de hoje; o corpo 201 é o de hoje (AC 10, door 3)
+**C12** - [x] `POST /api/admin/documentos` e `POST /api/admin/documentos/{id}/versoes` com PDF válido gravam o objeto em `{instituicaoId}/documentos/{32 hexadecimais}` e a `VersaoDocumento` guarda `Chave`, `Hash` (SHA-256 de 64 caracteres) e `Tamanho`, com `Texto`, `Paginas` e `NomeArquivo` iguais aos de hoje; o corpo 201 é o de hoje (AC 10, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Pdf_novo_e_nova_versao_vao_para_o_bucket"`
 
-**C13** - [ ] Oito recusas mantêm o status de hoje e não deixam objeto nem linha, em cada uma das duas rotas de envio: mais de 20 MB 413, não é PDF 415, PDF sem texto 400, PDF ilegível 400 (AC 11)
+**C13** - [x] Oito recusas mantêm o status de hoje e não deixam objeto nem linha, em cada uma das duas rotas de envio: mais de 20 MB 413, não é PDF 415, PDF sem texto 400, PDF ilegível 400 (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Pdf_recusado_nao_deixa_objeto"`
 
-**C14** - [ ] Depois da versão 2, o objeto da versão 1 continua no bucket com o mesmo SHA-256 e o download de cada versão devolve o PDF dela (AC 12)
+**C14** - [x] Depois da versão 2, o objeto da versão 1 continua no bucket com o mesmo SHA-256 e o download de cada versão devolve o PDF dela (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Nova_versao_mantem_o_objeto_anterior"`
 
 ### S4 - Armazenamento fora do ar é recusado de forma clara e não deixa linha sem arquivo (P1) · ~8 files · ~55 KB · ~19k

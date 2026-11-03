@@ -422,4 +422,21 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         await Recusa400(await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/encaminhar", new { setorId = b.Triagem.Id, motivo = "" }), "motivo", "encaminhar sem motivo para o mesmo setor");
         await conferir();
     }
+
+    // arquivos-minio C5 (L-023): a recusa do corpo do anexo vem antes do 409 do estado, e gravar no bucket não muda a ordem
+    [Fact]
+    public async Task Anexo_invalido_em_chamado_fechado_recusa_400_antes_do_409()
+    {
+        var b = await Balcao.Criar(f);
+        var fechado = await b.Chamado(Fechado);
+        var antes = await f.Db(b.Instituicao.Id, db => db.MensagensChamado.CountAsync());
+
+        var r400 = await Balcao.ComAnexos(b.A.Cliente, fechado, "Nota", "NOTA", ("a.png", Balcao.Arquivo(Balcao.Png, 100)));
+        Assert.Equal(HttpStatusCode.BadRequest, r400.StatusCode);
+        var r415 = await Balcao.ComAnexos(b.ClienteAluno, fechado, "Segue", "PUBLICA", ("a.exe", Balcao.Arquivo(Balcao.Exe, 100)));
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, r415.StatusCode);
+        var r409 = await Balcao.ComAnexos(b.ClienteAluno, fechado, "Segue", "PUBLICA", ("a.png", Balcao.Arquivo(Balcao.Png, 100)));
+        Assert.Equal(HttpStatusCode.Conflict, r409.StatusCode);
+        Assert.Equal(antes, await f.Db(b.Instituicao.Id, db => db.MensagensChamado.CountAsync()));
+    }
 }
