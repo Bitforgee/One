@@ -102,6 +102,9 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         for (var n = 0; n < 6; n++) ultimo = await cliente.Login("qualquer", Semente.NovoCpf(), "x");
         respostas.Add((429, ultimo));
 
+        using (f.MinioFora())
+            respostas.Add((503, await Balcao.ComAnexos(c.Cliente, numero, "segue", "PUBLICA", ("a.png", Balcao.Arquivo(Balcao.Png, 100)))));
+
         var linhas = new List<string>();
         foreach (var (status, r) in respostas)
         {
@@ -118,7 +121,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "erros.vivos.txt"), vivos); // para comparar à mão quando falhar
 
         var gravados = File.ReadAllLines(Retrato("erros.txt"));
-        Assert.Equal(8, gravados.Length);
+        Assert.Equal(9, gravados.Length);
         Assert.Equal(gravados.Select(SemTraceId), vivos);
     }
 

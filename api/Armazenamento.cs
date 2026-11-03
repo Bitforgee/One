@@ -6,6 +6,8 @@ using Amazon.S3.Model;
 namespace One.Api;
 
 // O único código que fala com o MinIO (API S3). Nunca apaga objeto: o bucket é versionado e as chaves são novas a cada gravação.
+public sealed class ArmazenamentoIndisponivel(Exception causa) : Exception("Armazenamento de arquivos indisponível.", causa);
+
 public class Armazenamento(IAmazonS3 s3, string bucket)
 {
     readonly HttpClient http = new();
@@ -29,7 +31,8 @@ public class Armazenamento(IAmazonS3 s3, string bucket)
     {
         var chave = $"{instituicaoId}/{tipo}/{Guid.NewGuid():N}";
         using var corpo = new MemoryStream(bytes);
-        await s3.PutObjectAsync(new PutObjectRequest { BucketName = Bucket, Key = chave, InputStream = corpo });
+        try { await s3.PutObjectAsync(new PutObjectRequest { BucketName = Bucket, Key = chave, InputStream = corpo }); }
+        catch (Exception e) when (e is AmazonClientException or HttpRequestException) { throw new ArmazenamentoIndisponivel(e); }
         return (chave, Convert.ToHexStringLower(SHA256.HashData(bytes)));
     }
 
@@ -44,9 +47,13 @@ public class Armazenamento(IAmazonS3 s3, string bucket)
             Expires = TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(1), // relógio real: o MinIO confere a assinatura com o dele
             Protocol = new Uri(s3.Config.ServiceURL).Scheme == "https" ? Protocol.HTTPS : Protocol.HTTP,
         });
-        var resposta = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-        resposta.EnsureSuccessStatusCode();
-        return await resposta.Content.ReadAsStreamAsync();
+        try
+        {
+            var resposta = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            resposta.EnsureSuccessStatusCode(); // objeto ausente: 404 do MinIO vira 503, nunca 200 vazio
+            return await resposta.Content.ReadAsStreamAsync();
+        }
+        catch (HttpRequestException e) { throw new ArmazenamentoIndisponivel(e); }
     }
 
     // Results.Stream não deduz o tamanho de um fluxo que não anda para trás: o Content-Length vem da linha do banco.

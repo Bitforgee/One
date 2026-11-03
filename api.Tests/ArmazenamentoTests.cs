@@ -1,6 +1,9 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
@@ -286,4 +289,153 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (versao, bytes) in new[] { (versoes[0], v1), (versoes[1], v2) })
             Assert.Equal(bytes, await (await admin.GetAsync($"/api/documentos/versoes/{versao.Id}")).Content.ReadAsByteArrayAsync());
     }
+
+    const string Fora = "Armazenamento de arquivos indisponível.";
+
+    static async Task Indisponivel(HttpResponseMessage r, string onde)
+    {
+        Assert.True(r.StatusCode == HttpStatusCode.ServiceUnavailable, $"{onde}: {(int)r.StatusCode}");
+        Assert.Equal("application/problem+json", r.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(Fora, (await r.Json()).GetProperty("detail").GetString());
+    }
+
+    // C15
+    [Fact]
+    public async Task Envio_com_armazenamento_fora_responde_503_e_nada_no_banco()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+        var (i, admin, categoria) = await Mundo();
+        var documento = await IdDoDocumento(await admin.Subir("Existente", categoria, Pdfs.Criar("Regulamento de estagio supervisionado.")));
+        async Task<string> Contagens() =>
+            string.Join(",", await f.Db(null, async db => new[]
+            {
+                await db.MensagensChamado.IgnoreQueryFilters().CountAsync(), await db.EventosChamado.IgnoreQueryFilters().CountAsync(), await db.Anexos.IgnoreQueryFilters().CountAsync(),
+                await db.Documentos.IgnoreQueryFilters().CountAsync(), await db.VersoesDocumento.IgnoreQueryFilters().CountAsync(), await db.TrechosFonte.IgnoreQueryFilters().CountAsync(),
+            })) + "|" + string.Join(",", await f.Chaves());
+        var antes = await Contagens();
+
+        using (f.MinioFora())
+        {
+            await Indisponivel(await Balcao.ComAnexos(b.A.Cliente, numero, "Veja a tela.", "PUBLICA", ("tela.png", Balcao.Arquivo(Balcao.Png, 100))), "mensagens");
+            await Indisponivel(await admin.Subir("Novo", categoria, Pdfs.Criar("Outro regulamento do curso.")), "documentos");
+            await Indisponivel(await admin.NovaVersao(documento, Pdfs.Criar("Segunda versao do regulamento.")), "versoes");
+        }
+        Assert.Equal(antes, await Contagens());
+    }
+
+    // C16
+    [Fact]
+    public async Task Leitura_com_armazenamento_fora_ou_objeto_ausente_responde_503()
+    {
+        var (b, _, _, anexoId) = await ComAnexo();
+        var (i, admin, categoria) = await Mundo();
+        var versaoId = (await Versoes(i, await IdDoDocumento(await admin.Subir("Regulamento", categoria, Pdfs.Criar("Regulamento de estagio supervisionado."))))).Single().Id;
+
+        using (f.MinioFora())
+        {
+            await Indisponivel(await b.ClienteAluno.GetAsync($"/api/anexos/{anexoId}"), "anexo, porta fechada");
+            await Indisponivel(await admin.GetAsync($"/api/documentos/versoes/{versaoId}"), "versão, porta fechada");
+        }
+
+        // o bucket é versionado: apagar o objeto põe uma marca e a leitura da chave passa a dar 404 (a linha é append-only)
+        using var s3 = OneFactory.ClienteS3();
+        foreach (var chave in await f.Db(null, async db => new[]
+        {
+            await db.Anexos.IgnoreQueryFilters().Where(x => x.Id == anexoId).Select(x => x.Chave).SingleAsync(),
+            await db.VersoesDocumento.IgnoreQueryFilters().Where(x => x.Id == versaoId).Select(x => x.Chave).SingleAsync(),
+        }))
+            await s3.DeleteObjectAsync(f.Bucket, chave);
+        await Indisponivel(await b.ClienteAluno.GetAsync($"/api/anexos/{anexoId}"), "anexo, objeto ausente");
+        await Indisponivel(await admin.GetAsync($"/api/documentos/versoes/{versaoId}"), "versão, objeto ausente");
+    }
+
+    // C17
+    [Fact]
+    public async Task Conflito_no_banco_apos_gravar_deixa_objeto_orfao()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado(EstadosChamado.AguardandoAluno);
+        var antes = await f.Chaves();
+        var s3 = (AmazonS3Client)f.Services.GetRequiredService<IAmazonS3>();
+        // logo depois do PutObject, outra sessão altera o chamado: o SaveChanges da API vê a versão velha
+        void Concorrente(object? _, Amazon.Runtime.ResponseEventArgs e)
+        {
+            if (e is Amazon.Runtime.WebServiceResponseEventArgs { Response: PutObjectResponse })
+                f.Db(b.Instituicao.Id, async db =>
+                {
+                    var c = await db.Chamados.SingleAsync(x => x.Numero == numero);
+                    db.Entry(c).Property(x => x.ResponsavelId).CurrentValue = c.ResponsavelId == b.B.Usuario.Id ? b.A.Usuario.Id : b.B.Usuario.Id;
+                    await db.SaveChangesAsync();
+                }).GetAwaiter().GetResult();
+        }
+        s3.AfterResponseEvent += Concorrente;
+        HttpResponseMessage r;
+        try { r = await Balcao.ComAnexos(b.ClienteAluno, numero, "Veja a tela.", "PUBLICA", ("tela.png", Balcao.Arquivo(Balcao.Png, 100))); }
+        finally { s3.AfterResponseEvent -= Concorrente; }
+
+        Assert.Equal(HttpStatusCode.Conflict, r.StatusCode);
+        Assert.Equal(Problemas.AlteradoPorOutro, (await r.Json()).GetProperty("detail").GetString());
+        var novas = (await f.Chaves()).Except(antes).ToList();
+        Assert.Single(novas);
+        Assert.False(await f.Db(null, db => db.Anexos.IgnoreQueryFilters().AnyAsync(x => x.Chave == novas[0])));
+    }
+
+    // C18
+    [Fact]
+    public async Task Preparar_sem_minio_falha_a_subida_citando_endpoint_e_bucket()
+    {
+        using var s3 = new AmazonS3Client(new Amazon.Runtime.BasicAWSCredentials("one", "one-minio-dev"), new AmazonS3Config { ServiceURL = "http://localhost:1", ForcePathStyle = true });
+        var e = await Assert.ThrowsAsync<InvalidOperationException>(() => new Armazenamento(s3, "bucket-fora").Preparar());
+        Assert.Contains("http://localhost:1", e.Message);
+        Assert.Contains("bucket-fora", e.Message);
+
+        await using var fechada = new OneFactoryMinioFechado();
+        var subida = Assert.ThrowsAny<Exception>(() => fechada.Services);
+        Assert.Contains("http://localhost:1", subida.ToString());
+        Assert.Contains(fechada.Bucket, subida.ToString());
+    }
+
+    // C19
+    [Fact]
+    public async Task Preparar_cria_bucket_e_liga_versionamento_e_e_idempotente()
+    {
+        var bucket = "one-prep-" + Guid.NewGuid().ToString("N")[..12];
+        using var s3 = OneFactory.ClienteS3();
+        try
+        {
+            var armazenamento = new Armazenamento(s3, bucket);
+            Assert.DoesNotContain(bucket, (await s3.ListBucketsAsync()).Buckets.Select(x => x.BucketName));
+            for (var vez = 1; vez <= 2; vez++)
+            {
+                await armazenamento.Preparar();
+                Assert.Equal(VersionStatus.Enabled, (await s3.GetBucketVersioningAsync(bucket)).VersioningConfig.Status);
+            }
+        }
+        finally { await s3.DeleteBucketAsync(bucket); }
+    }
+
+    // C21
+    [Fact]
+    public async Task Duas_gravacoes_do_mesmo_conteudo_geram_chaves_diferentes()
+    {
+        using var s3 = OneFactory.ClienteS3();
+        var armazenamento = new Armazenamento(s3, f.Bucket);
+        var bytes = Balcao.Arquivo(Balcao.Png, 300);
+
+        var (primeira, hash1) = await armazenamento.Gravar(7, "anexos", bytes);
+        var (segunda, hash2) = await armazenamento.Gravar(7, "anexos", bytes);
+
+        Assert.NotEqual(primeira, segunda);
+        Assert.Equal(hash1, hash2);
+        Assert.Contains(primeira, await f.Chaves());
+        Assert.Contains(segunda, await f.Chaves());
+        Assert.Equal(bytes, await f.Objeto(primeira));
+        Assert.Equal(bytes, await f.Objeto(segunda));
+    }
+}
+
+public class OneFactoryMinioFechado : OneFactory
+{
+    protected override int PortaMinio => 1;
 }

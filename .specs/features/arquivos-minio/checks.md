@@ -52,7 +52,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.De
 **C4** - [x] Quatro recusas de anexo mantêm o status de hoje e não deixam nenhum objeto no bucket nem linha nova: nota com anexo 400, tipo `.exe` 415, arquivo de 10 MB mais 1 byte 413, chamado em estado que não aceita a resposta 409 (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Recusa_antes_da_gravacao_nao_deixa_objeto"`
 
-**C5** - [ ] Um anexo `.exe` enviado a um chamado em estado que não aceita a resposta recebe 400 (a recusa do corpo vem antes do 409), e a ordem não muda por causa da gravação (L-023, AC 4)
+**C5** - [x] Um anexo `.exe` enviado a um chamado em estado que não aceita a resposta recebe 400 (a recusa do corpo vem antes do 409), e a ordem não muda por causa da gravação (L-023, AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OrdemDasRecusasTests.Anexo_invalido_em_chamado_fechado_recusa_400_antes_do_409"`
 
 **C6** - [x] O `IAmazonS3` registrado tem `ServiceURL` igual a `Armazenamento:Endpoint`, `ForcePathStyle` verdadeiro e `RequestChecksumCalculation` e `ResponseChecksumValidation` em `WHEN_REQUIRED`, e `Program.cs` e `OneFactory` leem as quatro chaves `Armazenamento:Endpoint`, `Chave`, `Segredo` e `Bucket` (door 2)
@@ -91,28 +91,28 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.No
 
 ### S4 - Armazenamento fora do ar é recusado de forma clara e não deixa linha sem arquivo (P1) · ~8 files · ~55 KB · ~19k
 
-**C15** - [ ] Com o endpoint apontando para uma porta fechada (fábrica derivada pelo membro virtual `PortaMinio`), as três rotas de envio respondem 503 com `Content-Type` `application/problem+json` e `detail` "Armazenamento de arquivos indisponível.", e a contagem de `MensagemChamado`, `EventoChamado`, `Anexo`, `Documento`, `VersaoDocumento` e `TrechoFonte` não muda (AC 13)
+**C15** - [x] Com o endpoint apontando para uma porta fechada (fábrica derivada pelo membro virtual `PortaMinio`), as três rotas de envio respondem 503 com `Content-Type` `application/problem+json` e `detail` "Armazenamento de arquivos indisponível.", e a contagem de `MensagemChamado`, `EventoChamado`, `Anexo`, `Documento`, `VersaoDocumento` e `TrechoFonte` não muda (AC 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Envio_com_armazenamento_fora_responde_503_e_nada_no_banco"`
 
-**C16** - [ ] Os dois downloads respondem 503 com o mesmo `detail`, nunca 200 de corpo vazio, em dois casos cada: endpoint em porta fechada e linha cuja chave não existe no bucket (AC 14)
+**C16** - [x] Os dois downloads respondem 503 com o mesmo `detail`, nunca 200 de corpo vazio, em dois casos cada: endpoint em porta fechada e linha cuja chave não existe no bucket (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Leitura_com_armazenamento_fora_ou_objeto_ausente_responde_503"`
 
-**C17** - [ ] Quando o `SaveChanges` falha por conflito de concorrência depois de o objeto estar gravado, a resposta tem o status de hoje (409 com `Problemas.AlteradoPorOutro`), o bucket guarda 1 objeto novo e nenhuma linha de `Anexo` o aponta (AC 15)
+**C17** - [x] Quando o `SaveChanges` falha por conflito de concorrência depois de o objeto estar gravado, a resposta tem o status de hoje (409 com `Problemas.AlteradoPorOutro`), o bucket guarda 1 objeto novo e nenhuma linha de `Anexo` o aponta (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Conflito_no_banco_apos_gravar_deixa_objeto_orfao"`
 
-**C18** - [ ] `Armazenamento.Preparar` contra uma porta fechada lança erro cuja mensagem contém o endpoint e o nome do bucket, e a subida do `Program` falha com ela (AC 16)
+**C18** - [x] `Armazenamento.Preparar` contra uma porta fechada lança erro cuja mensagem contém o endpoint e o nome do bucket, e a subida do `Program` falha com ela (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Preparar_sem_minio_falha_a_subida_citando_endpoint_e_bucket"`
 
 ### S5 - O bucket mantém o histórico e o código não apaga (P2) · ~5 files · ~34 KB · ~17k
 
-**C19** - [ ] `Preparar` chamado duas vezes seguidas cria o bucket na primeira, não lança erro na segunda, e `GetBucketVersioning` devolve `Enabled` nas duas (AC 17, door 4)
+**C19** - [x] `Preparar` chamado duas vezes seguidas cria o bucket na primeira, não lança erro na segunda, e `GetBucketVersioning` devolve `Enabled` nas duas (AC 17, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Preparar_cria_bucket_e_liga_versionamento_e_e_idempotente"`
 
 **C20** - [ ] Nenhum arquivo `.cs` de `api/` (fora de `Migracoes`) contém `DeleteObject`, `DeleteObjectAsync`, `DeleteObjects` nem `DeleteObjectsAsync`, e a regra falha para cada um dos 4 nomes quando aplicada a um texto que o contém (AC 18, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Codigo_do_api_nao_apaga_objeto"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Regra_de_delete_pega_cada_chamada"`
 
-**C21** - [ ] Duas gravações dos mesmos bytes geram duas chaves diferentes e dois objetos, e o primeiro objeto continua com os bytes originais (AC 19, door 3)
+**C21** - [x] Duas gravações dos mesmos bytes geram duas chaves diferentes e dois objetos, e o primeiro objeto continua com os bytes originais (AC 19, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Duas_gravacoes_do_mesmo_conteudo_geram_chaves_diferentes"`
 
 ### S6 - A migração não perde dado em silêncio (P2) · ~6 files · ~50 KB · ~14k

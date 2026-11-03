@@ -6,3 +6,4 @@
 413 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.14","title":"Arquivo grande demais","status":413,"detail":"O arquivo a.pdf passa de 10 MB."}
 415 {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.16","title":"Tipo de arquivo não aceito","status":415,"detail":"O arquivo a.pdf não é PDF, JPG nem PNG."}
 429 {"type":"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/429","title":"Muitas requisições","status":429,"detail":"Muitas tentativas. Aguarde um minuto e tente de novo."}
+503 {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.4","title":"Erro interno","status":503,"detail":"Armazenamento de arquivos indisponível."}

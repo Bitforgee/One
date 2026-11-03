@@ -86,6 +86,20 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
+    // C15/C16: a fábrica sobe na porta real (o Preparar da subida precisa do MinIO) e só então o cliente S3 da API passa a apontar para uma porta fechada.
+    public IDisposable MinioFora()
+    {
+        var config = (AmazonS3Config)((AmazonS3Client)Services.GetRequiredService<IAmazonS3>()).Config;
+        var original = config.ServiceURL;
+        config.ServiceURL = "http://localhost:1";
+        return new Restaurar(() => config.ServiceURL = original);
+    }
+
+    sealed class Restaurar(Action acao) : IDisposable
+    {
+        public void Dispose() => acao();
+    }
+
     // Cliente próprio do teste, sempre na porta real do MinIO: lê o bucket sem passar pela API.
     public static AmazonS3Client ClienteS3() =>
         new(new BasicAWSCredentials("one", "one-minio-dev"), new AmazonS3Config { ServiceURL = "http://localhost:9000", ForcePathStyle = true, RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED, ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED });
