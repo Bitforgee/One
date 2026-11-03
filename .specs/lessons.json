@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 54,
+  "next_id": 59,
   "lessons": [
     {
       "id": "L-001",
@@ -970,6 +970,96 @@
       ],
       "created": "2026-11-03T13:34:23Z",
       "last_seen": "2026-11-03T13:34:23Z"
+    },
+    {
+      "id": "L-054",
+      "key": "spec_deviation::give every width cap named in screens including exceptions in shared rows its own check measured against the screens value",
+      "text": "Give every width cap named in Screens, including exceptions in shared rows, its own check measured against the Screens value",
+      "signal": "spec_deviation",
+      "scope": "web-layout",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/acesso/Acesso.tsx:185 (web-layout)"
+      ],
+      "created": "2026-11-03T15:51:11Z",
+      "last_seen": "2026-11-03T15:51:11Z"
+    },
+    {
+      "id": "L-055",
+      "key": "ac_gap::enumerate each screens row s composition what sits inside what in which order into checks not only its texts and counts",
+      "text": "Enumerate each Screens row's composition (what sits inside what, in which order) into checks, not only its texts and counts",
+      "signal": "ac_gap",
+      "scope": "web-layout",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md Binding sources: user button, Cadastros Novo, Alert placement (web-layout)"
+      ],
+      "created": "2026-11-03T15:51:11Z",
+      "last_seen": "2026-11-03T15:51:11Z"
+    },
+    {
+      "id": "L-056",
+      "key": "ac_gap::measure both sides of every breakpoint screens names including padding and type size breakpoints",
+      "text": "Measure both sides of every breakpoint Screens names, including padding and type-size breakpoints",
+      "signal": "ac_gap",
+      "scope": "web-layout",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md Test policy: header padding, access padding, @[250px]/card (web-layout)"
+      ],
+      "created": "2026-11-03T15:51:11Z",
+      "last_seen": "2026-11-03T15:51:11Z"
+    },
+    {
+      "id": "L-057",
+      "key": "spec_precision_gap::a behaves as today check must name a proof for each state it lists and must not promise unchanged assertions when the plan moves a breakpoint they pin",
+      "text": "A behaves-as-today check must name a proof for each state it lists, and must not promise unchanged assertions when the plan moves a breakpoint they pin",
+      "signal": "spec_precision_gap",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C20; web/src/indicadores/indicadores.test.tsx:65 (web-tests)"
+      ],
+      "created": "2026-11-03T15:51:11Z",
+      "last_seen": "2026-11-03T15:51:11Z"
+    },
+    {
+      "id": "L-058",
+      "key": "ac_gap::when moving a list into a table keep exact match assertions exact by targeting the cell not the whole row text",
+      "text": "When moving a list into a table, keep exact-match assertions exact by targeting the cell, not the whole row text",
+      "signal": "ac_gap",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "layout-painel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/administracao/usuarios.test.tsx:34 (web-tests)"
+      ],
+      "created": "2026-11-03T15:51:12Z",
+      "last_seen": "2026-11-03T15:51:12Z"
     }
   ]
 }

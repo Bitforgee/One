@@ -330,6 +330,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md C12 avisos sem a chave no simularApi (verification rodada 1, gap 2) (web)
 - last seen: 2026-11-03T13:34:23Z
 
+### L-054 - Give every width cap named in Screens, including exceptions in shared rows, its own check measured against the Screens value
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web-layout` · harmful: 0
+- features: layout-painel
+- evidence: web/src/acesso/Acesso.tsx:185 (web-layout)
+- last seen: 2026-11-03T15:51:11Z
+
+### L-055 - Enumerate each Screens row's composition (what sits inside what, in which order) into checks, not only its texts and counts
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web-layout` · harmful: 0
+- features: layout-painel
+- evidence: verification.md Binding sources: user button, Cadastros Novo, Alert placement (web-layout)
+- last seen: 2026-11-03T15:51:11Z
+
+### L-056 - Measure both sides of every breakpoint Screens names, including padding and type-size breakpoints
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web-layout` · harmful: 0
+- features: layout-painel
+- evidence: verification.md Test policy: header padding, access padding, @[250px]/card (web-layout)
+- last seen: 2026-11-03T15:51:11Z
+
+### L-057 - A behaves-as-today check must name a proof for each state it lists, and must not promise unchanged assertions when the plan moves a breakpoint they pin
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: layout-painel
+- evidence: C20; web/src/indicadores/indicadores.test.tsx:65 (web-tests)
+- last seen: 2026-11-03T15:51:11Z
+
+### L-058 - When moving a list into a table, keep exact-match assertions exact by targeting the cell, not the whole row text
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: layout-painel
+- evidence: web/src/administracao/usuarios.test.tsx:34 (web-tests)
+- last seen: 2026-11-03T15:51:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
