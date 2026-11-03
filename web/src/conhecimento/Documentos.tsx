@@ -9,10 +9,11 @@ import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
+import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
+import { TableCell, TableRow } from '../ui/table'
 import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
 
 type Documento = {
@@ -39,30 +40,38 @@ function formulario(r: Envio) {
   return f
 }
 
-function ItemDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; novaVersao: () => void; arquivar: () => void; pendente: boolean }) {
+const Colunas = [{ titulo: 'Título' }, { titulo: 'Categoria', largo: true }, { titulo: 'Versão', largo: true }, { titulo: 'Arquivo', largo: true }, { titulo: 'Situação' }, { titulo: '' }]
+
+function LinhaDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; novaVersao: () => void; arquivar: () => void; pendente: boolean }) {
+  const versao = `versão ${d.versao.numero} · ${d.versao.paginas} ${paginas(d.versao.paginas)}`
   return (
-    <Card className="gap-1 px-3 py-3">
-      <div className="flex items-start justify-between gap-2">
-        <strong className="min-w-0 break-words">{d.titulo}</strong>
-        <div className="flex shrink-0 gap-1">
+    <TableRow>
+      <TableCell className={`font-medium ${Principal}`}>
+        {d.titulo}
+        <Detalhe>{[d.categoria, versao, d.versao.nomeArquivo].join(' · ')}</Detalhe>
+      </TableCell>
+      <CelulaLargo>{d.categoria}</CelulaLargo>
+      <CelulaLargo>{versao}</CelulaLargo>
+      <CelulaLargo>{d.versao.nomeArquivo}</CelulaLargo>
+      <TableCell>
+        <div className="flex gap-1">
           <SeloIndexacao valor={d.indexacao} />
           <SeloEstado estado={d.estado} />
         </div>
-      </div>
-      <div className="text-sm break-words text-muted-foreground">
-        {d.categoria} · versão {d.versao.numero} · {d.versao.paginas} {paginas(d.versao.paginas)} · {d.versao.nomeArquivo}
-      </div>
-      {d.estado === 'ATIVO' && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={novaVersao} disabled={pendente}>
-            Nova versão
-          </Button>
-          <Button size="sm" variant="outline" className="text-destructive" onClick={arquivar} disabled={pendente}>
-            Arquivar
-          </Button>
-        </div>
-      )}
-    </Card>
+      </TableCell>
+      <TableCell className="text-end">
+        {d.estado === 'ATIVO' && (
+          <MenuAcoes nome={d.titulo}>
+            <DropdownMenuItem disabled={pendente} onSelect={novaVersao}>
+              Nova versão
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" disabled={pendente} onSelect={arquivar}>
+              Arquivar
+            </DropdownMenuItem>
+          </MenuAcoes>
+        )}
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -114,14 +123,17 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })} />
-      <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
+      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })}>
+        <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
+      </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!envio} />
       <Situacao itens={documentos} erro={erro} />
-      {documentos?.map((d) => (
-        <ItemDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
-      ))}
+      <Tabela colunas={Colunas} itens={documentos}>
+        {documentos?.map((d) => (
+          <LinhaDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
+        ))}
+      </Tabela>
 
       <Editor titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />} botao="Enviar" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} />}

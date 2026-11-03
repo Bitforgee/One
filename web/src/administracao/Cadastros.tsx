@@ -8,9 +8,11 @@ import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
+import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
+import { TableCell, TableRow } from '../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Textarea } from '../ui/textarea'
 import type { Categoria, Curso, Pronta, Regra, Setor } from './comum'
@@ -56,20 +58,27 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
   }
 }
 
-// Cada linha é um botão da largura da lista: o nome e, abaixo, o que distingue o registro.
+const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
+
+// Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
 function ListaDaAba({ itens, linha, editar }: { itens?: { id: number }[]; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
   return (
-    <div className="flex flex-col gap-2">
+    <Tabela colunas={Colunas} itens={itens}>
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
-          <button key={x.id} type="button" onClick={() => editar(x)} className="w-full rounded-lg border px-3 py-2 text-start hover:bg-accent">
-            <div className="break-words">{principal}</div>
-            {detalhe && <div className="text-sm text-muted-foreground">{detalhe}</div>}
-          </button>
+          <TableRow key={x.id}>
+            <TableCell className={Principal}>
+              <button type="button" onClick={() => editar(x)} className="text-start font-medium hover:underline">
+                {principal}
+              </button>
+              {detalhe && <Detalhe>{detalhe}</Detalhe>}
+            </TableCell>
+            <CelulaLargo>{detalhe}</CelulaLargo>
+          </TableRow>
         )
       })}
-    </div>
+    </Tabela>
   )
 }
 
@@ -196,16 +205,24 @@ export function Cadastros() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })} />
       <ErroDe erro={erro} />
-      <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)}>
-        <TabsList className="w-full justify-start overflow-x-auto">
-          {abas.map((k) => (
-            <TabsTrigger key={k} value={k} className="flex-none">
-              {Titulos[k]}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)} className="gap-2">
+        <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })}>
+          <NativeSelect aria-label="Cadastro" className="w-full @4xl/main:hidden" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
+            {abas.map((k) => (
+              <option key={k} value={k}>
+                {Titulos[k]}
+              </option>
+            ))}
+          </NativeSelect>
+          <TabsList className="hidden @4xl/main:inline-flex">
+            {abas.map((k) => (
+              <TabsTrigger key={k} value={k}>
+                {Titulos[k]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Cabecalho>
         {abas.map((k) => (
           <TabsContent key={k} value={k} className="flex flex-col gap-2">
             <Situacao itens={dados?.[k]} erro={erro} />

@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useState, type Dispatch, type SetStateAction } from 'react'
-import { BotaoAcao, useGravacao } from '../acao'
+import { useGravacao } from '../acao'
 import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
 import { Campo } from '../Campo'
@@ -9,10 +9,11 @@ import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Situacao } from '../Situacao'
 import { Periodo } from '../Periodo'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
+import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
+import { TableCell, TableRow } from '../ui/table'
 import { Textarea } from '../ui/textarea'
 import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
 import { Resposta } from './Resposta'
@@ -46,45 +47,44 @@ const corpo = (r: Rascunho) => ({
   visivelAte: r.visivelAte || null,
 })
 
-function Validade({ a }: { a: Artigo }) {
-  return (
-    <>
-      {a.visivelDe && ` · válido de ${dataBr(a.visivelDe)}`}
-      {a.visivelAte && ` · válido até ${dataBr(a.visivelAte)}`}
-    </>
-  )
-}
+const Colunas = [{ titulo: 'Título' }, { titulo: 'Categoria', largo: true }, { titulo: 'Versão', largo: true }, { titulo: 'Validade', largo: true }, { titulo: 'Situação' }, { titulo: '' }]
 
-function ItemArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; editar: () => void; mudar: () => void; arquivar: () => void; pendente: boolean }) {
+// "válido de 01/12/2026 · válido até 31/12/2026"; sem datas, vazio.
+const validade = (a: Artigo) => [a.visivelDe && `válido de ${dataBr(a.visivelDe)}`, a.visivelAte && `válido até ${dataBr(a.visivelAte)}`].filter(Boolean).join(' · ')
+
+function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; editar: () => void; mudar: () => void; arquivar: () => void; pendente: boolean }) {
+  const versao = `versão ${a.versao.numero}`
   return (
-    <Card className="gap-1 px-3 py-3">
-      <div className="flex items-start justify-between gap-2">
-        <strong className="min-w-0 break-words">{a.versao.titulo}</strong>
-        <div className="flex shrink-0 gap-1">
+    <TableRow>
+      <TableCell className={`font-medium ${Principal}`}>
+        {a.versao.titulo}
+        <Detalhe>{[a.categoria, versao, validade(a)].filter(Boolean).join(' · ')}</Detalhe>
+      </TableCell>
+      <CelulaLargo>{a.categoria}</CelulaLargo>
+      <CelulaLargo>{versao}</CelulaLargo>
+      <CelulaLargo>{validade(a)}</CelulaLargo>
+      <TableCell>
+        <div className="flex gap-1">
           <SeloIndexacao valor={a.indexacao} />
           <SeloEstado estado={a.estado} />
         </div>
-      </div>
-      <div className="text-sm break-words text-muted-foreground">
-        {a.categoria} · versão {a.versao.numero}
-        <Validade a={a} />
-      </div>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={editar}>
-          Editar
-        </Button>
-        {a.estado !== 'ATIVO' && (
-          <BotaoAcao size="sm" variant="outline" className="text-success" pendente={pendente} onClick={mudar}>
-            Ativar
-          </BotaoAcao>
-        )}
-        {a.estado !== 'ARQUIVADO' && (
-          <Button size="sm" variant="outline" className="text-destructive" onClick={arquivar} disabled={pendente}>
-            Arquivar
-          </Button>
-        )}
-      </div>
-    </Card>
+      </TableCell>
+      <TableCell className="text-end">
+        <MenuAcoes nome={a.versao.titulo}>
+          <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
+          {a.estado !== 'ATIVO' && (
+            <DropdownMenuItem disabled={pendente} onSelect={mudar}>
+              Ativar
+            </DropdownMenuItem>
+          )}
+          {a.estado !== 'ARQUIVADO' && (
+            <DropdownMenuItem variant="destructive" disabled={pendente} onSelect={arquivar}>
+              Arquivar
+            </DropdownMenuItem>
+          )}
+        </MenuAcoes>
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -137,14 +137,17 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
-      <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
+      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })}>
+        <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
+      </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Situacao itens={artigos} erro={erro} />
-      {artigos?.map((a) => (
-        <ItemArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
-      ))}
+      <Tabela colunas={Colunas} itens={artigos}>
+        {artigos?.map((a) => (
+          <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
+        ))}
+      </Tabela>
 
       <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} />}

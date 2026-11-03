@@ -9,10 +9,11 @@ import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Situacao } from '../Situacao'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
+import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
+import { TableCell, TableRow } from '../ui/table'
 import type { Setor, Usuario } from './comum'
 
 const Papeis: [string, string][] = [
@@ -32,32 +33,32 @@ function alternar<T>(lista: T[], valor: T) {
   return lista.includes(valor) ? lista.filter((x) => x !== valor) : [...lista, valor]
 }
 
-function ItemUsuario({ u, setores, editar, desativar }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void }) {
+const Colunas = [{ titulo: 'Nome' }, { titulo: 'CPF', largo: true }, { titulo: 'E-mail', largo: true }, { titulo: 'Papéis', largo: true }, { titulo: 'Situação' }, { titulo: '' }]
+
+function LinhaUsuario({ u, setores, editar, desativar }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void }) {
   const papeis = new Map(Papeis)
+  const perfil = u.papeis.map((p) => papeis.get(p)).join(', ') + (u.setores.length > 0 ? ` · ${u.setores.map((s) => setores.get(s)).join(', ')}` : '')
   return (
-    <Card className="gap-1 px-3 py-3">
-      <div className="flex items-start justify-between gap-2">
-        <strong className="min-w-0 break-words">{u.nome}</strong>
-        {!u.ativo && <Badge variant="secondary">Desativado</Badge>}
-      </div>
-      <div className="text-sm break-words text-muted-foreground">
-        CPF {u.cpf} · {u.email}
-      </div>
-      <div className="text-sm">
-        {u.papeis.map((p) => papeis.get(p)).join(', ')}
-        {u.setores.length > 0 && ` · ${u.setores.map((s) => setores.get(s)).join(', ')}`}
-      </div>
-      {u.ativo && (
-        <div className="mt-2 flex gap-2">
-          <Button size="sm" variant="outline" onClick={editar}>
-            Editar
-          </Button>
-          <Button size="sm" variant="outline" className="text-destructive" onClick={desativar}>
-            Desativar
-          </Button>
-        </div>
-      )}
-    </Card>
+    <TableRow>
+      <TableCell className={`font-medium ${Principal}`}>
+        {u.nome}
+        <Detalhe>{[u.cpf, u.email, perfil].join(' · ')}</Detalhe>
+      </TableCell>
+      <CelulaLargo>{u.cpf}</CelulaLargo>
+      <CelulaLargo>{u.email}</CelulaLargo>
+      <CelulaLargo>{perfil}</CelulaLargo>
+      <TableCell>{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
+      <TableCell className="text-end">
+        {u.ativo && (
+          <MenuAcoes nome={u.nome}>
+            <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onSelect={desativar}>
+              Desativar
+            </DropdownMenuItem>
+          </MenuAcoes>
+        )}
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -126,9 +127,11 @@ export function Usuarios() {
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Situacao itens={dados?.usuarios} erro={erro} />
-      {dados?.usuarios.map((u) => (
-        <ItemUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
-      ))}
+      <Tabela colunas={Colunas} itens={dados?.usuarios}>
+        {dados?.usuarios.map((u) => (
+          <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
+        ))}
+      </Tabela>
 
       <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} />}

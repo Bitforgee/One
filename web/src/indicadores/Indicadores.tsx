@@ -5,7 +5,7 @@ import { api } from '../api'
 import { dia, Periodo } from '../Periodo'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
-import { Card } from '../ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
@@ -99,35 +99,62 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
 
 function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[]; cor: string }) {
   return (
-    <Card className="min-w-0 gap-2 px-3 py-3">
-      <h2 className="text-sm font-semibold">{titulo}</h2>
-      {linhas.length > 0 && (
-        <Suspense fallback={null}>
-          <Grafico linhas={linhas} cor={cor} />
-        </Suspense>
-      )}
-      <TabelaRanking linhas={linhas} />
+    <Card className="min-w-0 gap-2">
+      <CardHeader>
+        <CardTitle>{titulo}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {linhas.length > 0 && (
+          <Suspense fallback={null}>
+            <Grafico linhas={linhas} cor={cor} />
+          </Suspense>
+        )}
+        <TabelaRanking linhas={linhas} />
+      </CardContent>
     </Card>
   )
 }
 
-// Os 13 cartões, "Indicador principal" primeiro e nas 2 colunas, e os rankings que a API manda.
+// Os 4 de destaque (layout-painel AC 16), com o rodapé que diz o que o número mede; os outros 9 ficam compactos.
+const Destaques: [string, string][] = [
+  ['Indicador principal', 'Resolvidas sem reabertura, sobre as conversas com desfecho'],
+  ['Chamados abertos agora', 'Chamados não fechados neste momento'],
+  ['Autoatendimento', 'Resolvidas pelo assistente, sobre as conversas com desfecho'],
+  ['Tempo até a 1ª resposta', 'Da abertura à primeira resposta pública'],
+]
+
+// Os 13 cartões (4 de destaque e 9 compactos) e os rankings que a API manda; as grades seguem a largura do main (door 5).
 function Painel({ dados }: { dados: Indicadores }) {
   const rankings = [
     ['Categorias por conversas', dados.principaisCategorias.porConversas, 'var(--chart-1)'],
     ['Categorias por chamados', dados.principaisCategorias.porChamados, 'var(--chart-2)'],
   ] as const
+  const todos = cartoes(dados)
+  const valores = new Map(todos)
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 @3xl/main:grid-cols-4">
-        {cartoes(dados).map(([rotulo, valor], i) => (
-          <Card key={rotulo} className={`gap-1 px-3 py-2 ${i === 0 ? 'col-span-2' : ''}`}>
-            <div className="text-sm text-muted-foreground">{rotulo}</div>
-            <div className={i === 0 ? 'text-3xl font-semibold' : 'text-lg font-semibold'}>{valor}</div>
+      <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+        {Destaques.map(([rotulo, rodape]) => (
+          <Card key={rotulo} className="@container/card">
+            <CardHeader>
+              <CardDescription>{rotulo}</CardDescription>
+              <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{valores.get(rotulo)}</CardTitle>
+            </CardHeader>
+            <CardFooter className="text-sm text-muted-foreground">{rodape}</CardFooter>
           </Card>
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-2 @3xl/main:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4 @3xl/main:grid-cols-3">
+        {todos
+          .filter(([rotulo]) => !Destaques.some(([d]) => d === rotulo))
+          .map(([rotulo, valor]) => (
+            <Card key={rotulo} className="gap-1 px-4 py-3">
+              <div className="text-sm text-muted-foreground">{rotulo}</div>
+              <div className="text-xl font-semibold tabular-nums">{valor}</div>
+            </Card>
+          ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-2">
         {rankings
           .filter(([, r]) => r !== null)
           .map(([titulo, r, cor]) => (
