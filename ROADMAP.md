@@ -1,7 +1,7 @@
 # One: roadmap
 
 - **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  interface nova em build, lote 3 de 3, com as 3 telas da banca já migradas; domínio rico e contratos em build, lote 2 de 3)
+  interface nova em build, lote 3 de 3, com as 3 telas da banca já migradas; domínio rico e contratos construído, os 3 lotes, aguardando a verificação)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -46,13 +46,13 @@ hospedagem e ensaio.
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
 | Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 303 (237 antes da refatoração), web 131 (35 antes da refatoração, 99 antes da interface nova), e2e 27 (11 de antes mais 16 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Testes | API 329 (237 antes da refatoração), web 131 (35 antes da refatoração, 99 antes da interface nova), e2e 27 (11 de antes mais 16 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
 | Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. **Lote 2 verde** (C39 a C59, `ad45b53..c617f06`): detalhe do chamado, Indicadores (Recharts separado, TanStack Table 8.21.3, DayPicker) e listas; Vitest 131, e2e 27; mutação interrompida (AD-025). Lote 3 (acesso, conhecimento, administração, saída do Bootstrap) em build no Sonnet |
-| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes. **Lote 1 verde** (`2a2ba2e..3d6ee69`): retratos gravados contra o código de antes, API 303, e2e 23, `api/` sem mudança. Lote 2 (estrutura e entidades ricas) em build; lote 3 (contratos) a seguir |
+| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11. **Construído nos 3 lotes** (`2a2ba2e..ba5a01a`): retratos gravados contra o código de antes; `Chamado`, `Artigo` e `Documento` ricos em pastas por agregado; 29 `Entrada` e respostas nomeadas, as compartilhadas em `Shared/`; API 329, nenhuma migração, os 5 retratos de JSON idênticos. C3 a C41 provados; C1 espera o lote 3 da interface (um e2e de arranjo dela); C2 com uma troca de nome de tipo aceita pelo usuário. Verificação independente a seguir |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -224,7 +224,7 @@ antes do código, verificação independente depois), e a próxima só começa c
 | Quando | Feature | Onde |
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
-| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): plano e checks aprovados em 02/11; lote 1 verde em 02/11, lote 2 em build | `api/` |
+| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): construído em 02/11 (3 lotes); verificação depois do lote 3 da interface | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
@@ -249,9 +249,12 @@ Plano e checks aprovados em 02/11. Build em 3 lotes, cada um só com o anterior 
 - [x] Lote 1 (S1): rede de segurança gravada contra o código de antes: JSON de sucesso de 59 chamadas
       (`sucessos.txt`), importação, o que cada ação grava (`gravacoes.txt`: colunas, mensagens, eventos)
       e a ordem de recusa de cada handler reescrito. API 303, e2e 23; `api/` sem mudança.
-- [ ] Lote 2 (S5, S3, S4): uma entidade por arquivo em pastas por agregado, regra de dependência no
-      `ArquiteturaTests`, `Chamado` rico (12 transições e `Abrir`), `Artigo` e `Documento` ricos.
-- [ ] Lote 3 (S2): 41 respostas nomeadas e 29 `Entrada`, um por caso de uso.
+- [x] Lote 2 (S5, S3, S4): uma entidade por arquivo em pastas por agregado, regra de dependência no
+      `ArquiteturaTests`, `Chamado` rico (12 transições e `Abrir`), `Artigo` e `Documento` ricos. API 323,
+      e2e 27, nenhuma migração (o `OneDb` percorre as entidades por nome para manter os nomes das FKs).
+- [x] Lote 3 (S2): respostas nomeadas e 29 `Entrada`, um por caso de uso; as compartilhadas por 3 ou mais
+      casos em `Shared/`. API 329, retratos de JSON idênticos. Decisão do usuário em 02/11: aceita a troca
+      do nome do tipo citado numa asserção antiga (`Chamados.DetalheChamado` → `Chamados.Shared.DetalheChamado`).
 - [ ] Verificação independente aprovada.
 
 Decisão do usuário em 02/11/2026: a vertical slice não basta se as entidades ficam todas num
