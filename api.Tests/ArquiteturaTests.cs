@@ -981,4 +981,45 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.DoesNotContain("byte[]", codigo);
         }
     }
+
+    // arquivos-minio C20: door 4, o bucket é append-only e nenhum código do api/ apaga objeto
+    static readonly Regex ChamaDelete = new(@"\bDeleteObjects?(Async)?\b");
+
+    [Fact]
+    public void Codigo_do_api_nao_apaga_objeto() =>
+        Assert.Empty(CodigoApi().Where(p => ChamaDelete.IsMatch(File.ReadAllText(p))).Select(Relativo));
+
+    [Theory]
+    [InlineData("DeleteObject")]
+    [InlineData("DeleteObjectAsync")]
+    [InlineData("DeleteObjects")]
+    [InlineData("DeleteObjectsAsync")]
+    public void Regra_de_delete_pega_cada_chamada(string nome) =>
+        Assert.Matches(ChamaDelete, $"await s3.{nome}(new Req());");
+
+    // arquivos-minio C28: o termo novo entra no glossário
+    [Fact]
+    public void Glossario_tem_armazenamento()
+    {
+        var linhas = File.ReadAllLines(Path.Combine(Raiz(), ".specs", "GLOSSARIO.md")).Where(l => l.StartsWith('|') && l.Contains("`Armazenamento`"));
+        Assert.Contains(linhas, l => l.Trim().Trim('|').Split('|')[^1].Trim().Length >= 10);
+    }
+
+    // arquivos-minio C29: door 5, o serviço minio fixado por digest e a api esperando por ele
+    [Fact]
+    public void Compose_com_minio_por_digest()
+    {
+        var compose = File.ReadAllText(Path.Combine(Raiz(), "docker-compose.yml")).ReplaceLineEndings("\n");
+        var minio = Regex.Match(compose, @"(?ms)^  minio:\n(.*?)(?=^  \w+:|^\w+:)").Groups[1].Value;
+        Assert.Matches(@"image:\s*cgr\.dev/chainguard/minio@sha256:[0-9a-f]{64}\s", minio);
+        Assert.Contains("command: server /data --console-address \":9001\"", minio);
+        foreach (var trecho in new[] { "\"9000:9000\"", "\"9001:9001\"", "miniodata:/data", "healthcheck:", "MINIO_ROOT_USER:", "MINIO_ROOT_PASSWORD:" })
+            Assert.Contains(trecho, minio);
+        Assert.Matches(@"(?m)^volumes:\n(?:  \w+:\n)*  miniodata:", compose);
+
+        var api = Regex.Match(compose, @"(?ms)^  api:\n(.*?)(?=^  \w+:|^\w+:)").Groups[1].Value;
+        Assert.Matches(@"minio:\s*\n\s*condition: service_healthy", api);
+        foreach (var chave in new[] { "Endpoint", "Chave", "Segredo", "Bucket" })
+            Assert.Contains($"Armazenamento__{chave}:", api);
+    }
 }

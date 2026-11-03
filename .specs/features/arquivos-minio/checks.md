@@ -108,7 +108,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Pr
 **C19** - [x] `Preparar` chamado duas vezes seguidas cria o bucket na primeira, não lança erro na segunda, e `GetBucketVersioning` devolve `Enabled` nas duas (AC 17, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArmazenamentoTests.Preparar_cria_bucket_e_liga_versionamento_e_e_idempotente"`
 
-**C20** - [ ] Nenhum arquivo `.cs` de `api/` (fora de `Migracoes`) contém `DeleteObject`, `DeleteObjectAsync`, `DeleteObjects` nem `DeleteObjectsAsync`, e a regra falha para cada um dos 4 nomes quando aplicada a um texto que o contém (AC 18, door 4)
+**C20** - [x] Nenhum arquivo `.cs` de `api/` (fora de `Migracoes`) contém `DeleteObject`, `DeleteObjectAsync`, `DeleteObjects` nem `DeleteObjectsAsync`, e a regra falha para cada um dos 4 nomes quando aplicada a um texto que o contém (AC 18, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Codigo_do_api_nao_apaga_objeto"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Regra_de_delete_pega_cada_chamada"`
 
@@ -123,7 +123,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MigracaoArquivosMinio
 **C23** - [x] Com 1 linha em `Anexos` (caso 1) ou 1 linha em `VersoesDocumento` (caso 2), aplicar `ArquivosMinio` lança erro cuja mensagem contém `docker compose down -v`, `Conteudo` continua existindo nas duas tabelas e `__EFMigrationsHistory` não registra `ArquivosMinio` (AC 21, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~MigracaoArquivosMinioTests.Migracao_aborta_com_linha_em_anexo_ou_versao"`
 
-**C24** - [ ] O modelo do `OneDb` não tem mudança pendente em relação ao `OneDbModelSnapshot`, e `dotnet ef migrations has-pending-model-changes --project api` sai com 0 (AC 22)
+**C24** - [x] O modelo do `OneDb` não tem mudança pendente em relação ao `OneDbModelSnapshot`, e `dotnet ef migrations has-pending-model-changes --project api` sai com 0 (AC 22)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Modelo_sem_mudanca_pendente"`
 Proof: `dotnet ef migrations has-pending-model-changes --project api`
 
@@ -144,7 +144,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_d
 Proof: `python .specs/features/arquivos-minio/asserts_minio.py <base>`
 Proof: `python .specs/features/arquivos-minio/asserts_minio.py --autoteste`
 
-**C28** - [ ] As regras da `ArquiteturaTests` seguem: `Armazenamento.cs` é o 9º arquivo da raiz do `api/` (`Fatias_do_api`), o domínio não referencia ASP.NET Core nem `Mediator`, um arquivo por caso de uso, `Entrada` e `Resposta` por caso de uso, e `.specs/GLOSSARIO.md` ganha uma linha para `Armazenamento` com significado de pelo menos 10 caracteres; `CA1502` até 10 e `MSG0005` como erro (AC 24)
+**C28** - [x] As regras da `ArquiteturaTests` seguem: `Armazenamento.cs` é o 9º arquivo da raiz do `api/` (`Fatias_do_api`), o domínio não referencia ASP.NET Core nem `Mediator`, um arquivo por caso de uso, `Entrada` e `Resposta` por caso de uso, e `.specs/GLOSSARIO.md` ganha uma linha para `Armazenamento` com significado de pelo menos 10 caracteres; `CA1502` até 10 e `MSG0005` como erro (AC 24)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fatias_do_api"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dominio_sem_AspNetCore_Mediator_nem_fatias"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Um_arquivo_por_caso_de_uso"`

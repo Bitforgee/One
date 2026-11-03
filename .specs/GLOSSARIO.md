@@ -43,3 +43,9 @@ uma vez no código, num grupo de constantes de `api/Dados/Entidades.cs`; cada pr
 | prazo de rejeição | `Prazos:ConfirmacaoDias` | 7 dias | o aluno pode rejeitar a resolução até esse tempo depois dela; é o mesmo valor do prazo de confirmação, para o aluno poder rejeitar enquanto o chamado não fecha |
 | prazo de lembrete | `Prazos:LembreteAguardandoDias` | 3 dias | chamado em `AGUARDANDO_ALUNO` há esse tempo gera um lembrete por e-mail, uma vez |
 | prazo de resolver aguardando | `Prazos:ResolverAguardandoDias` | 7 dias | chamado em `AGUARDANDO_ALUNO` há esse tempo é resolvido pelo Sistema por falta de resposta |
+
+## Arquivos (`Armazenamento`, chaves `Armazenamento:*`)
+
+| Termo | Chave | Significado |
+| --- | --- | --- |
+| `Armazenamento` | `Armazenamento:Endpoint`, `Chave`, `Segredo`, `Bucket` | o único código que fala com o MinIO (`api/Armazenamento.cs`): grava os bytes de anexos e PDFs sob chave nova `{instituicaoId}/{anexos ou documentos}/{guid}`, lê pela chave da linha e nunca apaga; o banco guarda só chave, hash SHA-256 e tamanho |
