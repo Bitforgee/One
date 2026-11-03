@@ -107,7 +107,10 @@ test.describe('cabeçalho', () => {
   const sobrepoe = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
     a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5
 
-  for (const largura of [768, 1024, 1280, 1920]) {
+  // decisão do usuário de 02/11/2026 (C19): 3 links com nome a partir de 1024 px, 5 a partir de 1280 px, 7 a partir de 1536 px
+  const linksNaBarra: Record<number, number> = { 1024: 3, 1280: 5, 1536: 7, 1920: 7 }
+
+  for (const largura of [768, 1024, 1280, 1536, 1920]) {
     test(`barra a ${largura} px sem sobreposição, com todos os links ao alcance`, async ({ page }) => {
       await simularApi(page)
       await page.setViewportSize({ width: largura, height: 740 })
@@ -154,7 +157,7 @@ test.describe('cabeçalho', () => {
         const menu = page.locator('[data-slot=popover-content]')
         for (const rotulo of Links.filter((l) => !naBarra.includes(l))) await expect(menu.getByRole('link', { name: rotulo })).toBeVisible()
       } else await expect(mais).toBeHidden()
-      expect(naBarra.length).toBeGreaterThanOrEqual(3)
+      expect(naBarra.length, `links com nome na barra a ${largura} px`).toBe(linksNaBarra[largura])
     })
   }
 
