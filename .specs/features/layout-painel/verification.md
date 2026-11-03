@@ -2,144 +2,158 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: dac2832..a3bd34d
-**Round**: 1 - full
+**Diff range**: dac2832..ef737f1
+**Round**: 2 - scoped
 **Verifier**: independent sub-agent (author != verifier)
 
-All 38 checks have a green proof at `a3bd34d` with a located assertion, and all 5 faults were killed. The feature still fails on step 1 and the `Test policy` row for arrangement. `## Screens` decides several elements and arrangements that no check covers. One of them, Trocar senha capped at 384 px, is built differently: the code uses 420 px and an existing e2e asserts 420. Coverage also has one member with no proof: the "Consultar" Spinner of C20.
+Scope: the fix range `a3bd34d..ef737f1` (91116cc, 484942c, c95d470, 6fb790d, ef737f1) and every round-1 verdict that was not PASS. All 48 proofs re-ran at `ef737f1`. Sections or rows not touched by the fix say `carried from a3bd34d`.
+
+The fix closes round-1 gaps 1, 2, 4 and 5, and the breakpoint half of gap 3. Every proof is green: Vitest 273/273, Playwright 72/72, and each named test ran. The feature still fails on two points:
+
+1. **C47 is proven on one screen of three.** Removing `pendente` from the `MenuAcoes` of Usuários and Documentos leaves the whole suite green (fault F2 survived).
+2. **The new `## Exempted` list is partial.** Several values that `## Screens` decides have neither a check nor an exemption. Some were already named in round-1 gap 3; others were found this round on the screens the fix touched.
 
 ## Binding sources
 
-Opened: the plan's `## Screens` table, which is binding and was read in full. The shadcn dashboard example was read as files: the local copies of `site-header.tsx`, `app-sidebar.tsx`, `nav-user.tsx`, `nav-main.tsx` and `data-table.tsx`, and `page.tsx` and `section-cards.tsx` downloaded with curl from `raw.githubusercontent.com/shadcn-ui/ui/main/apps/v4/app/(app)/examples/dashboard/`. Upstream `site-header.tsx` and `app-sidebar.tsx` are byte-identical to the local copies. The template uses `collapsible="none"` and has no `SidebarTrigger`. The plan deliberately took `collapsible="icon"` and the trigger from the user's answers, and `## Screens` records that, so this is not a contradiction.
+Verified at ef737f1 for the screens whose interface the fix touched: Trocar senha (`Acesso.tsx`) and the row action menu (`Tabela.tsx` `MenuAcoes`, used by Artigos, Documentos and Usuários). This section also re-judges every round-1 `Uncovered` cell. The other rows are carried from a3bd34d.
+
+Opened this round: the plan's `## Screens` table (binding, read in full), and the local template copies `data-table.tsx` (trigger at `:307-315`: `variant="ghost" size="icon"`, `size-8 text-muted-foreground`) and `nav-user.tsx` (`side={isMobile ? "bottom" : "right"}`, `h-8 w-8` avatar, `truncate` name and email, `DropdownMenuSeparator`).
+
+The template opens the user menu at `bottom` on mobile, while `## Screens` says "acima no celular". C41 and the code follow `## Screens`. The Sheet's user button sits at the bottom of the screen, so even `bottom` would flip upward on collision. This is not a contradiction.
 
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
-| `## Screens` row "área principal": exception "Trocar senha até 384 px" | yes | code `web/src/acesso/Acesso.tsx:185` is `max-w-[420px]`; e2e `web/e2e/arranjo.spec.ts:374` asserts `<= 420`. No check names it | Trocar senha column width (384 px): no check, and the build differs |
-| `## Screens` row "Cadastros": wide layout, `TabsList` on the left and "Novo" on the right in the same row | yes | none | "Novo" on the tabs row at `@4xl/main`: no check, no test. C26 only checks that the tabs and the select are visible |
-| `## Screens` rows "casca, barra aberta" and "menu do usuário": user button composition and user menu order and placement | yes | none | initials in a 32 px square, name and role on 2 truncated lines, `ChevronsUpDown`; menu with name and role, then a separator, then "Sair"; opens to the right (open sidebar) or above (mobile). C10 checks only the contents |
-| `## Screens` row "casca, barra aberta": brand and institution "numa linha que pode quebrar em 2", sidebar background `--sidebar`, right border | yes | none | the old e2e assertions (2 lines with no ellipsis, `--sidebar` background, 1 px right border) were deleted in `arranjo.spec.ts` and not replaced |
-| `## Screens` row "casca, janela < 768 px": "fundo escurecido atrás" of the `Sheet` | yes | none | overlay: no check |
-| `## Screens` row "Indicadores, vazio / erro / carregando": the `Alert` spans the content width, below the toolbar | yes | none | Alert placement: no check |
-| `## Screens` values with no enumerated exemption: header icon buttons 36 px and header padding 16/24 px (lg); highlight value 30 px when the card is >= 250 px; footer 14 px muted on one line; compact label 14 px; table header text 14 px weight 500, 8 px corners, row hover; empty row 96 px; access card padding 40 px from 768 px | yes | none | `checks.md` has no exemption list naming these per screen, so they are uncovered rather than exempted |
-| shadcn `site-header.tsx` / `page.tsx` (header `h-(--header-height)` = 49 px, `text-base font-medium` h1, `@container/main`, `px-4 lg:px-6`, `py-4 md:py-6`) | yes | none | - (C8, C14, C15) |
-| shadcn `section-cards.tsx` (`@xl/main:grid-cols-2 @5xl/main:grid-cols-4`, `text-2xl tabular-nums`, `shadow-xs`) | yes | none | - (C16, C17; `shadow-xs` also in e2e "cartões sem sombra") |
-| shadcn `nav-user.tsx` (DropdownMenu, LogOut item) | yes | none | composition, see the user-button row above |
-| shadcn `data-table.tsx` (bordered box, `bg-muted` sticky header, empty row `h-24 text-center`) | yes | none | the 96 px and centring of the empty row: C24 checks only `colSpan` and text |
+| `## Screens` "área principal": "Trocar senha até 384 px" (round-1 gap 1) | yes | none - `web/src/acesso/Acesso.tsx:185` is now `max-w-sm` (384 px); `web/e2e/arranjo.spec.ts:374` asserts `<= 384`; C39 `:881` at 360 and 1280 | Trocar senha is listed among the "Exceções centralizadas", but its horizontal centring in the `main` has no check (code `mx-auto`, `Acesso.tsx:185`) |
+| `## Screens` "casca, barra aberta" + "menu do usuário" (round-1 gap 2) | yes | none | - closed by C40 (`:894-902`) and C41 (`:915-921`) |
+| `## Screens` "casca": `--sidebar` background, right border, institution on up to 2 lines (round-1 gap 2) | yes | none | - closed by C42 (`:948-954`) |
+| `## Screens` "casca, janela < 768 px": dark overlay (round-1 gap 2) | yes | none | - closed by C43 (`:836-839`) |
+| `## Screens` "Cadastros": `TabsList` left and "Novo" right on one row (round-1 gap 2) | yes | none | - closed by C44 (`:1129-1130`) |
+| `## Screens` "Indicadores, vazio / erro / carregando": `Alert` placement and width (round-1 gap 2) | yes | none | - closed by C45 (`:997-998`) |
+| `## Screens` values that round 1 listed with no exemption (round-1 gap 3), against the new `## Exempted` | yes | none | still open, neither checked nor named in `## Exempted`: header icon buttons 36 px ("Avisos", "Tema"); highlight footer 14 px `muted` on one line; compact label 14 px; table header text 14 px weight 500; empty row text centred (also AC 24 "centred", code `h-24 text-center` at `web/src/Tabela.tsx:33`, never asserted). Closed: header padding 16/24 (C46); highlight value 30 px (C46); access padding 24/40 (C46); 8 px corners and row hover (exempted as "raio da caixa", "cor do hover"); empty row 96 px (exempted as "altura das linhas") |
+| `## Screens` rows covered by the new checks, re-enumerated this round (missed in round 1) | yes | none | neither checked nor exempted: header "borda inferior"; `h1` "numa linha truncada"; table "caixa com borda" and "borda entre" rows; highlight and compact value "peso 600" (`## Exempted` names only "peso do rótulo"); compact value `tabular-nums`; sidebar "os grupos rolam no meio"; collapsed bar "o quadrado das iniciais" |
+| shadcn `data-table.tsx` row action trigger | yes | none - `MenuAcoes` keeps ghost/icon/`size-8`/muted; the Spinner while pending is the project's own AC 27 feedback | - |
+| shadcn `site-header.tsx`, `page.tsx`, `section-cards.tsx`, `app-sidebar.tsx` | carried from a3bd34d | none | carried; see the rows above |
 
-Covered by a test that no check names (it ran green under C33's full suite): the Indicadores period toolbar in "arranjo Indicadores" (`arranjo.spec.ts:259-261, 301`, inside C17's proof); the Artigos and Documentos toolbars in "arranjo Artigos e Documentos" (`arranjo.spec.ts:411-419`); "Novo" on the right in Usuários (`arranjo.spec.ts:449`); the Matrículas result `Alert` below "Importar" (`arranjo.spec.ts:605`); "Estado" as a `Badge` (`arranjo.spec.ts:319, 960`). The check text is silent on these, so they are noted here and not counted as findings.
-
-Facing the other way, the code renders nothing the design does not draw. The `GraduationCap` brand icon stands in for the template's logo icon, and the "Ações" card only appears when the row has some action. Neither is a new visible text.
+Facing the other way: the fix renders nothing that `## Screens` does not draw. The pending Spinner replaces the "⋮" only while a save is running.
 
 ## Checks
 
-Vitest ran once over the whole suite: `cd web && npx vitest run --reporter=verbose`, exit 0, 271 passed, and every named test appears individually as passed. Playwright ran once over the whole suite against the `api` container rebuilt from HEAD (`docker compose up -d --build api`): `cd web && npx playwright test --reporter=list`, exit 0, 66 passed, every named test individually present, no flakiness seen.
+Verified at ef737f1. `cd web && npx vitest run --reporter=verbose` exit 0, 273 passed (34 files). Every named test below appears with `✓`: "estado inicial da barra por one-barra" ×4, "título do cabeçalho por rota" ×11, "papel do usuário por precedência" ×3, "lista vazia numa linha" ×3, and textos 16/16.
+
+`docker compose up -d --build api`, then `cd web && npx playwright test --reporter=list` exit 0, 72 passed. Each named test appears with `✓`. No failure, so no rerun was needed and no flakiness was seen.
+
+Citations in the 5 test files the fix touched (`arranjo.spec.ts`, `indicadores.test.tsx`, `listas.test.tsx`, `usuarios.test.tsx`, `artigos.test.tsx`) are refreshed. Every other citation is carried from a3bd34d.
 
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
-| C1 | open sidebar 256 px at x=0, full height; brand/institution above groups; user button at the bottom; main at 256 | e2e "painel barra aberta" passed | `web/e2e/arranjo.spec.ts:766` `expect(Math.abs(b.width - 256)).toBeLessThanOrEqual(1)`; `:771-772` brand and institution above the 1st group; `:774` user button <= 16 px from the end; `:776` main x 256 | PASS |
-| C2 | toggle 48/256, main 48/256, one-barra recolhida/aberta | e2e "painel recolher e expandir" + vitest "alternar barra grava one-barra" passed | `web/e2e/arranjo.spec.ts:787-789` `expect.poll(() => largura(page)).toBe(48)`, `localStorage... toBe('recolhida')`; `:791-793`; `web/src/acesso/acesso.test.tsx:469-473` | PASS |
-| C3 | initial state from one-barra, 4 cases | vitest "estado inicial da barra por one-barra" (recolhida/aberta/null/xyz) passed | `web/src/acesso/acesso.test.tsx:477-487` `expect(estado()).toBe(esperado)` | PASS |
-| C4 | collapsed: names kept, labels/groups/institution invisible, tooltip on hover and focus | e2e "painel barra recolhida" passed | `web/e2e/arranjo.spec.ts:807` label width `<= 1`; `:809-811`; `:813` `toHaveText('Usuários')` (hover); `:815` (focus) | PASS |
-| C5 | < 768: no fixed sidebar; sheet at x=0, min(288, w), 3 groups, 9 links, user button | e2e "painel no celular" passed | `web/e2e/arranjo.spec.ts:824` `toBeHidden()`; `:828-829` x and `Math.min(288, w)`; `:831` `toHaveCount(3)`; `:832-833` | PASS |
-| C6 | picking "Fila" closes the sheet, h1 Fila | e2e "painel no celular" passed | `web/e2e/arranjo.spec.ts:837` `expect(page.getByRole('dialog')).toHaveCount(0)`; `:838` `toHaveText('Fila')` | PASS |
-| C7 | Ctrl+B and Meta+B toggle | vitest "Ctrl+B alterna a barra" passed | `web/src/acesso/acesso.test.tsx:495-499` `expect(estado()).toBe('collapsed')` / `'expanded'` | PASS |
-| C8 | header 49 px, sticky, order button, separator, h1 16/500, Tema on the right; Avisos left of Tema | e2e "painel cabeçalho" + "avisos no cabeçalho" passed | `web/e2e/arranjo.spec.ts:849` height 49; `:853` y 0 after scrolling; `:860-863` order; `:864` `toEqual(['16px', '500'])`; `web/e2e/push.spec.ts:80-81` | PASS |
-| C9 | h1 per route, 11 routes, exactly 1 h1 | vitest "título do cabeçalho por rota" (11 cases) passed | `web/src/acesso/acesso.test.tsx:530` `findByRole('heading', { level: 1, name: titulo })`; `:532` `toHaveLength(1)` | PASS |
-| C10 | menu: name, role by precedence (3 cases), "Sair" logs out | vitest "papel do usuário por precedência" (3) + "menu do usuário" passed | `web/src/acesso/acesso.test.tsx:545-546` `getByText(papel)`; `:556-557` login screen + 1 `POST /api/auth/logout` | PASS |
-| C11 | reduced motion: no transition | e2e "movimento reduzido na barra lateral" passed | `web/e2e/arranjo.spec.ts:873` `transitionDuration` `toBe('0s')`; `:877` `toBe(48)` | PASS |
-| C12 | no `sidebar_state` cookie, no `document.cookie` in src | vitest "sem cookie sidebar_state" passed | `web/src/acesso/acesso.test.tsx:509` `not.toContain('sidebar_state')`; `:511` `toEqual([])` | PASS |
-| C13 | no horizontal scroll: 15 screens x 6 widths x open/collapsed, long texts | e2e "sem rolagem horizontal" passed | `web/e2e/arranjo.spec.ts:894` `expect(rolagem).toBeLessThanOrEqual(janela)`, looping over `Telas` (15 rows, `web/e2e/simulada.ts`) with `simularApi(page, undefined, true)` | PASS |
-| C14 | main is container `main`; at 900 px, Fila has 3 columns open and 6 collapsed | e2e "colunas pela largura do main" passed | `web/e2e/arranjo.spec.ts:905` `toEqual(['inline-size', 'main'])`; `:907`; `:911` | PASS |
-| C15 | padding 16/16 at 360, 16/24 at 768 collapsed, 24/24 at 1280 | e2e "recuos do conteúdo" passed | `web/e2e/arranjo.spec.ts:1006-1007` | PASS |
-| C16 | 4 highlights in order, values and exact footers | vitest "destaques de Indicadores" passed | `web/src/indicadores/indicadores.test.tsx:87-92` `toEqual([['Indicador principal','12,3%','Resolvidas sem reabertura, ...'], ...])`; `:94` previous sibling is the FORM | PASS |
-| C17 | value >= 24 px, tabular-nums, label 14 px; 1/2/4 columns at 360/1280/1440 | e2e "arranjo Indicadores" passed | `web/e2e/arranjo.spec.ts:270` highlight columns; `:282-284` | PASS |
-| C18 | 9 compacts in today's order, 20 px, 2/3 columns | vitest "indicadores compactos na ordem" + e2e "arranjo Indicadores" passed | `web/src/indicadores/indicadores.test.tsx:99-109`; `web/e2e/arranjo.spec.ts:271`, `:287` `<= 0.5` | PASS |
-| C19 | ranking card: chart above table; side by side at 1440, stacked at 360 | vitest "ranking com gráfico acima da tabela" + e2e passed | `web/src/indicadores/indicadores.test.tsx:152` `DOCUMENT_POSITION_FOLLOWING`; `web/e2e/arranjo.spec.ts:272`, `:275`, `:295` | PASS |
-| C20 | period form, "Sem dados", error and Spinner as today | the 3 named vitest tests passed | `web/src/indicadores/indicadores.test.tsx:29` `findByText('Sem dados no período')`; `:190-196` (form); `:45-57` (values unchanged). The error is proven outside C20's proofs, at `web/src/indicadores/textos.test.tsx:64` `findByRole('alert')).toHaveTextContent('Falha ao calcular.')`. Spinner: no assertion anywhere, at base or HEAD (see Coverage). The assertion at `indicadores.test.tsx:65` changed from `md:grid-cols-2` to `@4xl/main:grid-cols-2`: it is not a weakening (same strength, required by AC 19 and AC 14), but it makes C20's wording "sem mudança de asserção" literally false - precision gap in the check | PASS |
-| C21 | columns per table, 7 lists | the 3 vitest tests passed | `web/src/chamados/listas.test.tsx:47,53` `expect(cabecalhos()).toEqual([...])`; `web/src/administracao/admin.test.tsx:38,44,53`; `web/src/conhecimento/artigos.test.tsx:57,63` | PASS |
-| C22 | "largo" columns hidden at 360 with a 12 px " · " line, shown at 1280; header `--muted` | e2e "colunas largas somem no estreito" passed | `web/e2e/arranjo.spec.ts:930` `toHaveCount(0)`; `:932-933` text + `toBe('12px')`; `:943` muted; `:947-948` | PASS |
-| C23 | clicking "Estado" opens the ticket; number is an `<a>` reachable by Tab | e2e "linha da lista abre o chamado" passed | `web/e2e/arranjo.spec.ts:961` `toHaveURL(/\/univag\/chamados\/ONE-123$/)`; `:970` | PASS |
-| C24 | empty: 1 row, colSpan = columns, 6 screens | the 3 vitest "lista vazia numa linha" tests passed | `web/src/test/util.tsx:102-106` `toHaveLength(1)`, `toHaveAttribute('colspan', ...)`; called at `web/src/chamados/listas.test.tsx:61,67`, `web/src/administracao/admin.test.tsx:69,74`, `web/src/conhecimento/artigos.test.tsx:71,77` | PASS |
-| C25 | "Ações de" menu, 7 cases, menuitem + destructive | the 3 vitest tests passed | `web/src/administracao/usuarios.test.tsx:43-44`; `web/src/conhecimento/artigos.test.tsx:85-87` `toEqual(['Editar', 'Ativar', 'Arquivar!'])`; `web/src/conhecimento/documentos.test.tsx:84-85`; `web/src/test/util.tsx:91` (`menuitem`, `data-variant`) | PASS |
-| C26 | Cadastros: select "Cadastro" with 5 options at 360, tabs at 1440 | e2e "Cadastros com select no estreito" passed | `web/e2e/arranjo.spec.ts:983-984`; `:986`; `:990-991` | PASS |
-| C27 | Novo, dialogs, editors as today | the 5 named vitest tests passed | `web/src/administracao/usuarios.test.tsx:93` `getByText('Desativar Carla?')`, `:99`; `:58`; `web/src/administracao/cadastros.test.tsx:66`; `web/src/conhecimento/documentos.test.tsx:51`; `web/src/conhecimento/artigos.test.tsx:30` | PASS |
-| C28 | detail at 1440: right column 320 px, Ações above history, Assumir inside | e2e "detalhe em duas colunas" passed | `web/e2e/arranjo.spec.ts:184-188` | PASS |
-| C29 | one column at 360 and 1280 open, in order | e2e "detalhe em uma coluna a 360 px" and "a 1280 px" passed | `web/e2e/arranjo.spec.ts:204` `expect(ys[i]).toBeGreaterThan(ys[i - 1])` | PASS |
-| C30 | title in h2, number in the h1 | vitest "título do chamado em h2" passed | `web/src/chamados/chamado.test.tsx:50-52` | PASS |
-| C31 | Assistente column <= 768 px, centred; composer <= 16 px from the bottom | e2e "arranjo Assistente" + "compositor visível..." passed | `web/e2e/arranjo.spec.ts:162,164`; `:86` | PASS |
-| C32 | 4 access screens: card <= 384, centred horizontally and vertically, at 360/1280 | 4 e2e "telas de acesso centralizadas ..." passed | `web/e2e/arranjo.spec.ts:388-390` | PASS |
-| C33 | same API calls; whole suites green | `python .specs/features/layout-painel/chamadas_iguais.py dac2832` exit 0 ("238 teste(s) da base, 138 gravação(ões) distintas; 0 problema(s) em HEAD"; `vaul@1.1.2 --no-save` before, `npm install` after); `--autoteste` exit 0; vitest 271/271; playwright 66/66 | `.specs/features/layout-painel/chamadas_iguais.py:17-31` `REESCRITOS` (9 entries) match the "Settled mid-build (1)" line in `## Handoff` one to one. On weakening, see the note under Test policy | PASS |
-| C34 | only the *(novo)* texts | the 6 textos files passed (16 tests) | `web/src/acesso/textos.test.tsx:8` (roles); `web/src/indicadores/textos.test.tsx:16` (footers); `web/src/chamados/textos.test.tsx:22` ("Ações"); `web/src/conhecimento/textos.test.tsx:11`; `web/src/administracao/textos.test.tsx:23,150` | PASS |
-| C35 | tokens unchanged; sidebar contrast >= 4.5 in 3 themes | vitest "tokens de Visual" + "contraste dos tokens da barra" passed | `web/src/test/interface.test.ts:181` `toBe(esperado)`; `:192` `toBeGreaterThanOrEqual(4.5)` | PASS |
-| C36 | crapper 0 at 9.99, dryer with no candidate; mutator suspended | `npm --prefix web run coverage` exit 0; `crapper --use-existing-coverage -s src --threshold 9.99` exit 0 (worst `Sidebar` 9.8, `SidebarProvider` 9.5, `chamados.ChamadoDetalhe/Detalhe` 9.0); the dryer command from C36 with `grep -q` exit 0. `mutator`: not run, suspended by user decision (AD-025) | `web/src/ui/sidebar.tsx` (`Sidebar` CRAP 9.8 < 9.99, in `web/.metrics/crap.edn`) | PASS |
-| C37 | build + structure test | `npm --prefix web run build` exit 0; vitest "estrutura em fatias" passed | `web/src/test/estrutura.test.ts:28` | PASS |
-| C38 | no `ui/drawer`, no `vaul` | vitest "sem gaveta Vaul" passed | `web/src/test/interface.test.ts:197-199` `expect(todas).not.toHaveProperty(['vaul'])` | PASS |
+| C1 | open bar 256 at x=0, full height; brand/institution above groups; user button at bottom; main at 256 | e2e "painel barra aberta" ✓ | `web/e2e/arranjo.spec.ts:766` `expect(Math.abs(b.width - 256)).toBeLessThanOrEqual(1)`; `:771-772`; `:774`; `:776` (unchanged lines) | PASS |
+| C2 | toggle 48/256, `one-barra` | e2e "painel recolher e expandir" ✓ + vitest "alternar barra grava one-barra" ✓ | `web/e2e/arranjo.spec.ts:787-789` `expect.poll(() => largura(page)).toBe(48)`, `toBe('recolhida')`; `:791-793`; `web/src/acesso/acesso.test.tsx:469-473` (carried from a3bd34d) | PASS |
+| C3 | initial state, 4 cases | vitest ×4 ✓ | `web/src/acesso/acesso.test.tsx:477-487` `expect(estado()).toBe(esperado)` (carried from a3bd34d) | PASS |
+| C4 | collapsed: names kept, labels hidden, tooltip | e2e "painel barra recolhida" ✓ | `web/e2e/arranjo.spec.ts:807` `toBeLessThanOrEqual(1)`; `:809-811`; `:813` `toHaveText('Usuários')`; `:815` `toHaveText('Artigos')` | PASS |
+| C5 | < 768: sheet x=0, min(288,w), 3 groups, 9 links, user button | e2e "painel no celular" ✓ | `web/e2e/arranjo.spec.ts:824` `toBeHidden()`; `:828-829`; `:831` `toHaveCount(3)`; `:832-833` | PASS |
+| C6 | "Fila" closes the sheet, h1 Fila | e2e "painel no celular" ✓ | `web/e2e/arranjo.spec.ts:843` `expect(page.getByRole('dialog')).toHaveCount(0)`; `:844` `toHaveText('Fila')` | PASS |
+| C7 | Ctrl+B / Meta+B | vitest "Ctrl+B alterna a barra" ✓ | `web/src/acesso/acesso.test.tsx:495-499` (carried from a3bd34d) | PASS |
+| C8 | header 49, sticky, order, h1 16/500; Avisos left of Tema | e2e "painel cabeçalho" ✓ + "avisos no cabeçalho" ✓ | `web/e2e/arranjo.spec.ts:855` height 49; `:859` `Math.abs(c.y) <= 1`; `:866-869` order; `:870` `toEqual(['16px', '500'])`; `web/e2e/push.spec.ts:80-81` (carried) | PASS |
+| C9 | h1 per route, 11 | vitest ×11 ✓ | `web/src/acesso/acesso.test.tsx:530`, `:532` `toHaveLength(1)` (carried from a3bd34d) | PASS |
+| C10 | menu name, role ×3, Sair logs out | vitest "menu do usuário" ✓ + "papel..." ×3 ✓ | `web/src/acesso/acesso.test.tsx:545-546`, `:556-557` (carried from a3bd34d) | PASS |
+| C11 | reduced motion | e2e "movimento reduzido na barra lateral" ✓ | `web/e2e/arranjo.spec.ts:1007` `transitionDuration` `toBe('0s')`; `:1011` `toBe(48)` | PASS |
+| C12 | no `sidebar_state` cookie | vitest "sem cookie sidebar_state" ✓ | `web/src/acesso/acesso.test.tsx:509`, `:511` (carried from a3bd34d) | PASS |
+| C13 | no horizontal scroll, 15 screens × 6 widths × 2 states | e2e "sem rolagem horizontal" ✓ (17.4 s) | `web/e2e/arranjo.spec.ts:1028` `expect(rolagem).toBeLessThanOrEqual(janela)` | PASS |
+| C14 | container `main`; Fila 3/6 columns at 900 | e2e "colunas pela largura do main" ✓ | `web/e2e/arranjo.spec.ts:1039` `toEqual(['inline-size', 'main'])`; `:1041`; `:1045` | PASS |
+| C15 | content padding 16/16, 16/24, 24/24 | e2e "recuos do conteúdo" ✓ | `web/e2e/arranjo.spec.ts:1145-1146` | PASS |
+| C16 | 4 highlights, order, values, footers | vitest "destaques de Indicadores" ✓ | `web/src/indicadores/indicadores.test.tsx:116` `expect(cartoesDe(destaques)).toEqual([...])`; `:123` `toBe('FORM')` | PASS |
+| C17 | value >= 24, tabular-nums, label 14; 1/2/4 columns | e2e "arranjo Indicadores" ✓ | `web/e2e/arranjo.spec.ts:270` destaques columns; `:282-284` (unchanged lines) | PASS |
+| C18 | 9 compacts, 20 px, 2/3 columns | vitest ✓ + e2e ✓ | `web/src/indicadores/indicadores.test.tsx:128` `toEqual([...])`; `web/e2e/arranjo.spec.ts:271`, `:287` | PASS |
+| C19 | ranking card, chart above table; side by side/stacked | vitest ✓ + e2e ✓ | `web/src/indicadores/indicadores.test.tsx:181` `DOCUMENT_POSITION_FOLLOWING`; `web/e2e/arranjo.spec.ts:272`, `:275` | PASS |
+| C20 | period form, "Sem dados", error, Spinner as today; only the rankings class changes (amended ef737f1) | the 3 named vitest ✓ | `web/src/indicadores/indicadores.test.tsx:29` `findByText('Sem dados no período')`; `:219-225` (form); `:74-86` values; `:94` `toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')` - the only changed assertion, now named in the claim. Error: `web/src/indicadores/textos.test.tsx:64` (runs in C34's proof) and C45's e2e. Spinner: C45's vitest `indicadores.test.tsx:55-56`. The round-1 wording precision gap is closed by the user-approved amendment | PASS |
+| C21 | column headers, 7 lists | 3 vitest ✓ | `web/src/chamados/listas.test.tsx:47`, `:56` `expect(cabecalhos()).toEqual([...])`; `web/src/administracao/admin.test.tsx:38,44,53` (carried); `web/src/conhecimento/artigos.test.tsx:57,63` | PASS |
+| C22 | "largo" hidden at 360, 12 px detail line, header `--muted` | e2e "colunas largas somem no estreito" ✓ | `web/e2e/arranjo.spec.ts:1064` `toHaveCount(0)`; `:1066-1067` `toBe('12px')`; `:1077` muted; `:1081-1082` | PASS |
+| C23 | Estado click opens ticket; number link focusable | e2e "linha da lista abre o chamado" ✓ | `web/e2e/arranjo.spec.ts:1095` `toHaveURL(/\/univag\/chamados\/ONE-123$/)`; `:1104` | PASS |
+| C24 | empty: 1 row, colSpan, 6 screens | 3 vitest ✓ | `web/src/test/util.tsx:102-106` (carried); called at `web/src/chamados/listas.test.tsx:66,72`, `web/src/administracao/admin.test.tsx:69,74` (carried), `web/src/conhecimento/artigos.test.tsx:71,77` | PASS |
+| C25 | "Ações de" menu, 7 cases | 3 vitest ✓ | `web/src/administracao/usuarios.test.tsx:44-45` `toEqual(['Editar', 'Desativar!'])`; `web/src/conhecimento/artigos.test.tsx:85-87`; `web/src/conhecimento/documentos.test.tsx:84-85` (carried); `web/src/test/util.tsx:91` (carried) | PASS |
+| C26 | Cadastros select at 360, tabs at 1440 | e2e "Cadastros com select no estreito" ✓ | `web/e2e/arranjo.spec.ts:1117-1118`; `:1120`; `:1124-1125` | PASS |
+| C27 | Novo, dialogs, editors as today | 5 vitest ✓ | `web/src/administracao/usuarios.test.tsx:94` `getByText('Desativar Carla?')`, `:100`; `:59`; `web/src/administracao/cadastros.test.tsx:66` (carried); `web/src/conhecimento/documentos.test.tsx:51` (carried); `web/src/conhecimento/artigos.test.tsx:30` | PASS |
+| C28 | detail 2 columns at 1440 | e2e "detalhe em duas colunas" ✓ | `web/e2e/arranjo.spec.ts:184-188` (unchanged lines) | PASS |
+| C29 | one column at 360 and 1280 | e2e ×2 ✓ | `web/e2e/arranjo.spec.ts:204` (unchanged line) | PASS |
+| C30 | title h2, number h1 | vitest ✓ | `web/src/chamados/chamado.test.tsx:50-52` (carried from a3bd34d) | PASS |
+| C31 | Assistente <= 768 centred; composer <= 16 px | e2e ×2 ✓ | `web/e2e/arranjo.spec.ts:162,164`; `:86` (unchanged lines) | PASS |
+| C32 | 4 access screens centred, <= 384 | e2e ×4 ✓ | `web/e2e/arranjo.spec.ts:388-390` (unchanged lines) | PASS |
+| C33 | same API calls; suites green | `chamadas_iguais.py dac2832` exit 0 ("238 teste(s) da base, 138 gravação(ões) distintas; 0 problema(s) em HEAD"); `--autoteste` ok; vitest 273/273; playwright 72/72 | `.specs/features/layout-painel/chamadas_iguais.py:17-31` `REESCRITOS` - untouched by the fix (no rename in a3bd34d..ef737f1) | PASS |
+| C34 | only *(novo)* texts | 6 textos files ✓ (16 tests) | `web/src/acesso/textos.test.tsx:8` etc. (carried from a3bd34d; the fix adds no visible text: the Spinner is `role="status"` with an accessible name only) | PASS |
+| C35 | tokens unchanged; sidebar contrast >= 4.5 | vitest ×2 ✓ | `web/src/test/interface.test.ts:181`, `:192` (carried from a3bd34d) | PASS |
+| C36 | crapper 0 at 9.99, dryer clean; mutator suspended | `npm --prefix web run coverage` exit 0; `crapper ... --threshold 9.99` exit 0 (worst `Sidebar` 9.8, `SidebarProvider` 9.5; `MenuAcoes` 2.0); dryer `grep -q` exit 0. `mutator` not run, suspended (AD-025) | `web/src/ui/sidebar.tsx` `Sidebar` CRAP 9.8 (`web/.metrics/crap.edn`) | PASS |
+| C37 | build + structure | `npm --prefix web run build` exit 0; vitest "estrutura em fatias" ✓ | `web/src/test/estrutura.test.ts:28` (carried) | PASS |
+| C38 | no drawer, no vaul | vitest "sem gaveta Vaul" ✓ | `web/src/test/interface.test.ts:197-199` (carried) | PASS |
+| C39 | Trocar senha <= 384 at 360 and 1280 | e2e "Trocar senha até 384 px" ✓ | `web/e2e/arranjo.spec.ts:881` `expect(width).toBeLessThanOrEqual(384)` in a loop over `[360, 1280]`; also `:374` | PASS |
+| C40 | initials 32×32; name and role on 2 ellipsis lines; chevron on the right | e2e "botão do usuário" ✓ | `web/e2e/arranjo.spec.ts:894` `toEqual([32, 32])`; `:898-899`; `:900` `textOverflow` `toBe('ellipsis')`; `:901` `svg.lucide-chevrons-up-down` right of texts | PASS |
+| C41 | menu: name/role, separator, Sair+LogOut; right at 1280 open, above at 360 | e2e "menu do usuário abre ao lado" ✓ | `web/e2e/arranjo.spec.ts:918` `toEqual([[null, 'AnaAdministrador'], ['separator', ''], ['menuitem', 'Sair']])`; `:915` `m.x >= b.x + b.width - 1`; `:916` `m.y + m.height <= b.y + 1`; `:920`; `:921` `svg.lucide-log-out`. Builder deviation (button box read before opening): accepted. Opening a modal dropdown hides the rest of the tree from accessibility but does not move the trigger, and fault F4 shows the side assertion bites | PASS |
+| C42 | `--sidebar` background, 1 px right border, institution in up to 2 lines | e2e "barra com fundo, borda e instituição" ✓ | `web/e2e/arranjo.spec.ts:948` `toBe(token)`; `:949` `toBe('1px')`; `:952-954` | PASS |
+| C43 | overlay behind the sheet at 360, alpha > 0 | e2e "painel no celular" ✓ (looped at 360/390/767) | `web/e2e/arranjo.spec.ts:836` `toBeVisible()`; `:838` `toEqual([0, 0, w, 740])`; `:839` alpha `toBeGreaterThan(0)` | PASS |
+| C44 | Cadastros 1440: tabs left, Novo right, same row | e2e "Cadastros com select no estreito" ✓ | `web/e2e/arranjo.spec.ts:1129` centres within 4 px; `:1130` `novo.x >= a.x + a.width - 1` | PASS |
+| C45 | empty and error `Alert` below the toolbar at block width, at 360/1280; Consultar Spinner + disabled | e2e "alertas de Indicadores" ✓ + vitest "Consultar mostra o Spinner enquanto busca" ✓ | `web/e2e/arranjo.spec.ts:997` `a.y >= f.y + f.height - 1`; `:998` `Math.abs(a.width - bloco.width) <= 1` (loop over `[200 semDados, 500] × [360, 1280]`; `bloco` = `main > div > div`, the screen's `flex-col` wrapper, `Indicadores.tsx:182`); `web/src/indicadores/indicadores.test.tsx:55` `expect(consultar).toBeDisabled()`; `:56` `within(consultar).getByRole('status')`; `:58-59` back to enabled, no status | PASS |
+| C46 | header padding 16@768 / 24@1024; access padding 24@360 / 40@768; highlight value 24@1328 / 30@1440 | e2e "quebras medidas dos dois lados" ✓ | `web/e2e/arranjo.spec.ts:964` `toBe(esperado)` header; `:971` access; `:980` card width `< 250` / `>= 250`; `:981` `fontSize` `toBe(fonte)` | PASS |
+| C47 | while a row action saves (Ativar, Arquivar, Desativar, Nova versão), the "Ações de" trigger shows the Spinner and is disabled, "como os botões soltos de hoje" | vitest "ações de linha mostram o Spinner enquanto gravam" ✓ | `web/src/conhecimento/artigos.test.tsx:104` `expect(gatilho).toBeDisabled()`; `:105` `within(gatilho).getByRole('status')`; `:107-108`. Only Artigos/Ativar is exercised. Desativar (Usuários, `web/src/administracao/Usuarios.tsx:53`) and Nova versão/Arquivar (Documentos, `web/src/conhecimento/Documentos.tsx:64`) have no proof: fault F2 removed both wirings and all 273 Vitest tests stayed green. Precision gap: "como os botões soltos de hoje" is false for 3 of the 4. At `dac2832` only "Ativar" showed a Spinner (`web/src/conhecimento/Artigos.tsx:77` `BotaoAcao`); Arquivar, Nova versão and the Documentos buttons were only `disabled`; the Usuários row buttons had no pending state | FAIL |
+| C48 | exact assertions restored: `/^Aluno$/` on the cell; `$` anchors on number and title cells | 2 vitest ✓ | `web/src/administracao/usuarios.test.tsx:35` `getAllByRole('cell')[3]).toHaveTextContent(/^Aluno$/)`; `web/src/chamados/listas.test.tsx:49` `/^ONE-1$/`, `:50` `/^boleto.*1 dia$/`, `:57` `/^ONE-3$/`, `:58` `/^histórico$/`. Builder deviation (`.*` between the title and "1 dia"): accepted. In jsdom the title cell also holds the narrow detail line. The anchors still forbid trailing text, which was the round-1 point, and the middle is pinned by the substring at `listas.test.tsx:25` | PASS |
 
 ## Coverage
 
-Recomputed from the authority over each set: `## Screens` and the plan's `Landing` for design sets, the code for implementation sets.
+Verified at ef737f1 for the rows whose authority the fix touched and for the sets that C39-C48 introduce. The other rows are carried from a3bd34d with the same members and proofs; their tests re-ran green above.
 
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| sidebar states (3) | plan door 1 | open C1 · collapsed C2, C4 · mobile C5, C6 | - |
-| one-barra values (4) | plan door 2 | recolhida, aberta, null, xyz -> C3 (`acesso.test.tsx:477-487`) | - |
-| h1 per route (11) | `Menu` in `web/src/Autenticado.tsx:18-28` (9) + `chamados/:numero` + `trocar-senha` | C9, 11 cases | - |
-| role precedence (3) | `Papeis` in `Autenticado.tsx` | C10, 3 cases | - |
-| action menu by row state (7) | conditions in `Usuarios.tsx:52`, `Artigos.tsx:75,80`, Documentos | C25, 7 cases | - |
-| no-scroll widths (6) x screens (15) | AC 13 / `Telas` in `web/e2e/simulada.ts` | C13 | - |
-| highlights (4) and compacts (9) | `## Screens` | C16, C18 | - |
-| Indicadores grid breakpoints: highlights 576/1024, compacts 768, rankings 896, toolbar 768 | `## Screens` | C17 (360/1280/1440), C18, C19; toolbar in "arranjo Indicadores" (360/1280) | - |
-| lists as tables (7) | AC 21 | C21 | - |
-| "largo" screens (5) | `## Screens` | C22, all 5 | - |
-| empty (6) | AC 24 | C24 | - |
-| detail states (2) | AC 28/29 | C28 · C29 | - |
-| access screens (4 + Trocar senha exception) | `## Screens` ("Login, Primeiro acesso, Definir senha", "raiz", and "Trocar senha até 384 px" in "área principal") | Login, Primeiro acesso, Definir senha, root -> C32 | Trocar senha 384 px: no check; code is 420 px (`Acesso.tsx:185`) |
-| Indicadores states under AC 20 (4) | AC 20 / C20 claim | period form `indicadores.test.tsx:190-196` · empty `:29` · error `textos.test.tsx:64` | "Spinner" in "Consultar": named in C20, no assertion anywhere |
-| themes for sidebar tokens (3) | `index.css` | C35, 3 themes | - |
+| access width caps (4 screens + Trocar senha) | `## Screens` "Login, Primeiro acesso, Definir senha", "raiz", "área principal" exception | Login, Primeiro acesso, Definir senha, raiz -> C32 · Trocar senha 384 -> C39 (`arranjo.spec.ts:881`) | - |
+| Indicadores states under AC 20 (4) | AC 20 / C20 claim | period form `indicadores.test.tsx:219-225` · empty `:29` · error `textos.test.tsx:64` and C45 e2e `:986-998` (500) · Spinner `indicadores.test.tsx:55-56` | - |
+| user button parts (3) | `## Screens` "casca, barra aberta" | initials square C40 `:894` · name/role 2 truncated lines `:899-900` · `ChevronsUpDown` `:901` | - |
+| user menu items in order (3) and side (2) | `## Screens` "menu do usuário" | name+role, separator, Sair -> C41 `:918` · right (open bar) `:915` · above (mobile) `:916` | - |
+| sidebar surface facts (3) | `## Screens` "casca, barra aberta" | background C42 `:948` · right border `:949` · institution wrap `:952-954` | - |
+| Indicadores alerts (2 kinds × 2 widths) | `## Screens` "vazio / erro / carregando" | C45, loop over `[semDados 200, erro 500] × [360, 1280]` `:997-998` | - |
+| breakpoint sides newly measured (3 breakpoints × 2 sides) | `## Screens` header, access, highlight rows | header 768/1024 C46 `:964` · access 360/768 `:971` · card <250/>=250 `:980-981` | - |
+| row-action pending feedback (3 screens: Artigos {Ativar, Arquivar}, Documentos {Nova versão, Arquivar}, Usuários {Desativar}) | the code: `MenuAcoes` `pendente` in `Tabela.tsx:52-57`, passed at `Artigos.tsx:73`, `Documentos.tsx:64`, `Usuarios.tsx:53` | Artigos (shared `pendente` prop, both items) -> C47 `artigos.test.tsx:104-108` | Usuários (Desativar) and Documentos (Nova versão, Arquivar): no proof; F2 survived |
+| restored exact assertions (2 files) | round-1 gap 5 | `usuarios.test.tsx:35` · `listas.test.tsx:49-50,57-58` | - |
+| sidebar states (3), one-barra values (4), h1 per route (11), role precedence (3), action menu by row state (7), no-scroll widths (6) × screens (15), highlights (4) and compacts (9), Indicadores grid breakpoints, lists as tables (7), "largo" screens (5), empty (6), detail states (2), sidebar-token themes (3) | carried from a3bd34d | carried from a3bd34d; every proof re-ran green at ef737f1 | - |
 
 ## Test policy rows
 
+Verified at ef737f1 for the unmet row and for the rows classifying touched files (`Acesso.tsx`, `Tabela.tsx`, `Usuarios.tsx`, `Artigos.tsx`, `Documentos.tsx`). The other rows are carried from a3bd34d.
+
 | Row | Files it classifies | Required proof | Expectation met |
 | --- | --- | --- | --- |
-| route -> title map, role precedence, initial sidebar state (decide) | `web/src/Autenticado.tsx` | Vitest, one case per row: C9 (11), C10 (3), C3 (4) | yes |
-| action-menu conditions (decide) | `Usuarios.tsx`, `Artigos.tsx`, `Documentos.tsx` | Vitest, one case per row state: C25 (7) | yes |
-| arrangement and container queries | `Autenticado.tsx`, `Tabela.tsx`, `Cabecalho.tsx`, `Indicadores.tsx`, `ChamadoDetalhe.tsx`, `Cadastros.tsx`, `Acesso.tsx`, `Assistente.tsx` | Playwright on each side of every breakpoint in `## Screens` | gap: no measurement for header padding 16 -> 24 px at 1024 px; access-card padding 24 -> 40 px at 768 px (only 360 px is measured); highlight value 24 -> 30 px at a 250 px card (`@[250px]/card`). Trocar senha is measured against 420, not 384. Every other breakpoint is measured on both sides |
-| components copied into `web/src/ui/` | `sidebar.tsx`, `sheet.tsx`, `dropdown-menu.tsx`, `separator.tsx`, `skeleton.tsx`, `use-mobile.ts` | none of their own; covered by the screens | yes (crapper 0; worst `Sidebar` 9.8) |
+| route -> title map, role precedence, initial bar state (decide) | `web/src/Autenticado.tsx` | Vitest, one case per row: C9 (11), C10 (3), C3 (4) | yes (carried from a3bd34d; re-ran green) |
+| action-menu conditions (decide) | `Usuarios.tsx`, `Artigos.tsx`, `Documentos.tsx` | Vitest, one case per row state: C25 (7) | yes - `pendente` adds no new condition on which actions appear; C25's 7 cases re-ran green |
+| arrangement and container queries | `Autenticado.tsx`, `Tabela.tsx`, `Cabecalho.tsx`, `Indicadores.tsx`, `ChamadoDetalhe.tsx`, `Cadastros.tsx`, `Acesso.tsx`, `Assistente.tsx` | Playwright on each side of every breakpoint in `## Screens` | yes - the three round-1 misses are now measured on both sides (C46 `:964`, `:971`, `:980-981`), and Trocar senha is measured against 384 (C39). Every other breakpoint keeps its measurement on both sides from round 1. The values with no breakpoint that stay uncovered are a step-1 finding (Binding sources), not this row's |
+| components copied into `web/src/ui/` | `sidebar.tsx`, `sheet.tsx`, `dropdown-menu.tsx`, `separator.tsx`, `skeleton.tsx`, `use-mobile.ts` | none of their own | yes (carried; crapper 0, worst `Sidebar` 9.8) |
 
-Swept, the `existing` rows re-read against the code: `ErroDe`/`Situacao` above the table (`Usuarios.tsx:127-129`, `Artigos.tsx:143-144`); `Menu` filtered by role (`Autenticado.tsx:238`); `radix-ui` installed (`web/package.json:29`). All hold.
-
-Points the builders flagged:
-
-- **C20, `@3xl/main` -> `@4xl/main`.** The net diff from base is `md:grid-cols-2` -> `@4xl/main:grid-cols-2` at `indicadores.test.tsx:65`. The changed assertion is about the rankings' arrangement, which AC 19 (896 px) and door 5 change. The value assertions (`:45-61`) are untouched. Not a weakening, but C20's text needs to name the exception (precision gap).
-- **e2e rewrites.** The 8 batch-2 rewrites, the new numbers in "arranjo telas de acesso" (card x 24, <= 384) and "arranjo Assistente" at 1440 match `## Screens`. Shell assertions were deleted and not replaced: `--sidebar` background, right border, institution on <= 2 lines with no ellipsis, group titles 12 px with 24 px between groups (the old "barra lateral a N px" and "grupos na barra lateral" tests). Those facts are still in `## Screens` (see Binding sources). The line `arranjo.spec.ts:374` kept `<= 420` for Trocar senha, which contradicts the 384 in `## Screens`.
-- **Unchanged-behaviour Vitest assertions, slightly weakened.** `web/src/administracao/usuarios.test.tsx:34` went from `querySelectorAll('.text-sm')[1]).toHaveTextContent(/^Aluno$/)` (a user with no sectors shows exactly "Aluno") to a substring, so trailing sectors would pass. `web/src/chamados/listas.test.tsx` lost the `$` anchor of `/Boleto · sem responsável · 1 dia$/`. Both were adapted to the table, and Impact does not list them. They are minor and do not affect any API call (C33 stays green), but they are weakenings.
-- **"Ativar" without the Spinner.** No check and no test, at base or HEAD, asserts pending feedback on "Ativar". The base tests never looked for a Spinner in `conhecimento/`. The item is `disabled={pendente}` (`Artigos.tsx:76`), and C25 and C27 only fix which actions appear and the flows. It contradicts no check or test, but it is a small visible deviation from AC 27 ("as today"), recorded in Handoff as Abandoned.
-- **`REESCRITOS` vs `## Handoff`.** All 9 entries match "Settled mid-build (1)". Batches 2 and 3 added none, as declared.
+Swept `existing` rows: carried from a3bd34d. The fix touched none of `ErroDe`/`Situacao`, the `Menu` role filter or `radix-ui`.
 
 ## Faults injected
 
-Isolation: `git worktree add <scratchpad>/wt HEAD` with `node_modules` as a junction (removed with `rmdir` before `git worktree remove --force`). The real tree's `git status --porcelain` was the same before and after (`?? .idea/`, `?? .playwright-mcp/`). For the e2e faults, the worktree was built with `vite build` and served with `vite preview --port 4179`, with `E2E_URL=http://localhost:4179`. A control test ("painel recolher e expandir") passed in each run, and the fault was confirmed in the served bundle.
+Verified at ef737f1. Isolation: `git worktree add <scratchpad>/wt2 HEAD` with `web/node_modules` as a junction, removed with `rmdir` before `git worktree remove --force`. The leftover `vite preview` process was stopped and the directory deleted. `git worktree list` shows only `D:/one-system`. Real-tree porcelain before and after: `?? .idea/`, `?? .playwright-mcp/`, identical.
+
+E2e faults ran against `npx vite build` + `npx vite preview --port 4179` from the worktree with `E2E_URL=http://localhost:4179`. Each was confirmed in the served bundle. The control "painel recolher e expandir" passed in every run, and each later run showed the earlier fault reverted: after F3 the `420px` count went back to 0, and C41 passed again under F5.
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| route -> title: `if (numero) return numero` disabled (detail h1 is empty) | `web/src/Autenticado.tsx:80` | yes - C9 "título do cabeçalho por rota (chamados/ONE-7)" failed |
-| initial state: `!== 'recolhida'` -> `=== 'aberta'` (absent or unknown starts collapsed) | `web/src/Autenticado.tsx` `useBarra` | yes - C3 "(null)" and "(xyz)" failed |
-| menu condition: "Ativar" only for `RASCUNHO` (ARQUIVADO loses it) | `web/src/conhecimento/Artigos.tsx:75` | yes - C25 "ações de artigo no menu" failed |
-| "largo" columns from `@xl/main` (576) instead of `@2xl/main` (672) | `web/src/Tabela.tsx:8` | yes - C14 "colunas pela largura do main" failed (at 900 open: 6 columns). C22 alone survives it: it only measures 360 and 1280 |
-| detail two columns from `@4xl/main` (896) instead of `@5xl/main` | `web/src/chamados/ChamadoDetalhe.tsx:269` | yes - C29 "detalhe em uma coluna a 1280 px" failed |
+| F1 `MenuAcoes` never shows the Spinner while pending (`{pendente ? <Spinner /> : <EllipsisVertical/>}` -> always the ellipsis) | `web/src/Tabela.tsx:57` | yes - C47 "ações de linha mostram o Spinner enquanto gravam" failed |
+| F2 Usuários and Documentos stop passing `pendente` to `MenuAcoes` | `web/src/administracao/Usuarios.tsx:53`, `web/src/conhecimento/Documentos.tsx:64` | no - full `npx vitest run` 273/273 green; no e2e reaches a pending save |
+| F3 Trocar senha back to `max-w-[420px]` | `web/src/acesso/Acesso.tsx:185` | yes - C39 "Trocar senha até 384 px" and "arranjo telas de acesso" failed (`Expected: <= 384, Received: 420`) |
+| F4 user menu side swapped (`isMobile ? 'right' : 'top'`) | `web/src/Autenticado.tsx:148` | yes - C41 "menu do usuário abre ao lado" failed at `:915` "à direita do botão" |
+| F5 header loses `lg:px-6` | `web/src/Autenticado.tsx:194` | yes - C46 "quebras medidas dos dois lados" failed: "cabeçalho a 1024 px", expected `24px`, received `16px` |
 
 ## Gate
 
-- `cd web && npx vitest run --reporter=verbose` - 271 passed, 0 failed
-- `cd web && npx playwright test --reporter=list` (container `api` rebuilt from a3bd34d) - 66 passed, 0 failed
-- `python .specs/features/layout-painel/chamadas_iguais.py dac2832` - exit 0, 238 base tests, 0 problems; `--autoteste` ok
-- `crapper --use-existing-coverage -s src --threshold 9.99` - exit 0; `dryer ... --threshold 0.8` - "No duplicate candidates found"; `npm --prefix web run build` - exit 0
-- `mutator` - not run, suspended (AD-025)
+Verified at ef737f1.
+
+- `cd web && npx vitest run --reporter=verbose`: 273 passed, 0 failed
+- `docker compose up -d --build api`, then `cd web && npx playwright test --reporter=list`: 72 passed, 0 failed, no retries
+- `npm --prefix web install vaul@1.1.2 --no-save`, then `python .specs/features/layout-painel/chamadas_iguais.py dac2832`: exit 0, 238 base tests, 0 problems. `--autoteste` ok. `npm --prefix web install` restored `node_modules` (`vaul` gone); nothing committed; porcelain unchanged
+- `npm --prefix web run coverage`, then `crapper --use-existing-coverage -s src --threshold 9.99`: exit 0. Worst: `Sidebar` 9.8
+- dryer (the C36 command) with `grep -q "No duplicate candidates found"`: exit 0
+- `npm --prefix web run build`: exit 0
+- `mutator`: not run, suspended by user decision (AD-025)
 
 Ranked gaps:
 
-1. **Trocar senha width differs from `## Screens`, with no check.** `## Screens` says "Trocar senha até 384 px"; the code is `max-w-[420px]` (`web/src/acesso/Acesso.tsx:185`), the e2e asserts `<= 420` (`web/e2e/arranjo.spec.ts:374`), and no check covers it.
-2. **Composition uncovered.** User button and user menu (initials square, 2 lines, chevron; name/role, separator, Sair; side right or top); "Novo" on the Cadastros tabs row; Indicadores `Alert` below the toolbar; sheet overlay; the institution wrap, `--sidebar` background and border, whose asserts were deleted and not replaced.
-3. **`Test policy` arrangement row unmet.** No measurement on the far side of: header padding at 1024 px, access-card padding at 768 px, highlight value at `@[250px]/card`. More generally, no exemption list names the spacing and type values of `## Screens` per screen.
-4. **C20 Spinner unproven, and C20's wording.** The Spinner has no assertion; "sem mudança de asserção" is false by one justified class change.
-5. **Two unchanged-behaviour Vitest assertions slightly weakened.** `usuarios.test.tsx:34` and the `$` dropped in `listas.test.tsx`.
+1. **C47 proven on one screen of three; mutant F2 survived.** Removing `pendente` from `MenuAcoes` in Usuários (`web/src/administracao/Usuarios.tsx:53`) and Documentos (`web/src/conhecimento/Documentos.tsx:64`) leaves every test green. Desativar, Nova versão and the Documentos Arquivar have no proof. The claim's "como os botões soltos de hoje" is also false for those three: at `dac2832` only "Ativar" had a Spinner. This is a precision gap in C47.
+2. **`## Exempted` is partial; `## Screens` values are neither checked nor exempted.**
+   - Still open from round 1: header icon buttons 36 px; highlight footer 14 px `muted` on one line; compact label 14 px; table header text 14 px weight 500; empty-row text centred (AC 24 "centred").
+   - Found this round: Trocar senha horizontal centring in the `main`; header bottom border; `h1` single truncated line; table box border and row borders; value weight 600 in highlights and compacts; compact `tabular-nums`; sidebar group region scrolling; the initials square on the collapsed bar.

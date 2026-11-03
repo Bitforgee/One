@@ -26,6 +26,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: verification.md F5; web/src/test/interface.test.ts:95 (web) (+2 more)
 - last seen: 2026-11-03T06:10:38Z
 
+### L-049 - Dê um check a cada valor de ## Visual e a cada frase de arranjo de ## Screens, inclusive às notas acrescentadas durante o build.
+- signal: `ac_gap` · recurrence: 2 feature(s) · scope: `specs/ui` · harmful: 0
+- features: redesign-institucional, layout-painel
+- evidence: plan.md ## Visual e ## Screens linha 0 (verification rodadas 1 e 2) (specs/ui) (+1 more)
+- last seen: 2026-11-03T16:30:49Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -300,12 +306,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md C25 (verification rodada 1, gap 1) (specs/checks)
 - last seen: 2026-11-03T12:33:37Z
 
-### L-049 - Dê um check a cada valor de ## Visual e a cada frase de arranjo de ## Screens, inclusive às notas acrescentadas durante o build.
-- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/ui` · harmful: 0
-- features: redesign-institucional
-- evidence: plan.md ## Visual e ## Screens linha 0 (verification rodadas 1 e 2) (specs/ui)
-- last seen: 2026-11-03T12:33:37Z
-
 ### L-050 - Ajuste visual feito depois da aprovação entra como nota em ## Screens e num check antes do commit que o fecha.
 - signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
 - features: redesign-institucional
@@ -359,6 +359,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: layout-painel
 - evidence: web/src/administracao/usuarios.test.tsx:34 (web-tests)
 - last seen: 2026-11-03T15:51:12Z
+
+### L-059 - When several screens pass the same new prop to a shared component, give each screen its own case; a test on one screen leaves the other screens' wiring without proof
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: layout-painel
+- evidence: F2 web/src/administracao/Usuarios.tsx:53, web/src/conhecimento/Documentos.tsx:64 (C47) (web-tests)
+- last seen: 2026-11-03T16:30:49Z
+
+### L-060 - Before a check says a list of actions behaves as today, read the base behaviour of each action; extending one action's behaviour to the rest misstates the base
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: layout-painel
+- evidence: C47; dac2832 web/src/conhecimento/Artigos.tsx:77 (specs/checks)
+- last seen: 2026-11-03T16:30:49Z
 
 ## Quarantined (failed when applied - ignore)
 
