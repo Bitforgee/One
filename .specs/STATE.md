@@ -33,9 +33,9 @@
 
 ## Handoff
 
-**Feature**: Etapa 4c: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio`, `tempo-real-signalr` (PASS rodada 2, 03/11) verificados; `interface-nova` concluída com o C7 aberto (AD-026). AD-022 fica `planned` até o Web Push, a outra metade dela
-**In progress**: build de `web-push`, lote 1 (S1–S3, servidor), base `f30a358`; provas por diff comparam com o HEAD do início do build
-**Next step**: lote 2 de `web-push` (S4, service worker e botão), verificação; depois Etapa 5 (dados, IA real, ensaio)
-**Blockers**: chave da OpenAI no `.env`; par VAPID de produção; perguntas `blocks go-live`
+**Feature**: Etapa 4c concluída em 03/11: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio`, `tempo-real-signalr` e `web-push` (PASS rodada 2) verificados; `interface-nova` concluída com o C7 aberto (AD-026); AD-019 a AD-024 ativas
+**In progress**: nothing
+**Next step**: Etapa 5 (09–19/11): chave da OpenAI no `.env`, dados reais da Univag, medição da conferência de trechos com a IA real, ensaio; congelamento a partir de 17/11
+**Blockers**: chave da OpenAI no `.env`; par VAPID de produção; hospedagem e SMTP (16/11); perguntas `blocks go-live`; repositório remoto do grupo não criado
 **Uncommitted**: nothing
 **Branch**: main
