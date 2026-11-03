@@ -28,6 +28,8 @@ GET /api/anexos/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/artigos/versoes/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/indicadores anonimo=False autorizacao=True limite=-
 GET /api/documentos/versoes/{id:long} anonimo=False autorizacao=True limite=-
+POST /api/tempo-real/negotiate anonimo=False autorizacao=True limite=-
+* /api/tempo-real anonimo=False autorizacao=True limite=-
 GET /api/admin/usuarios anonimo=False autorizacao=True limite=-
 POST /api/admin/usuarios anonimo=False autorizacao=True limite=-
 PUT /api/admin/usuarios/{id:long} anonimo=False autorizacao=True limite=-

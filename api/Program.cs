@@ -52,7 +52,9 @@ public class Program
 
     static void Servicos(IServiceCollection s)
     {
-        s.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()));
+        s.AddSignalR();
+        s.AddSingleton<AvisarMudanca>();
+        s.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()).AddInterceptors(sp.GetRequiredService<AvisarMudanca>()));
         s.TryAddSingleton(TimeProvider.System);
         s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
         s.AddSingleton<Email>();
@@ -138,6 +140,11 @@ public class Program
         AdminRotas.Mapear(api);
         IndicadorRotas.Mapear(api);
         DocumentoRotas.Mapear(api);
+        api.MapHub<TempoRealHub>("/tempo-real").Add(b =>
+        {
+            // o negotiate só atende POST; o endpoint do WebSocket também atende o long polling (GET, POST, DELETE) e fica sem restrição
+            if (b is RouteEndpointBuilder { RoutePattern.RawText: { } t } && t.EndsWith("/negotiate", StringComparison.Ordinal)) b.Metadata.Add(new HttpMethodMetadata(["POST"]));
+        });
 
         app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
         app.MapFallbackToFile("index.html");

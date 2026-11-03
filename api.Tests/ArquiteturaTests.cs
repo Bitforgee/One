@@ -1022,4 +1022,61 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var chave in new[] { "Endpoint", "Chave", "Segredo", "Bucket" })
             Assert.Contains($"Armazenamento__{chave}:", api);
     }
+
+    static IEnumerable<string> ArquivosDaApi() =>
+        Directory.EnumerateFiles(Path.Combine(Raiz(), "api"), "*.cs", SearchOption.AllDirectories)
+            .Where(a => !a.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !a.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"));
+
+    // tempo-real-signalr C15: o contrato do hub (door 1); nada em fluxo, a resposta da IA vai inteira (AD-012)
+    [Fact]
+    public void Contrato_do_hub()
+    {
+        var metodos = typeof(One.Api.Chamados.TempoRealHub).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
+        Assert.Equal(["EntrarNaFila()", "EntrarNoChamado(String)", "SairDoChamado(String)"],
+            metodos.Select(m => $"{m.Name}({string.Join(",", m.GetParameters().Select(p => p.ParameterType.Name))})").Order());
+        Assert.All(metodos, m => Assert.Equal(typeof(Task), m.ReturnType));
+
+        var hub = f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Where(e => e.Metadata.GetMetadata<Microsoft.AspNetCore.SignalR.HubMetadata>()?.HubType == typeof(One.Api.Chamados.TempoRealHub)).ToList();
+        Assert.Equal(["/api/tempo-real", "/api/tempo-real/negotiate"], hub.Select(e => e.RoutePattern.RawText).Order());
+    }
+
+    // tempo-real-signalr C16: os nomes dos grupos num arquivo só, com a instituição vinda do usuário relido
+    [Fact]
+    public void Grupos_num_so_lugar()
+    {
+        var comNome = ArquivosDaApi().Where(a => Regex.IsMatch(File.ReadAllText(a), @"\x22[^\x22\r\n]*\b(chamado|fila):")).Select(Path.GetFileName).ToList();
+        Assert.Equal(["TempoRealGrupos.cs"], comNome);
+        var hub = File.ReadAllText(Path.Combine(Api, "Chamados", "TempoRealHub.cs"));
+        var usos = Regex.Matches(hub, @"TempoRealGrupos\.\w+\((\w+(?:\.\w+)*)").Select(m => m.Groups[1].Value).ToList();
+        Assert.NotEmpty(usos);
+        Assert.All(usos, u => Assert.Equal("u.InstituicaoId", u));
+        Assert.DoesNotMatch(@"(?i)public async Task \w+\([^)]*instituicao", hub);
+    }
+
+    // tempo-real-signalr C31: o único envio por IHubContext fica no interceptador e só leva os dois nomes (door 1, door 4)
+    [Fact]
+    public void Hub_so_envia_ChamadoMudou_e_FilaMudou()
+    {
+        var usam = ArquivosDaApi().Where(a => File.ReadAllText(a).Contains("IHubContext")).Select(Path.GetFileName).ToList();
+        Assert.Equal(["AvisarMudanca.cs"], usam);
+        var nomes = ArquivosDaApi().SelectMany(a => Regex.Matches(File.ReadAllText(a), @"\.SendAsync\(\x22(\w+)\x22").Select(m => m.Groups[1].Value)).Order().ToList();
+        Assert.Equal(["ChamadoMudou", "FilaMudou"], nomes);
+    }
+
+    // tempo-real-signalr C32: AddSignalR, MapHub e o registro do aviso só no Program, que o host real, o comando e o OneFactory usam (door 4)
+    [Fact]
+    public void Aviso_registrado_so_no_Program()
+    {
+        var program = File.ReadAllText(Path.Combine(Api, "Program.cs"));
+        foreach (var termo in new[] { "AddSignalR(", "MapHub<TempoRealHub>(", "AddInterceptors(sp.GetRequiredService<AvisarMudanca>())" })
+        {
+            Assert.Contains(termo, program);
+            Assert.Equal(["Program.cs"], ArquivosDaApi().Where(a => File.ReadAllText(a).Contains(termo)).Select(Path.GetFileName));
+        }
+        var infra = Directory.EnumerateFiles(Path.Combine(Raiz(), "api.Tests", "Infra"), "*.cs").Select(File.ReadAllText).ToList();
+        foreach (var termo in new[] { "AddSignalR", "MapHub", "AvisarMudanca" })
+            Assert.DoesNotContain(infra, t => t.Contains(termo));
+        Assert.True(program.IndexOf("Servicos(builder.Services)", StringComparison.Ordinal) < program.IndexOf("InstituicaoComando.Executar", StringComparison.Ordinal));
+    }
 }
