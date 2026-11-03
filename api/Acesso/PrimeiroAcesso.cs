@@ -4,10 +4,14 @@ using One.Api.Dados;
 
 namespace One.Api.Acesso;
 
-public sealed record PrimeiroAcesso(PrimeiroAcessoIn Corpo) : IRequest<IResult>
+public sealed record PrimeiroAcesso(PrimeiroAcesso.Entrada Corpo) : IRequest<IResult>
 {
+    public sealed record Entrada(string? Instituicao, string? Cpf);
+
+    public sealed record Resposta(string Mensagem);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/auth/primeiro-acesso", (PrimeiroAcessoIn i, IMediator m) => m.Send(new PrimeiroAcesso(i))).AllowAnonymous().RequireRateLimiting("auth");
+        g.MapPost("/auth/primeiro-acesso", (PrimeiroAcesso.Entrada i, IMediator m) => m.Send(new PrimeiroAcesso(i))).AllowAnonymous().RequireRateLimiting("auth");
 }
 
 public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email email, IConfiguration cfg, ILogger<Email> log) : IRequestHandler<PrimeiroAcesso, IResult>
@@ -41,6 +45,6 @@ public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email 
                 }
             }
         }
-        return Results.Json(new { mensagem = Mensagem }, statusCode: 202);
+        return Results.Json(new PrimeiroAcesso.Resposta(Mensagem), statusCode: 202);
     }
 }

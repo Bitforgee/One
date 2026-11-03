@@ -5,10 +5,12 @@ using One.Api.Dados;
 
 namespace One.Api.Acesso;
 
-public sealed record DefinirSenha(DefinirSenhaIn Corpo) : IRequest<IResult>
+public sealed record DefinirSenha(DefinirSenha.Entrada Corpo) : IRequest<IResult>
 {
+    public sealed record Entrada(string? Token, string? NovaSenha);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/auth/definir-senha", (DefinirSenhaIn i, IMediator m) => m.Send(new DefinirSenha(i))).AllowAnonymous();
+        g.MapPost("/auth/definir-senha", (DefinirSenha.Entrada i, IMediator m) => m.Send(new DefinirSenha(i))).AllowAnonymous();
 }
 
 public sealed class DefinirSenhaHandler(OneDb db, TimeProvider relogio, IPasswordHasher<Usuario> hasher) : IRequestHandler<DefinirSenha, IResult>

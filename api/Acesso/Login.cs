@@ -9,12 +9,19 @@ using One.Api.Dados;
 namespace One.Api.Acesso;
 
 // door 6: o handler devolve o principal e a resposta; o cookie é emitido no lambda, que tem o HttpContext.
-public sealed record Entrada(ClaimsPrincipal? Principal, IResult Resposta);
+public sealed record ResultadoLogin(ClaimsPrincipal? Principal, IResult Resposta);
 
-public sealed record Login(LoginIn Corpo) : IRequest<Entrada>
+public sealed record Login(Login.Entrada Corpo) : IRequest<ResultadoLogin>
 {
+    public sealed record Entrada(string? Instituicao, string? Cpf, string? Senha);
+
+    public sealed record Resposta(long Id, string Nome, IReadOnlyList<string> Papeis, bool DeveTrocarSenha, Resposta.DaInstituicao Instituicao)
+    {
+        public sealed record DaInstituicao(string Slug, string Nome);
+    }
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/auth/login", async (LoginIn i, HttpContext ctx, IMediator m) =>
+        g.MapPost("/auth/login", async (Login.Entrada i, HttpContext ctx, IMediator m) =>
         {
             var e = await m.Send(new Login(i));
             if (e.Principal is { } p) await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, p);
@@ -22,14 +29,14 @@ public sealed record Login(LoginIn Corpo) : IRequest<Entrada>
         }).AllowAnonymous().RequireRateLimiting("auth");
 }
 
-public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IRequestHandler<Login, Entrada>
+public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IRequestHandler<Login, ResultadoLogin>
 {
     const string CredenciaisInvalidas = "CPF ou senha inválidos.";
 
     // Hash de uma senha qualquer: o login com CPF desconhecido gasta o mesmo tempo que o de CPF existente.
     static readonly string HashFicticio = new PasswordHasher<Usuario>().HashPassword(new Usuario(), "senha-ficticia");
 
-    public async ValueTask<Entrada> Handle(Login m, CancellationToken ct)
+    public async ValueTask<ResultadoLogin> Handle(Login m, CancellationToken ct)
     {
         var i = m.Corpo;
         var cpf = Cpf.Normalizar(i.Cpf);
@@ -47,13 +54,7 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
         var confere = hasher.VerifyHashedPassword(u ?? new Usuario(), podeEntrar ? u!.SenhaHash! : HashFicticio, i.Senha) != PasswordVerificationResult.Failed;
         if (!podeEntrar || !confere) return new(null, Problemas.Erro(401, CredenciaisInvalidas));
 
-        return new(Sessao.Principal(u!), Results.Ok(new
-        {
-            id = u!.Id,
-            nome = u.Nome,
-            papeis = u.Papeis.Select(p => p.Papel),
-            deveTrocarSenha = u.DeveTrocarSenha,
-            instituicao = new { slug = instituicao!.Slug, nome = instituicao.Nome },
-        }));
+        return new(Sessao.Principal(u!), Results.Ok(new Login.Resposta(u!.Id, u.Nome, [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,
+            new Login.Resposta.DaInstituicao(instituicao!.Slug, instituicao.Nome))));
     }
 }

@@ -4,10 +4,12 @@ using static One.Api.Chamados.AcoesChamado;
 
 namespace One.Api.Chamados;
 
-public sealed record ResolverChamado(string Numero, ResolverIn Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
+public sealed record ResolverChamado(string Numero, ResolverChamado.Entrada Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
+    public sealed record Entrada(string? Texto);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/chamados/{numero}/resolver", (string numero, ResolverIn i, HttpContext ctx, IMediator m) => m.Send(new ResolverChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
+        g.MapPost("/chamados/{numero}/resolver", (string numero, ResolverChamado.Entrada i, HttpContext ctx, IMediator m) => m.Send(new ResolverChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
 
     public string Acao => "resolver";
 

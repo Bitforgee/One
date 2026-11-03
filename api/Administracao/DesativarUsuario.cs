@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Administracao.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
@@ -24,6 +25,6 @@ public sealed class DesativarUsuarioHandler(OneDb db, TimeProvider relogio) : IR
         foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
             c.DevolverAFila(adminId, u.Nome, agora);
         await db.SaveChangesAsync();
-        return Results.Ok(await UsuarioRotas.Saida(db, u));
+        return Results.Ok(await UsuarioResposta.De(db, u));
     }
 }

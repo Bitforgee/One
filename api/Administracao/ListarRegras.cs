@@ -1,5 +1,6 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
@@ -12,5 +13,5 @@ public sealed record ListarRegras : IRequest<IResult>
 public sealed class ListarRegrasHandler(OneDb db) : IRequestHandler<ListarRegras, IResult>
 {
     public async ValueTask<IResult> Handle(ListarRegras m, CancellationToken ct) =>
-        Results.Ok((await db.Regras.OrderBy(r => r.Id).ToListAsync()).Select(RegraRotas.Saida));
+        Results.Ok((await db.Regras.OrderBy(r => r.Id).ToListAsync()).Select(RegraResposta.De));
 }

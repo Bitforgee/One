@@ -3,11 +3,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace One.Api.Acesso;
 
-public record LoginIn(string? Instituicao, string? Cpf, string? Senha);
-public record PrimeiroAcessoIn(string? Instituicao, string? Cpf);
-public record DefinirSenhaIn(string? Token, string? NovaSenha);
-public record TrocarSenhaIn(string? SenhaAtual, string? NovaSenha);
-
 public static class AuthRotas
 {
     public const string CpfInvalido = "CPF inválido.";

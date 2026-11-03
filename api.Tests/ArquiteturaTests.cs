@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql;
@@ -444,7 +446,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
             foreach (var c in t.GetConstructors())
                 Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
-        var montar = Assert.Single(typeof(One.Api.Chamados.DetalheChamado).GetMethods(), m => m.Name == "Montar");
+        var montar = Assert.Single(typeof(One.Api.Chamados.Shared.DetalheChamado).GetMethods(), m => m.Name == "Montar");
         Assert.DoesNotContain(typeof(HttpContext), montar.GetParameters().Select(p => p.ParameterType));
         Assert.Empty(ArquivosQue(new Regex("IHttpContextAccessor")));
     }
@@ -659,5 +661,253 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
                 : p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null)]);
         var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
         Assert.Equal(["assumir", "cancelar", "confirmar", "duplicado", "encaminhar", "nota", "reclassificar", "rejeitar", "resolver", "responder"], nomes.Order());
+    }
+
+    // ---- dominio-e-contratos S2: contratos nomeados ----
+
+    static readonly System.Reflection.BindingFlags Declarados = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+        | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly;
+
+    static string CodigoDe(params string[] relativo) => SemComentarios(Path.Combine([Api, .. relativo]));
+
+    // C13: objeto anônimo só nos 6 arquivos que o enunciado lista, e nenhum deles monta resposta HTTP (menos o de indicadores)
+    [Fact]
+    public void Objetos_anonimos_so_fora_das_respostas()
+    {
+        var anonimo = new Regex(@"\bnew\s*\{");
+        var esperado = new Dictionary<string, int>
+        {
+            ["Agendador.cs"] = 1, ["Assistente/Assistente.cs"] = 8, ["Assistente/Embeddings.cs"] = 1,
+            ["Conhecimento/Fontes.cs"] = 4, ["Indicadores/ConsultarIndicadores.cs"] = 2, ["Dados/OneDb.cs"] = 11,
+        };
+        var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
+        Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
+        Assert.Equal(27, achados.Values.Sum());
+        foreach (var arquivo in esperado.Keys.Except(["Indicadores/ConsultarIndicadores.cs"]))
+            Assert.DoesNotMatch(@"\b(Typed)?Results\.", CodigoDe(arquivo.Split('/')));
+        var indicadores = CodigoDe("Indicadores", "ConsultarIndicadores.cs");
+        Assert.Equal(["Results.Ok"], Regex.Matches(indicadores, @"\b(Typed)?Results\.\w+").Select(m => m.Value));
+        Assert.Contains("Results.Ok(CalculoIndicadores.Calcular(", indicadores);
+        Assert.Equal(typeof(One.Api.Indicadores.Resultado), typeof(One.Api.Indicadores.CalculoIndicadores).GetMethod("Calcular")!.ReturnType);
+    }
+
+    static readonly string[] AsEntradas =
+    [
+        "Login", "PrimeiroAcesso", "DefinirSenha", "TrocarSenha", "CriarSetor", "AlterarSetor", "CriarCategoria", "AlterarCategoria", "CriarCurso", "AlterarCurso",
+        "CriarRespostaPronta", "AlterarRespostaPronta", "SalvarRegra", "AlterarRegra", "CriarUsuario", "AlterarUsuario", "NovaConversa", "NovaMensagem",
+        "AvaliarConversa", "TransferirConversa", "AtendimentoDireto", "ResolverChamado", "RejeitarChamado", "CancelarChamado", "EncaminharChamado",
+        "ReclassificarChamado", "MarcarDuplicado", "CriarArtigo", "AlterarArtigo",
+    ];
+
+    static IEnumerable<Type> TiposDaApi() => typeof(Program).Assembly.GetTypes()
+        .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && !t.Name.Contains('<'));
+
+    // C14: door 1, o corpo JSON liga num Entrada aninhado na mensagem, um por caso de uso (29)
+    [Fact]
+    public void Entrada_por_caso_de_uso()
+    {
+        var topo = TiposDaApi().Where(t => !t.IsNested).ToList();
+        Assert.DoesNotContain(topo, t => t.Name.EndsWith("In", StringComparison.Ordinal) || t.Name == "Entrada");
+        var login = Assert.Single(topo, t => t.Name == "ResultadoLogin");
+        var parametros = Assert.Single(login.GetConstructors()).GetParameters();
+        Assert.Equal([typeof(System.Security.Claims.ClaimsPrincipal), typeof(IResult)], parametros.Select(p => p.ParameterType));
+        Assert.Equal(["Principal", "Resposta"], parametros.Select(p => p.Name));
+
+        var entradas = TiposDaApi().Where(t => t.IsNested && t.Name == "Entrada").ToList();
+        Assert.Equal(29, entradas.Count);
+        Assert.Equal(AsEntradas.Order(), entradas.Select(t => t.DeclaringType!.Name).Order());
+        var mensagens = Mensagens().Select(m => m.mensagem).ToList();
+        Assert.All(entradas, t => Assert.Contains(t.DeclaringType!, mensagens));
+
+        var endpoints = f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToList();
+        var comCorpo = endpoints.Select(e => (e, corpo: e.Metadata.GetMetadata<Microsoft.AspNetCore.Http.Metadata.IAcceptsMetadata>()))
+            .Where(x => x.corpo is not null && x.corpo.ContentTypes.Contains("application/json")).ToList();
+        Assert.Equal(29, comCorpo.Count);
+        var porNome = Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName));
+        Assert.Equal(entradas.Order(porNome), comCorpo.Select(x => x.corpo!.RequestType!).Order(porNome));
+        // o Entrada de cada rota é o da mensagem cujo Mapear registra aquela rota (verbo e caminho no arquivo do caso)
+        foreach (var (e, corpo) in comCorpo)
+        {
+            var mensagem = corpo!.RequestType!.DeclaringType!;
+            var mapa = Regex.Match(SemComentarios(ArquivoDo(mensagem)), @"\.Map(Get|Post|Put|Delete)\(\s*""([^""]+)""");
+            Assert.True(mapa.Success, mensagem.Name);
+            Assert.EndsWith(mapa.Groups[2].Value, e.RoutePattern.RawText);
+            Assert.Equal(mapa.Groups[1].Value.ToUpperInvariant(), Assert.Single(e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods));
+        }
+    }
+
+    static readonly string[] SemCorpoJson = ["DefinirSenha", "TrocarSenha", "BaixarAnexo", "BaixarVersaoDocumento"];
+
+    static readonly string[] ComRespostaAninhada =
+    [
+        "Login", "PrimeiroAcesso", "Eu", "VerInstituicao", "NovaConversa", "NovaMensagem", "VerConversa", "AvaliarConversa", "TransferirConversa",
+        "AtendimentoDireto", "EncerrarConversa", "ListarChamados", "RespostasProntasDoSetor", "VerVersaoArtigo", "ImportarMatriculas",
+    ];
+
+    static readonly string[] AsNoveAcoes =
+        ["ResponderChamado", "AssumirChamado", "ResolverChamado", "ConfirmarChamado", "RejeitarChamado", "CancelarChamado", "EncaminharChamado", "ReclassificarChamado", "MarcarDuplicado"];
+
+    // (fatia, record de Shared, os casos de uso que o citam)
+    static readonly (string fatia, string record, string[] casos)[] OsNoveShared =
+    [
+        ("Chamados", "DetalheChamado", ["VerChamado", .. AsNoveAcoes]),
+        ("Conhecimento", "ArtigoResposta", ["ListarArtigos", "CriarArtigo", "AlterarArtigo", "AtivarArtigo", "ArquivarArtigo"]),
+        ("Conhecimento", "DocumentoResposta", ["ListarDocumentos", "CriarDocumento", "NovaVersaoDocumento", "ArquivarDocumento"]),
+        ("Administracao", "UsuarioResposta", ["ListarUsuarios", "CriarUsuario", "AlterarUsuario", "DesativarUsuario"]),
+        ("Administracao", "RegraResposta", ["ListarRegras", "SalvarRegra", "AlterarRegra"]),
+        ("Administracao", "SetorResposta", ["ListarSetores", "CriarSetor", "AlterarSetor"]),
+        ("Administracao", "CategoriaResposta", ["ListarCategorias", "CriarCategoria", "AlterarCategoria"]),
+        ("Administracao", "CursoResposta", ["ListarCursos", "CriarCurso", "AlterarCurso"]),
+        ("Administracao", "RespostaProntaResposta", ["ListarRespostasProntas", "CriarRespostaPronta", "AlterarRespostaPronta"]),
+    ];
+
+    // o texto onde o caso de uso cita a própria resposta: o arquivo dele ou, nas 9 ações, o do AgirNoChamado que as embrulha
+    static string TextoDoCaso(Type mensagem) =>
+        SemComentarios(typeof(One.Api.Chamados.IAcaoChamado).IsAssignableFrom(mensagem) ? Path.Combine(Api, "Chamados", "AgirNoChamado.cs") : ArquivoDo(mensagem));
+
+    // C15: door 2, de onde vem o corpo JSON de cada uma das 54 mensagens que respondem com JSON
+    [Fact]
+    public void Resposta_por_caso_de_uso()
+    {
+        var mensagens = Mensagens().Select(m => m.mensagem).ToList();
+        Assert.Equal(58, mensagens.Count);
+        var comJson = mensagens.Where(m => !SemCorpoJson.Contains(m.Name)).ToList();
+        Assert.Equal(54, comJson.Count);
+
+        var aninhadas = TiposDaApi().Where(t => t.IsNested && t.Name == "Resposta" && mensagens.Contains(t.DeclaringType!)).Select(t => t.DeclaringType!.Name).Order().ToList();
+        Assert.Equal(ComRespostaAninhada.Order(), aninhadas);
+        var doShared = OsNoveShared.SelectMany(x => x.casos.Select(c => (caso: c, x.record))).ToDictionary(x => x.caso, x => x.record);
+        Assert.Equal(38, doShared.Count);
+
+        foreach (var m in comJson)
+        {
+            if (m.Name == "ConsultarIndicadores")
+            {
+                Assert.Contains("Results.Ok(CalculoIndicadores.Calcular(", TextoDoCaso(m));
+                Assert.DoesNotContain(m.Name, aninhadas);
+            }
+            else if (ComRespostaAninhada.Contains(m.Name))
+                Assert.Contains(m.GetNestedTypes(), t => t.Name == "Resposta");
+            else
+            {
+                Assert.True(doShared.TryGetValue(m.Name, out var nome), $"{m.Name}: sem Resposta aninhada nem record de Shared");
+                Assert.Matches($@"\b{nome}\b", TextoDoCaso(m));
+                Assert.DoesNotContain(m.Name, aninhadas);
+            }
+        }
+        Assert.Equal(comJson.Count, ComRespostaAninhada.Length + doShared.Count + 1);
+        Assert.All(SemCorpoJson, n => Assert.DoesNotContain(n, aninhadas.Concat(doShared.Keys)));
+
+        // exatamente 9 arquivos em pastas Shared, cada um com 1 record de topo do nome do arquivo e o namespace da fatia
+        var shared = CodigoApi().Where(p => Path.GetRelativePath(Api, p).Split(Path.DirectorySeparatorChar).Contains("Shared")).ToList();
+        Assert.Equal(9, shared.Count);
+        foreach (var arquivo in shared)
+        {
+            var nome = Path.GetFileNameWithoutExtension(arquivo);
+            var fatia = Path.GetRelativePath(Api, arquivo).Split(Path.DirectorySeparatorChar)[0];
+            var codigo = SemComentarios(arquivo);
+            Assert.Equal([nome], TipoDeTopo.Matches(codigo).Select(m => m.Groups[1].Value));
+            Assert.Matches($@"(?m)^public sealed record {nome}\b", codigo);
+            Assert.Matches($@"(?m)^namespace One\.Api\.{fatia}\.Shared;", codigo);
+            Assert.Equal(fatia, OsNoveShared.Single(x => x.record == nome).fatia);
+        }
+        Assert.Equal(OsNoveShared.Select(x => x.record).Order(), shared.Select(Path.GetFileNameWithoutExtension).Order());
+    }
+
+    // C16: cada record de Shared tem 3 ou mais usos, todos na fatia dele, e o nome não aparece em outra fatia
+    [Fact]
+    public void Shared_com_tres_usos_na_fatia()
+    {
+        var mensagens = Mensagens().Select(m => m.mensagem).ToList();
+        foreach (var (fatia, record, casos) in OsNoveShared)
+        {
+            var citam = mensagens.Where(m => m.Namespace == $"One.Api.{fatia}" && Regex.IsMatch(TextoDoCaso(m), $@"\b{record}\b")).Select(m => m.Name).Order().ToList();
+            Assert.True(citam.Count >= 3, $"{record}: {citam.Count} usos");
+            Assert.Equal(casos.Order(), citam);
+            var fora = CodigoApi().Where(p => !Relativo(p).StartsWith(fatia + "/"));
+            Assert.Empty(ArquivosQue(new Regex($@"\b{record}\b"), fora));
+        }
+    }
+
+    // C17: door 1, nenhum campo, propriedade, parâmetro ou retorno tipado object (nem genérico com object); a transcrição é a única exceção
+    static bool ComObject(Type t) =>
+        t == typeof(object) || (t.HasElementType && ComObject(t.GetElementType()!)) || (t.IsGenericType && t.GetGenericArguments().Any(ComObject));
+
+    static IEnumerable<(string onde, Type tipo)> Assinaturas(Type t) =>
+        t.GetFields(Declarados).Select(x => ($"{t.FullName}.{x.Name}", x.FieldType))
+            .Concat(t.GetProperties(Declarados).Select(x => ($"{t.FullName}.{x.Name}", x.PropertyType)))
+            .Concat(t.GetMethods(Declarados).Where(m => m.GetBaseDefinition().DeclaringType != typeof(object)).SelectMany(m => m.GetParameters().Select(p => ($"{t.FullName}.{m.Name}({p.Name})", p.ParameterType)).Append(($"{t.FullName}.{m.Name}()", m.ReturnType))))
+            .Concat(t.GetConstructors(Declarados).SelectMany(c => c.GetParameters().Select(p => ($"{t.FullName}.ctor({p.Name})", p.ParameterType))));
+
+    [Fact]
+    public void Nenhum_corpo_tipado_object()
+    {
+        var detalhe = typeof(One.Api.Chamados.Shared.DetalheChamado);
+        var itens = typeof(IReadOnlyList<object>);
+        var tipos = typeof(Program).Assembly.GetTypes()
+            .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && t.FullName != "One.Api.Assistente.Assistente"
+                && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false) && !t.Name.Contains('<'));
+        var com = tipos.SelectMany(Assinaturas).Where(x => ComObject(x.tipo)).ToList();
+        // a exceção: a transcrição do detalhe (propriedade, parâmetro do construtor e do Deconstruct), onde o item da equipe e o do aluno são records nomeados
+        var restante = com.Where(x => !(x.onde.StartsWith(detalhe.FullName + ".") && x.onde.Contains("Transcricao") && (x.tipo == itens || x.tipo.GetElementType() == itens))).ToList();
+        Assert.Empty(restante);
+        Assert.Equal(itens, detalhe.GetProperty("Transcricao")!.PropertyType);
+        Assert.Single(detalhe.GetProperties(Declarados), p => ComObject(p.PropertyType));
+        var equipe = detalhe.GetNestedType("TranscricaoDaEquipe")!;
+        var aluno = detalhe.GetNestedType("TranscricaoDoAluno")!;
+        Assert.NotNull(equipe.GetProperty("Fontes"));
+        Assert.Null(aluno.GetProperty("Fontes"));
+        Assert.Equal(["Autor", "Texto", "CriadaEm"], aluno.GetProperties().Select(p => p.Name));
+    }
+
+    // C26: door 4, o pipeline do chamado tem a forma da base; só o DetalheChamado.Montar e a Recusa são do domínio-e-contratos
+    [Fact]
+    public void Pipeline_do_chamado_com_a_forma_da_base()
+    {
+        string[] Publicos(Type t) => [.. t.GetMembers(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly)
+            .Where(m => m is not System.Reflection.ConstructorInfo && !(m is System.Reflection.MethodInfo { IsSpecialName: true })).Select(m => m.Name).Order()];
+
+        var permissoes = typeof(One.Api.Chamados.PermissoesChamado);
+        Assert.Equal(["Acoes", "Aluno", "Atendente", "Estados"], Publicos(permissoes));
+        Assert.Equal(typeof(string[]), permissoes.GetMethod("Estados")!.ReturnType);
+        Assert.Equal([typeof(string), typeof(string)], permissoes.GetMethod("Estados")!.GetParameters().Select(p => p.ParameterType));
+        Assert.Equal(typeof(IEnumerable<string>), permissoes.GetMethod("Acoes")!.ReturnType);
+        Assert.Equal([typeof(string), typeof(string), typeof(long?), typeof(long)], permissoes.GetMethod("Acoes")!.GetParameters().Select(p => p.ParameterType));
+
+        var acesso = typeof(One.Api.Chamados.AcessoChamado);
+        Assert.Equal(["Agora", "Cfg", "Chamado", "Instituicao", "Papel", "Prazos", "Preencher", "Usuario"], Publicos(acesso));
+        Assert.All(acesso.GetProperties(), p => Assert.False(p.SetMethod is { IsPublic: true }, p.Name));
+        var preencher = acesso.GetMethod("Preencher")!;
+        Assert.Equal(typeof(void), preencher.ReturnType);
+        Assert.Equal([typeof(Chamado), typeof(string), typeof(Usuario), typeof(Instituicao), typeof(DateTime), typeof(Microsoft.Extensions.Configuration.IConfiguration), typeof(Prazos)],
+            preencher.GetParameters().Select(p => p.ParameterType));
+
+        var acao = typeof(One.Api.Chamados.IAcaoChamado);
+        Assert.Equal(["Acao", "Criado", "Instituicao", "Numero", "Usuario", "Validar"], Publicos(acao));
+        var validar = acao.GetMethod("Validar")!;
+        Assert.Equal(typeof(ValueTask<IResult?>), validar.ReturnType);
+        Assert.Equal([typeof(One.Api.Chamados.AcessoChamado), typeof(OneDb)], validar.GetParameters().Select(p => p.ParameterType));
+
+        var agir = typeof(One.Api.Chamados.AgirNoChamado<,>);
+        Assert.Equal(["Handle"], Publicos(agir));
+        Assert.Equal([typeof(OneDb), typeof(One.Api.Chamados.AcessoChamado), typeof(TimeProvider), typeof(Prazos), typeof(Microsoft.Extensions.Configuration.IConfiguration)],
+            Assert.Single(agir.GetConstructors()).GetParameters().Select(p => p.ParameterType));
+        var handle = agir.GetMethod("Handle")!;
+        Assert.Equal(typeof(ValueTask<>), handle.ReturnType.GetGenericTypeDefinition());
+        Assert.Equal(agir.GetGenericArguments()[1], handle.ReturnType.GetGenericArguments()[0]);
+        Assert.Equal(typeof(CancellationToken), handle.GetParameters()[2].ParameterType);
+        Assert.Equal(agir.GetGenericArguments()[0], handle.GetParameters()[0].ParameterType);
+
+        Assert.Equal(typeof(Task<One.Api.Chamados.Shared.DetalheChamado>), typeof(One.Api.Chamados.Shared.DetalheChamado).GetMethod("Montar")!.ReturnType);
+
+        var recusa = CodigoDe("Dados", "Recusa.cs");
+        Assert.Contains("namespace One.Api.Dados;", recusa);
+        Assert.Contains("public sealed record Recusa(string Motivo);", recusa);
+        foreach (var (tipo, metodo) in new[] { (typeof(Chamado), "Assumir"), (typeof(Chamado), "Rejeitar"), (typeof(Artigo), "Ativar"), (typeof(Artigo), "Arquivar"), (typeof(Documento), "NovaVersao"), (typeof(Documento), "Arquivar") })
+            Assert.Equal(typeof(Recusa), tipo.GetMethod(metodo)!.ReturnType);
+
+        var sep = Path.DirectorySeparatorChar;
+        var chamam = CodigoApi().Where(p => !p.EndsWith($"{sep}Chamados{sep}PermissoesChamado.cs")).Where(p => Regex.IsMatch(SemComentarios(p), @"\bEstados\(")).Select(Relativo);
+        Assert.Equal(["Chamados/AgirNoChamado.cs"], chamam);
     }
 }

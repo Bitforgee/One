@@ -1,30 +1,34 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// A projeção, a validação e a aplicação do cadastro de Setor; ListarSetores e AlterarSetor usam as daqui.
-public sealed record CriarSetor(SetorIn Corpo) : IRequest<IResult>
+// A validação e a aplicação do cadastro de Setor, sobre os campos; ListarSetores e AlterarSetor usam as daqui.
+public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
 {
-    public static void Mapear(RouteGroupBuilder g) => g.MapPost("/setores", (SetorIn i, IMediator m) => m.Send(new CriarSetor(i)));
+    public sealed record Entrada(string? Nome, bool? Triagem, bool? Ativo);
 
-    public static object Saida(Setor s) => new { id = s.Id, nome = s.Nome, triagem = s.Triagem, ativo = s.Ativo };
+    public static void Mapear(RouteGroupBuilder g) => g.MapPost("/setores", (CriarSetor.Entrada i, IMediator m) => m.Send(new CriarSetor(i)));
 
-    public static void Aplicar(Setor s, SetorIn i) { s.Nome = i.Nome!; s.Triagem = i.Triagem == true; s.Ativo = i.Ativo ?? true; }
+    public static void Aplicar(Setor s, string? nome, bool? triagem, bool? ativo) { s.Nome = nome!; s.Triagem = triagem == true; s.Ativo = ativo ?? true; }
 
-    public static async Task<IResult?> Validar(OneDb db, SetorIn i, Setor? atual)
+    public static async Task<IResult?> Validar(OneDb db, string? nome, bool? triagem, Setor? atual)
     {
-        if (!AdminRotas.Nome(i.Nome)) return Problemas.Invalido("Informe o nome do setor.", "nome");
+        if (!AdminRotas.Nome(nome)) return Problemas.Invalido("Informe o nome do setor.", "nome");
         // AC 113: a instituição fica sempre com exatamente um setor de triagem
-        var triagens = await db.Setores.CountAsync(s => s.Triagem && s.Id != (atual == null ? 0 : atual.Id)) + (i.Triagem == true ? 1 : 0);
+        var triagens = await db.Setores.CountAsync(s => s.Triagem && s.Id != (atual == null ? 0 : atual.Id)) + (triagem == true ? 1 : 0);
         if (triagens != 1) return Problemas.Invalido("A instituição precisa de exatamente um setor de triagem.", "triagem");
-        return await db.Setores.AnyAsync(s => s.Nome == i.Nome && s.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe um setor com este nome.") : null;
+        return await db.Setores.AnyAsync(s => s.Nome == nome && s.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe um setor com este nome.") : null;
     }
 }
 
 public sealed class CriarSetorHandler(OneDb db) : IRequestHandler<CriarSetor, IResult>
 {
-    public async ValueTask<IResult> Handle(CriarSetor m, CancellationToken ct) =>
-        await CadastroRotas.Criar<Setor, SetorIn>(db, "/setores", m.Corpo, CriarSetor.Saida, CriarSetor.Validar, CriarSetor.Aplicar);
+    public async ValueTask<IResult> Handle(CriarSetor m, CancellationToken ct)
+    {
+        var e = m.Corpo;
+        return await CadastroRotas.Criar<Setor, SetorResposta>(db, "/setores", a => CriarSetor.Validar(db, e.Nome, e.Triagem, a), s => CriarSetor.Aplicar(s, e.Nome, e.Triagem, e.Ativo), SetorResposta.De);
+    }
 }

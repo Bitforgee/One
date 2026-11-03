@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
@@ -16,6 +17,6 @@ public sealed class ListarArtigosHandler(OneDb db) : IRequestHandler<ListarArtig
         var categorias = await db.Categorias.ToDictionaryAsync(c => c.Id, c => c.Nome);
         var artigos = await db.Artigos.Include(a => a.Versoes).OrderBy(a => a.Id).ToListAsync();
         var indexacao = await Fontes.Indexacao(db, artigos.Select(a => a.Ultima().Id).ToList());
-        return Results.Ok(artigos.Select(a => ArtigoRotas.Saida(a, categorias[a.CategoriaId], indexacao)));
+        return Results.Ok(artigos.Select(a => ArtigoResposta.De(a, categorias[a.CategoriaId], indexacao)));
     }
 }

@@ -63,22 +63,6 @@ public static class DocumentoRotas
     public static void Trechos(OneDb db, VersaoDocumento v, DateTime agora) =>
         db.TrechosFonte.AddRange(Dividir(v.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));
 
-    public static async Task<object> Saida(OneDb db, Documento d)
-    {
-        var v = d.Ultima();
-        var trechos = await db.TrechosFonte.Where(t => t.VersaoDocumentoId == v.Id).Select(t => new { Indexado = t.Embedding != null, t.Tentativas }).ToListAsync();
-        return new
-        {
-            id = d.Id,
-            titulo = d.Titulo,
-            categoriaId = d.CategoriaId,
-            categoria = await db.Categorias.Where(c => c.Id == d.CategoriaId).Select(c => c.Nome).SingleAsync(),
-            estado = d.Estado,
-            versao = new { id = v.Id, numero = v.Numero, nomeArquivo = v.NomeArquivo, paginas = v.Paginas, criadaEm = v.CriadaEm },
-            indexacao = trechos.All(t => t.Indexado) ? "INDEXADO" : trechos.Any(t => !t.Indexado && t.Tentativas >= 5) ? "FALHOU" : "PENDENTE",
-        };
-    }
-
     public static Task<Documento?> Ler(OneDb db, long id) =>
         db.Documentos.ComUltimaVersao().FirstOrDefaultAsync(d => d.Id == id);
 

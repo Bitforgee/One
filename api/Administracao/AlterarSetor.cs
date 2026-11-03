@@ -1,16 +1,22 @@
 using Mediator;
+using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-public sealed record AlterarSetor(long Id, SetorIn Corpo) : IRequest<IResult>
+public sealed record AlterarSetor(long Id, AlterarSetor.Entrada Corpo) : IRequest<IResult>
 {
+    public sealed record Entrada(string? Nome, bool? Triagem, bool? Ativo);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPut("/setores/{id:long}", (long id, SetorIn i, IMediator m) => m.Send(new AlterarSetor(id, i)));
+        g.MapPut("/setores/{id:long}", (long id, AlterarSetor.Entrada i, IMediator m) => m.Send(new AlterarSetor(id, i)));
 }
 
 public sealed class AlterarSetorHandler(OneDb db) : IRequestHandler<AlterarSetor, IResult>
 {
-    public async ValueTask<IResult> Handle(AlterarSetor m, CancellationToken ct) =>
-        await CadastroRotas.Alterar<Setor, SetorIn>(db, m.Id, m.Corpo, CriarSetor.Saida, CriarSetor.Validar, CriarSetor.Aplicar);
+    public async ValueTask<IResult> Handle(AlterarSetor m, CancellationToken ct)
+    {
+        var e = m.Corpo;
+        return await CadastroRotas.Alterar<Setor, SetorResposta>(db, m.Id, a => CriarSetor.Validar(db, e.Nome, e.Triagem, a), s => CriarSetor.Aplicar(s, e.Nome, e.Triagem, e.Ativo), SetorResposta.De);
+    }
 }

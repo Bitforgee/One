@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Chamados.Shared;
 using Microsoft.AspNetCore.Http.HttpResults;
 using One.Api.Dados;
 

@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Chamados.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Chamados;

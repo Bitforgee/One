@@ -1,13 +1,21 @@
+using System.Text.Json.Serialization;
 using Mediator;
 using One.Api.Dados;
 using static One.Api.Assistente.ConversaRotas;
 
 namespace One.Api.Assistente;
 
-public sealed record NovaConversa(MensagemIn Corpo, Usuario Usuario) : IRequest<IResult>
+public sealed record NovaConversa(NovaConversa.Entrada Corpo, Usuario Usuario) : IRequest<IResult>
 {
+    public sealed record Entrada(string? Mensagem);
+
+    public sealed record Resposta(long ConversaId, [property: JsonPropertyName("resposta")] Resposta.DoAssistente Assistente)
+    {
+        public sealed record DoAssistente(string Tipo, string Texto);
+    }
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/conversas", (MensagemIn i, HttpContext ctx, IMediator m) => m.Send(new NovaConversa(i, ctx.Usuario()))).RequireRateLimiting("mensagens");
+        g.MapPost("/conversas", (NovaConversa.Entrada i, HttpContext ctx, IMediator m) => m.Send(new NovaConversa(i, ctx.Usuario()))).RequireRateLimiting("mensagens");
 }
 
 public sealed class NovaConversaHandler(OneDb db, Assistente assistente, TimeProvider relogio) : IRequestHandler<NovaConversa, IResult>
@@ -21,7 +29,7 @@ public sealed class NovaConversaHandler(OneDb db, Assistente assistente, TimePro
         var agora = relogio.GetUtcNow().UtcDateTime;
         var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
         db.Conversas.Add(conversa);
-        var resposta = await Responder(db, assistente, conversa, i.Mensagem!, agora);
-        return Results.Created($"/api/conversas/{conversa.Id}", new { conversaId = conversa.Id, resposta });
+        var r = await Responder(db, assistente, conversa, i.Mensagem!, agora);
+        return Results.Created($"/api/conversas/{conversa.Id}", new NovaConversa.Resposta(conversa.Id, new(r.TipoFinal, r.Texto)));
     }
 }

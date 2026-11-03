@@ -4,10 +4,14 @@ using static One.Api.Assistente.ConversaRotas;
 
 namespace One.Api.Assistente;
 
-public sealed record AvaliarConversa(long Id, AvaliacaoIn Corpo, Usuario Usuario) : IRequest<IResult>
+public sealed record AvaliarConversa(long Id, AvaliarConversa.Entrada Corpo, Usuario Usuario) : IRequest<IResult>
 {
+    public sealed record Entrada(bool? Resolveu);
+
+    public sealed record Resposta(string? Desfecho);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/conversas/{id:long}/avaliacao", (long id, AvaliacaoIn i, HttpContext ctx, IMediator m) => m.Send(new AvaliarConversa(id, i, ctx.Usuario())));
+        g.MapPost("/conversas/{id:long}/avaliacao", (long id, AvaliarConversa.Entrada i, HttpContext ctx, IMediator m) => m.Send(new AvaliarConversa(id, i, ctx.Usuario())));
 }
 
 public sealed class AvaliarConversaHandler(OneDb db, TimeProvider relogio) : IRequestHandler<AvaliarConversa, IResult>
@@ -24,6 +28,6 @@ public sealed class AvaliarConversaHandler(OneDb db, TimeProvider relogio) : IRe
             conversa.DesfechoEm = relogio.GetUtcNow().UtcDateTime;
             await db.SaveChangesAsync();
         }
-        return Results.Ok(new { desfecho = conversa.Desfecho });
+        return Results.Ok(new AvaliarConversa.Resposta(conversa.Desfecho));
     }
 }

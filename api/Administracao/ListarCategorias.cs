@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
@@ -10,5 +11,5 @@ public sealed record ListarCategorias : IRequest<IResult>
 
 public sealed class ListarCategoriasHandler(OneDb db) : IRequestHandler<ListarCategorias, IResult>
 {
-    public async ValueTask<IResult> Handle(ListarCategorias m, CancellationToken ct) => await CadastroRotas.Listar<Categoria>(db, CriarCategoria.Saida);
+    public async ValueTask<IResult> Handle(ListarCategorias m, CancellationToken ct) => await CadastroRotas.Listar<Categoria, CategoriaResposta>(db, CategoriaResposta.De);
 }

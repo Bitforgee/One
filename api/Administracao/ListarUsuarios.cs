@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Administracao.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
@@ -13,8 +14,8 @@ public sealed class ListarUsuariosHandler(OneDb db) : IRequestHandler<ListarUsua
 {
     public async ValueTask<IResult> Handle(ListarUsuarios m, CancellationToken ct)
     {
-        var lista = new List<object>();
-        foreach (var u in await db.Usuarios.Include(u => u.Papeis).OrderBy(u => u.Nome).ToListAsync()) lista.Add(await UsuarioRotas.Saida(db, u));
+        var lista = new List<UsuarioResposta>();
+        foreach (var u in await db.Usuarios.Include(u => u.Papeis).OrderBy(u => u.Nome).ToListAsync()) lista.Add(await UsuarioResposta.De(db, u));
         return Results.Ok(lista);
     }
 }

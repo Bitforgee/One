@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
 using static One.Api.Conhecimento.DocumentoRotas;
 
@@ -18,6 +19,6 @@ public sealed class ArquivarDocumentoHandler(OneDb db) : IRequestHandler<Arquiva
         if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
         if (d.Arquivar() is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         await db.SaveChangesAsync();
-        return Results.Ok(await Saida(db, d));
+        return Results.Ok(await DocumentoResposta.De(db, d));
     }
 }

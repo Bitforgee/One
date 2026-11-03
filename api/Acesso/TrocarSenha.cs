@@ -4,10 +4,12 @@ using One.Api.Dados;
 
 namespace One.Api.Acesso;
 
-public sealed record TrocarSenha(TrocarSenhaIn Corpo, Usuario Usuario) : IRequest<IResult>
+public sealed record TrocarSenha(TrocarSenha.Entrada Corpo, Usuario Usuario) : IRequest<IResult>
 {
+    public sealed record Entrada(string? SenhaAtual, string? NovaSenha);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/auth/senha", (TrocarSenhaIn i, HttpContext ctx, IMediator m) => m.Send(new TrocarSenha(i, ctx.Usuario())));
+        g.MapPost("/auth/senha", (TrocarSenha.Entrada i, HttpContext ctx, IMediator m) => m.Send(new TrocarSenha(i, ctx.Usuario())));
 }
 
 public sealed class TrocarSenhaHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IRequestHandler<TrocarSenha, IResult>

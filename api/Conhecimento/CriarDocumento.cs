@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using static One.Api.Conhecimento.DocumentoRotas;
@@ -30,6 +31,6 @@ public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio) : IReq
         Trechos(db, d.Versoes.Single(), agora);
         db.Documentos.Add(d);
         await db.SaveChangesAsync();
-        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, d));
+        return Results.Created($"/api/admin/documentos/{d.Id}", await DocumentoResposta.De(db, d));
     }
 }

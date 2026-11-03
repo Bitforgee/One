@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
 using static One.Api.Conhecimento.DocumentoRotas;
 
@@ -25,6 +26,6 @@ public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio) :
         if (d.NovaVersao(versao) is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         Trechos(db, versao, agora);
         await db.SaveChangesAsync();
-        return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, m.Id) ?? d));
+        return Results.Created($"/api/admin/documentos/{d.Id}", await DocumentoResposta.De(db, await Ler(db, m.Id) ?? d));
     }
 }

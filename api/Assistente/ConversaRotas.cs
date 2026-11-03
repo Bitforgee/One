@@ -4,11 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Assistente;
 
-public record MensagemIn(string? Mensagem);
-public record AvaliacaoIn(bool? Resolveu);
-public record TransferirIn(long? MatriculaId);
-public record AtendimentoDiretoIn(string? Descricao, long? MatriculaId);
-
 // As rotas da conversa e os auxiliares que mais de um caso de uso da conversa usa.
 public static class ConversaRotas
 {
@@ -28,15 +23,12 @@ public static class ConversaRotas
     public static async Task<bool> PodeUsarAssistente(OneDb db, Usuario u) =>
         u.Tem(Papeis.Aluno) && await db.Matriculas.AnyAsync(m => m.UsuarioId == u.Id && m.Situacao == "ATIVA");
 
-    public static async Task<IResult> Transferido(OneDb db, Chamado chamado) =>
-        Results.Created($"/api/chamados/{chamado.Numero}", new
-        {
-            numero = chamado.Numero,
-            estado = chamado.Estado,
-            setor = await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync(),
-        });
+    // 201 do chamado aberto pela transferência; cada caso de uso dá a forma da própria Resposta (numero, estado, setor).
+    public static async Task<IResult> Transferido<TResposta>(OneDb db, Chamado chamado, Func<string, string, string, TResposta> resposta) =>
+        Results.Created($"/api/chamados/{chamado.Numero}",
+            resposta(chamado.Numero, chamado.Estado, await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync()));
 
-    public static async Task<object> Responder(OneDb db, Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
+    public static async Task<MensagemConversa> Responder(OneDb db, Assistente assistente, Conversa conversa, string mensagem, DateTime agora)
     {
         conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = mensagem, CriadaEm = agora });
         conversa.UltimaMensagemEm = agora;
@@ -44,7 +36,7 @@ public static class ConversaRotas
         var resposta = await assistente.Responder(conversa);
         conversa.Mensagens.Add(resposta);
         await db.SaveChangesAsync();
-        return new { tipo = resposta.TipoFinal, texto = resposta.Texto };
+        return resposta;
     }
 
     public static void Mapear(RouteGroupBuilder api)

@@ -7,6 +7,8 @@ namespace One.Api.Administracao;
 // door 15 e AC 105 a 107: tudo ou nada; atualiza alunos pelo CPF e matrículas pelo número, dentro da instituição.
 public sealed record ImportarMatriculas(IFormCollection Form) : IRequest<IResult>
 {
+    public sealed record Resposta(int Criados, int Atualizados);
+
     public static void Mapear(RouteGroupBuilder g) =>
         g.MapPost("/matriculas/importacao", async (HttpRequest req, IMediator m) =>
             await m.Send(new ImportarMatriculas(req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty)));
@@ -28,8 +30,10 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         if (erros.Count > 0) return Erros(erros);
 
         var (criados, atualizados) = await Gravar(validas, linhas);
-        return Results.Ok(new { criados, atualizados });
+        return Results.Ok(new ImportarMatriculas.Resposta(criados, atualizados));
     }
+
+    record DonoDaMatricula(string Numero, string Cpf);
 
     static string Campo(LinhaCsv l, int i) => l.Campos.ElementAtOrDefault(i) ?? "";
 
@@ -39,7 +43,7 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         var numeros = linhas.Select(l => Campo(l, 3)).ToList();
         var emails = linhas.Select(l => Campo(l, 2)).ToList();
         var matriculas = await db.Matriculas.Where(m => numeros.Contains(m.Numero))
-            .Select(m => new { m.Numero, Cpf = db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single() }).ToDictionaryAsync(m => m.Numero, m => m.Cpf);
+            .Select(m => new DonoDaMatricula(m.Numero, db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single())).ToDictionaryAsync(m => m.Numero, m => m.Cpf);
         return (matriculas, await db.Usuarios.Where(u => emails.Contains(u.Email)).ToDictionaryAsync(u => u.Email, u => u.Cpf));
     }
 
@@ -71,5 +75,5 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
 
     static IResult Erros(List<ErroCsv> erros) =>
         Results.Problem(detail: "O arquivo tem linhas inválidas; nenhuma linha foi importada.", statusCode: 400, title: Problemas.Titulo(400),
-            extensions: new Dictionary<string, object?> { ["erros"] = erros.Select(e => new { linha = e.Linha, motivo = e.Motivo }).ToList() });
+            extensions: new Dictionary<string, object?> { ["erros"] = erros });
 }

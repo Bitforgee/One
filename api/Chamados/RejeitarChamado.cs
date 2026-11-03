@@ -4,10 +4,12 @@ using static One.Api.Chamados.AcoesChamado;
 
 namespace One.Api.Chamados;
 
-public sealed record RejeitarChamado(string Numero, RejeitarIn Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
+public sealed record RejeitarChamado(string Numero, RejeitarChamado.Entrada Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
+    public sealed record Entrada(string? Motivo);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/chamados/{numero}/rejeitar", (string numero, RejeitarIn i, HttpContext ctx, IMediator m) => m.Send(new RejeitarChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
+        g.MapPost("/chamados/{numero}/rejeitar", (string numero, RejeitarChamado.Entrada i, HttpContext ctx, IMediator m) => m.Send(new RejeitarChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
 
     public string Acao => "rejeitar";
 

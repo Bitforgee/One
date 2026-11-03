@@ -3,13 +3,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-public record ResolverIn(string? Texto);
-public record RejeitarIn(string? Motivo);
-public record CancelarIn(string? Motivo);
-public record EncaminharIn(long? SetorId, string? Motivo);
-public record ReclassificarIn(long? CategoriaId);
-public record DuplicadoIn(string? NumeroOriginal);
-
 // As ações sobre o chamado passam todas pelo AgirNoChamado; aqui ficam as rotas e o que mais de uma ação usa.
 public static class AcoesChamado
 {

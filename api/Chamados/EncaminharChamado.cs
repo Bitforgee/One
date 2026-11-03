@@ -6,10 +6,12 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
-public sealed record EncaminharChamado(string Numero, EncaminharIn Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
+public sealed record EncaminharChamado(string Numero, EncaminharChamado.Entrada Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
+    public sealed record Entrada(long? SetorId, string? Motivo);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/chamados/{numero}/encaminhar", (string numero, EncaminharIn i, HttpContext ctx, IMediator m) => m.Send(new EncaminharChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
+        g.MapPost("/chamados/{numero}/encaminhar", (string numero, EncaminharChamado.Entrada i, HttpContext ctx, IMediator m) => m.Send(new EncaminharChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
 
     public string Acao => "encaminhar";
 

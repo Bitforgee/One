@@ -5,8 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-public record UsuarioIn(string? Cpf, string? Nome, string? Email, string? SenhaTemporaria, string[]? Papeis, long[]? Setores);
-
 // AC 108 a 112: usuários da instituição, com os papéis e os setores do atendente.
 public static class UsuarioRotas
 {
@@ -21,63 +19,51 @@ public static class UsuarioRotas
         DesativarUsuario.Mapear(admin);
     }
 
-    public static async Task<object> Saida(OneDb db, Usuario u) => new
-    {
-        id = u.Id,
-        cpf = u.Cpf,
-        nome = u.Nome,
-        email = u.Email,
-        ativo = u.Ativo,
-        deveTrocarSenha = u.DeveTrocarSenha,
-        papeis = u.Papeis.Select(p => p.Papel),
-        setores = await db.AtendenteSetores.Where(a => a.UsuarioId == u.Id).Select(a => a.SetorId).ToListAsync(),
-    };
-
     // 400 nos campos, 409 em CPF ou e-mail repetidos na instituição (AC 108, AC 109).
-    public static async Task<IResult?> Validar(OneDb db, UsuarioIn i, long id) =>
-        Pessoa(i) ?? await PapeisESetores(db, i) ?? await Repetidos(db, i, id);
+    public static async Task<IResult?> Validar(OneDb db, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, long id) =>
+        Pessoa(cpf, nome, email) ?? await PapeisESetores(db, senhaTemporaria, papeis, setores) ?? await Repetidos(db, cpf, email, id);
 
-    static IResult? Pessoa(UsuarioIn i)
+    static IResult? Pessoa(string? cpf, string? nome, string? email)
     {
-        if (Cpf.Normalizar(i.Cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
-        if (!AdminRotas.Nome(i.Nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
-        if (i.Email is null || !Email.Valido().IsMatch(i.Email)) return Problemas.Invalido("E-mail inválido.", "email");
+        if (Cpf.Normalizar(cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
+        if (!AdminRotas.Nome(nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
+        if (email is null || !Email.Valido().IsMatch(email)) return Problemas.Invalido("E-mail inválido.", "email");
         return null;
     }
 
-    static async Task<IResult?> PapeisESetores(OneDb db, UsuarioIn i)
+    static async Task<IResult?> PapeisESetores(OneDb db, string? senhaTemporaria, string[]? papeis, long[]? setoresInformados)
     {
-        if (i.Papeis is not { Length: > 0 } || i.Papeis.Any(p => !PapeisValidos.Contains(p))) return Problemas.Invalido("Escolha ao menos um papel.", "papeis");
-        var setores = i.Setores ?? [];
-        if (i.Papeis.Contains(Papeis.Atendente) && setores.Length == 0) return Problemas.Invalido("Escolha ao menos um setor para o atendente.", "setores");
+        if (papeis is not { Length: > 0 } || papeis.Any(p => !PapeisValidos.Contains(p))) return Problemas.Invalido("Escolha ao menos um papel.", "papeis");
+        var setores = setoresInformados ?? [];
+        if (papeis.Contains(Papeis.Atendente) && setores.Length == 0) return Problemas.Invalido("Escolha ao menos um setor para o atendente.", "setores");
         if (await db.Setores.CountAsync(s => setores.Contains(s.Id)) != setores.Distinct().Count()) return Problemas.Invalido("Setor inexistente.", "setores");
-        if (i.SenhaTemporaria is not null && !Senha.Valida(i.SenhaTemporaria))
+        if (senhaTemporaria is not null && !Senha.Valida(senhaTemporaria))
             return Problemas.Invalido($"A senha temporária deve ter de {Senha.Minimo} a {Senha.Maximo} caracteres.", "senhaTemporaria");
         return null;
     }
 
-    static async Task<IResult?> Repetidos(OneDb db, UsuarioIn i, long id)
+    static async Task<IResult?> Repetidos(OneDb db, string? cpfInformado, string? email, long id)
     {
-        var cpf = Cpf.Normalizar(i.Cpf);
+        var cpf = Cpf.Normalizar(cpfInformado);
         if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return AdminRotas.Repetido("Já existe um usuário com este CPF na instituição.");
-        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == i.Email)) return AdminRotas.Repetido("Já existe um usuário com este e-mail na instituição.");
+        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == email)) return AdminRotas.Repetido("Já existe um usuário com este e-mail na instituição.");
         return null;
     }
 
     // Grava o usuário, os papéis e os setores num SaveChanges só (AC 30 do refatoracao-solid).
-    public static async Task Gravar(OneDb db, Usuario u, UsuarioIn i, IPasswordHasher<Usuario> hasher)
+    public static async Task Gravar(OneDb db, Usuario u, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, IPasswordHasher<Usuario> hasher)
     {
-        u.Cpf = Cpf.Normalizar(i.Cpf)!;
-        u.Nome = i.Nome!;
-        u.Email = i.Email!;
-        u.Papeis.RemoveAll(p => !i.Papeis!.Contains(p.Papel));
-        u.Papeis.AddRange(i.Papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
-        if (i.SenhaTemporaria is not null)
+        u.Cpf = Cpf.Normalizar(cpf)!;
+        u.Nome = nome!;
+        u.Email = email!;
+        u.Papeis.RemoveAll(p => !papeis!.Contains(p.Papel));
+        u.Papeis.AddRange(papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
+        if (senhaTemporaria is not null)
         {
-            u.SenhaHash = hasher.HashPassword(u, i.SenhaTemporaria);
+            u.SenhaHash = hasher.HashPassword(u, senhaTemporaria);
             u.DeveTrocarSenha = true; // AC 110
         }
-        await Setores(db, u, i.Papeis!.Contains(Papeis.Atendente) ? i.Setores!.Distinct().ToList() : []);
+        await Setores(db, u, papeis!.Contains(Papeis.Atendente) ? setores!.Distinct().ToList() : []);
         await db.SaveChangesAsync();
     }
 

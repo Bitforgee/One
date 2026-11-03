@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
@@ -10,5 +11,5 @@ public sealed record ListarSetores : IRequest<IResult>
 
 public sealed class ListarSetoresHandler(OneDb db) : IRequestHandler<ListarSetores, IResult>
 {
-    public async ValueTask<IResult> Handle(ListarSetores m, CancellationToken ct) => await CadastroRotas.Listar<Setor>(db, CriarSetor.Saida);
+    public async ValueTask<IResult> Handle(ListarSetores m, CancellationToken ct) => await CadastroRotas.Listar<Setor, SetorResposta>(db, SetorResposta.De);
 }

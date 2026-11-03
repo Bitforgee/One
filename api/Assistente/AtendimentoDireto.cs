@@ -5,10 +5,14 @@ using static One.Api.Assistente.ConversaRotas;
 
 namespace One.Api.Assistente;
 
-public sealed record AtendimentoDireto(AtendimentoDiretoIn Corpo, Usuario Usuario, Instituicao Instituicao) : IRequest<IResult>
+public sealed record AtendimentoDireto(AtendimentoDireto.Entrada Corpo, Usuario Usuario, Instituicao Instituicao) : IRequest<IResult>
 {
+    public sealed record Entrada(string? Descricao, long? MatriculaId);
+
+    public sealed record Resposta(string Numero, string Estado, string Setor);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/atendimento-direto", (AtendimentoDiretoIn i, HttpContext ctx, IMediator m) => m.Send(new AtendimentoDireto(i, ctx.Usuario(), ctx.Instituicao()))).RequireRateLimiting("mensagens");
+        g.MapPost("/atendimento-direto", (AtendimentoDireto.Entrada i, HttpContext ctx, IMediator m) => m.Send(new AtendimentoDireto(i, ctx.Usuario(), ctx.Instituicao()))).RequireRateLimiting("mensagens");
 }
 
 public sealed class AtendimentoDiretoHandler(OneDb db, TimeProvider relogio) : IRequestHandler<AtendimentoDireto, IResult>
@@ -26,6 +30,7 @@ public sealed class AtendimentoDiretoHandler(OneDb db, TimeProvider relogio) : I
         var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
         conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = i.Descricao, CriadaEm = agora });
         db.Conversas.Add(conversa);
-        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, agora));
+        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, agora),
+            (numero, estado, setor) => new AtendimentoDireto.Resposta(numero, estado, setor));
     }
 }

@@ -5,10 +5,12 @@ using static One.Api.Chamados.AcoesChamado;
 
 namespace One.Api.Chamados;
 
-public sealed record ReclassificarChamado(string Numero, ReclassificarIn Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
+public sealed record ReclassificarChamado(string Numero, ReclassificarChamado.Entrada Corpo, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
+    public sealed record Entrada(long? CategoriaId);
+
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/chamados/{numero}/reclassificar", (string numero, ReclassificarIn i, HttpContext ctx, IMediator m) => m.Send(new ReclassificarChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
+        g.MapPost("/chamados/{numero}/reclassificar", (string numero, ReclassificarChamado.Entrada i, HttpContext ctx, IMediator m) => m.Send(new ReclassificarChamado(numero, i, ctx.Usuario(), ctx.Instituicao())));
 
     public string Acao => "reclassificar";
 

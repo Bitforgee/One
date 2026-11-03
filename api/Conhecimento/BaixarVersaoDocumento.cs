@@ -12,11 +12,13 @@ public sealed record BaixarVersaoDocumento(long Id, Usuario Usuario) : IRequest<
 
 public sealed class BaixarVersaoDocumentoHandler(OneDb db) : IRequestHandler<BaixarVersaoDocumento, IResult>
 {
+    record PdfBaixado(byte[] Conteudo, string NomeArquivo);
+
     public async ValueTask<IResult> Handle(BaixarVersaoDocumento m, CancellationToken ct)
     {
         var u = m.Usuario;
         if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Documento não encontrado.");
-        var v = await db.VersoesDocumento.Where(x => x.Id == m.Id).Select(x => new { x.Conteudo, x.NomeArquivo }).FirstOrDefaultAsync();
+        var v = await db.VersoesDocumento.Where(x => x.Id == m.Id).Select(x => new PdfBaixado(x.Conteudo, x.NomeArquivo)).FirstOrDefaultAsync();
         return v is null ? Problemas.Erro(404, "Documento não encontrado.") : Results.File(v.Conteudo, "application/pdf", v.NomeArquivo);
     }
 }

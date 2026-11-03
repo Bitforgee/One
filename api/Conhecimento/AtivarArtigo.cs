@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
@@ -22,6 +23,6 @@ public sealed class AtivarArtigoHandler(OneDb db, TimeProvider relogio) : IReque
         if (!await db.TrechosFonte.AnyAsync(t => t.VersaoArtigoId == atual.Id))
             db.TrechosFonte.Add(Fontes.DoArtigo(atual, relogio.GetUtcNow().UtcDateTime));
         await db.SaveChangesAsync();
-        return await ArtigoRotas.Responder(db, a);
+        return Results.Ok(await ArtigoResposta.De(db, a));
     }
 }

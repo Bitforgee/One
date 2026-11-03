@@ -1,4 +1,5 @@
 using Mediator;
+using One.Api.Conhecimento.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
@@ -13,9 +14,9 @@ public sealed class ListarDocumentosHandler(OneDb db) : IRequestHandler<ListarDo
 {
     public async ValueTask<IResult> Handle(ListarDocumentos m, CancellationToken ct)
     {
-        var lista = new List<object>();
+        var lista = new List<DocumentoResposta>();
         foreach (var d in await db.Documentos.ComUltimaVersao().OrderBy(d => d.Titulo).ThenBy(d => d.Id).ToListAsync())
-            lista.Add(await DocumentoRotas.Saida(db, d));
+            lista.Add(await DocumentoResposta.De(db, d));
         return Results.Ok(lista);
     }
 }
