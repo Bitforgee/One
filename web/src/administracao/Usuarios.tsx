@@ -35,7 +35,7 @@ function alternar<T>(lista: T[], valor: T) {
 
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'CPF', largo: true }, { titulo: 'E-mail', largo: true }, { titulo: 'Papéis', largo: true }, { titulo: 'Situação' }, { titulo: '' }]
 
-function LinhaUsuario({ u, setores, editar, desativar }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void }) {
+function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void; pendente: boolean }) {
   const papeis = new Map(Papeis)
   const perfil = u.papeis.map((p) => papeis.get(p)).join(', ') + (u.setores.length > 0 ? ` · ${u.setores.map((s) => setores.get(s)).join(', ')}` : '')
   return (
@@ -50,7 +50,7 @@ function LinhaUsuario({ u, setores, editar, desativar }: { u: Usuario; setores: 
       <TableCell>{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
       <TableCell className="text-end">
         {u.ativo && (
-          <MenuAcoes nome={u.nome}>
+          <MenuAcoes nome={u.nome} pendente={pendente}>
             <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={desativar}>
               Desativar
@@ -129,7 +129,7 @@ export function Usuarios() {
       <Situacao itens={dados?.usuarios} erro={erro} />
       <Tabela colunas={Colunas} itens={dados?.usuarios}>
         {dados?.usuarios.map((u) => (
-          <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} />
+          <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}
       </Tabela>
 

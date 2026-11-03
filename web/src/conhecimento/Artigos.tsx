@@ -70,7 +70,7 @@ function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edit
         </div>
       </TableCell>
       <TableCell className="text-end">
-        <MenuAcoes nome={a.versao.titulo}>
+        <MenuAcoes nome={a.versao.titulo} pendente={pendente}>
           <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
           {a.estado !== 'ATIVO' && (
             <DropdownMenuItem disabled={pendente} onSelect={mudar}>

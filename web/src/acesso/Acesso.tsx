@@ -182,7 +182,7 @@ export function TrocarSenha() {
   const navigate = useNavigate()
   const { me, setMe } = useSessao()
   return (
-    <div className="mx-auto flex max-w-[420px] flex-col gap-6">
+    <div className="mx-auto flex max-w-sm flex-col gap-6">
       {me.deveTrocarSenha && <Alert>Troque a senha temporária para continuar.</Alert>}
       <Formulario
         schema={z.object({ senhaAtual: obrigatorio, novaSenha: obrigatorio })}

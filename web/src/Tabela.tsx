@@ -1,6 +1,7 @@
 import { EllipsisVertical } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from './ui/button'
+import { Spinner } from './ui/spinner'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
@@ -48,12 +49,12 @@ export const CelulaLargo = ({ children }: { children?: ReactNode }) => <TableCel
 export const Detalhe = ({ children }: { children: ReactNode }) => <div className="text-xs text-muted-foreground @2xl/main:hidden">{children}</div>
 
 // O menu "⋮" da última coluna (door 4); a tela só o monta quando a linha tem alguma ação.
-export function MenuAcoes({ nome, children }: { nome: string; children: ReactNode }) {
+export function MenuAcoes({ nome, pendente, children }: { nome: string; pendente?: boolean; children: ReactNode }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Ações de ${nome}`}>
-          <EllipsisVertical aria-hidden="true" />
+        <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={`Ações de ${nome}`} disabled={pendente}>
+          {pendente ? <Spinner /> : <EllipsisVertical aria-hidden="true" />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">{children}</DropdownMenuContent>

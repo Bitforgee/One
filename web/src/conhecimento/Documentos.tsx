@@ -61,7 +61,7 @@ function LinhaDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; n
       </TableCell>
       <TableCell className="text-end">
         {d.estado === 'ATIVO' && (
-          <MenuAcoes nome={d.titulo}>
+          <MenuAcoes nome={d.titulo} pendente={pendente}>
             <DropdownMenuItem disabled={pendente} onSelect={novaVersao}>
               Nova versão
             </DropdownMenuItem>
