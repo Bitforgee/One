@@ -14,14 +14,14 @@ este arquivo, gravado em `## Handoff`.
 
 ### S1 - Histórico em frases (P1) · 4 files · 40 KB · ~12k
 
-**C1** - [x] Com um evento de cada um dos 9 tipos e as duas formas de `ATRIBUICAO`, cada `<li>` do Histórico tem o texto `{dd/mm/aaaa hh:mm} · {frase}` com a frase exata da tabela de `## Screens` (11 linhas, tabela no teste) (AC 1)
+**C1** - [x] Com um evento de cada um dos 9 tipos e as duas formas de `ATRIBUICAO`, cada `<li>` do Histórico tem o texto `{dd/mm/aaaa hh:mm} · {frase}` com a frase exata da tabela de `## Screens` (as 10 linhas de `## Screens` por tipo, mais um `TRANSICAO` a mais; 11 casos na tabela do teste) (AC 1)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frase de cada tipo de evento"`
 
 **C2** - [x] Num `TRANSICAO` de `AGUARDANDO_ALUNO` para `EM_ATENDIMENTO` a frase é `Carla mudou o estado de Aguardando aluno para Em atendimento`, sem nenhum código em maiúsculas com `_`; um estado nulo sai como `—` (AC 2)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frase de cada tipo de evento"`
 Proof: `cd web && npx vitest run src/chamados/resposta.test.tsx -t "estado nulo no histórico sai como travessão"`
 
-**C3** - [x] Um evento com `detalhe` termina em ` · {detalhe}` (testado em `TRANSICAO` com justificativa, `ANEXO` com o nome do arquivo e `ATRIBUICAO` com "Responsável desativado"); sem `detalhe`, a frase não termina em ` · ` (AC 3)
+**C3** - [x] Um evento com `detalhe` termina em ` · {detalhe}` (testado em `TRANSICAO` com justificativa, `ANEXO` com o nome do arquivo, `ATRIBUICAO` com "Responsável desativado" e `LEMBRETE` com o texto do agendador); sem `detalhe`, a frase não termina em ` · ` (AC 3)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "detalhe no fim da frase"`
 
 **C4** - [x] Um evento de tipo `ABERTURA` (fora dos 9) aparece como `Ana · ABERTURA`, ainda como item da lista ordenada (AC 4)
@@ -57,9 +57,9 @@ Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/c
 
 | Set (size) | Member -> proof | Unproven |
 | --- | --- | --- |
-| frases de `## Screens` (11) | C1, table-driven sobre as 11 linhas (9 tipos, `ATRIBUICAO` com e sem `para`) | - |
+| frases de `## Screens` (10) | C1, table-driven sobre as 10 linhas (9 tipos, `ATRIBUICAO` com e sem `para`) | - |
 | fallbacks (3) | tipo desconhecido C4 · estado desconhecido C5 · estado nulo C2 | - |
-| detalhe (3 origens) | justificativa C3 · nome do anexo C3 · "Responsável desativado" C3 | - |
+| detalhe (4 origens) | justificativa C3 · nome do anexo C3 · "Responsável desativado" C3 · lembrete do agendador C3 | - |
 | quem vê (2) | equipe C1, C8 · aluno C7 | - |
 | testes reescritos (4) | `eventos em ordem no fuso` C6 · `textos detalhe do chamado` C8 · `histórico só mostra a seta...` -> `estado nulo no histórico sai como travessão` C2 · `Histórico é uma lista ordenada` C4 | - |
 
@@ -99,3 +99,7 @@ Estimativa = arquivos lidos (`Conversa.tsx` 4,8 KB, `chamado.ts` ~3 KB, 4 testes
 - **Settled mid-build:** C10 ganhou a exceção do teste renomeado antes de qualquer prova rodar (o nome antigo descrevia a seta, que deixou de existir); o script envolve o da `redesign-institucional`
 - **Boundary:** C1-C11 closed at `a82cfc0`. Provas: Vitest 229/229; Playwright 58/58 contra o contêiner reconstruído; `chamadas_iguais.py a3d6e05` 226 testes, 0 problema; `crapper` 0 (`frase` 4.0); `dryer` sem candidato; `mutator` não rodou (AD-025)
 - **Abandoned:** nada
+
+### Correção após a verificação rodada 1
+
+- **Gaps tratados:** (1) `LEMBRETE` com o `detalhe` que o agendador sempre grava (`api/Agendador.cs`) entrou em "detalhe no fim da frase" (C3). (2) Contagem das frases corrigida para 10 linhas de `## Screens`. (3) C7 passou a afirmar também a ausência da lista. A frase do lembrete repete o assunto ("…enviou um lembrete ao aluno · Lembrete ao aluno: N dias…"), como manda a tabela aprovada; fica para o usuário decidir se reescreve

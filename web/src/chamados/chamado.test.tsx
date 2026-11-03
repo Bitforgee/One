@@ -58,6 +58,7 @@ describe('chamado', () => {
     expect(await screen.findByText('O boleto fica no portal.')).toBeInTheDocument()
     expect(screen.queryByText('Resumo gerado por IA')).not.toBeInTheDocument()
     expect(screen.queryByText('Histórico')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('eventos')).not.toBeInTheDocument() // historico-legivel C7: nem a lista
     expect(screen.getByRole('button', { name: 'Cancelar solicitação' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Resolver' })).not.toBeInTheDocument()
   })
@@ -224,12 +225,14 @@ describe('chamado', () => {
         { tipo: 'TRANSICAO', de: 'ABERTO', para: 'FECHADO', detalhe: 'Aluno desistiu' },
         { tipo: 'ANEXO', detalhe: 'boleto.pdf' },
         { tipo: 'ATRIBUICAO', ator: 'Sistema', de: 'Bruno', para: null, detalhe: 'Responsável desativado' },
+        { tipo: 'LEMBRETE', ator: 'Sistema', detalhe: 'Lembrete ao aluno: 3 dias aguardando resposta' }, // o agendador sempre grava o detalhe (Agendador.cs)
         { tipo: 'NOTA' },
       ]),
     ).toEqual([
       'Carla mudou o estado de Aberto para Fechado · Aluno desistiu',
       'Carla anexou um arquivo · boleto.pdf',
       'Sistema tirou Bruno da responsabilidade · Responsável desativado',
+      'Sistema enviou um lembrete ao aluno · Lembrete ao aluno: 3 dias aguardando resposta',
       'Carla escreveu uma nota interna',
     ])
   })
