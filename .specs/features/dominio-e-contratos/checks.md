@@ -448,3 +448,16 @@ estimado). Contexto fixo de cada builder: `plan.md` (32.336 B), este `checks.md`
   `OneDb` sem `using` em `UsuarioResposta`; nada de ambiente.
 - Abandoned: nada.
 
+
+### Depois do lote 3 (coordenador)
+
+- **Decisão do usuário em 02/11/2026 sobre o C2:** aceita a troca do qualificador em
+  `ArquiteturaTests.Handler_sem_HttpContext` (`One.Api.Chamados.DetalheChamado` →
+  `One.Api.Chamados.Shared.DetalheChamado`), consequência da door de `Shared` (resposta usada por 10 casos). A
+  afirmação é a mesma; `asserts_api.py f0a7c9e` acusa só esta linha e o Verifier confere que nada mais mudou.
+- **Commit misto `5cc2ac2`:** o construtor da `interface-nova` levou no mesmo commit o `git mv` de
+  `api/Chamados/DetalheChamado.cs` para `Shared/` que estava no índice compartilhado. É só a renomeação, sem
+  mudança de conteúdo; fica como está (sem reescrever histórico) e entra no intervalo desta feature.
+- **C1:** o e2e deu 28/29 em `3a4bf6c`; a falha é `arranjo.spec.ts:377`, teste de arranjo da `interface-nova`
+  (S7) ainda sem a reconstrução do contêiner do lote dela. A verificação desta feature espera o lote 3 da
+  `interface-nova` fechar.
