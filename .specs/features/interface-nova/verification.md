@@ -2,120 +2,81 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: 9eea6e0..95b2383 (fix: 43f55fb web, b508690 + 95b2383 docs); round 1 covered b2e7e79..1d0753f
-**Round**: 2 - scoped
-**Verifier**: independent sub-agent (author != verifier); proofs run in a detached worktree at 95b2383, e2e against a container built from it (`one-ui-verify2`, port 8083); e2e faults run against a Vite dev server of the same worktree (port 5199; the arranjo spec was green there first, 28/28)
+**Diff range**: 95b2383..bd7d7ce (fix: bd7d7ce, `web/e2e/arranjo.spec.ts` only); round 2 covered 9eea6e0..95b2383, round 1 b2e7e79..1d0753f
+**Round**: 3 - scoped
+**Verifier**: independent sub-agent (author != verifier); proofs run in a detached worktree at bd7d7ce, e2e against a container built from it (`one-ui-verify3`, port 8083, on `one-system_default` with the `api` service env); e2e faults run against a Vite dev server of the same worktree (port 5199; the arranjo spec was green there first, 29/29)
 
 ## Ranked gaps
 
-1. **The bar link counts the user ruled (5 from 1280 px, 7 from 1536 px) have no assertion, and a mutant that breaks them survives.** The plan note on `## Screens` row 0 and the C19 ruling both fix "3 links desde 1024 px, 5 desde 1280 px, 7 desde 1536 px". `e2e/arranjo.spec.ts:157` only asserts `naBarra.length >= 3`, and the C19 test (`:85`) only checks the 3 links at 1024 px. Fault F11 (`NaBarra` capped at 3 entries, everything else always in "Mais") leaves C19 and all 4 `barra a ... px` tests green, even though the live bar shows 3 links at 1280 and at 1920 px. No test runs at 1536 px. Minor in effect, because every link stays reachable with no overlap. But a surviving mutant on a fact a binding source decides is a FAIL. Fix: assert `naBarra.length` equals 3, 5 and 7 at 1024, 1280 and 1920 (or 1536) px for the 9-link user.
-2. **C7 (mutator, AC 8, door 4) is not proven.** It is suspended by user decision (AD-025), not passed, and it was not run.
+1. **C7 (mutator, AC 8, door 4) is not proven.** It is suspended by user decision (AD-025), and it was not run. The procedure has no PASS for a check that was not proven: a `Result` that is not PASS makes the verdict FAIL. That holds even when the user suspended the check. Only the user can accept the feature with C7 open, or lift the suspension so the mutator can run.
 
-Every round 1 gap except C7 is closed (see the tables below): the header overlap, the hidden labels, the arrangement facts with no check, the 8 icons, the F5 survivor (C90) and the F7a survivor (C48). The stale path list in C6 is substantively covered: `dryer` over all 19 root files finds no candidate. C6/C7's frozen text is unchanged, as `checks.md` Handoff records.
+Round 2 gap 1 is closed. The bar counts the user ruled (3/5/7 at 1024/1280/1536 px) are now asserted exactly, and the test runs at 1536 px. F11 is killed (see Faults). After that, C7 is the only check that is not PASS.
 
 ## Binding sources
 
-Step 1 was redone only for the screens the fix touched: row 0, plus the screens whose arrangement got new tests. Verified at 95b2383.
+Step 1 was redone only for row 0 (the header), which is the one surface the fix touched. Verified at bd7d7ce.
 
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
-| `## Screens` row 0 cabeçalho + note of 02/11/2026 (plan.md:144) and the C19 ruling (checks.md Handoff) | yes - live UI with the 3-role fixture at 360/768/1024/1280/1536/1920 px, plus 1-role and 2-role sets at 1024/1280/1536 | none | bar counts 5 at 1280 px and 7 at 1536 px (gap 1, F11 survived) |
-| `## Screens` rows 1, 2, 6, 9, 10, 11, 13, 14, 15 (new arrangement tests) | yes - new tests read against the rows; spot-checked by fault F8-F10 | none | - |
-| `## Visual` icons (plan.md:100-133) | yes - 8 previously unasserted icons now in `*/icones.test.tsx` | none | - |
-| other rows, tokens, AD-020 | carried from 1d0753f (round 1), not touched by the fix | none | - |
-
-Live header with the 3-role fixture user (ALUNO+ATENDENTE+ADMINISTRADOR, 9 links), container `one-ui-verify2`:
-
-| Width | Bar (height 56 px every width) | In "Mais" | Overlap | Institution width | No horizontal scroll |
-| --- | --- | --- | --- | --- | --- |
-| 360 | One, institution, Tema, Menu; drawer has 9 links + Sair | - | none | 189 px | yes |
-| 768 | same, drawer 10 items | - | none | 597 px | yes |
-| 1024 | Assistente, Minhas solicitações, Fila (labels 69/130/24 px), Mais, Tema, Sair | 6 | none | 416 px | yes |
-| 1280 | + Artigos, Documentos (5 links) | 4 | none | 329 px | yes |
-| 1536 | + Indicadores, Usuários (7 links) | Matrículas, Cadastros | none | 109 px (truncated) | yes |
-| 1920 | same as 1536 (container capped at `max-w-6xl`) | Matrículas, Cadastros | none | 109 px | yes |
-
-No link is missing from both the bar and "Mais" at any width. Other role sets: ALUNO alone and ATENDENTE alone show 2 links with no "Mais". ADMINISTRADOR alone shows 3, 5 and 6 links at 1024, 1280 and 1536 px, with the rest in "Mais", which is hidden at 1536. ATENDENTE+ADMINISTRADOR shows 3, 5 and 7, with "Mais" hidden at 1536. The 1280 px screenshot matches the ruling: names always visible, "Mais" opens a popover with icon+label rows, and Tema and Sair sit on the right.
+| `## Screens` row 0 cabeçalho + note of 02/11/2026 (plan.md:144) and the C19 ruling (checks.md Handoff) | yes - the ruling's 3/5/7 counts read against `web/e2e/arranjo.spec.ts:111` (`{ 1024: 3, 1280: 5, 1536: 7, 1920: 7 }`) and `:114` (widths 768/1024/1280/1536/1920); the live counts measured in round 2 (3/5/7/7) match, and the container at bd7d7ce passes the exact assertions | none | - |
+| all other rows, `## Visual`, tokens, AD-020 | carried from 95b2383 (round 2) and 1d0753f (round 1), not touched by the fix | none | - |
 
 ## Checks
 
-Proofs re-run in full at 95b2383: Vitest 168/168, e2e 44/44, plus every script and barrier. The rows below are the checks the fix touched or that were not PASS in round 1, and they are verified at 95b2383. Every other check (C8-C16, C20-C26, C28-C37, C39-C43, C45-C47, C49-C65, C67-C79, C81-C88, C91-C94) is **carried from 1d0753f**. Their evidence lines did not change: the fix touched no file they cite except `arranjo.spec.ts`, where the line numbers before line 81 are unchanged. Their proofs are green in the two full runs above.
+Proofs re-run in full at bd7d7ce: Vitest 168/168 and e2e 45/45 (44 plus the new 1536 px test), plus every script and barrier. The table lists the checks the fix touched and the checks that were not PASS in round 2, all verified at bd7d7ce. Every other check is **carried from 95b2383**: C8-C16, C17, C20-C26, C27-C37, C38, C39-C43, C44-C47, C48-C65, C66-C79, C80-C88, C89, C90-C94. The fix touched no file those checks cite except `arranjo.spec.ts`, and there every line after 107 moved by +3. The refreshed citations are C18 `:66`, `:532-537`, `:542`; C48 `:321`; C66 `:550`, `:568`; C38 `:577`, `:587`, `:594`; C44 `:605`, `:616`; C80 `:632-633`, `:645`; C89 `:656`, `:673`, `:685`, `:698`. All of their proofs are green in the two full runs.
 
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
-| C1 | whole Vitest and e2e suites green, no `.skip`/`.only` | `npx vitest run` 168/168 (JSON: 0 failed, 0 pending); `npx playwright test` 44/44 at :8083 | `.specs/features/interface-nova/seletores_conferem.py:90` (autotest kills an added `.only(`) | PASS |
-| C2 | `seletores_conferem.py b2e7e79` exit 0 | autotest ok; `b2e7e79` exit 0, 0 problems | `.specs/features/interface-nova/seletores_conferem.py:116` | PASS |
-| C3 | role queries preserved | autotest ok; `b2e7e79` exit 0, 389 queries, 0 problems | `.specs/features/interface-nova/consultas_preservadas.py:78` | PASS |
-| C4 | same calls base vs HEAD | autotest ok; `b2e7e79` exit 0, 99 tests, 90 distinct recordings, 0 problems (3 Bootstrap packages `--no-save`, `npm prune` after, 0 left) | `.specs/features/interface-nova/chamadas_iguais.py:136` | PASS |
-| C5 | crapper <= 9.99 over `src` | `npm run coverage` exit 0; `crapper --use-existing-coverage -s src --threshold 9.99` exit 0 | `web/src/Periodo.tsx:1` worst CRAP 8.1 | PASS |
-| C6 | dryer finds no candidate | door-4 command: "No duplicate candidates found"; rerun with all 19 root `*.ts(x)`: same | `web/src/Autenticado.tsx:1` (changed file is in the door-4 list) | PASS |
+| C1 | whole Vitest and e2e suites green, no `.skip`/`.only` | `npx vitest run` 29 files, 168/168; `E2E_URL=http://localhost:8083 npx playwright test` 45/45 | `.specs/features/interface-nova/seletores_conferem.py:90` (autotest kills an added `.only(`) | PASS |
+| C2 | `seletores_conferem.py b2e7e79` exit 0 | autotest exit 0; `b2e7e79` exit 0, "0 problema(s)" | `.specs/features/interface-nova/seletores_conferem.py:116` | PASS |
+| C3 | role queries preserved | autotest exit 0; `b2e7e79` exit 0, 389 queries, 0 problems | `.specs/features/interface-nova/consultas_preservadas.py:78` | PASS |
+| C4 | same calls base vs HEAD | autotest exit 0; `b2e7e79` exit 0, 99 tests, 90 distinct recordings, 0 problems (`bootstrap@5.3.8`, `bootstrap-icons@1.13.2`, `react-bootstrap@2.10.10` `--no-save`; `npm prune` removed 32 packages, 0 left) | `.specs/features/interface-nova/chamadas_iguais.py:136` | PASS |
+| C5 | crapper <= 9.99 over `src` | `npm run coverage` exit 0; `crapper --use-existing-coverage -s src --threshold 9.99` exit 0 | `web/src/Periodo.tsx:1` worst CRAP 8.1 (unchanged file) | PASS |
+| C6 | dryer finds no candidate | door-4 command prints "No duplicate candidates found" | `web/src/Autenticado.tsx:1` (no source changed by the fix) | PASS |
 | C7 | mutator over the slices | not run - AD-025 | `.specs/features/interface-nova/mutator_web.sh:13` | suspended by user decision (AD-025) - not proven |
-| C17 | header icons + Visual icons | `src/*/icones.test.tsx` 6 files, 7 tests passed | `web/src/acesso/icones.test.tsx:15` `lucide-sun`, `:17` `lucide-moon` · `web/src/assistente/icones.test.tsx:13-15` send/hand/shield-alert · `web/src/chamados/icones.test.tsx:14` paperclip · `web/src/conhecimento/icones.test.tsx:16,19` plus/calendar-days · `web/src/administracao/icones.test.tsx:14,19` plus · `web/src/indicadores/icones.test.tsx:14` calendar-days | PASS |
-| C18 | 360 px bar, 56 px, drawer | `arranjo.spec.ts` C18 tests + `cabeçalho a 360 px: marca e instituição...` passed | `web/e2e/arranjo.spec.ts:63` 56 px · `:529-534` One < institution < Tema < Menu, Tema and Menu right of centre · `:539` drawer anchored at the bottom | PASS |
-| C19 | read by the 02/11 ruling: drawer below 1024, bar from 1024, rest in "Mais" | frozen `-g "cabeçalho a 640 px..."` selects 0 tests (renamed by the ruling); ruled proofs `cabeçalho a 1024 px mostra os links na barra` + 4 `barra a ... px` passed (5/5) | `web/e2e/arranjo.spec.ts:92` Menu hidden at 1024 · `:100` Sair right of links · `:104` no link at 1023 · `:135` no pairwise overlap · `:148` label width > 10 · `:155` every other link in "Mais" | PASS (by the ruling; counts 5/7 unasserted - gap 1) |
-| C27 | header texts incl. "Mais" | `src/acesso/textos.test.tsx` passed | `web/src/acesso/textos.test.tsx:8` literal list now has `'Mais'` | PASS |
-| C38 | Assistente arrangement | `Assistente: data pequena à direita...` passed | `web/e2e/arranjo.spec.ts:574` rows 2 · `:584` `textAlign` `end` · `:591` error Alert below Enviar | PASS |
-| C44 | Detalhe arrangement | `Detalhe: cartão da equipe...` passed; `Histórico é uma lista ordenada` passed | `web/e2e/arranjo.spec.ts:602` team card above the conversation · `:613` actions wrap to >1 row · `web/src/chamados/icones.test.tsx:27` `OL` | PASS |
-| C48 | 13 cards in 2/4 equal columns | `indicadores em 2 e 4 colunas` passed | `web/e2e/arranjo.spec.ts:318` widths within 1 px | PASS |
-| C66 | screens 1-5 arrangement | `raiz com a marca...`, `Login: campos empilhados...` passed | `web/e2e/arranjo.spec.ts:547` centred · `:565` error Alert below Entrar | PASS |
-| C80 | Artigos/Documentos arrangement, dialogs | `botões pequenos em linha...`, `diálogos a 360 px com margem de 16 px` passed | `web/e2e/arranjo.spec.ts:629-630` same row, <= 36 px · `:642` x = 16 | PASS |
-| C89 | Usuários/Matrículas/Cadastros arrangement | `Matrículas: cabeçalho mono...`, `Cadastros: detalhe pequeno...` passed | `web/e2e/arranjo.spec.ts:653` mono · `:670` result Alert below Importar · `:682` reason wraps · `:695` detail smaller than name | PASS |
-| C90 | no file imports Bootstrap packages | `dependências do kit de interface` passed; `interface.test.ts` passed | `web/src/acesso/acesso.test.tsx:126` - `expect(...filter(... importa.test(texto))...).toEqual([])` | PASS |
+| C19 | read by the 02/11 ruling: drawer below 1024 px; from 1024 px, 3/5/7 named links at 1024/1280/1536 px, the rest in "Mais" | `--list -g "barra a\|cabeçalho a 1024"` selects 6 tests; all passed in the full run against :8083 | `web/e2e/arranjo.spec.ts:92` Menu hidden at 1024 · `:104` no link at 1023 · `:111` ruled counts · `:114` widths incl. 1536 · `:138` no pairwise overlap · `:151` label width > 10 · `:158` the rest in "Mais" · `:160` `expect(naBarra.length, ...).toBe(linksNaBarra[largura])` | PASS |
 
-The only assertion lines the fix changed or removed (`git diff 9eea6e0..95b2383` on test files) are these:
+The fix diff (`git show bd7d7ce`) changes three things in `web/e2e/arranjo.spec.ts`:
 
-- The C19 test, renamed and re-measured by the user's ruling.
-- The "Menu" `toBeHidden` line, moved earlier in the same test.
-- The C27 `Cabecalho` literal list, which gained `'Mais'`.
-- The `simulada.ts` fixture, which gained the `assumir`, `confirmar` and `cancelar` actions.
+- It adds 1536 to the width list.
+- It adds the `linksNaBarra` map.
+- It replaces `toBeGreaterThanOrEqual(3)` with an exact `toBe(linksNaBarra[largura])`.
 
-Every other change adds lines, and C2, C3 and C4 run clean against b2e7e79.
+No other assertion was removed or weakened. The 768 px branch still returns at the drawer before the count line. C2 and C3 stay clean against b2e7e79.
 
 ## Coverage
 
-Recomputed only for the rows the fix touched; the rest is carried from 1d0753f.
+Recomputed only for the rows the fix touched. The rest is carried from 95b2383.
 
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| Screens arrangement facts (16 screens) | plan.md `## Screens` Arranjo column + the row 0 note, enumerated | round 1 gap-3 facts now: row 0 C18 `:521`; row 1/2 C66; row 6 C38; row 9 C44; rows 10/11/13 C80/C89; row 14/15 C89; dialogs C80 | row 0 note: 5 links from 1280 px, 7 from 1536 px (gap 1) |
-| header widths (ruling) | the row 0 note and C19 ruling: 1023/1024 edge, 768/1024/1280/1920 | C19 `:85`; `barra a ... px` x4 | 1536 px not run by any test (live: 7 links, no overlap) |
-| Lucide icons (18 Visual + CalendarDays) | plan.md `## Visual`, rows 10, 12 | 11 header C17 (acesso.test.tsx); Send, Hand, ShieldAlert, Paperclip, Plus, Sun, Moon, CalendarDays in `*/icones.test.tsx`; FileText, BookText C40 | - |
-| new texts (18 with "Mais") | `## Screens` *(novo)* marks + the row 0 note | "Mais" C27 and the e2e `barra` tests | - |
-| plan criteria (61) | carried from 1d0753f | AC 4 for row 0 now holds at every width (labels never hidden) | AC 8 (C7 suspended, AD-025) |
-| AD-018 barriers (3) | door 4 | crapper C5, dryer C6 (also over all 19 root files) | mutator C7 (suspended by user decision) |
-| all other sets | carried from 1d0753f | unchanged | - |
+| row 0 note: named links per width (3) | the row 0 note and the C19 ruling | 3 at 1024 `:160` (and C19 `:85`); 5 at 1280 `:160`; 7 at 1536 `:160` (also 7 at 1920) | - |
+| header widths (ruling) | the row 0 note and C19 ruling: 1023/1024 edge, 768/1024/1280/1536/1920 | C19 `:85`; `barra a ... px` x5 (`:114`) | - |
+| plan criteria (61) | carried from 95b2383 | as round 2 | AC 8 (C7 suspended, AD-025) |
+| AD-018 barriers (3) | door 4 | crapper C5, dryer C6 | mutator C7 (suspended by user decision) |
+| all other sets | carried from 95b2383 | unchanged | - |
 
 ## Test policy rows
 
 | Row | Files it classifies | Required proof | Expectation met |
 | --- | --- | --- | --- |
-| Arranjo e medidas da tela | all 15 screens + header | Playwright, every arrangement fact measured | not met - the bar counts 5/7 from the ruling are not measured (F11 survived); every round 1 gap-3 fact is now measured |
-| Regra sobre código-fonte | `test/interface.test.ts`, `acesso.test.tsx` | one case per member | yes - C90's import half now sits in its named proof (`acesso.test.tsx:126`, F1 killed) |
-| Tela que decide; Saída do build; Código copiado para `ui/` | carried from 1d0753f | as round 1 | yes - re-run green: `ui_isolada.sh` 0, `precache_completo` 17 URLs 0 problems, `recharts_separado` 0 problems, both autotests ok, crapper 0 |
+| Arranjo e medidas da tela | all 15 screens + header (`arranjo.spec.ts` touched) | Playwright, every arrangement fact measured | yes - the ruled 3/5/7 counts are measured exactly at every width, including 1536 px, and F11 and F12 are killed |
+| Regra sobre código-fonte; Tela que decide; Saída do build; Código copiado para `ui/` | carried from 95b2383 | as round 2 | yes - re-run green at bd7d7ce: `ui_isolada.sh` exit 0, `precache_completo` 17 URLs 0 problems, `recharts_separado` 3 chunks 0 problems, crapper exit 0 |
 
 ## Faults injected
 
-Every fault ran in the scratch worktree, one at a time, and was reverted with `git checkout -- <file>`. `git status --porcelain` in the worktree was empty after each fault, and the real tree's porcelain matches its baseline. The Vitest faults ran under `npx vitest run <file> -t`, and each filter selects 1 passing test at baseline. The e2e faults ran under `playwright test -g` against the dev server. The mutator is suspended (AD-025) and was not run.
+Every fault ran in the scratch worktree, one at a time, under `E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.spec.ts -g "cabeçalho a 1024|barra a"`. That filter selects 6 tests, all green at baseline. Each fault was reverted with `git checkout -- src/Autenticado.tsx`, and no tracked file stayed modified afterwards. The real tree was never edited. The mutator is suspended (AD-025) and was not run. The round 2 faults F1-F10 hit files the fix did not touch, so they are carried from 95b2383 (all killed).
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| F1 (round 1 F5 re-injected) `import 'bootstrap-icons/font/bootstrap-icons.css'` | `web/src/main.tsx:5` | yes - C90 `dependências do kit de interface`: "expected ['/src/main.tsx'] to deeply equal []" |
-| F2 (round 1 F7a re-injected) `grid-cols-2` -> `grid-cols-1` | `web/src/indicadores/Indicadores.tsx:122` | yes - C48 "360 px: larguras 151,169,..." |
-| F3 header overlap: all 9 links in the bar from 1024 px | `web/src/Autenticado.tsx:66` (`NaBarra`) | yes - `barra a 1024 px` (Cadastros out of the nav) |
-| F4 label hidden from 1280 px (`xl:sr-only` on the span) | `web/src/Autenticado.tsx:79` | yes - `barra a 1280 px` "rótulo de Assistente" |
-| F5 Indicadores neither in the bar nor in "Mais" at 1280 px | `web/src/Autenticado.tsx:67` (`NoMais[5]`) | yes - `barra a 1280 px` `toBeVisible` in "Mais" failed |
-| F6 "Menu" kept up to 1279 px (`lg:hidden` -> `xl:hidden`) | `web/src/Autenticado.tsx:155` | yes - C19 `cabeçalho a 1024 px` `toBeHidden` failed |
-| F7 icon `Send` -> `SendHorizontal` | `web/src/assistente/Assistente.tsx:151` | yes - `Assistente traz Send, Hand e ShieldAlert` (`lucide-send`) |
-| F8 Login error Alert moved above the form | `web/src/acesso/Acesso.tsx:64` | yes - `Login: campos empilhados e o erro abaixo do formulário` |
-| F9 message date `text-end` -> `text-start` | `web/src/Balao.tsx:33` | yes - `Assistente: data pequena à direita...` |
-| F10 Cadastros detail loses `text-sm` | `web/src/administracao/Cadastros.tsx:68` | yes - `Cadastros: detalhe pequeno embaixo do nome` |
-| F11 bar never grows past 3 links (`NaBarra` = 3 entries, `NoMais` empty, "Mais" always shown) | `web/src/Autenticado.tsx:66-67,92` | no - C19 and the 4 `barra a ... px` tests stay green (9/9 on `-g "cabeçalho\|barra a"`); live bar has 3 links at 1280 and 1920 px |
+| F11 (round 2 survivor re-injected) bar stuck at 3 links: `NaBarra` = `['lg:flex','lg:flex','lg:flex','','','','']`, `NoMais` all `''` | `web/src/Autenticado.tsx:66-67` | yes - `barra a 1280/1536/1920 px` fail at `arranjo.spec.ts:160`: expected 5/7/7, received 3 |
+| F12 6 links at 1536 px: 7th entry of `NaBarra` and `NoMais` -> `''` (Usuários stays in "Mais", reachable, no overlap) | `web/src/Autenticado.tsx:66-67` | yes - `barra a 1536 px` and `barra a 1920 px` fail at `:160`: expected 7, received 6 (2 failed, 4 passed) |
 
 ## Gate
 
-- Vitest: `cd web && npx vitest run`, 168 passed, 0 failed, 0 skipped (verified at 95b2383).
-- e2e: `E2E_URL=http://localhost:8083 npx playwright test`, 44 passed, 0 failed.
-- Scripts against b2e7e79: `seletores_conferem` exit 0, `consultas_preservadas` exit 0 (389), `chamadas_iguais` exit 0 (99); all autotests ok.
-- Build: `npm run build` exit 0; `precache_completo` 17 URLs 0 problems; `recharts_separado` 0 problems; `ui_isolada.sh` exit 0.
-- Barriers: `crapper` exit 0 (worst 8.1); `dryer` finds no candidate (door-4 list and all 19 root files).
+- Vitest: `cd web && npx vitest run`, 168 passed, 0 failed (verified at bd7d7ce).
+- e2e: `E2E_URL=http://localhost:8083 npx playwright test`, 45 passed, 0 failed.
+- Scripts against b2e7e79: `seletores_conferem` exit 0, `consultas_preservadas` exit 0 (389), `chamadas_iguais` exit 0 (99); all three autotests exit 0.
+- Build: `npm run build` exit 0; `precache_completo` exit 0 (17 URLs); `recharts_separado` exit 0; `ui_isolada.sh` exit 0.
+- Barriers: `crapper` exit 0; `dryer` finds no candidate.
 - `mutator`: suspended by user decision (AD-025), not run.
