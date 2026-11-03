@@ -1,18 +1,16 @@
 import { useMutation } from '@tanstack/react-query'
 import { Hand, Send, ShieldAlert } from 'lucide-react'
-import { motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
 import { useChamado } from '../chamado'
-import { formatarData } from '../datas'
+import { Balao } from '../Balao'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Conversation, ConversationContent } from '../ui/conversation'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Label } from '../ui/label'
-import { Message, MessageContent } from '../ui/message'
 import { NativeSelect, NativeSelectOption } from '../ui/native-select'
 import { Spinner } from '../ui/spinner'
 import { Textarea } from '../ui/textarea'
@@ -56,38 +54,15 @@ function transferir(conversaId: number | undefined, descricao: string, matricula
     : api<Transferencia>(`/api/conversas/${conversaId}/transferir`, escolha)
 }
 
-const MensagemAnimada = motion.create(Message)
-
-type BalaoProps = { doAluno: boolean; autor?: string; texto: string; aviso?: boolean; em: string; fuso: string }
-
-// Aluno à direita em bg-primary-subtle; assistente e atendente à esquerda em bg-muted. O texto do modelo vai como
-// texto puro (AD-012). O balão novo entra subindo 8 px, só com transform; o MotionConfig do App respeita o movimento reduzido.
-function Balao({ doAluno, autor, texto, aviso, em, fuso }: BalaoProps) {
-  return (
-    <MensagemAnimada
-      from={doAluno ? 'user' : 'assistant'}
-      initial={{ y: 8 }}
-      animate={{ y: 0 }}
-      transition={{ ease: 'easeOut' }}
-      className={`w-fit max-w-[90%] gap-1 rounded-lg px-3 py-2 ${doAluno ? 'ms-auto bg-primary-subtle' : 'me-auto bg-muted'}`}
-    >
-      <div className="text-xs font-semibold empty:hidden">{autor}</div>
-      <MessageContent className="w-full text-base break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
-        {texto}
-      </MessageContent>
-      {aviso && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
-      <div className="text-end text-xs text-muted-foreground">{formatarData(em, fuso)}</div>
-    </MensagemAnimada>
-  )
-}
-
 function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso: string; digitando: boolean }) {
   return (
     <Conversation className="overflow-y-visible">
       {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
       <ConversationContent className="gap-2 px-0 py-2" scrollClassName="[scrollbar-gutter:auto]!">
         {mensagens.map((m, i) => (
-          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} aviso={m.tipo === 'resposta'} em={m.em} fuso={fuso} />
+          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} em={m.em} fuso={fuso}>
+            {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
+          </Balao>
         ))}
         {digitando && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

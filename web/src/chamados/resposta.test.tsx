@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import type { Chamado } from '../chamado'
@@ -51,6 +51,25 @@ describe('resposta no chamado', () => {
     await waitFor(() => expect(screen.getByLabelText('Responder')).toHaveValue(''))
     expect(screen.getByLabelText('Aguardando aluno')).not.toBeChecked()
     expect((screen.getByLabelText(/Anexos/) as HTMLInputElement).files).toHaveLength(0)
+  })
+
+  // C42 (AC 32, door 11): o campo nativo continua achado pelo rótulo, e o arquivo solto na área do Dropzone vai em anexos
+  it('soltar arquivo em Anexos envia em anexos', async () => {
+    const chamadas = detalhe(chamado({ acoes: ['responder'] }), {}, me())
+    const campo = await screen.findByLabelText('Anexos (PDF, JPG ou PNG, até 10 MB cada)')
+    expect(campo).toHaveAttribute('type', 'file')
+    expect(campo).toHaveAttribute('multiple')
+    expect(campo).toHaveAttribute('accept', '.pdf,.jpg,.jpeg,.png')
+    expect(campo).not.toHaveAttribute('aria-label')
+    const a = new File(['%PDF-1.4'], 'a.pdf', { type: 'application/pdf' })
+    const item = { kind: 'file', type: a.type, getAsFile: () => a }
+    fireEvent.drop(campo.parentElement!, { dataTransfer: { files: [a], items: [item], types: ['Files'] } })
+    await screen.findByText('a.pdf')
+    await userEvent.type(screen.getByLabelText('Responder'), 'Segue.')
+    await userEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+
+    const enviado = await corpo(chamadas)
+    expect((enviado.anexos as File).name).toBe('a.pdf')
   })
 
   it('nota interna não leva anexo nem aguardando aluno', async () => {
@@ -107,15 +126,15 @@ describe('conversa do chamado', () => {
         ],
       }),
     )
-    const publica = (await screen.findByText('Segue o boleto.')).closest('.card') as HTMLElement
+    const publica = (await screen.findByText('Segue o boleto.')).closest('.is-user, .is-assistant') as HTMLElement
     expect(within(publica).getByRole('link', { name: 'boleto.pdf' })).toHaveAttribute('href', '/api/anexos/9')
     expect(publica).toHaveTextContent('(2 KB)')
     expect(publica).toHaveClass('me-auto')
     expect(within(publica).queryByText('Nota interna')).not.toBeInTheDocument()
-    const nota = screen.getByText('Aluno ligou.').closest('.card') as HTMLElement
+    const nota = screen.getByText('Aluno ligou.').closest('.is-user, .is-assistant') as HTMLElement
     expect(within(nota).getByText('Nota interna')).toBeInTheDocument()
     expect(nota).toHaveClass('bg-warning-subtle')
-    expect(screen.getByText('Obrigada!').closest('.card')).toHaveClass('ms-auto', 'bg-primary-subtle')
+    expect(screen.getByText('Obrigada!').closest('.is-user, .is-assistant')).toHaveClass('ms-auto', 'bg-primary-subtle')
     expect(screen.queryByText('Nenhuma resposta ainda.')).not.toBeInTheDocument()
     expect(screen.getByText(/Financeiro · Boleto · sem responsável/)).toBeInTheDocument()
     expect(screen.queryByText('Resumo gerado por IA')).not.toBeInTheDocument()
@@ -136,8 +155,8 @@ describe('conversa do chamado', () => {
         ],
       }),
     )
-    expect((await screen.findByText('quantas horas?')).closest('.card')).toHaveClass('ms-auto')
-    const resposta = screen.getByText('São 300 horas.').closest('.card') as HTMLElement
+    expect((await screen.findByText('quantas horas?')).closest('.is-user, .is-assistant')).toHaveClass('ms-auto')
+    const resposta = screen.getByText('São 300 horas.').closest('.is-user, .is-assistant') as HTMLElement
     expect(resposta).toHaveClass('me-auto')
     expect(within(resposta).getByText('Este documento foi atualizado depois desta resposta.')).toBeInTheDocument()
   })

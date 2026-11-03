@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Chamado } from '../chamado'
 import { abrir, api, chamado, me } from '../test/util'
 
@@ -24,14 +24,14 @@ describe('chamado', () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => new Promise(() => {}) })
     const carregando = abrir('/univag/chamados/ONE-1')
     await screen.findByRole('navigation')
-    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('spinner-border')
+    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
     carregando.unmount()
 
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [404, { status: 404, detail: 'Chamado não encontrado.' }] })
     const comErro = abrir('/univag/chamados/ONE-1')
     expect(await screen.findByRole('alert')).toHaveTextContent('Chamado não encontrado.')
-    expect(screen.getByRole('alert')).toHaveClass('alert', 'alert-danger')
+    expect(screen.getByRole('alert')).toHaveClass('text-destructive')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     comErro.unmount()
 
@@ -79,8 +79,8 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    const antiga = (await screen.findByText('Resposta antiga.')).closest('.card') as HTMLElement
-    const nova = screen.getByText('Resposta nova.').closest('.card') as HTMLElement
+    const antiga = (await screen.findByText('Resposta antiga.')).closest('.is-user, .is-assistant') as HTMLElement
+    const nova = screen.getByText('Resposta nova.').closest('.is-user, .is-assistant') as HTMLElement
     expect(within(antiga).getByText('Boleto (versão 1)')).toBeInTheDocument()
     expect(within(antiga).getByText('Este artigo foi atualizado depois desta resposta.')).toBeInTheDocument()
     expect(within(nova).queryByText('Este artigo foi atualizado depois desta resposta.')).not.toBeInTheDocument()
@@ -111,14 +111,34 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    const resposta = (await screen.findByText('O estágio exige 300 horas.')).closest('.card') as HTMLElement
-    const doc = within(resposta).getByText('Regulamento de estágio').closest('div.border-top') as HTMLElement
-    expect(within(doc).getByRole('img', { name: 'Documento' })).toHaveClass('bi-file-earmark-pdf')
+    const resposta = (await screen.findByText('O estágio exige 300 horas.')).closest('.is-user, .is-assistant') as HTMLElement
+    const doc = within(resposta).getByText('Regulamento de estágio').closest('div.border-t') as HTMLElement
+    expect(within(doc).getByRole('img', { name: 'Documento' })).toHaveClass('lucide-file-text')
     expect(within(doc).getByText('“mínima do estágio supervisionado é de 300 horas”')).toBeInTheDocument()
     expect(within(doc).getByRole('link', { name: 'Abrir o PDF (versão 2)' })).toHaveAttribute('href', '/api/documentos/versoes/42')
-    const art = within(resposta).getByText('Estágio obrigatório').closest('div.border-top') as HTMLElement
-    expect(within(art).getByRole('img', { name: 'Artigo' })).toHaveClass('bi-journal-text')
+    const art = within(resposta).getByText('Estágio obrigatório').closest('div.border-t') as HTMLElement
+    expect(within(art).getByRole('img', { name: 'Artigo' })).toHaveClass('lucide-book-text')
     expect(within(art).queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  // C41 (AC 31): o detalhe relê o chamado a cada 15 s; só o relógio dos intervalos é falso
+  it('detalhe relê o chamado a cada 15 s', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+    try {
+      const chamadas = api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
+      abrir('/univag/chamados/ONE-1')
+      await screen.findByRole('heading', { name: 'ONE-1 · preciso do boleto' })
+      const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
+      expect(leituras()).toBe(1)
+      await vi.advanceTimersByTimeAsync(14_999)
+      expect(leituras()).toBe(1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(leituras()).toBe(2)
+      await vi.advanceTimersByTimeAsync(15_000)
+      expect(leituras()).toBe(3)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('eventos em ordem no fuso', async () => {

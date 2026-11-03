@@ -1,37 +1,36 @@
-import { Badge, Card, ListGroup, Stack } from 'react-bootstrap'
+import { BookText, FileText, Paperclip } from 'lucide-react'
+import { Balao } from '../Balao'
 import { Estados, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
+import { Badge } from '../ui/badge'
+import { Card, CardContent } from '../ui/card'
 import { responsavel } from './Chamados'
-
-export const quebra = { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } as const
 
 export function Cabecalho({ c }: { c: Chamado }) {
   return (
     <>
-      <h1 className="h4" style={{ overflowWrap: 'anywhere' }}>
+      <h1 className="text-xl font-semibold break-words">
         {c.numero} · {c.titulo}
       </h1>
-      <p className="mb-2">
-        <Badge bg="primary" className="me-2">
-          {Estados[c.estado]}
-        </Badge>
-        <span className="small text-body-secondary">
+      <p className="mb-0 flex flex-wrap items-center gap-2">
+        <Badge>{Estados[c.estado]}</Badge>
+        <span className="text-sm text-muted-foreground">
           {c.setor} · {c.categoria} · {responsavel(c.responsavel)}
         </span>
       </p>
       {c.eventos && (
-        <Card className="mb-3">
-          <Card.Body className="small">
+        <Card className="gap-2 py-3">
+          <CardContent className="px-3 text-sm">
             <div>
               {c.solicitante} · matrícula {c.matricula.numero} · {c.matricula.curso} · {c.matricula.semestre}º semestre
             </div>
             {c.resumo && (
               <div className="mt-2">
-                <div className="fw-semibold">Resumo gerado por IA</div>
-                <div style={quebra}>{c.resumo}</div>
+                <div className="font-semibold">Resumo gerado por IA</div>
+                <div className="break-words whitespace-pre-wrap">{c.resumo}</div>
               </div>
             )}
-          </Card.Body>
+          </CardContent>
         </Card>
       )}
     </>
@@ -41,82 +40,66 @@ export function Cabecalho({ c }: { c: Chamado }) {
 // RAG: a fonte citada, com o link do PDF da versão citada e o aviso de versão atualizada.
 function FonteCitada({ f }: { f: Fonte }) {
   const documento = f.tipo === 'DOCUMENTO'
+  const Icone = documento ? FileText : BookText
   return (
-    <div className="small border-top mt-2 pt-1">
-      <div className="fw-semibold">
-        <i className={`bi ${documento ? 'bi-file-earmark-pdf' : 'bi-journal-text'} me-1`} aria-label={documento ? 'Documento' : 'Artigo'} role="img" />
+    <div className="mt-2 border-t pt-1 text-sm">
+      <div className="flex items-center gap-1 font-semibold">
+        <Icone role="img" aria-label={documento ? 'Documento' : 'Artigo'} className="size-4 shrink-0" />
         {f.titulo}
       </div>
       {f.trechos.map((t, j) => (
-        <blockquote key={j} className="mb-1 fst-italic" style={quebra}>
+        <blockquote key={j} className="mb-1 break-words whitespace-pre-wrap italic">
           “{t}”
         </blockquote>
       ))}
       {documento && (
-        <a href={`/api/documentos/versoes/${f.versaoDocumentoId}`} target="_blank" rel="noreferrer">
+        <a href={`/api/documentos/versoes/${f.versaoDocumentoId}`} target="_blank" rel="noreferrer" className="text-primary underline">
           Abrir o PDF (versão {f.numero})
         </a>
       )}
-      {f.atualizado && <div className="text-warning-emphasis">{documento ? 'Este documento' : 'Este artigo'} foi atualizado depois desta resposta.</div>}
+      {f.atualizado && <div className="font-medium">{documento ? 'Este documento' : 'Este artigo'} foi atualizado depois desta resposta.</div>}
     </div>
   )
 }
 
 export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
   return (
-    <>
-      <h2 className="h6">Conversa com o assistente</h2>
-      <Stack gap={2} className="mb-3">
-        {c.transcricao.map((m, i) => (
-          <Card key={i} className={m.autor === 'ALUNO' ? 'ms-auto bg-primary-subtle' : 'me-auto'} style={{ maxWidth: '90%' }}>
-            <Card.Body className="py-2 px-3">
-              <div style={quebra}>{m.texto}</div>
-              {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
-              <div className="small text-body-secondary text-end">{formatarData(m.criadaEm, fuso)}</div>
-            </Card.Body>
-          </Card>
-        ))}
-      </Stack>
-    </>
+    <section className="flex flex-col gap-2">
+      <h2 className="font-semibold">Conversa com o assistente</h2>
+      {c.transcricao.map((m, i) => (
+        <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} em={m.criadaEm} fuso={fuso}>
+          {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
+        </Balao>
+      ))}
+    </section>
   )
 }
 
 function Mensagem({ m, fuso }: { m: MensagemChamado; fuso: string }) {
-  const nota = m.tipo === 'NOTA'
   return (
-    <Card className={nota ? 'bg-warning-subtle' : m.doAluno ? 'ms-auto bg-primary-subtle' : 'me-auto'} style={{ maxWidth: '90%' }}>
-      <Card.Body className="py-2 px-3">
-        <div className="small fw-semibold">
-          {m.autor}
-          {nota && <Badge bg="warning" text="dark" className="ms-2">Nota interna</Badge>}
+    <Balao doAluno={m.doAluno} autor={m.autor} nota={m.tipo === 'NOTA'} texto={m.texto} em={m.criadaEm} fuso={fuso}>
+      {m.anexos?.map((x) => (
+        <div key={x.id} className="flex flex-wrap items-center gap-1 text-sm break-all">
+          <Paperclip aria-hidden="true" className="size-4 shrink-0" />
+          <a href={`/api/anexos/${x.id}`} target="_blank" rel="noreferrer" className="text-primary underline">
+            {x.nome}
+          </a>{' '}
+          <span className="text-muted-foreground">({Math.ceil(x.tamanho / 1024)} KB)</span>
         </div>
-        <div style={quebra}>{m.texto}</div>
-        {m.anexos?.map((x) => (
-          <div key={x.id} className="small">
-            <i className="bi bi-paperclip me-1" aria-hidden="true" />
-            <a href={`/api/anexos/${x.id}`} target="_blank" rel="noreferrer">
-              {x.nome}
-            </a>{' '}
-            <span className="text-body-secondary">({Math.ceil(x.tamanho / 1024)} KB)</span>
-          </div>
-        ))}
-        <div className="small text-body-secondary text-end">{formatarData(m.criadaEm, fuso)}</div>
-      </Card.Body>
-    </Card>
+      ))}
+    </Balao>
   )
 }
 
 export function Mensagens({ mensagens, fuso }: { mensagens: MensagemChamado[]; fuso: string }) {
   return (
-    <>
-      <h2 className="h6">Atendimento</h2>
-      <Stack gap={2} className="mb-3">
-        {mensagens.length === 0 && <p className="text-body-secondary small">Nenhuma resposta ainda.</p>}
-        {mensagens.map((m) => (
-          <Mensagem key={m.id} m={m} fuso={fuso} />
-        ))}
-      </Stack>
-    </>
+    <section className="flex flex-col gap-2">
+      <h2 className="font-semibold">Atendimento</h2>
+      {mensagens.length === 0 && <p className="mb-0 text-sm text-muted-foreground">Nenhuma resposta ainda.</p>}
+      {mensagens.map((m) => (
+        <Mensagem key={m.id} m={m} fuso={fuso} />
+      ))}
+    </section>
   )
 }
 
@@ -125,17 +108,17 @@ const traco = (v: string | null) => (v === null ? '—' : v)
 export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: string }) {
   if (!eventos) return null
   return (
-    <>
-      <h2 className="h6">Histórico</h2>
-      <ListGroup as="ol" variant="flush" className="small mb-3" data-testid="eventos">
+    <section>
+      <h2 className="font-semibold">Histórico</h2>
+      <ol className="mb-0 divide-y ps-0 text-sm" data-testid="eventos">
         {eventos.map((e, i) => (
-          <ListGroup.Item as="li" key={i} className="px-0">
-            <span className="text-body-secondary me-2">{formatarData(e.criadoEm, fuso)}</span>
+          <li key={i} className="py-1 break-words">
+            <span className="me-2 text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span>
             {e.tipo} · {e.ator}
             {(e.de || e.para) && ` · ${traco(e.de)} → ${traco(e.para)}`}
-          </ListGroup.Item>
+          </li>
         ))}
-      </ListGroup>
-    </>
+      </ol>
+    </section>
   )
 }

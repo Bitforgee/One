@@ -1,11 +1,20 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Alert, Button, Form, Modal, Stack } from 'react-bootstrap'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Paperclip } from 'lucide-react'
+import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
+import { useDropzone } from 'react-dropzone'
 import { useParams } from 'react-router'
-import { BotaoAcao, useAcao } from '../acao'
 import { api, ErroApi } from '../api'
 import { useChamado, type Chamado } from '../chamado'
 import { Opcoes } from '../Opcoes'
 import { useSessao } from '../sessao'
+import { Alert } from '../ui/alert'
+import { Button } from '../ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { NativeSelect, NativeSelectOption } from '../ui/native-select'
+import { Spinner } from '../ui/spinner'
+import { Textarea } from '../ui/textarea'
 import { Carregando } from './Chamados'
 import { Cabecalho, Historico, Mensagens, Transcricao } from './Conversa'
 
@@ -13,13 +22,24 @@ type Executar = (caminho: string, corpo: unknown, depois?: () => void) => void
 type Acoes = { pode: (acao: string) => boolean; executar: Executar; pendente: boolean }
 type Pronta = { id: number; titulo: string; texto: string }
 
-// AC 147: respostas prontas do setor do chamado, só para a equipe
+// Cada botão de ação tem no mínimo 44 px de altura (## Screens linha 9); pendente mostra o Spinner e desabilita.
+function BotaoAcao({ pendente, children, className, ...props }: ComponentProps<typeof Button> & { pendente: boolean }) {
+  return (
+    <Button {...props} className={`h-11 ${className ?? ''}`} disabled={pendente || props.disabled}>
+      {pendente && <Spinner />}
+      {children}
+    </Button>
+  )
+}
+
+// AC 147: respostas prontas do setor do chamado, só para a equipe; uma falha deixa a lista vazia
 function useProntas(setorId?: number) {
-  const [prontas, setProntas] = useState<Pronta[]>([])
-  useEffect(() => {
-    if (setorId) api<Pronta[]>(`/api/respostas-prontas?setorId=${setorId}`).then(setProntas, () => setProntas([]))
-  }, [setorId])
-  return prontas
+  const { data } = useQuery({
+    queryKey: ['prontas', setorId],
+    queryFn: () => api<Pronta[]>(`/api/respostas-prontas?setorId=${setorId}`),
+    enabled: setorId !== undefined,
+  })
+  return data ?? []
 }
 
 type Equipe = { equipe: boolean; nota: boolean }
@@ -28,24 +48,42 @@ type Equipe = { equipe: boolean; nota: boolean }
 function SelecaoPronta({ nota, prontas, setTexto }: { nota: boolean; prontas: Pronta[]; setTexto: (t: string) => void }) {
   if (nota || prontas.length === 0) return null
   return (
-    <Form.Select aria-label="Resposta pronta" className="mb-2" value="" onChange={(e) => setTexto(prontas.find((p) => String(p.id) === e.target.value)!.texto)}>
-      <option value="">Inserir resposta pronta…</option>
+    <NativeSelect aria-label="Resposta pronta" value="" onChange={(e) => setTexto(prontas.find((p) => String(p.id) === e.target.value)!.texto)}>
+      <NativeSelectOption value="">Inserir resposta pronta…</NativeSelectOption>
       {prontas.map((p) => (
-        <option key={p.id} value={p.id}>
+        <NativeSelectOption key={p.id} value={p.id}>
           {p.titulo}
-        </option>
+        </NativeSelectOption>
       ))}
-    </Form.Select>
+    </NativeSelect>
   )
 }
 
-function CampoAnexos({ nota, envio, setArquivos }: { nota: boolean; envio?: boolean; setArquivos: (a: File[]) => void }) {
-  if (nota) return null
+// Área do Dropzone em volta do campo de arquivo nativo, que continua achado pelo rótulo (door 11).
+function CampoAnexos({ arquivos, setArquivos }: { arquivos: File[]; setArquivos: (a: File[]) => void }) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop: (aceitos) => setArquivos(aceitos), noClick: true })
   return (
-    <Form.Group controlId="anexos" className="mt-2">
-      <Form.Label className="small">Anexos (PDF, JPG ou PNG, até 10 MB cada)</Form.Label>
-      <Form.Control key={String(envio)} type="file" size="sm" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setArquivos(Array.from((e.target as HTMLInputElement).files!))} />
-    </Form.Group>
+    <div {...getRootProps({ className: `flex flex-col gap-2 rounded-md border border-dashed px-3 py-2 ${isDragActive ? 'bg-accent' : ''}` })}>
+      <Label htmlFor="anexos" className="cursor-pointer">
+        <Paperclip aria-hidden="true" className="size-4" />
+        Anexos (PDF, JPG ou PNG, até 10 MB cada)
+      </Label>
+      <input {...getInputProps({ id: 'anexos', 'aria-label': undefined, style: undefined, className: 'sr-only', accept: '.pdf,.jpg,.jpeg,.png' })} />
+      {arquivos.map((a, i) => (
+        <div key={i} className="text-sm break-all">
+          {a.name}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Marca({ id, rotulo, marcado, mudar }: { id: string; rotulo: string; marcado: boolean; mudar: (v: boolean) => void }) {
+  return (
+    <div className="flex min-h-11 items-center gap-2">
+      <input type="checkbox" id={id} className="size-4 accent-primary" checked={marcado} onChange={(e) => mudar(e.target.checked)} />
+      <Label htmlFor={id}>{rotulo}</Label>
+    </div>
   )
 }
 
@@ -54,10 +92,10 @@ function MarcasDaEquipe({ equipe, nota, pode, setNota, aguardaAluno, setAguardaA
 }) {
   if (!equipe) return null
   return (
-    <Stack direction="horizontal" gap={3} className="flex-wrap mt-2">
-      {pode('nota') && <Form.Check id="nota" label="Nota interna" checked={nota} onChange={(e) => setNota(e.target.checked)} />}
-      {pode('responder') && !nota && <Form.Check id="aguarda" label="Aguardando aluno" checked={aguardaAluno} onChange={(e) => setAguardaAluno(e.target.checked)} />}
-    </Stack>
+    <div className="flex flex-wrap gap-x-4">
+      {pode('nota') && <Marca id="nota" rotulo="Nota interna" marcado={nota} mudar={setNota} />}
+      {pode('responder') && !nota && <Marca id="aguarda" rotulo="Aguardando aluno" marcado={aguardaAluno} mudar={setAguardaAluno} />}
+    </div>
   )
 }
 
@@ -95,45 +133,43 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   }
 
   return (
-    <Form onSubmit={responder} className="mb-3">
+    <form onSubmit={responder} className="flex flex-col gap-2">
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
-      <Form.Group controlId="resposta">
-        <Form.Label>{rotuloResposta(c, equipe)}</Form.Label>
-        <Form.Control as="textarea" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
-      </Form.Group>
-      <CampoAnexos nota={nota} envio={envio} setArquivos={setArquivos} />
+      <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
+      <Textarea id="resposta" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
+      {!nota && <CampoAnexos key={String(envio)} arquivos={arquivos} setArquivos={setArquivos} />}
       <MarcasDaEquipe equipe={equipe} nota={nota} pode={pode} setNota={setNota} aguardaAluno={aguardaAluno} setAguardaAluno={setAguardaAluno} />
-      <BotaoAcao type="submit" pendente={pendente} className="mt-2" disabled={semEnvio(texto, nota, pode('responder'))}>
+      <BotaoAcao type="submit" pendente={pendente} className="self-start" disabled={semEnvio(texto, nota, pode('responder'))}>
         Enviar
       </BotaoAcao>
-    </Form>
+    </form>
   )
 }
 
 function BotoesDeAcao({ pode, executar, pendente, abrir }: Acoes & { abrir: (modal: 'encaminhar' | 'cancelar') => void }) {
   return (
-    <Stack direction="horizontal" gap={2} className="flex-wrap mb-3">
+    <div className="flex flex-wrap gap-2 empty:hidden">
       {pode('assumir') && (
         <BotaoAcao pendente={pendente} onClick={() => executar('assumir', {})}>
           Assumir
         </BotaoAcao>
       )}
       {pode('confirmar') && (
-        <BotaoAcao pendente={pendente} variant="success" onClick={() => executar('confirmar', {})}>
+        <BotaoAcao pendente={pendente} className="bg-success" onClick={() => executar('confirmar', {})}>
           Confirmar resolução
         </BotaoAcao>
       )}
       {pode('encaminhar') && (
-        <Button variant="outline-secondary" onClick={() => abrir('encaminhar')} disabled={pendente}>
+        <BotaoAcao pendente={false} variant="outline" onClick={() => abrir('encaminhar')} disabled={pendente}>
           Encaminhar
-        </Button>
+        </BotaoAcao>
       )}
       {pode('cancelar') && (
-        <Button variant="outline-danger" onClick={() => abrir('cancelar')} disabled={pendente}>
+        <BotaoAcao pendente={false} variant="outline" className="text-destructive" onClick={() => abrir('cancelar')} disabled={pendente}>
           Cancelar solicitação
-        </Button>
+        </BotaoAcao>
       )}
-    </Stack>
+    </div>
   )
 }
 
@@ -141,29 +177,26 @@ function BotoesDeAcao({ pode, executar, pendente, abrir }: Acoes & { abrir: (mod
 function FormDeAcao({ visivel, enviar, children }: { visivel: boolean; enviar: () => void; children: ReactNode }) {
   if (!visivel) return null
   return (
-    <Form
-      className="mb-3"
+    <form
+      className="flex flex-col gap-2"
       onSubmit={(e) => {
         e.preventDefault()
         enviar()
       }}
     >
       {children}
-    </Form>
+    </form>
   )
 }
 
 type Campo = { valor: string; setValor: (v: string) => void }
-type FormTextoProps = Campo & { visivel: boolean; enviar: () => void; id: string; rotulo: string; botao: string; variant: string; pendente: boolean }
+type FormTextoProps = Campo & { visivel: boolean; enviar: () => void; id: string; rotulo: string; botao: string; variant?: 'outline'; className?: string; pendente: boolean }
 
-function FormTexto({ visivel, enviar, id, rotulo, botao, variant, pendente, valor, setValor }: FormTextoProps) {
+function FormTexto({ visivel, enviar, id, rotulo, botao, variant, className, pendente, valor, setValor }: FormTextoProps) {
   return (
     <FormDeAcao visivel={visivel} enviar={enviar}>
-      <Form.Group controlId={id}>
-        <Form.Label>{rotulo}</Form.Label>
-        <Form.Control as="textarea" rows={2} maxLength={4000} value={valor} onChange={(e) => setValor(e.target.value)} />
-      </Form.Group>
-      <BotaoAcao type="submit" pendente={pendente} variant={variant} className="mt-2" disabled={!valor.trim()}>
+      <CampoMotivo id={id} rotulo={rotulo} valor={valor} setValor={setValor} />
+      <BotaoAcao type="submit" pendente={pendente} variant={variant} className={`self-start ${className ?? ''}`} disabled={!valor.trim()}>
         {botao}
       </BotaoAcao>
     </FormDeAcao>
@@ -175,58 +208,74 @@ function FormLinha({ visivel, enviar, id, rotulo, botao, pendente, pronto, child
 }) {
   return (
     <FormDeAcao visivel={visivel} enviar={enviar}>
-      <Form.Group controlId={id}>
-        <Form.Label>{rotulo}</Form.Label>
-        <Stack direction="horizontal" gap={2}>
-          {children}
-          <BotaoAcao type="submit" pendente={pendente} variant="outline-secondary" disabled={!pronto}>
-            {botao}
-          </BotaoAcao>
-        </Stack>
-      </Form.Group>
+      <Label htmlFor={id}>{rotulo}</Label>
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">{children}</div>
+        <BotaoAcao type="submit" pendente={pendente} variant="outline" disabled={!pronto}>
+          {botao}
+        </BotaoAcao>
+      </div>
     </FormDeAcao>
   )
 }
 
-function Confirmacao({ aberto, fechar, titulo, botao, variant, pronto, confirmar, children }: {
-  aberto: boolean; fechar: () => void; titulo: string; botao: string; variant?: string; pronto: boolean; confirmar: () => void; children: ReactNode
+function Confirmacao({ aberto, fechar, titulo, botao, destrutivo, pronto, confirmar, children }: {
+  aberto: boolean; fechar: () => void; titulo: string; botao: string; destrutivo?: boolean; pronto: boolean; confirmar: () => void; children: ReactNode
 }) {
   return (
-    <Modal show={aberto} onHide={fechar} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>{titulo}</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>{children}</Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={fechar}>
-          Voltar
-        </Button>
-        <Button
-          variant={variant}
-          disabled={!pronto}
-          onClick={() => {
-            fechar()
-            confirmar()
-          }}
-        >
-          {botao}
-        </Button>
-      </Modal.Footer>
-    </Modal>
+    <Dialog open={aberto} onOpenChange={fechar}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">{children}</div>
+        <DialogFooter>
+          <Button variant="outline" onClick={fechar}>
+            Voltar
+          </Button>
+          <Button
+            variant={destrutivo ? 'destructive' : 'default'}
+            disabled={!pronto}
+            onClick={() => {
+              fechar()
+              confirmar()
+            }}
+          >
+            {botao}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
 function CampoMotivo({ id, rotulo, valor, setValor }: Campo & { id: string; rotulo: string }) {
   return (
-    <Form.Group controlId={id}>
-      <Form.Label>{rotulo}</Form.Label>
-      <Form.Control as="textarea" rows={2} maxLength={4000} value={valor} onChange={(e) => setValor(e.target.value)} />
-    </Form.Group>
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={id}>{rotulo}</Label>
+      <Textarea id={id} rows={2} maxLength={4000} value={valor} onChange={(e) => setValor(e.target.value)} />
+    </div>
   )
 }
 
+type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
+
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
-  const acao = useAcao()
+  // Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
+  const acao = useMutation({
+    mutationFn: async ({ caminho, corpo }: Pedido) => {
+      try {
+        return await api<Chamado>(`/api/chamados/${c.numero}/${caminho}`, corpo)
+      } catch (e) {
+        if (e instanceof ErroApi && e.status === 409) await carregar()
+        throw e
+      }
+    },
+    onSuccess: (novo, { depois }) => {
+      setChamado(novo)
+      depois?.()
+    },
+  })
   const [resolucao, setResolucao] = useState('')
   const [motivo, setMotivo] = useState('') // o mesmo motivo serve à rejeição, ao encaminhamento e ao cancelamento
   const [categoriaId, setCategoriaId] = useState('')
@@ -236,71 +285,60 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const fechar = () => setModal(undefined)
   const equipe = c.eventos !== null
   const pode = (a: string) => c.acoes.includes(a)
-
-  // Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
-  function executar(caminho: string, corpo: unknown, depois?: () => void) {
-    acao.executar(async () => {
-      try {
-        setChamado(await api<Chamado>(`/api/chamados/${c.numero}/${caminho}`, corpo))
-        depois?.()
-      } catch (e) {
-        if (e instanceof ErroApi && e.status === 409) await carregar()
-        throw e
-      }
-    })
-  }
-  const acoes = { pode, executar, pendente: acao.pendente }
+  const executar: Executar = (caminho, corpo, depois) => acao.mutate({ caminho, corpo, depois })
+  const pendente = acao.isPending
+  const acoes = { pode, executar, pendente }
   const limparMotivo = () => setMotivo('')
 
   return (
-    <>
+    <div className="mx-auto flex max-w-3xl flex-col gap-4">
       <Cabecalho c={c} />
       <Transcricao c={c} fuso={fuso} />
       <Mensagens mensagens={c.mensagens} fuso={fuso} />
       <Responder c={c} equipe={equipe} {...acoes} />
       <BotoesDeAcao {...acoes} abrir={setModal} />
       <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
-        id="resolucao" rotulo="Resolução" botao="Resolver" variant="success" pendente={acao.pendente} valor={resolucao} setValor={setResolucao} />
+        id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
       <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
-        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={acao.pendente} pronto={categoriaId !== ''}>
-        <Form.Select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
+        <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
           <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
-        </Form.Select>
+        </NativeSelect>
       </FormLinha>
       <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
-        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={acao.pendente} pronto={original.trim() !== ''}>
-        <Form.Control placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} />
+        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
+        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
       </FormLinha>
       <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
-        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline-secondary" pendente={acao.pendente} valor={motivo} setValor={setMotivo} />
-      {acao.alerta}
+        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
+      {acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
       <Historico eventos={c.eventos} fuso={fuso} />
 
       <Confirmacao aberto={modal === 'encaminhar'} fechar={fechar} titulo="Encaminhar para outro setor?" botao="Encaminhar" pronto={setorId !== '' && motivo.trim() !== ''}
         confirmar={() => executar('encaminhar', { setorId: Number(setorId), motivo }, () => { setMotivo(''); setSetorId('') })}>
-        <p className="small">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>
-        <Form.Group controlId="setor" className="mb-2">
-          <Form.Label>Setor</Form.Label>
-          <Form.Select value={setorId} onChange={(e) => setSetorId(e.target.value)}>
+        <p className="mb-0 text-sm">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="setor">Setor</Label>
+          <NativeSelect id="setor" value={setorId} onChange={(e) => setSetorId(e.target.value)}>
             <Opcoes vazio="Escolha o setor" itens={c.setores} />
-          </Form.Select>
-        </Form.Group>
+          </NativeSelect>
+        </div>
         <CampoMotivo id="motivo-encaminhar" rotulo="Motivo" valor={motivo} setValor={setMotivo} />
       </Confirmacao>
 
-      <Confirmacao aberto={modal === 'cancelar'} fechar={fechar} titulo="Cancelar a solicitação?" botao="Cancelar solicitação" variant="danger" pronto
+      <Confirmacao aberto={modal === 'cancelar'} fechar={fechar} titulo="Cancelar a solicitação?" botao="Cancelar solicitação" destrutivo pronto
         confirmar={() => executar('cancelar', { motivo: motivo.trim() || undefined }, limparMotivo)}>
         <CampoMotivo id="justificativa" rotulo="Justificativa (opcional)" valor={motivo} setValor={setMotivo} />
       </Confirmacao>
-    </>
+    </div>
   )
 }
 
 export function ChamadoDetalhe() {
   const { numero } = useParams()
   const { me } = useSessao()
-  const { chamado, erro, carregar, setChamado } = useChamado(numero)
-  if (erro && !chamado) return <Alert variant="danger">{erro}</Alert>
+  const { chamado, erro, carregar, setChamado } = useChamado(numero!)
+  if (erro && !chamado) return <Alert variant="destructive">{erro}</Alert>
   if (!chamado) return <Carregando />
   return <Detalhe c={chamado} fuso={me.instituicao.fuso} carregar={carregar} setChamado={setChamado} />
 }

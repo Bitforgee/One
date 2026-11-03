@@ -206,3 +206,60 @@ test.describe('Assistente', () => {
     expect(Math.abs(coluna.x - (largura - coluna.x - coluna.width))).toBeLessThanOrEqual(1)
   })
 })
+
+test.describe('Detalhe do chamado', () => {
+  test('arranjo Detalhe do chamado', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await simularApi(page)
+    await page.goto('/univag/chamados/ONE-123')
+    await page.getByText('Resumo gerado por IA').waitFor()
+
+    const titulo = await caixa(page.getByRole('heading', { level: 1 }))
+    expect(titulo.x).toBeGreaterThanOrEqual(0)
+    expect(titulo.x + titulo.width).toBeLessThanOrEqual(360)
+
+    // <button> do main; o campo de arquivo (sr-only, papel button no Chromium) não é botão de ação
+    const botoes = page.getByRole('main').locator('button')
+    expect(await botoes.count()).toBeGreaterThan(0)
+    for (const botao of await botoes.all()) {
+      if (!(await botao.isVisible())) continue
+      expect((await caixa(botao)).height, await botao.textContent() ?? '').toBeGreaterThanOrEqual(44 - 1)
+    }
+
+    // a fonte fica dentro do balão do assistente, abaixo do texto
+    const balao = page.locator('.is-assistant').filter({ hasText: 'Como emitir a segunda via do boleto do semestre' })
+    const b = await caixa(balao)
+    const texto = await caixa(balao.getByText('O boleto fica em https://portal.univag.edu.br/financeiro/boletos/segunda-via', { exact: true }))
+    const fonte = await caixa(balao.locator('div.border-t'))
+    expect(fonte.y).toBeGreaterThanOrEqual(texto.y + texto.height - 1)
+    expect(fonte.x).toBeGreaterThanOrEqual(b.x - 1)
+    expect(fonte.x + fonte.width).toBeLessThanOrEqual(b.x + b.width + 1)
+    expect(fonte.y + fonte.height).toBeLessThanOrEqual(b.y + b.height + 1)
+
+    await page.setViewportSize({ width: 1024, height: 740 })
+    expect((await caixa(page.locator('main > div').first())).width).toBeLessThanOrEqual(768)
+  })
+})
+
+test.describe('listas de chamados', () => {
+  test('arranjo listas de chamados', async ({ page }) => {
+    await simularApi(page)
+    for (const caminho of ['/univag/solicitacoes', '/univag/fila']) {
+      await page.setViewportSize({ width: 360, height: 740 })
+      await page.goto(caminho)
+      const cartao = page.getByRole('main').getByRole('link').filter({ hasText: 'ONE-123' })
+      await cartao.waitFor()
+      const lista = await caixa(page.locator('main > div').first())
+      const c = await caixa(cartao)
+      expect(Math.abs(c.width - lista.width), caminho).toBeLessThanOrEqual(1)
+      const numero = await caixa(cartao.getByText('ONE-123', { exact: true }))
+      const selo = await caixa(cartao.locator('[data-slot=badge]'))
+      expect(Math.abs(numero.y - selo.y), caminho).toBeLessThanOrEqual(4)
+      const titulo = await caixa(cartao.getByText(/^Preciso da segunda via/))
+      expect(titulo.y, caminho).toBeGreaterThanOrEqual(Math.max(numero.y + numero.height, selo.y + selo.height) - 1)
+
+      await page.setViewportSize({ width: 1024, height: 740 })
+      expect((await caixa(page.locator('main > div').first())).width, caminho).toBeLessThanOrEqual(768)
+    }
+  })
+})

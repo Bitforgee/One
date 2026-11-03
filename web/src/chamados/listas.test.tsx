@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { onlineManager } from '@tanstack/react-query'
+import { describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 
 const atendente = me({ papeis: ['ALUNO', 'ATENDENTE'] })
@@ -42,7 +43,7 @@ describe('listas de chamados', () => {
     lista('fila', () => new Promise(() => {}))
     abrir('/univag/fila')
     expect(await screen.findByRole('heading', { name: 'Fila' })).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('spinner-border')
+    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')
     expect(screen.queryByText('Nenhum chamado na fila dos seus setores.')).not.toBeInTheDocument()
   })
 
@@ -52,5 +53,23 @@ describe('listas de chamados', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao listar.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
+  })
+
+  // C56 (AC 19, door 7): sem rede, a consulta não pausa; o erro vira o alert, numa chamada só
+  it('sem rede a lista mostra o erro', async () => {
+    const fetch = vi.fn(async (url: string) => {
+      if (url === '/api/auth/me') return new Response(JSON.stringify(atendente), { headers: { 'Content-Type': 'application/json' } })
+      throw new TypeError('Failed to fetch')
+    })
+    vi.stubGlobal('fetch', fetch)
+    onlineManager.setOnline(false)
+    try {
+      abrir('/univag/fila')
+      expect(await screen.findByRole('alert')).toHaveTextContent('Failed to fetch')
+      expect(screen.queryByRole('status', { name: 'Carregando' })).not.toBeInTheDocument()
+      expect(fetch.mock.calls.filter(([url]) => url === '/api/chamados?escopo=fila')).toHaveLength(1)
+    } finally {
+      onlineManager.setOnline(true)
+    }
   })
 })
