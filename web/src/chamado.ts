@@ -42,6 +42,25 @@ export const Estados: Record<string, string> = {
   FECHADO: 'Fechado',
 }
 
+// Frase de cada evento do Histórico (historico-legivel ## Screens); tipo desconhecido sai cru para nunca esconder um evento.
+const estado = (v: string | null) => (v === null ? '—' : (Estados[v] ?? v))
+const Frases: Record<string, (e: Evento) => string> = {
+  CRIACAO: (e) => `${e.ator} abriu a solicitação`,
+  TRANSICAO: (e) => `${e.ator} mudou o estado de ${estado(e.de)} para ${estado(e.para)}`,
+  ATRIBUICAO: (e) => (e.para ? `${e.ator} atribuiu a ${e.para}` : `${e.ator} tirou ${e.de} da responsabilidade`),
+  LEMBRETE: (e) => `${e.ator} enviou um lembrete ao aluno`,
+  NOTA: (e) => `${e.ator} escreveu uma nota interna`,
+  RESPOSTA: (e) => `${e.ator} respondeu ao aluno`,
+  ANEXO: (e) => `${e.ator} anexou um arquivo`,
+  ENCAMINHAMENTO: (e) => `${e.ator} encaminhou de ${e.de} para ${e.para}`,
+  RECLASSIFICACAO: (e) => `${e.ator} mudou a categoria de ${e.de} para ${e.para}`,
+}
+
+export function frase(e: Evento) {
+  const texto = Frases[e.tipo]?.(e) ?? `${e.ator} · ${e.tipo}`
+  return e.detalhe ? `${texto} · ${e.detalhe}` : texto
+}
+
 export const IntervaloAtualizacao = 15_000
 export const IntervaloComConexao = 60_000
 

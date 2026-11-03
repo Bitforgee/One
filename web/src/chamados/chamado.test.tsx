@@ -179,13 +179,64 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    const itens = within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent)
+    const lis = within(await screen.findByTestId('eventos')).getAllByRole('listitem')
     // America/Cuiaba é UTC-4: 03:30Z ainda é dia 1º
-    expect(itens).toEqual([
-      '01/11/2026 23:30CRIACAO · Sistema · — → ABERTO',
-      '02/11/2026 08:00ATRIBUICAO · Carla · — → Carla',
-      '02/11/2026 08:00TRANSICAO · Carla · ABERTO → EM_ATENDIMENTO',
+    expect(lis.map((li) => li.textContent)).toEqual([
+      '01/11/2026 23:30 · Sistema abriu a solicitação',
+      '02/11/2026 08:00 · Carla atribuiu a Carla',
+      '02/11/2026 08:00 · Carla mudou o estado de Aberto para Em atendimento',
     ])
+    for (const li of lis) expect(within(li).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toHaveClass('text-muted-foreground')
+  })
+
+  // historico-legivel: monta o detalhe da equipe com estes eventos e devolve o texto de cada item do Histórico
+  async function historico(eventos: { tipo: string; ator?: string; de?: string | null; para?: string | null; detalhe?: string | null }[]) {
+    const completos = eventos.map((e) => ({ ator: 'Carla', de: null, para: null, detalhe: null, criadoEm: '2026-11-02T12:00:00Z', ...e }))
+    api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe({ eventos: completos })] })
+    abrir('/univag/chamados/ONE-1')
+    return within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
+  }
+
+  // historico-legivel C1, C2 (AC 1, AC 2): as 11 linhas de ## Screens
+  it('frase de cada tipo de evento', async () => {
+    const Casos: [{ tipo: string; ator?: string; de?: string | null; para?: string | null }, string][] = [
+      [{ tipo: 'CRIACAO', ator: 'Sistema', para: 'ABERTO' }, 'Sistema abriu a solicitação'],
+      [{ tipo: 'TRANSICAO', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO' }, 'Carla mudou o estado de Aguardando aluno para Em atendimento'],
+      [{ tipo: 'ATRIBUICAO', de: null, para: 'Bruno' }, 'Carla atribuiu a Bruno'],
+      [{ tipo: 'ATRIBUICAO', de: 'Bruno', para: null }, 'Carla tirou Bruno da responsabilidade'],
+      [{ tipo: 'LEMBRETE', ator: 'Sistema' }, 'Sistema enviou um lembrete ao aluno'],
+      [{ tipo: 'NOTA' }, 'Carla escreveu uma nota interna'],
+      [{ tipo: 'RESPOSTA' }, 'Carla respondeu ao aluno'],
+      [{ tipo: 'ANEXO' }, 'Carla anexou um arquivo'],
+      [{ tipo: 'ENCAMINHAMENTO', de: 'Secretaria', para: 'Financeiro' }, 'Carla encaminhou de Secretaria para Financeiro'],
+      [{ tipo: 'RECLASSIFICACAO', de: 'Boleto', para: 'Matrícula' }, 'Carla mudou a categoria de Boleto para Matrícula'],
+      [{ tipo: 'TRANSICAO', de: 'RESOLVIDO', para: 'FECHADO' }, 'Carla mudou o estado de Resolvido para Fechado'],
+    ]
+    const itens = await historico(Casos.map(([e]) => e))
+    expect(itens).toEqual(Casos.map(([, f]) => f))
+    for (const item of itens) expect(item, 'sem código cru').not.toMatch(/[A-Z]{2,}_[A-Z]+|\b(?:TRANSICAO|CRIACAO|ATRIBUICAO|ABERTO|FECHADO|RESOLVIDO)\b/)
+  })
+
+  // historico-legivel C3 (AC 3)
+  it('detalhe no fim da frase', async () => {
+    expect(
+      await historico([
+        { tipo: 'TRANSICAO', de: 'ABERTO', para: 'FECHADO', detalhe: 'Aluno desistiu' },
+        { tipo: 'ANEXO', detalhe: 'boleto.pdf' },
+        { tipo: 'ATRIBUICAO', ator: 'Sistema', de: 'Bruno', para: null, detalhe: 'Responsável desativado' },
+        { tipo: 'NOTA' },
+      ]),
+    ).toEqual([
+      'Carla mudou o estado de Aberto para Fechado · Aluno desistiu',
+      'Carla anexou um arquivo · boleto.pdf',
+      'Sistema tirou Bruno da responsabilidade · Responsável desativado',
+      'Carla escreveu uma nota interna',
+    ])
+  })
+
+  // historico-legivel C5 (AC 5)
+  it('estado desconhecido sai cru', async () => {
+    expect(await historico([{ tipo: 'TRANSICAO', de: 'ABERTO', para: 'SUSPENSO' }])).toEqual(['Carla mudou o estado de Aberto para SUSPENSO'])
   })
 
   it('resposta pronta preenche o texto e o anexo vai junto', async () => {

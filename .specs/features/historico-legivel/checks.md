@@ -45,8 +45,9 @@ Proof: `cd web && npx vitest run src/chamados/textos.test.tsx -t "textos detalhe
 Proof: `cd web && npx vitest run`
 Proof: `cd web && npx playwright test`
 
-**C10** - Cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD
-Proof: `python .specs/features/interface-nova/chamadas_iguais.py <base>`
+**C10** - Cada teste de `<base>` faz as mesmas chamadas à API em `<base>` e em HEAD, exceto `conversa do chamado > histórico só mostra a seta quando o evento tem origem ou destino`, reescrito por `## Test policy` como `estado nulo no histórico sai como travessão`, que pode faltar no HEAD (L-048)
+Proof: `python .specs/features/historico-legivel/chamadas_iguais.py --autoteste`
+Proof: `python .specs/features/historico-legivel/chamadas_iguais.py <base>`
 
 **C11** - Barreiras do AD-018: `crapper` sai 0 no limite 9.99 e `dryer` sem candidato 0.8+; o `mutator` segue suspenso (AD-025)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
@@ -94,3 +95,5 @@ Estimativa = arquivos lidos (`Conversa.tsx` 4,8 KB, `chamado.ts` ~3 KB, 4 testes
 
 - S1 + S0 = ~25k, só `web/src/chamados` e `chamado.ts` - um construtor, sem pergunta
 - Mechanism: one builder
+- Feature base (`<base>`): `a3d6e05` (`docs(historico-legivel): plan and checks`)
+- **Settled mid-build:** C10 ganhou a exceção do teste renomeado antes de qualquer prova rodar (o nome antigo descrevia a seta, que deixou de existir); o script envolve o da `redesign-institucional`

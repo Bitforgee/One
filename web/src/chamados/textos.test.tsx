@@ -80,7 +80,7 @@ const daEquipe = chamado({
 })
 const ValoresDaEquipe = [
   'Em atendimento', 'preciso do boleto', 'O boleto fica no portal.', 'Aluna pede o boleto.', 'Regulamento', 'Boleto do semestre', 'Aluno ligou.', 'Bruno', 'Boleto',
-  'Secretaria', 'Matrícula', 'TRANSICAO · Carla · ABERTO → EM_ATENDIMENTO', data('2026-11-02T12:00:00Z'), data('2026-11-02T12:10:00Z'),
+  'Secretaria', 'Matrícula', 'Carla mudou o estado de Aberto para Em atendimento' /* historico-legivel C8 */, data('2026-11-02T12:00:00Z'), data('2026-11-02T12:10:00Z'),
 ]
 
 function detalhe(c: Chamado | Rota, quem = me({ papeis: ['ATENDENTE'], matriculas: [] }), rotas: Record<string, Rota> = {}) {

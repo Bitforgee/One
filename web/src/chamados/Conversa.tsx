@@ -1,6 +1,6 @@
 import { BookText, FileText, Paperclip } from 'lucide-react'
 import { Balao, Quebravel } from '../Balao'
-import { Estados, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
+import { Estados, frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { Badge } from '../ui/badge'
 import { Card, CardContent } from '../ui/card'
@@ -103,8 +103,6 @@ export function Mensagens({ mensagens, fuso }: { mensagens: MensagemChamado[]; f
   )
 }
 
-const traco = (v: string | null) => (v === null ? '—' : v)
-
 export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: string }) {
   if (!eventos) return null
   return (
@@ -113,9 +111,7 @@ export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: s
       <ol className="mb-0 divide-y ps-0 text-sm" data-testid="eventos">
         {eventos.map((e, i) => (
           <li key={i} className="py-1 break-words">
-            <span className="me-2 text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span>
-            {e.tipo} · {e.ator}
-            {(e.de || e.para) && ` · ${traco(e.de)} → ${traco(e.para)}`}
+            <span className="text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span> · {frase(e)}
           </li>
         ))}
       </ol>
