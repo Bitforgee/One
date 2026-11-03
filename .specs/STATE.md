@@ -34,8 +34,8 @@
 
 ## Handoff
 
-**Feature**: Etapa 4c concluída em 03/11: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio`, `tempo-real-signalr` e `web-push` (PASS rodada 2) verificados; `interface-nova` concluída com o C7 aberto (AD-026); AD-019 a AD-024 ativas
-**In progress**: `redesign-institucional` (AD-027) - build
+**Feature**: `redesign-institucional` (AD-027) verificado em 03/11 (PASS rodada 3, 27/27, 5 faltas mortas); Etapa 4c concluída em 03/11: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio`, `tempo-real-signalr` e `web-push` (PASS rodada 2) verificados; `interface-nova` concluída com o C7 aberto (AD-026); AD-019 a AD-024 ativas
+**In progress**: nothing
 **Next step**: Etapa 5 (09–19/11): chave da OpenAI no `.env`, dados reais da Univag, medição da conferência de trechos com a IA real, ensaio; congelamento a partir de 17/11
 **Blockers**: chave da OpenAI no `.env`; par VAPID de produção; hospedagem e SMTP (16/11); perguntas `blocks go-live`; repositório remoto do grupo não criado
 **Uncommitted**: nothing

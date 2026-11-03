@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 48,
+  "next_id": 51,
   "lessons": [
     {
       "id": "L-001",
@@ -862,6 +862,60 @@
       ],
       "created": "2026-11-03T06:10:38Z",
       "last_seen": "2026-11-03T06:10:38Z"
+    },
+    {
+      "id": "L-048",
+      "key": "spec_precision_gap::quando o test policy permite reescrever testes nomeie no check de comparacao com a base os testes reescritos que podem faltar",
+      "text": "Quando o Test policy permite reescrever testes, nomeie no check de comparação com a base os testes reescritos que podem faltar.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "redesign-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C25 (verification rodada 1, gap 1) (specs/checks)"
+      ],
+      "created": "2026-11-03T12:33:37Z",
+      "last_seen": "2026-11-03T12:33:37Z"
+    },
+    {
+      "id": "L-049",
+      "key": "ac_gap::de um check a cada valor de visual e a cada frase de arranjo de screens inclusive as notas acrescentadas durante o build",
+      "text": "Dê um check a cada valor de ## Visual e a cada frase de arranjo de ## Screens, inclusive às notas acrescentadas durante o build.",
+      "signal": "ac_gap",
+      "scope": "specs/ui",
+      "status": "candidate",
+      "features": [
+        "redesign-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "plan.md ## Visual e ## Screens linha 0 (verification rodadas 1 e 2) (specs/ui)"
+      ],
+      "created": "2026-11-03T12:33:37Z",
+      "last_seen": "2026-11-03T12:33:37Z"
+    },
+    {
+      "id": "L-050",
+      "key": "spec_deviation::ajuste visual feito depois da aprovacao entra como nota em screens e num check antes do commit que o fecha",
+      "text": "Ajuste visual feito depois da aprovação entra como nota em ## Screens e num check antes do commit que o fecha.",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "redesign-institucional"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/Autenticado.tsx:126 lg:whitespace-normal (verification rodada 1, gap 2) (web)"
+      ],
+      "created": "2026-11-03T12:33:37Z",
+      "last_seen": "2026-11-03T12:33:37Z"
     }
   ]
 }

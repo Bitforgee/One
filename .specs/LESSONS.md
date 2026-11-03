@@ -294,6 +294,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md C24, C34 (specs/checks)
 - last seen: 2026-11-03T06:10:38Z
 
+### L-048 - Quando o Test policy permite reescrever testes, nomeie no check de comparação com a base os testes reescritos que podem faltar.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: redesign-institucional
+- evidence: checks.md C25 (verification rodada 1, gap 1) (specs/checks)
+- last seen: 2026-11-03T12:33:37Z
+
+### L-049 - Dê um check a cada valor de ## Visual e a cada frase de arranjo de ## Screens, inclusive às notas acrescentadas durante o build.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/ui` · harmful: 0
+- features: redesign-institucional
+- evidence: plan.md ## Visual e ## Screens linha 0 (verification rodadas 1 e 2) (specs/ui)
+- last seen: 2026-11-03T12:33:37Z
+
+### L-050 - Ajuste visual feito depois da aprovação entra como nota em ## Screens e num check antes do commit que o fecha.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: redesign-institucional
+- evidence: web/src/Autenticado.tsx:126 lg:whitespace-normal (verification rodada 1, gap 2) (web)
+- last seen: 2026-11-03T12:33:37Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
