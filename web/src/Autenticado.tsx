@@ -3,6 +3,7 @@ import { BookText, ChartColumn, FileText, Inbox, ListChecks, LogOut, Menu as Ico
 import { useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
+import { AvisosPush } from './AvisosPush'
 import type { Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
@@ -151,6 +152,7 @@ export function Autenticado() {
             <Links itens={itens} slug={slug} />
             <Mais itens={itens} slug={slug} />
           </div>
+          {me.papeis.includes('ALUNO') && <AvisosPush />}
           <Tema />
           <Drawer open={aberto} onOpenChange={setAberto}>
             <DrawerTrigger asChild>

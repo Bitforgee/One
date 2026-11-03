@@ -16,7 +16,7 @@ function envio(corpo: unknown): RequestInit {
 }
 
 // Toda chamada à API passa por aqui: erro vira ErroApi com o `detail` do ProblemDetails.
-export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?: 'PUT'): Promise<T> {
+export async function api<T = unknown>(caminho: string, corpo?: unknown, metodo?: 'PUT' | 'DELETE'): Promise<T> {
   const r = await fetch(caminho, { method: metodo ?? (corpo === undefined ? 'GET' : 'POST'), credentials: 'same-origin', ...envio(corpo) })
   const texto = await r.text()
   const json = texto ? JSON.parse(texto) : undefined

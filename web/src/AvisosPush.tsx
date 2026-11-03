@@ -1,0 +1,37 @@
+import { useQuery } from '@tanstack/react-query'
+import { Bell, BellOff } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { api } from './api'
+import { ativar, desativar, subscricaoLocal, suportado } from './push'
+import { Button } from './ui/button'
+
+// Botão da barra do aluno: só aparece com suporte do navegador e a chave do servidor (404 = push desligado).
+export function AvisosPush() {
+  const chave = useQuery({ queryKey: ['push-chave'], queryFn: () => api<{ chavePublica: string }>('/api/push/chave'), enabled: suportado(), retry: false })
+  const local = useQuery({ queryKey: ['push-local'], queryFn: subscricaoLocal, enabled: !!chave.data })
+  const [ocupado, setOcupado] = useState(false)
+  if (!chave.data || local.data === undefined) return null
+  const inscrito = local.data
+
+  async function alternar() {
+    setOcupado(true)
+    try {
+      if (inscrito) await desativar(inscrito)
+      else if (!(await ativar(chave.data!.chavePublica))) toast.error('Os avisos estão bloqueados neste navegador')
+      await local.refetch()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Não foi possível alterar os avisos.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  const rotulo = inscrito ? 'Desativar avisos' : 'Ativar avisos neste aparelho'
+  const Icone = inscrito ? BellOff : Bell
+  return (
+    <Button variant="ghost" size="icon" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={alternar}>
+      <Icone aria-hidden="true" />
+    </Button>
+  )
+}
