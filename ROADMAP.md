@@ -1,7 +1,7 @@
 # One: roadmap
 
 - **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  interface nova em build, lote 3 de 3, com as 3 telas da banca já migradas; domínio rico e contratos construído, os 3 lotes, aguardando a verificação)
+  domínio rico e contratos verificado; interface nova concluída com o C7 de mutação aberto por decisão do usuário)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -10,7 +10,7 @@
   - `.specs/features/vertical-slice-completa/`: um arquivo por caso de uso com `Mediator` (Etapa 4c), 31 checks;
   - `.specs/features/interface-nova/`: shadcn/ui e Tailwind no `web/` (Etapa 4c), 61 critérios, 94 checks;
   - `.specs/features/dominio-e-contratos/`: domínio rico e contratos por caso de uso (Etapa 4c), 28 critérios, 41 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-025;
+  - `.specs/STATE.md`: decisões AD-001 a AD-026;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -46,13 +46,13 @@ hospedagem e ensaio.
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
 | Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 329 (237 antes da refatoração), web 131 (35 antes da refatoração, 99 antes da interface nova), e2e 27 (11 de antes mais 16 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Testes | API 329 (237 antes da refatoração), web 168 (35 antes da refatoração, 99 antes da interface nova), e2e 45 (11 de antes mais 34 de tela e de arranjo de 360 a 1920 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
-| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. **Lote 2 verde** (C39 a C59, `ad45b53..c617f06`): detalhe do chamado, Indicadores (Recharts separado, TanStack Table 8.21.3, DayPicker) e listas; Vitest 131, e2e 27; mutação interrompida (AD-025). Lote 3 (acesso, conhecimento, administração, saída do Bootstrap) em build no Sonnet |
-| Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11. **Construído nos 3 lotes** (`2a2ba2e..ba5a01a`): retratos gravados contra o código de antes; `Chamado`, `Artigo` e `Documento` ricos em pastas por agregado; 29 `Entrada` e respostas nomeadas, as compartilhadas em `Shared/`; API 329, nenhuma migração, os 5 retratos de JSON idênticos. C3 a C41 provados; C1 espera o lote 3 da interface (um e2e de arranjo dela); C2 com uma troca de nome de tipo aceita pelo usuário. Verificação independente a seguir |
+| Interface nova (`interface-nova`) | **Concluída em 02/11** (`2aa8a9a..bd7d7ce`): 15 telas em shadcn/ui e Tailwind, Bootstrap removido, cabeçalho com nomes sempre visíveis e menu "Mais". Verificação: rodada 1 reprovou por sobreposição no cabeçalho e lacunas de teste, rodada 2 pela contagem de links da barra, rodada 3 só pelo C7 (mutação suspensa, AD-025). Decisão do usuário (AD-026): fechar com o C7 aberto. Vitest 168, e2e 45 |
+| Domínio rico e contratos (`dominio-e-contratos`) | 41 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só pelo C27 (`Agendador.cs` mudou só nos comentários removidos a pedido do usuário), aceito pelo usuário. 28 falhas injetadas, todas pegas; API 329, nenhuma migração |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -224,11 +224,11 @@ antes do código, verificação independente depois), e a próxima só começa c
 | Quando | Feature | Onde |
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
-| 02–05/11 | domínio rico e contratos por caso de uso (AD-024): construído em 02/11 (3 lotes); verificação depois do lote 3 da interface | `api/` |
+| 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
-| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: lotes 1 (fundação e Assistente) e 2 (detalhe do chamado, Indicadores, listas) verdes em 02/11: as 3 telas da banca estão migradas; lote 3 (demais telas e saída do Bootstrap) em build | `web/` |
+| 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
 
@@ -255,7 +255,7 @@ Plano e checks aprovados em 02/11. Build em 3 lotes, cada um só com o anterior 
 - [x] Lote 3 (S2): respostas nomeadas e 29 `Entrada`, um por caso de uso; as compartilhadas por 3 ou mais
       casos em `Shared/`. API 329, retratos de JSON idênticos. Decisão do usuário em 02/11: aceita a troca
       do nome do tipo citado numa asserção antiga (`Chamados.DetalheChamado` → `Chamados.Shared.DetalheChamado`).
-- [ ] Verificação independente aprovada.
+- [x] Verificação independente aprovada em 02/11 (rodada 2).
 
 Decisão do usuário em 02/11/2026: a vertical slice não basta se as entidades ficam todas num
 arquivo, sem regra, e as respostas são objetos anônimos. Entra logo depois da verificação da vertical
@@ -390,12 +390,14 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
 - [x] Lote 2 (S3 a S5, C39 a C59): detalhe do chamado, Indicadores (Recharts carregado sob demanda,
       TanStack Table 8.21.3, DayPicker 10.0.2 em português) e listas. Vitest 131, e2e 27, pior CRAP 9,0,
       dryer limpo. A mutação desse lote foi interrompida em 02/11 (AD-025); os checks de mutação ficam abertos.
-- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento (Tiptap só texto, área de arrastar arquivo),
+- [x] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento (Tiptap só texto, área de arrastar arquivo),
       administração e a saída do Bootstrap. Sem mutação (AD-025); construtor no Sonnet. Decisão do usuário
       em 02/11: a tela do chamado troca o `setInterval` pelo `refetchInterval` do TanStack Query, e o teste
       "atualiza chamado a cada 15 s" passa a avançar o relógio com `await` (nenhum `expect` muda).
-- [ ] Verificação independente aprovada (perfil `ui`), com os checks de mutação marcados como suspensos
-      por decisão do usuário.
+- [x] Verificação independente (perfil `ui`), 3 rodadas: todos os checks provados menos o C7 (mutação),
+      suspenso pela AD-025. Decisão do usuário em 02/11 (AD-026): a interface fecha com o C7 aberto, que roda
+      quando a mutação for liberada. O cabeçalho mostra os nomes sempre, com 3, 5 e 7 links a partir de 1024,
+      1280 e 1536 px e o resto no menu "Mais"; abaixo de 1024 px, a gaveta.
 
 Decisão do usuário em 02/11/2026 (AD-020): o `web/` troca o Bootstrap por esta stack antes da banca, tela a tela,
 dentro das 6 fatias do AD-017. Planejar com `tlc-spec-lean` perfil `ui`, e a migração não pode
