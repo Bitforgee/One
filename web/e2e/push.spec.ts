@@ -54,7 +54,7 @@ test('barra com o botão de avisos sem sobreposição', async ({ page }) => {
     await page.goto('/univag/assistente')
     await expect(page.getByRole('button', { name: Ativar })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth), `${largura} px: rolagem horizontal`).toBeLessThanOrEqual(largura)
-    const itens = await page.getByRole('navigation').evaluate((n) => {
+    const itens = await page.locator('main > header').evaluate((n) => {
       const filhos = [...n.firstElementChild!.children].flatMap((e) => (e.tagName === 'DIV' ? [...e.children] : [e]))
       return filhos.map((e) => ({ texto: e.textContent || e.getAttribute('aria-label'), ...e.getBoundingClientRect().toJSON() })).filter((c) => c.width > 0)
     })
@@ -64,26 +64,22 @@ test('barra com o botão de avisos sem sobreposição', async ({ page }) => {
   }
 })
 
-test('na gaveta o item de avisos mostra o texto visível', async ({ page }) => {
+// layout-painel C8: o botão de avisos é um ícone no cabeçalho, à esquerda de Tema na mesma linha, com a barra aberta, recolhida e no celular
+test('avisos no cabeçalho', async ({ page }) => {
   await comChave(page, 200)
-  await page.setViewportSize({ width: 360, height: 740 })
-  await page.goto('/univag/assistente')
-  await page.getByRole('button', { name: 'Menu' }).click()
-  await expect(page.getByRole('dialog').getByText(Ativar, { exact: true })).toBeVisible()
+  for (const [largura, estado] of [[360, 'aberta'], [1280, 'aberta'], [1280, 'recolhida']] as const) {
+    await page.setViewportSize({ width: largura, height: 740 })
+    await page.goto('/univag')
+    await page.evaluate((v) => localStorage.setItem('one-barra', v), estado)
+    await page.goto('/univag/assistente')
+    const cabecalho = page.locator('main > header')
+    const avisos = cabecalho.getByRole('button', { name: Ativar })
+    await expect(avisos, `${largura} px ${estado}`).toBeVisible()
+    const a = (await avisos.boundingBox())!
+    const t = (await cabecalho.getByRole('button', { name: 'Tema' }).boundingBox())!
+    expect(a.x + a.width, `${largura} px ${estado}: à esquerda de Tema`).toBeLessThanOrEqual(t.x + 1)
+    expect(Math.abs(a.y - t.y), `${largura} px ${estado}: na mesma linha`).toBeLessThanOrEqual(1)
+    expect(await avisos.textContent(), 'só o ícone').toBe('')
+    await expect(page.locator('[data-sidebar=sidebar]').getByRole('button', { name: Ativar }), 'fora da barra').toHaveCount(0)
+  }
 })
-
-// barra-lateral-grupos C12: recolhida, o botão de avisos fica só com o ícone e dentro dos 64 px
-test('barra recolhida esconde o texto dos avisos', async ({ page }) => {
-  await comChave(page, 200)
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await page.goto('/univag/assistente')
-  const avisos = page.getByRole('navigation').getByRole('button', { name: Ativar })
-  await expect(avisos).toBeVisible()
-  expect(await avisos.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'texto visível com a barra aberta').toBeGreaterThan(10)
-  await page.getByRole('button', { name: 'Recolher barra lateral' }).click()
-  await expect.poll(async () => Math.round((await page.getByRole('navigation').boundingBox())!.width)).toBe(64)
-  expect(await avisos.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'texto escondido').toBeLessThanOrEqual(1)
-  const caixa = (await avisos.boundingBox())!
-  expect(caixa.x + caixa.width, 'dentro dos 64 px').toBeLessThanOrEqual(65)
-})
-

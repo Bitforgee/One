@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { simularApi } from './simulada'
+import { simularApi, Telas } from './simulada'
 
 // Arranjo de ## Screens medido com boundingBox() (regra do arranjo de checks.md): px CSS, tolerância de 1 px.
 test.use({ serviceWorkers: 'block' })
@@ -7,6 +7,8 @@ test.use({ serviceWorkers: 'block' })
 // barra-lateral-grupos: na ordem dos grupos (Atendimento, Conhecimento, Administração)
 const Links = ['Assistente', 'Minhas solicitações', 'Fila', 'Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros']
 const caixa = async (l: Locator) => (await l.boundingBox())!
+// a casca anima a largura da barra ao trocar entre celular e desktop: mede depois que as transições acabam
+const assentar = (page: Page) => page.waitForFunction(() => document.getAnimations().every((a) => a.playState === 'finished'))
 const Longa =
   'O boleto do semestre fica no Portal do Aluno, em Financeiro, Boletos e mensalidades. Escolha o mês, confira o valor e gere a segunda via; se o valor estiver diferente do contrato, abra uma solicitação para o financeiro conferir a rematrícula do semestre anterior. '.repeat(3)
 
@@ -55,152 +57,6 @@ const deslocamentoY = (transform: string) => (transform === 'none' ? 0 : Number(
 const identidade = (transform: string) => transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)'
 
 test.describe('cabeçalho', () => {
-  test('cabeçalho a 360 px abre a gaveta Menu', async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 740 })
-    await simularApi(page)
-    await page.goto('/univag/chamados/ONE-123')
-    await page.getByText('Resumo gerado por IA').waitFor()
-    const nav = page.getByRole('navigation')
-    expect((await caixa(nav)).height).toBeCloseTo(56, 0)
-    await page.evaluate(() => window.scrollTo(0, 300))
-    expect(await page.evaluate(() => window.scrollY)).toBe(300)
-    expect(Math.abs((await caixa(nav)).y)).toBeLessThanOrEqual(1)
-
-    await page.getByRole('button', { name: 'Menu' }).click()
-    const gaveta = page.getByRole('dialog', { name: 'Menu' })
-    await gaveta.waitFor()
-    const itens = gaveta.locator('a, button')
-    expect(await itens.allTextContents()).toEqual([...Links, 'Sair'])
-    for (const item of await itens.all()) expect(Math.abs((await caixa(item)).height - 48)).toBeLessThanOrEqual(1)
-
-    // só aluno: os dois links do aluno e Sair
-    const aluno = await page.context().newPage()
-    await simularApi(aluno, ['ALUNO'])
-    await aluno.setViewportSize({ width: 360, height: 740 })
-    await aluno.goto('/univag/solicitacoes')
-    await aluno.getByRole('button', { name: 'Menu' }).click()
-    expect(await aluno.getByRole('dialog', { name: 'Menu' }).locator('a, button').allTextContents()).toEqual(['Assistente', 'Minhas solicitações', 'Sair'])
-  })
-
-  // Os itens visíveis da barra (marca, instituição, links e botões) não se sobrepõem; os filhos dos <div> entram no lugar deles.
-  async function semSobreposicao(nav: Locator, onde: string) {
-    const itens = await nav.evaluate((n) => {
-      const abrir = (e: Element): Element[] => (e.tagName === 'DIV' ? [...e.children].flatMap(abrir) : [e])
-      return abrir(n.firstElementChild!).map((e) => ({ texto: e.textContent || e.getAttribute('aria-label'), ...e.getBoundingClientRect().toJSON() })).filter((c) => c.width > 0)
-    })
-    expect(itens.length, onde).toBeGreaterThanOrEqual(4)
-    const sobrepoe = (a: (typeof itens)[number], b: typeof a) => a.x < b.x + b.width - 0.5 && b.x < a.x + a.width - 0.5 && a.y < b.y + b.height - 0.5 && b.y < a.y + a.height - 0.5
-    for (let i = 0; i < itens.length; i++)
-      for (let j = i + 1; j < itens.length; j++) expect(sobrepoe(itens[i], itens[j]), `${onde}: "${itens[i].texto}" x "${itens[j].texto}"`).toBe(false)
-  }
-
-  // redesign-institucional (AD-027, door 3a): a partir de 1024 px o mesmo <nav> é a barra lateral de 240 px, sem "Mais"
-  for (const [largura, altura] of [[1024, 740], [1280, 800], [1536, 800], [1920, 800]]) {
-    test(`barra lateral a ${largura} px`, async ({ page }) => {
-      await simularApi(page)
-      await page.setViewportSize({ width: largura, height: altura })
-      await page.goto('/univag/chamados/ONE-123')
-      await page.getByText('Resumo gerado por IA').waitFor()
-      const nav = page.getByRole('navigation')
-      const barra = await caixa(nav)
-      expect(Math.abs(barra.x), 'C8 à esquerda').toBeLessThanOrEqual(1)
-      expect(Math.abs(barra.width - 240), 'C8 largura').toBeLessThanOrEqual(1)
-      expect(Math.abs(barra.height - altura), 'C8/C9 altura da janela, não 56 px').toBeLessThanOrEqual(1)
-      // ## Screens linha 0: borda à direita e fundo --sidebar
-      expect(await nav.evaluate((e) => getComputedStyle(e).borderRightWidth), 'borda à direita').toBe('1px')
-      const [fundoBarra, fundoSidebar] = await nav.evaluate((e) => {
-          const amostra = document.createElement('div')
-          amostra.style.background = 'var(--sidebar)'
-          document.body.append(amostra)
-          const cor = getComputedStyle(amostra).backgroundColor
-          amostra.remove()
-          return [getComputedStyle(e).backgroundColor, cor]
-        })
-      expect(fundoBarra, 'fundo --sidebar').toBe(fundoSidebar)
-      expect(fundoBarra, 'o --sidebar não é o fundo da página').not.toBe(await page.evaluate(() => getComputedStyle(document.body).backgroundColor))
-      // marca e instituição no topo; o nome inteiro, em até 2 linhas, sem reticências (decisão do usuário de 03/11)
-      const marca = await caixa(nav.getByText('One', { exact: true }))
-      const nome = nav.getByTestId('instituicao')
-      const caixaNome = await caixa(nome)
-      expect(caixaNome.width, 'instituição visível').toBeGreaterThan(0)
-      expect(marca.y + marca.height, 'marca acima da instituição').toBeLessThanOrEqual(caixaNome.y + 1)
-      expect(await nome.evaluate((e) => e.scrollWidth <= e.clientWidth), 'instituição sem corte na largura').toBe(true)
-      const linhas = await nome.evaluate((e) => {
-        const c = getComputedStyle(e)
-        return Math.round((e.clientHeight - parseFloat(c.paddingTop) - parseFloat(c.paddingBottom)) / parseFloat(c.lineHeight))
-      })
-      expect(linhas, 'instituição em até 2 linhas').toBeLessThanOrEqual(2)
-      expect(await nome.evaluate((e) => getComputedStyle(e).whiteSpace), 'quebra em vez de reticências').toBe('normal')
-      let fundoDoUltimo = 0
-      let anterior: { x: number; y: number; height: number } | null = null
-      for (const rotulo of Links) {
-        const link = nav.getByRole('link', { name: rotulo })
-        await expect(link, `C8 ${rotulo}`).toBeVisible()
-        await expect(link.locator('svg'), `C8 ícone de ${rotulo}`).toBeVisible()
-        expect(await link.locator('span').evaluate((e) => e.getBoundingClientRect().width), `C8 rótulo de ${rotulo}`).toBeGreaterThan(10)
-        const c = await caixa(link)
-        expect(c.x + c.width, `C8 ${rotulo} dentro da barra`).toBeLessThanOrEqual(241)
-        expect(Math.abs(c.height - 36), `${rotulo}: linha de 36 px`).toBeLessThanOrEqual(1)
-        expect(c.y, `${rotulo} abaixo da instituição`).toBeGreaterThanOrEqual(caixaNome.y + caixaNome.height - 1)
-        if (anterior) {
-          expect(Math.abs(c.x - anterior.x), `${rotulo}: mesma coluna`).toBeLessThanOrEqual(1)
-          expect(c.y, `${rotulo}: um por linha`).toBeGreaterThanOrEqual(anterior.y + anterior.height - 1)
-        }
-        anterior = c
-        fundoDoUltimo = Math.max(fundoDoUltimo, c.y + c.height)
-      }
-      for (const nome of ['Tema', 'Sair']) {
-        const botao = nav.getByRole('button', { name: nome })
-        await expect(botao, nome).toBeVisible()
-        expect((await caixa(botao)).y, `${nome} depois dos links`).toBeGreaterThanOrEqual(fundoDoUltimo - 1)
-      }
-      await expect(page.getByRole('button', { name: 'Menu' }), 'C9 sem Menu').toBeHidden()
-      expect((await caixa(page.locator('main'))).x, 'C9 conteúdo à direita da barra').toBeGreaterThanOrEqual(barra.x + barra.width - 0.5)
-      await expect(page.getByText('Mais', { exact: true }), 'C11').toHaveCount(0)
-      expect(await page.evaluate(() => document.documentElement.scrollWidth), 'sem rolagem horizontal').toBeLessThanOrEqual(largura)
-
-      await semSobreposicao(nav, `${largura} px`)
-
-      await page.evaluate(() => window.scrollTo(0, 300))
-      expect(await page.evaluate(() => window.scrollY), 'C13 a página rolou').toBe(300)
-      expect(Math.abs((await caixa(nav)).y), 'C13 barra fixa no topo').toBeLessThanOrEqual(1)
-
-      // link ativo em bg-primary-subtle e font-medium (## Screens linha 0)
-      await page.goto('/univag/fila')
-      const fila = nav.getByRole('link', { name: 'Fila' })
-      await expect(fila).toHaveAttribute('aria-current', 'page')
-      expect(await fila.evaluate((e) => getComputedStyle(e).fontWeight), 'ativo em font-medium').toBe('500')
-      expect(await nav.getByRole('link', { name: 'Artigos' }).evaluate((e) => getComputedStyle(e).fontWeight), 'inativo').toBe('400')
-    })
-  }
-
-  for (const largura of [360, 768, 1023]) {
-    test(`abaixo de 1024 px sem barra lateral (${largura} px)`, async ({ page }) => {
-      await simularApi(page)
-      await page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida')) // C16: a preferência não vale aqui
-      await page.setViewportSize({ width: largura, height: 740 })
-      await page.goto('/univag/fila')
-      const nav = page.getByRole('navigation')
-      await expect(nav.getByTestId('instituicao')).toBeVisible()
-      const barra = await caixa(nav)
-      expect(Math.abs(barra.width - largura), 'C10 largura da janela').toBeLessThanOrEqual(1)
-      expect(Math.abs(barra.height - 56), 'C10 56 px').toBeLessThanOrEqual(1)
-      expect((await caixa(nav.getByTestId('instituicao'))).width, 'nome da instituição').toBeGreaterThan(0)
-      // ## Screens linha 0: na barra de topo o nome continua truncado (nota de 03/11)
-      expect(await nav.getByTestId('instituicao').evaluate((e) => [getComputedStyle(e).whiteSpace, getComputedStyle(e).textOverflow]), 'truncado').toEqual(['nowrap', 'ellipsis'])
-      await semSobreposicao(nav, `${largura} px`)
-      for (const rotulo of Links) await expect(nav.getByRole('link', { name: rotulo }), `C10 ${rotulo} só na gaveta`).toBeHidden()
-      await expect(page.getByText('Mais', { exact: true }), 'C11').toHaveCount(0)
-      await expect(nav.getByText('Ana', { exact: true }), 'barra-lateral-grupos C9: sem nome na barra de topo').toBeHidden()
-      for (const nome of ['Recolher barra lateral', 'Expandir barra lateral']) await expect(nav.getByRole('button', { name: nome }), `C16 ${nome}`).toBeHidden()
-      await nav.getByRole('button', { name: 'Menu' }).click()
-      const gaveta = page.getByRole('dialog', { name: 'Menu' })
-      await gaveta.waitFor()
-      expect(await gaveta.locator('a, button').allTextContents(), 'C10 gaveta como antes').toEqual([...Links, 'Sair'])
-      await expect(gaveta.getByRole('button', { name: /barra lateral/ }), 'C16 sem recolher na gaveta').toHaveCount(0)
-    })
-  }
-
   test('fonte Inter do próprio app', async ({ page, baseURL }) => {
     const origens = new Set<string>()
     page.on('request', (r) => void origens.add(new URL(r.url()).origin))
@@ -298,11 +154,12 @@ test.describe('Assistente', () => {
     await dialogo.getByRole('button', { name: 'Cancelar' }).click()
 
     await page.setViewportSize({ width: 1024, height: 740 })
-    const coluna = await caixa(page.locator('main > div').first())
+    await assentar(page)
+    const coluna = await caixa(page.locator('main > div > div').first())
     expect(coluna.width).toBeLessThanOrEqual(768)
     const largura = await page.evaluate(() => document.documentElement.clientWidth)
     // redesign-institucional (door 3a): a barra lateral ocupa a esquerda; a coluna centraliza no espaço à direita dela
-    const inicio = (await caixa(page.getByRole('navigation'))).width
+    const inicio = (await caixa(page.locator('[data-slot=sidebar-container]'))).width
     expect(Math.abs(coluna.x - inicio - (largura - coluna.x - coluna.width))).toBeLessThanOrEqual(1)
   })
 })
@@ -319,7 +176,7 @@ test.describe('Detalhe do chamado', () => {
     expect(titulo.x + titulo.width).toBeLessThanOrEqual(360)
 
     // <button> do main; o campo de arquivo (sr-only, papel button no Chromium) não é botão de ação
-    const botoes = page.getByRole('main').locator('button')
+    const botoes = page.locator('main > div button') // só o conteúdo: o cabeçalho da casca tem os botões dele
     expect(await botoes.count()).toBeGreaterThan(0)
     for (const botao of await botoes.all()) {
       if (!(await botao.isVisible())) continue
@@ -337,7 +194,7 @@ test.describe('Detalhe do chamado', () => {
     expect(fonte.y + fonte.height).toBeLessThanOrEqual(b.y + b.height + 1)
 
     await page.setViewportSize({ width: 1024, height: 740 })
-    expect((await caixa(page.locator('main > div').first())).width).toBeLessThanOrEqual(768)
+    expect((await caixa(page.locator('main > div > div').first())).width).toBeLessThanOrEqual(768)
   })
 })
 
@@ -352,8 +209,10 @@ test.describe('Indicadores', () => {
     await page.goto('/univag/indicadores')
     await page.getByText('Indicador principal').waitFor()
     const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=..')
-    for (const [largura, colunas] of [[360, 2], [767, 2], [768, 4], [1024, 4]]) {
+    // layout-painel door 5: as colunas seguem o main (768 px de main = 1280 px de janela com a barra aberta)
+    for (const [largura, colunas] of [[360, 2], [767, 2], [1024, 2], [1280, 4]]) {
       await page.setViewportSize({ width: largura, height: 740 })
+      await assentar(page)
       const caixas = []
       for (const rotulo of Cartoes) caixas.push(await caixa(cartao(rotulo)))
       const xs = new Set(caixas.map((c) => Math.round(c.x)))
@@ -399,7 +258,8 @@ test.describe('Indicadores', () => {
       expect((await caixa(ranking.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
     }
 
-    await page.setViewportSize({ width: 1024, height: 740 })
+    await page.setViewportSize({ width: 1280, height: 740 }) // main de 976 px: a linha de ferramentas cabe numa linha
+    await assentar(page)
     c = await campos()
     for (const outro of [c.ate, c.calendario, c.consultar]) expect(mesmaLinha(c.de, outro), JSON.stringify(c)).toBe(true)
   })
@@ -413,7 +273,7 @@ test.describe('listas de chamados', () => {
       await page.goto(caminho)
       const cartao = page.getByRole('main').getByRole('link').filter({ hasText: 'ONE-123' })
       await cartao.waitFor()
-      const lista = await caixa(page.locator('main > div').first())
+      const lista = await caixa(page.locator('main > div > div').first())
       const c = await caixa(cartao)
       expect(Math.abs(c.width - lista.width), caminho).toBeLessThanOrEqual(1)
       const numero = await caixa(cartao.getByText('ONE-123', { exact: true }))
@@ -422,8 +282,10 @@ test.describe('listas de chamados', () => {
       const titulo = await caixa(cartao.getByText(/^Preciso da segunda via/))
       expect(titulo.y, caminho).toBeGreaterThanOrEqual(Math.max(numero.y + numero.height, selo.y + selo.height) - 1)
 
-      await page.setViewportSize({ width: 1024, height: 740 })
-      expect((await caixa(page.locator('main > div').first())).width, caminho).toBeLessThanOrEqual(768)
+      await page.setViewportSize({ width: 1280, height: 740 })
+      await assentar(page)
+      // layout-painel: as listas ocupam a largura do conteúdo, sem o max-w-3xl de antes
+      expect((await caixa(page.locator('main > div > div').first())).width, caminho).toBeGreaterThan(768)
     }
   })
 })
@@ -469,7 +331,7 @@ test.describe('acesso', () => {
     await page.setViewportSize({ width: 1024, height: 740 })
     await page.goto('/univag/trocar-senha')
     await page.getByRole('heading', { name: 'Trocar senha' }).waitFor()
-    expect((await caixa(page.locator('main > div').first())).width).toBeLessThanOrEqual(420)
+    expect((await caixa(page.locator('main > div > div').first())).width).toBeLessThanOrEqual(420)
   })
 })
 
@@ -487,8 +349,10 @@ test.describe('conhecimento', () => {
       await page.goto(caminho)
       const item = page.locator('[data-slot=card]').filter({ hasText: cartao })
       await item.waitFor()
-      const h1 = await caixa(page.getByRole('heading', { name: titulo }))
-      expect(naMesmaLinha(h1, await caixa(page.getByRole('button', { name: botao }))), caminho).toBe(true)
+      // o título foi para o cabeçalho da casca (h1 único): o botão fica sozinho, à direita
+      await expect(page.getByRole('heading', { level: 1, name: titulo }), caminho).toBeVisible()
+      const novo = await caixa(page.getByRole('button', { name: botao }))
+      expect(novo.x + novo.width, caminho).toBeGreaterThanOrEqual(360 - 16 - 1)
       const nome = await caixa(item.locator('strong'))
       for (const selo of await item.locator('[data-slot=badge]').all()) expect(naMesmaLinha(nome, await caixa(selo)), caminho).toBe(true)
     }
@@ -537,12 +401,13 @@ test.describe('administração', () => {
     await page.setViewportSize({ width: 360, height: 740 })
     await page.goto('/univag/usuarios')
     await page.getByText('Carla Regina de Souza Albuquerque').waitFor()
-    expect(naMesmaLinha(await caixa(page.getByRole('heading', { name: 'Usuários' })), await caixa(page.getByRole('button', { name: /Novo/ })))).toBe(true)
+    const novo = await caixa(page.getByRole('button', { name: /Novo/ }))
+    expect(novo.x + novo.width).toBeGreaterThanOrEqual(360 - 16 - 1) // o título está no cabeçalho da casca; o botão fica à direita
 
     await page.goto('/univag/matriculas')
     const importar = page.getByRole('button', { name: 'Importar' })
     await importar.waitFor()
-    const conteudo = async () => (await caixa(page.locator('main > div').first())).width
+    const conteudo = async () => (await caixa(page.locator('main > div > div').first())).width
     expect(Math.abs((await caixa(importar)).width - (await conteudo()))).toBeLessThanOrEqual(1)
     await page.setViewportSize({ width: 1024, height: 740 })
     expect((await caixa(importar)).width).toBeLessThan(await conteudo())
@@ -561,28 +426,6 @@ test.describe('arranjo restante', () => {
   test.use({ viewport: { width: 360, height: 740 } })
   const direita = (c: { x: number; width: number }) => c.x + c.width
   const abaixo = (a: { y: number; height: number }, b: { y: number }) => b.y >= a.y + a.height - 1
-
-  // C18 (linha 0)
-  test('cabeçalho a 360 px: marca e instituição à esquerda, Tema e Menu à direita, gaveta de baixo', async ({ page }) => {
-    await simularApi(page)
-    await page.goto('/univag/fila')
-    const nav = page.getByRole('navigation')
-    const marca = await caixa(nav.getByText('One', { exact: true }))
-    const nome = await caixa(nav.getByTestId('instituicao'))
-    const tema = await caixa(nav.getByRole('button', { name: 'Tema' }))
-    const menu = await caixa(nav.getByRole('button', { name: 'Menu' }))
-    expect(marca.x).toBeLessThan(nome.x)
-    expect(direita(marca)).toBeLessThanOrEqual(nome.x + 1)
-    expect(direita(nome)).toBeLessThanOrEqual(tema.x + 1)
-    expect(direita(tema)).toBeLessThanOrEqual(menu.x + 1)
-    expect(direita(menu)).toBeGreaterThan(360 / 2)
-    expect(tema.x).toBeGreaterThan(360 / 2)
-    await nav.getByRole('button', { name: 'Menu' }).click()
-    const gaveta = page.getByRole('dialog', { name: 'Menu' })
-    // a gaveta sobe até assentar; ancorada embaixo
-    await expect.poll(async () => Math.abs((await caixa(gaveta)).y + (await caixa(gaveta)).height - 740)).toBeLessThanOrEqual(1)
-    expect((await caixa(gaveta)).y).toBeGreaterThan(0)
-  })
 
   // C66 (linha 1)
   test('raiz com a marca e o texto centralizados', async ({ page }) => {
@@ -856,150 +699,180 @@ test.describe('redesign institucional', () => {
   })
 })
 
-// barra-lateral-grupos: grupos, nome do usuário e a barra recolhida
-test.describe('barra lateral com grupos', () => {
-  const Grupos = [
-    ['Atendimento', ['Assistente', 'Minhas solicitações', 'Fila', 'Indicadores']],
-    ['Conhecimento', ['Artigos', 'Documentos']],
-    ['Administração', ['Usuários', 'Matrículas', 'Cadastros']],
-  ] as const
 
-  // C4 (## Screens)
-  test('grupos na barra lateral', async ({ page }) => {
+// layout-painel: a casca do template (door 1 a 3 e 5), medida como em ## Screens
+const Conteiner = '[data-slot=sidebar-container]'
+
+test.describe('painel', () => {
+  const largura = async (page: Page) => Math.round((await caixa(page.locator(Conteiner))).width)
+  const recolhida = (page: Page) => page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
+
+  test('painel barra aberta', async ({ page }) => {
     await simularApi(page)
-    await page.setViewportSize({ width: 1280, height: 800 })
-    await page.goto('/univag/fila')
-    const nav = page.getByRole('navigation')
-    let fundoAnterior = -1
-    for (const [nome, links] of Grupos) {
-      const grupo = nav.getByRole('group', { name: nome })
-      const titulo = grupo.getByText(nome, { exact: true })
-      await expect(titulo).toBeVisible()
-      expect(await titulo.evaluate((e) => getComputedStyle(e).fontSize), `${nome}: text-xs`).toBe('12px')
-      const t = await caixa(titulo)
-      expect(t.y + t.height, `${nome} acima do primeiro link`).toBeLessThanOrEqual((await caixa(grupo.getByRole('link', { name: links[0] }))).y + 1)
-      if (fundoAnterior >= 0) expect(t.y - fundoAnterior, `${nome}: 24 px antes do título`).toBeGreaterThanOrEqual(23)
-      expect(await grupo.evaluate((e) => getComputedStyle(e).marginTop), `${nome}: margem antes do grupo`).toBe(fundoAnterior >= 0 ? '24px' : '0px')
-      const ultimo = await caixa(grupo.getByRole('link', { name: links[links.length - 1] }))
-      fundoAnterior = ultimo.y + ultimo.height
-    }
-  })
-
-  // C4 (## Screens, gaveta)
-  test('grupos na gaveta', async ({ page }) => {
-    await simularApi(page)
-    await page.setViewportSize({ width: 360, height: 740 })
-    await page.goto('/univag/fila')
-    await page.getByRole('button', { name: 'Menu' }).click()
-    const gaveta = page.getByRole('dialog', { name: 'Menu' })
-    await gaveta.waitFor()
-    // a gaveta sobe até assentar; mede depois
-    await expect.poll(async () => Math.abs((await caixa(gaveta)).y + (await caixa(gaveta)).height - 740)).toBeLessThanOrEqual(1)
-    for (const [nome, links] of Grupos) {
-      const titulo = await caixa(gaveta.getByRole('group', { name: nome }).getByText(nome, { exact: true }))
-      expect(Math.abs(titulo.height - 32), `${nome}: 32 px`).toBeLessThanOrEqual(1)
-      expect(await gaveta.getByRole('group', { name: nome }).getByText(nome, { exact: true }).evaluate((e) => getComputedStyle(e).fontSize), `${nome}: text-xs`).toBe('12px')
-      expect(titulo.y + titulo.height, `${nome} antes dos links`).toBeLessThanOrEqual((await caixa(gaveta.getByRole('link', { name: links[0] }))).y + 1)
-    }
-    // com os títulos a lista passa da altura da gaveta: rola até "Sair", que fica dentro da tela
-    const sair = gaveta.getByRole('button', { name: 'Sair' })
-    await sair.scrollIntoViewIfNeeded()
-    const s = await caixa(sair)
-    expect(s.y + s.height, 'Sair ao alcance').toBeLessThanOrEqual(741)
-  })
-
-  // C5 (AC 4)
-  test('nome do usuário na barra', async ({ page }) => {
-    await simularApi(page)
-    await page.setViewportSize({ width: 1280, height: 800 })
-    await page.goto('/univag/fila')
-    const nav = page.getByRole('navigation')
-    const nome = nav.getByText('Ana', { exact: true })
-    await expect(nome).toBeVisible()
-    expect(await nome.evaluate((e) => [getComputedStyle(e).whiteSpace, getComputedStyle(e).textOverflow])).toEqual(['nowrap', 'ellipsis'])
-    const n = await caixa(nome)
-    expect(n.x + n.width, 'dentro da barra').toBeLessThanOrEqual(241)
-    for (const botao of ['Tema', 'Sair']) expect(n.y + n.height, `acima de ${botao}`).toBeLessThanOrEqual((await caixa(nav.getByRole('button', { name: botao }))).y + 1)
-  })
-
-  // C8, C10 a C14 (AC 6, AC 8 a AC 12)
-  for (const largura of [1024, 1280]) {
-    test(`barra recolhida a ${largura} px`, async ({ page }) => {
-      await simularApi(page)
-      await page.setViewportSize({ width: largura, height: 800 })
+    for (const w of [768, 1024, 1280, 1440]) {
+      await page.setViewportSize({ width: w, height: 800 })
       await page.goto('/univag/fila')
-      const nav = page.getByRole('navigation')
-      const recolher = nav.getByRole('button', { name: 'Recolher barra lateral' })
-      await expect(recolher, 'C10').toHaveAttribute('aria-expanded', 'true')
-      const marcaAberta = await caixa(nav.getByText('One', { exact: true }))
-      const botaoAberto = await caixa(recolher)
-      expect(Math.abs(botaoAberto.y - marcaAberta.y), 'C10 na linha da marca').toBeLessThanOrEqual(4)
-      expect(botaoAberto.x, 'C10 botão à direita da marca').toBeGreaterThanOrEqual(marcaAberta.x + marcaAberta.width)
-      expect(botaoAberto.x + botaoAberto.width, 'C10 botão na metade direita da barra').toBeGreaterThan(120)
+      const barra = page.locator(Conteiner)
+      await expect(barra.getByTestId('instituicao'), `${w} px`).toBeVisible()
+      const b = await caixa(barra)
+      expect(Math.abs(b.x), `${w} px: x`).toBeLessThanOrEqual(1)
+      expect(Math.abs(b.width - 256), `${w} px: largura`).toBeLessThanOrEqual(1)
+      expect(Math.abs(b.height - 800), `${w} px: altura da janela`).toBeLessThanOrEqual(1)
+      const marca = await caixa(barra.getByText('One', { exact: true }))
+      const instituicao = await caixa(barra.getByTestId('instituicao'))
+      const primeiroGrupo = await caixa(barra.getByText('Atendimento', { exact: true }))
+      expect(marca.y + marca.height, `${w} px: marca acima do 1º grupo`).toBeLessThanOrEqual(primeiroGrupo.y + 1)
+      expect(instituicao.y + instituicao.height, `${w} px: instituição acima do 1º grupo`).toBeLessThanOrEqual(primeiroGrupo.y + 1)
+      const usuario = await caixa(barra.getByRole('button', { name: /Ana/ }))
+      expect(b.y + b.height - (usuario.y + usuario.height), `${w} px: botão do usuário no fim`).toBeLessThanOrEqual(16)
+      expect(usuario.y, `${w} px: botão do usuário abaixo dos links`).toBeGreaterThan((await caixa(barra.getByRole('link', { name: 'Cadastros' }))).y)
+      expect(Math.abs((await caixa(page.locator('main'))).x - 256), `${w} px: main`).toBeLessThanOrEqual(1)
+    }
+  })
 
-      await recolher.click()
-      await expect.poll(async () => Math.round((await caixa(nav)).width), 'C11 64 px').toBe(64)
-      expect((await caixa(page.locator('main'))).x, 'C11 conteúdo a partir de 64 px').toBeGreaterThanOrEqual(63)
-      const expandir = nav.getByRole('button', { name: 'Expandir barra lateral' })
-      await expect(expandir, 'C11').toHaveAttribute('aria-expanded', 'false')
-      expect(await page.evaluate(() => localStorage.getItem('one-barra')), 'C14').toBe('recolhida')
+  test('painel recolher e expandir', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    const alternar = page.getByRole('button', { name: 'Alternar barra lateral' })
+    const inicioDoMain = async () => Math.round((await caixa(page.locator('main'))).x)
+    await alternar.click()
+    await expect.poll(() => largura(page)).toBe(48)
+    await expect.poll(inicioDoMain).toBe(48)
+    expect(await page.evaluate(() => localStorage.getItem('one-barra'))).toBe('recolhida')
+    await alternar.click()
+    await expect.poll(() => largura(page)).toBe(256)
+    await expect.poll(inicioDoMain).toBe(256)
+    expect(await page.evaluate(() => localStorage.getItem('one-barra'))).toBe('aberta')
+  })
 
-      for (const rotulo of Links) {
-        const link = nav.getByRole('link', { name: rotulo })
-        await expect(link, `C12 ${rotulo}`).toBeVisible()
-        expect(await link.locator('span').evaluate((e) => e.getBoundingClientRect().width), `C12 rótulo de ${rotulo} escondido`).toBeLessThanOrEqual(1)
-        const c = await caixa(link)
-        expect(Math.abs(c.height - 36), `C12 ${rotulo} 36 px`).toBeLessThanOrEqual(1)
-        expect(c.x + c.width, `C12 ${rotulo} dentro dos 64 px`).toBeLessThanOrEqual(65)
-      }
-      for (const nome of ['Atendimento', 'Conhecimento', 'Administração']) expect((await caixa(nav.getByText(nome, { exact: true }))).width, `C12 título ${nome}`).toBeLessThanOrEqual(1)
-      await expect(nav.getByTestId('instituicao'), 'C12 instituição').toBeHidden()
-      await expect(nav.getByText('Ana', { exact: true }), 'C12 nome em texto escondido (fica a sigla)').toBeHidden()
-      // marca e botão de expandir empilhados no topo
-      const marca = await caixa(nav.getByText('One', { exact: true }))
-      expect(marca.y + marca.height, 'C12 marca acima do botão de expandir').toBeLessThanOrEqual((await caixa(expandir)).y + 1)
-      // linha fina entre grupos no lugar do título
-      expect(await nav.getByRole('group').evaluateAll((gs) => gs.map((g) => getComputedStyle(g).borderTopWidth)), 'C12 linha entre grupos').toEqual(['0px', '1px', '1px'])
-      // Tema e Sair só com ícone, um por linha
-      const tema = await caixa(nav.getByRole('button', { name: 'Tema' }))
-      const sair = nav.getByRole('button', { name: 'Sair' })
-      expect(await sair.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'C12 Sair só com ícone').toBeLessThanOrEqual(1)
-      expect((await caixa(sair)).y, 'C12 Sair abaixo de Tema').toBeGreaterThanOrEqual(tema.y + tema.height - 1)
-      // nenhum item visível passa dos 64 px
-      const direitas = await nav.evaluate((n) =>
-        [...n.querySelectorAll('a, button, [role=img], span')].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 1).map((r) => Math.round(r.right)),
-      )
-      expect(Math.max(...direitas), 'C12 tudo dentro dos 64 px').toBeLessThanOrEqual(64)
+  test('painel barra recolhida', async ({ page }) => {
+    await simularApi(page)
+    await recolhida(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    const barra = page.locator(Conteiner)
+    await expect.poll(() => largura(page)).toBe(48)
+    for (const rotulo of Links) {
+      const link = barra.getByRole('link', { name: rotulo })
+      await expect(link, rotulo).toBeVisible()
+      await expect(link.locator('svg'), `ícone de ${rotulo}`).toBeVisible()
+      expect(await link.locator('span').evaluate((e) => e.getBoundingClientRect().width), `rótulo de ${rotulo}`).toBeLessThanOrEqual(1)
+    }
+    for (const nome of ['Atendimento', 'Conhecimento', 'Administração']) expect((await caixa(barra.getByText(nome, { exact: true }))).width, `título ${nome}`).toBeLessThanOrEqual(1)
+    expect((await caixa(barra.getByTestId('instituicao'))).width, 'instituição').toBeLessThanOrEqual(1)
+    expect((await caixa(barra.getByText('One', { exact: true }))).width, 'One').toBeLessThanOrEqual(1)
+    await barra.getByRole('link', { name: 'Usuários' }).hover()
+    await expect(page.getByRole('tooltip'), 'dica ao passar o mouse').toHaveText('Usuários')
+    await barra.getByRole('link', { name: 'Artigos' }).focus()
+    await expect(page.getByRole('tooltip'), 'dica ao focar').toHaveText('Artigos')
+  })
 
-      const circulo = nav.getByRole('img', { name: 'Ana' })
-      const k = await caixa(circulo)
-      expect([Math.round(k.width), Math.round(k.height)], 'C8 círculo de 32 px').toEqual([32, 32])
-      await circulo.focus()
-      await expect(page.getByRole('tooltip'), 'C8 nome na dica').toHaveText('Ana')
+  test('painel no celular', async ({ page }) => {
+    await simularApi(page)
+    for (const w of [360, 390, 767]) {
+      await page.setViewportSize({ width: w, height: 740 })
+      await page.goto('/univag/indicadores')
+      await page.getByRole('heading', { level: 1, name: 'Indicadores' }).waitFor()
+      await expect(page.getByRole('link', { name: 'Fila' }), `${w} px: sem barra fixa`).toBeHidden()
+      await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
+      const painel = page.getByRole('dialog', { name: 'Menu' })
+      await painel.waitFor()
+      await expect.poll(async () => Math.abs((await caixa(painel)).x), `${w} px: x`).toBeLessThanOrEqual(1)
+      await expect.poll(async () => Math.abs((await caixa(painel)).width - Math.min(288, w)), `${w} px: largura`).toBeLessThanOrEqual(1)
+      await expect(painel.getByTestId('instituicao')).toBeVisible()
+      await expect(painel.getByRole('group')).toHaveCount(3)
+      for (const rotulo of Links) await expect(painel.getByRole('link', { name: rotulo }), `${w} px: ${rotulo}`).toBeVisible()
+      await expect(painel.getByRole('button', { name: /Ana/ })).toBeVisible()
 
-      await nav.getByRole('link', { name: 'Artigos' }).focus()
-      await expect(page.getByRole('tooltip'), 'C13 rótulo na dica').toHaveText('Artigos')
-      await nav.getByRole('link', { name: 'Usuários' }).hover()
-      await expect(page.getByRole('tooltip'), 'C13 dica ao passar o mouse').toHaveText('Usuários')
+      // C6: escolher um link fecha o painel e abre a tela
+      await painel.getByRole('link', { name: 'Fila' }).click()
+      await expect(page.getByRole('dialog'), `${w} px: painel fechado`).toHaveCount(0)
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fila')
+    }
+  })
 
-      await page.reload()
-      await expect.poll(async () => Math.round((await caixa(page.getByRole('navigation'))).width), 'C14 recarregou recolhida').toBe(64)
+  test('painel cabeçalho', async ({ page }) => {
+    await simularApi(page)
+    for (const w of [360, 1280]) {
+      await page.setViewportSize({ width: w, height: 500 })
+      await page.goto('/univag/chamados/ONE-123')
+      await page.getByText('Resumo gerado por IA').waitFor()
+      const cabecalho = page.locator('main > header')
+      expect(Math.abs((await caixa(cabecalho)).height - 49), `${w} px: altura`).toBeLessThanOrEqual(1)
+      await page.evaluate(() => window.scrollTo(0, 400))
+      expect(await page.evaluate(() => window.scrollY), `${w} px: a página rolou`).toBe(400)
+      const c = await caixa(cabecalho)
+      expect(Math.abs(c.y), `${w} px: fixo no topo`).toBeLessThanOrEqual(1)
+      const botao = await caixa(cabecalho.getByRole('button', { name: 'Alternar barra lateral' }))
+      const separador = cabecalho.locator('[data-orientation=vertical]')
+      const s1 = await caixa(separador)
+      const h1 = cabecalho.getByRole('heading', { level: 1 })
+      const t = await caixa(h1)
+      const tema = await caixa(cabecalho.getByRole('button', { name: 'Tema' }))
+      expect(botao.x + botao.width, `${w} px: botão antes do separador`).toBeLessThanOrEqual(s1.x + 1)
+      expect(s1.x + s1.width, `${w} px: separador antes do h1`).toBeLessThanOrEqual(t.x + 1)
+      expect(t.x + t.width, `${w} px: h1 antes de Tema`).toBeLessThanOrEqual(tema.x + 1)
+      expect(c.x + c.width - (tema.x + tema.width), `${w} px: Tema na ponta direita`).toBeLessThanOrEqual(25)
+      expect(await h1.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).fontWeight]), `${w} px: h1`).toEqual(['16px', '500'])
+    }
+  })
 
-      await page.getByRole('button', { name: 'Expandir barra lateral' }).click()
-      await expect.poll(async () => Math.round((await caixa(page.getByRole('navigation'))).width), 'C11 volta a 240 px').toBe(240)
-      expect(await page.evaluate(() => localStorage.getItem('one-barra')), 'C14').toBe('aberta')
-    })
-  }
-
-  // C17 (AC 15)
   test('movimento reduzido na barra lateral', async ({ page }) => {
     await simularApi(page)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto('/univag/fila')
-    const duracao = () => page.getByRole('navigation').evaluate((e) => getComputedStyle(e).transitionDuration)
-    await page.getByRole('button', { name: 'Recolher barra lateral' }).click() // a transição só vale depois de alternar
-    expect(await duracao()).not.toBe('0s')
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    expect(await duracao()).toBe('0s')
+    expect(await page.locator(Conteiner).evaluate((e) => getComputedStyle(e).transitionDuration)).toBe('0s')
+    await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
+    // sem transição, a largura final já vale no quadro seguinte ao clique
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+    expect(await largura(page)).toBe(48)
+  })
+
+  test('sem rolagem horizontal', async ({ page }) => {
+    test.setTimeout(300_000)
+    await simularApi(page, undefined, true)
+    const publicas = ['Login', 'Raiz', 'Primeiro acesso', 'Criar senha']
+    for (const [nome, caminho, preparar] of Telas) {
+      for (const w of [360, 390, 768, 1024, 1280, 1440]) {
+        const estados = publicas.includes(nome) || w < 768 ? ['aberta'] : ['aberta', 'recolhida']
+        for (const estado of estados) {
+          await page.setViewportSize({ width: w, height: 800 })
+          await page.goto('/univag')
+          await page.evaluate((v) => localStorage.setItem('one-barra', v), estado)
+          await page.goto(caminho)
+          await preparar(page)
+          const [rolagem, janela] = await page.evaluate(() => [document.documentElement.scrollWidth, innerWidth])
+          expect(rolagem, `${nome} a ${w} px (${estado})`).toBeLessThanOrEqual(janela)
+        }
+      }
+    }
+  })
+
+  // C14: a largura do main, e não a da janela, é a que as telas medem
+  test('colunas pela largura do main', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 900, height: 800 })
+    await page.goto('/univag/fila')
+    await page.getByText('ONE-123').waitFor()
+    expect(await page.locator('main > div').evaluate((e) => [getComputedStyle(e).containerType, getComputedStyle(e).containerName])).toEqual(['inline-size', 'main'])
+  })
+
+  test('recuos do conteúdo', async ({ page }) => {
+    await simularApi(page)
+    // [largura da janela, barra recolhida, recuo esquerdo, distância ao cabeçalho]
+    for (const [w, barraRecolhida, lado, topo] of [[360, false, 16, 16], [768, true, 16, 24], [1280, false, 24, 24]] as const) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.goto('/univag')
+      await page.evaluate((v) => localStorage.setItem('one-barra', v), barraRecolhida ? 'recolhida' : 'aberta')
+      await page.goto('/univag/fila')
+      await page.getByText('ONE-123').waitFor()
+      const main = await caixa(page.locator('main'))
+      const cabecalho = await caixa(page.locator('main > header'))
+      const bloco = await caixa(page.locator('main > div > div').first())
+      expect(Math.abs(bloco.x - (main.x + lado)), `${w} px: recuo esquerdo`).toBeLessThanOrEqual(1)
+      expect(Math.abs(bloco.y - (cabecalho.y + cabecalho.height + topo)), `${w} px: distância ao cabeçalho`).toBeLessThanOrEqual(1)
+    }
   })
 })

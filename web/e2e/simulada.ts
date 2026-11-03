@@ -1,7 +1,13 @@
 import type { Page } from '@playwright/test'
 
+// layout-painel C13: textos sem espaço que só quebram pelo CSS (título de 120 caracteres, e-mail de 60)
+const TituloLongo = 'Boleto'.repeat(20)
+const EmailLongo = 'e'.repeat(46) + '@univag.edu.br'
+
 // API simulada: o teste mede só o layout de cada tela.
-export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR']) {
+// Com `extremos`, Fila, Artigos, Documentos e Usuários ganham uma linha com os textos longos de C13.
+export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false) {
+  const mais = <T,>(linhas: T[], extra: T) => (extremos ? [...linhas, extra] : linhas)
   await page.route('**/api/**', (rota) => {
     const caminho = new URL(rota.request().url()).pathname
     const json = (status: number, corpo: unknown) => rota.fulfill({ status, contentType: 'application/json', body: JSON.stringify(corpo) })
@@ -20,7 +26,10 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
       return json(201, { conversaId: 1, resposta: { tipo: 'resposta', texto: 'O boleto do semestre fica no Portal do Aluno: https://portal.univag.edu.br/financeiro/boletos/segunda-via' } })
     const longo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
     if (caminho === '/api/chamados' && rota.request().url().includes('escopo=fila'))
-      return json(200, [{ numero: 'ONE-123', titulo: longo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', dias: 12 }])
+      {
+      const fila = { numero: 'ONE-123', titulo: longo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', dias: 12 }
+      return json(200, mais([fila], { ...fila, numero: 'ONE-124', titulo: TituloLongo }))
+    }
     if (caminho === '/api/chamados') return json(200, [{ numero: 'ONE-123', titulo: longo, estado: 'EM_ATENDIMENTO', criadoEm: '2026-11-02T12:00:00Z' }])
     if (caminho === '/api/chamados/ONE-123')
       return json(200, {
@@ -38,13 +47,19 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
         acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
       })
     if (caminho === '/api/admin/usuarios')
-      return json(200, [{ id: 1, cpf: '12345678909', nome: 'Carla Regina de Souza Albuquerque', email: 'carla.regina.albuquerque@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ATENDENTE', 'ADMINISTRADOR'], setores: [1] }])
+      {
+      const usuario = { id: 1, cpf: '12345678909', nome: 'Carla Regina de Souza Albuquerque', email: 'carla.regina.albuquerque@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ATENDENTE', 'ADMINISTRADOR'], setores: [1] }
+      return json(200, mais([usuario], { ...usuario, id: 2, nome: 'Bruno', email: EmailLongo }))
+    }
     if (caminho === '/api/admin/setores') return json(200, [{ id: 1, nome: 'Coordenação de Análise e Desenvolvimento de Sistemas', triagem: false, ativo: true }])
     if (['/api/admin/cursos', '/api/admin/regras', '/api/admin/respostas-prontas'].includes(caminho)) return json(200, [])
     if (caminho === '/api/admin/categorias') return json(200, [{ id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true }])
     if (caminho === '/api/admin/artigos')
-      return json(200, [{ id: 1, estado: 'ARQUIVADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
-        versao: { id: 1, numero: 12, titulo: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', perguntas: ['boleto?'], resposta: 'x', links: [] } }])
+{
+      const artigo = { id: 1, estado: 'ARQUIVADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
+        versao: { id: 1, numero: 12, titulo: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', perguntas: ['boleto?'], resposta: 'x', links: [] } }
+      return json(200, mais([artigo], { ...artigo, id: 2, versao: { ...artigo.versao, id: 2, titulo: TituloLongo } }))
+    }
     if (caminho === '/api/indicadores')
       return json(200, {
         semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.6543, taxaEscalonamento: 0.2, taxaAbandono: 0.1457, taxaPerguntasSemArtigo: 0.12,
@@ -53,8 +68,50 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
         indicadorPrincipal: 0.7123,
       })
     if (caminho === '/api/admin/documentos')
-      return json(200, [{ id: 1, titulo: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades', estado: 'ATIVO', indexacao: 'INDEXADO',
-        versao: { id: 1, numero: 3, nomeArquivo: 'regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf', paginas: 42, criadaEm: '2026-11-02T12:00:00Z' } }])
+{
+      const documento = { id: 1, titulo: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades', estado: 'ATIVO', indexacao: 'INDEXADO',
+        versao: { id: 1, numero: 3, nomeArquivo: 'regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf', paginas: 42, criadaEm: '2026-11-02T12:00:00Z' } }
+      return json(200, mais([documento], { ...documento, id: 2, titulo: TituloLongo }))
+    }
     return json(404, { status: 404, detail: 'Recurso não encontrado.' })
   })
 }
+
+// As telas de C13 e do teste de 360 px, cada uma com o que esperar até estar desenhada.
+export const Telas: [string, string, (p: Page) => Promise<void>][] = [
+  ['Login', '/univag', async (p) => void (await p.getByLabel('CPF').waitFor())],
+  [
+    'Assistente',
+    '/univag/assistente',
+    async (p) => {
+      await p.getByLabel('Mensagem').fill('preciso do boleto do semestre, onde encontro a segunda via?')
+      await p.getByRole('button', { name: /Enviar/ }).click()
+      await p.getByText('Isso resolveu?').waitFor()
+    },
+  ],
+  ['Minhas solicitações', '/univag/solicitacoes', async (p) => void (await p.getByText('ONE-123').waitFor())],
+  ['Fila', '/univag/fila', async (p) => void (await p.getByText('ONE-123').waitFor())],
+  ['Detalhe do chamado', '/univag/chamados/ONE-123', async (p) => void (await p.getByText('Resumo gerado por IA').waitFor())],
+  ['Artigos', '/univag/artigos', async (p) => void (await p.getByText('ARQUIVADO').first().waitFor())],
+  ['Indicadores', '/univag/indicadores', async (p) => void (await p.getByText('Indicador principal').waitFor())],
+  ['Usuários', '/univag/usuarios', async (p) => void (await p.getByText('Carla Regina de Souza Albuquerque').waitFor())],
+  [
+    'Matrículas',
+    '/univag/matriculas',
+    async (p) => {
+      await p.route('**/api/admin/matriculas/importacao', (r) =>
+        r.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ status: 400, detail: 'Há erros no arquivo.', erros: [{ linha: 2, motivo: 'O CPF informado nesta linha não confere com nenhum aluno cadastrado' }] }) }),
+      )
+      await p.locator('input[type=file]').setInputFiles({ name: 'matriculas.csv', mimeType: 'text/csv', buffer: Buffer.from('cpf;nome') })
+      await p.getByRole('button', { name: 'Importar' }).click()
+      await p.getByRole('dialog').getByRole('button', { name: 'Importar' }).click()
+      await p.getByRole('cell', { name: /não confere/ }).waitFor()
+    },
+  ],
+  ['Cadastros', '/univag/cadastros', async (p) => void (await p.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').waitFor())],
+  ['Raiz', '/', async (p) => void (await p.getByText('Abra o endereço da sua instituição, por exemplo /univag.').waitFor())],
+  ['Primeiro acesso', '/univag/primeiro-acesso', async (p) => void (await p.getByLabel('CPF').waitFor())],
+  ['Criar senha', '/univag/definir-senha?token=x', async (p) => void (await p.getByLabel('Nova senha').waitFor())],
+  ['Trocar senha', '/univag/trocar-senha', async (p) => void (await p.getByLabel('Senha atual').waitFor())],
+  ['Documentos', '/univag/documentos', async (p) => void (await p.getByText('Regulamento do estágio supervisionado obrigatório dos cursos de graduação').waitFor())],
+]

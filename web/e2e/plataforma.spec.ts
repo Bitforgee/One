@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-import { simularApi } from './simulada'
+import { expect, test } from '@playwright/test'
+import { simularApi, Telas } from './simulada'
 
 test('manifesto e service worker', async ({ page, request }) => {
   const manifesto = await (await request.get('/manifest.webmanifest')).json()
@@ -32,33 +32,7 @@ test('manifesto e service worker', async ({ page, request }) => {
 test.describe('sem rolagem horizontal a 360 px', () => {
   test.use({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' })
 
-  const telas: [string, string, (p: Page) => Promise<void>][] = [
-    ['Login', '/univag', async (p) => void (await p.getByLabel('CPF').waitFor())],
-    [
-      'Assistente',
-      '/univag/assistente',
-      async (p) => {
-        await p.getByLabel('Mensagem').fill('preciso do boleto do semestre, onde encontro a segunda via?')
-        await p.getByRole('button', { name: /Enviar/ }).click()
-        await p.getByText('Isso resolveu?').waitFor()
-      },
-    ],
-    ['Minhas solicitações', '/univag/solicitacoes', async (p) => void (await p.getByText('ONE-123').waitFor())],
-    ['Fila', '/univag/fila', async (p) => void (await p.getByText('ONE-123').waitFor())],
-    ['Detalhe do chamado', '/univag/chamados/ONE-123', async (p) => void (await p.getByText('Resumo gerado por IA').waitFor())],
-    ['Artigos', '/univag/artigos', async (p) => void (await p.getByText('ARQUIVADO').waitFor())],
-    ['Indicadores', '/univag/indicadores', async (p) => void (await p.getByText('Indicador principal').waitFor())],
-    ['Usuários', '/univag/usuarios', async (p) => void (await p.getByText('Carla Regina de Souza Albuquerque').waitFor())],
-    ['Matrículas', '/univag/matriculas', async (p) => void (await p.getByLabel('Arquivo CSV').waitFor())],
-    ['Cadastros', '/univag/cadastros', async (p) => void (await p.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').waitFor())],
-    ['Raiz', '/', async (p) => void (await p.getByText('Abra o endereço da sua instituição, por exemplo /univag.').waitFor())],
-    ['Primeiro acesso', '/univag/primeiro-acesso', async (p) => void (await p.getByLabel('CPF').waitFor())],
-    ['Criar senha', '/univag/definir-senha?token=x', async (p) => void (await p.getByLabel('Nova senha').waitFor())],
-    ['Trocar senha', '/univag/trocar-senha', async (p) => void (await p.getByLabel('Senha atual').waitFor())],
-    ['Documentos', '/univag/documentos', async (p) => void (await p.getByText('Regulamento do estágio supervisionado obrigatório dos cursos de graduação').waitFor())],
-  ]
-
-  for (const [nome, caminho, preparar] of telas)
+  for (const [nome, caminho, preparar] of Telas)
     test(nome, async ({ page }) => {
       await simularApi(page)
       await page.goto(caminho)
