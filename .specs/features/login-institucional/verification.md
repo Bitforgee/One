@@ -1,143 +1,168 @@
 # Login institucional verification
 
-**Verdict**: FAIL
+**Verdict**: PASS
 **Profile**: ui
-**Diff range**: 1e9e76c..0b1cb84
-**Round**: 1 - full
+**Diff range**: 1e9e76c..547a6f2
+**Round**: 2 - scoped
 **Verifier**: independent sub-agent (author != verifier)
 
-Verified at 0b1cb84. All 22 checks are proven by located assertions, and 5 of 5 faults were killed. The verdict is FAIL anyway: three values that `## Screens` decides have no check and no exemption, and one `Test policy` row is not met. See `## Ranked gaps`.
+Round 2 is scoped to the fix range `0b1cb84..547a6f2` (05d3052 docs, c83cf75 `test(web)`, 547a6f2 docs) and to the four round-1 gaps. `git diff 0b1cb84..HEAD` touches only `.specs/` files, `web/e2e/arranjo.spec.ts` (+39 lines appended at :1567, three tests) and `web/src/acesso/textos.test.tsx` (+18 lines inserted at :119, one test). `git diff --quiet 0b1cb84 HEAD -- web/src ':!web/src/**/*.test.*'` exits 0, so no production code changed. The `api` container serves the same bundle as round 1 (`/assets/index-ClewLWmE.js`, with markers `grid min-h-svh lg:grid-cols-2`, `Atendimento ao estudante` and `Entre com seu CPF e sua senha.`).
+
+All 26 proofs were re-run at 547a6f2. All four round-1 gaps are closed by C23-C26, each with a located assertion, and each of the four new assertion surfaces was made to fail by a production fault.
 
 ## Binding sources
 
+The shadcn sources are carried from 0b1cb84, because the fix touched neither them nor the interface. The three `## Screens` rows the fix targets were re-enumerated at 547a6f2.
+
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
-| shadcn `login-02` `page.tsx` (raw.githubusercontent.com, shadcn-ui/ui main, apps/v4/registry/new-york-v4/blocks/login-02/page.tsx) | yes - WebFetch, full source returned | none | - |
-| shadcn `login-02` `components/login-form.tsx` (same directory) | yes - WebFetch returned only a summary, so the raw file was downloaded with curl and read in full | none | - |
-| shadcn `examples/authentication/page.tsx` (binding only for the panel fill) | yes - WebFetch returned only a summary, so the raw file was downloaded with curl and read in full | none | - |
-| plan `## Screens` row "cabeçalho do corpo, Login" (plan.md:83) | yes | none | "texto centrado": the description line "Entre com seu CPF e sua senha." has no centring check. C6 asserts `text-align` on the `h1` only (arranjo.spec.ts:1408); the line itself gets only size, colour and y (1410, 1412). Not in `## Exempted` |
-| plan `## Screens` row "cabeçalho do corpo, Primeiro acesso e Criar senha" (plan.md:84) and AC 7 | yes | none | "24 px ... até o `Alert` de sucesso" is measured only on Primeiro acesso (arranjo.spec.ts:1437-1442). The Criar senha success `Alert` ("Senha criada.") has no position check |
-| plan `## Screens` row "Login, instituição não encontrada" (plan.md:89) and AC 15 | yes | none | "`Alert` centrado na janela": C15 checks only the horizontal centre (arranjo.spec.ts:1562). The vertical centre is unchecked, while the Spinner gets both (1552-1553). `## Exempted` leaves out only the `Centro` padding and width |
+| shadcn `login-02` `page.tsx` (carried from 0b1cb84) | yes - WebFetch at round 1, full source | none | - |
+| shadcn `login-02` `components/login-form.tsx` (carried from 0b1cb84) | yes - curl at round 1, read in full | none | - |
+| shadcn `examples/authentication/page.tsx`, binding for the panel fill only (carried from 0b1cb84) | yes - curl at round 1, read in full | none | - |
+| plan `## Screens` "cabeçalho do corpo, Login" (plan.md:83), verified at 547a6f2 | yes | none | - |
+| plan `## Screens` "cabeçalho do corpo, Primeiro acesso e Criar senha" (plan.md:84), verified at 547a6f2 | yes | none | - |
+| plan `## Screens` "Login, instituição não encontrada" (plan.md:89), verified at 547a6f2 | yes | none | - |
+| plan `## Observable` rows for Primeiro acesso and Criar senha (plan.md:176-177), verified at 547a6f2 | yes | none | - |
 
-**How the sources compare with the checks.** login-02 sets the grid `grid min-h-svh lg:grid-cols-2` (C1, C2). It sets the form column `flex flex-col gap-4 p-6 md:p-10` (C3; the 16 px gap is folded into C5's centring formula, arranjo.spec.ts:1395-1397). It sets the brand row `flex justify-center gap-2 md:justify-start` (C4), the body `flex flex-1 items-center justify-center` > `w-full max-w-xs` (C5), and a panel to the right that is hidden below `lg` (C1, C2). Its header puts `gap-1` (4 px) between the `h1` and the line, which matches C6. examples/authentication sets the panel fill `bg-primary/5`, `p-10` and content at `mt-auto` (C10, C12).
+**Step 1 re-enumeration (verified at 547a6f2).**
+- **"cabeçalho do corpo, Login" (plan.md:83).**
+  - `h1` = API `nome`: C6, arranjo.spec.ts:1407. The page has a single `h1`: C6, :1406.
+  - The `h1` is 24/600 and centred: C6, :1408. It keeps `tracking-tight`: C20, interface.test.ts:186.
+  - The line "Entre com seu CPF e sua senha." is new text: C18, textos.test.tsx:69. It sits 4 px below the `h1`: C6, :1412. It is 14 px and muted: C6, :1410.
+  - **The line is centred**: C25. It has `text-align: center` (:1601) and its centre on the block centre (:1603).
+  - CPF starts 24 px below the line: C6, :1413.
+  - Nothing is left uncovered.
+- **"cabeçalho do corpo, Primeiro acesso e Criar senha" (plan.md:84).**
+  - The `h1` has the same style as the Login `h1` (C7, :1426) and sits at the top of the block (C7, :1421 and :1429).
+  - There is no line below it: C7, :1432.
+  - The first field starts 24 px below the `h1`: C7, :1430.
+  - The success `Alert` starts 24 px below the `h1`. Primeiro acesso: C7, :1442. **Criar senha: C23, :1577.**
+  - Nothing is left uncovered.
+- **"Login, instituição não encontrada" (plan.md:89).**
+  - The text: C15 Vitest, acesso.test.tsx:54, and C18.
+  - The `Alert` is centred in the window horizontally (C15, :1562) and **vertically (C24, :1591)**.
+  - There is no grid and no panel: C15, :1563, `h1, h2` count 0.
+  - The `Centro` padding and width are exempted by name in `## Exempted`.
+  - Nothing is left uncovered.
+- **`## Observable`, Primeiro acesso (sucesso, erro, enviando) and Criar senha (sucesso, token inválido, enviando).**
+  - Success texts: C18, textos.test.tsx:103 (`'Link enviado.'`) and the `estados` list at :108 (`'Senha criada. '`, `'Entre com o CPF e a nova senha.'`).
+  - Success positions: C7 and C23.
+  - **Error and invalid-token states: C26** (:130-132).
+  - "Enviando" adds no text: the `Spinner` is an svg inside the button. `## Exempted` names it in the forms row ("o Spinner dentro do botão").
+  - Nothing is left uncovered.
 
-None of these is a contradiction, for these reasons:
-- The source brand is an `<a href="#">`, a placeholder with no destination; the approved plan says "Não é link" (C4).
-- Icon size and colour, the `h1` weight (`font-bold` in the source, `font-semibold tracking-tight` in the house system, C20) and the 24 px header-to-field gap (FieldGroup `gap-7` in the source) are values. `## Screens` sets them from the house design system.
-- `lg:block` became `lg:flex` so that `mt-auto` works, and `border-l` replaces the example's `dark:border-r` because the panel moved to the right. The plan's door 1 decides both.
-
-**Each screen against `## Screens`.**
-- Grade < 1024: one column, `min-h-svh`, panel `display:none`, no horizontal scroll at 360, 390 and 768. Proven by C2, C9, and C5's 900 px centring (which needs the column to reach the window bottom).
-- Grade ≥ 1024: two equal columns, panel at x = half, y = 0, height ≥ window. Proven by C1 and C9.
-- Coluna: padding by C3; brand-row-to-body gap of 16 px by C5; body fills the remaining height by C5.
-- Linha da marca: icon, 8 px gap, "One" 16/600 primary, one row, not a link, centred or x = 40, top = padding. All proven by C4.
-- Corpo: width and x at 6 widths and vertical centring by C5.
-- Login header: `h1` = nome, single `h1`, 24/600, centred; line 4 px below at 14 px muted; CPF 24 px below. Proven by C6 and C20. The line's centring is **uncovered**.
-- Primeiro acesso and Criar senha header: proven by C7, except the Criar senha success Alert spacing, which is **uncovered**.
-- Login form: 24 px stack, Entrar width, Alert below, link centred below, Tab order. Proven by C8.
-- Primeiro acesso and Criar senha forms: full-width button and centred "Voltar" by C7; no card by C21; texts by C18. The rest is unchanged behaviour (Swept existing).
-- Painel: proven by C10-C13.
-- Loading: proven by C15.
-- Not found: proven by C15, horizontal only; vertical is **uncovered**.
-- Themes: proven by C14 and C19.
-- Root and Trocar senha: proven by C16.
-
-**Code against design.** `Acesso.tsx:35-67` renders only what `## Screens` draws: the brand row, the body with `h1`, optional line and children, and the panel with `h2`, `p` and a `ul` of 3 items. No extra element, link or text. `-mt-5` on the line is spacing only (Settled mid-build 3).
+**Code against design** (carried from 0b1cb84): no production change since then.
 
 ## Checks
 
+All proofs were re-run at 547a6f2 in one Vitest invocation (`cd web && npx vitest run --reporter=verbose`) and one Playwright invocation (`cd web && npx playwright test --reporter=list`). The verbose and list output shows each named test as its own passing line. No filter selects zero tests: for every `-g` and `-t` string, the full-run output was grepped and each one hit at least one passing test. C1-C22 evidence lines are carried from 0b1cb84. Both files gained lines only at :119 and :1567, and every cited carried line is above those points, so none of them moved. This was re-read at 547a6f2 for textos.test.tsx:69, :86, :96, :108 and arranjo.spec.ts:1442.
+
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
-| C1 | two columns from 1024 px, panel at half, y 0, height ≥ 800 | `npx playwright test e2e/arranjo.spec.ts -g "entrada em duas colunas"` - passed (arranjo.spec.ts:1328) | `web/e2e/arranjo.spec.ts:1334` `perto(c.x, 0, ...)`; `:1336` `perto(p.x, w / 2, ...)`; `:1337` `perto(p.width, w / 2, ...)`; `:1338` `perto(p.y, 0, ...)`; `:1339` `expect(p.height, ...).toBeGreaterThanOrEqual(800 - 1)` over Entradas × [1024, 1280, 1440] | PASS |
-| C2 | panel `display: none`, column = viewport at 360, 768, 1023 | `-g "entrada numa coluna abaixo de 1024 px"` - passed (:1343) | `web/e2e/arranjo.spec.ts:1348` `expect(await painel(page).evaluate((e) => getComputedStyle(e).display), ...).toBe('none')`; `:1349` `perto((await caixa(coluna(page))).width, w, ...)` | PASS |
-| C3 | padding 24px at 360/767, 40px at 768/1280 | `-g "recuo da coluna de entrada"` - passed (:1353) | `web/e2e/arranjo.spec.ts:1357` `expect(await estilo(coluna(page), 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'), ...).toEqual([esperado, esperado, esperado, esperado])` | PASS |
-| C4 | brand row: icon 24 primary, "One" 16/600 primary, 8 px, same line, not a link, centred or x 40, top 24 or 40 | `-g "linha da marca na entrada"` - passed (:1361) | `web/e2e/arranjo.spec.ts:1368` `perto(i.width, 24, ...)`; `:1370` `toBe(await cor(page, '--primary'))`; `:1371` `toEqual(['16px', '600', await cor(page, '--primary')])`; `:1372` `perto(o.x, i.x + i.width + 8, ...)`; `:1374` ancestor a or button `.count()` `toBe(0)`; `:1376` `perto(l.x + l.width / 2, c.x + c.width / 2, ...)`; `:1379` `perto(i.x, 40, ...)` | PASS |
-| C5 | block widths and x at 6 widths; vertical centre at 900 px height | `-g "bloco do formulário por largura"` - passed (:1385) | `web/e2e/arranjo.spec.ts:1390` `perto(b.width, largura, ...)`; `:1391` `perto(b.x, x, ...)` over the 6 tuples at :1387; `:1397` `perto(b.y + b.height / 2, (topo + base) / 2, ...)` with `topo = m.y + m.height + 16`, `base = 900 - recuo` | PASS |
-| C6 | Login single `h1` = API nome, 24/600/center; line 4 px below, 14px muted; CPF 24 px below | `-g "cabeçalho do Login"` - passed (:1402); vitest `login mostra o nome da instituição` - passed | `web/e2e/arranjo.spec.ts:1406` `expect(await page.locator('h1').count(), ...).toBe(1)`; `:1407` `.toBe(NomeSimulado)`; `:1408` `.toEqual(['24px', '600', 'center'])`; `:1410` `.toEqual(['14px', await cor(page, '--muted-foreground')])`; `:1412` `perto(f.y, h.y + h.height + 4, ...)`; `:1413` `perto(cpf.y, f.y + f.height + 24, ...)`; `web/src/acesso/acesso.test.tsx:33` `expect(await screen.findByText(/Univag/)).toBeInTheDocument()` | PASS |
-| C7 | (amended 03/11) PA and CS `h1` same style as Login, at top of block; field 24 px below; nothing between; button = field width; Voltar centred; PA success Alert 24 px below `h1` | `-g "cabeçalho de Primeiro acesso e Criar senha"` - passed (:1417) | `web/e2e/arranjo.spec.ts:1426` `.toEqual(estiloLogin)`; `:1421` and `:1429` `perto(h.y, blocoCaixa.y, ...)`; `:1430` `perto(primeiroCampo.y, h.y + h.height + 24, ...)`; `:1432` `following-sibling::*[1]//label` `.count()` `toBe(1)`; `:1433` `perto(b.width, ...width, ...)`; `:1436` `perto(voltar.x + voltar.width / 2, blocoCaixa.x + blocoCaixa.width / 2, ...)`; `:1442` `perto(alerta.y, h2.y + h2.height + 24, ...)` | PASS |
-| C8 | Login 24 px stack, Entrar = CPF width, link centred below, Alert below Entrar and link below Alert, Tab order | `-g "formulário do Login: espaços, erro e teclado"` (:1448) and `-g "Login: campos empilhados e o erro abaixo do formulário"` (:494) - both passed | `web/e2e/arranjo.spec.ts:1454` `perto(s.y, c.y + c.height + 24, ...)`; `:1455` `perto(e.y, s.y + s.height + 24, ...)`; `:1456` `perto(e.width, (await caixa(cpf)).width, ...)`; `:1458` `perto(l.x + l.width / 2, bb.x + bb.width / 2, ...)`; `:1462` `await expect(alvo, ...).toBeFocused()` over [senha, entrar, link]; `:1471` `expect(erro.y, ...).toBeGreaterThanOrEqual(e2.y + e2.height - 1)`; `:1472` `expect(l2.y, ...).toBeGreaterThanOrEqual(erro.y + erro.height - 1)`; `:507` `expect(abaixo(entrar, erro)).toBe(true)` | PASS |
-| C9 | no horizontal scroll on the 3 screens at 6 widths | `-g "sem rolagem horizontal"` - passed (:1027) | `web/e2e/arranjo.spec.ts:1041` `expect(rolagem, ...).toBeLessThanOrEqual(janela)` over `Telas` (Login, Primeiro acesso and Criar senha at `web/e2e/simulada.ts:82,113,114`) × [360, 390, 768, 1024, 1280, 1440] | PASS |
-| C10 | panel bg = `bg-primary/5` probe with alpha, border-left 1px `--border`, padding 40 | `-g "fundo e borda do painel"` - passed (:1476) | `web/e2e/arranjo.spec.ts:1487` probe colour `not.toMatch` an opaque or zero-alpha pattern; `:1489` `expect(fundo, ...).toBe(esperado)`; `:1490` `.toEqual(['1px', await cor(page, '--border')])`; `:1491` `.toEqual(['40px', '40px', '40px', '40px'])` | PASS |
-| C11 | panel `h2`, line, 3 `li` in order with icons, sizes, colours, gaps; PA and CS same | `-g "conteúdo do painel"` - passed (:1495) | `web/e2e/arranjo.spec.ts:1499` `.toBe('Atendimento ao estudante')`; `:1500` `.toEqual(['30px', '600', await cor(page, '--foreground')])`; `:1502` `.toEqual(['16px', await cor(page, '--muted-foreground')])`; `:1504` `perto(f.y, t.y + t.height + 8, ...)`; `:1505` `perto(l.y, f.y + f.height + 24, ...)`; `:1507` `expect(await itens.count(), 'itens').toBe(3)`; `:1512` `expect(await item.textContent(), ...).toBe(texto)` with `svg.lucide-${icone}` (:1513); `:1515` `perto(s.width, 20, ...)`; `:1517` icon colour `--primary`; `:1520` `perto(textoX, s.x + s.width + 12, ...)`; `:1521` `perto(caixaItem.y, anterior.y + anterior.height + 16, ...)`; `:1526-1527` PA and CS `h2` visible, `li` count `toBe(3)` | PASS |
-| C12 | content bottom 40 px above panel bottom, x = half + 41, width ≤ 448 at 1024×740 and 1440×900 | `-g "posição do conteúdo do painel"` - passed (:1531) | `web/e2e/arranjo.spec.ts:1537` `perto(c.y + c.height, p.y + p.height - 40, ...)`; `:1538` `perto(c.x, w / 2 + 41, ...)`; `:1539` `expect(c.width, ...).toBeLessThanOrEqual(448 + 1)` | PASS |
-| C13 | 3 panel svgs `aria-hidden="true"`, no focusable in panel | vitest `painel de entrada sem foco e com ícones escondidos` - passed | `web/src/acesso/acesso.test.tsx:44` `expect(icones, caminho).toHaveLength(3)`; `:45` `expect(i, caminho).toHaveAttribute('aria-hidden', 'true')`; `:46` `expect(painel.querySelectorAll('a, button, input, select, textarea, [tabindex]'), caminho).toHaveLength(0)` | PASS |
-| C14 | contrast ≥ 4.5 of fg and muted-fg on 5% primary over background, 3 themes | vitest `contraste do painel de entrada` - passed | `web/src/test/interface.test.ts:158` `decodificar(0.05 * c + 0.95 * f[i])`; `:162` `expect((Math.max(l, luz) + 0.05) / (Math.min(l, luz) + 0.05), ...).toBeGreaterThanOrEqual(4.5)` over `temas()` (`:73`, `:root`, `.dark`, `.dark.black`) | PASS |
-| C15 | loading Spinner 32 px centred in window; 404 Alert horizontally centred; no `h1` nor panel | `-g "carregando e instituição não encontrada no centro"` - passed (:1543); vitest `slug desconhecido mostra Instituição não encontrada` - passed | `web/e2e/arranjo.spec.ts:1551` `.toEqual(['32px', '32px'])`; `:1552` `perto(s.x + s.width / 2, w / 2, ...)`; `:1553` `perto(s.y + s.height / 2, 400, ...)`; `:1554` and `:1563` `expect(await page.locator('h1, h2').count(), ...).toBe(0)`; `:1562` `perto(a.x + a.width / 2, w / 2, ...)`; `web/src/acesso/acesso.test.tsx:54` `expect(await screen.findByText('Instituição não encontrada.')).toBeInTheDocument()` | PASS |
-| C16 | root `/` and Trocar senha tests pass unchanged | `-g "telas de acesso centralizadas /"`, `-g "Trocar senha até 384 px"` (:884), `-g "raiz com a marca e o texto centralizados"` (:485) - all passed | `web/e2e/arranjo.spec.ts:388-390` (case `/`, the same three expressions as at base, now inside `if (caminho === '/')`) `expect(c.width, rotulo).toBeLessThanOrEqual(384)`; `:894` `expect(Math.abs(cartao.x + cartao.width / 2 - (bloco.x + bloco.width / 2)), ...).toBeLessThanOrEqual(1)`; `:489` `expect(Math.abs(c.x + c.width / 2 - 180)).toBeLessThanOrEqual(1)`; tests at :884 and :485 untouched by the diff | PASS |
-| C17 | same API requests; script exits 0; full suites pass | `python .specs/features/login-institucional/chamadas_iguais.py 1e9e76c` exit 0 ("275 teste(s) da base, 143 gravação(ões) distintas; 0 problema(s) em HEAD"); `--autoteste` exit 0 ("autoteste ok"); full Vitest 277/277, full Playwright 90/90 | `.specs/features/login-institucional/chamadas_iguais.py:16` `mod.REESCRITOS = {}` (matches Handoff Settled 6: no Vitest test renamed); `:22` `sys.exit(mod.base_ci.main(sys.argv))` | PASS |
-| C18 | only today's texts minus "·", plus the 6 new ones, per state | vitest `-t "textos das telas de acesso"` - textos raiz, Login, Primeiro acesso, Criar senha and Trocar senha all passed | `web/src/acesso/textos.test.tsx:69` list without `'·'`, with `'Entre com seu CPF e sua senha.'` and `...Painel` (`:56`, the 5 panel texts); `:86` `t.conferir(montada.container, ['Univag'])`; `:96`, `:108` PA and CS lists with `...Painel`; `web/src/test/textos.ts:23` `expect(sobra(texto, [...literais, ...extras])).toEqual([])` and `:28` `expect(literais.filter((l) => !tudo.includes(l))).toEqual([])` | PASS |
-| C19 | no literal colour; AD-027 tokens unchanged in 3 themes | vitest `tokens da paleta`, `tokens de Visual` - passed | `web/src/test/interface.test.ts:171-173` `expect(claro[token], ...).toBe(valorClaro)` (and `.dark`, `.black`); `:179` `expect(arquivos.filter((a) => CorLiteral.test(texto(a)))).toEqual([])`; `:196` `expect(t[seletor][linha[0]], ...).toBe(esperado)` | PASS |
-| C20 | `h1` of `Acesso.tsx` keeps `text-2xl font-semibold tracking-tight`; only `h1` files are Acesso and Autenticado | vitest `títulos de página` - passed | `web/src/test/interface.test.ts:184` `.toEqual(['Autenticado.tsx', 'acesso/Acesso.tsx'])`; `:186` `toMatch(/className="(?:[^"]* )?text-2xl font-semibold tracking-tight[ "]/)` | PASS |
-| C21 | rewritten layout-painel tests keep their names and measure the grid; no card on the 3 screens | `-g "telas de acesso centralizadas /univag"` (3 cases, :378), `-g "quebras medidas dos dois lados"` (:971), `-g "arranjo telas de acesso"` (:335) - all passed | `web/e2e/arranjo.spec.ts:397` `expect(b.width, rotulo).toBeLessThanOrEqual(320)`; `:398` `expect(Math.abs(b.x + b.width / 2 - (coluna.x + coluna.width / 2)), rotulo).toBeLessThanOrEqual(1)`; `:399` `expect(await page.locator('[data-slot=card]').count(), rotulo).toBe(0)`; `:984` `expect(await padding(coluna), ...).toBe(esperado)` over [[360,'24px'],[768,'40px']]; `:351-352` x 24, width 312; `:356-357` x 96, width 320 | PASS |
-| C22 | crapper 0 at 9.99, dryer no candidate, build 0; mutator suspended | `npm --prefix web run coverage` exit 0 then `crapper --use-existing-coverage -s src --threshold 9.99` exit 0 (no function above 9.99); C22 dryer command piped to `grep -q "No duplicate candidates found"` exit 0; `npm --prefix web run build` exit 0 | command exit codes; the dryer output line reads `No duplicate candidates found.`; `mutator` NOT run, suspended by user decision (AD-025) | PASS |
+| C1 | two columns from 1024 px | `entrada em duas colunas` (arranjo.spec.ts:1328) passed at 547a6f2 | carried from 0b1cb84: `:1334` `perto(c.x, 0, ...)`; `:1336` `perto(p.x, w / 2, ...)`; `:1337` `perto(p.width, w / 2, ...)`; `:1339` `toBeGreaterThanOrEqual(800 - 1)` | PASS |
+| C2 | panel `display: none`, column = viewport below 1024 | `entrada numa coluna abaixo de 1024 px` (:1343) passed | carried from 0b1cb84: `:1348` `...toBe('none')`; `:1349` `perto((await caixa(coluna(page))).width, w, ...)` | PASS |
+| C3 | padding 24/40 | `recuo da coluna de entrada` (:1353) passed | carried from 0b1cb84: `:1357` `.toEqual([esperado, esperado, esperado, esperado])` | PASS |
+| C4 | brand row | `linha da marca na entrada` (:1361) passed | carried from 0b1cb84: `:1368` `perto(i.width, 24, ...)`; `:1371` `toEqual(['16px', '600', await cor(page, '--primary')])`; `:1372` `perto(o.x, i.x + i.width + 8, ...)`; `:1374` ancestor a/button count `toBe(0)` | PASS |
+| C5 | block width, x, vertical centre | `bloco do formulário por largura` (:1385) passed | carried from 0b1cb84: `:1390` `perto(b.width, largura, ...)`; `:1391` `perto(b.x, x, ...)`; `:1397` `perto(b.y + b.height / 2, (topo + base) / 2, ...)` | PASS |
+| C6 | Login header | `cabeçalho do Login` (:1402) and Vitest `login mostra o nome da instituição` passed | carried from 0b1cb84: `:1406` `.toBe(1)`; `:1407` `.toBe(NomeSimulado)`; `:1408` `.toEqual(['24px', '600', 'center'])`; `:1412` `perto(f.y, h.y + h.height + 4, ...)`; `:1413` `perto(cpf.y, f.y + f.height + 24, ...)`; `acesso.test.tsx:33` | PASS |
+| C7 | PA and CS header, PA success Alert | `cabeçalho de Primeiro acesso e Criar senha` (:1417) passed | carried from 0b1cb84: `:1426` `.toEqual(estiloLogin)`; `:1429` `perto(h.y, blocoCaixa.y, ...)`; `:1430` `perto(primeiroCampo.y, h.y + h.height + 24, ...)`; `:1442` `perto(alerta.y, h2.y + h2.height + 24, ...)` | PASS |
+| C8 | Login form stack, Alert, link, Tab | `formulário do Login: espaços, erro e teclado` (:1448) and `Login: campos empilhados e o erro abaixo do formulário` (:494) passed | carried from 0b1cb84: `:1454-1456`, `:1458`, `:1462` `toBeFocused()`, `:1471-1472`, `:507` `expect(abaixo(entrar, erro)).toBe(true)` | PASS |
+| C9 | no horizontal scroll | `sem rolagem horizontal` (arranjo.spec.ts:1027) passed | carried from 0b1cb84: `:1041` `expect(rolagem, ...).toBeLessThanOrEqual(janela)` | PASS |
+| C10 | panel fill, border, padding | `fundo e borda do painel` (:1476) passed | carried from 0b1cb84: `:1489` `expect(fundo, ...).toBe(esperado)`; `:1490` `.toEqual(['1px', await cor(page, '--border')])`; `:1491` `.toEqual(['40px', '40px', '40px', '40px'])` | PASS |
+| C11 | panel content | `conteúdo do painel` (:1495) passed | carried from 0b1cb84: `:1499` `.toBe('Atendimento ao estudante')`; `:1507` `.toBe(3)`; `:1512` `.toBe(texto)`; `:1520`, `:1521` | PASS |
+| C12 | panel content position | `posição do conteúdo do painel` (:1531) passed | carried from 0b1cb84: `:1537` `perto(c.y + c.height, p.y + p.height - 40, ...)`; `:1538` `perto(c.x, w / 2 + 41, ...)`; `:1539` `toBeLessThanOrEqual(448 + 1)` | PASS |
+| C13 | panel svgs hidden, nothing focusable | Vitest `painel de entrada sem foco e com ícones escondidos` passed | carried from 0b1cb84: `acesso.test.tsx:45` `toHaveAttribute('aria-hidden', 'true')`; `:46` `...toHaveLength(0)` | PASS |
+| C14 | panel contrast ≥ 4.5, 3 themes | Vitest `contraste do painel de entrada` passed | carried from 0b1cb84: `interface.test.ts:162` `...toBeGreaterThanOrEqual(4.5)` | PASS |
+| C15 | loading and not found centred (x) | `carregando e instituição não encontrada no centro` (:1543) and Vitest `slug desconhecido mostra Instituição não encontrada` passed | carried from 0b1cb84: `:1551` `.toEqual(['32px', '32px'])`; `:1552-1553`; `:1562` `perto(a.x + a.width / 2, w / 2, ...)`; `:1563` `h1, h2` count `toBe(0)`; `acesso.test.tsx:54` | PASS |
+| C16 | root and Trocar senha unchanged | `telas de acesso centralizadas /` (:378, case `/`), `Trocar senha até 384 px` (:884), `raiz com a marca e o texto centralizados` (:485) passed | carried from 0b1cb84: `:388-390`; `:894`; `:489` | PASS |
+| C17 | same API requests | `chamadas_iguais.py 1e9e76c` exit 0 ("275 teste(s) da base, 143 gravação(ões) distintas; 0 problema(s) em HEAD"); `--autoteste` exit 0 ("autoteste ok"), at 547a6f2 | carried from 0b1cb84: `chamadas_iguais.py:16` `mod.REESCRITOS = {}`; `:22` `sys.exit(mod.base_ci.main(sys.argv))` | PASS |
+| C18 | texts per state | Vitest `-t "textos das telas de acesso"`: textos raiz, Login, Primeiro acesso, Criar senha and Trocar senha passed (the filter now also selects C26's test) | carried from 0b1cb84: `textos.test.tsx:69`, `:86` `t.conferir(montada.container, ['Univag'])`, `:96`, `:108`; `web/src/test/textos.ts:23` `expect(sobra(texto, [...literais, ...extras])).toEqual([])`; `:28` | PASS |
+| C19 | no literal colour, tokens unchanged | Vitest `tokens da paleta` and `tokens de Visual` passed | carried from 0b1cb84: `interface.test.ts:171-173`, `:179` `.toEqual([])`, `:196` | PASS |
+| C20 | `h1` classes, only 2 `h1` files | Vitest `títulos de página` passed | carried from 0b1cb84: `interface.test.ts:184` `.toEqual(['Autenticado.tsx', 'acesso/Acesso.tsx'])`; `:186` | PASS |
+| C21 | rewritten layout-painel tests | `telas de acesso centralizadas /univag` (3 cases, :378), `quebras medidas dos dois lados` (:971), `arranjo telas de acesso` (:335) passed | carried from 0b1cb84: `:397-399` (`[data-slot=card]` count `toBe(0)`); `:984`; `:351-352`; `:356-357` | PASS |
+| C22 | crapper, dryer, build | at 547a6f2: `npm --prefix web run coverage` exit 0 (278 passed); `crapper --use-existing-coverage -s src --threshold 9.99` exit 0; C22 dryer command piped to `grep -q` exit 0 (`No duplicate candidates found.`); `npm --prefix web run build` exit 0 | command exit codes; `mutator` NOT run, suspended by user decision (AD-025) | PASS |
+| C23 | CS success `Alert` 24 px below `h1`, 360 and 1280 | `alerta de sucesso de Criar senha` (arranjo.spec.ts:1569) passed at 547a6f2 | verified at 547a6f2: `web/e2e/arranjo.spec.ts:1574` `page.getByRole('alert').filter({ hasText: 'Senha criada.' })`; `:1577` `perto(alerta.y, h.y + h.height + 24, \`${w}: alerta de sucesso\`)` over `[360, 1280]` (:1570) | PASS |
+| C24 | not-found `Alert` vertical centre in window, 360 and 1280 | `instituição não encontrada no centro vertical` (:1583) passed | verified at 547a6f2: `web/e2e/arranjo.spec.ts:1585` `setViewportSize({ width: w, height: 800 })`; `:1591` `perto(a.y + a.height / 2, 400, \`${w}: centro y do Alert\`)` | PASS |
+| C25 | Login line `text-align: center` and centred on the block | `frase do Login centrada` (:1597) passed | verified at 547a6f2: `web/e2e/arranjo.spec.ts:1601` `expect(await estilo(frase, 'text-align'), ...).toEqual(['center'])`; `:1603` `perto(f.x + f.width / 2, b.x + b.width / 2, \`${w}: centro da frase\`)` | PASS |
+| C26 | PA error and CS invalid-token states show only today's texts plus the API `detail` in an `Alert` | Vitest `textos dos erros de Primeiro acesso e Criar senha` passed | verified at 547a6f2: `web/src/acesso/textos.test.tsx:130` `expect(await screen.findByRole('alert'), caminho).toHaveTextContent('Dados recusados pela API.')`; `:131` `t.conferir(container, ['Dados recusados pela API.'])` (`textos.ts:23` `sobra(...)` `.toEqual([])`); `:132` `t.todos()`, looped over both screens (:122-123) | PASS |
 
-Every named test above shows up individually as passed in one Vitest invocation (12 selected, 12 passed, 71 skipped) and one Playwright invocation (22 selected, 22 passed). No filter matched zero tests (L-002). Each new proof sits in a file the diff touches. C9's test (:1027) and C8's second test (:494) predate the feature, but they ran at HEAD against the new grid. The Handoff says "90 de 91" e2e; `npx playwright test --list` reports 90 tests in total, and all 90 passed.
+Run totals at 547a6f2:
+- Vitest: 34 files, 278 passed, 0 failed.
+- Playwright: 93 passed, 0 failed. That is round 1's 90 plus C23-C26's three e2e tests, which show as tests 91, 92 and 93.
+
+The four new proofs sit in the files the fix touched. They are new tests, and no older assertion changed.
 
 ## Coverage
 
+Rows the fix touched were recomputed at 547a6f2. All other rows are carried from 0b1cb84.
+
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| door 1, screens on the grid (3) | plan `## Landing` door 1 | Login, Primeiro acesso, Criar senha: C1-C5 each loop over `Entradas` (arranjo.spec.ts:1302) | - |
-| 1024 px breakpoint (2 sides) | `## Screens` grade rows | 1023 C2 (:1345) · 1024 C1 (:1330) | - |
-| 768 px breakpoint (2 sides) | `## Screens` coluna and linha da marca rows | 767 C3 C4 · 768 C3 C4 | - |
-| form block widths (6) | `## Screens` corpo row | 360, 390, 768, 1024, 1280, 1440 C5 (:1387) | - |
-| no-scroll widths (6) | `## Screens` grade rows and AC 9 | 360, 390, 768, 1024, 1280, 1440 C9 (:1032) | - |
-| body headers (3) | `## Screens` header rows | Login C6 · Primeiro acesso C7 · Criar senha C7 | - |
-| what follows the header at 24 px (4) | `## Screens` plan.md:84 and AC 7 | PA first field C7 · CS first field C7 · PA success Alert C7 (:1442) | Criar senha success Alert ("Senha criada.") |
-| panel texts (5) | `## Screens` painel row | title, line, items 1-3 C11 | - |
-| panel icons (3) | `## Screens` painel row | MessageCircle, ListChecks, Users C11 C13 | - |
-| themes for panel contrast (3) | `## Screens` temas row | `:root`, `.dark`, `.dark.black` C14 (interface.test.ts:73) | - |
-| Login states off the grid, each centred in window (2 states × 2 axes) | `## Screens` plan.md:88-89 and AC 15 | loading x and y C15 (:1552-1553) · not-found x C15 (:1562) | not-found Alert vertical centre |
-| Login header texts centred (2) | `## Screens` plan.md:83 "texto centrado" | `h1` C6 (:1408) | description line "Entre com seu CPF e sua senha." |
-| screens that do not change (2) | `## Screens` raiz/Trocar senha row | root C16 · Trocar senha C16 | - |
-| layout-painel tests rewritten (3) | plan `## Impact` | `telas de acesso centralizadas` (3 cases) C21 · `quebras medidas dos dois lados` C21 · `arranjo telas de acesso` C21 | - |
-| new texts (6) | `## Screens` *(novo)* marks | Login line + 5 panel texts C18 | - |
-| text states per screen (Observable) | plan `## Observable` plan.md:169-177 | Login: loading, not found, form, login refused C18 · PA: form, success C18 · CS: form, success C18 | Primeiro acesso error state (API `Alert`); Criar senha invalid-token state (API `Alert`) |
+| door 1, screens on the grid (3) - carried from 0b1cb84 | plan `## Landing` door 1 | C1-C5 over `Entradas` (:1302) | - |
+| 1024 px breakpoint (2 sides) - carried from 0b1cb84 | `## Screens` grade rows | 1023 C2 · 1024 C1 | - |
+| 768 px breakpoint (2 sides) - carried from 0b1cb84 | `## Screens` coluna, marca | 767 C3 C4 · 768 C3 C4 | - |
+| form block widths (6) - carried from 0b1cb84 | `## Screens` corpo | C5 (:1387) | - |
+| no-scroll widths (6) - carried from 0b1cb84 | `## Screens` grade and AC 9 | C9 (:1032) | - |
+| body headers (3) - carried from 0b1cb84 | `## Screens` header rows | Login C6 · PA C7 · CS C7 | - |
+| what follows the header at 24 px (4) - verified at 547a6f2 | `## Screens` plan.md:84 and AC 7 | PA first field C7 (:1430) · CS first field C7 (:1430) · PA success Alert C7 (:1442) · CS success Alert C23 (:1577) | - |
+| panel texts (5) - carried from 0b1cb84 | `## Screens` painel | C11 | - |
+| panel icons (3) - carried from 0b1cb84 | `## Screens` painel | C11 C13 | - |
+| themes for panel contrast (3) - carried from 0b1cb84 | `## Screens` temas | C14 | - |
+| Login states off the grid, centred in window (2 states × 2 axes) - verified at 547a6f2 | `## Screens` plan.md:88-89 and AC 15 | loading x, y C15 (:1552-1553) · not-found x C15 (:1562) · not-found y C24 (:1591) | - |
+| Login header texts centred (2) - verified at 547a6f2 | `## Screens` plan.md:83 "texto centrado" | `h1` C6 (:1408) · line C25 (:1601, :1603) | - |
+| screens that do not change (2) - carried from 0b1cb84 | `## Screens` raiz/Trocar senha | C16 | - |
+| layout-painel tests rewritten (3) - carried from 0b1cb84 | plan `## Impact` | C21 | - |
+| new texts (6) - carried from 0b1cb84 | `## Screens` *(novo)* marks | C18 | - |
+| text states per screen (Observable) - verified at 547a6f2 | plan `## Observable` plan.md:169-177 | Login: loading, not found, form, refused C18 · PA: form, success C18; error C26 (:130-131) · CS: form, success C18; invalid token C26 (:130-131) | - |
 
-There is no `Surface` and no `Relations`, so the plan has no route or entity set. The "sending" state adds no visible text (`Spinner` is an svg inside `BotaoAcao`, `web/src/acao.tsx:12`), so it is not counted as a text state.
+The "enviando" states add no visible text. The `Spinner` is an svg inside `BotaoAcao` (carried from 0b1cb84), and `## Exempted` names it.
 
 ## Test policy rows
 
 | Row | Files it classifies | Required proof | Expectation met |
 | --- | --- | --- | --- |
-| arranjo das telas de entrada (breakpoint CSS) | `web/src/acesso/Acesso.tsx` (Entrada, :35-67) | Playwright `boundingBox()` and `getComputedStyle`, one width on each side of 768 and 1024, on the 3 screens: C1 (1024), C2 (1023), C3 and C4 (767 and 768), all over `Entradas` | yes |
-| textos visíveis por estado | `Acesso.tsx` Login, PrimeiroAcesso, DefinirSenha | Vitest `textos` with `estados`, `conferir` and `todos`, each state of each screen | no - Primeiro acesso error and Criar senha invalid-token states have no `conferir` (textos.test.tsx:95-117 covers form and success only) |
-| contraste derivado dos tokens | `web/src/index.css` | Vitest over `index.css`, 3 themes: C14 (interface.test.ts:155-165) over `temas()` | yes |
-| `Acesso.tsx` (no new condition) | `web/src/acesso/Acesso.tsx` | none of its own beyond the above: the `isError`, `isPending`, `mensagem` and `pronto` branches already exist (:111, :117, :154, :179); crapper reports 0 above 9.99 | yes |
+| arranjo das telas de entrada (carried from 0b1cb84) | `web/src/acesso/Acesso.tsx` (Entrada) | Playwright `boundingBox()` and `getComputedStyle`, each side of 768 and 1024, 3 screens: C1-C4 | yes |
+| textos visíveis por estado (re-judged at 547a6f2) | `Acesso.tsx` Login, PrimeiroAcesso, DefinirSenha | Vitest `textos` with `estados`, `conferir` and `todos`, each state of each screen. Login covered by C18 (:69-92). PA form and success covered by C18 (:96-104), PA error by C26 (:122, :131). CS form and success covered by C18 (:108-116), CS invalid token by C26 (:123, :131) | yes |
+| contraste derivado dos tokens (carried from 0b1cb84) | `web/src/index.css` | Vitest over `index.css`, 3 themes: C14 | yes |
+| `Acesso.tsx` no new condition (carried from 0b1cb84, re-confirmed: no production change in the fix range) | `web/src/acesso/Acesso.tsx` | none of its own; crapper 0 above 9.99 at 547a6f2 | yes |
 
-**Swept `existing` rows, read against the code:**
-- validation: `obrigatorio = z.string().min(1)` at `Acesso.tsx:17`, used at :104, :158, :185; test `formulários de acesso exigem só os obrigatórios` at acesso.test.tsx:111. Present.
-- authorization: the login posts to `/api/auth/login` at `Acesso.tsx:131`, and the API decides. Present.
-- state transitions: `setPronto(true)` at `Acesso.tsx:190`, the `pronto` branch at :179-182; test `definir senha envia o token do link e mostra Senha criada` at acesso.test.tsx:330. Present.
+**Swept `existing` rows**: carried from 0b1cb84. The fix changed no production code, so the cited constraints (`Acesso.tsx:17`, `:131`, `:190`) cannot have moved.
 
 ## Faults injected
 
-Each fault ran in the isolated worktree (`git worktree add <scratch>/wtl HEAD`, `web/node_modules` as a junction). For the e2e faults: `npx vite build`, then `npx vite preview --port 4179 --strictPort`, then `E2E_URL=http://localhost:4179`, running only the narrowest proof. After each fault the source was restored and the worktree porcelain was empty.
+Faults F1-F5 are carried from 0b1cb84, all killed: the grid breakpoint, the panel item order, the body's vertical centring, the `--muted-foreground` contrast, and the `h1` text.
+
+Round 2 put one fault on each new assertion surface (verified at 547a6f2). The real tree's porcelain before was `?? .idea/` and `?? .playwright-mcp/`. The isolated worktree was set up with `git worktree add <scratch>/wtl2 HEAD`, and `web/node_modules` was linked in as a junction made with `mklink /J`.
+
+For each e2e fault, the edit was applied with `sed`. Then `npx vite build` ran, followed by `npx vite preview --port 4179 --strictPort`. The marker was grepped from the served bundle, and only the narrowest proof ran, with `E2E_URL=http://localhost:4179`. The preview was killed with `taskkill /T`, and the source was restored with `git checkout`. The worktree porcelain was empty after each fault.
+
+One run is not counted. My first F2 attempt used a wrong line address, so `sed` changed nothing. The diff stat was empty and the served bundle had no marker, so the test's pass there is not a surviving mutant. F2 was re-run with a pattern address, and the fault was confirmed in the bundle.
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| F1 grid breakpoint `lg:grid-cols-2` -> `xl:grid-cols-2`. Served bundle marker: `grid min-h-svh xl:grid-cols-2` | `web/src/acesso/Acesso.tsx:37` | yes - `entrada em duas colunas`: "/univag a 1024: largura da coluna: 1024 contra 512" |
-| F2 panel items 2 and 3 swapped (ListChecks and Users). Bundle marker: `` [Sy,`Fale com a equipe da instituição quando precisar`],[Hv,`Acompanhe suas solicitações até a resposta`] `` | `web/src/acesso/Acesso.tsx:30-31` | yes - `conteúdo do painel`: item 1 expected "Acompanhe suas solicitações até a resposta", received "Fale com a equipe da instituição quando precisar" |
-| F3 vertical centring `items-center` -> `items-start` on the body. Served bundle marker: `flex flex-1 items-start justify-center` | `web/src/acesso/Acesso.tsx:43` | yes - `bloco do formulário por largura`: "/univag a 360: centro vertical: 244 contra 470" |
-| F4 contrast input: `:root --muted-foreground` `oklch(0.50 0 0)` -> `oklch(0.66 0 0)` (Vitest reads the source file) | `web/src/index.css:27` | yes - `contraste do painel de entrada`: ":root --muted-foreground: expected 2.88 to be greater than or equal to 4.5" |
-| F5 Login `h1` text `instituicao.nome` -> `"One · " + instituicao.nome`. Served bundle marker: `` lo:`One · `+n.nome,des `` | `web/src/acesso/Acesso.tsx:125` | yes - `cabeçalho do Login`: expected "Centro Universitário de Várzea Grande", received "One · Centro Universitário de Várzea Grande" |
+| F6 Criar senha success `<Alert>` -> `<Alert className="mt-4">`. Served marker: `` mt-4`,children:[`Senha criada `` | `web/src/acesso/Acesso.tsx:180` | yes - `alerta de sucesso de Criar senha`: "360: alerta de sucesso: 423 contra 407" (received 16, expected ≤ 1) |
+| F7 `Centro` `items-center` -> `items-start`. Served marker: `flex min-h-svh w-full items-start justify-center` | `web/src/acesso/Acesso.tsx:22` | yes - `instituição não encontrada no centro vertical`: "360: centro y do Alert: 67 contra 400" |
+| F8 Login line loses `text-center` (`-mt-5 text-center text-sm` -> `-mt-5 text-sm`). Served marker: `mt-5 text-sm text-muted-foreground` | `web/src/acesso/Acesso.tsx:46` | yes - `frase do Login centrada`: "360: text-align", `toEqual(['center'])` failed at arranjo.spec.ts:1601 |
+| F9 form error `Alert` shows an extra literal (`{m.error.message}` -> `{m.error.message} Tente de novo.`). Vitest, run in the worktree | `web/src/acesso/Acesso.tsx:99` | yes - `textos dos erros de Primeiro acesso e Criar senha`: "expected [ 'Tente', 'de', 'novo' ] to deeply equal []" (1 failed, 6 skipped) |
 
-**Cleanup.** Port 4179 was confirmed free. The junction was removed with `rmdir`, and `D:\one-system\web\node_modules` is still intact. Then `git worktree remove --force` ran. `git worktree list` shows only `D:/one-system 0b1cb84 [main]`. The real tree's porcelain matches the baseline (`?? .idea/`, `?? .playwright-mcp/`). `git stash` was never used.
+F8 was killed by the `text-align` assertion (:1601). The box-centre assertion (:1603) alone could not catch it, because the `p` spans the block's width. The two assertions together settle C25's claim.
+
+**Cleanup.**
+- Port 4179 had no LISTENING socket left.
+- The junction was removed with `rmdir`, and `D:\one-system\web\node_modules` is still intact (`node_modules\vite` exists).
+- `git worktree remove --force` ran, and `git worktree list` shows only `D:/one-system 547a6f2 [main]`.
+- The real tree's porcelain matches the baseline (`?? .idea/`, `?? .playwright-mcp/`).
+- `git stash` was never used.
 
 ## Gate
 
-- `docker compose up -d --build api`: the container serves the HEAD bundle, confirmed by `lg:grid-cols-2` and `Atendimento ao estudante` in `/assets/index-ClewLWmE.js`.
-- `cd web && npx vitest run --reporter=verbose`: 34 files, 277 passed, 0 failed.
-- `cd web && npx playwright test --reporter=list`: 90 passed, 0 failed (90 listed).
+All results below are verified at 547a6f2.
+
+- The `api` container (up, port 8080) serves `/assets/index-ClewLWmE.js`, the same bundle as round 1. It carries `grid min-h-svh lg:grid-cols-2`, `Atendimento ao estudante` and `Entre com seu CPF e sua senha.`. There was no production change in the fix range.
+- `cd web && npx vitest run --reporter=verbose`: 34 files, 278 passed, 0 failed.
+- `cd web && npx playwright test --reporter=list`: 93 passed, 0 failed.
 - `python .specs/features/login-institucional/chamadas_iguais.py 1e9e76c`: exit 0. `--autoteste`: exit 0.
-- `npm --prefix web run coverage`: 277 passed. Then `crapper --use-existing-coverage -s src --threshold 9.99`: exit 0, no function above 9.99.
+- `npm --prefix web run coverage`: 278 passed. Then `crapper --use-existing-coverage -s src --threshold 9.99`: exit 0.
 - dryer (the exact C22 command) piped to `grep -q "No duplicate candidates found"`: exit 0.
 - `npm --prefix web run build`: exit 0.
 - `mutator`: NOT run, suspended by user decision (AD-025).
-
-## Ranked gaps
-
-1. Criar senha success `Alert` spacing has no check. `## Screens` and AC 7 require 24 px from the `h1` "até o `Alert` de sucesso" on both screens, but C7 measures only Primeiro acesso. This is the shared-component, one-screen pattern from L-059. - C7 - `web/e2e/arranjo.spec.ts:1437-1442` (Primeiro acesso only); plan.md:84
-2. The not-found `Alert` is centred "na janela" (plan.md:89, AC 15), but C15 asserts only the horizontal centre. The vertical centre is unproven, and `## Exempted` leaves out only the `Centro` padding and width. Precision gap in C15. - C15 - `web/e2e/arranjo.spec.ts:1562`
-3. The Login header "texto centrado" (plan.md:83) covers the description line "Entre com seu CPF e sua senha.", which has no centring check. C6 asserts `text-align: center` on the `h1` only. - C6 - `web/e2e/arranjo.spec.ts:1408-1412`
-4. The `Test policy` row "textos visíveis por estado" requires every state of every screen. The Primeiro acesso error state and the Criar senha invalid-token state (plan `## Observable` plan.md:176-177) have no `conferir`, although the Login's refused state does. - C18 - `web/src/acesso/textos.test.tsx:95-117`
