@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 39,
+  "next_id": 43,
   "lessons": [
     {
       "id": "L-001",
@@ -521,17 +521,19 @@
       "text": "Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.",
       "signal": "surviving_mutant",
       "scope": "web",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "interface-nova"
+        "interface-nova",
+        "tempo-real-signalr"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "verification.md F5; web/src/test/interface.test.ts:95 (web)"
+        "verification.md F5; web/src/test/interface.test.ts:95 (web)",
+        "verification.md F4 vs C23; api.Tests/TempoRealAvisosTests.cs:135 (api)"
       ],
       "created": "2026-11-03T01:28:01Z",
-      "last_seen": "2026-11-03T01:28:01Z"
+      "last_seen": "2026-11-03T05:07:14Z"
     },
     {
       "id": "L-030",
@@ -694,6 +696,78 @@
       ],
       "created": "2026-11-03T04:04:35Z",
       "last_seen": "2026-11-03T04:04:35Z"
+    },
+    {
+      "id": "L-039",
+      "key": "surviving_mutant::quando um falso substitui o cliente de uma conexao nos testes grave no falso a url e as opcoes com que o app o constroi e afirme as o falso que ignora a configuracao deixa o endereco errado passar em toda suite",
+      "text": "Quando um falso substitui o cliente de uma conexão nos testes, grave no falso a URL e as opções com que o app o constrói e afirme-as; o falso que ignora a configuração deixa o endereço errado passar em toda suíte.",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "tempo-real-signalr"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F9; web/src/tempo-real.ts:74 (web)"
+      ],
+      "created": "2026-11-03T05:07:14Z",
+      "last_seen": "2026-11-03T05:07:14Z"
+    },
+    {
+      "id": "L-040",
+      "key": "surviving_mutant::nao prove so depois do commit por uma leitura feita ao receber o aviso o commit vem microssegundos depois e a leitura passa mesmo com o aviso adiantado afirme a ausencia do aviso entre a gravacao e o commit",
+      "text": "Não prove 'só depois do commit' por uma leitura feita ao receber o aviso; o commit vem microssegundos depois e a leitura passa mesmo com o aviso adiantado: afirme a ausência do aviso entre a gravação e o commit.",
+      "signal": "surviving_mutant",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "tempo-real-signalr"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F4; api.Tests/TempoRealAvisosTests.cs:135-137 (api)"
+      ],
+      "created": "2026-11-03T05:07:14Z",
+      "last_seen": "2026-11-03T05:07:14Z"
+    },
+    {
+      "id": "L-041",
+      "key": "ac_gap::quando n acoes mandam o mesmo evento ao mesmo destino afirme a contagem n ou um evento por acao um receber so e satisfeito pela primeira",
+      "text": "Quando N ações mandam o mesmo evento ao mesmo destino, afirme a contagem N ou um evento por ação; um Receber só é satisfeito pela primeira.",
+      "signal": "ac_gap",
+      "scope": "api",
+      "status": "candidate",
+      "features": [
+        "tempo-real-signalr"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C22; api.Tests/TempoRealAvisosTests.cs:118 (api)"
+      ],
+      "created": "2026-11-03T05:07:14Z",
+      "last_seen": "2026-11-03T05:07:14Z"
+    },
+    {
+      "id": "L-042",
+      "key": "spec_precision_gap::antes de fixar num check o conteudo exato de uma lista de permissoes confira os arquivos que os outros checks mandam criar no mesmo lugar",
+      "text": "Antes de fixar num check o conteúdo exato de uma lista de permissões, confira os arquivos que os outros checks mandam criar no mesmo lugar.",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "tempo-real-signalr"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C49 vs C41; web/src/test/estrutura.test.ts:10 (web)"
+      ],
+      "created": "2026-11-03T05:07:14Z",
+      "last_seen": "2026-11-03T05:07:14Z"
     }
   ]
 }

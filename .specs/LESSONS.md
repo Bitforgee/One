@@ -20,6 +20,12 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: checks.md C21, C32 (verification.md precision gaps) (specs/checks) (+2 more)
 - last seen: 2026-11-03T03:21:42Z
 
+### L-029 - Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.
+- signal: `surviving_mutant` · recurrence: 2 feature(s) · scope: `web` · harmful: 0
+- features: interface-nova, tempo-real-signalr
+- evidence: verification.md F5; web/src/test/interface.test.ts:95 (web) (+1 more)
+- last seen: 2026-11-03T05:07:14Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -180,12 +186,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md gaps 3 and 4 (web)
 - last seen: 2026-11-03T01:28:01Z
 
-### L-029 - Ponha nas linhas Proof de um check todo teste que afirma uma parte da afirmação; a parte afirmada só noutro teste sobrevive às provas nomeadas.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
-- features: interface-nova
-- evidence: verification.md F5; web/src/test/interface.test.ts:95 (web)
-- last seen: 2026-11-03T01:28:01Z
-
 ### L-030 - Afirme a largura igual das colunas e não só a quantidade de posições x; um col-span no primeiro item cria uma trilha implícita que mantém a contagem.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
 - features: interface-nova
@@ -239,6 +239,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: arquivos-minio
 - evidence: verification.md round 2 N4, api/Chamados/ResponderChamado.cs:61 (storage)
 - last seen: 2026-11-03T04:04:35Z
+
+### L-039 - Quando um falso substitui o cliente de uma conexão nos testes, grave no falso a URL e as opções com que o app o constrói e afirme-as; o falso que ignora a configuração deixa o endereço errado passar em toda suíte.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: tempo-real-signalr
+- evidence: verification.md F9; web/src/tempo-real.ts:74 (web)
+- last seen: 2026-11-03T05:07:14Z
+
+### L-040 - Não prove 'só depois do commit' por uma leitura feita ao receber o aviso; o commit vem microssegundos depois e a leitura passa mesmo com o aviso adiantado: afirme a ausência do aviso entre a gravação e o commit.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api` · harmful: 0
+- features: tempo-real-signalr
+- evidence: verification.md F4; api.Tests/TempoRealAvisosTests.cs:135-137 (api)
+- last seen: 2026-11-03T05:07:14Z
+
+### L-041 - Quando N ações mandam o mesmo evento ao mesmo destino, afirme a contagem N ou um evento por ação; um Receber só é satisfeito pela primeira.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `api` · harmful: 0
+- features: tempo-real-signalr
+- evidence: C22; api.Tests/TempoRealAvisosTests.cs:118 (api)
+- last seen: 2026-11-03T05:07:14Z
+
+### L-042 - Antes de fixar num check o conteúdo exato de uma lista de permissões, confira os arquivos que os outros checks mandam criar no mesmo lugar.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: tempo-real-signalr
+- evidence: C49 vs C41; web/src/test/estrutura.test.ts:10 (web)
+- last seen: 2026-11-03T05:07:14Z
 
 ## Quarantined (failed when applied - ignore)
 
