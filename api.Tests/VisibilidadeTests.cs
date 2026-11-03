@@ -222,9 +222,9 @@ public class ConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory>
         {
             var c1 = await db1.Chamados.SingleAsync(c => c.Numero == numero);
             var c2 = await db2.Chamados.SingleAsync(c => c.Numero == numero);
-            c1.ResponsavelId = b.B.Usuario.Id;
+            db1.Entry(c1).Property(x => x.ResponsavelId).CurrentValue = b.B.Usuario.Id;
             await db1.SaveChangesAsync();
-            c2.Estado = AguardandoAluno;
+            db2.Entry(c2).Property(x => x.Estado).CurrentValue = AguardandoAluno;
             await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => db2.SaveChangesAsync());
         }));
         var c = await b.Ler(numero);

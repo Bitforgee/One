@@ -77,6 +77,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
         });
         mb.Entity<Artigo>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
+        mb.Entity<Artigo>().HasMany(a => a.Versoes).WithOne(v => v.Artigo).HasForeignKey(v => v.ArtigoId);
         mb.Entity<VersaoArtigo>().HasIndex(x => new { x.ArtigoId, x.Numero }).IsUnique();
         mb.Entity<TokenAcesso>(e =>
         {
@@ -92,6 +93,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.ToTable(t => t.HasCheckConstraint("ck_citacao_artigo_fonte", "trecho_fonte_id IS NOT NULL OR versao_artigo_id IS NOT NULL"));
         });
         mb.Entity<Documento>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
+        mb.Entity<Documento>().HasMany(d => d.Versoes).WithOne(v => v.Documento).HasForeignKey(v => v.DocumentoId);
         mb.Entity<VersaoDocumento>().HasIndex(x => new { x.DocumentoId, x.Numero }).IsUnique();
         mb.Entity<TrechoFonte>(e =>
         {
@@ -118,13 +120,13 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         });
         mb.Entity<MensagemChamado>(e =>
         {
-            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+            e.HasOne<Chamado>().WithMany(c => c.Mensagens).HasForeignKey(x => x.ChamadoId);
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AutorId);
         });
         mb.Entity<Anexo>().HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
         mb.Entity<EventoChamado>(e =>
         {
-            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+            e.HasOne<Chamado>().WithMany(c => c.Eventos).HasForeignKey(x => x.ChamadoId);
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AtorId);
         });
         mb.Entity<RespostaPronta>(e =>
@@ -137,7 +139,8 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         foreach (var tipo in mb.Model.GetEntityTypes().Select(e => e.ClrType).Where(t => typeof(IDaInstituicao).IsAssignableFrom(t)).ToList())
             configurar.MakeGenericMethod(tipo).Invoke(this, [mb]);
 
-        foreach (var e in mb.Model.GetEntityTypes())
+        // o nome da FK usa o nome da tabela do principal naquele instante: a ordem do nome simples reproduz a de antes das pastas
+        foreach (var e in mb.Model.GetEntityTypes().OrderBy(t => t.ClrType.Name, StringComparer.Ordinal).ToList())
         {
             e.SetTableName(Snake(e.ClrType.Name));
             foreach (var p in e.GetProperties()) p.SetColumnName(Snake(p.Name));

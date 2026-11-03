@@ -15,11 +15,11 @@ public sealed record CancelarChamado(string Numero, CancelarIn? Corpo, Usuario U
         ValueTask.FromResult(Corpo?.Motivo is { Length: > 4000 } ? Problemas.Invalido("A justificativa pode ter até 4000 caracteres.", "motivo") : null);
 }
 
-public sealed class CancelarChamadoHandler(OneDb db, AcessoChamado a) : IRequestHandler<CancelarChamado, IResult>
+public sealed class CancelarChamadoHandler(AcessoChamado a) : IRequestHandler<CancelarChamado, IResult>
 {
     public ValueTask<IResult> Handle(CancelarChamado m, CancellationToken ct)
     {
-        Fechar(db, a, MotivosFechamento.Cancelado, string.IsNullOrWhiteSpace(m.Corpo?.Motivo) ? null : m.Corpo.Motivo);
+        a.Chamado.Cancelar(a.Usuario.Id, m.Corpo?.Motivo, a.Agora);
         return ValueTask.FromResult(Results.Empty);
     }
 }

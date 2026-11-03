@@ -28,12 +28,7 @@ public sealed class EncaminharChamadoHandler(OneDb db, AcessoChamado a) : IReque
     {
         var i = m.Corpo;
         var nomes = await db.Setores.Where(s => s.Id == a.Chamado.SetorId || s.Id == i.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
-        Mensagem(db, a, TiposMensagem.Nota, i.Motivo!);
-        Evento(db, a, TiposEvento.Encaminhamento, nomes[a.Chamado.SetorId], nomes[i.SetorId!.Value]);
-        await Atribuir(db, a, null);
-        Mudar(db, a, Aberto);
-        a.Chamado.SetorId = i.SetorId.Value;
-        a.Chamado.Encaminhamentos++;
+        a.Chamado.Encaminhar(a.Usuario.Id, i.SetorId!.Value, nomes[a.Chamado.SetorId], nomes[i.SetorId.Value], i.Motivo!, await NomeDoResponsavel(db, a.Chamado), a.Agora);
         return Results.Empty;
     }
 }

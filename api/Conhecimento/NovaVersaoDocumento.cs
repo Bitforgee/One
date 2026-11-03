@@ -19,9 +19,11 @@ public sealed class NovaVersaoDocumentoHandler(OneDb db, TimeProvider relogio) :
         if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
         var (pdf, erro) = await LerPdf(m.Form.Files["arquivo"]);
         if (erro is not null) return erro;
-        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento está arquivado.");
 
-        d.Versoes.Add(Versao(db, pdf!, d.Ultima().Numero + 1, relogio.GetUtcNow().UtcDateTime));
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        var versao = Versao(pdf!, d.Ultima().Numero + 1, agora);
+        if (d.NovaVersao(versao) is { } recusa) return Problemas.Erro(409, recusa.Motivo);
+        Trechos(db, versao, agora);
         await db.SaveChangesAsync();
         return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, await Ler(db, m.Id) ?? d));
     }

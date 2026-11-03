@@ -21,9 +21,8 @@ public sealed class MarcarDuplicadoHandler(OneDb db, AcessoChamado a) : IRequest
 {
     public async ValueTask<IResult> Handle(MarcarDuplicado m, CancellationToken ct)
     {
-        await RespostaDaEquipe(db, a, $"Este pedido continua em {m.Corpo.NumeroOriginal}.");
-        a.Chamado.NumeroOriginal = m.Corpo.NumeroOriginal;
-        Fechar(db, a, MotivosFechamento.Duplicado, null);
+        a.Chamado.MarcarDuplicado(a.Usuario.Id, m.Corpo.NumeroOriginal!, a.Agora);
+        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, a.Chamado, a.Agora); // AC 122
         return Results.Empty;
     }
 }

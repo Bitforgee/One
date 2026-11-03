@@ -109,19 +109,19 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         var mensagem = await f.Db(i.Id, async db =>
         {
             var aluno = await f.Usuario(i, [One.Api.Dados.Papeis.Aluno]);
-            var c = new One.Api.Dados.Conversa { AlunoId = aluno.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
-            c.Mensagens.Add(new One.Api.Dados.MensagemConversa { Autor = "ASSISTENTE", Texto = "x", CriadaEm = DateTime.UtcNow });
+            var c = new Conversa { AlunoId = aluno.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
+            c.Mensagens.Add(new MensagemConversa { Autor = "ASSISTENTE", Texto = "x", CriadaEm = DateTime.UtcNow });
             db.Conversas.Add(c);
             await db.SaveChangesAsync();
             return c.Mensagens[0].Id;
         });
         var documento = await f.Db(i.Id, async db =>
         {
-            var d = new One.Api.Dados.Documento { Titulo = "Regulamento", CategoriaId = (await db.Categorias.FirstAsync()).Id };
-            d.Versoes.Add(new One.Api.Dados.VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+            var d = Documento.Criar("Regulamento", (await db.Categorias.FirstAsync()).Id,
+                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
-            return d.Versoes[0].Id;
+            return d.Versoes.Single().Id;
         });
 
         foreach (var (sql, restricao) in new[]
@@ -174,12 +174,12 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
         var i = c.Instituicao;
         await f.Db(i.Id, async db =>
         {
-            var d = new One.Api.Dados.Documento { Titulo = "Regulamento", CategoriaId = (await db.Categorias.FirstAsync()).Id };
-            d.Versoes.Add(new One.Api.Dados.VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+            var d = Documento.Criar("Regulamento", (await db.Categorias.FirstAsync()).Id,
+                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
             // trecho pendente do documento, para a gravação permitida do embedding
-            db.TrechosFonte.Add(new One.Api.Dados.TrechoFonte { VersaoDocumentoId = d.Versoes[0].Id, Texto = "pendente", ProximaTentativa = DateTime.UtcNow });
+            db.TrechosFonte.Add(new TrechoFonte { VersaoDocumentoId = d.Versoes.Single().Id, Texto = "pendente", ProximaTentativa = DateTime.UtcNow });
             await db.SaveChangesAsync();
         });
         var indexado = Semente.Fonte(c.Boleto.Id);

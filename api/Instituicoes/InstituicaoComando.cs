@@ -130,7 +130,9 @@ public static partial class InstituicaoComando
         foreach (var (a, categoria) in plano.Artigos)
         {
             var versao = new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora };
-            db.Artigos.Add(new Artigo { CategoriaId = categoria.Id, Estado = EstadosArtigo.Ativo, Versoes = [versao] });
+            var artigo = Artigo.Criar(categoria.Id, null, null, versao);
+            artigo.Ativar();
+            db.Artigos.Add(artigo);
             db.TrechosFonte.Add(Fontes.DoArtigo(versao, agora)); // RAG, AC 4
         }
         await db.SaveChangesAsync();

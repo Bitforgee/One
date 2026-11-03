@@ -56,13 +56,12 @@ public static class DocumentoRotas
         }
     }
 
-    public static VersaoDocumento Versao(OneDb db, Pdf pdf, int numero, DateTime agora)
-    {
-        var v = new VersaoDocumento { Numero = numero, NomeArquivo = pdf.Nome, Conteudo = pdf.Conteudo, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
-        // AC 16: os trechos pendentes entram na mesma transação; o agendador gera os embeddings
-        db.TrechosFonte.AddRange(Dividir(pdf.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));
-        return v;
-    }
+    public static VersaoDocumento Versao(Pdf pdf, int numero, DateTime agora) =>
+        new() { Numero = numero, NomeArquivo = pdf.Nome, Conteudo = pdf.Conteudo, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
+
+    // AC 16: os trechos pendentes entram na mesma transação; o agendador gera os embeddings
+    public static void Trechos(OneDb db, VersaoDocumento v, DateTime agora) =>
+        db.TrechosFonte.AddRange(Dividir(v.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));
 
     public static async Task<object> Saida(OneDb db, Documento d)
     {

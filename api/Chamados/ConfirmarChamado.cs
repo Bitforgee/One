@@ -14,11 +14,11 @@ public sealed record ConfirmarChamado(string Numero, Usuario Usuario, Instituica
     public ValueTask<IResult?> Validar(AcessoChamado a, OneDb db) => ValueTask.FromResult<IResult?>(null);
 }
 
-public sealed class ConfirmarChamadoHandler(OneDb db, AcessoChamado a) : IRequestHandler<ConfirmarChamado, IResult>
+public sealed class ConfirmarChamadoHandler(AcessoChamado a) : IRequestHandler<ConfirmarChamado, IResult>
 {
     public ValueTask<IResult> Handle(ConfirmarChamado m, CancellationToken ct)
     {
-        Fechar(db, a, MotivosFechamento.Confirmado, null);
+        a.Chamado.Confirmar(a.Usuario.Id, a.Agora);
         return ValueTask.FromResult(Results.Empty);
     }
 }

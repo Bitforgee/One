@@ -1,7 +1,6 @@
 using Mediator;
 using One.Api.Dados;
 using static One.Api.Chamados.AcoesChamado;
-using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
@@ -19,9 +18,7 @@ public sealed class AssumirChamadoHandler(OneDb db, AcessoChamado a) : IRequestH
 {
     public async ValueTask<IResult> Handle(AssumirChamado m, CancellationToken ct)
     {
-        if (a.Chamado.ResponsavelId == a.Usuario.Id) return Problemas.Erro(409, "Você já é o responsável por este chamado.");
-        await Atribuir(db, a, a.Usuario.Id);
-        if (a.Chamado.Estado == Aberto) Mudar(db, a, EmAtendimento);
-        return Results.Empty;
+        var recusa = a.Chamado.Assumir(a.Usuario.Id, await NomeDoResponsavel(db, a.Chamado), a.Usuario.Nome, a.Agora);
+        return recusa is null ? Results.Empty : Problemas.Erro(409, recusa.Motivo);
     }
 }

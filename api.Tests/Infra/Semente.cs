@@ -101,12 +101,9 @@ public static class Semente
         f.Db(i.Id, async db =>
         {
             var versao = new VersaoArtigo { Numero = 1, Titulo = titulo, Perguntas = [titulo + "?"], Resposta = resposta, Links = [.. links ?? []], CriadaEm = f.Relogio.GetUtcNow().UtcDateTime };
-            var a = new Artigo
-            {
-                CategoriaId = categoriaId ?? (await db.Categorias.FirstAsync()).Id,
-                Estado = estado,
-                Versoes = [versao],
-            };
+            var a = One.Api.Dados.Artigos.Artigo.Criar(categoriaId ?? (await db.Categorias.FirstAsync()).Id, null, null, versao);
+            if (estado == EstadosArtigo.Ativo) a.Ativar();
+            else if (estado == EstadosArtigo.Arquivado) a.Arquivar();
             db.Artigos.Add(a);
             await db.SaveChangesAsync();
             if (estado == EstadosArtigo.Ativo)

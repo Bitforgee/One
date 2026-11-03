@@ -40,7 +40,8 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a) : IReques
 {
     public async ValueTask<IResult> Handle(ResponderChamado m, CancellationToken ct)
     {
-        if (m.Tipo == TiposMensagem.Nota) { Mensagem(db, a, TiposMensagem.Nota, m.Texto); return Results.Empty; }
+        var c = a.Chamado;
+        if (m.Tipo == TiposMensagem.Nota) { c.Anotar(a.Usuario.Id, m.Texto, a.Agora); return Results.Empty; }
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)
         {
@@ -49,14 +50,12 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a) : IReques
         }
         if (a.Papel == PermissoesChamado.Aluno)
         {
-            if (a.Chamado.Estado == Resolvido) return await RejeitarResolucao(db, a, m.Texto, anexos); // AC 86
-            Anexar(db, a, Mensagem(db, a, TiposMensagem.Publica, m.Texto), anexos);
-            if (a.Chamado.Estado == AguardandoAluno) Mudar(db, a, EmAtendimento);
+            if (c.Estado == Resolvido) return await RejeitarResolucao(db, a, m.Texto, anexos); // AC 86
+            c.ResponderComoAluno(a.Usuario.Id, m.Texto, anexos, a.Agora);
             return Results.Empty;
         }
-        await RespostaDaEquipe(db, a, m.Texto, anexos);
-        if (a.Chamado.ResponsavelId is null) await Atribuir(db, a, a.Usuario.Id); // AC 77
-        Mudar(db, a, m.AguardaAluno ? AguardandoAluno : EmAtendimento);
+        c.ResponderComoEquipe(a.Usuario.Id, a.Usuario.Nome, m.Texto, anexos, m.AguardaAluno, a.Agora);
+        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, c, a.Agora); // AC 122
         return Results.Empty;
     }
 }

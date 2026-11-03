@@ -51,12 +51,12 @@ public class IndicadoresTests(OneFactory f) : IClassFixture<OneFactory>
         f.Db(m.I.Id, async db =>
         {
             var numero = await db.Database.SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {m.I.Id} RETURNING ultimo_numero_chamado AS \"Value\"").ToListAsync();
-            var c = new Chamado
-            {
-                Numero = $"ONE-{numero.Single()}", ConversaId = conversa.Id, SolicitanteId = aluno.Id, MatriculaId = await db.Matriculas.Where(x => x.UsuarioId == aluno.Id).Select(x => x.Id).FirstAsync(),
-                Semestre = 3, Titulo = "MENSAGEM-SECRETA do aluno", CategoriaId = categoria.Id, CategoriaOriginalId = categoria.Id, OrigemCategoria = "IA", SetorId = setor.Id,
-                Estado = estado, MotivoFechamento = motivo, Reaberturas = reaberturas, Encaminhamentos = encaminhamentos, CriadoEm = criado,
-            };
+            var c = One.Api.Dados.Chamados.Chamado.Abrir($"ONE-{numero.Single()}", conversa.Id, aluno.Id, await db.Matriculas.Where(x => x.UsuarioId == aluno.Id).Select(x => x.Id).FirstAsync(),
+                3, "MENSAGEM-SECRETA do aluno", null, categoria.Id, "IA", setor.Id, criado);
+            // histórico fabricado: estado, motivo e contadores que só as transições gravariam
+            var e = db.Entry(c);
+            (e.Property(x => x.Estado).CurrentValue, e.Property(x => x.MotivoFechamento).CurrentValue) = (estado, motivo);
+            (e.Property(x => x.Reaberturas).CurrentValue, e.Property(x => x.Encaminhamentos).CurrentValue) = (reaberturas, encaminhamentos);
             db.Chamados.Add(c);
             await db.SaveChangesAsync();
             db.EventosChamado.AddRange(transicoes.Select(t => new EventoChamado { ChamadoId = c.Id, Tipo = "TRANSICAO", De = t.de, Para = t.para, CriadoEm = criado.AddHours(t.h) }));

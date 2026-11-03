@@ -26,4 +26,14 @@
     <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="One.Api.Dados.Chamados" />
+    <Using Include="One.Api.Dados.Conversas" />
+    <Using Include="One.Api.Dados.Artigos" />
+    <Using Include="One.Api.Dados.Documentos" />
+    <Using Include="One.Api.Dados.Trechos" />
+    <Using Include="One.Api.Dados.Usuarios" />
+    <Using Include="One.Api.Dados.Cadastros" />
+    <Using Include="One.Api.Dados.Emails" />
+  </ItemGroup>
 </Project>

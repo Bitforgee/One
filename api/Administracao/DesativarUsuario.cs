@@ -22,16 +22,7 @@ public sealed class DesativarUsuarioHandler(OneDb db, TimeProvider relogio) : IR
         var adminId = m.Admin.Id;
         u.Ativo = false;
         foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
-        {
-            db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Atribuicao, AtorId = adminId, De = u.Nome, Detalhe = "Responsável desativado", CriadoEm = agora });
-            c.ResponsavelId = null;
-            if (c.Estado is EmAtendimento or AguardandoAluno)
-            {
-                db.EventosChamado.Add(new EventoChamado { ChamadoId = c.Id, Tipo = TiposEvento.Transicao, AtorId = adminId, De = c.Estado, Para = Aberto, CriadoEm = agora });
-                c.Estado = Aberto;
-                c.AguardandoDesde = null;
-            }
-        }
+            c.DevolverAFila(adminId, u.Nome, agora);
         await db.SaveChangesAsync();
         return Results.Ok(await UsuarioRotas.Saida(db, u));
     }

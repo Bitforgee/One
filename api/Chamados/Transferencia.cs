@@ -42,20 +42,9 @@ public static class Transferencia
         }
         var categoria = categoriaId is null ? categoriasAtivas.Single(c => c.Padrao) : await db.Categorias.SingleAsync(c => c.Id == categoriaId);
 
-        var chamado = new Chamado
-        {
-            ConversaId = conversa.Id,
-            SolicitanteId = conversa.AlunoId,
-            MatriculaId = matricula.Id,
-            Semestre = matricula.Semestre,
-            Titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120),
-            Resumo = assistente.Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null,
-            CategoriaId = categoria.Id,
-            CategoriaOriginalId = categoria.Id,
-            OrigemCategoria = origem,
-            SetorId = await Setor(db, categoria, matricula),
-            CriadoEm = agora,
-        };
+        var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
+        var resumo = assistente.Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
+        var setorId = await Setor(db, categoria, matricula);
         conversa.Desfecho = Desfechos.Transferida;
         conversa.DesfechoEm = agora;
 
@@ -63,10 +52,8 @@ public static class Transferencia
         var numero = await db.Database
             .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")
             .ToListAsync();
-        chamado.Numero = $"ONE-{numero.Single()}";
+        var chamado = Chamado.Abrir($"ONE-{numero.Single()}", conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre, titulo, resumo, categoria.Id, origem, setorId, agora);
         db.Chamados.Add(chamado);
-        await db.SaveChangesAsync();
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = chamado.Id, Tipo = TiposEvento.Criacao, Para = chamado.Estado, CriadoEm = agora });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         return chamado;

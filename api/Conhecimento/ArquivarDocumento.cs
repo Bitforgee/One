@@ -16,8 +16,7 @@ public sealed class ArquivarDocumentoHandler(OneDb db) : IRequestHandler<Arquiva
     {
         var d = await Ler(db, m.Id);
         if (d is null) return Problemas.Erro(404, "Documento não encontrado.");
-        if (d.Estado == EstadosDocumento.Arquivado) return Problemas.Erro(409, "O documento já está arquivado.");
-        d.Estado = EstadosDocumento.Arquivado;
+        if (d.Arquivar() is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         await db.SaveChangesAsync();
         return Results.Ok(await Saida(db, d));
     }

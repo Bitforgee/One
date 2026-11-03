@@ -15,7 +15,7 @@ public sealed class CriarArtigoHandler(OneDb db, TimeProvider relogio) : IReques
     {
         var i = m.Corpo;
         if (await Validar(db, i) is { } erro) return erro;
-        var a = new Artigo { CategoriaId = i.CategoriaId!.Value, VisivelDe = i.VisivelDe, VisivelAte = i.VisivelAte, Versoes = [Versao(i, 1, relogio.GetUtcNow().UtcDateTime)] };
+        var a = Artigo.Criar(i.CategoriaId!.Value, i.VisivelDe, i.VisivelAte, Versao(i, 1, relogio.GetUtcNow().UtcDateTime));
         db.Artigos.Add(a);
         await db.SaveChangesAsync();
         return await Responder(db, a, 201);

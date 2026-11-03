@@ -1,7 +1,6 @@
 using Mediator;
 using One.Api.Dados;
 using static One.Api.Chamados.AcoesChamado;
-using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
@@ -20,10 +19,7 @@ public sealed class ResolverChamadoHandler(OneDb db, AcessoChamado a) : IRequest
 {
     public async ValueTask<IResult> Handle(ResolverChamado m, CancellationToken ct)
     {
-        Mensagem(db, a, TiposMensagem.Publica, m.Corpo.Texto!);
-        if (a.Chamado.ResponsavelId is null) await Atribuir(db, a, a.Usuario.Id);
-        Mudar(db, a, Resolvido);
-        a.Chamado.ResolvidoEm = a.Agora;
+        a.Chamado.Resolver(a.Usuario.Id, a.Usuario.Nome, m.Corpo.Texto!, a.Agora);
         await Avisos.Resolvido(db, a.Cfg, a.Prazos, a.Instituicao, a.Chamado, m.Corpo.Texto!, a.Agora); // AC 123
         return Results.Empty;
     }

@@ -18,11 +18,9 @@ public sealed class AlterarArtigoHandler(OneDb db, TimeProvider relogio) : IRequ
         var a = await Ler(db, m.Id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (await Validar(db, i) is { } erro) return erro;
-        a.CategoriaId = i.CategoriaId!.Value;
-        (a.VisivelDe, a.VisivelAte) = (i.VisivelDe, i.VisivelAte);
         var agora = relogio.GetUtcNow().UtcDateTime;
         var nova = Versao(i, a.Ultima().Numero + 1, agora);
-        a.Versoes.Add(nova);
+        a.NovaVersao(nova, i.CategoriaId!.Value, i.VisivelDe, i.VisivelAte);
         if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(Fontes.DoArtigo(nova, agora));
         await db.SaveChangesAsync();
         return await Responder(db, a);

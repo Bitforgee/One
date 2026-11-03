@@ -25,8 +25,9 @@ public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio) : IReq
         var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
         if (erro is not null) return erro;
 
-        var d = new Documento { Titulo = titulo, CategoriaId = categoriaId };
-        d.Versoes.Add(Versao(db, pdf!, 1, relogio.GetUtcNow().UtcDateTime));
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        var d = Documento.Criar(titulo, categoriaId, Versao(pdf!, 1, agora));
+        Trechos(db, d.Versoes.Single(), agora);
         db.Documentos.Add(d);
         await db.SaveChangesAsync();
         return Results.Created($"/api/admin/documentos/{d.Id}", await Saida(db, d));

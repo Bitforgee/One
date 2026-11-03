@@ -92,8 +92,8 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await Base();
         await f.Db(i.Id, async db =>
         {
-            var d = new Documento { Titulo = "Regulamento de estagio", CategoriaId = (await db.Categorias.FirstAsync()).Id };
-            d.Versoes.Add(new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
+            var d = Documento.Criar("Regulamento de estagio", (await db.Categorias.FirstAsync()).Id,
+                new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Conteudo = [1], Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
         });
