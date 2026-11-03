@@ -232,3 +232,4 @@ Somando ≈ 15k de escrita e ≈ 10k de suítes, dá **~68k**. Total **~258k**, 
 - S3 + S4 (Indicadores e listas) = ~98k; entrar em S5 leva a ~166k → corte depois de S4
 - S5 (detalhe, Assistente, acesso) = ~68k; o lote final roda de novo C33-C38 sobre a feature inteira
 - Mechanism: handoff em 3 lotes sequenciais (lote 1: S1 + S2 + S0; lote 2: S3 + S4; lote 3: S5 e S0 de novo sobre a feature inteira), cada um só depois do verde do anterior - escolha do usuário em 03/11; construtores no Sonnet (memória do projeto)
+- Feature base (`<base>`): `dac2832` (`docs(layout-painel): plan, checks and AD-029`)
