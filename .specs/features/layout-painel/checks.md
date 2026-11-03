@@ -84,7 +84,7 @@ Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "arranjo Indicadore
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "ranking com gráfico acima da tabela"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "arranjo Indicadores"`
 
-**C20** - [x] Formulário de período, "Sem dados no período", erro e Spinner como hoje: os testes de hoje continuam verdes sem mudança de asserção (AC 20)
+**C20** - [x] Formulário de período, "Sem dados no período", erro e Spinner como hoje: os testes de hoje continuam verdes sem mudança de asserção, salvo a classe da grade dos rankings, que segue a quebra de 896 px do `## Screens` (`@4xl/main:grid-cols-2`; emenda aprovada pelo usuário em 03/11 após a verificação rodada 1) (AC 20)
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "Sem dados no período"`
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "período pelo calendário só consulta no Consultar"`
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "cartões formatam taxa, horas e número, e o ranking vazio mostra traço"`
