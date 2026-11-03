@@ -246,3 +246,17 @@ Tamanho estimado por slice = (2 x bytes dos arquivos existentes que a slice rees
   válido), nessa ordem.
 - **Decisão do usuário em 02/11/2026 sobre o C29:** criar o e2e real com anexo (Playwright contra o contêiner, usuário
   criado pelo primeiro acesso com o Mailpit, envio e download de um PDF conferindo os bytes).
+
+### Correção após a verificação rodada 1
+
+Testes novos sob os checks existentes (o texto do `checks.md` não mudou; nenhuma asserção foi alterada). Falha injetada = como o teste foi visto falhar.
+
+| Lacuna | Correção | Teste | Falha injetada |
+| --- | --- | --- | --- |
+| C7/C10 Content-Length só lido de `GetAsync` (bufferizado) | `ResponseHeadersRead` nas duas rotas | `Content_length_do_anexo_e_da_versao_vai_no_cabecalho` | apagar `ctx.Response.ContentLength = tamanho` em `api/Armazenamento.cs`: reprova |
+| C8 contador cego à URL assinada | `Armazenamento` aceita um `HttpMessageHandler`; `OneFactory` conta as leituras por ele | `Contador_de_leituras_ve_o_download_pela_url_assinada` (o contador sobe 1 num 200) e o `Download_negado_e_404_sem_abrir_objeto` existente | abrir o objeto antes da checagem de acesso em `BaixarAnexo.cs`: reprova |
+| AC 13 erro do bucket | achado real: `AmazonServiceException` (resposta de erro do S3) não é `AmazonClientException` e dava 500; o catch de `Gravar` agora inclui os dois | `Erro_do_bucket_responde_503_e_nada_fica` (MD5 declarado errado, o MinIO recusa) | estreitar o catch para `HttpRequestException`: reprova (500); antes da correção também dava 500 |
+| Objetos órfãos no 409 | chave e hash saem antes (`Armazenamento.NovaChave`/`Hash`), o domínio decide, `Gravar(chave, bytes)` só depois; órfão fica só para falha do banco após a gravação | `Rejeitar_resolucao_vencida_com_anexo_nao_deixa_objeto`, `Nova_versao_de_documento_arquivado_nao_deixa_objeto` | reprovavam no código da rodada 1 (objeto novo no bucket). `Cadeia_*` e `OrdemDasRecusasTests` seguem verdes sem edição |
+| C29 e2e sem anexo | e2e real `web/e2e/anexos.spec.ts` (Mailpit, primeiro acesso do administrador e do aluno, matrícula por CSV, chamado, PDF anexo, download com SHA-256, Content-Length e tipo, desativa o aluno) | `aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO` | passa contra a imagem própria na :8082 (instituição `e2e` criada com `instituicao criar`; `E2E_INSTITUICAO` e `E2E_ADMIN_EMAIL` apontam para ela) |
+
+Contagens: `api.Tests` 366/366 (361 + 5 novos), `asserts_minio.py 8e73913` 0 problemas; e2e 46/46 (45 + 1). Container, imagem, worktree, banco `one_minio_e2e` e bucket `one-e2e-r1` removidos. O aluno é desativado no fim; curso, matrícula e objeto ficam (cadastro append-only, bucket nunca apaga). AD-021 passou a `active` em `STATE.md`.
