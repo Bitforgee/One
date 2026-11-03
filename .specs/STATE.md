@@ -33,9 +33,9 @@
 
 ## Handoff
 
-**Feature**: Etapa 4c, parte de arquitetura e interface: `vertical-slice-completa` (PASS rodada 2), `dominio-e-contratos` (PASS rodada 2) e `interface-nova` (concluída com o C7 aberto por decisão do usuário, AD-026); comentários removidos do `api/` (`0960b70`)
-**In progress**: nothing
-**Next step**: MinIO (AD-021), SignalR (AD-022) e Web Push, uma feature por vez com `tlc-spec-lean`; construtores no Sonnet, sem mutação (AD-025)
-**Blockers**: chave da OpenAI no `.env`; perguntas `blocks go-live`
+**Feature**: Etapa 4c: `vertical-slice-completa`, `dominio-e-contratos`, `arquivos-minio` (PASS rodada 3, 03/11) verificados; `interface-nova` concluída com o C7 aberto (AD-026)
+**In progress**: build de `tempo-real-signalr` (um construtor, base `f996d30`)
+**Next step**: verificar `tempo-real-signalr`; depois `web-push` (2 lotes, base `f30a358`)
+**Blockers**: chave da OpenAI no `.env`; par VAPID de produção; perguntas `blocks go-live`
 **Uncommitted**: nothing
 **Branch**: main
