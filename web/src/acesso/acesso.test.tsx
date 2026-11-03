@@ -69,7 +69,7 @@ describe('acesso', () => {
     abrir('/univag')
     await entrar()
     expect(await screen.findByRole('alert')).toHaveTextContent('CPF ou senha inválidos.')
-    expect(screen.getByRole('alert')).toHaveClass('alert', 'alert-danger')
+    expect(screen.getByRole('alert')).toHaveClass('text-destructive')
   })
 
   it('requisição pendente mostra Spinner e desabilita o botão', async () => {
@@ -77,7 +77,37 @@ describe('acesso', () => {
     abrir('/univag')
     await entrar()
     await waitFor(() => expect(screen.getByRole('button', { name: /Entrar/ })).toBeDisabled())
-    expect(within(screen.getByRole('button', { name: /Entrar/ })).getByRole('status')).toHaveClass('spinner-border')
+    expect(within(screen.getByRole('button', { name: /Entrar/ })).getByRole('status')).toHaveClass('animate-spin')
+  })
+
+  // C60 (AC 39, AC 40): só os 6 campos obrigatórios; o que a API recusa sai mesmo assim
+  it('formulários de acesso exigem só os obrigatórios', async () => {
+    const recusa = (detail: string) => () => [422, { status: 422, title: 'Dados inválidos', detail }] as [number, unknown]
+    const telas: [string, string, string, [string, string][], Record<string, () => [number, unknown]>][] = [
+      ['/univag', 'Entrar', '/api/auth/login', [['CPF', '1'], ['Senha', 'x']], { ...instituicao, 'POST /api/auth/login': recusa('CPF inválido.') }],
+      ['/univag/primeiro-acesso', 'Enviar link', '/api/auth/primeiro-acesso', [['CPF', '1']], { 'POST /api/auth/primeiro-acesso': recusa('CPF inválido.') }],
+      ['/univag/definir-senha?token=t', 'Salvar senha', '/api/auth/definir-senha', [['Nova senha', 'x']], { 'POST /api/auth/definir-senha': recusa('Senha curta.') }],
+      ['/univag/trocar-senha', 'Salvar', '/api/auth/senha', [['Senha atual', 'x'], ['Nova senha', 'x']], { 'GET /api/auth/me': () => [200, me()], 'POST /api/auth/senha': recusa('Senha curta.') }],
+    ]
+    for (const [caminho, botao, url, campos, rotas] of telas) {
+      for (const vazio of campos.map(([rotulo]) => rotulo)) {
+        const chamadas = api(rotas)
+        const { unmount } = abrir(caminho)
+        for (const [rotulo, valor] of campos) if (rotulo !== vazio) await userEvent.type(await screen.findByLabelText(rotulo), valor)
+        await userEvent.click(await screen.findByRole('button', { name: botao }))
+        await waitFor(() => expect(screen.getByLabelText(vazio)).toHaveAttribute('aria-invalid', 'true'))
+        expect(chamadas.filter((c) => c.metodo === 'POST'), `${caminho} sem ${vazio}`).toEqual([])
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+        unmount()
+      }
+      const chamadas = api(rotas)
+      const { unmount } = abrir(caminho)
+      for (const [rotulo, valor] of campos) await userEvent.type(await screen.findByLabelText(rotulo), valor)
+      await userEvent.click(screen.getByRole('button', { name: botao }))
+      expect(await screen.findByRole('alert')).toHaveTextContent(/inválido|curta/)
+      expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url), caminho).toEqual([url])
+      unmount()
+    }
   })
 
   it('cabeçalho mostra a instituição', async () => {

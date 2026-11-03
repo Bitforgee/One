@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert, Button, Form, Modal, Table } from 'react-bootstrap'
-import { BotaoAcao, useAcao } from '../acao'
+import { BotaoBs, useAcao } from '../acao'
 import { api, ErroApi } from '../api'
 
 type Erro = { linha: number; motivo: string }
@@ -62,9 +62,9 @@ export function Matriculas() {
         <Form.Label>Arquivo CSV</Form.Label>
         <Form.Control type="file" accept=".csv,text/csv" onChange={(e) => setArquivo((e.target as HTMLInputElement).files![0])} />
       </Form.Group>
-      <BotaoAcao pendente={acao.pendente} disabled={!arquivo} onClick={() => setConfirmar(true)}>
+      <BotaoBs pendente={acao.pendente} disabled={!arquivo} onClick={() => setConfirmar(true)}>
         Importar
-      </BotaoAcao>
+      </BotaoBs>
       {resultado && (
         <Alert variant="success" className="mt-3">
           Importação concluída: {resultado.criados} matrículas criadas e {resultado.atualizados} atualizadas.

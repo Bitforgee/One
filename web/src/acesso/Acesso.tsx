@@ -1,84 +1,116 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Alert, Card, Container, Form, Spinner } from 'react-bootstrap'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useState, type ComponentProps, type ReactNode } from 'react'
+import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
-import { BotaoAcao, useAcao } from '../acao'
+import { z } from 'zod'
+import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { telaInicial, useSessao } from '../sessao'
+import { Alert } from '../ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Spinner } from '../ui/spinner'
+
+// Só o que a tela já exigia (campo preenchido); o resto, quem decide é a API (AC 39, AC 40).
+const obrigatorio = z.string().min(1)
 
 function Cartao({ titulo, children }: { titulo: ReactNode; children: ReactNode }) {
   return (
-    <Container className="py-4" style={{ maxWidth: 420 }}>
+    <div className="mx-auto w-full max-w-[420px] px-4 py-6">
       <Card>
-        <Card.Body>
-          <Card.Title as="h1" className="h4 mb-3">
-            {titulo}
-          </Card.Title>
-          {children}
-        </Card.Body>
+        <CardHeader>
+          <CardTitle>
+            <h1 className="text-xl font-semibold">{titulo}</h1>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">{children}</CardContent>
       </Card>
-    </Container>
+    </div>
   )
 }
+
+type Props<T extends FieldValues> = { f: UseFormReturn<T>; nome: Path<T>; rotulo: string; dica?: string } & ComponentProps<'input'>
+
+function Campo<T extends FieldValues>({ f, nome, rotulo, dica, ...props }: Props<T>) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={nome}>{rotulo}</Label>
+      <Input id={nome} aria-invalid={!!f.formState.errors[nome]} {...props} {...f.register(nome)} />
+      {dica && <p className="text-sm text-muted-foreground">{dica}</p>}
+    </div>
+  )
+}
+
+// Formulário de um envio só: Zod pelo RHF, a mutação em volta de api() e o erro da API num Alert.
+function Formulario<T extends FieldValues>({ schema, enviar, botao, className, children }: {
+  schema: z.ZodType<T>
+  enviar: (v: T) => Promise<unknown>
+  botao: string
+  className?: string
+  children: (form: UseFormReturn<T>) => ReactNode
+}) {
+  const form = useForm<T>({ resolver: zodResolver(schema as never) as Resolver<T> })
+  const m = useMutation({ mutationFn: enviar })
+  return (
+    <>
+      <form noValidate onSubmit={form.handleSubmit((v) => m.mutate(v))} className="flex flex-col gap-6">
+        {children(form)}
+        <BotaoAcao type="submit" pendente={m.isPending} className={className}>
+          {botao}
+        </BotaoAcao>
+      </form>
+      {m.error && <Alert variant="destructive">{m.error.message}</Alert>}
+    </>
+  )
+}
+
+const schemaLogin = z.object({ cpf: obrigatorio, senha: obrigatorio })
 
 export function Login() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const [nome, setNome] = useState<string>()
-  const [naoEncontrada, setNaoEncontrada] = useState(false)
-  const [cpf, setCpf] = useState('')
-  const [senha, setSenha] = useState('')
-  const { pendente, alerta, executar } = useAcao()
+  const { data: instituicao, isError, isPending } = useQuery({ queryKey: ['instituicao', slug], queryFn: () => api<{ nome: string }>(`/api/instituicoes/${slug}`) })
 
-  useEffect(() => {
-    api<{ nome: string }>(`/api/instituicoes/${slug}`)
-      .then((i) => setNome(i.nome))
-      .catch(() => setNaoEncontrada(true))
-  }, [slug])
-
-  if (naoEncontrada)
+  if (isError)
     return (
-      <Container className="py-5" style={{ maxWidth: 420 }}>
-        <Alert variant="warning">Instituição não encontrada.</Alert>
-      </Container>
+      <div className="mx-auto max-w-[420px] px-4 py-12">
+        <Alert>Instituição não encontrada.</Alert>
+      </div>
     )
-  if (!nome)
+  if (isPending)
     return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" role="status" aria-label="Carregando" />
-      </Container>
+      <div className="flex justify-center py-12">
+        <Spinner className="size-8" />
+      </div>
     )
-
-  function entrar(e: FormEvent) {
-    e.preventDefault()
-    executar(async () => {
-      const u = await api<{ papeis: string[]; deveTrocarSenha: boolean }>('/api/auth/login', { instituicao: slug, cpf, senha })
-      navigate(`/${slug}/${telaInicial(u)}`)
-    })
-  }
 
   return (
     <Cartao
       titulo={
         <>
-          One <span className="text-body-secondary fw-normal">· {nome}</span>
+          One <span className="font-normal text-muted-foreground">· {instituicao.nome}</span>
         </>
       }
     >
-      <Form onSubmit={entrar}>
-        <Form.Group className="mb-3" controlId="cpf">
-          <Form.Label>CPF</Form.Label>
-          <Form.Control inputMode="numeric" autoComplete="username" value={cpf} onChange={(e) => setCpf(e.target.value)} required />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="senha">
-          <Form.Label>Senha</Form.Label>
-          <Form.Control type="password" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
-        </Form.Group>
-        <BotaoAcao type="submit" pendente={pendente} className="w-100">
-          Entrar
-        </BotaoAcao>
-      </Form>
-      {alerta}
-      <div className="mt-3 text-center">
+      <Formulario
+        schema={schemaLogin}
+        botao="Entrar"
+        className="w-full"
+        enviar={async (v) => {
+          const u = await api<{ papeis: string[]; deveTrocarSenha: boolean }>('/api/auth/login', { instituicao: slug, ...v })
+          navigate(`/${slug}/${telaInicial(u)}`)
+        }}
+      >
+        {(form) => (
+          <>
+            <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" autoComplete="username" />
+            <Campo f={form} nome="senha" rotulo="Senha" type="password" autoComplete="current-password" />
+          </>
+        )}
+      </Formulario>
+      <div className="text-center">
         <Link to={`/${slug}/primeiro-acesso`}>Primeiro acesso ou esqueci minha senha</Link>
       </div>
     </Cartao>
@@ -87,33 +119,22 @@ export function Login() {
 
 export function PrimeiroAcesso() {
   const { slug } = useParams()
-  const [cpf, setCpf] = useState('')
   const [mensagem, setMensagem] = useState<string>()
-  const { pendente, alerta, executar } = useAcao()
-
-  function enviar(e: FormEvent) {
-    e.preventDefault()
-    executar(async () => setMensagem((await api<{ mensagem: string }>('/api/auth/primeiro-acesso', { instituicao: slug, cpf })).mensagem))
-  }
-
   return (
     <Cartao titulo="Primeiro acesso">
       {mensagem ? (
-        <Alert variant="success">{mensagem}</Alert>
+        <Alert>{mensagem}</Alert>
       ) : (
-        <Form onSubmit={enviar}>
-          <Form.Group className="mb-3" controlId="cpf">
-            <Form.Label>CPF</Form.Label>
-            <Form.Control inputMode="numeric" value={cpf} onChange={(e) => setCpf(e.target.value)} required />
-            <Form.Text>Enviaremos um link para criar a senha no e-mail registrado na instituição.</Form.Text>
-          </Form.Group>
-          <BotaoAcao type="submit" pendente={pendente} className="w-100">
-            Enviar link
-          </BotaoAcao>
-        </Form>
+        <Formulario
+          schema={z.object({ cpf: obrigatorio })}
+          botao="Enviar link"
+          className="w-full"
+          enviar={async (v) => setMensagem((await api<{ mensagem: string }>('/api/auth/primeiro-acesso', { instituicao: slug, ...v })).mensagem)}
+        >
+          {(form) => <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" dica="Enviaremos um link para criar a senha no e-mail registrado na instituição." />}
+        </Formulario>
       )}
-      {alerta}
-      <div className="mt-3 text-center">
+      <div className="text-center">
         <Link to={`/${slug}`}>Voltar para o login</Link>
       </div>
     </Cartao>
@@ -123,37 +144,26 @@ export function PrimeiroAcesso() {
 export function DefinirSenha() {
   const { slug } = useParams()
   const [busca] = useSearchParams()
-  const [novaSenha, setNovaSenha] = useState('')
   const [pronto, setPronto] = useState(false)
-  const { pendente, alerta, executar } = useAcao()
-
-  function salvar(e: FormEvent) {
-    e.preventDefault()
-    executar(async () => {
-      await api('/api/auth/definir-senha', { token: busca.get('token'), novaSenha })
-      setPronto(true)
-    })
-  }
-
   return (
     <Cartao titulo="Criar senha">
       {pronto ? (
-        <Alert variant="success">
+        <Alert>
           Senha criada. <Link to={`/${slug}`}>Entre com o CPF e a nova senha.</Link>
         </Alert>
       ) : (
-        <Form onSubmit={salvar}>
-          <Form.Group className="mb-3" controlId="novaSenha">
-            <Form.Label>Nova senha</Form.Label>
-            <Form.Control type="password" autoComplete="new-password" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} required />
-            <Form.Text>De 8 a 128 caracteres.</Form.Text>
-          </Form.Group>
-          <BotaoAcao type="submit" pendente={pendente} className="w-100">
-            Salvar senha
-          </BotaoAcao>
-        </Form>
+        <Formulario
+          schema={z.object({ novaSenha: obrigatorio })}
+          botao="Salvar senha"
+          className="w-full"
+          enviar={async (v) => {
+            await api('/api/auth/definir-senha', { token: busca.get('token'), ...v })
+            setPronto(true)
+          }}
+        >
+          {(form) => <Campo f={form} nome="novaSenha" rotulo="Nova senha" type="password" autoComplete="new-password" dica="De 8 a 128 caracteres." />}
+        </Formulario>
       )}
-      {alerta}
     </Cartao>
   )
 }
@@ -162,39 +172,27 @@ export function TrocarSenha() {
   const { slug } = useParams()
   const navigate = useNavigate()
   const { me, setMe } = useSessao()
-  const [senhaAtual, setSenhaAtual] = useState('')
-  const [novaSenha, setNovaSenha] = useState('')
-  const { pendente, alerta, executar } = useAcao()
-
-  function salvar(e: FormEvent) {
-    e.preventDefault()
-    executar(async () => {
-      await api('/api/auth/senha', { senhaAtual, novaSenha })
-      const atualizado = { ...me, deveTrocarSenha: false }
-      setMe(atualizado)
-      navigate(`/${slug}/${telaInicial(atualizado)}`)
-    })
-  }
-
   return (
-    <div style={{ maxWidth: 420 }}>
-      <h1 className="h4 mb-3">Trocar senha</h1>
-      {me.deveTrocarSenha && <Alert variant="info">Troque a senha temporária para continuar.</Alert>}
-      <Form onSubmit={salvar}>
-        <Form.Group className="mb-3" controlId="senhaAtual">
-          <Form.Label>Senha atual</Form.Label>
-          <Form.Control type="password" autoComplete="current-password" value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)} required />
-        </Form.Group>
-        <Form.Group className="mb-3" controlId="novaSenhaTroca">
-          <Form.Label>Nova senha</Form.Label>
-          <Form.Control type="password" autoComplete="new-password" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} required />
-          <Form.Text>De 8 a 128 caracteres.</Form.Text>
-        </Form.Group>
-        <BotaoAcao type="submit" pendente={pendente}>
-          Salvar
-        </BotaoAcao>
-      </Form>
-      {alerta}
+    <div className="mx-auto flex max-w-[420px] flex-col gap-6">
+      <h1 className="text-xl font-semibold">Trocar senha</h1>
+      {me.deveTrocarSenha && <Alert>Troque a senha temporária para continuar.</Alert>}
+      <Formulario
+        schema={z.object({ senhaAtual: obrigatorio, novaSenha: obrigatorio })}
+        botao="Salvar"
+        enviar={async (v) => {
+          await api('/api/auth/senha', v)
+          const atualizado = { ...me, deveTrocarSenha: false }
+          setMe(atualizado)
+          navigate(`/${slug}/${telaInicial(atualizado)}`)
+        }}
+      >
+        {(form) => (
+          <>
+            <Campo f={form} nome="senhaAtual" rotulo="Senha atual" type="password" autoComplete="current-password" />
+            <Campo f={form} nome="novaSenha" rotulo="Nova senha" type="password" autoComplete="new-password" dica="De 8 a 128 caracteres." />
+          </>
+        )}
+      </Formulario>
     </div>
   )
 }

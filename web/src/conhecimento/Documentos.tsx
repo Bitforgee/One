@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Badge, Button, Form, ListGroup, Modal, Stack } from 'react-bootstrap'
-import { BotaoAcao, useAcao } from '../acao'
+import { BotaoBs, useAcao } from '../acao'
 import { api } from '../api'
 import { Opcoes } from '../Opcoes'
 import { ConfirmarArquivar, SeloIndexacao, Situacao, useBase, type Categoria, type Indexacao } from './comum'
@@ -143,9 +143,9 @@ export function Documentos() {
             <Button variant="secondary" onClick={() => setEnvio(undefined)}>
               Cancelar
             </Button>
-            <BotaoAcao type="submit" pendente={acao.pendente} disabled={!envio?.arquivo}>
+            <BotaoBs type="submit" pendente={acao.pendente} disabled={!envio?.arquivo}>
               Enviar
-            </BotaoAcao>
+            </BotaoBs>
           </Modal.Footer>
         </Form>
       </Modal>

@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
-import { Container } from 'react-bootstrap'
 import { Route, Routes } from 'react-router'
 import { DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
 import { Cadastros } from './administracao/Cadastros'
@@ -41,10 +40,19 @@ export function App() {
   )
 }
 
+function Raiz() {
+  return (
+    <div className="px-4 py-12 text-center text-muted-foreground">
+      <p className="text-xl font-semibold text-primary">One</p>
+      <p>Abra o endereço da sua instituição, por exemplo /univag.</p>
+    </div>
+  )
+}
+
 function Rotas() {
   return (
     <Routes>
-      <Route path="/" element={<Container className="py-5">Abra o endereço da sua instituição, por exemplo /univag.</Container>} />
+      <Route path="/" element={<Raiz />} />
       <Route path="/:slug">
         <Route index element={<Login />} />
         <Route path="primeiro-acesso" element={<PrimeiroAcesso />} />

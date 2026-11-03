@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Button, Form, Modal, Spinner, Stack } from 'react-bootstrap'
-import { BotaoAcao, useAcao } from '../acao'
+import { BotaoBs, useAcao } from '../acao'
 import { api } from '../api'
 
 export type Id = { id: number }
@@ -51,9 +51,9 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, child
           <Button variant="secondary" onClick={fechar}>
             Cancelar
           </Button>
-          <BotaoAcao type="submit" pendente={pendente}>
+          <BotaoBs type="submit" pendente={pendente}>
             Salvar
-          </BotaoAcao>
+          </BotaoBs>
         </Modal.Footer>
       </Form>
     </Modal>

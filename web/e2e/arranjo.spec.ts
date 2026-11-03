@@ -324,3 +324,48 @@ test.describe('listas de chamados', () => {
     }
   })
 })
+
+test.describe('acesso', () => {
+  // C66 (## Screens linhas 1 a 5)
+  test('arranjo telas de acesso', async ({ page }) => {
+    await simularApi(page)
+    const largura = () => page.evaluate(() => document.documentElement.clientWidth)
+
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/')
+    const aviso = page.getByText('Abra o endereço da sua instituição')
+    await aviso.waitFor()
+    expect(await aviso.evaluate((e) => getComputedStyle(e).textAlign), 'raiz').toBe('center')
+
+    for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']) {
+      await page.setViewportSize({ width: 360, height: 740 })
+      await page.goto(caminho)
+      const cartao = page.locator('[data-slot=card]')
+      await cartao.waitFor()
+      const c = await caixa(cartao)
+      expect(Math.abs(c.x - 16), caminho).toBeLessThanOrEqual(1)
+      expect(c.x + c.width, caminho).toBeGreaterThanOrEqual(344 - 1)
+      expect(c.x + c.width, caminho).toBeLessThanOrEqual(360)
+
+      await page.setViewportSize({ width: 1024, height: 740 })
+      const g = await caixa(cartao)
+      expect(g.width, caminho).toBeLessThanOrEqual(420)
+      expect(Math.abs(g.x - (await largura() - g.x - g.width)), caminho).toBeLessThanOrEqual(1)
+    }
+
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag')
+    const entrar = await caixa(page.getByRole('button', { name: 'Entrar' }))
+    const cpf = await caixa(page.getByLabel('CPF'))
+    expect(Math.abs(entrar.width - cpf.width)).toBeLessThanOrEqual(1)
+    const link = await caixa(page.getByRole('link', { name: 'Primeiro acesso ou esqueci minha senha' }))
+    const cartao = await caixa(page.locator('[data-slot=card]'))
+    expect(link.y).toBeGreaterThanOrEqual(entrar.y + entrar.height - 1)
+    expect(Math.abs(link.x + link.width / 2 - (cartao.x + cartao.width / 2))).toBeLessThanOrEqual(1)
+
+    await page.setViewportSize({ width: 1024, height: 740 })
+    await page.goto('/univag/trocar-senha')
+    await page.getByRole('heading', { name: 'Trocar senha' }).waitFor()
+    expect((await caixa(page.locator('main > div').first())).width).toBeLessThanOrEqual(420)
+  })
+})

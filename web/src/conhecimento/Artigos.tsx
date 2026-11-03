@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Badge, Button, Col, Form, ListGroup, Modal, Row, Stack } from 'react-bootstrap'
-import { BotaoAcao, useAcao } from '../acao'
+import { BotaoBs, useAcao } from '../acao'
 import { api } from '../api'
 import { Opcoes } from '../Opcoes'
 import { ConfirmarArquivar, SeloIndexacao, Situacao, useBase, type Categoria, type Indexacao } from './comum'
@@ -65,9 +65,9 @@ function ItemArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edita
           Editar
         </Button>
         {a.estado !== 'ATIVO' && (
-          <BotaoAcao size="sm" variant="outline-success" pendente={pendente} onClick={mudar}>
+          <BotaoBs size="sm" variant="outline-success" pendente={pendente} onClick={mudar}>
             Ativar
-          </BotaoAcao>
+          </BotaoBs>
         )}
         {a.estado !== 'ARQUIVADO' && (
           <Button size="sm" variant="outline-danger" onClick={arquivar} disabled={pendente}>
@@ -183,9 +183,9 @@ export function Artigos() {
             <Button variant="secondary" onClick={() => setEditando(undefined)}>
               Cancelar
             </Button>
-            <BotaoAcao type="submit" pendente={acao.pendente}>
+            <BotaoBs type="submit" pendente={acao.pendente}>
               Salvar
-            </BotaoAcao>
+            </BotaoBs>
           </Modal.Footer>
         </Form>
       </Modal>
