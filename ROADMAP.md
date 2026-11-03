@@ -1,7 +1,7 @@
 # One: roadmap
 
 - **Data:** 02/11/2026, fim da noite (RAG, refatoração e vertical slice completa verificados no `main`;
-  interface nova em build, lote 2 de 3; domínio rico e contratos em build, lote 2 de 3)
+  interface nova em build, lote 3 de 3, com as 3 telas da banca já migradas; domínio rico e contratos em build, lote 2 de 3)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -46,12 +46,12 @@ hospedagem e ensaio.
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
 | Código | 72 commits em `main`; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58` |
-| Testes | API 303 (237 antes da refatoração), web 118 (35 antes da refatoração, 99 antes da interface nova), e2e 23 (11 de antes mais 12 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Testes | API 303 (237 antes da refatoração), web 131 (35 antes da refatoração, 99 antes da interface nova), e2e 27 (11 de antes mais 16 de tela e de arranjo a 360 px), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | Ainda não colocada |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
-| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. Lote 2 (detalhe do chamado, Indicadores, listas) em build, sem mutação desde 02/11 (AD-025) |
+| Interface nova (`interface-nova`) | Plano e 94 checks aprovados em 02/11 (`b2e7e79`); build em 3 lotes. **Lote 1 verde** (C1 a C38, `2aa8a9a..7a3b007`): Tailwind v4, shadcn/ui, TanStack Query e o chat do Assistente; pior CRAP 9,0, dryer limpo, 300 mutantes mortos e 0 sobreviventes. **Lote 2 verde** (C39 a C59, `ad45b53..c617f06`): detalhe do chamado, Indicadores (Recharts separado, TanStack Table 8.21.3, DayPicker) e listas; Vitest 131, e2e 27; mutação interrompida (AD-025). Lote 3 (acesso, conhecimento, administração, saída do Bootstrap) em build no Sonnet |
 | Domínio rico e contratos (`dominio-e-contratos`) | Plano (`066ca62`) e 41 checks (`f0a7c9e`) aprovados em 02/11: 41 respostas nomeadas, 29 `Entrada`, 17 transições e 3 fábricas nas entidades, uma entidade por arquivo. Build em 3 lotes. **Lote 1 verde** (`2a2ba2e..3d6ee69`): retratos gravados contra o código de antes, API 303, e2e 23, `api/` sem mudança. Lote 2 (estrutura e entidades ricas) em build; lote 3 (contratos) a seguir |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
@@ -228,7 +228,7 @@ antes do código, verificação independente depois), e a próxima só começa c
 | 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
 | 06–07/11 | tempo real com SignalR | `api/`, `web/` |
 | 07–08/11 | Web Push | `api/`, `web/` (service worker) |
-| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: lote 1 (fundação e Assistente) verde em 02/11; lote 2 (detalhe do chamado, Indicadores, listas) em build; lote 3 (demais telas e saída do Bootstrap) a seguir | `web/` |
+| 02–14/11 | interface nova (shadcn/ui e Tailwind), começando pelas 3 telas da banca: lotes 1 (fundação e Assistente) e 2 (detalhe do chamado, Indicadores, listas) verdes em 02/11: as 3 telas da banca estão migradas; lote 3 (demais telas e saída do Bootstrap) em build | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
 
@@ -384,10 +384,13 @@ O código previsto para esta semana (S6, S7, S9, S11 e o resto do S8) já está 
       Assistente. Vitest 118, e2e 23, 300 mutantes mortos. Achado: as classes utilitárias do Bootstrap
       usam `!important` e vencem as do Tailwind com o mesmo nome; um bloco provisório em `index.css`
       corrige até a S9 apagar o Bootstrap.
-- [ ] Lote 2 (S3 a S5, C39 a C59): detalhe do chamado, Indicadores (Recharts carregado sob demanda) e listas.
-      A mutação desse lote foi interrompida em 02/11 (AD-025); os checks de mutação ficam abertos.
-- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento, administração e a saída do Bootstrap. Sem
-      mutação (AD-025); construtor no Sonnet.
+- [x] Lote 2 (S3 a S5, C39 a C59): detalhe do chamado, Indicadores (Recharts carregado sob demanda,
+      TanStack Table 8.21.3, DayPicker 10.0.2 em português) e listas. Vitest 131, e2e 27, pior CRAP 9,0,
+      dryer limpo. A mutação desse lote foi interrompida em 02/11 (AD-025); os checks de mutação ficam abertos.
+- [ ] Lote 3 (S6 a S9, C60 a C94): acesso, conhecimento (Tiptap só texto, área de arrastar arquivo),
+      administração e a saída do Bootstrap. Sem mutação (AD-025); construtor no Sonnet. Decisão do usuário
+      em 02/11: a tela do chamado troca o `setInterval` pelo `refetchInterval` do TanStack Query, e o teste
+      "atualiza chamado a cada 15 s" passa a avançar o relógio com `await` (nenhum `expect` muda).
 - [ ] Verificação independente aprovada (perfil `ui`), com os checks de mutação marcados como suspensos
       por decisão do usuário.
 
