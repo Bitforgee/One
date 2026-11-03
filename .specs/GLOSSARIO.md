@@ -55,3 +55,10 @@ uma vez no código, num grupo de constantes de `api/Dados/Entidades.cs`; cada pr
 | Termo | Chave | Significado |
 | --- | --- | --- |
 | `sinal de mudança` | `ChamadoMudou(numero)`, `FilaMudou()` | aviso sem dado de que um chamado mudou: o hub `TempoRealHub` o manda depois do commit (`AvisarMudanca`) ao grupo `chamado:{instituicaoId}:{numero}` e às filas `fila:{instituicaoId}:{setorId}`; a tela relê pelo `GET` de sempre. O polling de 15 s do `useChamado` segue como rede de segurança (15 s sem conexão, 60 s com ela) |
+
+## Avisos no aparelho (Web Push, chaves `Push:*`)
+
+| Termo | Chave | Significado |
+| --- | --- | --- |
+| `SubscricaoPush` | `Push:ChavePublica`, `ChavePrivada`, `Assunto` | inscrição de um navegador de um usuário para receber avisos; o `endpoint` é único no banco inteiro e um novo `POST` do mesmo endpoint a move para quem ativou por último |
+| `PushSaida` | `Push:*` | aviso a enviar a uma `SubscricaoPush`, com tentativas e próxima tentativa como o `EmailSaida`; o texto não é guardado, o agendador monta o JSON a partir do número do chamado |

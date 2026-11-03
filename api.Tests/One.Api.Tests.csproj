@@ -33,6 +33,7 @@
     <Using Include="One.Api.Dados.Usuarios" />
     <Using Include="One.Api.Dados.Cadastros" />
     <Using Include="One.Api.Dados.Emails" />
+    <Using Include="One.Api.Dados.Push" />
   </ItemGroup>
 
 </Project>

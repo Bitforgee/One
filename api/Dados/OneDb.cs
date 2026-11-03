@@ -32,6 +32,8 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<Documento> Documentos => Set<Documento>();
     public DbSet<VersaoDocumento> VersoesDocumento => Set<VersaoDocumento>();
     public DbSet<TrechoFonte> TrechosFonte => Set<TrechoFonte>();
+    public DbSet<SubscricaoPush> SubscricoesPush => Set<SubscricaoPush>();
+    public DbSet<PushSaida> PushesSaida => Set<PushSaida>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -106,6 +108,17 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.Property(x => x.Embedding).HasColumnType("vector(1536)");
             e.HasIndex(x => x.Embedding).HasMethod("hnsw").HasOperators("vector_cosine_ops");
             e.ToTable(t => t.HasCheckConstraint("ck_trecho_fonte_uma_versao", "(versao_artigo_id IS NULL) <> (versao_documento_id IS NULL)"));
+        });
+        mb.Entity<SubscricaoPush>(e =>
+        {
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
+            e.HasIndex(x => x.Endpoint).IsUnique();
+        });
+        mb.Entity<PushSaida>(e =>
+        {
+            e.HasOne<SubscricaoPush>().WithMany().HasForeignKey(x => x.SubscricaoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
+            e.Property(x => x.EnviadoEm).IsConcurrencyToken(); // a gravação só vale se ninguém enviou antes (AC 18)
         });
         mb.Entity<Chamado>(e =>
         {

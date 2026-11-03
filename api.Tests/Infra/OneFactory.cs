@@ -15,7 +15,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using Npgsql;
+using One.Api.Chamados;
 using One.Api.Dados;
+using WebPush;
 
 namespace One.Api.Tests.Infra;
 
@@ -30,6 +32,9 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public HasherEspiao Hasher { get; } = new();
     public ContadorDeGravacoes Gravacoes { get; } = new();
     public AtrasoDoCommit Commit { get; } = new();
+    public static readonly VapidDetails Vapid = VapidHelper.GenerateVapidKeys();
+    public EnviadorFalso Push { get; } = new();
+    protected virtual bool EnviadorPushReal => false;
     protected virtual bool LimitesReais => false;
     protected virtual int PortaSmtp => 1025;
     protected virtual int PortaMinio => 9000;
@@ -62,6 +67,9 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Llm:BaseUrl", "https://llm.teste/v1");
         builder.UseSetting("Llm:ChaveApi", "chave-teste");
         builder.UseSetting("Llm:Modelo", "gpt-6-luna");
+        builder.UseSetting("Push:ChavePublica", Vapid.PublicKey);
+        builder.UseSetting("Push:ChavePrivada", Vapid.PrivateKey);
+        builder.UseSetting("Push:Assunto", "mailto:teste@one.test");
         builder.UseSetting("Agendador:Ativo", "false"); // os testes chamam Agendador.Executar com o relógio falso
         if (!LimitesReais)
         {
@@ -83,6 +91,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
             s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes, Commit));
+            if (!EnviadorPushReal) s.AddSingleton<IEnviadorPush>(Push); // o último registro vence; o real só no OneFactoryEnviadorReal
             s.RemoveAll<Armazenamento>();
             s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, new ContaLeituras(this)));
         });
@@ -206,6 +215,11 @@ public class AtrasoDoCommit : DbTransactionInterceptor
 public class OneFactoryComLimites : OneFactory
 {
     protected override bool LimitesReais => true;
+}
+
+public class OneFactoryEnviadorReal : OneFactory
+{
+    protected override bool EnviadorPushReal => true;
 }
 
 public class OneFactorySmtpFora : OneFactory

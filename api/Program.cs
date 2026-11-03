@@ -21,6 +21,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        if (args is ["push", ..]) return PushComando.Executar(args[1..], Console.Out, Console.Error);
         var comando = args is ["instituicao", ..];
         var builder = WebApplication.CreateBuilder(args);
         if (comando) builder.Logging.ClearProviders();
@@ -58,6 +59,8 @@ public class Program
         s.TryAddSingleton(TimeProvider.System);
         s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
         s.AddSingleton<Email>();
+        s.AddHttpClient("push");
+        s.AddSingleton<IEnviadorPush, EnviadorPush>();
         s.AddSingleton<IAmazonS3>(sp =>
         {
             var c = sp.GetRequiredService<IConfiguration>();
@@ -140,6 +143,7 @@ public class Program
         AdminRotas.Mapear(api);
         IndicadorRotas.Mapear(api);
         DocumentoRotas.Mapear(api);
+        PushRotas.Mapear(api);
         api.MapHub<TempoRealHub>("/tempo-real").Add(b =>
         {
             // o negotiate só atende POST; o endpoint do WebSocket também atende o long polling (GET, POST, DELETE) e fica sem restrição

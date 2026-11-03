@@ -58,6 +58,9 @@ services:
       Armazenamento__Chave: one
       Armazenamento__Segredo: one-minio-dev
       Armazenamento__Bucket: one
+      Push__ChavePublica: ${PUSH_CHAVE_PUBLICA:-}
+      Push__ChavePrivada: ${PUSH_CHAVE_PRIVADA:-}
+      Push__Assunto: ${PUSH_ASSUNTO:-}
     ports:
       - "8080:8080"
 

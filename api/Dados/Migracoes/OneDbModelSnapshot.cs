@@ -997,6 +997,107 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("instituicao");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.Push.PushSaida", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("ChamadoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("chamado_id");
+
+                    b.Property<DateTime?>("EnviadoEm")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enviado_em");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<DateTime>("ProximaTentativa")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("proxima_tentativa");
+
+                    b.Property<long>("SubscricaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("subscricao_id");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.HasKey("Id")
+                        .HasName("pk_push_saida");
+
+                    b.HasIndex("ChamadoId")
+                        .HasDatabaseName("ix_push_saida_chamado_id");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_push_saida_instituicao_id");
+
+                    b.HasIndex("SubscricaoId")
+                        .HasDatabaseName("ix_push_saida_subscricao_id");
+
+                    b.ToTable("push_saida");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Push.SubscricaoPush", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Auth")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("auth");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("endpoint");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("P256dh")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("p256dh");
+
+                    b.Property<DateTime>("RegistradaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registrada_em");
+
+                    b.Property<long>("UsuarioId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscricao_push");
+
+                    b.HasIndex("Endpoint")
+                        .IsUnique()
+                        .HasDatabaseName("ix_subscricao_push_endpoint");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_subscricao_push_instituicao_id");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_subscricao_push_usuario_id");
+
+                    b.ToTable("subscricao_push");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Trechos.TrechoFonte", b =>
                 {
                     b.Property<long>("Id")
@@ -1623,6 +1724,47 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_email_saida_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Push.PushSaida", b =>
+                {
+                    b.HasOne("One.Api.Dados.Chamados.Chamado", null)
+                        .WithMany()
+                        .HasForeignKey("ChamadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_push_saida_chamado_chamado_id");
+
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_push_saida_instituicao_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Push.SubscricaoPush", null)
+                        .WithMany()
+                        .HasForeignKey("SubscricaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_push_saida_subscricoes_push_subscricao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Push.SubscricaoPush", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscricao_push_instituicao_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscricao_push_usuarios_usuario_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Trechos.TrechoFonte", b =>

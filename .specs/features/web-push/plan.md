@@ -25,6 +25,7 @@ flowchart TD
     API --> SB["SubscricaoPush (door 2)"]
     SB --> PS
     WP -- "404 ou 410" --> DEL["apaga SubscricaoPush"]
+    CMD["Program.cs: push chaves (PushComando em api/Chamados) imprime o par VAPID para o .env (door 6)"]
 ```
 
 ## Impact
@@ -34,7 +35,7 @@ flowchart TD
 | domain | novo termo: `SubscricaoPush` - inscrição de um navegador de um usuário para receber avisos; vive em `api/Dados/` por agregado (AD-024), com métodos de entidade (reatribuir ao usuário, registrar) e setters privados |
 | domain | novo termo: `PushSaida` - aviso a enviar a uma subscrição, com tentativas e próxima tentativa como `EmailSaida`; métodos `RegistrarFalha` e `Concluir` na entidade |
 | domain | termo existente: `Avisos` decidia só e-mail; passa a enfileirar também push dentro de `Enfileirar`, na mesma transação. Quem chama: `ResponderChamado`, `ResolverChamado`, `MarcarDuplicado` e `Agendador` (`Lembrar`, `ResolverSemResposta`); nenhum muda de assinatura |
-| code | `Agendador.Processar` ganha o caso `push` e `LerFilas` ganha a leitura da nova fila; CA1502 deve continuar em 10 ou menos (se o `switch` estourar, o despacho dos itens de fila sai para um método) |
+| code | `Agendador.Processar` ganha o caso `push` e `LerFilas` ganha a leitura da nova fila; CA1502 deve continuar em 10 ou menos (o `switch` dos itens saiu de `Processar` para o método `Despachar`, que ganha o caso `push`) |
 | tests | os retratos de rota em `api.Tests/Retratos/rotas.txt` ganham as 3 rotas novas; as linhas existentes não mudam |
 | web build | `vite-plugin-pwa` passa de `generateSW` para `injectManifest`: o `sw.js` deixa de ser gerado pelo Workbox e passa a ser compilado de `web/src/sw.ts`; `precache_completo.py` (C10 de `interface-nova`) tem de continuar saindo com 0 sobre `api/wwwroot` |
 | config | três chaves novas `Push:ChavePublica`, `Push:ChavePrivada`, `Push:Assunto` (variáveis `Push__*` no compose, valores no `.env`, nunca no git) |
