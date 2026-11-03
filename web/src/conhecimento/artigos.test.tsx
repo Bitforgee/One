@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, me } from '../test/util'
+import { abrir, acoesDe, api, cabecalhos, esperaLinhaVazia, me } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 
@@ -36,5 +36,54 @@ describe('artigos', () => {
       visivelDe: null,
       visivelAte: null,
     })
+  })
+
+  const categorias = [{ id: 3, nome: 'Estágio', ativa: true }]
+  const artigo = (id: number, titulo: string, estado: string) => ({
+    id, estado, indexacao: null, categoriaId: 3, categoria: 'Estágio', visivelDe: null, visivelAte: null,
+    versao: { id, numero: 1, titulo, perguntas: [], resposta: 'r', links: [] },
+  })
+  const documento = (estado: string) => ({
+    id: 1, titulo: 'Edital', categoriaId: 3, categoria: 'Estágio', estado, indexacao: 'INDEXADO',
+    versao: { id: 10, numero: 1, nomeArquivo: 'edital.pdf', paginas: 2, criadaEm: '2026-11-02T12:00:00Z' },
+  })
+  const servir = (lista: string, itens: unknown[]) => api({ 'GET /api/auth/me': () => [200, admin], [`GET /api/admin/${lista}`]: () => [200, itens], 'GET /api/admin/categorias': () => [200, categorias] })
+
+  // layout-painel C21 (AC 21)
+  it('colunas de Artigos e Documentos', async () => {
+    servir('artigos', [artigo(1, 'Faltas', 'ATIVO')])
+    let montada = abrir('/univag/artigos')
+    await screen.findByText('Faltas')
+    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Validade', 'Situação', ''])
+    montada.unmount()
+
+    servir('documentos', [documento('ATIVO')])
+    montada = abrir('/univag/documentos')
+    await screen.findByText('Edital')
+    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Arquivo', 'Situação', ''])
+  })
+
+  // layout-painel C24 (AC 24)
+  it('lista vazia numa linha', async () => {
+    servir('artigos', [])
+    let montada = abrir('/univag/artigos')
+    await screen.findByText('Nenhum item cadastrado.')
+    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+    montada.unmount()
+
+    servir('documentos', [])
+    montada = abrir('/univag/documentos')
+    await screen.findByText('Nenhum item cadastrado.')
+    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+  })
+
+  // layout-painel C25 (AC 25): por estado do artigo
+  it('ações de artigo no menu', async () => {
+    servir('artigos', [artigo(1, 'Em rascunho', 'RASCUNHO'), artigo(2, 'No ar', 'ATIVO'), artigo(3, 'Guardado', 'ARQUIVADO')])
+    abrir('/univag/artigos')
+    await screen.findByText('Em rascunho')
+    expect(await acoesDe('Em rascunho')).toEqual(['Editar', 'Ativar', 'Arquivar!'])
+    expect(await acoesDe('No ar')).toEqual(['Editar', 'Arquivar!'])
+    expect(await acoesDe('Guardado')).toEqual(['Editar', 'Ativar'])
   })
 })

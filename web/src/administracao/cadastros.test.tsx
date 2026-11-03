@@ -34,9 +34,10 @@ function cadastros(rotas: Record<string, Rota> = {}) {
 }
 
 const linhas = (aba: string) =>
-  within(screen.getByRole('tabpanel', { name: aba }))
-    .getAllByRole('button')
-    .map((b) => Array.from(b.children).map((c) => c.textContent))
+  Array.from(within(screen.getByRole('tabpanel', { name: aba })).getByRole('table').querySelectorAll('tbody tr')).map((tr) => {
+    const [nome, detalhe] = Array.from((tr as HTMLTableRowElement).cells)
+    return [nome.querySelector('button')!.textContent, detalhe.textContent].filter(Boolean)
+  })
 const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
 
 async function aba(nome: string) {
@@ -121,7 +122,7 @@ describe('cadastros', () => {
   it('regra por setor e resposta pronta gravam os números escolhidos', async () => {
     const chamadas = cadastros({ 'PUT /api/admin/regras/6': () => [200, {}], 'POST /api/admin/respostas-prontas': () => [201, {}] })
     await aba('Regras')
-    await userEvent.click(await screen.findByText('setor Financeiro'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Notas' }))
     let d = within(await screen.findByRole('dialog'))
     expect(d.getByLabelText('Categoria')).toHaveValue('7')
     expect(d.getByLabelText('Setor')).toHaveValue('2')

@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, me } from '../test/util'
+import { abrir, api, cabecalhos, esperaLinhaVazia, me } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const setores = [{ id: 1, nome: 'Triagem', triagem: true, ativo: true }, { id: 2, nome: 'Financeiro', triagem: false, ativo: true }]
@@ -21,6 +21,57 @@ describe('administração', () => {
     expect(await screen.findByText('O arquivo tem linhas inválidas; nenhuma linha foi importada.')).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '3' })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: 'CPF inválido' })).toBeInTheDocument()
+  })
+
+  // layout-painel C21 (AC 21): Usuários, as 5 abas de Cadastros e os erros de Matrículas
+  it('colunas das tabelas de administração', async () => {
+    const vazias = Object.fromEntries(['categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []] as [number, unknown]]))
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/usuarios': () => [200, []],
+      'GET /api/admin/setores': () => [200, setores],
+      ...vazias,
+      'POST /api/admin/matriculas/importacao': () => [400, { status: 400, detail: 'Linhas inválidas.', erros: [{ linha: 3, motivo: 'CPF inválido' }] }],
+    })
+    let montada = abrir('/univag/usuarios')
+    await screen.findByText('Nenhum item cadastrado.')
+    expect(cabecalhos()).toEqual(['Nome', 'CPF', 'E-mail', 'Papéis', 'Situação', ''])
+    montada.unmount()
+
+    montada = abrir('/univag/cadastros')
+    for (const aba of ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']) {
+      await userEvent.click(await screen.findByRole('tab', { name: aba }))
+      expect(cabecalhos(within(screen.getByRole('tabpanel', { name: aba })).getByRole('table'))).toEqual(['Nome', 'Detalhe'])
+    }
+    montada.unmount()
+
+    abrir('/univag/matriculas')
+    await userEvent.upload(await screen.findByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
+    await screen.findByRole('table')
+    expect(cabecalhos()).toEqual(['Linha', 'Motivo'])
+  })
+
+  // layout-painel C24 (AC 24): Usuários e uma aba de Cadastros
+  it('lista vazia numa linha', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/usuarios': () => [200, []],
+      'GET /api/admin/setores': () => [200, []],
+      'GET /api/admin/categorias': () => [200, []],
+      'GET /api/admin/cursos': () => [200, []],
+      'GET /api/admin/regras': () => [200, []],
+      'GET /api/admin/respostas-prontas': () => [200, []],
+    })
+    const montada = abrir('/univag/usuarios')
+    await screen.findByText('Nenhum item cadastrado.')
+    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+    montada.unmount()
+
+    abrir('/univag/cadastros')
+    await screen.findByText('Nenhum item cadastrado.')
+    esperaLinhaVazia('Nenhum item cadastrado.', 2)
   })
 
   it('novo atendente envia papéis e setores', async () => {

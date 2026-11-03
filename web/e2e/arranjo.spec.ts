@@ -201,37 +201,9 @@ test.describe('Detalhe do chamado', () => {
 test.describe('Indicadores', () => {
   const Cartoes = ['Indicador principal', 'Alunos ativos', 'Conversas', 'Autoatendimento', 'Escalonamento', 'Abandono', 'Perguntas sem artigo',
     'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura']
+  const Destaques = Cartoes.filter((r) => ['Indicador principal', 'Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta'].includes(r))
+  const Compactos = Cartoes.filter((r) => !Destaques.includes(r))
   const mesmaLinha = (a: { y: number }, b: { y: number }) => Math.abs(a.y - b.y) <= 4
-
-  test('indicadores em 2 e 4 colunas', async ({ page }) => {
-    await simularApi(page)
-    await page.setViewportSize({ width: 360, height: 740 })
-    await page.goto('/univag/indicadores')
-    await page.getByText('Indicador principal').waitFor()
-    const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=..')
-    // layout-painel door 5: as colunas seguem o main (768 px de main = 1280 px de janela com a barra aberta)
-    for (const [largura, colunas] of [[360, 2], [767, 2], [1024, 2], [1280, 4]]) {
-      await page.setViewportSize({ width: largura, height: 740 })
-      await assentar(page)
-      const caixas = []
-      for (const rotulo of Cartoes) caixas.push(await caixa(cartao(rotulo)))
-      const xs = new Set(caixas.map((c) => Math.round(c.x)))
-      expect(xs.size, `${largura} px`).toBe(colunas)
-      // colunas de largura igual: um col-span no primeiro cartão cria uma trilha implícita que mantém a contagem de x (L-030)
-      const larguras = caixas.slice(1).map((c) => c.width)
-      expect(Math.max(...larguras) - Math.min(...larguras), `${largura} px: larguras ${larguras.map(Math.round)}`).toBeLessThanOrEqual(1)
-      // "Indicador principal" vem primeiro e ocupa 2 colunas
-      expect(Math.round(caixas[0].x)).toBe(Math.min(...xs))
-      expect(caixas[0].y).toBeLessThanOrEqual(Math.min(...caixas.map((c) => c.y)))
-      const segunda = caixas.find((c) => Math.round(c.x) === [...xs].sort((p, q) => p - q)[1])!
-      expect(Math.abs(caixas[0].x + caixas[0].width - (segunda.x + segunda.width)), `${largura} px`).toBeLessThanOrEqual(1)
-
-      const conversas = await caixa(page.locator('[data-slot=card]').filter({ hasText: 'Categorias por conversas' }))
-      const chamados = await caixa(page.locator('[data-slot=card]').filter({ hasText: 'Categorias por chamados' }))
-      if (colunas === 2) expect(chamados.y, `${largura} px`).toBeGreaterThanOrEqual(conversas.y + conversas.height - 1)
-      else expect(mesmaLinha(conversas, chamados), `${largura} px`).toBe(true)
-    }
-  })
 
   test('arranjo Indicadores', async ({ page }) => {
     await simularApi(page)
@@ -249,8 +221,34 @@ test.describe('Indicadores', () => {
     expect(mesmaLinha(c.calendario, c.consultar)).toBe(true)
     expect(c.calendario.y).toBeGreaterThanOrEqual(c.de.y + c.de.height - 1)
 
+    const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
+    const estilo = (l: Locator, propriedade: string) => l.evaluate((e, p) => getComputedStyle(e).getPropertyValue(p), propriedade)
+    // layout-painel door 5: as colunas seguem o main (976 px de conteúdo a 1280 px de janela com a barra aberta, 1136 px a 1440 px)
+    for (const [largura, destaque, compactos, rankings] of [[360, 1, 2, 1], [1280, 2, 3, 2], [1440, 4, 3, 2]]) {
+      await page.setViewportSize({ width: largura, height: 740 })
+      await assentar(page)
+      const colunas = async (rotulos: string[]) => new Set((await Promise.all(rotulos.map((r) => caixa(cartao(r))))).map((b) => Math.round(b.x))).size
+      expect(await colunas(Destaques), `${largura} px: destaques`).toBe(destaque)
+      expect(await colunas(Compactos), `${largura} px: compactos`).toBe(compactos)
+      expect(await colunas(['Categorias por conversas', 'Categorias por chamados']), `${largura} px: rankings`).toBe(rankings)
+      if (rankings === 1) {
+        const [conversas, chamados] = await Promise.all([caixa(cartao('Categorias por conversas')), caixa(cartao('Categorias por chamados'))])
+        expect(chamados.y, `${largura} px`).toBeGreaterThanOrEqual(conversas.y + conversas.height - 1)
+      }
+    }
+
+    // destaques: valor de 24 px ou mais com tabular-nums e rótulo de 14 px; compactos: valor de 20 px; os destaques vêm antes
+    for (const rotulo of Destaques) {
+      const valor = cartao(rotulo).locator('[data-slot=card-title]')
+      expect(parseFloat(await estilo(valor, 'font-size')), rotulo).toBeGreaterThanOrEqual(24)
+      expect(await estilo(valor, 'font-variant-numeric'), rotulo).toContain('tabular-nums')
+      expect(parseFloat(await estilo(cartao(rotulo).locator('[data-slot=card-description]'), 'font-size')), rotulo).toBe(14)
+      expect((await caixa(cartao(rotulo))).y, rotulo).toBeLessThan((await caixa(cartao('Alunos ativos'))).y)
+    }
+    for (const rotulo of Compactos) expect(Math.abs(parseFloat(await estilo(cartao(rotulo).locator('> div').nth(1), 'font-size')) - 20), rotulo).toBeLessThanOrEqual(0.5)
+
     for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
-      const ranking = page.locator('[data-slot=card]').filter({ hasText: titulo })
+      const ranking = cartao(titulo)
       const grafico = ranking.locator('.recharts-responsive-container')
       await grafico.waitFor()
       const g = await caixa(grafico)
@@ -271,16 +269,19 @@ test.describe('listas de chamados', () => {
     for (const caminho of ['/univag/solicitacoes', '/univag/fila']) {
       await page.setViewportSize({ width: 360, height: 740 })
       await page.goto(caminho)
-      const cartao = page.getByRole('main').getByRole('link').filter({ hasText: 'ONE-123' })
-      await cartao.waitFor()
-      const lista = await caixa(page.locator('main > div > div').first())
-      const c = await caixa(cartao)
-      expect(Math.abs(c.width - lista.width), caminho).toBeLessThanOrEqual(1)
-      const numero = await caixa(cartao.getByText('ONE-123', { exact: true }))
-      const selo = await caixa(cartao.locator('[data-slot=badge]'))
-      expect(Math.abs(numero.y - selo.y), caminho).toBeLessThanOrEqual(4)
-      const titulo = await caixa(cartao.getByText(/^Preciso da segunda via/))
-      expect(titulo.y, caminho).toBeGreaterThanOrEqual(Math.max(numero.y + numero.height, selo.y + selo.height) - 1)
+      const linha = page.getByRole('main').getByRole('row').filter({ hasText: 'ONE-123' })
+      await linha.waitFor()
+      // a tabela ocupa a largura do conteúdo, e o número, o título e o estado ficam na mesma linha da tabela
+      const conteudo = await caixa(page.locator('main > div > div').first())
+      const tabela = await caixa(page.getByRole('main').getByRole('table'))
+      expect(conteudo.width - tabela.width, caminho).toBeLessThanOrEqual(2 + 1) // a borda de 1 px de cada lado
+      expect(conteudo.width - tabela.width, caminho).toBeGreaterThanOrEqual(0)
+      const l = await caixa(linha)
+      for (const alvo of [linha.getByRole('link', { name: 'ONE-123' }), linha.getByText(/^Preciso da segunda via/).first(), linha.locator('[data-slot=badge]')]) {
+        const a = await caixa(alvo)
+        expect(a.y, caminho).toBeGreaterThanOrEqual(l.y - 1)
+        expect(a.y + a.height, caminho).toBeLessThanOrEqual(l.y + l.height + 1)
+      }
 
       await page.setViewportSize({ width: 1280, height: 740 })
       await assentar(page)
@@ -338,25 +339,31 @@ test.describe('acesso', () => {
 const naMesmaLinha = (a: { y: number }, b: { y: number }) => Math.abs(a.y - b.y) <= 4
 
 test.describe('conhecimento', () => {
-  // C80 (## Screens linhas 10 e 11)
   test('arranjo Artigos e Documentos', async ({ page }) => {
     await simularApi(page)
-    await page.setViewportSize({ width: 360, height: 740 })
-    for (const [caminho, titulo, botao, cartao] of [
-      ['/univag/artigos', 'Artigos', /Novo/, 'Como emitir a segunda via'],
-      ['/univag/documentos', 'Documentos', /Enviar PDF/, 'Regulamento do estágio'],
+    for (const [caminho, titulo, botao, ajuda] of [
+      ['/univag/artigos', 'Artigos', /Novo/, /^Orientações internas/],
+      ['/univag/documentos', 'Documentos', /Enviar PDF/, /^PDFs da instituição/],
     ] as const) {
+      // estreito: o texto de ajuda em cima e o botão embaixo, à direita; largo (main de 976 px): na mesma linha, o texto à esquerda
+      await page.setViewportSize({ width: 360, height: 740 })
       await page.goto(caminho)
-      const item = page.locator('[data-slot=card]').filter({ hasText: cartao })
-      await item.waitFor()
-      // o título foi para o cabeçalho da casca (h1 único): o botão fica sozinho, à direita
+      await page.getByRole('table').waitFor()
       await expect(page.getByRole('heading', { level: 1, name: titulo }), caminho).toBeVisible()
-      const novo = await caixa(page.getByRole('button', { name: botao }))
+      let texto = await caixa(page.getByText(ajuda))
+      let novo = await caixa(page.getByRole('button', { name: botao }))
       expect(novo.x + novo.width, caminho).toBeGreaterThanOrEqual(360 - 16 - 1)
-      const nome = await caixa(item.locator('strong'))
-      for (const selo of await item.locator('[data-slot=badge]').all()) expect(naMesmaLinha(nome, await caixa(selo)), caminho).toBe(true)
+      expect(novo.y, caminho).toBeGreaterThanOrEqual(texto.y + texto.height - 1)
+
+      await page.setViewportSize({ width: 1280, height: 740 })
+      await assentar(page)
+      texto = await caixa(page.getByText(ajuda))
+      novo = await caixa(page.getByRole('button', { name: botao }))
+      expect(naMesmaLinha({ y: texto.y + texto.height / 2 }, { y: novo.y + novo.height / 2 }), caminho).toBe(true)
+      expect(novo.x, caminho).toBeGreaterThan(texto.x + texto.width - 1)
     }
 
+    await page.setViewportSize({ width: 360, height: 740 })
     await page.goto('/univag/artigos')
     await page.getByRole('button', { name: /Novo/ }).click()
     const dialogo = page.getByRole('dialog')
@@ -377,25 +384,6 @@ test.describe('conhecimento', () => {
 })
 
 test.describe('administração', () => {
-  // C83 (AC 46)
-  test('abas de Cadastros rolam na própria faixa', async ({ page }) => {
-    await simularApi(page)
-    await page.setViewportSize({ width: 360, height: 740 })
-    await page.goto('/univag/cadastros')
-    const abas = page.getByRole('tablist')
-    await abas.waitFor()
-    expect(await abas.evaluate((e) => getComputedStyle(e).overflowX)).toBe('auto')
-    expect(await abas.evaluate((e) => e.scrollLeft)).toBe(0)
-    await page.getByRole('tab', { name: 'Respostas prontas' }).click()
-    expect(await abas.evaluate((e) => e.scrollLeft)).toBeGreaterThan(0)
-    expect(await page.evaluate(() => window.scrollX)).toBe(0)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360)
-
-    await page.setViewportSize({ width: 1024, height: 740 })
-    expect(await abas.evaluate((e) => e.scrollWidth - e.clientWidth)).toBeLessThanOrEqual(0)
-  })
-
-  // C89 (## Screens linhas 13 a 15)
   test('arranjo administração', async ({ page }) => {
     await simularApi(page)
     await page.setViewportSize({ width: 360, height: 740 })
@@ -408,16 +396,17 @@ test.describe('administração', () => {
     const importar = page.getByRole('button', { name: 'Importar' })
     await importar.waitFor()
     const conteudo = async () => (await caixa(page.locator('main > div > div').first())).width
-    expect(Math.abs((await caixa(importar)).width - (await conteudo()))).toBeLessThanOrEqual(1)
+    // o botão ocupa a largura do cartão (conteúdo menos o recuo de 16 px de cada lado do cartão)
+    expect(Math.abs((await caixa(importar)).width - ((await conteudo()) - 34))).toBeLessThanOrEqual(1)
     await page.setViewportSize({ width: 1024, height: 740 })
-    expect((await caixa(importar)).width).toBeLessThan(await conteudo())
+    expect((await caixa(importar)).width).toBeLessThan(await conteudo() - 34)
 
     await page.setViewportSize({ width: 360, height: 740 })
     await page.goto('/univag/cadastros')
-    const linha = page.getByRole('tabpanel').getByRole('button').first()
-    await linha.waitFor()
-    const lista = await caixa(linha.locator('..'))
-    expect(Math.abs((await caixa(linha)).width - lista.width)).toBeLessThanOrEqual(1)
+    const tabela = page.getByRole('tabpanel').getByRole('table')
+    await tabela.waitFor()
+    expect((await conteudo()) - (await caixa(tabela)).width).toBeLessThanOrEqual(2 + 1) // a borda de 1 px de cada lado
+    expect((await conteudo()) - (await caixa(tabela)).width).toBeGreaterThanOrEqual(0)
   })
 })
 
@@ -502,21 +491,23 @@ test.describe('arranjo restante', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(300)
   })
 
-  // C80 (linhas 10, 11) e C89 (linha 13)
   test('botões pequenos em linha em Artigos, Documentos e Usuários', async ({ page }) => {
     await simularApi(page)
-    for (const [caminho, cartao] of [['/univag/artigos', 'Como emitir'], ['/univag/documentos', 'Regulamento do estágio'], ['/univag/usuarios', 'Carla Regina']] as const) {
+    for (const [caminho, linha, nome] of [
+      ['/univag/artigos', 'Como emitir', 'Como emitir a segunda via do boleto do semestre com o valor corrigido'],
+      ['/univag/documentos', 'Regulamento do estágio', 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação'],
+      ['/univag/usuarios', 'Carla Regina', 'Carla Regina de Souza Albuquerque'],
+    ] as const) {
       await page.goto(caminho)
-      const item = page.locator('[data-slot=card]').filter({ hasText: cartao })
+      const item = page.getByRole('row').filter({ hasText: linha })
       await item.waitFor()
+      // a última coluna é só o botão "⋮" de 32 px, dentro da janela
       const botoes = await item.getByRole('button').all()
-      expect(botoes.length, caminho).toBeGreaterThanOrEqual(2)
-      const primeiro = await caixa(botoes[0])
-      for (const b of botoes) {
-        const c = await caixa(b)
-        expect(naMesmaLinha(primeiro, c), caminho).toBe(true)
-        expect(c.height, caminho).toBeLessThanOrEqual(36)
-      }
+      expect(botoes.length, caminho).toBe(1)
+      await expect(botoes[0], caminho).toHaveAccessibleName(`Ações de ${nome}`)
+      const b = await caixa(botoes[0])
+      expect(b.height, caminho).toBeLessThanOrEqual(36)
+      expect(direita(b), caminho).toBeLessThanOrEqual(360)
     }
   })
 
@@ -571,14 +562,14 @@ test.describe('arranjo restante', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360)
   })
 
-  // C89 (linha 15)
   test('Cadastros: detalhe pequeno embaixo do nome', async ({ page }) => {
     await simularApi(page)
     await page.route('**/api/admin/setores', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, nome: 'Secretaria', triagem: true, ativo: true }]) }))
     await page.goto('/univag/cadastros')
-    const linha = page.getByRole('tabpanel').getByRole('button').first()
+    const linha = page.getByRole('tabpanel').getByRole('row').nth(1)
     await linha.waitFor()
-    const [nome, detalhe] = await linha.locator('div').all()
+    const nome = linha.getByRole('button', { name: 'Secretaria' })
+    const detalhe = linha.locator('div.text-xs')
     expect(abaixo(await caixa(nome), await caixa(detalhe))).toBe(true)
     expect(await detalhe.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeLessThan(await nome.evaluate((e) => parseFloat(getComputedStyle(e).fontSize)))
   })
@@ -685,15 +676,15 @@ test.describe('redesign institucional', () => {
     expect(await dialogo.evaluate((e) => getComputedStyle(e).boxShadow), 'diálogo com sombra').not.toBe('none')
   })
 
-  // C21 (AC 21)
   test('cartões sem sombra', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await simularApi(page)
     await page.goto('/univag/indicadores')
     await page.getByText('Indicador principal').waitFor()
+    // layout-painel: os 4 destaques levam shadow-xs, como no template; os outros cartões seguem sem sombra
     const sombras = await page.locator('[data-slot=card]').evaluateAll((els) => els.map((e) => getComputedStyle(e).boxShadow))
     expect(sombras.length).toBeGreaterThanOrEqual(13)
-    expect(new Set(sombras)).toEqual(new Set(['none']))
+    expect(sombras.filter((x) => x === 'none').length).toBe(sombras.length - 4)
     const cantos = await page.locator('[data-slot=card]').evaluateAll((els) => els.map((e) => getComputedStyle(e).borderTopLeftRadius))
     expect(new Set(cantos), 'rounded-lg = --radius 0.5rem').toEqual(new Set(['8px']))
   })
@@ -850,13 +841,98 @@ test.describe('painel', () => {
     }
   })
 
-  // C14: a largura do main, e não a da janela, é a que as telas medem
   test('colunas pela largura do main', async ({ page }) => {
     await simularApi(page)
     await page.setViewportSize({ width: 900, height: 800 })
     await page.goto('/univag/fila')
     await page.getByText('ONE-123').waitFor()
     expect(await page.locator('main > div').evaluate((e) => [getComputedStyle(e).containerType, getComputedStyle(e).containerName])).toEqual(['inline-size', 'main'])
+    // a mesma janela de 900 px: barra aberta, main de 644 px (estreito); recolhida, de 852 px (largo)
+    await expect(page.getByRole('columnheader')).toHaveText(['Número', 'Título', 'Estado'])
+    await page.evaluate(() => localStorage.setItem('one-barra', 'recolhida'))
+    await page.goto('/univag/fila')
+    await page.getByText('ONE-123').waitFor()
+    await expect(page.getByRole('columnheader')).toHaveText(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
+  })
+
+  // C22: no estreito os cabeçalhos "largo" somem e os valores vão para uma linha de 12 px sob a coluna principal
+  test('colunas largas somem no estreito', async ({ page }) => {
+    await simularApi(page)
+    await page.route('**/api/admin/setores', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, nome: 'Secretaria', triagem: true, ativo: true }]) }))
+    const Telas5: [string, string, string[], string][] = [
+      ['/univag/fila', 'ONE-123', ['Categoria', 'Responsável', 'Dias'], 'Financeiro > Boletos e mensalidades · Carla Regina de Souza · 12 dias'],
+      ['/univag/usuarios', 'Carla Regina de Souza Albuquerque', ['CPF', 'E-mail', 'Papéis'], '12345678909 · carla.regina.albuquerque@univag.edu.br · Atendente, Administrador'],
+      ['/univag/artigos', 'Como emitir a segunda via', ['Categoria', 'Versão', 'Validade'], 'Financeiro > Boletos e mensalidades · versão 12'],
+      ['/univag/documentos', 'Regulamento do estágio', ['Categoria', 'Versão', 'Arquivo'], 'Financeiro > Boletos e mensalidades · versão 3 · 42 páginas · regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf'],
+      ['/univag/cadastros', 'Secretaria', ['Detalhe'], 'triagem'],
+    ]
+    for (const [caminho, espera, largos, linha] of Telas5) {
+      await page.setViewportSize({ width: 360, height: 800 })
+      await page.goto(caminho)
+      await page.getByText(espera).first().waitFor()
+      const cabecalhos = page.getByRole('columnheader')
+      for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 360 px: ${l}`).toHaveCount(0)
+      const detalhe = page.locator('tbody div.text-xs').first()
+      await expect(detalhe, caminho).toContainText(linha)
+      expect(await detalhe.evaluate((e) => getComputedStyle(e).fontSize), caminho).toBe('12px')
+      // o cabeçalho da tabela tem o fundo --muted
+      const fundos = await page.evaluate(() => {
+        const sonda = document.createElement('div')
+        sonda.style.background = 'var(--muted)'
+        document.body.append(sonda)
+        const muted = getComputedStyle(sonda).backgroundColor
+        sonda.remove()
+        return [getComputedStyle(document.querySelector('thead')!).backgroundColor, muted]
+      })
+      expect(fundos[0], caminho).toBe(fundos[1])
+
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await assentar(page)
+      for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 1280 px: ${l}`).toHaveCount(1)
+      await expect(detalhe, caminho).toBeHidden()
+    }
+  })
+
+  // C23
+  test('linha da lista abre o chamado', async ({ page }) => {
+    await simularApi(page)
+    for (const caminho of ['/univag/fila', '/univag/solicitacoes']) {
+      await page.setViewportSize({ width: 1280, height: 800 })
+      await page.goto(caminho)
+      const linha = page.getByRole('row').filter({ hasText: 'ONE-123' })
+      await linha.waitFor()
+      await linha.locator('[data-slot=badge]').click()
+      await expect(page, caminho).toHaveURL(/\/univag\/chamados\/ONE-123$/)
+      // o número é um link que recebe foco pelo Tab
+      await page.goto(caminho)
+      await linha.waitFor()
+      let focado = false
+      for (let i = 0; i < 40 && !focado; i++) {
+        await page.keyboard.press('Tab')
+        focado = await page.evaluate(() => document.activeElement?.tagName === 'A' && document.activeElement.textContent === 'ONE-123')
+      }
+      expect(focado, caminho).toBe(true)
+    }
+  })
+
+  // C26
+  test('Cadastros com select no estreito', async ({ page }) => {
+    await simularApi(page)
+    await page.route('**/api/admin/cursos', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 4, nome: 'Direito', setorCoordenacaoId: null }]) }))
+    await page.setViewportSize({ width: 360, height: 800 })
+    await page.goto('/univag/cadastros')
+    const abas = page.getByRole('tablist')
+    const select = page.getByRole('combobox', { name: 'Cadastro' })
+    await select.waitFor()
+    await expect(abas).toBeHidden()
+    expect(await select.locator('option').allTextContents()).toEqual(['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas'])
+    await select.selectOption({ label: 'Cursos' })
+    await expect(page.getByRole('tabpanel').getByRole('button', { name: 'Direito' })).toBeVisible()
+
+    await page.setViewportSize({ width: 1440, height: 800 })
+    await assentar(page)
+    await expect(abas).toBeVisible()
+    await expect(select).toBeHidden()
   })
 
   test('recuos do conteúdo', async ({ page }) => {

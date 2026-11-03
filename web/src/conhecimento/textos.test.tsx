@@ -2,13 +2,13 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { estados } from '../test/textos'
-import { abrir, api, me, type Rota } from '../test/util'
+import { abrir, api, escolher, me, type Rota } from '../test/util'
 
 // Linhas 10 e 11 de ## Screens (Artigos e Documentos); título, categoria, números e datas vêm do fixture, como a tela os formata.
 const Artigos = [
   'Artigos', 'Novo', 'Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.',
-  'Indexando', 'Indexado', 'Falhou', 'RASCUNHO', 'ATIVO', 'ARQUIVADO', '· versão', '· válido de', '· válido até', 'Editar', 'Ativar', 'Arquivar',
-  'Nenhum item cadastrado.',
+  'Indexando', 'Indexado', 'Falhou', 'RASCUNHO', 'ATIVO', 'ARQUIVADO', 'versão', 'válido de', 'válido até', 'Editar', 'Ativar', 'Arquivar',
+  'Nenhum item cadastrado.', 'Versão', 'Validade', 'Situação',
   'Novo artigo', 'Editar artigo', 'Salvar cria uma nova versão; as anteriores ficam guardadas.',
   'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.',
   'Título', 'Perguntas relacionadas (uma por linha)', 'Categoria', 'Escolha a categoria', 'Resposta', 'Links (um por linha, com https://)',
@@ -18,7 +18,7 @@ const Artigos = [
 ]
 const Documentos = [
   'Documentos', 'Enviar PDF', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
-  'Indexado', 'ATIVO', 'ARQUIVADO', '· versão', 'página', 'páginas', 'Nova versão', 'Arquivar',
+  'Indexado', 'ATIVO', 'ARQUIVADO', 'versão', 'página', 'páginas', 'Nova versão', 'Arquivar', 'Versão', 'Arquivo', 'Situação',
   'PDF com texto (não digitalizado), até 20 MB.', 'A nova versão de “', '” substitui a atual na busca; as anteriores ficam guardadas.',
   'Título', 'Categoria', 'Escolha a categoria', 'Arquivo PDF', 'Cancelar', 'Enviar',
   'Arquivar o documento?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
@@ -77,7 +77,10 @@ describe('textos', () => {
     t.conferir(tela(), ['Estágio', '2', '01/11/2026', '31/12/2026', 'Estágio obrigatório', 'Faltas', 'Prova final'])
 
     // "Editar artigo" com o calendário aberto; a resposta e as perguntas vêm do fixture
-    await userEvent.click(within(tela()).getAllByRole('button', { name: 'Editar' })[0])
+    await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Faltas' }))
+    t.conferir(await screen.findByRole('menu'))
+    await userEvent.keyboard('{Escape}')
+    await escolher('Estágio obrigatório', 'Editar')
     let dialogo = await screen.findByRole('dialog')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Escolher validade no calendário' }))
     const calendario = document.querySelector('[data-slot=popover-content]') as HTMLElement
@@ -97,9 +100,9 @@ describe('textos', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
     // ativar e arquivar: os outros 2 toasts; e "Arquivar o artigo?"
-    await userEvent.click(within(tela()).getAllByRole('button', { name: 'Ativar' })[0])
+    await escolher('Faltas', 'Ativar')
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo ativado.'))
-    await userEvent.click(within(tela()).getAllByRole('button', { name: 'Arquivar' })[0])
+    await escolher('Estágio obrigatório', 'Arquivar')
     t.conferir(await screen.findByRole('dialog'), ['Estágio obrigatório'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo arquivado.'))
@@ -121,7 +124,9 @@ describe('textos', () => {
     t.conferir(tela(), ['Estágio', '1', '3', 'Regulamento', 'Regulamento.pdf', 'Edital', 'Edital.pdf'])
 
     // "Nova versão"
-    await userEvent.click(within(tela()).getByRole('button', { name: 'Nova versão' }))
+    await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Regulamento' }))
+    t.conferir(await screen.findByRole('menu'))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Nova versão' }))
     t.conferir(await screen.findByRole('dialog'), ['Regulamento'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
@@ -138,7 +143,7 @@ describe('textos', () => {
     t.conferir(avisos())
 
     // arquivar
-    await userEvent.click(within(tela()).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Regulamento', 'Arquivar')
     t.conferir(await screen.findByRole('dialog'), ['Regulamento'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento arquivado.'))

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { abrir, api, me, type Rota } from '../test/util'
+import { abrir, acoesDe, api, escolher, me, type Rota } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const categorias = [{ id: 3, nome: 'Estágio', ativa: true }]
@@ -14,7 +14,7 @@ const documento = (id: number, titulo: string, estado: string, paginas = 3) => (
   versao: { id: id * 10, numero: 1, nomeArquivo: `${titulo}.pdf`, paginas, criadaEm: '2026-11-02T12:00:00Z' },
 })
 const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
-const item = async (titulo: string) => (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
+const item = async (titulo: string) => (await screen.findByText(titulo)).closest('tr') as HTMLElement
 const pdf = () => new File(['%PDF-1.4'], 'regulamento.pdf', { type: 'application/pdf' })
 
 function tela(caminho: string, lista: string, itens: unknown[], rotas: Record<string, Rota> = {}) {
@@ -29,21 +29,18 @@ describe('artigos', () => {
     const ativo = await item('Ativo')
     expect(within(ativo).getByText('ATIVO').parentElement).toHaveClass('flex', 'gap-1')
     expect(ativo).toHaveTextContent('Estágio · versão 2 · válido de 01/11/2026 · válido até 31/12/2026')
-    expect(within(ativo).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument()
-    expect(within(ativo).getByRole('button', { name: 'Arquivar' })).toBeInTheDocument()
+    expect(await acoesDe('Ativo')).toEqual(['Editar', 'Arquivar!'])
     const rascunho = await item('Rascunho')
-    expect(rascunho.querySelector('.text-sm')).toHaveTextContent(/^Estágio · versão 2$/)
-    expect(within(rascunho).getByRole('button', { name: 'Ativar' })).toBeInTheDocument()
-    expect(within(rascunho).getByRole('button', { name: 'Arquivar' })).toBeInTheDocument()
+    expect(rascunho.querySelector('.text-xs')).toHaveTextContent(/^Estágio · versão 2$/)
+    expect(await acoesDe('Rascunho')).toEqual(['Editar', 'Ativar', 'Arquivar!'])
     const arquivado = await item('Arquivado')
-    expect(arquivado.querySelector('.text-sm')).toHaveTextContent(/^Estágio · versão 2 · válido até 31\/10\/2026$/)
-    expect(within(arquivado).getByRole('button', { name: 'Ativar' })).toBeInTheDocument()
-    expect(within(arquivado).queryByRole('button', { name: 'Arquivar' })).not.toBeInTheDocument()
+    expect(arquivado.querySelector('.text-xs')).toHaveTextContent(/^Estágio · versão 2 · válido até 31\/10\/2026$/)
+    expect(await acoesDe('Arquivado')).toEqual(['Editar', 'Ativar'])
   })
 
   it('editar abre o artigo preenchido e salva uma nova versão', async () => {
     const chamadas = tela('/univag/artigos', 'artigos', [artigo(1, 'Estágio obrigatório', 'ATIVO', '2026-11-01')], { 'PUT /api/admin/artigos/1': () => [200, {}] })
-    await userEvent.click(within(await item('Estágio obrigatório')).getByRole('button', { name: 'Editar' }))
+    await escolher('Estágio obrigatório', 'Editar')
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('Editar artigo')).toBeInTheDocument()
     expect(d.getByText('Salvar cria uma nova versão; as anteriores ficam guardadas.')).toBeInTheDocument()
@@ -64,9 +61,9 @@ describe('artigos', () => {
       'POST /api/admin/artigos/2/ativar': () => [200, {}],
       'POST /api/admin/artigos/2/arquivar': () => [200, {}],
     })
-    await userEvent.click(within(await item('Rascunho')).getByRole('button', { name: 'Ativar' }))
+    await escolher('Rascunho', 'Ativar')
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
-    await userEvent.click(within(await item('Rascunho')).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Rascunho', 'Arquivar')
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('Arquivar o artigo?')).toBeInTheDocument()
     expect(d.getByText(/“Rascunho” sai da base do assistente/)).toBeInTheDocument()
@@ -121,7 +118,7 @@ describe('documentos', () => {
     const chamadas = tela('/univag/documentos', 'documentos', [documento(1, 'Regulamento', 'ATIVO', 1)], {
       'POST /api/admin/documentos/1/versoes': () => [415, { status: 415, detail: 'O arquivo precisa ser um PDF.' }],
     })
-    await userEvent.click(within(await item('Regulamento')).getByRole('button', { name: 'Nova versão' }))
+    await escolher('Regulamento', 'Nova versão')
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('A nova versão de “Regulamento” substitui a atual na busca; as anteriores ficam guardadas.')).toBeInTheDocument()
     expect(d.queryByLabelText('Título')).not.toBeInTheDocument()
@@ -132,14 +129,14 @@ describe('documentos', () => {
     const [, url, corpo] = gravadas(chamadas)[0]
     expect(url).toBe('/api/admin/documentos/1/versoes')
     expect(Object.keys(corpo)).toEqual(['arquivo'])
-    expect((await item('Regulamento')).querySelector('.text-sm')).toHaveTextContent(/· 1 página · Regulamento\.pdf$/)
+    expect((await item('Regulamento')).querySelector('.text-xs')).toHaveTextContent(/· 1 página · Regulamento\.pdf$/)
   })
 
   it('erro ao arquivar aparece na página', async () => {
     tela('/univag/documentos', 'documentos', [documento(1, 'Regulamento', 'ATIVO')], {
       'POST /api/admin/documentos/1/arquivar': () => [409, { status: 409, detail: 'O documento já foi arquivado.' }],
     })
-    await userEvent.click(within(await item('Regulamento')).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Regulamento', 'Arquivar')
     expect(within(await screen.findByRole('dialog')).getByText('Arquivar o documento?')).toBeInTheDocument()
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('O documento já foi arquivado.')
@@ -157,7 +154,7 @@ const comResposta = (id: number, resposta: string) => {
 const editor = async () => within(await screen.findByRole('dialog')).getByRole('textbox', { name: 'Resposta' })
 async function editarArtigo(resposta: string, rotas: Record<string, Rota> = {}) {
   const chamadas = tela('/univag/artigos', 'artigos', [comResposta(1, resposta)], { 'PUT /api/admin/artigos/1': () => [200, {}], ...rotas })
-  await userEvent.click(within(await item('Estágio obrigatório')).getByRole('button', { name: 'Editar' }))
+  await escolher('Estágio obrigatório', 'Editar')
   await editor()
   return chamadas
 }
@@ -178,18 +175,18 @@ describe('toasts', () => {
       'POST /api/admin/artigos/1/arquivar': () => [200, {}],
     })
     // salvar com 422: o detail no alert do diálogo e nenhum toast
-    await userEvent.click(within(await item('Ativo')).getByRole('button', { name: 'Editar' }))
+    await escolher('Ativo', 'Editar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Título repetido.')
     expect(avisos()).not.toHaveTextContent('Artigo salvo.')
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
-    await userEvent.click(within(await item('Rascunho')).getByRole('button', { name: 'Editar' }))
+    await escolher('Rascunho', 'Editar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo salvo.'))
-    await userEvent.click(within(await item('Rascunho')).getByRole('button', { name: 'Ativar' }))
+    await escolher('Rascunho', 'Ativar')
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo ativado.'))
-    await userEvent.click(within(await item('Rascunho')).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Rascunho', 'Arquivar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo arquivado.'))
   })
@@ -210,12 +207,12 @@ describe('toasts', () => {
     await userEvent.click(d.getByRole('button', { name: 'Enviar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento enviado.'))
 
-    await userEvent.click(within(await item('Edital')).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Edital', 'Arquivar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('O documento já foi arquivado.')
     expect(avisos()).not.toHaveTextContent('Documento arquivado.')
 
-    await userEvent.click(within(await item('Regulamento')).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Regulamento', 'Arquivar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento arquivado.'))
   })

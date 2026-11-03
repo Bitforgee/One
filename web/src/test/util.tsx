@@ -1,6 +1,7 @@
-import { render } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { vi } from 'vitest'
+import { expect, vi } from 'vitest'
 import { App } from '../App'
 import type { Me } from '../api'
 import type { Chamado } from '../chamado'
@@ -74,4 +75,33 @@ export function chamado(parcial: Partial<Chamado> = {}): Chamado {
     acoes: ['responder', 'cancelar'],
     ...parcial,
   }
+}
+
+// Abre o menu "Ações de <nome>" da linha e escolhe o item (layout-painel door 4).
+export async function escolher(nome: string, item: string) {
+  await userEvent.click(await screen.findByRole('button', { name: `Ações de ${nome}` }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+// Os itens do menu "Ações de <nome>", na ordem, deixando o menu fechado; sem o botão, lista vazia.
+export async function acoesDe(nome: string) {
+  const botao = screen.queryByRole('button', { name: `Ações de ${nome}` })
+  if (!botao) return []
+  await userEvent.click(botao)
+  const itens = (await screen.findAllByRole('menuitem')).map((i) => `${i.textContent}${i.getAttribute('data-variant') === 'destructive' ? '!' : ''}`)
+  await userEvent.keyboard('{Escape}')
+  return itens
+}
+
+// Os títulos de coluna da tabela, na ordem; "" é a coluna sem texto (a do menu).
+export const cabecalhos = (tabela = screen.getByRole('table')) => within(tabela).getAllByRole('columnheader').map((h) => h.textContent)
+
+// Lista vazia: uma linha só no corpo, com uma célula que ocupa todas as colunas e o texto de vazio (layout-painel AC 24).
+export function esperaLinhaVazia(texto: string, colunas: number, tabela = screen.getByRole('table')) {
+  const corpo = within(tabela).getAllByRole('row').slice(1)
+  expect(corpo).toHaveLength(1)
+  const celulas = within(corpo[0]).getAllByRole('cell')
+  expect(celulas).toHaveLength(1)
+  expect(celulas[0]).toHaveAttribute('colspan', String(colunas))
+  expect(celulas[0]).toHaveTextContent(texto)
 }

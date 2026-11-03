@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, me } from '../test/util'
+import { abrir, acoesDe, api, escolher, me } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const categorias = [{ id: 3, nome: 'Estágio', ativa: true }]
@@ -31,21 +31,21 @@ describe('documentos', () => {
 
     lista = [documento(1, 'Regulamento de estágio', 'INDEXADO', 12), documento(2, 'Calendário', 'PENDENTE', 1)]
     abrir('/univag/documentos')
-    const item = (await screen.findByText('Regulamento de estágio')).closest('[data-slot=card]') as HTMLElement
+    const item = (await screen.findByText('Regulamento de estágio')).closest('tr') as HTMLElement
     expect(within(item).getByText('ATIVO')).toBeInTheDocument()
     expect(within(item).getByText('Indexado')).toBeInTheDocument()
     expect(item).toHaveTextContent('Estágio · versão 2 · 12 páginas · Regulamento de estágio.pdf')
-    const outro = screen.getByText('Calendário').closest('[data-slot=card]') as HTMLElement
+    const outro = screen.getByText('Calendário').closest('tr') as HTMLElement
     expect(within(outro).getByText('Indexando')).toBeInTheDocument()
     expect(outro).toHaveTextContent('1 página')
 
-    await userEvent.click(within(item).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Regulamento de estágio', 'Arquivar')
     const dialogo = within(await screen.findByRole('dialog'))
     expect(chamadas.some((c) => c.metodo === 'POST')).toBe(false)
     await userEvent.click(dialogo.getByRole('button', { name: 'Voltar' }))
     expect(chamadas.some((c) => c.metodo === 'POST')).toBe(false)
 
-    await userEvent.click(within(item).getByRole('button', { name: 'Arquivar' }))
+    await escolher('Regulamento de estágio', 'Arquivar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))
     await screen.findByText('Regulamento de estágio')
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url)).toEqual(['/api/admin/documentos/1/arquivar'])
@@ -64,11 +64,24 @@ describe('documentos', () => {
     })
     abrir('/univag/artigos')
 
-    const de = async (titulo: string) => (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
+    const de = async (titulo: string) => (await screen.findByText(titulo)).closest('tr') as HTMLElement
     expect(within(await de('Indexado já')).getByText('Indexado')).toBeInTheDocument()
     expect(within(await de('Recém ativado')).getByText('Indexando')).toBeInTheDocument()
     expect(within(await de('Sem sucesso')).getByText('Falhou')).toBeInTheDocument()
     const rascunho = await de('Rascunho')
     for (const rotulo of ['Indexado', 'Indexando', 'Falhou']) expect(within(rascunho).queryByText(rotulo)).not.toBeInTheDocument()
+  })
+
+  // layout-painel C25 (AC 25): ativo -> Nova versão e Arquivar (destrutivo); arquivado -> sem botão
+  it('ações de documento no menu', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/documentos': () => [200, [documento(1, 'No ar', 'INDEXADO', 1), { ...documento(2, 'Guardado', 'INDEXADO', 1), estado: 'ARQUIVADO' }]],
+      'GET /api/admin/categorias': () => [200, categorias],
+    })
+    abrir('/univag/documentos')
+    await screen.findByText('No ar')
+    expect(await acoesDe('No ar')).toEqual(['Nova versão', 'Arquivar!'])
+    expect(screen.queryByRole('button', { name: 'Ações de Guardado' })).not.toBeInTheDocument()
   })
 })

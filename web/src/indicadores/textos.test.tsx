@@ -12,6 +12,8 @@ const Indicadores = [
   '12,3%', '1,5 h', '—',
   'Categorias por conversas', 'Categorias por chamados', 'Categoria', 'Total', 'Boleto3',
   'Escolher período no calendário',
+  // os 4 rodapés dos destaques (*(novo)*)
+  'Resolvidas sem reabertura, sobre as conversas com desfecho', 'Chamados não fechados neste momento', 'Resolvidas pelo assistente, sobre as conversas com desfecho', 'Da abertura à primeira resposta pública',
 ]
 // o calendário do ptBR: título do mês, dias da semana e números dos dias (*(novo, do ptBR)*)
 const Calendario = ['novembro 2026', 'dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab', ...Array.from({ length: 31 }, (_, i) => String(i + 1))]

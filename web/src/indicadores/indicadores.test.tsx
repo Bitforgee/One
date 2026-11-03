@@ -61,8 +61,52 @@ describe('indicadores', () => {
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
     expect(screen.queryByText('Sem dados no período')).not.toBeInTheDocument()
     expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(1)
-    // os rankings ficam um embaixo do outro no celular e lado a lado a partir do md
-    expect(conversas.parentElement).toHaveClass('grid-cols-1', '@3xl/main:grid-cols-2')
+    // os rankings ficam um embaixo do outro no celular e lado a lado a partir de 896 px do main
+    expect(conversas.parentElement).toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')
+  })
+
+  // layout-painel C16 (AC 16) e C18 (AC 18): os 13 rótulos e valores de hoje, os 4 de destaque primeiro com o rodapé
+  const dadosCheios = {
+    semDados: false, alunosAtivos: 12, conversas: 5, taxaAutoatendimento: 0.456, taxaEscalonamento: 0.2, taxaAbandono: 0.1, taxaPerguntasSemArtigo: 0.1,
+    chamadosAbertos: 4, chamadosResolvidos: 2, tempoPrimeiraRespostaHoras: 1.5, tempoResolucaoHoras: 3, roteamentoCorreto: 0.5, taxaReabertura: 0.1,
+    principaisCategorias: { porConversas: null, porChamados: null }, indicadorPrincipal: 0.123,
+  }
+  const cartoesDe = (grade: Element) => Array.from(grade.children).map((c) => [...c.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent))
+
+  async function painel() {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 15, 10, 0))
+    api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/indicadores?de=2026-11-01&ate=2026-11-15': () => [200, dadosCheios] })
+    abrir('/univag/indicadores')
+    const principal = (await screen.findByText('Indicador principal')).closest('[data-slot=card]') as HTMLElement
+    return principal.parentElement as HTMLElement
+  }
+
+  it('destaques de Indicadores', async () => {
+    const destaques = await painel()
+    expect(cartoesDe(destaques)).toEqual([
+      ['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho'],
+      ['Chamados abertos agora', '4', 'Chamados não fechados neste momento'],
+      ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho'],
+      ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública'],
+    ])
+    // vêm antes de qualquer outro cartão
+    expect(destaques.previousElementSibling?.tagName).toBe('FORM')
+  })
+
+  it('indicadores compactos na ordem', async () => {
+    const compactos = (await painel()).nextElementSibling!
+    expect(cartoesDe(compactos)).toEqual([
+      ['Alunos ativos', '12'],
+      ['Conversas', '5'],
+      ['Escalonamento', '20%'],
+      ['Abandono', '10%'],
+      ['Perguntas sem artigo', '10%'],
+      ['Chamados resolvidos', '2'],
+      ['Tempo de resolução', '3 h'],
+      ['Roteamento correto', '50%'],
+      ['Reabertura', '10%'],
+    ])
   })
 
   it('ranking que a API não manda não aparece', async () => {

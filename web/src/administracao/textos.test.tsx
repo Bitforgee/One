@@ -2,11 +2,11 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
-import { abrir, api, me, type Rota } from '../test/util'
+import { abrir, api, escolher, me, type Rota } from '../test/util'
 
 // Linhas 13, 14 e 15 de ## Screens (Usuários, Matrículas, Cadastros); nomes, CPF, números e arquivos vêm do fixture.
 const Usuarios = [
-  'Usuários', 'Novo', 'Desativado', 'CPF', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum item cadastrado.',
+  'Usuários', 'Novo', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum item cadastrado.',
   'Novo usuário', 'Editar usuário', 'Nome', 'E-mail', 'Papéis', 'Setores do atendente', 'Senha temporária (opcional)',
   'Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.', 'Cancelar', 'Salvar',
   'A pessoa perde o acesso na próxima requisição. Conversas, chamados e histórico ficam guardados; os chamados em que ela era responsável voltam para a fila do setor.',
@@ -20,7 +20,7 @@ const Matriculas = [
 ]
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']
 const Cadastros = [
-  'Cadastros', 'Novo', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
+  'Cadastros', 'Novo', 'Detalhe', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
   'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'setor', 'coordenação do curso', '·', 'Nenhum item cadastrado.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Destino', 'Setor fixo', 'Coordenação do curso da matrícula', 'Setor', 'Escolha o setor', 'Escolha a categoria', 'Título', 'Texto',
@@ -72,7 +72,9 @@ describe('textos', () => {
     t.conferir(tela(), fixture)
 
     // "Editar usuário" com setores, e o toast
-    await userEvent.click(within(tela()).getAllByRole('button', { name: 'Editar' })[0])
+    await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Carla' }))
+    t.conferir(await screen.findByRole('menu'), fixture)
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Editar' }))
     const editar = await screen.findByRole('dialog')
     t.conferir(editar, fixture)
     await userEvent.click(within(editar).getByRole('button', { name: 'Salvar' }))
@@ -85,7 +87,7 @@ describe('textos', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
     // "Desativar {nome}?" e o toast
-    await userEvent.click(within(tela()).getAllByRole('button', { name: 'Desativar' })[1])
+    await escolher('Davi', 'Desativar')
     t.conferir(await screen.findByRole('dialog'), ['Davi'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Usuário desativado.'))

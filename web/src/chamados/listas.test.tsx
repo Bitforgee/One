@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import { onlineManager } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
-import { abrir, api, me, type Rota } from '../test/util'
+import { abrir, api, cabecalhos, esperaLinhaVazia, me, type Rota } from '../test/util'
 
 const atendente = me({ papeis: ['ALUNO', 'ATENDENTE'] })
 
@@ -19,11 +19,11 @@ describe('listas de chamados', () => {
       ],
     ])
     abrir('/univag/fila')
-    const primeiro = (await screen.findByText('ONE-1')).closest('a') as HTMLElement
-    expect(primeiro).toHaveAttribute('href', '/univag/chamados/ONE-1')
+    const primeiro = (await screen.findByText('ONE-1')).closest('tr') as HTMLElement
+    expect(within(primeiro).getByText('ONE-1')).toHaveAttribute('href', '/univag/chamados/ONE-1')
     expect(within(primeiro).getByText('Aberto')).toBeInTheDocument()
-    expect(primeiro).toHaveTextContent(/Boleto · sem responsável · 1 dia$/)
-    const segundo = screen.getByText('ONE-2').closest('a') as HTMLElement
+    expect(primeiro).toHaveTextContent('Boleto · sem responsável · 1 dia')
+    const segundo = screen.getByText('ONE-2').closest('tr') as HTMLElement
     expect(within(segundo).getByText('Em atendimento')).toBeInTheDocument()
     expect(segundo).toHaveTextContent('Matrícula · Carla · 3 dias')
     expect(screen.queryByText('Nenhum chamado na fila dos seus setores.')).not.toBeInTheDocument()
@@ -33,10 +33,38 @@ describe('listas de chamados', () => {
   it('Minhas solicitações lista os chamados do aluno sem a linha da equipe', async () => {
     lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])
     abrir('/univag/solicitacoes')
-    const item = (await screen.findByText('ONE-3')).closest('a') as HTMLElement
-    expect(item).toHaveAttribute('href', '/univag/chamados/ONE-3')
-    expect(item).toHaveTextContent('ONE-3Resolvidohistórico')
+    const item = (await screen.findByText('ONE-3')).closest('tr') as HTMLElement
+    expect(within(item).getByText('ONE-3')).toHaveAttribute('href', '/univag/chamados/ONE-3')
+    expect(item).toHaveTextContent('ONE-3históricoResolvido')
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
+  })
+
+  // layout-painel C21 (AC 21)
+  it('colunas das listas de chamados', async () => {
+    lista('fila', () => [200, [{ numero: 'ONE-1', titulo: 'boleto', categoria: 'Boleto', estado: 'ABERTO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 1 }]])
+    const montada = abrir('/univag/fila')
+    await screen.findByText('ONE-1')
+    expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
+    montada.unmount()
+
+    lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])
+    abrir('/univag/solicitacoes')
+    await screen.findByText('ONE-3')
+    expect(cabecalhos()).toEqual(['Número', 'Título', 'Estado'])
+  })
+
+  // layout-painel C24 (AC 24)
+  it('lista vazia numa linha', async () => {
+    lista('fila', () => [200, []])
+    const montada = abrir('/univag/fila')
+    await screen.findByText('Nenhum chamado na fila dos seus setores.')
+    esperaLinhaVazia('Nenhum chamado na fila dos seus setores.', 6)
+    montada.unmount()
+
+    lista('meus', () => [200, []])
+    abrir('/univag/solicitacoes')
+    await screen.findByText(/Você ainda não tem solicitações/)
+    esperaLinhaVazia('Você ainda não tem solicitações. Fale com o assistente.', 3)
   })
 
   it('lista carregando mostra o Spinner e nada mais', async () => {
