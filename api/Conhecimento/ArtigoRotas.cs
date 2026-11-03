@@ -3,12 +3,10 @@ using One.Api.Dados;
 
 namespace One.Api.Conhecimento;
 
-// Os auxiliares que mais de um caso de uso de artigo usa.
 public static class ArtigoRotas
 {
     public static void Mapear(RouteGroupBuilder api) => VerVersaoArtigo.Mapear(api);
 
-    // AC 99 e 100: título, ao menos uma pergunta, categoria e resposta; links só http(s).
     public static async Task<IResult?> Validar(OneDb db, string? titulo, string[]? perguntas, long? categoriaId, string? resposta, string[]? links, DateOnly? visivelDe, DateOnly? visivelAte)
     {
         if (TituloEPerguntas(titulo, perguntas) is { } erro) return erro;
@@ -28,7 +26,7 @@ public static class ArtigoRotas
         if (string.IsNullOrWhiteSpace(resposta) || resposta.Length > 8000) return Problemas.Invalido("Informe a resposta, com até 8000 caracteres.", "resposta");
         if ((links ?? []).Any(LinkInvalido))
             return Problemas.Invalido("Todo link deve começar com https:// ou http://.", "links");
-        if (visivelDe > visivelAte) return Problemas.Invalido("O início da validade deve ser anterior ou igual ao fim.", "visivelDe"); // AC 150
+        if (visivelDe > visivelAte) return Problemas.Invalido("O início da validade deve ser anterior ou igual ao fim.", "visivelDe");
         return null;
     }
 
@@ -46,7 +44,6 @@ public static class ArtigoRotas
 
     public static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
 
-    // S7: o administrador escreve, versiona, ativa e arquiva; nada é apagado (versões append-only, door 6).
     public static void MapearAdmin(RouteGroupBuilder admin)
     {
         ListarArtigos.Mapear(admin);

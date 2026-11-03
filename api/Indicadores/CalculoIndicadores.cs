@@ -7,7 +7,6 @@ public record ChamadoLido(long Id, DateTime CriadoEm, string Estado, string? Mot
 public record RespostaLida(long ChamadoId, long? AutorId, DateTime CriadaEm);
 public record ConversaLida(long AlunoId, string? Desfecho, bool SemBase);
 
-// O que a rota lê do banco. Conversas e as categorias citadas nelas são nulas com escopo de setor: conversa não pertence a setor.
 public record Massa(List<ChamadoLido> Chamados, List<EventoChamado> Eventos, List<RespostaLida> Respostas,
     List<ConversaLida>? Conversas, List<long>? CategoriasDasConversas, Dictionary<long, string> Categorias);
 
@@ -19,14 +18,11 @@ public record Resultado(DateOnly De, DateOnly Ate, long? SetorId, bool SemDados,
     int ChamadosAbertos, int ChamadosResolvidos, double? TempoPrimeiraRespostaHoras, double? TempoResolucaoHoras,
     double? RoteamentoCorreto, double? TaxaReabertura, PrincipaisCategorias PrincipaisCategorias, double? IndicadorPrincipal);
 
-// S11: os 14 indicadores do Quadro 12 (conteudo.md), com as definições da seção I das regras de negócio, sem banco.
 public static class CalculoIndicadores
 {
-    // AC 9: o período são dias inteiros no fuso da instituição
     public static (DateTime Inicio, DateTime Fim) Periodo(DateOnly de, DateOnly ate, TimeZoneInfo fuso) =>
         (TimeZoneInfo.ConvertTimeToUtc(de.ToDateTime(TimeOnly.MinValue), fuso), TimeZoneInfo.ConvertTimeToUtc(ate.AddDays(1).ToDateTime(TimeOnly.MinValue), fuso));
 
-    // AC 134: "estão ou estiveram" no setor: o atual ou o de origem de algum encaminhamento (o evento guarda o nome do setor)
     public static List<ChamadoLido> DosSetores(List<ChamadoLido> chamados, List<EventoChamado> eventos, List<long> setores, List<string> nomes)
     {
         var porChamado = eventos.ToLookup(e => e.ChamadoId);
@@ -58,7 +54,6 @@ public static class CalculoIndicadores
 
     record IndicadoresDeConversa(int? AlunosAtivos, int? Total, double? Autoatendimento, double? Escalonamento, double? Abandono, double? SemArtigo);
 
-    // Com escopo de setor (conversas nulas), as contagens de conversa ficam nulas e as taxas sem base.
     static IndicadoresDeConversa DeConversa(List<ConversaLida>? lidas)
     {
         var conversas = lidas ?? [];
@@ -74,7 +69,6 @@ public static class CalculoIndicadores
     static IEnumerable<EventoChamado> Resolucoes(IEnumerable<EventoChamado> eventos) =>
         eventos.Where(e => e.Tipo == TiposEvento.Transicao && e.Para == Resolvido);
 
-    // AC 133: da criação à última resolução, sem o tempo em AGUARDANDO_ALUNO
     static TimeSpan Resolucao(ChamadoLido c, IEnumerable<EventoChamado> eventos)
     {
         var fimResolucao = Resolucoes(eventos).Last().CriadoEm;
@@ -88,7 +82,6 @@ public static class CalculoIndicadores
         return fimResolucao - c.CriadoEm - aguardando;
     }
 
-    // Primeira mensagem pública de quem não é o solicitante, por chamado.
     static double? PrimeiraResposta(Massa m, List<ChamadoLido> criados)
     {
         var solicitante = m.Chamados.ToDictionary(c => c.Id, c => c.SolicitanteId);

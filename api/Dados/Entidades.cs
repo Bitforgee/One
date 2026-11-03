@@ -42,7 +42,6 @@ public static class EstadosChamado
     public const string Fechado = "FECHADO";
 }
 
-// Valores gravados em evento_chamado.tipo, mensagem_chamado.tipo e chamado.motivo_fechamento (.specs/GLOSSARIO.md).
 public static class TiposEvento
 {
     public const string Criacao = "CRIACAO";

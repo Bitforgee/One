@@ -7,7 +7,6 @@ namespace One.Api.Chamados;
 
 public sealed record ListarChamados(string? Escopo, string? Estado, Usuario Usuario) : IRequest<IResult>
 {
-    // Um item de "meus chamados"; a fila do atendente tem o item próprio, com categoria, responsável e dias.
     public sealed record Resposta(string Numero, string Titulo, string Estado, DateTime CriadoEm);
 
     public sealed record RespostaDaFila(string Numero, string Titulo, string Categoria, string Estado, string? Responsavel, DateTime CriadoEm, int Dias);
@@ -34,7 +33,6 @@ public sealed class ListarChamadosHandler(OneDb db, TimeProvider relogio) : IReq
             .Select(c => new ListarChamados.Resposta(c.Numero, c.Titulo, c.Estado, c.CriadoEm))
             .ToListAsync();
 
-    // Fila dos setores do atendente, do mais antigo para o mais novo.
     async Task<List<ListarChamados.RespostaDaFila>> Fila(Usuario u, string? estado, DateTime agora)
     {
         var setores = db.AtendenteSetores.Where(a => a.UsuarioId == u.Id).Select(a => a.SetorId);

@@ -1,6 +1,5 @@
 namespace One.Api.Conhecimento;
 
-// Arquivo enviado lido para bytes, com o tipo conferido pela assinatura: anexos de chamado e PDFs de documento.
 public static class Arquivos
 {
     public const string Pdf = "application/pdf";
@@ -9,7 +8,6 @@ public static class Arquivos
 
     public record Lido(byte[] Bytes, string Tipo, string Nome);
 
-    // door 13: o tipo vem da assinatura do arquivo, não do nome nem do Content-Type enviado.
     static string? TipoPelaAssinatura(byte[] b) => b switch
     {
         [0x25, 0x50, 0x44, 0x46, ..] => Pdf,
@@ -18,7 +16,6 @@ public static class Arquivos
         _ => null,
     };
 
-    // 413 acima de maximo bytes; 415 se a assinatura não é de um dos tipos aceitos. As mensagens são de quem chama.
     public static async Task<(Lido?, IResult?)> Ler(IFormFile f, long maximo, string[] aceitos, string grandeDemais, string tipoRecusado)
     {
         if (f.Length > maximo) return (null, Problemas.Erro(413, grandeDemais));

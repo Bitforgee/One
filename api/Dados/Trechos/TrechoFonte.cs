@@ -2,7 +2,6 @@ using Pgvector;
 
 namespace One.Api.Dados.Trechos;
 
-// RAG, door R3: unidade da busca e da citação; pertence a exatamente uma versão, de artigo ou de documento
 public class TrechoFonte : IDaInstituicao
 {
     public long Id { get; set; }

@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// A validação e a aplicação do cadastro de Categoria, sobre os campos; ListarCategorias e AlterarCategoria usam as daqui.
 public sealed record CriarCategoria(CriarCategoria.Entrada Corpo) : IRequest<IResult>
 {
     public sealed record Entrada(string? Nome, bool? Ativa);
@@ -18,7 +17,7 @@ public sealed record CriarCategoria(CriarCategoria.Entrada Corpo) : IRequest<IRe
     {
         if (!AdminRotas.Nome(nome)) return Problemas.Invalido("Informe o nome da categoria.", "nome");
         if (atual is { Padrao: true } && (nome != atual.Nome || ativa == false))
-            return Problemas.Invalido("A categoria \"Não classificado\" não pode ser renomeada nem desativada.", "nome"); // AC 117
+            return Problemas.Invalido("A categoria \"Não classificado\" não pode ser renomeada nem desativada.", "nome");
         return await db.Categorias.AnyAsync(c => c.Nome == nome && c.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe uma categoria com este nome.") : null;
     }
 }

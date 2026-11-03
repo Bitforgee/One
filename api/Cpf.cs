@@ -2,7 +2,6 @@ namespace One.Api;
 
 public static class Cpf
 {
-    // Aceita só dígitos, pontos e traço; devolve os 11 dígitos ou null.
     public static string? Normalizar(string? texto)
     {
         if (texto is null) return null;

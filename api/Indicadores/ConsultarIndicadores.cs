@@ -6,7 +6,6 @@ using One.Api.Dados;
 
 namespace One.Api.Indicadores;
 
-// S11: a rota confere quem pede e o período, lê do banco e entrega a conta a CalculoIndicadores.
 public sealed record ConsultarIndicadores(DateOnly? De, DateOnly? Ate, long? SetorId, Usuario Usuario, Instituicao Instituicao) : IRequest<IResult>
 {
     public static void Mapear(RouteGroupBuilder g) =>
@@ -30,7 +29,6 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
         return Results.Ok(CalculoIndicadores.Calcular(massa, de.Value, ate.Value, fuso, setorId));
     }
 
-    // AC 134: o atendente vê só os setores dele; o administrador, a instituição ou o setor pedido. Null = a instituição toda.
     async Task<(List<long>?, IResult?)> Escopo(Usuario u, long? setorId)
     {
         if (!u.Tem(Papeis.Administrador))
@@ -43,10 +41,8 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
         return await db.Setores.AnyAsync(s => s.Id == setorId) ? ([setorId.Value], null) : (null, Problemas.Invalido("Setor inexistente.", "setorId"));
     }
 
-    // shortcut: calcula em memória sobre os chamados do escopo; com milhares de chamados por instituição, agregar em SQL
     async Task<Massa> Ler(List<long>? setores, (DateTime Inicio, DateTime Fim) periodo)
     {
-        // AC 148: chamado duplicado não conta
         var todos = await db.Chamados.Where(c => c.MotivoFechamento != MotivosFechamento.Duplicado || c.MotivoFechamento == null)
             .Select(c => new ChamadoLido(c.Id, c.CriadoEm, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)).ToListAsync();
         var eventos = await db.EventosChamado.Where(e => e.Tipo == TiposEvento.Transicao || e.Tipo == TiposEvento.Encaminhamento)
@@ -62,7 +58,6 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
         return new Massa(todos, eventos, respostas, conversas, citadas, categorias);
     }
 
-    // Conversas do período e a categoria de cada fonte citada nelas (uma vez por conversa e categoria).
     async Task<(List<ConversaLida>, List<long>)> Conversas(DateTime inicio, DateTime fim)
     {
         var conversas = (await db.Conversas.Where(c => c.CriadaEm >= inicio && c.CriadaEm < fim)

@@ -3,7 +3,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// door 11: e-mails de chamado entram em email_saida na transação da ação; o agendador envia.
 public static class Avisos
 {
     public static string Link(IConfiguration cfg, Instituicao i, Chamado c) =>
@@ -15,21 +14,17 @@ public static class Avisos
         db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = assunto, Corpo = corpo, ProximaTentativa = agora });
     }
 
-    // AC 122
     public static Task NovaResposta(OneDb db, IConfiguration cfg, Instituicao i, Chamado c, DateTime agora) =>
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero}: nova resposta",
             $"Sua solicitação {c.Numero} recebeu uma nova resposta.\n\nPara ler e responder, abra:\n{Link(cfg, i, c)}\n");
 
-    // AC 123
     public static Task Resolvido(OneDb db, IConfiguration cfg, Prazos prazos, Instituicao i, Chamado c, string texto, DateTime agora) =>
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero} foi resolvido",
             $"Sua solicitação {c.Numero} foi resolvida:\n\n{texto}\n\nPara confirmar ou rejeitar a resolução (até {prazos.RejeicaoDias} dias), abra:\n{Link(cfg, i, c)}\n");
 
-    // AC 10: datas no fuso da instituição do item, no formato dd/mm/aaaa hh:mm
     public static string DataLocal(Instituicao i, DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(utc, TimeZoneInfo.FindSystemTimeZoneById(i.Fuso)).ToString("dd/MM/yyyy HH:mm");
 
-    // AC 145
     public static Task AguardaResposta(OneDb db, IConfiguration cfg, Instituicao i, Chamado c, DateTime agora) =>
         Enfileirar(db, c, agora, $"[{i.Nome}] {c.Numero} aguarda sua resposta",
             $"O atendimento da solicitação {c.Numero} está esperando uma resposta sua desde {DataLocal(i, c.AguardandoDesde ?? agora)} (horário da instituição).\n\nPara responder, abra:\n{Link(cfg, i, c)}\n");

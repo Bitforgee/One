@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Conhecimento;
 
-// Só atendentes e administradores veem a base interna; para os demais a versão "não existe" (AC 40).
 public sealed record VerVersaoArtigo(long Id, Usuario Usuario) : IRequest<IResult>
 {
     public sealed record Resposta(string Titulo, string Texto, IReadOnlyList<string> Links, long? VersaoAtivaAtualId);

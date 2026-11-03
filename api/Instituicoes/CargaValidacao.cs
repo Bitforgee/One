@@ -9,16 +9,13 @@ public record CategoriaCarga(string? Nome);
 public record RegraCarga(string? Categoria, string? Setor, bool CoordenacaoDoCurso);
 public record ArtigoCarga(string? Titulo, List<string>? Perguntas, string? Categoria, string? Resposta, List<string>? Links);
 
-// O que a instituição já tem, pelo nome.
 public record Existentes(Dictionary<string, Setor> Setores, Dictionary<string, Categoria> Categorias, HashSet<string> Cursos, List<long> CategoriasComRegra);
 
 public record RegraPlanejada(RegraRoteamento Regra, Categoria Categoria, Setor? Setor);
 public record ArtigoPlanejado(ArtigoCarga Artigo, Categoria Categoria);
 
-// O que a carga grava: setores e categorias (os existentes e os novos), cursos, regras e artigos.
 public record Plano(Dictionary<string, Setor> Setores, Dictionary<string, Categoria> Categorias, List<Curso> Cursos, List<RegraPlanejada> Regras, List<ArtigoPlanejado> Artigos);
 
-// Validação do arquivo da carga, sem gravar: os erros vêm na ordem do arquivo; com algum erro o comando não grava nada.
 public static class CargaValidacao
 {
     public static (List<string> Erros, Plano Plano) Validar(ArquivoCarga arq, Existentes ex)
@@ -32,7 +29,6 @@ public static class CargaValidacao
         return (erros, new Plano(setores, categorias, cursos, regras, artigos));
     }
 
-    // Setores e categorias: nome obrigatório e único na instituição e no arquivo.
     static Dictionary<string, T> Nomeados<T>(IEnumerable<string?>? nomes, Dictionary<string, T> existentes, string campo, string repetido, Func<string, T> novo, List<string> erros)
     {
         var todos = new Dictionary<string, T>(existentes);
@@ -71,7 +67,6 @@ public static class CargaValidacao
         return regras;
     }
 
-    // Setor ou coordenação do curso, um dos dois.
     static Setor? Destino(RegraCarga r, int i, Dictionary<string, Setor> setores, List<string> erros)
     {
         Setor? setor = null;

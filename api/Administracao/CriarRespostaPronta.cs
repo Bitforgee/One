@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// A validação e a aplicação do cadastro de RespostaPronta, sobre os campos; ListarRespostasProntas e AlterarRespostaPronta usam as daqui.
 public sealed record CriarRespostaPronta(CriarRespostaPronta.Entrada Corpo) : IRequest<IResult>
 {
     public sealed record Entrada(long? SetorId, string? Titulo, string? Texto);

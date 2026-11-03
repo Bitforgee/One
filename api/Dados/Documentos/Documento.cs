@@ -1,7 +1,5 @@
 namespace One.Api.Dados.Documentos;
 
-// RAG, door R4: PDF da instituição, fonte interna do assistente como o artigo (AD-012)
-// door 3: o documento guarda o estado e o número das versões; as versões são append-only e o banco não é consultado aqui.
 public class Documento : IDaInstituicao
 {
     readonly List<VersaoDocumento> _versoes = [];
@@ -22,7 +20,6 @@ public class Documento : IDaInstituicao
         return d;
     }
 
-    // AC 19 e 20: versão nova só em documento ATIVO; o número tem de passar o de toda versão que o documento guarda.
     public Recusa? NovaVersao(VersaoDocumento versao)
     {
         if (Estado == EstadosDocumento.Arquivado) return new Recusa("O documento está arquivado.");

@@ -8,7 +8,6 @@ using One.Api.Dados;
 
 namespace One.Api.Acesso;
 
-// door 6: o handler devolve o principal e a resposta; o cookie é emitido no lambda, que tem o HttpContext.
 public sealed record ResultadoLogin(ClaimsPrincipal? Principal, IResult Resposta);
 
 public sealed record Login(Login.Entrada Corpo) : IRequest<ResultadoLogin>
@@ -33,7 +32,6 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
 {
     const string CredenciaisInvalidas = "CPF ou senha inválidos.";
 
-    // Hash de uma senha qualquer: o login com CPF desconhecido gasta o mesmo tempo que o de CPF existente.
     static readonly string HashFicticio = new PasswordHasher<Usuario>().HashPassword(new Usuario(), "senha-ficticia");
 
     public async ValueTask<ResultadoLogin> Handle(Login m, CancellationToken ct)

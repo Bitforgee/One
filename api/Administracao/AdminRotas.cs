@@ -11,7 +11,6 @@ public static class AdminRotas
 
     public static void Mapear(RouteGroupBuilder api)
     {
-        // AC 104: todo /api/admin/* exige o papel administrador.
         var admin = api.MapGroup("/admin").AddEndpointFilter(async (c, next) =>
             c.HttpContext.Usuario().Tem(Papeis.Administrador) ? await next(c) : Problemas.Erro(403, "Só administradores podem usar esta área."));
 

@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// AC 147: respostas prontas do setor, só para quem atende nele
 public sealed record RespostasProntasDoSetor(long? SetorId, Usuario Usuario) : IRequest<IResult>
 {
     public sealed record Resposta(long Id, string Titulo, string Texto);

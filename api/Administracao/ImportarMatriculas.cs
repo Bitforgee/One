@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// door 15 e AC 105 a 107: tudo ou nada; atualiza alunos pelo CPF e matrículas pelo número, dentro da instituição.
 public sealed record ImportarMatriculas(IFormCollection Form) : IRequest<IResult>
 {
     public sealed record Resposta(int Criados, int Atualizados);
@@ -37,7 +36,6 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
 
     static string Campo(LinhaCsv l, int i) => l.Campos.ElementAtOrDefault(i) ?? "";
 
-    // CPF que já usa cada matrícula e cada e-mail do arquivo na instituição.
     async Task<(Dictionary<string, string>, Dictionary<string, string>)> Donos(List<LinhaCsv> linhas)
     {
         var numeros = linhas.Select(l => Campo(l, 3)).ToList();
@@ -56,7 +54,7 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         var (criados, atualizados) = (0, 0);
         foreach (var l in validas)
         {
-            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(new Usuario { Cpf = l.Cpf }).Entity; // sem senha: entra pelo primeiro acesso
+            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(new Usuario { Cpf = l.Cpf }).Entity;
             u.Nome = l.Nome;
             u.Email = l.Email;
             if (!u.Tem(Papeis.Aluno)) u.Papeis.Add(new UsuarioPapel { Papel = Papeis.Aluno });

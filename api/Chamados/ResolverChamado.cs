@@ -22,7 +22,7 @@ public sealed class ResolverChamadoHandler(OneDb db, AcessoChamado a) : IRequest
     public async ValueTask<IResult> Handle(ResolverChamado m, CancellationToken ct)
     {
         a.Chamado.Resolver(a.Usuario.Id, a.Usuario.Nome, m.Corpo.Texto!, a.Agora);
-        await Avisos.Resolvido(db, a.Cfg, a.Prazos, a.Instituicao, a.Chamado, m.Corpo.Texto!, a.Agora); // AC 123
+        await Avisos.Resolvido(db, a.Cfg, a.Prazos, a.Instituicao, a.Chamado, m.Corpo.Texto!, a.Agora);
         return Results.Empty;
     }
 }

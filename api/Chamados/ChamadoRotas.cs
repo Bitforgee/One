@@ -3,12 +3,10 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// Consulta do chamado: listas, detalhe, anexo e respostas prontas. As ações ficam em AcoesChamado.
 public static class ChamadoRotas
 {
     public static IResult NaoEncontrado() => Problemas.Erro(404, "Chamado não encontrado.");
 
-    // Visível ao aluno solicitante e aos atendentes do setor atual; para os demais o chamado "não existe" (AC 72).
     public static async Task<(Chamado?, string?)> Carregar(OneDb db, Usuario u, string numero)
     {
         var c = await db.Chamados.FirstOrDefaultAsync(x => x.Numero == numero);

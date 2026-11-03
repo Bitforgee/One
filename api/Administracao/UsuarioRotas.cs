@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// AC 108 a 112: usuários da instituição, com os papéis e os setores do atendente.
 public static class UsuarioRotas
 {
     static readonly string[] PapeisValidos = [Papeis.Aluno, Papeis.Atendente, Papeis.Administrador];
@@ -15,11 +14,9 @@ public static class UsuarioRotas
         ListarUsuarios.Mapear(admin);
         CriarUsuario.Mapear(admin);
         AlterarUsuario.Mapear(admin);
-        // AC 111 e 112: nada do histórico some; os chamados do atendente voltam para a fila do setor.
         DesativarUsuario.Mapear(admin);
     }
 
-    // 400 nos campos, 409 em CPF ou e-mail repetidos na instituição (AC 108, AC 109).
     public static async Task<IResult?> Validar(OneDb db, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, long id) =>
         Pessoa(cpf, nome, email) ?? await PapeisESetores(db, senhaTemporaria, papeis, setores) ?? await Repetidos(db, cpf, email, id);
 
@@ -50,7 +47,6 @@ public static class UsuarioRotas
         return null;
     }
 
-    // Grava o usuário, os papéis e os setores num SaveChanges só (AC 30 do refatoracao-solid).
     public static async Task Gravar(OneDb db, Usuario u, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, IPasswordHasher<Usuario> hasher)
     {
         u.Cpf = Cpf.Normalizar(cpf)!;
@@ -61,13 +57,12 @@ public static class UsuarioRotas
         if (senhaTemporaria is not null)
         {
             u.SenhaHash = hasher.HashPassword(u, senhaTemporaria);
-            u.DeveTrocarSenha = true; // AC 110
+            u.DeveTrocarSenha = true;
         }
         await Setores(db, u, papeis!.Contains(Papeis.Atendente) ? setores!.Distinct().ToList() : []);
         await db.SaveChangesAsync();
     }
 
-    // O vínculo de um usuário novo leva o id temporário dele; o EF troca pelo id gerado na mesma gravação.
     static async Task Setores(OneDb db, Usuario u, List<long> setores)
     {
         var atuais = await db.AtendenteSetores.Where(a => a.UsuarioId == u.Id).ToListAsync();

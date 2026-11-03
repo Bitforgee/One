@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// door 5: a mensagem de uma das 9 ações do chamado; o AgirNoChamado roda antes do handler de toda mensagem que a implementa.
 public interface IAcaoChamado : IRequest<IResult>
 {
     string Numero { get; }
@@ -16,12 +15,9 @@ public interface IAcaoChamado : IRequest<IResult>
     ValueTask<IResult?> Validar(AcessoChamado a, OneDb db);
 }
 
-// Pipeline de toda ação: 404 visibilidade, 403 papel, 400 corpo, 409 estado; depois o handler aplica e o behavior grava numa
-// transação. O handler devolve Results.Empty quando aplicou, ou a recusa.
 public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado acesso, TimeProvider relogio, Prazos prazos, IConfiguration cfg)
     : IPipelineBehavior<TMessage, TResponse> where TMessage : IAcaoChamado
 {
-    // TResponse é sempre IResult: IAcaoChamado é IRequest<IResult>
     public async ValueTask<TResponse> Handle(TMessage m, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken ct) =>
         (TResponse)await Agir(m, async () => (IResult)(object)(await next(m, ct))!);
 

@@ -58,7 +58,6 @@ public class Program
         s.AddSingleton<Agendador>();
         s.AddHostedService(sp => sp.GetRequiredService<Agendador>());
         s.AddHttpClient("llm", Llm);
-        // vertical-slice-completa door 2: Scoped, para o handler usar o OneDb que Sessao.Validar filtrou nesta requisição
         s.AddMediator(o => { o.ServiceLifetime = ServiceLifetime.Scoped; o.PipelineBehaviors = [typeof(AgirNoChamado<,>)]; });
         s.AddScoped<AcessoChamado>();
         s.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
@@ -72,11 +71,9 @@ public class Program
             c.ProblemDetails.Type ??= $"https://developer.mozilla.org/docs/Web/HTTP/Reference/Status/{status}";
         });
 
-        // door 14: xmin divergente ou chave única violada por pedido simultâneo viram 409, sem mudar nada
         s.AddExceptionHandler(o => o.StatusCodeSelector = e => Problemas.Conflito(e) ? 409 : 500);
     }
 
-    // RAG door R1: chat e embeddings pelo mesmo cliente; o limite de 20 s é do relógio injetado (Embeddings.TempoLimite)
     static void Llm(IServiceProvider sp, HttpClient c)
     {
         var cfg = sp.GetRequiredService<IConfiguration>();

@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// A validação e a aplicação do cadastro de Setor, sobre os campos; ListarSetores e AlterarSetor usam as daqui.
 public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
 {
     public sealed record Entrada(string? Nome, bool? Triagem, bool? Ativo);
@@ -17,7 +16,6 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
     public static async Task<IResult?> Validar(OneDb db, string? nome, bool? triagem, Setor? atual)
     {
         if (!AdminRotas.Nome(nome)) return Problemas.Invalido("Informe o nome do setor.", "nome");
-        // AC 113: a instituição fica sempre com exatamente um setor de triagem
         var triagens = await db.Setores.CountAsync(s => s.Triagem && s.Id != (atual == null ? 0 : atual.Id)) + (triagem == true ? 1 : 0);
         if (triagens != 1) return Problemas.Invalido("A instituição precisa de exatamente um setor de triagem.", "triagem");
         return await db.Setores.AnyAsync(s => s.Nome == nome && s.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe um setor com este nome.") : null;

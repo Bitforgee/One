@@ -1,6 +1,5 @@
 namespace One.Api;
 
-// Os 5 prazos do atendimento (.specs/GLOSSARIO.md), lidos de Prazos:* uma vez no startup.
 public record Prazos(int AbandonoMinutos, int ConfirmacaoDias, int LembreteAguardandoDias, int ResolverAguardandoDias)
 {
     public static Prazos Ler(IConfiguration cfg) => new(
@@ -14,7 +13,6 @@ public record Prazos(int AbandonoMinutos, int ConfirmacaoDias, int LembreteAguar
     public TimeSpan Lembrete => TimeSpan.FromDays(LembreteAguardandoDias);
     public TimeSpan ResolverAguardando => TimeSpan.FromDays(ResolverAguardandoDias);
 
-    // O aluno pode rejeitar enquanto o chamado não fecha sozinho: o prazo de rejeição é o de confirmação.
     public int RejeicaoDias => ConfirmacaoDias;
     public TimeSpan Rejeicao => Confirmacao;
 }

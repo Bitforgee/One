@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// AC 129: o anexo segue o acesso ao chamado
 public sealed record BaixarAnexo(long Id, Usuario Usuario) : IRequest<IResult>
 {
     public static void Mapear(RouteGroupBuilder g) =>

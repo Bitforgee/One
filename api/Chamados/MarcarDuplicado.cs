@@ -24,7 +24,7 @@ public sealed class MarcarDuplicadoHandler(OneDb db, AcessoChamado a) : IRequest
     public async ValueTask<IResult> Handle(MarcarDuplicado m, CancellationToken ct)
     {
         a.Chamado.MarcarDuplicado(a.Usuario.Id, m.Corpo.NumeroOriginal!, a.Agora);
-        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, a.Chamado, a.Agora); // AC 122
+        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, a.Chamado, a.Agora);
         return Results.Empty;
     }
 }

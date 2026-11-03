@@ -10,7 +10,6 @@ public static class Transferencia
     public const string OrigemArtigo = "ARTIGO";
     public const string OrigemPadrao = "PADRAO";
 
-    // AC 66: com uma única matrícula ativa ela é usada; com mais de uma, o aluno escolhe.
     public static async Task<Matricula?> Matricula(OneDb db, long alunoId, long? matriculaId)
     {
         var ativas = await db.Matriculas.Where(m => m.UsuarioId == alunoId && m.Situacao == "ATIVA").ToListAsync();
@@ -22,8 +21,6 @@ public static class Transferencia
     public static IResult MatriculaInvalida() =>
         Problemas.Invalido("Escolha uma das suas matrículas ativas.", "matriculaId");
 
-    // Cria o chamado da conversa numa transação com o número do contador da instituição (door 5).
-    // A conversa (nova ou já gravada) precisa estar sem desfecho; quem chama já conferiu dono e matrícula.
     public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora)
     {
         await using var tx = await db.Database.BeginTransactionAsync();
@@ -48,7 +45,6 @@ public static class Transferencia
         conversa.Desfecho = Desfechos.Transferida;
         conversa.DesfechoEm = agora;
 
-        // o UPDATE trava a linha da instituição até o commit: transferências simultâneas nunca repetem número
         var numero = await db.Database
             .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")
             .ToListAsync();
@@ -59,7 +55,6 @@ public static class Transferencia
         return chamado;
     }
 
-    // AC 63 a 65: a regra da categoria decide o setor; sem regra ou sem coordenação, a triagem.
     static async Task<long> Setor(OneDb db, Categoria categoria, Matricula matricula)
     {
         var regra = categoria.Padrao ? null : await db.Regras.FirstOrDefaultAsync(r => r.CategoriaId == categoria.Id);

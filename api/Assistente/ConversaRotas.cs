@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Assistente;
 
-// As rotas da conversa e os auxiliares que mais de um caso de uso da conversa usa.
 public static class ConversaRotas
 {
     public const string Aluno = "ALUNO";
@@ -23,7 +22,6 @@ public static class ConversaRotas
     public static async Task<bool> PodeUsarAssistente(OneDb db, Usuario u) =>
         u.Tem(Papeis.Aluno) && await db.Matriculas.AnyAsync(m => m.UsuarioId == u.Id && m.Situacao == "ATIVA");
 
-    // 201 do chamado aberto pela transferência; cada caso de uso dá a forma da própria Resposta (numero, estado, setor).
     public static async Task<IResult> Transferido<TResposta>(OneDb db, Chamado chamado, Func<string, string, string, TResposta> resposta) =>
         Results.Created($"/api/chamados/{chamado.Numero}",
             resposta(chamado.Numero, chamado.Estado, await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync()));
@@ -46,7 +44,6 @@ public static class ConversaRotas
         VerConversa.Mapear(api);
         AvaliarConversa.Mapear(api);
         TransferirConversa.Mapear(api);
-        // AC 57: atendente antes de qualquer mensagem, sem chamar o provedor de IA.
         AtendimentoDireto.Mapear(api);
         EncerrarConversa.Mapear(api);
     }

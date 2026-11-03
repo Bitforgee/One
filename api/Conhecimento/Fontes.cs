@@ -5,20 +5,15 @@ using Pgvector.EntityFrameworkCore;
 
 namespace One.Api.Conhecimento;
 
-// Trecho de fonte devolvido pela busca, com o que o modelo e a conferência precisam (door R3).
 public record Fonte(long Id, string Titulo, string Texto, List<string> Links, double Distancia, long? ArtigoId);
 
-// Dono único de "última versão" e de "artigo ou documento" das fontes do assistente: busca, citação,
-// categoria da fonte citada e indexação passam por aqui.
 public static class Fontes
 {
-    // RAG, AC 4: o trecho de um artigo é a versão inteira: título, perguntas e resposta
     public static string TextoDoArtigo(VersaoArtigo v) => $"{v.Titulo}\n{string.Join("\n", v.Perguntas)}\n{v.Resposta}";
 
     public static TrechoFonte DoArtigo(VersaoArtigo v, DateTime agora) =>
         new() { VersaoArtigo = v, Ordem = 0, Texto = TextoDoArtigo(v), ProximaTentativa = agora };
 
-    // Última versão: a de maior número.
     public static VersaoArtigo Ultima(this Artigo a) => a.Versoes.OrderByDescending(v => v.Numero).First();
 
     public static VersaoDocumento Ultima(this Documento d) => d.Versoes.OrderByDescending(v => v.Numero).First();
@@ -32,13 +27,11 @@ public static class Fontes
     public static IQueryable<VersaoDocumento> VersoesDocumentoAtuais(this OneDb db) =>
         db.VersoesDocumento.Where(v => v.Numero == db.VersoesDocumento.Where(x => x.DocumentoId == v.DocumentoId).Max(x => x.Numero));
 
-    // RAG, AC 6 e Surface: estado da indexação do trecho da versão de artigo; nulo quando ela nunca foi ativada
     public static async Task<Dictionary<long, string>> Indexacao(OneDb db, List<long> versoes) =>
         (await db.TrechosFonte.Where(t => t.VersaoArtigoId != null && versoes.Contains(t.VersaoArtigoId.Value))
             .Select(t => new { Versao = t.VersaoArtigoId!.Value, Indexado = t.Embedding != null, t.Tentativas }).ToListAsync())
         .ToDictionary(t => t.Versao, t => t.Indexado ? "INDEXADO" : t.Tentativas >= 5 ? "FALHOU" : "PENDENTE");
 
-    // RAG, AC 8 e AC 150: artigo ativo, na validade de hoje, na versão atual
     static IQueryable<long?> ArtigosBuscaveis(OneDb db, DateOnly hoje) =>
         db.VersoesAtuais().Where(v => v.Artigo!.Estado == EstadosArtigo.Ativo
                 && (v.Artigo.VisivelDe == null || v.Artigo.VisivelDe <= hoje)
@@ -48,7 +41,6 @@ public static class Fontes
     static IQueryable<long?> DocumentosBuscaveis(OneDb db) =>
         db.VersoesDocumentoAtuais().Where(v => v.Documento!.Estado == EstadosDocumento.Ativo).Select(v => (long?)v.Id);
 
-    // RAG, AC 7 e AC 8: os k trechos mais próximos da consulta, só de fontes buscáveis (door 16: o filtro global limita à instituição)
     public static async Task<List<Fonte>> Buscar(OneDb db, float[] vetor, DateOnly hoje, int k)
     {
         var consulta = new Vector(vetor);
@@ -75,8 +67,6 @@ public static class Fontes
 
     record VersaoCitada(string Titulo, int Numero, long Atual);
 
-    // AC 73 a 75 e RAG: a fonte de cada citação, como a equipe a vê no detalhe do chamado. A citação nova aponta para o trecho
-    // de fonte (artigo ou documento); as anteriores ao RAG, para a versão de artigo. "Atualizado" quando a fonte ativa tem versão nova.
     public static async Task<Func<CitacaoArtigo, FonteCitada>> Citadas(OneDb db, List<CitacaoArtigo> citacoes)
     {
         var idsTrecho = citacoes.Where(x => x.TrechoFonteId != null).Select(x => x.TrechoFonteId!.Value).Distinct().ToList();
@@ -126,7 +116,6 @@ public static class Fontes
         public long CategoriaId { get; init; }
     }
 
-    // Categoria da fonte de cada citação: a do artigo ou a do documento do trecho citado, ou a do artigo das citações anteriores ao RAG.
     public static IQueryable<CategoriaCitada> CategoriasCitadas(this OneDb db) =>
         db.Citacoes.Select(ci => new CategoriaCitada
         {

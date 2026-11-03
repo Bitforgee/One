@@ -3,8 +3,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// Cadastros simples da instituição: GET lista, POST cria, PUT {id} altera; validar devolve 400/409 ou null.
-// Cada cadastro tem 3 casos de uso; a projeção, a validação e a aplicação ficam no arquivo do Criar dele.
 public static class CadastroRotas
 {
     public static void Mapear(RouteGroupBuilder admin)
@@ -29,7 +27,6 @@ public static class CadastroRotas
     public static async Task<IResult> Listar<T, TOut>(OneDb db, Func<T, TOut> saida) where T : class =>
         Results.Ok((await db.Set<T>().OrderBy(e => EF.Property<long>(e, "Id")).ToListAsync()).Select(saida));
 
-    // validar e aplicar fecham sobre os campos do Entrada do caso de uso; aqui só o roteiro comum.
     public static async Task<IResult> Criar<T, TOut>(OneDb db, string rota, Func<T?, Task<IResult?>> validar, Action<T> aplicar, Func<T, TOut> saida)
         where T : class, IDaInstituicao, new()
     {

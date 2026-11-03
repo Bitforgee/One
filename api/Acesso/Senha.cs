@@ -1,6 +1,5 @@
 namespace One.Api.Acesso;
 
-// Limites da senha, para a definição, a troca e a senha temporária do cadastro.
 public static class Senha
 {
     public const int Minimo = 8;

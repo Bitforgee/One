@@ -14,7 +14,6 @@ public static class Sessao
         new(new ClaimsIdentity([new Claim("sub", u.Id.ToString()), new Claim("instituicao_id", u.InstituicaoId.ToString())],
             CookieAuthenticationDefaults.AuthenticationScheme));
 
-    // Reconfere usuário e instituição ativos a cada requisição e renova o cookie (8 h desde a última requisição).
     public static async Task Validar(CookieValidatePrincipalContext ctx)
     {
         var db = ctx.HttpContext.RequestServices.GetRequiredService<OneDb>();

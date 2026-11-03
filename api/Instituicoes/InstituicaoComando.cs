@@ -7,7 +7,6 @@ using One.Api.Conhecimento;
 
 namespace One.Api.Instituicoes;
 
-// Comando do operador da plataforma: `dotnet One.Api.dll instituicao criar|carga ...`. Sai com 0 ou 1.
 public static partial class InstituicaoComando
 {
     public static async Task<int> Executar(IServiceProvider servicos, string[] args, TextWriter saida, TextWriter erro)
@@ -76,7 +75,6 @@ public static partial class InstituicaoComando
         return [];
     }
 
-    // --slug de uma instituição existente e --arquivo JSON legível; devolve a instituição e o arquivo, ou o erro.
     static async Task<(Instituicao?, T?, string?)> LerArquivo<T>(OneDb db, Dictionary<string, string> o) where T : class
     {
         var slug = o.GetValueOrDefault("slug") ?? "";
@@ -109,7 +107,6 @@ public static partial class InstituicaoComando
         return [];
     }
 
-    // Grava o plano numa transação; devolve quantos setores e categorias eram novos.
     static async Task<(int, int)> Gravar(OneDb db, ArquivoCarga arq, Existentes existentes, Plano plano, DateTime agora)
     {
         await using var tx = await db.Database.BeginTransactionAsync();
@@ -133,7 +130,7 @@ public static partial class InstituicaoComando
             var artigo = Artigo.Criar(categoria.Id, null, null, versao);
             artigo.Ativar();
             db.Artigos.Add(artigo);
-            db.TrechosFonte.Add(Fontes.DoArtigo(versao, agora)); // RAG, AC 4
+            db.TrechosFonte.Add(Fontes.DoArtigo(versao, agora));
         }
         await db.SaveChangesAsync();
         await tx.CommitAsync();
@@ -142,7 +139,6 @@ public static partial class InstituicaoComando
 
     record PerguntaAvaliacao(string? Pergunta, string? Fonte);
 
-    // RAG S4, AC 25 a 27: mede a busca do assistente com perguntas reais; não chama o chat e não grava nada.
     static async Task<List<string>> AvaliarBusca(IServiceProvider sp, Dictionary<string, string> o, TextWriter saida)
     {
         var db = sp.GetRequiredService<OneDb>();
@@ -178,7 +174,6 @@ public static partial class InstituicaoComando
         return erros;
     }
 
-    // Posição da fonte esperada entre as buscadas (0 = não veio), ou a falha dos embeddings.
     static async Task<(int, string?)> Avaliar(IServiceProvider sp, long instituicaoId, PerguntaAvaliacao p, TextWriter saida)
     {
         float[] vetor;

@@ -7,7 +7,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api;
 
-// door 12: um laço para todas as instituições; cada item é gravado na instituição dele, numa transação própria.
 public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, ILogger<Agendador> log) : BackgroundService
 {
     public record Item(string Tipo, long Id, long InstituicaoId);
@@ -28,7 +27,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
 
     public async Task Executar(CancellationToken parar = default) => await Processar(await Ler(), parar);
 
-    // Leitura dos candidatos de todas as instituições; a gravação reconfere a condição de cada um (AC 120).
     public async Task<List<Item>> Ler()
     {
         using var escopo = escopos.CreateScope();
@@ -58,7 +56,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     {
         var itens = await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
             .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync();
-        // RAG, AC 5: trechos de fonte sem embedding, de todas as instituições
         itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
             .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
         return itens;
@@ -96,8 +93,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         }
     }
 
-    // RAG, AC 5 e AC 6: um lote de até 100 trechos (de várias instituições) por chamada; a falha soma tentativa e espera 2^n minutos.
-    // O embedding só é gravado num trecho que ainda não tem (o trigger recusa trocar um embedding existente).
     async Task Indexar(Item[] lote)
     {
         using var escopo = escopos.CreateScope();
@@ -118,7 +113,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             }
             log.LogInformation("Agendador indexou {Quantidade} trechos de fonte", trechos.Count);
         }
-        catch (Exception falha) // status, rede, 20 s ou formato: tudo conta como tentativa
+        catch (Exception falha)
         {
             foreach (var t in trechos)
             {
@@ -132,7 +127,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         }
     }
 
-    // AC 118
     async Task Abandonar(OneDb db, long id, DateTime agora)
     {
         var limite = agora - prazos.Abandono;
@@ -141,7 +135,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         if (n == 1) log.LogInformation("Conversa {ConversaId} abandonada (instituição {InstituicaoId})", id, db.InstituicaoAtual);
     }
 
-    // AC 119: só fecha se continua RESOLVIDO e vencido no momento da gravação.
     async Task FecharResolvido(OneDb db, long id, DateTime agora)
     {
         var limite = agora - prazos.Confirmacao;
@@ -155,7 +148,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
     }
 
-    // AC 145: um único lembrete por período em AGUARDANDO_ALUNO
     async Task Lembrar(OneDb db, long id, DateTime agora)
     {
         var limite = agora - prazos.Lembrete;
@@ -170,7 +162,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await tx.CommitAsync();
     }
 
-    // AC 146: depois do prazo (Prazos:ResolverAguardandoDias) sem resposta o Sistema resolve; daí em diante valem a rejeição e o fechamento automático
     async Task ResolverSemResposta(OneDb db, long id, DateTime agora)
     {
         var limite = agora - prazos.ResolverAguardando;
@@ -186,7 +177,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await tx.CommitAsync();
     }
 
-    // door 11 e AC 126: remetente com o nome da instituição do e-mail; falha soma tentativa e espera 2^n minutos.
     async Task Enviar(OneDb db, Email email, long id, DateTime agora)
     {
         var e = await db.EmailsSaida.SingleAsync(x => x.Id == id);

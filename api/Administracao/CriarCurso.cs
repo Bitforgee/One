@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// A validação e a aplicação do cadastro de Curso, sobre os campos; ListarCursos e AlterarCurso usam as daqui.
 public sealed record CriarCurso(CriarCurso.Entrada Corpo) : IRequest<IResult>
 {
     public sealed record Entrada(string? Nome, long? SetorCoordenacaoId);

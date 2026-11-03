@@ -43,11 +43,9 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         Devolva apenas um objeto JSON: {"tipo":"resposta"|"pergunta"|"sem_base"|"transferir","texto":"...","fonteIds":[12],"trechos":[{"fonteId":12,"texto":"..."}],"categoriaId":3,"resumo":"..."}
         """;
 
-    // RAG, AC 7: a consulta são as últimas 3 mensagens do aluno, mascaradas como as do chat (AC 34 do mvp-one)
     public static string Consulta(IEnumerable<MensagemConversa> mensagens) =>
         string.Join("\n", mensagens.Where(m => m.Autor != Autor).OrderBy(m => m.Id).TakeLast(3).Select(m => Mascara.Aplicar(m.Texto)));
 
-    // RAG, AC 7 e AC 8: os K trechos mais próximos, só de fontes buscáveis da instituição da sessão (door 16)
     public async Task<List<Fonte>> Buscar(float[] vetor, long instituicaoId)
     {
         var k = cfg.GetValue("Rag:K", 5);
@@ -56,7 +54,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         return await Fontes.Buscar(db, vetor, hoje, k);
     }
 
-    // Recebe a conversa com a mensagem nova do aluno já gravada e devolve a mensagem do assistente a gravar.
     public async Task<MensagemConversa> Responder(Conversa conversa)
     {
         var modelo = cfg["Llm:Modelo"] ?? "gpt-6-luna";
@@ -68,7 +65,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         }
         catch (Exception e) when (e is HttpRequestException or OperationCanceledException or JsonException or InvalidOperationException)
         {
-            // AC 14: sem embedding da consulta não há busca nem chamada ao chat
             log.LogWarning(e, "Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", "busca_indisponivel", conversa.InstituicaoId, conversa.Id);
             return new MensagemConversa { Autor = Autor, Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] };
         }
@@ -107,7 +103,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
     static string ArtigosCitados(SaidaModelo? saida, List<Fonte> fontes) =>
         string.Join(",", (saida?.FonteIds ?? []).Select(id => fontes.FirstOrDefault(f => f.Id == id)?.ArtigoId).OfType<long>());
 
-    // RAG, door R1: corpo do Chat Completions da OpenAI, sem max_tokens nem temperature (pergunta 1 do plano)
     async Task<object> Corpo(Conversa conversa, string modelo, List<Fonte> fontes)
     {
         var categorias = await db.Categorias.Where(c => c.Ativa).OrderBy(c => c.Id).Select(c => new { id = c.Id, nome = c.Nome }).ToListAsync();
@@ -128,7 +123,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         };
     }
 
-    // O tipo que o aluno vê para uma saída válida do provedor; com motivo, ela vira sem_base.
     static (string, string?, List<CitacaoArtigo>) Classificar(SaidaModelo saida, List<Fonte> fontes, Conversa conversa)
     {
         switch (saida.Tipo)
@@ -154,7 +148,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         _ => Textos.SemBase,
     };
 
-    // door 19 contra o trecho de fonte citado (AC 11 e AC 12): só fontes buscadas; trecho literal no texto da fonte; links do artigo de origem
     static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<Fonte> buscadas)
     {
         var ids = saida.FonteIds?.Distinct().ToList() ?? [];
@@ -173,7 +166,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         }).ToList(), null);
     }
 
-    // Todo trecho é literal numa fonte citada, e toda fonte citada tem trecho.
     static bool TrechosConferem(List<Trecho> trechos, List<Fonte> citadas) =>
         trechos.All(t => citadas.FirstOrDefault(f => f.Id == t.FonteId) is { } f && Conferencia.TrechoConfere(t.Texto, f.Texto))
             && citadas.All(f => trechos.Any(t => t.FonteId == f.Id));
@@ -216,7 +208,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         if (!raiz.TryGetProperty("usage", out var u) || u.ValueKind != JsonValueKind.Object) return new();
         int Ler(JsonElement e, string nome) => e.TryGetProperty(nome, out var p) && p.ValueKind == JsonValueKind.Number ? p.GetInt32() : 0;
         var entrada = Ler(u, "prompt_tokens");
-        // DeepSeek informa acerto e falta de cache; o formato OpenAI informa prompt_tokens_details.cached_tokens.
         var comCache = u.TryGetProperty("prompt_cache_hit_tokens", out _) ? Ler(u, "prompt_cache_hit_tokens")
             : u.TryGetProperty("prompt_tokens_details", out var d) && d.ValueKind == JsonValueKind.Object ? Ler(d, "cached_tokens") : 0;
         var semCache = u.TryGetProperty("prompt_cache_miss_tokens", out _) ? Ler(u, "prompt_cache_miss_tokens") : entrada - comCache;

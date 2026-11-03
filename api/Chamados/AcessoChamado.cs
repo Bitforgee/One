@@ -2,7 +2,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// door 5: o chamado carregado e quem age nele, um por requisição; só o AgirNoChamado preenche, antes do Validar e do handler.
 public sealed class AcessoChamado
 {
     public Chamado Chamado { get; private set; } = null!;

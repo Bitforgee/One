@@ -3,7 +3,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// As ações sobre o chamado passam todas pelo AgirNoChamado; aqui ficam as rotas e o que mais de uma ação usa.
 public static class AcoesChamado
 {
     public static void Mapear(RouteGroupBuilder api)
@@ -16,18 +15,15 @@ public static class AcoesChamado
         CancelarChamado.Mapear(api);
         EncaminharChamado.Mapear(api);
         ReclassificarChamado.Mapear(api);
-        // AC 148 e 149: só outro chamado do mesmo aluno; o duplicado sai dos indicadores
         MarcarDuplicado.Mapear(api);
     }
 
     public static IResult? Texto(string? texto, string campo, string mensagem) =>
         string.IsNullOrWhiteSpace(texto) || texto.Length > 4000 ? Problemas.Invalido(mensagem, campo) : null;
 
-    // Nome do responsável atual, que o domínio recebe pronto para os eventos de atribuição.
     public static async Task<string?> NomeDoResponsavel(OneDb db, Chamado c) =>
         c.ResponsavelId is { } id ? await db.Usuarios.Where(u => u.Id == id).Select(u => u.Nome).SingleAsync() : null;
 
-    // AC 84 a 87: rejeição da resolução, pela rejeição ou pela resposta do aluno a um RESOLVIDO. Results.Empty quando aplicou.
     public static async Task<IResult> RejeitarResolucao(OneDb db, AcessoChamado a, string motivo, List<Anexo>? anexos = null)
     {
         var c = a.Chamado;

@@ -12,7 +12,6 @@ public static class AuthRotas
         Login.Mapear(api);
         PrimeiroAcesso.Mapear(api);
         DefinirSenha.Mapear(api);
-        // fora do mediator; Delegate: o grupo de métodos (HttpContext) -> Task casaria com RequestDelegate e o 204 se perderia
         api.MapPost("/auth/logout", (Delegate)Logout).AllowAnonymous();
         Eu.Mapear(api);
         TrocarSenha.Mapear(api);

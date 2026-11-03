@@ -4,12 +4,10 @@ public record LinhaCsv(int Numero, string[] Campos);
 public record ErroCsv(int Linha, string Motivo);
 public record Linha(int Numero, string Cpf, string Nome, string Email, string Matricula, long CursoId, int Semestre, string Situacao);
 
-// door 15 e AC 105 a 107: leitura do CSV de matrículas, sem gravar. Uma linha com erro leva todos os motivos dela juntos.
 public static class CsvMatriculas
 {
     public const string Cabecalho = "cpf;nome;email;matricula;curso;semestre;situacao";
 
-    // Separa as linhas (sem as em branco do fim) e os campos aparados; o cabeçalho errado é o erro da linha 1.
     public static (List<LinhaCsv> Linhas, ErroCsv? Erro) Separar(string texto)
     {
         var linhas = texto.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
@@ -18,7 +16,6 @@ public static class CsvMatriculas
         return (linhas.Skip(1).Select((l, n) => new LinhaCsv(n + 2, l.Split(';').Select(x => x.Trim()).ToArray())).ToList(), null);
     }
 
-    // cursos: id pelo nome; donoDaMatricula e donoDoEmail: CPF que já usa a matrícula ou o e-mail na instituição.
     public static (List<Linha> Validas, List<ErroCsv> Erros) Validar(List<LinhaCsv> linhas, IReadOnlyDictionary<string, long> cursos,
         IReadOnlyDictionary<string, string> donoDaMatricula, IReadOnlyDictionary<string, string> donoDoEmail)
     {

@@ -6,7 +6,6 @@ using static One.Api.Conhecimento.DocumentoRotas;
 
 namespace One.Api.Conhecimento;
 
-// door 6: o formulário é lido no lambda, sem ligar IFormFile (que exigiria o antiforgery)
 public sealed record CriarDocumento(IFormCollection Form) : IRequest<IResult>
 {
     public static void Mapear(RouteGroupBuilder g) =>

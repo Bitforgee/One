@@ -14,7 +14,6 @@ public sealed record ArtigoResposta(long Id, string Estado, string? Indexacao, l
             new(v.Id, v.Numero, v.Titulo, v.Perguntas, v.Resposta, v.Links, v.CriadaEm));
     }
 
-    // Um artigo só: o nome da categoria e a indexação da última versão vêm do banco.
     public static async Task<ArtigoResposta> De(OneDb db, Artigo a) =>
         De(a, await db.Categorias.Where(c => c.Id == a.CategoriaId).Select(c => c.Nome).SingleAsync(), await Fontes.Indexacao(db, [a.Versoes.Max(v => v.Id)]));
 }

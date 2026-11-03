@@ -4,8 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados.Shared;
 
-// AC 73 a 75: o detalhe do chamado; o aluno não recebe resumo, notas, eventos nem as fontes do assistente.
-// Usado por VerChamado e pelas 9 ações (que o devolvem pelo AgirNoChamado).
 public sealed record DetalheChamado(
     string Numero, string Titulo, string Estado, string? MotivoFechamento, string? NumeroOriginal, long SetorId, string Setor, string Categoria,
     string? Responsavel, DateTime CriadoEm, DateTime? ResolvidoEm, DetalheChamado.DaMatricula Matricula, string? Solicitante, string? Resumo,
@@ -15,7 +13,6 @@ public sealed record DetalheChamado(
 {
     public sealed record DaMatricula(string Numero, string Curso, int Semestre);
 
-    // Item da transcrição: a equipe vê as fontes (a chave sai nula sem citação); o aluno não recebe a chave.
     public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes);
 
     public sealed record TranscricaoDoAluno(string Autor, string Texto, DateTime CriadaEm);
@@ -28,7 +25,6 @@ public sealed record DetalheChamado(
 
     public sealed record Destino(long Id, string Nome);
 
-    // O que só a equipe vê; para o aluno tudo nulo e sem fontes.
     record DaEquipe(string? Solicitante, string? Resumo, string? OrigemCategoria, Dictionary<long, IEnumerable<Fontes.FonteCitada>> Fontes,
         IReadOnlyList<DoEvento>? Eventos, IReadOnlyList<Destino>? Setores, IReadOnlyList<Destino>? Categorias)
     {
@@ -60,11 +56,9 @@ public sealed record DetalheChamado(
                 ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id))
                 : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))],
             await DasMensagens(db, c, equipe, nomes), daEquipe.Eventos, PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId),
-            // destinos de encaminhar e reclassificar (S6), só para a equipe
             daEquipe.Setores, daEquipe.Categorias);
     }
 
-    // Mensagens do chamado com os anexos; o aluno só vê as públicas.
     static async Task<IReadOnlyList<DaMensagem>> DasMensagens(OneDb db, Chamado c, bool equipe, Dictionary<long, string> nomes)
     {
         var mensagens = await db.MensagensChamado.Where(m => m.ChamadoId == c.Id && (equipe || m.Tipo == TiposMensagem.Publica)).OrderBy(m => m.Id).ToListAsync();

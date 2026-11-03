@@ -5,15 +5,11 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace One.Api.Conhecimento;
 
-// RAG S3, door R4: PDFs da instituição como fonte interna do assistente; nunca aparecem para o aluno (AD-012).
-// Os auxiliares que mais de um caso de uso de documento usa.
 public static class DocumentoRotas
 {
     const long MaxPdf = 20 * 1024 * 1024;
     public const string SemTexto = "O PDF não tem texto. Exporte o documento com texto, não digitalizado.";
 
-    // RAG, AC 17: trechos de até 1500 caracteres, cortados no fim de parágrafo (se houver um antes do limite) ou de frase,
-    // e o seguinte começa repetindo os últimos 200 caracteres do anterior.
     public static List<string> Dividir(string texto, int maximo = 1500, int sobreposicao = 200)
     {
         texto = texto.Replace("\r\n", "\n").Trim();
@@ -37,7 +33,6 @@ public static class DocumentoRotas
 
     public record Pdf(byte[] Conteudo, string Texto, int Paginas, string Nome);
 
-    // AC 18: 413 acima de 20 MB, 415 sem a assinatura %PDF, 400 sem texto extraível
     public static async Task<(Pdf?, IResult?)> LerPdf(IFormFile? arquivo)
     {
         if (arquivo is null) return (null, Problemas.Invalido("Envie o PDF no campo arquivo.", "arquivo"));
@@ -59,7 +54,6 @@ public static class DocumentoRotas
     public static VersaoDocumento Versao(Pdf pdf, int numero, DateTime agora) =>
         new() { Numero = numero, NomeArquivo = pdf.Nome, Conteudo = pdf.Conteudo, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
 
-    // AC 16: os trechos pendentes entram na mesma transação; o agendador gera os embeddings
     public static void Trechos(OneDb db, VersaoDocumento v, DateTime agora) =>
         db.TrechosFonte.AddRange(Dividir(v.Texto).Select((t, i) => new TrechoFonte { VersaoDocumento = v, Ordem = i, Texto = t, ProximaTentativa = agora }));
 
@@ -70,11 +64,9 @@ public static class DocumentoRotas
     {
         ListarDocumentos.Mapear(admin);
         CriarDocumento.Mapear(admin);
-        // AC 19 e AC 20: versão nova só em documento ATIVO; as anteriores ficam guardadas
         NovaVersaoDocumento.Mapear(admin);
         ArquivarDocumento.Mapear(admin);
     }
 
-    // AC 21 e AC 22: só atendente e administrador baixam a versão citada; para os demais ela "não existe"
     public static void Mapear(RouteGroupBuilder api) => BaixarVersaoDocumento.Mapear(api);
 }

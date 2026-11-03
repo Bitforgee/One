@@ -6,7 +6,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
-// /mensagens: resposta pública ("responder") ou nota interna ("nota"), com anexos; door 6: o formulário é lido no lambda.
 public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
     const long MaxAnexo = 10 * 1024 * 1024;
@@ -31,7 +30,6 @@ public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuar
         return null;
     }
 
-    // AC 127 e 128: PDF, JPG ou PNG de até 10 MB, conferidos pela assinatura
     public static Task<(Arquivos.Lido?, IResult?)> LerAnexo(IFormFile f) =>
         Arquivos.Ler(f, MaxAnexo, [Arquivos.Pdf, Arquivos.Jpeg, Arquivos.Png], $"O arquivo {f.FileName} passa de 10 MB.", $"O arquivo {f.FileName} não é PDF, JPG nem PNG.");
 }
@@ -45,17 +43,17 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a) : IReques
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)
         {
-            var lido = (await ResponderChamado.LerAnexo(f)).Item1!; // o Validar já recusou os inválidos
+            var lido = (await ResponderChamado.LerAnexo(f)).Item1!;
             anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Conteudo = lido.Bytes });
         }
         if (a.Papel == PermissoesChamado.Aluno)
         {
-            if (c.Estado == Resolvido) return await RejeitarResolucao(db, a, m.Texto, anexos); // AC 86
+            if (c.Estado == Resolvido) return await RejeitarResolucao(db, a, m.Texto, anexos);
             c.ResponderComoAluno(a.Usuario.Id, m.Texto, anexos, a.Agora);
             return Results.Empty;
         }
         c.ResponderComoEquipe(a.Usuario.Id, a.Usuario.Nome, m.Texto, anexos, m.AguardaAluno, a.Agora);
-        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, c, a.Agora); // AC 122
+        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, c, a.Agora);
         return Results.Empty;
     }
 }

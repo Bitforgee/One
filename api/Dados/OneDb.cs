@@ -6,7 +6,6 @@ namespace One.Api.Dados;
 
 public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
 {
-    // Instituição da sessão; o filtro global e o SaveChanges usam este valor (door 16).
     public long? InstituicaoAtual { get; set; }
 
     public DbSet<Instituicao> Instituicoes => Set<Instituicao>();
@@ -139,7 +138,6 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         foreach (var tipo in mb.Model.GetEntityTypes().Select(e => e.ClrType).Where(t => typeof(IDaInstituicao).IsAssignableFrom(t)).ToList())
             configurar.MakeGenericMethod(tipo).Invoke(this, [mb]);
 
-        // o nome da FK usa o nome da tabela do principal naquele instante: a ordem do nome simples reproduz a de antes das pastas
         foreach (var e in mb.Model.GetEntityTypes().OrderBy(t => t.ClrType.Name, StringComparer.Ordinal).ToList())
         {
             e.SetTableName(Snake(e.ClrType.Name));

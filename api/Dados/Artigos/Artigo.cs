@@ -1,6 +1,5 @@
 namespace One.Api.Dados.Artigos;
 
-// door 3: o artigo guarda os próprios estados e o número das versões; as versões são append-only e o banco não é consultado aqui.
 public class Artigo : IDaInstituicao
 {
     readonly List<VersaoArtigo> _versoes = [];
@@ -11,7 +10,7 @@ public class Artigo : IDaInstituicao
     public long InstituicaoId { get; set; }
     public long CategoriaId { get; private set; }
     public string Estado { get; private set; } = EstadosArtigo.Rascunho;
-    public DateOnly? VisivelDe { get; private set; } // AC 150: dias no fuso da instituição
+    public DateOnly? VisivelDe { get; private set; }
     public DateOnly? VisivelAte { get; private set; }
     public IReadOnlyCollection<VersaoArtigo> Versoes => _versoes;
 
@@ -22,7 +21,6 @@ public class Artigo : IDaInstituicao
         return a;
     }
 
-    // Uma edição vira versão nova (AC 99); o número tem de passar o de toda versão que o artigo guarda.
     public void NovaVersao(VersaoArtigo versao, long categoriaId, DateOnly? visivelDe, DateOnly? visivelAte)
     {
         Acrescentar(versao);

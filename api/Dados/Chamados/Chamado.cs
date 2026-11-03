@@ -2,9 +2,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Dados.Chamados;
 
-// door 3: o chamado guarda o ciclo de vida. Transição que não existe no estado atual lança InvalidOperationException (o
-// AgirNoChamado recusa antes, por HTTP); recusa de negócio sai como Recusa. O domínio não consulta o banco: nomes, "responsável
-// ainda ativo" e prazo chegam como valores, e mensagens e eventos novos entram nas coleções que o EF grava.
 public class Chamado : IDaInstituicao
 {
     static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
@@ -21,25 +18,25 @@ public class Chamado : IDaInstituicao
     public long ConversaId { get; private set; }
     public long SolicitanteId { get; private set; }
     public long MatriculaId { get; private set; }
-    public int Semestre { get; private set; } // semestre da matrícula na transferência (AC 59)
+    public int Semestre { get; private set; }
     public string Titulo { get; private set; } = "";
     public string? Resumo { get; private set; }
     public long CategoriaId { get; private set; }
     public long CategoriaOriginalId { get; private set; }
-    public string OrigemCategoria { get; private set; } = ""; // IA, ARTIGO ou PADRAO
+    public string OrigemCategoria { get; private set; } = "";
     public long SetorId { get; private set; }
     public long? ResponsavelId { get; private set; }
     public string Estado { get; private set; } = Aberto;
-    public string? MotivoFechamento { get; private set; } // CONFIRMADO, CANCELADO, FECHADO_AUTOMATICAMENTE, DUPLICADO
+    public string? MotivoFechamento { get; private set; }
     public int Reaberturas { get; private set; }
     public int Encaminhamentos { get; private set; }
     public DateTime CriadoEm { get; private set; }
     public DateTime? ResolvidoEm { get; private set; }
     public DateTime? FechadoEm { get; private set; }
-    public DateTime? AguardandoDesde { get; private set; } // AC 145 e 146: prazos em AGUARDANDO_ALUNO
+    public DateTime? AguardandoDesde { get; private set; }
     public DateTime? LembreteEm { get; private set; }
-    public string? NumeroOriginal { get; private set; } // AC 148
-    public uint Xmin { get; private set; } // door 14: coluna de sistema do PostgreSQL como token de concorrência
+    public string? NumeroOriginal { get; private set; }
+    public uint Xmin { get; private set; }
     public IReadOnlyCollection<MensagemChamado> Mensagens => _mensagens;
     public IReadOnlyCollection<EventoChamado> Eventos => _eventos;
 
@@ -58,7 +55,6 @@ public class Chamado : IDaInstituicao
         return c;
     }
 
-    // AC 77: quem já é o responsável recebe a recusa; assumir um ABERTO começa o atendimento.
     public Recusa? Assumir(long atorId, string? nomeAnterior, string nomeNovo, DateTime agora)
     {
         Exigir(Abertos);
@@ -69,7 +65,6 @@ public class Chamado : IDaInstituicao
         return null;
     }
 
-    // Resposta do aluno; em RESOLVIDO ela vale como rejeição (AC 86), por Rejeitar.
     public void ResponderComoAluno(long atorId, string texto, IEnumerable<Anexo> anexos, DateTime agora)
     {
         Exigir(Abertos);
@@ -78,7 +73,6 @@ public class Chamado : IDaInstituicao
         if (Estado == AguardandoAluno) Mudar(EmAtendimento, ato);
     }
 
-    // AC 77: sem responsável, quem responde assume; a resposta pode deixar o chamado aguardando o aluno.
     public void ResponderComoEquipe(long atorId, string nomeAtor, string texto, IEnumerable<Anexo> anexos, bool aguardaAluno, DateTime agora)
     {
         Exigir(Abertos);
@@ -110,7 +104,6 @@ public class Chamado : IDaInstituicao
         Fechar(MotivosFechamento.Confirmado, null, new Ato(atorId, agora));
     }
 
-    // AC 84 a 87: volta ao responsável ativo, ou à fila do setor se ele não existe mais; fora do prazo, recusa.
     public Recusa? Rejeitar(long atorId, string motivo, IEnumerable<Anexo> anexos, bool responsavelAtivo, string? nomeResponsavel, int prazoDias, DateTime agora)
     {
         Exigir([Resolvido]);
@@ -148,7 +141,6 @@ public class Chamado : IDaInstituicao
         CategoriaId = categoriaId;
     }
 
-    // AC 148 e 149
     public void MarcarDuplicado(long atorId, string numeroOriginal, DateTime agora)
     {
         Exigir(Abertos);
@@ -158,7 +150,6 @@ public class Chamado : IDaInstituicao
         Fechar(MotivosFechamento.Duplicado, null, ato);
     }
 
-    // O responsável foi desativado: o chamado perde o responsável e, se estava em atendimento, volta para a fila.
     public void DevolverAFila(long atorId, string nomeResponsavel, DateTime agora)
     {
         Exigir(NaoFechados);

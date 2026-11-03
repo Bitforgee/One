@@ -3,7 +3,6 @@ using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-// AC 114: uma regra por categoria; salvar de novo substitui a anterior.
 public static class RegraRotas
 {
     public static void Mapear(RouteGroupBuilder admin)
@@ -17,7 +16,7 @@ public static class RegraRotas
     {
         if (!await db.Categorias.AnyAsync(c => c.Id == categoriaId && !c.Padrao)) return Problemas.Invalido("Escolha uma categoria que não seja \"Não classificado\".", "categoriaId");
         if (destino is not ("SETOR" or "COORDENACAO_CURSO")) return Problemas.Invalido("O destino deve ser SETOR ou COORDENACAO_CURSO.", "destino");
-        if (destino == "SETOR" && !await db.Setores.AnyAsync(s => s.Id == setorId)) return Problemas.Invalido("Informe o setor de destino.", "setorId"); // AC 115
+        if (destino == "SETOR" && !await db.Setores.AnyAsync(s => s.Id == setorId)) return Problemas.Invalido("Informe o setor de destino.", "setorId");
         return null;
     }
 

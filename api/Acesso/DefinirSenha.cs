@@ -32,7 +32,6 @@ public sealed class DefinirSenhaHandler(OneDb db, TimeProvider relogio, IPasswor
         return Results.NoContent();
     }
 
-    // O token do link: da instituição ativa do slug, não usado, não vencido e de um usuário ativo.
     async Task<(TokenAcesso?, Usuario?)> TokenValido(string? texto, DateTime agora)
     {
         var slug = texto?.Split('.')[0];

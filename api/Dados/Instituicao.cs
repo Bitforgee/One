@@ -8,5 +8,5 @@ public class Instituicao
     public string Fuso { get; set; } = "";
     public bool Ativa { get; set; } = true;
     public DateTime CriadaEm { get; set; }
-    public long UltimoNumeroChamado { get; set; } // door 5: incrementado com UPDATE ... RETURNING
+    public long UltimoNumeroChamado { get; set; }
 }
