@@ -46,7 +46,7 @@ Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 **C9** - [x] Nas mesmas larguras não há barra de topo de 56 px nem botão "Menu" visíveis, e o `main` começa à direita do `<nav>` sem sobrepor (AC 9)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra lateral a"`
 
-**C10** - [x] A 360, 768 e 1023 px o `<nav>` é a barra de topo, com a largura da janela e 56 px de altura, o nome da instituição com largura maior que 0 e nenhum item sobreposto, e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
+**C10** - [x] A 360, 768 e 1023 px o `<nav>` é a barra de topo, com a largura da janela e 56 px de altura, o nome da instituição com largura maior que 0 e truncado (`white-space: nowrap`, `text-overflow: ellipsis`) e nenhum item sobreposto, e "Menu" abre a gaveta com os links e "Sair", como antes (AC 10)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cabeçalho a 360 px abre a gaveta Menu"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
@@ -88,8 +88,9 @@ Proof: `cd web && npx vitest run src/assistente/conversa.test.tsx -t "balão sem
 Proof: `cd web && npx vitest run src/indicadores/indicadores.test.tsx -t "rótulo do gráfico"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "rótulo do gráfico numa linha"`
 
-**C21** - [x] Todo `[data-slot=card]` de Indicadores a 1280 px tem `box-shadow` computado `none` (AC 21)
+**C21** - [x] Todo `[data-slot=card]` de Indicadores a 1280 px tem `box-shadow` computado `none` e canto de 8 px (`rounded-lg`); popover e diálogo mantêm `box-shadow` diferente de `none`; o texto do balão tem `line-height` de 26 px (`leading-relaxed`) (AC 21, `## Visual`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "cartões sem sombra"`
+Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "superfícies de Visual"`
 
 **C22** - [x] Todo `<h1` de `web/src` fora dos testes tem `text-2xl font-semibold tracking-tight` na classe (AC 22)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "títulos de página"`
@@ -131,6 +132,7 @@ Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/c
 | arranjo da barra lateral, ## Screens linha 0 (8) | 240 px à esquerda C8 · altura da janela C8 · borda direita C8 · fundo `--sidebar` C8 · marca e instituição no topo C8 · links de 36 px um por linha C8 · ativo `bg-primary-subtle` e `font-medium` C8, C12 · rodapé avisos/Tema/Sair C14 | - |
 | autores de balão (4) | aluno C18 · assistente C18 · atendente C18 · nota interna C18 | - |
 | bordas do rótulo do gráfico (3) | 17 C20 · 18 C20 · 19 C20 | - |
+| valores de superfície de `## Visual` (4) | cartão sem sombra C21 · cartão `rounded-lg` C21 · popover e diálogo com sombra C21 · balão `leading-relaxed` C21 | - |
 | doors do plano (4) | door 1 C3, C7 · door 2 C1 · door 3/3a C8 · door 4 C15, C19 | - |
 | títulos de página (9) | Acesso.tsx:25 C22 · Acesso.tsx:177 C22 · Matriculas.tsx C22 · Assistente.tsx C22 · Cabecalho.tsx C22 · Chamados.tsx C22 · Conversa.tsx C22 · Indicadores.tsx C22 · todo `h1` novo C22 | - |
 | testes reescritos (6) | `tokens da paleta` C1 · `contraste dos tokens` C2 · textos do cabeçalho C11 · `Tema grava a escolha em one-tema` C3 · e2e da barra de topo C8, C10 · avisos no "Mais" C14, C25 | - |
@@ -155,7 +157,7 @@ Evidence:
 - `src/assistente/avisos.test.tsx` "no(a) Mais o item de avisos mostra o texto visível" (regra do `web-push`: avisos com texto visível fora da barra de topo): trocado por "na barra lateral o botão de avisos traz o texto visível" (acrescentado após a verificação rodada 1, que apontou a ausência desta linha)
 - os fatos "sem sobreposição" e "nome da instituição com largura maior que 0" da barra de topo antiga seguem afirmados a 360, 768 e 1023 px (C10) e na barra lateral (C8)
 
-Cost: 5 testes reescritos, ~10 novos.
+Cost: 6 testes reescritos, ~15 novos.
 
 ## Swept
 
@@ -188,3 +190,7 @@ Estimativa = (bytes lidos dos 21 arquivos que a feature toca, 151 545 B, contado
 ### Correção após a verificação rodada 1
 
 - **Gaps tratados:** (1) C25 com a exceção do teste reescrito e o script `.specs/features/redesign-institucional/chamadas_iguais.py`, que envolve o da `interface-nova` sem mudá-lo (decisão do usuário). (2) Instituição em 2 linhas na barra lateral: nota na linha 0 de `## Screens` (decisão do usuário) e afirmada em C8. (3) Arranjo da barra lateral (borda, fundo, marca/instituição no topo, links de 36 px um por linha, `font-medium`, 1024 × 740) afirmado em C8. (4) `<wbr>` nos trechos das fontes: prova nova em C15. (5) Ordem dos temas: afirmada no teste do C3. (6) Canto da nota interna: afirmado no teste do C18. (7) Sobreposição e largura da instituição voltaram a ser afirmadas (C8, C10); a troca do teste dos avisos entrou na evidência do `## Test policy`. (8) AD-027 no `STATE.md` ganhou a nota da door 3a
+
+### Correção após a verificação rodada 2
+
+- **Gaps tratados:** (1) `## Visual`: canto de 8 px do `Card`, sombra do popover e do diálogo e `leading-relaxed` do balão afirmados em C21 (prova nova "superfícies de Visual"). (2) Linha 0 de `## Screens`: o nome truncado na barra de topo abaixo de 1024 px afirmado em C10. (3) Contagem do `## Test policy` corrigida para 6 testes reescritos
