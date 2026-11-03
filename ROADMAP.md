@@ -225,9 +225,9 @@ antes do código, verificação independente depois), e a próxima só começa c
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
-| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano em escrita desde 02/11 | `api/`, `docker-compose.yml` |
-| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano em escrita desde 02/11 | `api/`, `web/` |
-| 07–09/11 | Web Push (`web-push`): plano em escrita desde 02/11 | `api/`, `web/` (service worker) |
+| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano pronto em 02/11, aguardando aprovação | `api/`, `docker-compose.yml` |
+| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano pronto em 02/11, aguardando aprovação | `api/`, `web/` |
+| 07–09/11 | Web Push (`web-push`): plano pronto em 02/11, aguardando aprovação | `api/`, `web/` (service worker) |
 | 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
