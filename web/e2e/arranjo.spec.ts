@@ -197,6 +197,7 @@ test.describe('cabeçalho', () => {
       const gaveta = page.getByRole('dialog', { name: 'Menu' })
       await gaveta.waitFor()
       expect(await gaveta.locator('a, button').allTextContents(), 'C10 gaveta como antes').toEqual([...Links, 'Sair'])
+      await expect(gaveta.getByRole('button', { name: /barra lateral/ }), 'C16 sem recolher na gaveta').toHaveCount(0)
     })
   }
 
@@ -878,6 +879,7 @@ test.describe('barra lateral com grupos', () => {
       const t = await caixa(titulo)
       expect(t.y + t.height, `${nome} acima do primeiro link`).toBeLessThanOrEqual((await caixa(grupo.getByRole('link', { name: links[0] }))).y + 1)
       if (fundoAnterior >= 0) expect(t.y - fundoAnterior, `${nome}: 24 px antes do título`).toBeGreaterThanOrEqual(23)
+      expect(await grupo.evaluate((e) => getComputedStyle(e).marginTop), `${nome}: margem antes do grupo`).toBe(fundoAnterior >= 0 ? '24px' : '0px')
       const ultimo = await caixa(grupo.getByRole('link', { name: links[links.length - 1] }))
       fundoAnterior = ultimo.y + ultimo.height
     }
@@ -896,6 +898,7 @@ test.describe('barra lateral com grupos', () => {
     for (const [nome, links] of Grupos) {
       const titulo = await caixa(gaveta.getByRole('group', { name: nome }).getByText(nome, { exact: true }))
       expect(Math.abs(titulo.height - 32), `${nome}: 32 px`).toBeLessThanOrEqual(1)
+      expect(await gaveta.getByRole('group', { name: nome }).getByText(nome, { exact: true }).evaluate((e) => getComputedStyle(e).fontSize), `${nome}: text-xs`).toBe('12px')
       expect(titulo.y + titulo.height, `${nome} antes dos links`).toBeLessThanOrEqual((await caixa(gaveta.getByRole('link', { name: links[0] }))).y + 1)
     }
     // com os títulos a lista passa da altura da gaveta: rola até "Sair", que fica dentro da tela
@@ -928,7 +931,11 @@ test.describe('barra lateral com grupos', () => {
       const nav = page.getByRole('navigation')
       const recolher = nav.getByRole('button', { name: 'Recolher barra lateral' })
       await expect(recolher, 'C10').toHaveAttribute('aria-expanded', 'true')
-      expect(Math.abs((await caixa(recolher)).y - (await caixa(nav.getByText('One', { exact: true }))).y), 'C10 na linha da marca').toBeLessThanOrEqual(4)
+      const marcaAberta = await caixa(nav.getByText('One', { exact: true }))
+      const botaoAberto = await caixa(recolher)
+      expect(Math.abs(botaoAberto.y - marcaAberta.y), 'C10 na linha da marca').toBeLessThanOrEqual(4)
+      expect(botaoAberto.x, 'C10 botão à direita da marca').toBeGreaterThanOrEqual(marcaAberta.x + marcaAberta.width)
+      expect(botaoAberto.x + botaoAberto.width, 'C10 botão na metade direita da barra').toBeGreaterThan(120)
 
       await recolher.click()
       await expect.poll(async () => Math.round((await caixa(nav)).width), 'C11 64 px').toBe(64)
@@ -947,6 +954,22 @@ test.describe('barra lateral com grupos', () => {
       }
       for (const nome of ['Atendimento', 'Conhecimento', 'Administração']) expect((await caixa(nav.getByText(nome, { exact: true }))).width, `C12 título ${nome}`).toBeLessThanOrEqual(1)
       await expect(nav.getByTestId('instituicao'), 'C12 instituição').toBeHidden()
+      await expect(nav.getByText('Ana', { exact: true }), 'C12 nome em texto escondido (fica a sigla)').toBeHidden()
+      // marca e botão de expandir empilhados no topo
+      const marca = await caixa(nav.getByText('One', { exact: true }))
+      expect(marca.y + marca.height, 'C12 marca acima do botão de expandir').toBeLessThanOrEqual((await caixa(expandir)).y + 1)
+      // linha fina entre grupos no lugar do título
+      expect(await nav.getByRole('group').evaluateAll((gs) => gs.map((g) => getComputedStyle(g).borderTopWidth)), 'C12 linha entre grupos').toEqual(['0px', '1px', '1px'])
+      // Tema e Sair só com ícone, um por linha
+      const tema = await caixa(nav.getByRole('button', { name: 'Tema' }))
+      const sair = nav.getByRole('button', { name: 'Sair' })
+      expect(await sair.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'C12 Sair só com ícone').toBeLessThanOrEqual(1)
+      expect((await caixa(sair)).y, 'C12 Sair abaixo de Tema').toBeGreaterThanOrEqual(tema.y + tema.height - 1)
+      // nenhum item visível passa dos 64 px
+      const direitas = await nav.evaluate((n) =>
+        [...n.querySelectorAll('a, button, [role=img], span')].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 1).map((r) => Math.round(r.right)),
+      )
+      expect(Math.max(...direitas), 'C12 tudo dentro dos 64 px').toBeLessThanOrEqual(64)
 
       const circulo = nav.getByRole('img', { name: 'Ana' })
       const k = await caixa(circulo)
@@ -956,6 +979,8 @@ test.describe('barra lateral com grupos', () => {
 
       await nav.getByRole('link', { name: 'Artigos' }).focus()
       await expect(page.getByRole('tooltip'), 'C13 rótulo na dica').toHaveText('Artigos')
+      await nav.getByRole('link', { name: 'Usuários' }).hover()
+      await expect(page.getByRole('tooltip'), 'C13 dica ao passar o mouse').toHaveText('Usuários')
 
       await page.reload()
       await expect.poll(async () => Math.round((await caixa(page.getByRole('navigation'))).width), 'C14 recarregou recolhida').toBe(64)

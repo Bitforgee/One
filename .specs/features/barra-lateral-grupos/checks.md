@@ -25,7 +25,7 @@ Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "grupos por papel
 **C3** - [x] Cada grupo é um `role="group"` cujo nome acessível é o título ("Atendimento", "Conhecimento", "Administração"), na barra e na gaveta (AC 3)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "grupos por assunto na barra e na gaveta"`
 
-**C4** - [x] Arranjo a 1280 px com a barra aberta: cada título acima do primeiro link do seu grupo, em `font-size` 12 px; entre o último link de um grupo e o título seguinte há ao menos 24 px; a 360 px na gaveta cada título tem 32 px (±1) de altura e fica antes dos seus links (`## Screens`)
+**C4** - [x] Arranjo a 1280 px com a barra aberta: cada título acima do primeiro link do seu grupo, em `font-size` 12 px; entre o último link de um grupo e o título seguinte há ao menos 24 px (margem de 24 px nos grupos depois do primeiro, 0 no primeiro); a 360 px na gaveta cada título tem 32 px (±1) de altura, `font-size` 12 px, e fica antes dos seus links (`## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos na barra lateral"`
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "grupos na gaveta"`
 
@@ -48,17 +48,18 @@ Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px 
 
 ### S3 - Recolher (P1) · 3 files · 70 KB · ~15k
 
-**C10** - [x] A 1024 e 1280 px, com a barra aberta, há um botão "Recolher barra lateral" com `aria-expanded="true"` na mesma linha da marca (topos com diferença de no máximo 4 px) (AC 8)
+**C10** - [x] A 1024 e 1280 px, com a barra aberta, há um botão "Recolher barra lateral" com `aria-expanded="true"` na mesma linha da marca (topos com diferença de no máximo 4 px), à direita dela (AC 8)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
 **C11** - [x] Clicar em "Recolher barra lateral" deixa a barra com 64 px (±1), o `main` começando em x ≥ 63 e o botão com nome "Expandir barra lateral" e `aria-expanded="false"`; clicar de novo volta a 240 px (AC 9)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "recolher e expandir gravam one-barra"`
 
-**C12** - [x] Recolhida, os 9 links seguem com o nome acessível do rótulo e só o ícone visível (rótulo com largura de no máximo 1 px), um por linha de 36 px; títulos de grupo, instituição e texto dos avisos não visíveis; nenhum item passa dos 64 px (AC 10)
+**C12** - [x] Recolhida, os 9 links seguem com o nome acessível do rótulo e só o ícone visível (rótulo com largura de no máximo 1 px), um por linha de 36 px; títulos de grupo, instituição, nome em texto e texto dos avisos não visíveis; marca acima do botão de expandir; linha de 1 px no topo do 2º e do 3º grupo; "Sair" só com ícone, abaixo de "Tema"; nenhum item visível passa dos 64 px (AC 10, `## Screens`)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
+Proof: `cd web && npx playwright test e2e/push.spec.ts -g "barra recolhida esconde o texto dos avisos"`
 
-**C13** - [x] Recolhida, focar um link pelo teclado mostra um `role="tooltip"` com o rótulo do link (AC 11)
+**C13** - [x] Recolhida, focar um link pelo teclado ou passar o mouse sobre ele mostra um `role="tooltip"` com o rótulo do link (AC 11)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 
 **C14** - [x] Recolher grava `recolhida` e expandir grava `aberta` em `localStorage['one-barra']`; recarregar a página com `recolhida` começa com 64 px (AC 12, door 1)
@@ -67,7 +68,7 @@ Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "barra recolhida"`
 **C15** - [x] Sem `one-barra`, ou com o valor `x`, a barra começa aberta (`data-recolhida` ausente ou `false`, botão "Recolher barra lateral") (AC 13)
 Proof: `cd web && npx vitest run src/acesso/acesso.test.tsx -t "one-barra desconhecido começa aberta"`
 
-**C16** - [x] A 768 px com `one-barra = recolhida` a barra de topo tem 56 px e nenhum botão "Recolher barra lateral" ou "Expandir barra lateral" está visível (AC 14)
+**C16** - [x] A 768 px com `one-barra = recolhida` a barra de topo tem 56 px e nenhum botão "Recolher barra lateral" ou "Expandir barra lateral" está visível, nem na barra nem na gaveta (AC 14)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts -g "abaixo de 1024 px sem barra lateral"`
 
 **C17** - [x] Com `prefers-reduced-motion: reduce` o `transition-duration` computado do `<nav>` é `0s`; sem ele, maior que `0s` (AC 15)
@@ -143,3 +144,8 @@ Estimativa = arquivos lidos (`Autenticado.tsx` 9 KB, `AvisosPush.tsx` 2 KB, `e2e
 - **Abandoned:** helper `recolhida()` que montava as classes (o Tailwind não as enxerga)
 - (7) O `crapper` reprovou `Autenticado` (CRAP 20.4, complexidade 14): o estado da barra foi para `useBarra`, o botão para `BotaoBarra` e a gaveta para `Gaveta`; um teste Vitest novo ("recolher e expandir gravam one-barra") cobre o alternar, antes só no e2e, e entrou como prova extra do C11
 - **Boundary:** C1-C19 closed (feature base `ff07f05`; a branch foi rebaseada sobre o `historico-legivel` e entrou na `main` por fast-forward). Provas no HEAD: Vitest 238/238; Playwright 64/64 contra o contêiner reconstruído; `chamadas_iguais.py ff07f05` 229 testes, 0 problema; `crapper` 0 (pior: `Autenticado` 9.0); `dryer` sem candidato; `mutator` não rodou (AD-025)
+
+### Correção após a verificação rodada 1
+
+- **Gaps tratados (só testes):** arranjo da barra recolhida (marca e botão empilhados, linha entre grupos, Tema e Sair só com ícone um por linha, nome em texto escondido, nada além dos 64 px) e o texto dos avisos (prova nova em `e2e/push.spec.ts`, que serve a chave e o service worker) em C12; dica por hover em C13; botão à direita da marca em C10; margem 0 no primeiro grupo e 12 px nos títulos da gaveta em C4; nenhum botão de recolher na gaveta em C16
+- **Observação do Verifier, fora do veredito e não tratada:** com a barra recolhida, uma dica aberta por hover continua na tela se a janela encolher abaixo de 1024 px sem mexer o mouse

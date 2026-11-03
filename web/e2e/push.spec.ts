@@ -71,3 +71,19 @@ test('na gaveta o item de avisos mostra o texto visível', async ({ page }) => {
   await page.getByRole('button', { name: 'Menu' }).click()
   await expect(page.getByRole('dialog').getByText(Ativar, { exact: true })).toBeVisible()
 })
+
+// barra-lateral-grupos C12: recolhida, o botão de avisos fica só com o ícone e dentro dos 64 px
+test('barra recolhida esconde o texto dos avisos', async ({ page }) => {
+  await comChave(page, 200)
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/univag/assistente')
+  const avisos = page.getByRole('navigation').getByRole('button', { name: Ativar })
+  await expect(avisos).toBeVisible()
+  expect(await avisos.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'texto visível com a barra aberta').toBeGreaterThan(10)
+  await page.getByRole('button', { name: 'Recolher barra lateral' }).click()
+  await expect.poll(async () => Math.round((await page.getByRole('navigation').boundingBox())!.width)).toBe(64)
+  expect(await avisos.locator('span').evaluate((e) => e.getBoundingClientRect().width), 'texto escondido').toBeLessThanOrEqual(1)
+  const caixa = (await avisos.boundingBox())!
+  expect(caixa.x + caixa.width, 'dentro dos 64 px').toBeLessThanOrEqual(65)
+})
+
