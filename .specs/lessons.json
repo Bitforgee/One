@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 51,
+  "next_id": 52,
   "lessons": [
     {
       "id": "L-001",
@@ -916,6 +916,24 @@
       ],
       "created": "2026-11-03T12:33:37Z",
       "last_seen": "2026-11-03T12:33:37Z"
+    },
+    {
+      "id": "L-051",
+      "key": "ac_gap::tire os casos de teste de um campo de todos os lugares que o gravam inclusive o agendador nao so da entidade de dominio",
+      "text": "Tire os casos de teste de um campo de todos os lugares que o gravam, inclusive o agendador, não só da entidade de domínio.",
+      "signal": "ac_gap",
+      "scope": "specs/coverage",
+      "status": "candidate",
+      "features": [
+        "historico-legivel"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "chamado.test.tsx:207 LEMBRETE sem detalhe (verification rodada 1, gap 1) (specs/coverage)"
+      ],
+      "created": "2026-11-03T13:15:33Z",
+      "last_seen": "2026-11-03T13:15:33Z"
     }
   ]
 }

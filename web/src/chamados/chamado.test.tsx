@@ -198,7 +198,7 @@ describe('chamado', () => {
     return within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
   }
 
-  // historico-legivel C1, C2 (AC 1, AC 2): as 11 linhas de ## Screens
+  // historico-legivel C1, C2 (AC 1, AC 2): as 10 linhas de ## Screens (11 casos)
   it('frase de cada tipo de evento', async () => {
     const Casos: [{ tipo: string; ator?: string; de?: string | null; para?: string | null }, string][] = [
       [{ tipo: 'CRIACAO', ator: 'Sistema', para: 'ABERTO' }, 'Sistema abriu a solicitação'],

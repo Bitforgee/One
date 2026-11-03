@@ -312,6 +312,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/Autenticado.tsx:126 lg:whitespace-normal (verification rodada 1, gap 2) (web)
 - last seen: 2026-11-03T12:33:37Z
 
+### L-051 - Tire os casos de teste de um campo de todos os lugares que o gravam, inclusive o agendador, não só da entidade de domínio.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/coverage` · harmful: 0
+- features: historico-legivel
+- evidence: chamado.test.tsx:207 LEMBRETE sem detalhe (verification rodada 1, gap 1) (specs/coverage)
+- last seen: 2026-11-03T13:15:33Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
