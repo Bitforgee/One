@@ -1,11 +1,12 @@
 using System.Text.Json;
-using WebPush;
+using Lib.Net.Http.WebPush;
+using Lib.Net.Http.WebPush.Authentication;
 
 namespace One.Api.Chamados;
 
 public interface IEnviadorPush
 {
-    // Falha com WebPushException (StatusCode do serviço de push) ou outra exceção; quem chama decide repetir ou apagar a subscrição.
+    // Falha com PushServiceClientException (StatusCode do serviço de push) ou outra exceção; quem chama decide repetir ou apagar a subscrição.
     Task Enviar(string endpoint, string p256dh, string auth, string payload, CancellationToken ct);
 }
 
@@ -14,8 +15,13 @@ public sealed class EnviadorPush(IHttpClientFactory http, IConfiguration cfg) : 
     public async Task Enviar(string endpoint, string p256dh, string auth, string payload, CancellationToken ct)
     {
         var c = ConfigPush.Ler(cfg);
-        var cliente = new WebPushClient(http.CreateClient("push"));
-        await cliente.SendNotificationAsync(new PushSubscription(endpoint, p256dh, auth), payload, new VapidDetails(c.Assunto, c.ChavePublica, c.ChavePrivada), ct);
+        var cliente = new PushServiceClient(http.CreateClient("push"));
+        var inscricao = new PushSubscription { Endpoint = endpoint };
+        inscricao.SetKey(PushEncryptionKeyName.P256DH, p256dh);
+        inscricao.SetKey(PushEncryptionKeyName.Auth, auth);
+        using var vapid = new VapidAuthentication(c.ChavePublica, c.ChavePrivada) { Subject = c.Assunto };
+        // RFC 8291 (aes128gcm) e RFC 8292 (Authorization: vapid t=,k=)
+        await cliente.RequestPushMessageDeliveryAsync(inscricao, new PushMessage(payload), vapid, VapidAuthenticationScheme.Vapid, ct);
     }
 }
 

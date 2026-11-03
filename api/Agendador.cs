@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Chamados;
 using Pgvector;
-using WebPush;
+using Lib.Net.Http.WebPush;
 using One.Api.Dados;
 using static One.Api.Dados.EstadosChamado;
 
@@ -221,7 +221,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             await envio.Enviar(s.Endpoint, s.P256dh, s.Auth, PayloadPush.De(slug, numero), junto.Token);
             p.Concluir(agora);
         }
-        catch (WebPushException e) when (e.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone)
+        catch (PushServiceClientException e) when (e.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone)
         {
             db.SubscricoesPush.Remove(s);
         }

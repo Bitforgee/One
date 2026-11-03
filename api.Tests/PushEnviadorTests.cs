@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using One.Api.Chamados;
 using One.Api.Tests.Infra;
-using WebPush;
+using Lib.Net.Http.WebPush;
 
 namespace One.Api.Tests;
 
@@ -47,6 +47,22 @@ public class PushEnviadorTests : IClassFixture<OneFactoryEnviadorReal>
         return (Url([0x04, .. p.Q.X!, .. p.Q.Y!]), Url(RandomNumberGenerator.GetBytes(16)));
     }
 
+    [Fact]
+    public async Task Real_envia_post_cifrado_com_vapid()
+    {
+        var (envio, rede) = Montar(HttpStatusCode.Created);
+        var (p256dh, auth) = Navegador();
+
+        await envio.Enviar("https://push.teste/abc", p256dh, auth, PayloadPush.De("univag", "ONE-1"), CancellationToken.None);
+
+        var pedido = Assert.Single(rede.Pedidos);
+        Assert.Equal((HttpMethod.Post, new Uri("https://push.teste/abc"), "aes128gcm"), (pedido.Metodo, pedido.Uri, pedido.Codificacao));
+        Assert.StartsWith("vapid ", pedido.Autorizacao);
+        Assert.Matches(@"\bt=[\w-]+\.[\w-]+\.[\w-]+", pedido.Autorizacao);
+        Assert.Contains($"k={OneFactory.Vapid.PublicKey}", pedido.Autorizacao);
+        Assert.True(pedido.Corpo.AsSpan().IndexOf("One"u8) < 0, "o corpo deve ir cifrado");
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.NotFound)]
     [InlineData(HttpStatusCode.Gone)]
@@ -54,7 +70,7 @@ public class PushEnviadorTests : IClassFixture<OneFactoryEnviadorReal>
     {
         var (envio, _) = Montar(status);
         var (p256dh, auth) = Navegador();
-        var falha = await Assert.ThrowsAsync<WebPushException>(() => envio.Enviar("https://push.teste/abc", p256dh, auth, "{}", CancellationToken.None));
+        var falha = await Assert.ThrowsAsync<PushServiceClientException>(() => envio.Enviar("https://push.teste/abc", p256dh, auth, "{}", CancellationToken.None));
         Assert.Equal(status, falha.StatusCode);
     }
 

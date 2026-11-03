@@ -17,7 +17,6 @@ using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 using One.Api.Chamados;
 using One.Api.Dados;
-using WebPush;
 
 namespace One.Api.Tests.Infra;
 
@@ -32,7 +31,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public HasherEspiao Hasher { get; } = new();
     public ContadorDeGravacoes Gravacoes { get; } = new();
     public AtrasoDoCommit Commit { get; } = new();
-    public static readonly VapidDetails Vapid = VapidHelper.GenerateVapidKeys();
+    public static readonly ParVapid Vapid = ParVapid.Gerar();
     public EnviadorFalso Push { get; } = new();
     protected virtual bool EnviadorPushReal => false;
     protected virtual bool LimitesReais => false;

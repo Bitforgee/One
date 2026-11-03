@@ -1,4 +1,4 @@
-using WebPush;
+using System.Security.Cryptography;
 
 namespace One.Api.Chamados;
 
@@ -11,9 +11,22 @@ public static class PushComando
             erro.WriteLine("uso: push chaves");
             return 1;
         }
-        var chaves = VapidHelper.GenerateVapidKeys();
+        var chaves = ParVapid.Gerar();
         saida.WriteLine($"PUSH_CHAVE_PUBLICA={chaves.PublicKey}");
         saida.WriteLine($"PUSH_CHAVE_PRIVADA={chaves.PrivateKey}");
         return 0;
     }
+}
+
+// par VAPID (RFC 8292): chave pública P-256 não comprimida (65 bytes) e privada D (32 bytes), em base64url sem preenchimento
+public sealed record ParVapid(string PublicKey, string PrivateKey)
+{
+    public static ParVapid Gerar()
+    {
+        using var ec = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var p = ec.ExportParameters(true);
+        return new(Url([0x04, .. p.Q.X!, .. p.Q.Y!]), Url(p.D!));
+    }
+
+    static string Url(byte[] b) => Convert.ToBase64String(b).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 }

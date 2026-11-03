@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Chamados;
 using One.Api.Dados;
-using WebPush;
+using Lib.Net.Http.WebPush;
 
 namespace One.Api.Tests.Infra;
 
@@ -22,7 +22,7 @@ public class EnviadorFalso : IEnviadorPush
         if (Comportamento is { } c) await c(e, ct);
     }
 
-    public static WebPushException Falha(System.Net.HttpStatusCode status) => new("falha simulada", new PushSubscription(), new HttpResponseMessage(status));
+    public static PushServiceClientException Falha(System.Net.HttpStatusCode status) => new("falha simulada", status);
 }
 
 public static class PushSemente

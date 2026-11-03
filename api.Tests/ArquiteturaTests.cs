@@ -1118,12 +1118,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Contains(linhas, l => l.Contains($"`{termo}`") && l.Trim().Trim('|').Split('|')[^1].Trim().Length >= 10);
     }
 
-    // web-push C24: door 1, WebPush 1.0.13 e nenhuma outra biblioteca de push
+    // web-push C24: door 1, Lib.Net.Http.WebPush 3.3.1 (troca de 03/11/2026) e nenhuma outra biblioteca de push
     [Fact]
     public void Pacote_webpush_fixo()
     {
         var pacotes = System.Xml.Linq.XDocument.Load(Path.Combine(Api, "One.Api.csproj")).Descendants("PackageReference").Select(p => ((string?)p.Attribute("Include") ?? "", (string?)p.Attribute("Version"))).ToList();
-        Assert.Contains(("WebPush", "1.0.13"), pacotes);
-        Assert.DoesNotContain(pacotes, p => Regex.IsMatch(p.Item1, "(?i)push|vapid|firebase|onesignal") && p.Item1 != "WebPush");
+        Assert.Contains(("Lib.Net.Http.WebPush", "3.3.1"), pacotes);
+        Assert.DoesNotContain(pacotes, p => Regex.IsMatch(p.Item1, "(?i)push|vapid|firebase|onesignal") && p.Item1 != "Lib.Net.Http.WebPush");
     }
 }
