@@ -225,9 +225,9 @@ antes do código, verificação independente depois), e a próxima só começa c
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
-| 05–06/11 | arquivos no MinIO | `api/`, `docker-compose.yml` |
-| 06–07/11 | tempo real com SignalR | `api/`, `web/` |
-| 07–08/11 | Web Push | `api/`, `web/` (service worker) |
+| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano em escrita desde 02/11 | `api/`, `docker-compose.yml` |
+| 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano em escrita desde 02/11 | `api/`, `web/` |
+| 07–09/11 | Web Push (`web-push`): plano em escrita desde 02/11 | `api/`, `web/` (service worker) |
 | 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
 | 13/11 | 1ª versão no AVA: o que estiver verde no `main` nesse dia | |
 | 16/11 | limite: o que não estiver verificado sai da banca e volta para depois | |
@@ -448,6 +448,13 @@ dentro de textos, como URLs, ficam). Ficaram de fora as migrações geradas pelo
 de asserções preservadas comparam. Build com CA1502, barreira do Mediator e API 329/329 verdes. As referências
 aos critérios (`// AC 18`) e os dois `shortcut:` saíram do código; os limites conhecidos continuam na linha
 "Escala" deste roadmap e a ligação com os critérios fica nos `plan.md`/`checks.md` e no git.
+
+## Próximas features (a partir de 02/11)
+
+Pedido do usuário em 02/11/2026: seguir com MinIO, SignalR e Web Push em subagentes. Os três planos são
+escritos em paralelo (só documentos); o build segue uma feature por vez no `api/`, nesta ordem: MinIO,
+SignalR, Web Push, cada uma só depois da anterior verificada. Construtores no Sonnet, sem mutação (AD-025),
+Verifier no modelo mais forte.
 
 ## Custo do build com subagentes
 
