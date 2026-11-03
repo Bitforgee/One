@@ -225,7 +225,7 @@ antes do código, verificação independente depois), e a próxima só começa c
 | --- | --- | --- |
 | 02/11 | vertical slice completa com `Mediator`: **feita e verificada** (rodada 2, `verification.md`); API 292 testes, 58 casos de uso | `api/` |
 | 02/11 | domínio rico e contratos por caso de uso (AD-024): **feito e verificado** (rodada 2) | `api/` |
-| 03–05/11 | arquivos no MinIO (`arquivos-minio`): plano e 30 checks aprovados em 02/11 (`8e73913`); build em 2 lotes, lote 1 em andamento | `api/`, `docker-compose.yml` |
+| 03–05/11 | arquivos no MinIO (`arquivos-minio`): construído em 02/11 (2 lotes e a correção da rodada 1, `9ca2325..e84ca8d`); verificação na rodada 3 | `api/`, `docker-compose.yml` |
 | 05–07/11 | tempo real com SignalR (`tempo-real-signalr`): plano e 51 checks aprovados em 02/11 (`f996d30`); um construtor, depois do MinIO verificado | `api/`, `web/` |
 | 07–09/11 | Web Push (`web-push`): plano e 53 checks aprovados em 02/11 (`f30a358`); 2 lotes, depois do SignalR verificado | `api/`, `web/` (service worker) |
 | 02/11 | interface nova (shadcn/ui e Tailwind): **concluída**, as 15 telas migradas e o Bootstrap removido; C7 (mutação) aberto por decisão do usuário (AD-026) | `web/` |
@@ -458,7 +458,7 @@ Verifier no modelo mais forte.
 
 | Feature | Plano e checks | Decisões do usuário (02/11) | Build |
 | --- | --- | --- | --- |
-| `arquivos-minio` | 25 critérios, 30 checks | imagem `cgr.dev/chainguard/minio` fixada por digest (a `minio/minio` comunitária deixou de ser publicada em 10/2025: o MinIO Community virou só código-fonte, AGPLv3); sem cópia dos `bytea` antigos, o banco de desenvolvimento é recriado | 2 lotes; lote 1 em andamento |
+| `arquivos-minio` | 25 critérios, 30 checks; API 367, e2e 46 | imagem `cgr.dev/chainguard/minio` fixada por digest (a `minio/minio` comunitária deixou de ser publicada em 10/2025: o MinIO Community virou só código-fonte, AGPLv3); sem cópia dos `bytea` antigos, o banco de desenvolvimento é recriado; C5 vale pela base (415), C29 com e2e real de anexo | construído; verificação: rodada 1 reprovou (tamanho no cabeçalho, contador de leituras, erro do bucket virando 500, objetos órfãos em dois 409, falta de e2e com anexo), rodada 2 reprovou só pela gravação da rejeição aceita com anexo, corrigida em `e84ca8d`; rodada 3 em andamento |
 | `tempo-real-signalr` | 51 checks | recarga de segurança a cada 60 s com o hub aberto (15 s sem conexão); o sinal não leva dados e também chega ao aluno nas notas internas | 1 construtor, depois do MinIO |
 | `web-push` | 29 critérios, 53 checks | push só para o aluno, nos 3 eventos do e-mail; par VAPID gerado uma vez pelo comando `push chaves` e guardado no `.env` do servidor (sem ele o push fica desligado) | 2 lotes, depois do SignalR |
 
