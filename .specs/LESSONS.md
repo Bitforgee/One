@@ -198,6 +198,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md gap 8; checks.md C6, C7 (web)
 - last seen: 2026-11-03T01:28:01Z
 
+### L-032 - When a ruling fixes how many items show at each breakpoint, assert the exact count per width, not a lower bound, so a layout that never grows fails
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `responsive-ui` · harmful: 0
+- features: interface-nova
+- evidence: verification.md F11 / web/e2e/arranjo.spec.ts:157 (responsive-ui)
+- last seen: 2026-11-03T01:53:43Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

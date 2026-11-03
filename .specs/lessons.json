@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 32,
+  "next_id": 33,
   "lessons": [
     {
       "id": "L-001",
@@ -566,6 +566,24 @@
       ],
       "created": "2026-11-03T01:28:01Z",
       "last_seen": "2026-11-03T01:28:01Z"
+    },
+    {
+      "id": "L-032",
+      "key": "surviving_mutant::when a ruling fixes how many items show at each breakpoint assert the exact count per width not a lower bound so a layout that never grows fails",
+      "text": "When a ruling fixes how many items show at each breakpoint, assert the exact count per width, not a lower bound, so a layout that never grows fails",
+      "signal": "surviving_mutant",
+      "scope": "responsive-ui",
+      "status": "candidate",
+      "features": [
+        "interface-nova"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F11 / web/e2e/arranjo.spec.ts:157 (responsive-ui)"
+      ],
+      "created": "2026-11-03T01:53:43Z",
+      "last_seen": "2026-11-03T01:53:43Z"
     }
   ]
 }
