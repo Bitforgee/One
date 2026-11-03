@@ -49,3 +49,9 @@ uma vez no código, num grupo de constantes de `api/Dados/Entidades.cs`; cada pr
 | Termo | Chave | Significado |
 | --- | --- | --- |
 | `Armazenamento` | `Armazenamento:Endpoint`, `Chave`, `Segredo`, `Bucket` | o único código que fala com o MinIO (`api/Armazenamento.cs`): grava os bytes de anexos e PDFs sob chave nova `{instituicaoId}/{anexos ou documentos}/{guid}`, lê pela chave da linha e nunca apaga; o banco guarda só chave, hash SHA-256 e tamanho |
+
+## Tempo real (`/api/tempo-real`)
+
+| Termo | Chave | Significado |
+| --- | --- | --- |
+| `sinal de mudança` | `ChamadoMudou(numero)`, `FilaMudou()` | aviso sem dado de que um chamado mudou: o hub `TempoRealHub` o manda depois do commit (`AvisarMudanca`) ao grupo `chamado:{instituicaoId}:{numero}` e às filas `fila:{instituicaoId}:{setorId}`; a tela relê pelo `GET` de sempre. O polling de 15 s do `useChamado` segue como rede de segurança (15 s sem conexão, 60 s com ela) |
