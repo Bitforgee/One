@@ -1262,4 +1262,29 @@ test.describe('painel', () => {
     expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['1px', '1px', '8px'])
     expect(await page.locator('tbody tr').first().evaluate((e) => getComputedStyle(e).borderBottomWidth), 'borda entre linhas').toBe('1px')
   })
+
+  // C54
+  test('texto das linhas de 14 px', async ({ page }) => {
+    await simularApi(page)
+    for (const w of [360, 1440]) {
+      await page.setViewportSize({ width: w, height: 900 })
+      await page.goto('/univag/fila')
+      const celula = page.locator('tbody tr').first().locator('td').first()
+      await celula.waitFor()
+      expect(await celula.evaluate((e) => getComputedStyle(e).fontSize), `${w} px: célula do corpo`).toBe('14px')
+    }
+  })
+
+  // C55
+  test('ícones centralizados na barra recolhida', async ({ page }) => {
+    await simularApi(page)
+    await recolhida(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/fila')
+    const barra = page.locator(Conteiner)
+    await expect.poll(() => largura(page)).toBe(48)
+    const centro = async (l: Locator) => { const c = await caixa(l); return c.x + c.width / 2 }
+    for (const rotulo of Links) expect(Math.abs((await centro(barra.getByRole('link', { name: rotulo }).locator('svg'))) - 24), `ícone de ${rotulo}`).toBeLessThanOrEqual(1)
+    expect(Math.abs((await centro(barra.getByText('A', { exact: true }))) - 24), 'iniciais').toBeLessThanOrEqual(1)
+  })
 })
