@@ -116,6 +116,24 @@ describe('textos das telas de acesso', () => {
     t.todos()
   })
 
+  // login-institucional C26: o estado de erro de cada formulário mostra só os textos de hoje e o detail da API
+  it('textos dos erros de Primeiro acesso e Criar senha', async () => {
+    for (const [caminho, rota, campo, botao, literais] of [
+      ['/univag/primeiro-acesso', 'POST /api/auth/primeiro-acesso', 'CPF', 'Enviar link', ['One', 'Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel]],
+      ['/univag/definir-senha?token=vencido', 'POST /api/auth/definir-senha', 'Nova senha', 'Salvar senha', ['One', 'Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', ...Painel]],
+    ] as const) {
+      const t = estados([...literais])
+      api({ [rota]: () => Recusa })
+      const { container, unmount } = abrir(caminho)
+      await userEvent.type(screen.getByLabelText(campo), '1')
+      await userEvent.click(screen.getByRole('button', { name: botao }))
+      expect(await screen.findByRole('alert'), caminho).toHaveTextContent('Dados recusados pela API.')
+      t.conferir(container, ['Dados recusados pela API.'])
+      t.todos()
+      unmount()
+    }
+  })
+
   it('textos Trocar senha', async () => {
     const t = estados(['Trocar senha', 'Troque a senha temporária para continuar.', 'Senha atual', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar'])
     for (const deveTrocarSenha of [true, false]) {

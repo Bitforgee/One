@@ -1564,4 +1564,43 @@ test.describe('entrada institucional', () => {
       await page.unrouteAll()
     }
   })
+
+  // C23
+  test('alerta de sucesso de Criar senha', async ({ page }) => {
+    for (const w of [360, 1280]) {
+      await ir(page, '/univag/definir-senha?token=t', w)
+      await page.route('**/api/auth/definir-senha', (rota) => rota.fulfill({ status: 204 }))
+      await page.getByLabel('Nova senha').fill('senha-nova-123')
+      await page.getByRole('button', { name: 'Salvar senha' }).click()
+      const alerta = await caixa(page.getByRole('alert').filter({ hasText: 'Senha criada.' }))
+      const h = await caixa(page.locator('h1')) // o bloco, mais baixo, recentra: mede o h1 depois do envio
+      perto(alerta.y, h.y + h.height + 24, `${w}: alerta de sucesso`)
+      await page.unrouteAll()
+    }
+  })
+
+  // C24
+  test('instituição não encontrada no centro vertical', async ({ page }) => {
+    for (const w of [360, 1280]) {
+      await page.setViewportSize({ width: w, height: 800 })
+      await page.route('**/api/instituicoes/univag', (rota) => rota.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ status: 404, detail: 'Instituição não encontrada.' }) }))
+      await page.goto('/univag')
+      const alerta = page.getByRole('alert').filter({ hasText: 'Instituição não encontrada.' })
+      await alerta.waitFor()
+      const a = await caixa(alerta)
+      perto(a.y + a.height / 2, 400, `${w}: centro y do Alert`)
+      await page.unrouteAll()
+    }
+  })
+
+  // C25
+  test('frase do Login centrada', async ({ page }) => {
+    for (const w of [360, 1280]) {
+      await ir(page, '/univag', w)
+      const frase = page.getByText('Entre com seu CPF e sua senha.', { exact: true })
+      expect(await estilo(frase, 'text-align'), `${w}: text-align`).toEqual(['center'])
+      const [f, b] = [await caixa(frase), await caixa(bloco(page))]
+      perto(f.x + f.width / 2, b.x + b.width / 2, `${w}: centro da frase`)
+    }
+  })
 })
