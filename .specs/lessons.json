@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 73,
+  "next_id": 75,
   "lessons": [
     {
       "id": "L-001",
@@ -1314,6 +1314,42 @@
       ],
       "created": "2026-11-04T22:02:57Z",
       "last_seen": "2026-11-04T22:02:57Z"
+    },
+    {
+      "id": "L-073",
+      "key": "surviving_mutant::um check com a ou b precisa de uma prova com a e outra com b testar so com a foto deixa a ilustracao sem prova",
+      "text": "Um check com 'A (ou B)' precisa de uma prova com A e outra com B; testar só com a foto deixa a ilustração sem prova.",
+      "signal": "surviving_mutant",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "aparencia-instituicao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/aparencia.spec.ts C65 (web/e2e)"
+      ],
+      "created": "2026-11-04T22:20:24Z",
+      "last_seen": "2026-11-04T22:20:24Z"
+    },
+    {
+      "id": "L-074",
+      "key": "spec_precision_gap::cada separador ou classe de caractere que uma regra pura nomeia precisa de um caso de teste que so passa por ele",
+      "text": "Cada separador ou classe de caractere que uma regra pura nomeia precisa de um caso de teste que só passa por ele.",
+      "signal": "spec_precision_gap",
+      "scope": "api.Tests",
+      "status": "candidate",
+      "features": [
+        "protecao-injecao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api/Assistente/Conferencia.cs:38 (api.Tests)"
+      ],
+      "created": "2026-11-04T22:20:24Z",
+      "last_seen": "2026-11-04T22:20:24Z"
     }
   ]
 }

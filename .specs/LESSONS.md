@@ -444,6 +444,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/e2e/aparencia.spec.ts:151 (web/e2e)
 - last seen: 2026-11-04T22:02:57Z
 
+### L-073 - Um check com 'A (ou B)' precisa de uma prova com A e outra com B; testar só com a foto deixa a ilustração sem prova.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: aparencia-instituicao
+- evidence: web/e2e/aparencia.spec.ts C65 (web/e2e)
+- last seen: 2026-11-04T22:20:24Z
+
+### L-074 - Cada separador ou classe de caractere que uma regra pura nomeia precisa de um caso de teste que só passa por ele.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `api.Tests` · harmful: 0
+- features: protecao-injecao
+- evidence: api/Assistente/Conferencia.cs:38 (api.Tests)
+- last seen: 2026-11-04T22:20:24Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
