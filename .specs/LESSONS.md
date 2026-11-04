@@ -456,6 +456,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api/Assistente/Conferencia.cs:38 (api.Tests)
 - last seen: 2026-11-04T22:20:24Z
 
+### L-075 - Para provar 'na mesma transação', faça falhar a gravação de dentro e confira que o resto não ficou; falhar só o commit não distingue gravar antes ou depois.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api.Tests` · harmful: 0
+- features: instituicoes-plataforma
+- evidence: checks C10 (api.Tests)
+- last seen: 2026-11-04T23:29:06Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

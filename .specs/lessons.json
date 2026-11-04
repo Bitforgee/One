@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 75,
+  "next_id": 76,
   "lessons": [
     {
       "id": "L-001",
@@ -1350,6 +1350,24 @@
       ],
       "created": "2026-11-04T22:20:24Z",
       "last_seen": "2026-11-04T22:20:24Z"
+    },
+    {
+      "id": "L-075",
+      "key": "surviving_mutant::para provar na mesma transacao faca falhar a gravacao de dentro e confira que o resto nao ficou falhar so o commit nao distingue gravar antes ou depois",
+      "text": "Para provar 'na mesma transação', faça falhar a gravação de dentro e confira que o resto não ficou; falhar só o commit não distingue gravar antes ou depois.",
+      "signal": "surviving_mutant",
+      "scope": "api.Tests",
+      "status": "candidate",
+      "features": [
+        "instituicoes-plataforma"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks C10 (api.Tests)"
+      ],
+      "created": "2026-11-04T23:29:06Z",
+      "last_seen": "2026-11-04T23:29:06Z"
     }
   ]
 }

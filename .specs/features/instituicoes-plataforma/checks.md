@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/instituicoes-plataforma/plan.md`
 
-36 checks em 4 slices · 4 one-way doors · 0 perguntas abertas
+38 checks em 5 slices · 4 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md`
 e este `checks.md`, gravado no `## Handoff`.
@@ -75,11 +75,13 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Lista
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_instituicao_201"`
 
-**C10** - [x] Depois de C9, existe 1 `EmailSaida` com `instituicao_id` da "demo", `Destinatario` igual ao e-mail do admin, `Assunto` "[Faculdade Demo] Crie sua senha" e `Corpo` contendo o link `.../demo/definir-senha?token=` de um token válido do admin. A linha é gravada na mesma transação: com o commit simulado falhando (`f.Commit`), nada da instituição nem o e-mail fica (AC 10)
+**C10** - Depois de C9, existe 1 `EmailSaida` com `instituicao_id` da "demo", `Destinatario` igual ao e-mail do admin, `Assunto` "[Faculdade Demo] Crie sua senha" e `Corpo` contendo o link `.../demo/definir-senha?token=` de um token válido do admin. A linha é gravada na mesma transação: com o commit simulado falhando (`f.Commit`), nada da instituição nem o e-mail fica (AC 10) Com a gravação da `EmailSaida` falhando (o `SaveChanges` que grava o e-mail lança), nem a instituição nem o administrador ficam no banco (decisão delegada pelo usuário em 04/11, depois da rodada 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_grava_o_email_na_mesma_transacao"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Falha_ao_gravar_o_email_nao_cria_a_instituicao"`
 
-**C11** - [x] O `POST` responde `400` no campo e não grava nada em 7 casos: `slug` "ab" (curto), `slug` "Demo" (maiúscula), `nome` vazio, `fuso` "Brasil/Cuiaba", `admin.cpf` "111.111.111-11", `admin.nome` vazio e `admin.email` "x". Os campos são `slug`, `nome`, `fuso`, `admin.cpf`, `admin.nome` e `admin.email` (AC 11)
+**C11** - O `POST` responde `400` no campo e não grava nada em 7 casos: `slug` "ab" (curto), `slug` "Demo" (maiúscula), `nome` vazio, `fuso` "Brasil/Cuiaba", `admin.cpf` "111.111.111-11", `admin.nome` vazio e `admin.email` "x". Os campos são `slug`, `nome`, `fuso`, `admin.cpf`, `admin.nome` e `admin.email` (AC 11) A recusa do CPF de dígitos iguais vale só para a rota: `instituicao criar --admin-cpf 111.111.111-11` continua saindo com 0, como em `<base>` (AD-033: o comando mantém a saída) (decisão delegada pelo usuário em 04/11, depois da rodada 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_invalido_400"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OperadorComandoTests.Cli_aceita_cpf_de_digitos_iguais_como_na_base"`
 
 **C12** - [x] Um `POST` com o `slug` de uma instituição que já existe (ativa ou inativa) responde `409` com `detail` "Esse endereço já está em uso." e não grava nada (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_repetido_409"`
@@ -94,7 +96,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTes
 
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "lista com selo, administradores e ações"`
 
-**C15** - [x] A 1440 px, "Nova instituição" fica à direita do título, com o mesmo `top` (1 px). A 390 px, as linhas viram cartões (`role="listitem"`), sem `<table>` visível, e `scrollWidth` ≤ 390 (Screens)
+**C15** - A 1440 px, a tela tem um só título "Instituições" (o `h1` da casca, sem título repetido na área de conteúdo), e "Nova instituição" fica no topo da área de conteúdo, alinhado à direita (`right` a no máximo 1 px do `right` da área). A 390 px, as linhas viram cartões (`role="listitem"`), sem `<table>` visível, e `scrollWidth` ≤ 390 (Screens) (decisão delegada pelo usuário em 04/11, depois da rodada 1)
 Proof: `cd web && npx playwright test e2e/instituicoes.spec.ts -g "arranjo Instituições"`
 
 **C16** - [x] Digitar "Centro Universitário São José & Cia" no Nome preenche o Endereço com "centro-universitario-sao-jose-cia". Editar o Endereço para "csj" e depois mudar o Nome deixa "csj". O fuso começa em `America/Sao_Paulo`, e a lista de fusos tem só fusos `America/*` do Brasil (AC 15)
@@ -123,12 +125,14 @@ Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "imp
 
 ### S4 - Desativar, reativar e reenviar acesso (P1)
 
-**C22** - [x] `POST .../demo/desativar` responde `200` com `{slug:"demo", ativa:false}`. Depois:
+**C22** - `POST .../demo/desativar` responde `200` com `{slug:"demo", ativa:false}`. Depois:
 - `GET /api/instituicoes/demo` responde `404`;
 - `POST /api/auth/login` na "demo" responde como instituição inexistente, igual a `<base>`;
 - o cliente do admin da "demo", logado antes, recebe `401` em `GET /api/auth/me` (AC 22)
 
+- `POST /api/auth/primeiro-acesso` com o CPF do admin da "demo" não grava token nem `EmailSaida` (decisão delegada pelo usuário em 04/11, depois da rodada 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Desativar_bloqueia_login_e_sessao"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Desativar_bloqueia_primeiro_acesso"`
 
 **C23** - [x] `desativar` com o slug da instituição do próprio operador responde `409` com `detail` "Você não pode desativar a instituição em que está.", e `ativa` continua true (AC 23)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Nao_desativa_a_propria"`
@@ -155,6 +159,16 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_
 
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "desativar confirma, reativar e reenviar agem direto"`
 
+### S5 - Arranjos de ## Screens sem check na rodada 1 (P1)
+
+Acrescentados por decisão delegada pelo usuário em 04/11, depois da rodada 1 (L-070).
+
+**C37** - A 390 px, cada cartão da lista tem o nome e o selo de situação na primeira linha (mesmo `top`, 1 px; o selo à direita do nome) e o endereço `/{slug}` abaixo deles (Screens: Instituições < 768 px)
+Proof: `cd web && npx playwright test e2e/instituicoes.spec.ts -g "cartão com nome e selo na 1ª linha e endereço abaixo"`
+
+**C38** - O `Dialog` "Nova instituição" mostra os campos nesta ordem de cima para baixo: Nome, Endereço, Fuso horário, e sob o título "Primeiro administrador": Nome, CPF, E-mail; o rodapé tem "Cancelar" à esquerda de "Criar"; o campo Endereço mostra o prefixo fixo "/" antes do texto (Screens: Nova instituição)
+Proof: `cd web && npx playwright test e2e/instituicoes.spec.ts -g "diálogo Nova instituição com campos em ordem, Cancelar e prefixo"`
+
 ### S0 - Invariantes e barreiras (P1)
 
 **C29** - [x] A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 3 e 5 da lista fechada (Surface)
@@ -163,7 +177,7 @@ Proof: `dotnet test api.Tests`
 **C30** - [x] `rotas.txt` ganha exatamente as 6 linhas do `Surface`, todas `anonimo=False autorizacao=True limite=-`, e nenhuma linha some (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
-**C31** - [x] Nenhum arquivo de `api/` fora de `api/Instituicoes/` (os casos de uso da plataforma), `api/Sessao.cs`, `api/Acesso/*` e `api/Agendador.cs` atribui `InstituicaoAtual` além dos de `<base>`. `IgnoreQueryFilters` continua só no agendador e no comando (door 3)
+**C31** - Nenhum arquivo de `api/` fora dos arquivos nomeados (os 3 casos de uso da plataforma que gravam em outra instituição, mais `BaixarImagemInstituicao.cs`, `ManifestoInstituicao.cs` e `InstituicaoComando.cs`, que já trocavam), `api/Sessao.cs`, `api/Acesso/*` e `api/Agendador.cs` atribui `InstituicaoAtual` além dos de `<base>`. `IgnoreQueryFilters` continua só no agendador e no comando (door 3) (decisão delegada pelo usuário em 04/11, depois da rodada 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.IgnoreQueryFilters_so_no_agendador_e_no_comando|FullyQualifiedName~PlataformaTests.InstituicaoAtual_so_onde_ja_era_e_na_plataforma"`
 
 **C32** - [x] `dotnet build api` passa com a barreira CA1502 (AD-018)
@@ -203,9 +217,9 @@ Proof: `cd web && E2E_URL=http://localhost:8086 npx playwright test`
 | papéis sem acesso (4) | `ADMINISTRADOR` C4, C5 · `ATENDENTE` C4, C5 · `ALUNO` C4, C5 · sem sessão C4 | - |
 | campos inválidos na criação (7) | slug curto C11 · slug maiúsculo C11 · nome C11 · fuso C11 · CPF C11 · nome do admin C11 · e-mail C11 | - |
 | casos do comando `operador` (6) | adicionar C1 · repetir C1 · remover C2 · slug inexistente C3 · CPF sem usuário C3 · usuário inativo C3 | - |
-| efeitos de desativar (3) | página pública 404 C22 · login C22 · sessão aberta C22 | - |
+| efeitos de desativar (4) | página pública 404 C22 · login C22 · primeiro acesso C22 · sessão aberta C22 | - |
 | destinatários do reenvio (2) | admin ativo C25 · admin inativo excluído C25 | - |
-| one-way doors do `Landing` (4) | 1 C1, C6, C7 · 2 C4 · 3 C19, C31 · 4 C5 | - |
+| one-way doors do `Landing` (5) | 1 C1, C6, C7 · 2 C4 · 3 C19, C31 · 4 C5 · 5 C8 | - |
 
 - Os claims que nomeiam status, rota ou forma de resposta (C4, C6 a C12, C19 a C27) têm prova pela API
 - Os de arranjo (C15) são medidos no Chromium; os de tela (C5, C14, C16 a C18, C21, C28) pelo Vitest com a API simulada
