@@ -1,8 +1,8 @@
 # One: roadmap
 
-- **Data:** 03/11/2026 (Etapa 4c concluída: vertical slice completa, domínio rico e contratos, arquivos no MinIO,
-  tempo real com SignalR e Web Push verificados no `main`; interface nova concluída com o C7 de mutação aberto por
-  decisão do usuário. Próximo: Etapa 5, que depende da chave da OpenAI e dos dados da Univag)
+- **Data:** 04/11/2026 (anexos na conversa com o assistente verificados; aparência por instituição, com revisão
+  visual e do celular, e proteção contra prompt injection construídas, com a verificação em andamento; chave da
+  OpenAI no `.env` e respondendo. Próximo: fechar as duas verificações e a Etapa 5, que depende dos dados da Univag)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -14,7 +14,10 @@
   - `.specs/features/arquivos-minio/`: anexos e PDFs no MinIO (Etapa 4c), 25 critérios, 30 checks;
   - `.specs/features/tempo-real-signalr/`: telas atualizadas pelo hub SignalR (Etapa 4c), 51 checks;
   - `.specs/features/web-push/`: aviso ao aluno com o app fechado (Etapa 4c), 29 critérios, 53 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-026;
+  - `.specs/features/anexos-assistente/`: fotos e PDFs na conversa, lidos pela IA (04/11), 29 critérios, 40 checks;
+  - `.specs/features/aparencia-instituicao/`: aparência por instituição, revisão visual e celular (04/11), 53 critérios, 64 checks;
+  - `.specs/features/protecao-injecao/`: proteção contra prompt injection (04/11), 9 checks;
+  - `.specs/STATE.md`: decisões AD-001 a AD-032;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -39,7 +42,7 @@ A Univag é o primeiro cliente.
 | 20/11/2026 (qui) | Aplicação para a banca | todos os slices P1 funcionando de ponta a ponta, hospedados, com os dados da Univag |
 | 27/11/2026 (sex) | Entrega final | P2 que couber, documento ABNT atualizado, relatório de verificação |
 
-## Onde estamos (02/11/2026)
+## Onde estamos (04/11/2026)
 
 O código do MVP inteiro (P1, P2 e P3) e o RAG ficaram prontos bem antes das datas. O que falta
 para a banca deixou de ser código: a verificação do RAG fechar, dados reais, chave da OpenAI,
@@ -49,10 +52,10 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 160 commits em `main`, só nesta máquina; a refatoração vai de `69fd9ab` a `f18ad08`, a vertical slice completa de `9ef0f19` a `45fba58`, o MinIO de `9ca2325` a `e84ca8d` |
-| Testes | API 449 (237 antes da refatoração), web 213 (35 antes da refatoração, 99 antes da interface nova), e2e 51 (11 de antes, 34 de tela e de arranjo de 360 a 1920 px, 1 com anexo real contra o contêiner, 5 do Web Push), e2e de 360 px em 10 telas, e2e de PWA contra o contêiner. A IA nos testes é simulada: nenhum teste chamou a OpenAI de verdade ainda |
+| Código | 249 commits em `main`, só nesta máquina. Desde 04/11 o trabalho é feito direto na `main` (pedido do usuário); a branch `visual-sem-cara-de-ia` foi incorporada por avanço rápido |
+| Testes | Em 04/11: API 534, web (Vitest) 329, arranjo com a API simulada 84, e2e real contra o contêiner 109. O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`) |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
-| Chave da OpenAI no `.env` | Ainda não colocada |
+| Chave da OpenAI no `.env` | **Colocada.** Em 04/11 uma chamada real ao `gpt-6-luna` com imagem e PDF respondeu 200 (`provedor_aceita_anexos.py`, C20 de `anexos-assistente`). O ensaio de ponta a ponta da Etapa 5 continua por fazer |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
 | Arquivos no MinIO (`arquivos-minio`) | 30 checks provados; verificação independente **aprovada** em 03/11 (rodada 3). Anexos e PDFs saíram do `bytea` para o MinIO (`cgr.dev/chainguard/minio` fixada por digest), download por streaming com o mesmo `Content-Length`, chave com a instituição, bucket versionado sem exclusão, 503 quando o armazenamento cai. A verificação achou e o build corrigiu: erro do S3 virando 500, objetos órfãos em dois 409 |
@@ -60,6 +63,10 @@ hospedagem e ensaio.
 | Web Push (`web-push`) | 53 checks provados; verificação independente **aprovada** em 03/11 (rodada 2). Servidor: inscrições por instituição, fila `push_saida` na mesma transação do e-mail, agendador com novas tentativas e limpeza no 404/410, comando `push chaves`; envio com `Lib.Net.Http.WebPush` 3.3.1 em `aes128gcm` com `vapid` (Safari e iPhone). Web: `sw.ts` com `injectManifest`, sino na barra e texto na gaveta e no menu "Mais", permissão só no clique, inscrição desfeita se o servidor recusar. Decisões do usuário: troca de biblioteca, `DELETE ?endpoint=`, botão. Falta só a conferência manual com o par VAPID de produção |
 | Interface nova (`interface-nova`) | **Concluída em 02/11** (`2aa8a9a..bd7d7ce`): 15 telas em shadcn/ui e Tailwind, Bootstrap removido, cabeçalho com nomes sempre visíveis e menu "Mais". Verificação: rodada 1 reprovou por sobreposição no cabeçalho e lacunas de teste, rodada 2 pela contagem de links da barra, rodada 3 só pelo C7 (mutação suspensa, AD-025). Decisão do usuário (AD-026): fechar com o C7 aberto. Vitest 168, e2e 45 |
 | Domínio rico e contratos (`dominio-e-contratos`) | 41 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só pelo C27 (`Agendador.cs` mudou só nos comentários removidos a pedido do usuário), aceito pelo usuário. 28 falhas injetadas, todas pegas; API 329, nenhuma migração |
+| Visual de 03/11 (`redesign-institucional`, `barra-lateral-grupos`, `historico-legivel`, `layout-painel`, `login-institucional`) | Todas verificadas em 03/11 (AD-027 a AD-030). Em 04/11, `2512a37` deixou login, barra, painel e compositor com menos cara de modelo, e `688aedc` transformou os links da resposta do assistente em botões |
+| Anexos na conversa (`anexos-assistente`) | 40 checks provados; verificação independente **aprovada** em 04/11 (rodada 2). O aluno anexa fotos (JPG, PNG) e PDFs, até 10 MB cada e 3 por conversa, com texto obrigatório; a IA lê o anexo na própria requisição ao `gpt-6-luna`, mas a resposta continua só das fontes (AD-012); o atendente baixa os anexos na transcrição do chamado. O modelo continua o `gpt-6-luna`: o `gpt-4o-mini` custa mais por token e por imagem e será desligado em 14/01/2027 (AD-031). A rodada 1 reprovou por login demais no e2e, um teste velho de relógio e uma rota sem prova de 503 |
+| Aparência da instituição (`aparencia-instituicao`) | 64 checks, construída em 3 lotes em 04/11 (`06d68a8..179d088`); **verificação independente em andamento**. O admin define, na tela nova "Aparência" com prévia, logo, ícone do app, cor (recusada abaixo de 4,5:1 de contraste), imagem e textos do login, nome, foto, boas-vindas e até 4 perguntas sugeridas do assistente, e o contato do atendimento. Entram também os e-mails com a marca, o manifesto do app por instituição, 6 ilustrações próprias, os alertas consertados (saíam uma palavra por linha), alvos de 44 px e listas em cartões no celular, e as ações do chamado num botão fixo (AD-032) |
+| Proteção contra prompt injection (`protecao-injecao`) | 9 checks, construída em 04/11 (`301eb16`); **verificação independente pendente**. Regra no prompt de que o aluno é dado e não instrução, resposta de até 700 caracteres, números da resposta conferidos com as fontes citadas e as mensagens do aluno, e pergunta de volta sem link. Por decisão do usuário, a cópia longa do texto da fonte não é bloqueada: o risco de vazar artigo interno (AD-012) continua aceito |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
@@ -439,8 +446,8 @@ mudar nenhum teste de comportamento.
 | # | Pergunta | Quem resolve | Até | Se não resolver |
 | --- | --- | --- | --- | --- |
 | 1 | A Univag fornece o CSV dos alunos do piloto? | coordenação / TI Univag | piloto | só alunos de teste |
-| 2 | A Univag aceita a OpenAI processando conversas mascaradas e documentos, sem região de dados no Brasil (LGPD art. 33)? | Univag (jurídico) | piloto | o assistente roda só em teste |
-| 3 | ~~Quem cria a conta de IA?~~ Resolvida: conta da OpenAI criada. Falta a chave no `.env` com crédito | grupo | **03/11** | o assistente só diz "não encontrei", e o ensaio da Etapa 5 não acontece |
+| 2 | A Univag aceita a OpenAI processando conversas mascaradas e documentos, sem região de dados no Brasil (LGPD art. 33)? Desde 04/11 inclui fotos e PDFs anexados pelo aluno, que vão sem máscara de CPF e nome (AD-031) | Univag (jurídico) | piloto | o assistente e os anexos rodam só em teste |
+| 3 | ~~Quem cria a conta de IA?~~ Resolvida: conta criada e chave no `.env`; a chamada real respondeu 200 em 04/11 | grupo | ~~03/11~~ | - |
 | 4 | Qual conta SMTP envia os e-mails? | grupo | 16/11 | Mailpit local e senha temporária dada pelo admin |
 | 5 | Onde hospedar a banca, e com qual domínio? | grupo | **16/11** | `docker compose` num notebook |
 | 6 | A coordenação fornece setores, atendentes e textos dos artigos? | coordenação Univag | **06/11** | carga de exemplo escrita pelo grupo |
