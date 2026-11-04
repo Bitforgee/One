@@ -157,7 +157,7 @@ Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "des
 
 ### S0 - Invariantes e barreiras (P1)
 
-**C29** - A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 3 e 5 da lista fechada (Surface)
+**C29** - [x] A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 3 e 5 da lista fechada (Surface)
 Proof: `dotnet test api.Tests`
 
 **C30** - [x] `rotas.txt` ganha exatamente as 6 linhas do `Surface`, todas `anonimo=False autorizacao=True limite=-`, e nenhuma linha some (Surface)
@@ -180,7 +180,7 @@ Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/c
 **C35** - [x] A suíte de arranjo (`arranjo.spec.ts`, `celular.spec.ts`, `aparencia.spec.ts`, `instituicoes.spec.ts`) passa inteira com a API simulada (Screens)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts e2e/instituicoes.spec.ts`
 
-**C36** - De ponta a ponta, na imagem própria:
+**C36** - [x] De ponta a ponta, na imagem própria:
 1. Um operador, com o papel dado pelo comando dentro do contêiner, entra, abre Instituições e cria a "demo".
 2. O e-mail de primeiro acesso do admin da "demo" chega ao Mailpit, e o link leva à tela de criar senha da "demo".
 3. O operador desativa a "demo", e o login dela dá "Instituição não encontrada".
@@ -237,3 +237,15 @@ e `acesso.test.tsx` somam ~260 KB (~65k), mais ~35k de código e testes novos. T
 - `MediatorTests.AgirNoChamado_so_nas_9_acoes`: 68 mensagens, (9, 59).
 - `SessaoTests.Sem_cookie_401_em_toda_rota_privada`: 64 rotas privadas.
 - `web/`: nenhuma contagem nem grupo existente mudou (o menu novo só aparece para `OPERADOR`, que nenhum teste antigo usa): a edição 4 da lista fechada não foi preciso fazer.
+
+**Valores novos** (cada um subiu a mesma conta, só com as 6 rotas, os 6 casos de uso e `CriarInstituicao.Entrada`):
+- `RetratoTests.Tabela_de_rotas_igual_a_da_base`: 73 -> 79 rotas, 70 -> 76 com um só método, 71 -> 77 com autorização; `rotas.txt` ganhou as 6 linhas do `Surface` depois das de push, nenhuma some.
+- `ArquiteturaTests`: mensagens e handlers 68 -> 74 (4 asserções), fatia `Instituicoes` 6 -> 12, `Map*` 71 -> 77, `Entrada` aninhadas e rotas com corpo JSON 31 -> 32, mensagens com JSON 59 -> 65; `AsEntradas` ganhou `CriarInstituicao` e `ComRespostaAninhada` ganhou os 6 casos de uso novos.
+- `MediatorTests.AgirNoChamado_so_nas_9_acoes`: 68 -> 74 mensagens, (9, 59) -> (9, 65).
+- `SessaoTests.Sem_cookie_401_em_toda_rota_privada`: 64 -> 70.
+- `.specs/GLOSSARIO.md`: seção `Papéis` com `OPERADOR`.
+- Fora da lista fechada, só acréscimos: `AtrasoDoCommit.Falhar` em `api.Tests/Infra/OneFactory.cs` (infra de teste, para C10); um `it` novo em `usuarios.test.tsx` (`usuário com OPERADOR edita sem enviar o papel`).
+
+- **Boundary:** `HEAD` depois do commit deste handoff (antes dele: `f1f7d40` API, `5ca4505` web). Todos os 36 checks marcados `[x]`. `dotnet build api` 0 erros (CA1502); `dotnet test api.Tests` 565 verdes (inclui `OperadorComandoTests` e `PlataformaTests`); Vitest 340 verdes em 41 arquivos (+9 em `instituicoes.test.tsx`/`usuarios.test.tsx`); `crapper` sai 0 no limite 9.99 (maior CRAP novo: `Instituicoes` 8.0) e `dryer` sem candidato; layout (`arranjo`, `celular`, `aparencia`, `instituicoes`) 91 verdes contra `vite preview` na 5199; e2e real contra a imagem de `5ca4505` na 8086: `operador cria e desativa uma instituição` verde e a suíte inteira 117 verdes. Container, imagem, banco `one_e2e_plataforma`, bucket `one-e2e-plataforma` e worktree removidos.
+- **Settled mid-build:** nada com o usuário. Decisões do construtor: (1) `Landing` ganhou a linha 5: a contagem de administradores da lista é um SQL direto (`Database.SqlQuery`) em `usuario`/`usuario_papel`, porque `Usuario` tem filtro global e a porta 3 proíbe `IgnoreQueryFilters` e trocar a instituição para ler. (2) C11 pede `400` para o CPF `111.111.111-11`, mas `Cpf.Normalizar` o aceita (os dígitos verificadores batem); a recusa dos 11 dígitos iguais ficou em `Criacao.Validar` (a criação do administrador, também usada pelo comando `instituicao criar`), sem mexer em `Cpf.Normalizar`, que vale para o login e a tela Usuários. (3) Os `400` da carga voltam em `errors.arquivo` (lista de textos) e o JSON inválido também; o `413` e o `404` saem antes de ler o JSON. (4) C15 pede "Nova instituição" à direita do título com o mesmo `top`: o `h1` único mora no cabeçalho da casca, outra linha, então a tela traz um `h2` "Instituições" de 36 px na mesma linha do botão (o `h1` e o `h2` repetem o texto). (5) `Usuarios.tsx` filtra `OPERADOR` do formulário e da coluna Papéis (sem isso o `PUT` da tela devolveria `OPERADOR` e levaria `400`, AC 7). (6) `acao.tsx`: `aviso` de `useGravacao` pode ser função da resposta (o "N administrador(es)" vem do `enviados`). (7) O Agendador olha a fila de e-mail a cada 60 s: o e2e real espera até 100 s pelo e-mail. (8) `--remover` do comando é uma flag sem valor e é tirada dos argumentos antes de ler os pares. Nenhuma corrida de dois operadores com o mesmo slug apareceu nos testes; o `POST` trata a violação do índice único como `409`.
+- **Abandoned:** nada.
