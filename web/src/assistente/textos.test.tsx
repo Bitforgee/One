@@ -32,6 +32,7 @@ const Assistente = [
   'Abrir a solicitação ONE-1',
   'Que bom que resolveu! Conversa encerrada.',
   'Conversa encerrada.',
+  'Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa.',
 ]
 
 const Agora = '2026-11-02T15:00:00Z'

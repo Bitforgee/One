@@ -1,9 +1,10 @@
 import { useMutation } from '@tanstack/react-query'
 import { ArrowUp, ExternalLink, Hand, ShieldAlert } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
-import { useChamado } from '../chamado'
+import { useChamado, type Anexo } from '../chamado'
+import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Balao } from '../Balao'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
@@ -14,9 +15,10 @@ import { Label } from '../ui/label'
 import { NativeSelect, NativeSelectOption } from '../ui/native-select'
 import { Spinner } from '../ui/spinner'
 import { Textarea } from '../ui/textarea'
+import { AjudaDosAnexos, BotaoAnexar, Selos, useAnexos, type Anexos } from './Anexos'
 
 type Tipo = 'resposta' | 'pergunta' | 'sem_base' | 'transferir'
-type Mensagem = { autor: 'ALUNO' | 'ASSISTENTE'; texto: string; tipo?: Tipo; em: string }
+type Mensagem = { autor: 'ALUNO' | 'ASSISTENTE'; texto: string; tipo?: Tipo; em: string; anexos?: Anexo[] }
 type Resposta = { tipo: Tipo; texto: string }
 type Transferencia = { numero: string; estado: string; setor: string }
 type Confirmar = 'atendente' | 'encerrar'
@@ -40,10 +42,50 @@ function podeConfirmar(confirmar: Confirmar | undefined, conversaId: number | un
   return pedido && (ativas <= 1 || matriculaId !== '')
 }
 
+// Com arquivos a mensagem vai em multipart ("mensagem" e "anexos"); sem eles, em JSON como sempre.
+function corpoDaMensagem(mensagem: string, arquivos: File[]) {
+  if (arquivos.length === 0) return { mensagem }
+  const form = new FormData()
+  form.append('mensagem', mensagem)
+  for (const a of arquivos) form.append('anexos', a)
+  return form
+}
+
 // A primeira mensagem abre a conversa; as seguintes vão para ela.
-function perguntar(conversaId: number | undefined, mensagem: string) {
+function perguntar(conversaId: number | undefined, mensagem: string, arquivos: File[]) {
   const url = conversaId === undefined ? '/api/conversas' : `/api/conversas/${conversaId}/mensagens`
-  return api<{ conversaId?: number; resposta: Resposta }>(url, { mensagem })
+  return api<{ conversaId?: number; resposta: Resposta }>(url, corpoDaMensagem(mensagem, arquivos))
+}
+
+type Efeitos = { adicionar: (novas: Mensagem[]) => void; abrirConversa: (id: number) => void; limparTexto: () => void; zerarAvaliacao: () => void; enviou: () => void }
+
+// Sem arquivos o balão do aluno entra antes da resposta (e fica, se a API falhar). Com arquivos, só depois do sucesso:
+// o texto e os selos ficam onde estão para o aluno tentar de novo, e os links precisam dos ids que a API gravou.
+async function enviarMensagem(mensagem: string, arquivos: File[], conversaId: number | undefined, efeitos: Efeitos) {
+  const agora = () => new Date().toISOString()
+  if (arquivos.length === 0) {
+    efeitos.adicionar([{ autor: 'ALUNO', texto: mensagem, em: agora() }])
+    efeitos.limparTexto()
+  }
+  efeitos.zerarAvaliacao()
+  const r = await perguntar(conversaId, mensagem, arquivos)
+  if (r.conversaId) efeitos.abrirConversa(r.conversaId)
+  const doAluno: Mensagem[] = arquivos.length === 0 ? [] : [{ autor: 'ALUNO', texto: mensagem, em: agora(), anexos: await anexosDaUltima((r.conversaId ?? conversaId)!) }]
+  efeitos.adicionar([...doAluno, { autor: 'ASSISTENTE', texto: r.resposta.texto, tipo: r.resposta.tipo, em: agora() }])
+  if (doAluno.length > 0) {
+    efeitos.limparTexto()
+    efeitos.enviou()
+  }
+}
+
+// A resposta do envio não traz os ids dos anexos: eles vêm da conversa, na última mensagem do aluno.
+async function anexosDaUltima(conversaId: number): Promise<Anexo[]> {
+  try {
+    const { mensagens } = await api<{ mensagens: { autor: string; anexos: Anexo[] }[] }>(`/api/conversas/${conversaId}`)
+    return mensagens.filter((m) => m.autor === 'ALUNO').at(-1)?.anexos ?? []
+  } catch {
+    return [] // a mensagem já foi gravada; sem os links, o balão mostra só o texto
+  }
 }
 
 // Com conversa, transfere a conversa; sem ela, abre o atendimento direto com a descrição.
@@ -102,6 +144,7 @@ function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso:
           const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
           return (
             <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.em} fuso={fuso}>
+              {m.anexos?.map((a) => <LinkDeAnexo key={a.id} href={`/api/conversas/anexos/${a.id}`} nome={a.nome} tamanho={a.tamanho} />)}
               {links.length > 0 && <Links links={links} />}
               {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
             </Balao>
@@ -170,6 +213,13 @@ function Transferido({ transferido, fuso }: { transferido: Transferencia; fuso: 
   )
 }
 
+// Enter envia e Shift+Enter quebra a linha; durante a composição de acentos (IME) o Enter é do teclado
+function enviarComEnter(e: KeyboardEvent<HTMLTextAreaElement>, vazio: boolean) {
+  if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
+  e.preventDefault()
+  if (!vazio) e.currentTarget.form?.requestSubmit()
+}
+
 type EntradaProps = {
   noLimite: boolean
   texto: string
@@ -179,10 +229,11 @@ type EntradaProps = {
   destaque: boolean
   emConversa: boolean
   confirmar: (qual: Confirmar) => void
+  anexos: Anexos
 }
 
 // Compositor no estilo do ChatGPT: uma caixa arredondada com o campo que cresce com o texto e, embaixo, as ações à esquerda e o enviar redondo à direita.
-function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar }: EntradaProps) {
+function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar, anexos }: EntradaProps) {
   const vazio = pendente || !texto.trim()
   // type="button": dentro do form, o padrão "submit" enviaria a mensagem
   const acoes = (
@@ -200,7 +251,9 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   )
   if (noLimite) return acoes
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
+    <>
+      <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
+      <Selos anexos={anexos} />
       <Label htmlFor="mensagem" className="sr-only">
         Mensagem
       </Label>
@@ -210,22 +263,22 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
         maxLength={1000}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
-        onKeyDown={(e) => {
-          // Enter envia e Shift+Enter quebra a linha; durante a composição de acentos (IME) o Enter é do teclado
-          if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
-          e.preventDefault()
-          if (!vazio) e.currentTarget.form?.requestSubmit()
-        }}
+        onKeyDown={(e) => enviarComEnter(e, vazio)}
         placeholder="Escreva sua dúvida"
         className="max-h-52 min-h-10 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
       />
       <div className="flex items-end justify-between gap-1.5">
-        {acoes}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <BotaoAnexar anexos={anexos} />
+          {acoes}
+        </div>
         <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
           {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
         </Button>
       </div>
-    </form>
+      </form>
+      <p className="mt-1.5 mb-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>
+    </>
   )
 }
 
@@ -315,17 +368,19 @@ export function Assistente() {
   const [avaliada, setAvaliada] = useState<boolean>() // só conta depois de uma resposta, e cada envio a zera
   const [explicar, setExplicar] = useState(false)
   const [confirmar, setConfirmar] = useState<Confirmar>()
-  const agora = () => new Date().toISOString()
+  const anexos = useAnexos()
   const envio = useMutation({
-    mutationFn: async (mensagem: string) => {
-      setMensagens((m) => [...m, { autor: 'ALUNO', texto: mensagem, em: agora() }])
-      setTexto('')
-      setAvaliada(false)
-      setExplicar(false)
-      const r = await perguntar(conversaId, mensagem)
-      if (r.conversaId) setConversaId(r.conversaId)
-      setMensagens((m) => [...m, { autor: 'ASSISTENTE', texto: r.resposta.texto, tipo: r.resposta.tipo, em: agora() }])
-    },
+    mutationFn: (mensagem: string) =>
+      enviarMensagem(mensagem, anexos.escolhidos, conversaId, {
+        adicionar: (novas) => setMensagens((m) => [...m, ...novas]),
+        abrirConversa: setConversaId,
+        limparTexto: () => setTexto(''),
+        zerarAvaliacao: () => {
+          setAvaliada(false)
+          setExplicar(false)
+        },
+        enviou: anexos.enviou,
+      }),
   })
   const acao = useMutation({ mutationFn: (passo: () => Promise<void>) => passo() })
   const { ultima, noLimite, destaque } = situacao(mensagens, explicar)
@@ -381,7 +436,7 @@ export function Assistente() {
         <Encerrada desfecho={desfecho} />
       ) : (
         <div className="sticky bottom-0 z-10 mt-auto bg-background pt-2 pb-1.5">
-          <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} />
+          <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} anexos={anexos} />
         </div>
       )}
       <Erro erro={envio.error} />

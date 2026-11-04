@@ -1,7 +1,8 @@
-import { BookText, FileText, Paperclip } from 'lucide-react'
+import { BookText, FileText } from 'lucide-react'
 import { Balao, Quebravel } from '../Balao'
 import { Estados, frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
+import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Badge } from '../ui/badge'
 import { Card, CardContent } from '../ui/card'
 import { responsavel } from './Chamados'
@@ -66,6 +67,7 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
       <h2 className="font-semibold">Conversa com o assistente</h2>
       {c.transcricao.map((m, i) => (
         <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} em={m.criadaEm} fuso={fuso}>
+          {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
           {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
         </Balao>
       ))}
@@ -76,15 +78,7 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
 function Mensagem({ m, fuso }: { m: MensagemChamado; fuso: string }) {
   return (
     <Balao doAluno={m.doAluno} autor={m.autor} nota={m.tipo === 'NOTA'} texto={m.texto} em={m.criadaEm} fuso={fuso}>
-      {m.anexos?.map((x) => (
-        <div key={x.id} className="flex flex-wrap items-center gap-1 text-sm break-all">
-          <Paperclip aria-hidden="true" className="size-4 shrink-0" />
-          <a href={`/api/anexos/${x.id}`} target="_blank" rel="noreferrer" className="text-primary underline">
-            {x.nome}
-          </a>{' '}
-          <span className="text-muted-foreground">({Math.ceil(x.tamanho / 1024)} KB)</span>
-        </div>
-      ))}
+      {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
     </Balao>
   )
 }

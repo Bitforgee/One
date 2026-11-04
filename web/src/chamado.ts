@@ -26,7 +26,7 @@ export type Chamado = {
   solicitante: string | null
   resumo: string | null
   origemCategoria: string | null
-  transcricao: { autor: string; texto: string; criadaEm: string; fontes?: Fonte[] | null }[]
+  transcricao: { autor: string; texto: string; criadaEm: string; fontes?: Fonte[] | null; anexos?: Anexo[] }[]
   mensagens: MensagemChamado[]
   eventos: Evento[] | null
   acoes: string[]

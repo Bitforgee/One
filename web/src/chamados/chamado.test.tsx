@@ -98,6 +98,32 @@ describe('chamado', () => {
     expect(within(nova).getByText('“fica no Portal do Aluno”')).toBeInTheDocument()
   })
 
+  // anexos-assistente C38 (AC 29): o anexo que o aluno mandou ao assistente aparece na transcrição, como link para o download da conversa
+  it('transcrição mostra os anexos do aluno como links', async () => {
+    api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () => [
+        200,
+        daEquipe({
+          transcricao: [
+            { autor: 'ALUNO', texto: 'esse boleto está certo?', criadaEm: '2026-11-02T12:00:00Z', anexos: [{ id: 41, nome: 'boleto.png', tipo: 'image/png', tamanho: 2048 }, { id: 42, nome: 'extrato.pdf', tipo: 'application/pdf', tamanho: 4096 }] },
+            { autor: 'ASSISTENTE', texto: 'Posso transferir você.', criadaEm: '2026-11-02T12:00:05Z' },
+            { autor: 'ALUNO', texto: 'quero um atendente', criadaEm: '2026-11-02T12:00:10Z', anexos: [] },
+          ],
+        }),
+      ],
+    })
+    abrir('/univag/chamados/ONE-1')
+
+    const balao = (await screen.findByText('esse boleto está certo?')).closest('.is-user, .is-assistant') as HTMLElement
+    expect(within(balao).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
+      ['boleto.png', '/api/conversas/anexos/41'],
+      ['extrato.pdf', '/api/conversas/anexos/42'],
+    ])
+    for (const texto of ['Posso transferir você.', 'quero um atendente'])
+      expect(within((screen.getByText(texto)).closest('.is-user, .is-assistant') as HTMLElement).queryByRole('link')).not.toBeInTheDocument()
+  })
+
   // RAG C40
   it('fonte de documento no detalhe', async () => {
     api({

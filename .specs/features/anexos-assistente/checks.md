@@ -124,29 +124,29 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Tabelas_snake_case_e_datas_timestamptz"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tabela_anexo_conversa_com_fk_nao_nula"`
 
-**C28** - A tela Assistente tem, no formulário da mensagem, um botão com nome acessível "Anexar arquivo" que aciona um `input type="file"` com `accept=".pdf,.jpg,.jpeg,.png"` e `multiple` (AC 21)
+**C28** - [x] A tela Assistente tem, no formulário da mensagem, um botão com nome acessível "Anexar arquivo" que aciona um `input type="file"` com `accept=".pdf,.jpg,.jpeg,.png"` e `multiple` (AC 21)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "botão Anexar arquivo abre o seletor de PDF, JPG e PNG"`
 
-**C29** - Escolhidos `boleto.png` e `comprovante.pdf`, a tela mostra 2 selos, nessa ordem, com os nomes e os botões "Remover boleto.png" e "Remover comprovante.pdf". Clicar em "Remover boleto.png" deixa só o selo de `comprovante.pdf` (AC 22)
+**C29** - [x] Escolhidos `boleto.png` e `comprovante.pdf`, a tela mostra 2 selos, nessa ordem, com os nomes e os botões "Remover boleto.png" e "Remover comprovante.pdf". Clicar em "Remover boleto.png" deixa só o selo de `comprovante.pdf` (AC 22)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "selos dos arquivos escolhidos e remover"`
 
-**C30** - "Anexar arquivo" fica desabilitado em 2 casos: com 3 arquivos escolhidos e nenhum enviado, e com 2 já enviados na conversa mais 1 escolhido. Com 2 escolhidos e nenhum enviado, fica habilitado (AC 23)
+**C30** - [x] "Anexar arquivo" fica desabilitado em 2 casos: com 3 arquivos escolhidos e nenhum enviado, e com 2 já enviados na conversa mais 1 escolhido. Com 2 escolhidos e nenhum enviado, fica habilitado (AC 23)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "Anexar arquivo desabilitado com 3 anexos na conversa"`
 
-**C31** - Ao enviar com 2 arquivos, a tela faz `POST /api/conversas` com `FormData` contendo `mensagem` e 2 entradas `anexos`. Depois do sucesso, os selos somem e o balão do aluno mostra 2 links, com os nomes, para `/api/conversas/anexos/{id}`, com os `id` devolvidos pela API (AC 24)
+**C31** - [x] Ao enviar com 2 arquivos, a tela faz `POST /api/conversas` com `FormData` contendo `mensagem` e 2 entradas `anexos`. Depois do sucesso, os selos somem e o balão do aluno mostra 2 links, com os nomes, para `/api/conversas/anexos/{id}`, com os `id` devolvidos pela API (AC 24)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "envio com anexos vai em FormData e o balão mostra os links"`
 
-**C32** - Sem arquivo escolhido, a tela continua mandando o corpo JSON `{ "mensagem": "..." }`, e `conversa.test.tsx` passa inteiro sem edição (AC 24, door 2)
+**C32** - [x] Sem arquivo escolhido, a tela continua mandando o corpo JSON `{ "mensagem": "..." }`, e `conversa.test.tsx` passa inteiro sem edição (AC 24, door 2)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "sem anexo o envio continua em JSON"`
 Proof: `cd web && npx vitest run src/assistente/conversa.test.tsx`
 
-**C33** - Para cada uma das respostas `400`, `413`, `415` e `503` da API, a tela mostra o `detail` da API no alerta de erro e mantém no campo o texto digitado e os selos escolhidos (AC 25)
+**C33** - [x] Para cada uma das respostas `400`, `413`, `415` e `503` da API, a tela mostra o `detail` da API no alerta de erro e mantém no campo o texto digitado e os selos escolhidos (AC 25)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "erro da API mantém texto e selos"`
 
-**C34** - A tela Assistente mostra, abaixo do campo, o texto literal "Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa." (AC 26)
+**C34** - [x] A tela Assistente mostra, abaixo do campo, o texto literal "Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa." (AC 26)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
-**C35** - A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
+**C35** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
@@ -160,7 +160,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tr
 **C37** - [x] O atendente que abre esse chamado pede `GET /api/conversas/anexos/{id}` e recebe `200` com os mesmos bytes (AC 28, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Download_pelo_atendente_do_chamado"`
 
-**C38** - Na tela do chamado, a transcrição mostra cada anexo do aluno como link com o nome, para `/api/conversas/anexos/{id}` (AC 29)
+**C38** - [x] Na tela do chamado, a transcrição mostra cada anexo do aluno como link com o nome, para `/api/conversas/anexos/{id}` (AC 29)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "transcrição mostra os anexos do aluno como links"`
 
 **C39** - De ponta a ponta na imagem própria (MinIO do compose, provedor sem chave), o aluno anexa um PNG à primeira mensagem e vê o link no balão. O download devolve o mesmo SHA-256 e `Content-Type` `image/png`. Depois de "Falar com atendente", o administrador abre o chamado, vê o link na transcrição e baixa os mesmos bytes (AC 1, AC 24, AC 29)

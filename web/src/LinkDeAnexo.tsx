@@ -1,0 +1,14 @@
+import { Paperclip } from 'lucide-react'
+
+// Anexo como link com o nome (e o tamanho, quando há): o do chamado e o da conversa com o assistente.
+export function LinkDeAnexo({ href, nome, tamanho }: { href: string; nome: string; tamanho?: number }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1 text-sm break-all">
+      <Paperclip aria-hidden="true" className="size-4 shrink-0" />
+      <a href={href} target="_blank" rel="noreferrer" className="text-primary underline">
+        {nome}
+      </a>{' '}
+      {tamanho !== undefined && <span className="text-muted-foreground">({Math.ceil(tamanho / 1024)} KB)</span>}
+    </div>
+  )
+}
