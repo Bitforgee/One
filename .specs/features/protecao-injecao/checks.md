@@ -59,7 +59,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Teto
 
 ### S3 - Números conferidos (P1)
 
-**C4** - A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 10 casos:
+**C4** - [x] A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 13 casos:
 - "dia 10" com fonte "dia 10 de cada mês" → verdadeiro;
 - "dia 30" com a mesma fonte → falso;
 - "R$ 1.250,00" com fonte "R$ 1.250,00" → verdadeiro;
@@ -69,7 +69,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Teto
 - texto sem dígito → verdadeiro;
 - "R$ 10.250,00" com fontes "dia 10" e "R$ 1.250,00" → falso;
 - "dia ³⁰" com fonte "dia 30" → falso;
-- "passo ①" com fonte "passo 1" → falso.
+- "passo ①" com fonte "passo 1" → falso;
+- "R$ 1.250,50" com fonte "R$ 1.250 e 50 centavos" → falso (`,` junta);
+- "10/30" com fonte "dia 10 e 30 dias" → falso (`/` junta);
+- "dia ３０" (largura total) com fonte "dia 30" → falso.
 
 (Intent: números conferidos)
 
@@ -154,3 +157,4 @@ Bem abaixo do orçamento de 150k: um construtor só, sem pergunta.
 - **Boundary (rodada 1):** NumerosConferem aceita só números de 0-9 com `.`/`,`/`/` internos, zeros à esquerda tirados por grupo, e falha com qualquer `\p{N}` fora de 0-9; permitidos = só fontes citadas (`Conferir` perdeu o parâmetro `conversa`). 536 testes verdes, `dotnet build api` sem erro. Sobrevivente citadas→buscadas provado: o teste falha com a troca e passa revertido.
 - **Settled mid-build (rodada 1):** a fonte extra com 45 é semeada dentro de `Numero_fora_da_fonte_citada_vira_sem_base` (não em `Cenario`, para não mudar os outros testes). `Numeros_conferem_com_mensagem_do_aluno` removido (contradiz C6); `Ordem_dos_motivos` usa `Texto(694) + " dia 30"` = 701 com assert do tamanho.
 - **Abandoned (rodada 1):** nada.
+- **Boundary (rodada 2):** C4 ganhou 3 casos em `Numeros_conferem` (`,` junta, `/` junta, largura total); cada um falha ao tirar `,`, ao tirar `/` e ao estreitar o guarda para `\p{No}`, e passa revertido. `api/` não mudou.

@@ -58,6 +58,9 @@ public class ConferenciaTests
     [InlineData("R$ 10.250,00", "dia 10 e R$ 1.250,00", false)]
     [InlineData("dia ³⁰", "dia 30", false)]
     [InlineData("passo ①", "passo 1", false)]
+    [InlineData("R$ 1.250,50", "R$ 1.250 e 50 centavos", false)]
+    [InlineData("10/30", "dia 10 e 30 dias", false)]
+    [InlineData("dia ３０", "dia 30", false)]
     public void Numeros_conferem(string texto, string fonte, bool esperado) =>
         Assert.Equal(esperado, Conferencia.NumerosConferem(texto, [fonte]));
 }
