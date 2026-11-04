@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/aparencia-instituicao/plan.md`
 
-64 checks em 8 slices · 9 one-way doors · 0 perguntas abertas
+71 checks em 9 slices · 9 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o
 commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
@@ -59,7 +59,7 @@ Um filtro que não seleciona teste nenhum sai com código 0 (L-002). O construto
 **C1** - [x] A 390 px, a mensagem "Há erros no arquivo." do `Alert` de Matrículas ocupa 1 linha (altura do texto ≤ 1,5 × `line-height`). Um `Alert` sem ícone tem o texto com a largura do conteúdo do alerta, com tolerância de 1 px (AC 1)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alerta sem ícone em uma linha"`
 
-**C2** - [x] A 390 px, a altura medida é ≥ 44 px para: `Button` nos tamanhos `default`, `sm`, `icon` e `xs` (um de cada, na tela de teste de Artigos e no Assistente), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
+**C2** - A 390 px, a altura medida é ≥ 44 px para: `Button` nos 8 tamanhos de `ui/button.tsx` (`default`, `sm`, `lg`, `xs`, `icon`, `icon-xs`, `icon-sm`, `icon-lg`), um de cada, em tela real quando o tamanho é usado e num botão de teste com as classes de `buttonVariants` quando não é (emenda aprovada pelo usuário em 04/11, rodada 1), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alvos de toque de 44 px abaixo de 768"`
 
 **C3** - [x] O selo de estado do chamado tem a classe de fundo por grupo, para os 5 estados: `ABERTO` e `EM_ATENDIMENTO` → `bg-primary-subtle`; `AGUARDANDO_ALUNO` → `bg-warning-subtle`; `RESOLVIDO` e `FECHADO` → a classe de `success` escolhida. O texto de cada selo é o de `<base>` (AC 3)
@@ -76,7 +76,7 @@ Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "Cadastros seletor 
 
 ### S2 - Listas e chamado pensados para o celular (P1) · ~8 files · ~80 KB · ~22k
 
-**C7** - [x] A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`):
+**C7** - A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`): Nas listas com estado (Fila e Minhas solicitações), o teste afirma que existe 1 selo por cartão antes de medir a posição, sem condicionar a medida à existência do selo (L-069) (emenda aprovada pelo usuário em 04/11, rodada 1)
 - O selo de estado, quando a lista tem estado, fica à direita da primeira coluna e com o mesmo `top` (1 px).
 - A coluna principal fica abaixo das duas.
 
@@ -103,12 +103,13 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.P
 **C13** - [x] `PUT` com `cor` inválida responde `400` com `errors.cor` "Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela." e não grava nada, em 4 entradas: `224fa7` (sem `#`), `#224fa` (5 dígitos), `#ffd700` (contraste 1,4:1) e `#767676` + 1 grau, isto é `#777777` (contraste 4,48:1). Aceita `#767676` (4,54:1) e `#224fa7` (AC 13, door 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Cor_invalida_ou_sem_contraste_400"`
 
-**C14** - [x] O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (13 limites, 26 pedidos):
+**C14** - O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (12 limites nos dois lados da borda, 24 pedidos, mais o e-mail inválido) (emenda aprovada pelo usuário em 04/11, rodada 1):
 - tamanho máximo: `nomeCurto` 12, `login.titulo` 60, `login.frase` 160, cada `login.itens` 80, `assistente.nome` 40, `assistente.boasVindas` 300, cada `assistente.perguntas` 100, `contato.horario` 120, `contato.telefone` 30 e `contato.email` 120;
 - quantidade máxima: 3 `login.itens` e 4 `assistente.perguntas`;
 - `contato.email` "nao-e-email" (inválido) (AC 14)
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Limites_dos_textos_400"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Email_de_contato_invalido_400"`
 
 **C15** - [x] `POST /api/admin/aparencia/imagens/logo` com um PNG válido responde `200` com `{tipo:"logo", versao:1}`, grava o objeto com chave começando por `{instituicaoId}/aparencia/`, com os mesmos bytes, e 1 linha `imagem_instituicao` com `conteudo` `image/png`, `tamanho` e `hash` SHA-256. Um segundo envio responde `versao:2`, deixa 1 linha só e uma chave nova, e o objeto antigo continua no bucket (AC 15, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Enviar_imagem_grava_e_reenviar_sobe_a_versao"`
@@ -251,7 +252,7 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no 
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
 
-**C51** - [x] O e-mail de primeiro acesso de uma instituição com cor e logo chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega `
+**C51** - Um e-mail da fila `EmailSaida` de uma instituição com cor e logo (o caminho que envia os e-mails de aviso e, pelo mesmo `Email.Enviar`, o de primeiro acesso) chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega ` (emenda aprovada pelo usuário em 04/11, rodada 1)
 `; emenda aprovada pelo usuário em 04/11), e há uma parte `text/html` (AC 48, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Email_vai_com_texto_e_html"`
 
@@ -327,6 +328,40 @@ A suíte e2e inteira passa (AC 15, AC 25, AC 31, AC 32, AC 51)
 Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test e2e/aparencia-real.spec.ts -g "admin personaliza a aparência e o login muda"`
 Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test`
 
+### S9 - Arranjos de ## Screens sem check na rodada 1 (P1)
+
+Acrescentados com aprovação do usuário em 04/11, depois da rodada 1 da verificação.
+
+**C65** - Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, o centro horizontal do bloco de boas-vindas fica a no máximo 1 px do centro da área de conteúdo (Screens: Assistente sem conversa)
+Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`
+
+**C66** - A 1440 px, com imagem de login, a base do bloco de título, frase e itens fica a no máximo 48 px da base do painel. O bloco fica sobre um elemento do painel com `background-image` `linear-gradient` cuja caixa contém a caixa do bloco (Screens: Login ≥ 1024 px)
+Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "textos do login na base sobre a faixa"`
+
+**C67** - Com foto do assistente, a 390 e a 1440 px, a `img` do assistente de cada balão `ASSISTENTE` tem `right` ≤ `left` do balão e se sobrepõe a ele na vertical (Screens: Assistente com conversa)
+Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "foto do assistente à esquerda do balão"`
+
+**C68** - Na tela "Transferido", com contato, o `top` do bloco "Contato do atendimento" é maior que o `bottom` do número do chamado (Screens: Transferido)
+Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "contato abaixo do número do chamado"`
+
+**C69** - Medidas do ícone na casca:
+- com ícone, a 1440 px, a `img` do ícone na barra recolhida mede 32×32 px (1 px);
+- a 390 px, a do topo mede 24×24 px, com `right` ≤ `left` do título da tela e centro vertical a no máximo 2 px do centro do título;
+- sem ícone, a 390 px, as iniciais em `bg-primary` (24×24 px) ocupam a mesma posição antes do título (Screens: Casca autenticada; AC 33)
+
+Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ícone de 32 e 24 px antes do título"`
+
+**C70** - Na tela Aparência, para cada um dos 4 tipos (`logo`, `icone`, `login`, `assistente`), table-driven:
+- com versão, a seção mostra a miniatura com `src` `/api/instituicoes/{slug}/imagens/{tipo}?v={versao}`, o botão "Enviar imagem" e o botão "Remover";
+- "Enviar imagem" faz o `POST` multipart para o tipo;
+- "Remover" abre o `Confirmar` e faz o `DELETE` do tipo;
+- sem versão, não há miniatura nem "Remover" (Screens: Aparência; AC 15, AC 21)
+
+Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "as 4 imagens com miniatura, enviar e remover"`
+
+**C71** - Sem logo, as iniciais da prévia da tela Aparência são iguais às do login para o mesmo nome, em 2 nomes: "Centro Universitário de Várzea Grande" e "Faculdade Demo". As duas telas usam a mesma função `iniciais` (AC 24)
+Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "iniciais da prévia iguais às do login"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -350,7 +385,7 @@ Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test`
 | ilustrações (6) | `BoasVindas` C40, C50 · `Conversa` C41 · `CaixaVazia` C48 · `Documento` C48 · `Pessoas` C48 · `Grafico` C49 · as 6 C47 | - |
 | campos de contato (3) | horário C45 · telefone C45 · e-mail C45 | - |
 | e-mail (3 variantes) | com cor e logo C52 · sem cor nem logo C52 · MinIO fora C53 | - |
-| one-way doors do `Landing` (9) | 1 C12, C59 · 2 C15, C59 · 3 C12, C22 · 4 C31 · 5 C54, C56 · 6 C51, C52 · 7 C23, C28 · 8 C13, C27, C33 · 9 C47 | - |
+| one-way doors do `Landing` (11) | 1 C12, C59 · 2 C15, C59 · 3 C12, C22 · 4 C31 · 5 C54, C56 · 6 C51, C52 · 7 C23, C28 · 8 C13, C27, C33 · 9 C47 · 10 C14 · 11 C21 | - |
 | startup config: aparência aplicada (2 lugares) | telas com `slug` antes do login (Acesso) C35, C37 · casca autenticada C35, C36 | - |
 
 - Claims que nomeiam status, rota ou forma de resposta: C11 a C22, C30 a C32, C51 a C55. Cada um tem uma prova
