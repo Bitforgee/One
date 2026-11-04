@@ -22,14 +22,11 @@ public static partial class Criacao
         else if (await db.Instituicoes.AnyAsync(i => i.Slug == n.Slug)) erros.Add(new("slug", $"\"{n.Slug}\" já existe", Repetido: true));
         if (n.Nome == "") erros.Add(new("nome", "obrigatório"));
         if (!(TimeZoneInfo.TryFindSystemTimeZoneById(n.Fuso, out var tz) && tz.HasIanaId)) erros.Add(new("fuso", $"\"{n.Fuso}\" não é um fuso IANA (ex.: America/Cuiaba)"));
-        if (!CpfAceito(n.Cpf)) erros.Add(new("admin.cpf", "CPF inválido"));
+        if (n.Cpf is null) erros.Add(new("admin.cpf", "CPF inválido"));
         if (n.AdminNome == "") erros.Add(new("admin.nome", "obrigatório"));
         if (!Email.Valido().IsMatch(n.Email)) erros.Add(new("admin.email", $"\"{n.Email}\" não é um e-mail válido"));
         return erros;
     }
-
-    // Cpf.Normalizar aceita os 11 dígitos iguais (111.111.111-11 passa nas contas); aqui, onde nasce o administrador, não.
-    static bool CpfAceito(string? cpf) => cpf is not null && cpf.Distinct().Count() > 1;
 
     // Grava tudo numa transação; com cfg, o e-mail de primeiro acesso entra nela.
     public static async Task<(Instituicao, string)> Gravar(OneDb db, NovaInstituicao n, DateTime agora, IConfiguration? cfg)

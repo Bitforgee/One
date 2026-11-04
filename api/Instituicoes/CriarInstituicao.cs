@@ -21,7 +21,9 @@ public sealed class CriarInstituicaoHandler(OneDb db, TimeProvider relogio, ICon
     {
         static string Valor(string? v) => v?.Trim() ?? "";
         var (e, a) = (m.Corpo, m.Corpo.Admin);
-        var n = new NovaInstituicao(Valor(e.Slug), Valor(e.Nome), Valor(e.Fuso), Cpf.Normalizar(Valor(a?.Cpf)), Valor(a?.Nome), Valor(a?.Email));
+        // Cpf.Normalizar aceita os 11 dígitos iguais; só esta rota os recusa (AD-033: o comando mantém a saída)
+        var cpf = Cpf.Normalizar(Valor(a?.Cpf));
+        var n = new NovaInstituicao(Valor(e.Slug), Valor(e.Nome), Valor(e.Fuso), cpf?.Distinct().Count() > 1 ? cpf : null, Valor(a?.Nome), Valor(a?.Email));
         var erros = await Criacao.Validar(db, n);
         if (erros.FirstOrDefault(x => !x.Repetido) is { } invalido) return Problemas.Invalido(invalido.Mensagem, invalido.Campo);
         if (erros.Count > 0) return Problemas.Erro(409, EmUso);

@@ -21,6 +21,17 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
     Task<int> TotalDePapeis() => f.Db(null, db => db.UsuarioPapeis.IgnoreQueryFilters().CountAsync());
 
     [Fact]
+    public async Task Cli_aceita_cpf_de_digitos_iguais_como_na_base()
+    {
+        var (codigo, _, erro) = await Rodar("criar", "--slug", "iguais", "--nome", "Univag", "--fuso", "America/Cuiaba",
+            "--admin-cpf", "111.111.111-11", "--admin-nome", "Coordenadora", "--admin-email", "c@iguais.edu.br");
+
+        Assert.Equal(0, codigo);
+        Assert.Equal("", erro);
+        Assert.True(await f.Db(null, db => db.Instituicoes.AnyAsync(i => i.Slug == "iguais")));
+    }
+
+    [Fact]
     public async Task Adicionar_operador_sai_0()
     {
         var i = await f.Instituicao(slug: "univag");

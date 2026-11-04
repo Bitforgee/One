@@ -185,6 +185,7 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
     int total;
     public int Total => total;
     public void Zerar() => Interlocked.Exchange(ref total, 0);
+    public bool FalharAoGravarEmail { get; set; } // instituicoes-plataforma C10: o SaveChanges que grava a EmailSaida lança
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
@@ -195,6 +196,7 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
     {
         Interlocked.Increment(ref total);
+        if (FalharAoGravarEmail && eventData.Context!.ChangeTracker.Entries<EmailSaida>().Any(e => e.State == EntityState.Added)) throw new InvalidOperationException("gravação do e-mail simulada");
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }

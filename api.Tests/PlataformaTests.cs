@@ -222,6 +222,19 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(await f.Db(null, db => db.EmailsSaida.IgnoreQueryFilters().AnyAsync(e => e.Destinatario == "admin@demo-falha.edu.br")));
     }
 
+    [Fact]
+    public async Task Falha_ao_gravar_o_email_nao_cria_a_instituicao()
+    {
+        var op = await UmOperador();
+        f.Gravacoes.FalharAoGravarEmail = true;
+        try { await op.Cliente.PostAsJsonAsync(Lista, Corpo(slug: "demo-sem-email", cpf: Semente.NovoCpf(), email: "admin@demo-sem-email.edu.br")); }
+        catch (Exception) { /* o servidor de teste pode relançar a falha */ }
+        finally { f.Gravacoes.FalharAoGravarEmail = false; }
+
+        Assert.False(await f.Db(null, db => db.Instituicoes.AnyAsync(x => x.Slug == "demo-sem-email")));
+        Assert.False(await f.Db(null, db => db.Usuarios.IgnoreQueryFilters().AnyAsync(u => u.Email == "admin@demo-sem-email.edu.br")));
+    }
+
     [Theory]
     [InlineData("slug", "ab")]
     [InlineData("slug", "Demo")]
@@ -350,6 +363,23 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
     }
 
     [Fact]
+    public async Task Desativar_bloqueia_primeiro_acesso()
+    {
+        var op = await UmOperador();
+        var demo = await f.Instituicao();
+        var adminDemo = await f.Usuario(demo, [Papeis.Administrador]);
+        Task<int> Tokens() => f.Db(demo.Id, db => db.Tokens.CountAsync());
+        Task<int> Emails() => f.Db(demo.Id, db => db.EmailsSaida.CountAsync());
+        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
+        Assert.Equal(1, await Tokens()); // ativa: o pedido grava o token
+
+        await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/desativar", null);
+        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
+
+        Assert.Equal((1, 0), (await Tokens(), await Emails()));
+    }
+
+    [Fact]
     public async Task Nao_desativa_a_propria()
     {
         var op = await UmOperador();
@@ -457,7 +487,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var fora = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
             .Select(p => Path.GetRelativePath(api, p).Replace(sep, '/'))
-            .Where(p => !p.StartsWith("Instituicoes/") && !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs"))
+            .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/InstituicaoComando.cs"))
             .Where(p => atribui.IsMatch(File.ReadAllText(Path.Combine(api, p))));
         Assert.Equal(["Chamados/TempoRealHub.cs"], fora);
     }
