@@ -36,7 +36,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         1. Responda só com o que está nas fontes abaixo. Não invente regras, prazos, valores nem exceções.
         2. Não cite nem mencione as fontes, seus títulos ou ids no texto para o aluno.
         3. Em "trechos", copie literalmente, sem mudar nenhuma letra, de 1 a 3 trechos de 20 a 400 caracteres do texto de cada fonte citada que sustentam o que você escreveu.
-        4. Use só links que aparecem nas fontes citadas.
+        4. Use só links que aparecem nas fontes citadas. Escreva cada link no fim da frase, depois de dois-pontos ("...no portal: https://..."); a tela tira o link do texto e mostra um botão para ele.
         5. Se faltar informação para escolher a orientação certa, faça uma pergunta curta, de até 200 caracteres e terminada em "?", com tipo "pergunta".
         6. Se nenhuma fonte responde, devolva tipo "sem_base". Se o aluno pedir um atendente, devolva tipo "transferir".
         7. Em "categoriaId", sugira a categoria do assunto entre as categorias abaixo. Em "resumo", resuma o caso em uma frase para o atendente, sem dados pessoais.

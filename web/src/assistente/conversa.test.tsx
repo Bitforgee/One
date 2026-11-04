@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { onlineManager } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { Balao } from '../Balao'
+import { separarLinks } from './Assistente'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
 const Exemplo = /Pergunte, por exemplo/
@@ -254,5 +255,31 @@ describe('conversa com o assistente', () => {
     expect(conteudo.textContent).toBe(Texto)
     expect(conteudo.querySelector('b, img')).toBeNull()
     for (const no of conteudo.childNodes) expect(no.nodeType === Node.TEXT_NODE || no.nodeName === 'WBR', no.nodeName).toBe(true)
+  })
+
+  // os links da resposta saem do texto e viram botões; a pontuação final fica
+  it.each([
+    ['Gere a segunda via no portal: https://portal.edu.br/boletos.', 'Gere a segunda via no portal.', ['https://portal.edu.br/boletos']],
+    ['Veja (https://a.edu.br/x) e https://b.edu.br, ou https://a.edu.br/x!', 'Veja e, ou!', ['https://a.edu.br/x', 'https://b.edu.br']],
+    ['Sem link aqui.', 'Sem link aqui.', []],
+    ['Fica em Financeiro > Boletos: https://a.edu.br/b', 'Fica em Financeiro > Boletos.', ['https://a.edu.br/b']],
+    ['Termina sem ponto', 'Termina sem ponto', []],
+    ['Linha 1\nVeja: https://a.edu.br\nLinha 3', 'Linha 1\nVeja\nLinha 3', ['https://a.edu.br']],
+  ])('separarLinks(%j)', (texto, limpo, links) => {
+    expect(separarLinks(texto)).toEqual({ texto: limpo, links })
+  })
+
+  it('link da resposta vira botão que abre em nova aba; o do aluno fica no texto', async () => {
+    const Link = 'https://www.portal.edu.br/financeiro/boletos/'
+    assistente({ 'POST /api/conversas': responde('resposta', `Gere a segunda via no portal: ${Link}`) })
+    await enviar(`e esse link ${Link}`)
+    const botao = await screen.findByRole('link', { name: /portal\.edu\.br\/financeiro\/boletos/ })
+    expect(botao).toHaveAttribute('href', Link)
+    expect(botao).toHaveAttribute('target', '_blank')
+    expect(botao).toHaveAttribute('rel', 'noreferrer')
+    expect(botao.closest('.is-assistant')).toHaveTextContent('Gere a segunda via no portal')
+    expect(botao.closest('.is-assistant')!.querySelector('.whitespace-pre-wrap')!.textContent).toBe('Gere a segunda via no portal.')
+    expect(screen.getByText(`e esse link ${Link}`)).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /portal\.edu\.br/ })).toHaveLength(1)
   })
 })

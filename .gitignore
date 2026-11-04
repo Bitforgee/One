@@ -11,3 +11,6 @@ web/test-results/
 web/playwright-report/
 web/coverage/
 .metrics/
+web/apresentacao/saida/
+web/apresentacao/dados/
+web/apresentacao/dados.json

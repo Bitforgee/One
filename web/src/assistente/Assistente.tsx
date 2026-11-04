@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { ArrowUp, Hand, ShieldAlert } from 'lucide-react'
+import { ArrowUp, ExternalLink, Hand, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
@@ -54,16 +54,59 @@ function transferir(conversaId: number | undefined, descricao: string, matricula
     : api<Transferencia>(`/api/conversas/${conversaId}/transferir`, escolha)
 }
 
+// Mesma regra de URL do backend (Conferencia.Url), que já recusa a resposta com link fora das fontes citadas.
+// O link sai do texto com os dois-pontos e o espaço antes dele; a pontuação final fica ("via: https://x." -> "via.").
+export function separarLinks(texto: string) {
+  const links: string[] = []
+  const limpo = texto.replace(/\s*:?\s*(https?:\/\/[^\s<>()"']+)/gi, (_, url: string) => {
+    const link = url.replace(/[.,;:!?]+$/, '')
+    if (!links.includes(link)) links.push(link)
+    return url.slice(link.length)
+  })
+  const final = limpo.replace(/\s*\(\s*\)/g, '').replace(/[ \t]+([.,;!?])/g, '$1').trim()
+  // o link fechava a resposta sem pontuação: a frase que sobra ganha o ponto final
+  const semPonto = /https?:\/\/[^\s<>()"']+$/i.test(texto.trim()) && /[\p{L}\p{N}]$/u.test(final)
+  return { texto: semPonto ? `${final}.` : final, links }
+}
+
+// Domínio e caminho, sem o www.: "portal.univag.edu.br/financeiro/boletos"
+const rotulo = (link: string) => {
+  if (!URL.canParse(link)) return link
+  const u = new URL(link)
+  return u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? u.pathname.replace(/\/$/, '') : '')
+}
+
+function Links({ links }: { links: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {links.map((link) => (
+        <Button key={link} asChild variant="outline" size="sm" className="max-w-full rounded-full bg-background">
+          <a href={link} target="_blank" rel="noreferrer">
+            <ExternalLink aria-hidden="true" />
+            <span className="truncate">{rotulo(link)}</span>
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso: string; digitando: boolean }) {
   return (
     <Conversation className="overflow-y-visible">
       {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
       <ConversationContent className="gap-2 px-0 py-2" scrollClassName="[scrollbar-gutter:auto]!">
-        {mensagens.map((m, i) => (
-          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} em={m.em} fuso={fuso}>
-            {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
-          </Balao>
-        ))}
+        {mensagens.map((m, i) => {
+          // no assistente os links viram botões abaixo do texto; a mensagem do aluno fica como ele escreveu
+          const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
+          return (
+            <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.em} fuso={fuso}>
+              {links.length > 0 && <Links links={links} />}
+              {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
+            </Balao>
+          )
+        })}
         {digitando && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner aria-label="Digitando" />

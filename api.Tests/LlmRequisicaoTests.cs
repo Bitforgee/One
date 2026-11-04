@@ -87,6 +87,8 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(4, m.Count);
         Assert.Equal(["system", "system", "system", "user"], m.Select(x => x.GetProperty("role").GetString()));
         Assert.Contains("Responda só com o que está nas fontes", m[0].GetProperty("content").GetString());
+        // a tela tira o link do texto e mostra um botão: o link vem no fim da frase, depois de dois-pontos
+        Assert.Contains("Escreva cada link no fim da frase, depois de dois-pontos", m[0].GetProperty("content").GetString());
         Assert.StartsWith("Fontes", m[1].GetProperty("content").GetString());
         Assert.Contains(Cenario.RespostaBoleto, m[1].GetProperty("content").GetString());
         Assert.StartsWith("Categorias", m[2].GetProperty("content").GetString());
