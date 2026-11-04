@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test, type APIRequestContext, type PlaywrightWorkerArgs } from '@playwright/test'
 import { createHash } from 'node:crypto'
 
 // arquivos-minio C29: e2e real, sem simulada.ts. Contra E2E_URL, com o Mailpit do compose (primeiro acesso por e-mail) e o MinIO atrás da API.
@@ -105,6 +105,98 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   const lista = Array.isArray(usuarios) ? usuarios : usuarios.itens
   const aluno = lista.find((u: { email: string }) => u.email === alunoEmail)
   expect((await admin.post(`/api/admin/usuarios/${aluno.id}/desativar`)).ok()).toBeTruthy()
+  await contexto.close()
+  await admin.dispose()
+})
+
+// anexos-assistente C39: o aluno anexa uma foto na conversa com o assistente (sem chave do provedor: a resposta é sem_base) e a equipe baixa a mesma foto no chamado transferido.
+async function adminLogado(playwright: PlaywrightWorkerArgs['playwright'], baseURL: string | undefined) {
+  const admin = await playwright.request.newContext({ baseURL })
+  // o outro teste deste arquivo já pode ter feito o primeiro acesso (a senha é a mesma)
+  if ((await admin.post('/api/auth/login', { data: { instituicao: slug, cpf: adminCpf, senha: senhaAdmin } })).status() !== 200) {
+    const token = await primeiroAcesso(admin, adminCpf, adminEmail)
+    expect((await admin.post('/api/auth/definir-senha', { data: { token, novaSenha: senhaAdmin } })).ok()).toBeTruthy()
+    await entrar(admin, adminCpf, senhaAdmin)
+  }
+  return admin
+}
+
+test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browser, playwright, baseURL }) => {
+  const rodada = Date.now()
+  const alunoCpf = cpfValido(rodada)
+  const alunoEmail = `aluno.${rodada}@e2e.one`
+  const admin = await adminLogado(playwright, baseURL)
+
+  // o administrador passa a atender a triagem, para abrir o chamado transferido
+  const eu = await (await admin.get('/api/auth/me')).json()
+  const setores = await (await admin.get('/api/admin/setores')).json()
+  const triagem = (Array.isArray(setores) ? setores : setores.itens).find((s: { triagem: boolean }) => s.triagem)
+  const atualizado = await admin.put(`/api/admin/usuarios/${eu.id}`, { data: { cpf: adminCpf, nome: eu.nome, email: adminEmail, papeis: ['ADMINISTRADOR', 'ATENDENTE'], setores: [triagem.id] } })
+  expect(atualizado.status(), await atualizado.text()).toBe(200)
+  await entrar(admin, adminCpf, senhaAdmin)
+
+  const curso = `Curso e2e ${rodada}`
+  expect((await admin.post('/api/admin/cursos', { data: { nome: curso, setorCoordenacaoId: triagem.id } })).status()).toBe(201)
+  const csv = `cpf;nome;email;matricula;curso;semestre;situacao\n${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA\n`
+  const importado = await admin.post('/api/admin/matriculas/importacao', { multipart: { arquivo: { name: 'm.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })
+  expect(importado.status(), await importado.text()).toBe(200)
+
+  const contexto = await browser.newContext({ baseURL })
+  const page = await contexto.newPage()
+  const tokenAluno = await primeiroAcesso(page.request, alunoCpf, alunoEmail)
+  await page.goto(`/${slug}/definir-senha?token=${tokenAluno}`)
+  await page.getByLabel('Nova senha').fill(senhaAluno)
+  await page.getByRole('button', { name: 'Salvar senha' }).click()
+  await expect(page.getByText('Senha criada.')).toBeVisible()
+  await entrar(page.request, alunoCpf, senhaAluno)
+
+  // pela tela: escolhe a foto, escreve e envia; o balão do aluno ganha o link
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from(Array.from({ length: 3000 }, (_, i) => (i * 11 + rodada) % 256))])
+  await page.goto(`/${slug}/assistente`)
+  await page.locator('input[type="file"]').setInputFiles({ name: 'boleto.png', mimeType: 'image/png', buffer: png })
+  await expect(page.getByRole('button', { name: 'Remover boleto.png' })).toBeVisible()
+  await page.getByLabel('Mensagem').fill('esse boleto está certo?')
+  await page.getByRole('button', { name: 'Enviar' }).click()
+  const link = page.getByRole('log').getByRole('link', { name: 'boleto.png' })
+  await expect(link).toBeVisible()
+  const href = (await link.getAttribute('href'))!
+  expect(href).toMatch(/^\/api\/conversas\/anexos\/\d+$/)
+
+  const baixado = await page.request.get(href)
+  expect(baixado.status()).toBe(200)
+  expect(baixado.headers()['content-type']).toBe('image/png')
+  expect(sha((await baixado.body()) as Buffer)).toBe(sha(png))
+
+  // transfere para um atendente; o administrador abre o chamado e baixa a mesma foto
+  await page.getByRole('button', { name: 'Falar com atendente' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+  const protocolo = page.getByRole('link', { name: /^Abrir a solicitação / })
+  await expect(protocolo).toBeVisible()
+  const numero = (await protocolo.textContent())!.replace('Abrir a solicitação ', '').trim()
+
+  const equipe = await browser.newContext({ baseURL })
+  const painel = await equipe.newPage()
+  await entrar(painel.request, adminCpf, senhaAdmin)
+  await painel.goto(`/${slug}/chamados/${numero}`)
+  const doChamado = painel.getByRole('link', { name: 'boleto.png' })
+  await expect(doChamado).toBeVisible()
+  expect(await doChamado.getAttribute('href')).toBe(href)
+  const daEquipe = await painel.request.get(href)
+  expect(daEquipe.status()).toBe(200)
+  expect(sha((await daEquipe.body()) as Buffer)).toBe(sha(png))
+
+  // o limite de corpo de 30 MB do Kestrel não vale nas duas rotas de mensagem: 3 arquivos de 10 MiB passam (AC 16)
+  const form = new FormData()
+  form.append('mensagem', 'três fotos grandes')
+  for (const n of [1, 2, 3]) form.append('anexos', new Blob([png.subarray(0, 8), Buffer.alloc(10 * 1024 * 1024 - 8, n)], { type: 'image/png' }), `grande-${n}.png`)
+  const tres = await page.request.post('/api/conversas', { multipart: form, timeout: 120_000 })
+  expect(tres.status(), await tres.text()).toBe(201)
+
+  // limpeza possível: o aluno é desativado (o bucket nunca apaga e o cadastro é append-only)
+  const usuarios = await (await admin.get('/api/admin/usuarios')).json()
+  const aluno = (Array.isArray(usuarios) ? usuarios : usuarios.itens).find((u: { email: string }) => u.email === alunoEmail)
+  expect((await admin.post(`/api/admin/usuarios/${aluno.id}/desativar`)).ok()).toBeTruthy()
+  await equipe.close()
   await contexto.close()
   await admin.dispose()
 })
