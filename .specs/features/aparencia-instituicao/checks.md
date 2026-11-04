@@ -134,10 +134,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.R
 **C22** - [x] As 4 rotas de `/api/admin/aparencia` respondem `403` para `ALUNO` e para `ATENDENTE`, e `401` sem sessão, em 12 pedidos. O admin da instituição A nunca lê nem altera a aparência de B (AC 22, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Rotas_de_admin_403_e_401"`
 
-**C23** - O link "Aparência", com ícone `Palette`, aparece no grupo "Administração", depois de "Cadastros", na barra e na gaveta para `ADMINISTRADOR`. Não aparece para `ALUNO` nem para `ATENDENTE`. Leva a `/{slug}/aparencia` (AC 23, door 7)
+**C23** - [x] O link "Aparência", com ícone `Palette`, aparece no grupo "Administração", depois de "Cadastros", na barra e na gaveta para `ADMINISTRADOR`. Não aparece para `ALUNO` nem para `ATENDENTE`. Leva a `/{slug}/aparencia` (AC 23, door 7)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "link Aparência só para administrador"`
 
-**C24** - Na tela Aparência, sem salvar, a prévia muda em 4 casos:
+**C24** - [x] Na tela Aparência, sem salvar, a prévia muda em 4 casos:
 - digitar `#8a1538` em "Cor principal" muda a cor do botão da prévia para esse valor;
 - escolher um arquivo de logo mostra uma `img` na prévia com `src` `blob:`;
 - digitar "Fale com a Univag" em "Título do login" mostra esse texto na prévia;
@@ -145,10 +145,10 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "link A
 
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "prévia muda antes de salvar"`
 
-**C25** - Ao salvar, a tela faz `PUT /api/admin/aparencia` com os campos do formulário e mostra "Aparência salva.". A consulta de `GET /api/instituicoes/{slug}` é invalidada, e o `--marca` do `<html>` passa ao valor novo sem recarregar a página (AC 25)
+**C25** - [x] Ao salvar, a tela faz `PUT /api/admin/aparencia` com os campos do formulário e mostra "Aparência salva.". A consulta de `GET /api/instituicoes/{slug}` é invalidada, e o `--marca` do `<html>` passa ao valor novo sem recarregar a página (AC 25)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "salvar mostra Aparência salva e aplica sem recarregar"`
 
-**C26** - A tela mostra o texto da API sem apagar o que foi digitado:
+**C26** - [x] A tela mostra o texto da API sem apagar o que foi digitado:
 - um `400` com `errors.cor` aparece abaixo do campo de cor;
 - um `413`, um `415` e um `503` no envio de imagem aparecem no alerta da seção da imagem (AC 26)
 
@@ -158,10 +158,10 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "erro d
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "contraste ao lado da cor e Salvar desabilitado"`
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "contraste calcula a razão WCAG"`
 
-**C28** - A 1440 px, o formulário fica à esquerda e a prévia à direita, com `top` igual (1 px) e a prévia `position: sticky`. A 390 px, a prévia fica acima do formulário e tem um botão "Ocultar prévia" que a recolhe. As seções aparecem nesta ordem: "Marca", "Login", "Assistente", "Contato", depois "Salvar" (Screens: Aparência)
+**C28** - [x] A 1440 px, o formulário fica à esquerda e a prévia à direita, com `top` igual (1 px) e a prévia `position: sticky`. A 390 px, a prévia fica acima do formulário e tem um botão "Ocultar prévia" que a recolhe. As seções aparecem nesta ordem: "Marca", "Login", "Assistente", "Contato", depois "Salvar" (Screens: Aparência)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "arranjo Aparência"`
 
-**C29** - "Remover" numa imagem abre o `Confirmar` existente, com "Remover a imagem?". Confirmar faz `DELETE /api/admin/aparencia/imagens/{tipo}`, e a miniatura some (AC 21, Observable)
+**C29** - [x] "Remover" numa imagem abre o `Confirmar` existente, com "Remover a imagem?". Confirmar faz `DELETE /api/admin/aparencia/imagens/{tipo}`, e a miniatura some (AC 21, Observable)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "remover imagem pede confirmação"`
 
 ### S4 - A marca da instituição no app (P1) · ~14 files · ~110 KB · ~32k
@@ -175,35 +175,35 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaPublicaTests
 **C32** - [x] A rota de imagem responde `404` em 4 casos: instituição inexistente, instituição inativa, tipo sem imagem e tipo desconhecido. Com `f.MinioFora()`, responde `503` (AC 30)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaPublicaTests.Imagem_publica_404_e_503"`
 
-**C33** - Com a aparência simulada com `cor` `#8a1538`, a 1024 px, o fundo computado do botão "Entrar" é igual ao de um elemento de referência pintado com `#8a1538` no tema Claro. Nos temas Escuro e Preto, é igual ao de um elemento pintado com `color-mix(in oklch, #8a1538 55%, white)`. Sem `cor`, o fundo é igual ao `oklch(0.45 0.15 262)` de `<base>` no Claro e ao `oklch(0.72 0.12 262)` no Escuro (AC 31, door 8)
+**C33** - [x] Com a aparência simulada com `cor` `#8a1538`, a 1024 px, o fundo computado do botão "Entrar" é igual ao de um elemento de referência pintado com `#8a1538` no tema Claro. Nos temas Escuro e Preto, é igual ao de um elemento pintado com `color-mix(in oklch, #8a1538 55%, white)`. Sem `cor`, o fundo é igual ao `oklch(0.45 0.15 262)` de `<base>` no Claro e ao `oklch(0.72 0.12 262)` no Escuro (AC 31, door 8)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "cor da instituição nos três temas"`
 
-**C34** - `index.css` define `--primary`, `--sidebar-primary`, `--primary-subtle` e `--ring` a partir de `var(--marca, <valor de base>)` em `:root`, `.dark` e `.black`. O componente que aplica a aparência põe `style="--marca: #8a1538"` no `<html>` quando há `cor` e remove a propriedade quando não há (AC 31)
+**C34** - [x] `index.css` define `--primary`, `--sidebar-primary`, `--primary-subtle` e `--ring` a partir de `var(--marca, <valor de base>)` em `:root`, `.dark` e `.black`. O componente que aplica a aparência põe `style="--marca: #8a1538"` no `<html>` quando há `cor` e remove a propriedade quando não há (AC 31)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "marca no html só com cor"`
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "tokens derivam de marca nos três temas"`
 
-**C35** - Com `imagens.logo` = 3, o login mostra no topo do formulário uma `img` com `src` `/api/instituicoes/univag/imagens/logo?v=3`, `alt` igual ao nome da instituição e altura ≤ 40 px. A barra lateral aberta mostra a mesma `img` no cabeçalho. Sem logo, o login mostra as iniciais e não mostra "One" (AC 32)
+**C35** - [x] Com `imagens.logo` = 3, o login mostra no topo do formulário uma `img` com `src` `/api/instituicoes/univag/imagens/logo?v=3`, `alt` igual ao nome da instituição e altura ≤ 40 px. A barra lateral aberta mostra a mesma `img` no cabeçalho. Sem logo, o login mostra as iniciais e não mostra "One" (AC 32)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "logo no login e na barra"`
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "logo até 40 px no login"`
 
-**C36** - Com `imagens.icone` = 2, os `href` de `<link rel="icon">` e de `<link rel="apple-touch-icon">` são `/api/instituicoes/univag/imagens/icone?v=2`. A barra recolhida e o topo do celular mostram uma `img` com esse `src`. Sem ícone, os dois links voltam a `/icons/icon-192.png`, e a barra mostra as iniciais num elemento com `bg-primary` (AC 33)
+**C36** - [x] Com `imagens.icone` = 2, os `href` de `<link rel="icon">` e de `<link rel="apple-touch-icon">` são `/api/instituicoes/univag/imagens/icone?v=2`. A barra recolhida e o topo do celular mostram uma `img` com esse `src`. Sem ícone, os dois links voltam a `/icons/icon-192.png`, e a barra mostra as iniciais num elemento com `bg-primary` (AC 33)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "ícone na aba, na barra recolhida e no topo"`
 
-**C37** - Nas telas com `slug`, `document.title` é o `nomeCurto` ("Univag"), ou o `nome` sem `nomeCurto`. `<meta name="theme-color">` tem `content` `#8a1538` com cor, e `#224fa7` sem cor (AC 34)
+**C37** - [x] Nas telas com `slug`, `document.title` é o `nomeCurto` ("Univag"), ou o `nome` sem `nomeCurto`. `<meta name="theme-color">` tem `content` `#8a1538` com cor, e `#224fa7` sem cor (AC 34)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "título e theme-color da instituição"`
 
-**C38** - Com `imagens.login` = 1, a 1440 px, a imagem ocupa o painel direito inteiro (a caixa da `img` é igual à do painel, com 1 px de tolerância), com `object-fit: cover`, `alt=""` e o título, a frase e os itens sobre ela. A 390 px, uma faixa de altura 128 px (1 px) com a imagem fica acima do `h1` do formulário, com o logo dentro da faixa (AC 35)
+**C38** - [x] Com `imagens.login` = 1, a 1440 px, a imagem ocupa o painel direito inteiro (a caixa da `img` é igual à do painel, com 1 px de tolerância), com `object-fit: cover`, `alt=""` e o título, a frase e os itens sobre ela. A 390 px, uma faixa de altura 128 px (1 px) com a imagem fica acima do `h1` do formulário, com o logo dentro da faixa (AC 35)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "imagem do login no painel e na faixa"`
 
-**C39** - Com `login` definido, o painel mostra o `titulo`, a `frase` e os `itens` da instituição. Sem `login`, mostra "Atendimento ao estudante", a frase de `<base>` e os 3 itens de `<base>`, comparados com os textos de `<base>` lidos em `web/src/test/textos.ts` (AC 36)
+**C39** - [x] Com `login` definido, o painel mostra o `titulo`, a `frase` e os `itens` da instituição. Sem `login`, mostra "Atendimento ao estudante", a frase de `<base>` e os 3 itens de `<base>`, comparados com os textos de `<base>` lidos em `web/src/test/textos.ts` (AC 36)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "textos do login da instituição ou os de base"`
 
-**C40** - A raiz `/` mostra a ilustração `Boas-vindas` (`svg[data-ilustracao="boas-vindas"]`) acima do `h1` "One" (AC 37)
+**C40** - [x] A raiz `/` mostra a ilustração `Boas-vindas` (`svg[data-ilustracao="boas-vindas"]`) acima do `h1` "One" (AC 37)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "raiz com a ilustração Boas-vindas"`
 
 ### S5 - Assistente com identidade e contato do atendimento (P1) · ~8 files · ~70 KB · ~20k
 
-**C41** - Sem conversa, com `assistente {nome:"Vagner", boasVindas:"Oi! Posso ajudar com boletos e matrícula.", perguntas:[4 textos]}` e foto, o assistente mostra:
+**C41** - [x] Sem conversa, com `assistente {nome:"Vagner", boasVindas:"Oi! Posso ajudar com boletos e matrícula.", perguntas:[4 textos]}` e foto, o assistente mostra:
 - uma `img` redonda de 64 px com `alt` "Vagner";
 - o texto "Olá! Eu sou Vagner." e as boas-vindas;
 - 4 botões com os textos das perguntas, na ordem.
@@ -213,16 +213,16 @@ Sem nada definido, mostra a ilustração `Conversa`, "Olá! Eu sou Assistente." 
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "boas-vindas com nome, foto e perguntas"`
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "boas-vindas padrão sem aparência"`
 
-**C42** - Sem `assistente.perguntas`, a tela mostra 2 botões: "Como emito o boleto do semestre?" e "Posso abonar falta com atestado?" (AC 39)
+**C42** - [x] Sem `assistente.perguntas`, a tela mostra 2 botões: "Como emito o boleto do semestre?" e "Posso abonar falta com atestado?" (AC 39)
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "perguntas padrão"`
 
-**C43** - Tocar na pergunta "Posso abonar falta com atestado?" faz `POST /api/conversas` com o corpo `{ "mensagem": "Posso abonar falta com atestado?" }`. Depois, o balão do aluno mostra esse texto e as sugestões somem (AC 40)
+**C43** - [x] Tocar na pergunta "Posso abonar falta com atestado?" faz `POST /api/conversas` com o corpo `{ "mensagem": "Posso abonar falta com atestado?" }`. Depois, o balão do aluno mostra esse texto e as sugestões somem (AC 40)
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "tocar na sugestão envia a pergunta"`
 
-**C44** - Com foto do assistente, cada balão `ASSISTENTE` tem uma `img` de 24 px com `alt` igual ao nome do assistente, e os balões do aluno não têm. Sem foto, nenhum balão tem `img` (AC 41)
+**C44** - [x] Com foto do assistente, cada balão `ASSISTENTE` tem uma `img` de 24 px com `alt` igual ao nome do assistente, e os balões do aluno não têm. Sem foto, nenhum balão tem `img` (AC 41)
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "foto do assistente nos balões"`
 
-**C45** - Na tela "Transferido", com `contato {horario:"Seg a sex, 8h às 18h", telefone:"(65) 3688-6000", email:"atendimento@univag.edu.br"}`, aparece "Contato do atendimento" com:
+**C45** - [x] Na tela "Transferido", com `contato {horario:"Seg a sex, 8h às 18h", telefone:"(65) 3688-6000", email:"atendimento@univag.edu.br"}`, aparece "Contato do atendimento" com:
 - o horário;
 - um link `href="tel:6536886000"` com o texto do telefone;
 - um link `href="mailto:atendimento@univag.edu.br"`.
@@ -231,21 +231,21 @@ Com só o telefone, aparece só o link do telefone. Sem contato, o bloco não ap
 
 Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "contato na transferência"`
 
-**C46** - Com contato, a barra lateral e a gaveta têm o item "Contato" acima do usuário, que abre um `Dialog` com os mesmos campos e links de C45. Sem contato, o item não existe (AC 43)
+**C46** - [x] Com contato, a barra lateral e a gaveta têm o item "Contato" acima do usuário, que abre um `Dialog` com os mesmos campos e links de C45. Sem contato, o item não existe (AC 43)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "item Contato no menu só com contato"`
 
 ### S6 - Ilustrações nos estados vazios (P2) · ~10 files · ~40 KB · ~14k
 
-**C47** - `web/src/ilustracoes/` exporta exatamente as 6 ilustrações `BoasVindas`, `Conversa`, `CaixaVazia`, `Documento`, `Pessoas` e `Grafico`. Cada uma renderiza um `<svg>` com `aria-hidden="true"` e `data-ilustracao` com o nome em kebab-case. Nenhum atributo `fill`/`stroke` e nenhum `style` contém cor literal (hex, `rgb`, `hsl`, `oklch` ou nome de cor). Só aparecem `currentColor`, `none`, `var(--primary)` e `var(--primary-subtle)`, e nenhum `<image>` nem `href` externo (AC 44, door 9)
+**C47** - [x] `web/src/ilustracoes/` exporta exatamente as 6 ilustrações `BoasVindas`, `Conversa`, `CaixaVazia`, `Documento`, `Pessoas` e `Grafico`. Cada uma renderiza um `<svg>` com `aria-hidden="true"` e `data-ilustracao` com o nome em kebab-case. Nenhum atributo `fill`/`stroke` e nenhum `style` contém cor literal (hex, `rgb`, `hsl`, `oklch` ou nome de cor). Só aparecem `currentColor`, `none`, `var(--primary)` e `var(--primary-subtle)`, e nenhum `<image>` nem `href` externo (AC 44, door 9)
 Proof: `cd web && npx vitest run src/ilustracoes/ilustracoes.test.tsx -t "6 ilustrações só com currentColor e tokens"`
 
-**C48** - Com a lista vazia, cada lista mostra a ilustração, o título, a frase e o botão de ação, como no AC 45 (6 listas, table-driven). "Falar com o assistente" leva a `/{slug}/assistente`, "Novo artigo" abre o diálogo de artigo novo e "Novo documento" abre o de documento novo (AC 45)
+**C48** - [x] Com a lista vazia, cada lista mostra a ilustração, o título, a frase e o botão de ação, como no AC 45 (6 listas, table-driven). "Falar com o assistente" leva a `/{slug}/assistente`, "Novo artigo" abre o diálogo de artigo novo e "Novo documento" abre o de documento novo (AC 45)
 Proof: `cd web && npx vitest run src/tabela.test.tsx -t "vazio ilustrado nas 6 listas"`
 
-**C49** - Indicadores sem atendimento no período mostra `svg[data-ilustracao="grafico"]` e "Sem atendimentos neste período." (AC 46)
+**C49** - [x] Indicadores sem atendimento no período mostra `svg[data-ilustracao="grafico"]` e "Sem atendimentos neste período." (AC 46)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "Indicadores sem dados com ilustração"`
 
-**C50** - Sem imagem de login, o painel direito do login a 1440 px e a faixa a 390 px mostram `svg[data-ilustracao="boas-vindas"]` (AC 47)
+**C50** - [x] Sem imagem de login, o painel direito do login a 1440 px e a faixa a 390 px mostram `svg[data-ilustracao="boas-vindas"]` (AC 47)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no login sem imagem"`
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
@@ -283,7 +283,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ManifestoTests.Manife
 **C55** - [x] O manifesto responde `404` para instituição inexistente e para instituição inativa (AC 52)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ManifestoTests.Manifesto_404"`
 
-**C56** - Nas telas com `slug`, `<link rel="manifest">` tem `href` igual a `/api/instituicoes/univag/manifest.webmanifest`. Na raiz `/`, ele fica com o `href` de `<base>` (AC 53)
+**C56** - [x] Nas telas com `slug`, `<link rel="manifest">` tem `href` igual a `/api/instituicoes/univag/manifest.webmanifest`. Na raiz `/`, ele fica com o `href` de `<base>` (AC 53)
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "manifesto da instituição no link"`
 
 ### S0 - Invariantes e barreiras (P1)
@@ -305,18 +305,18 @@ Proof: `dotnet ef migrations has-pending-model-changes --project api`
 **C60** - [x] `dotnet build api` passa com a barreira CA1502 (AD-018)
 Proof: `dotnet build api`
 
-**C61** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 5 da lista fechada, cada uma listada no `## Handoff` (AC 1 a AC 53)
+**C61** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 5 da lista fechada, cada uma listada no `## Handoff` (AC 1 a AC 53)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
-**C62** - O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais. Os arquivos novos da raiz de `web/src` entram na lista do `dryer` no mesmo commit que os cria (L-031) (AD-018)
+**C62** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais. Os arquivos novos da raiz de `web/src` entram na lista do `dryer` no mesmo commit que os cria (L-031) (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
-Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx | grep -q "No duplicate candidates found"`
+Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx | grep -q "No duplicate candidates found"`
 
-**C63** - A suíte de arranjo (`arranjo.spec.ts`, `celular.spec.ts`, `aparencia.spec.ts`) passa inteira com a API simulada (Screens)
+**C63** - [x] A suíte de arranjo (`arranjo.spec.ts`, `celular.spec.ts`, `aparencia.spec.ts`) passa inteira com a API simulada (Screens)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts`
 
-**C64** - De ponta a ponta, na imagem própria (MinIO do compose):
+**C64** - [x] De ponta a ponta, na imagem própria (MinIO do compose):
 1. O admin da instituição `e2e` abre Aparência, define a cor `#8a1538`, envia um logo PNG e um ícone PNG de 512×512 e salva.
 2. Num contexto sem cookie, o login da instituição mostra o logo, e o fundo do botão "Entrar" é igual ao de `#8a1538`.
 3. O manifesto traz o ícone novo.
@@ -436,3 +436,21 @@ Playwright (`e2e/arranjo.spec.ts`; a 360 px as listas são cartões e não há `
 - **Boundary:** lote 2 (web S1 e S2) fechado em `aaf0b9f`: C1 a C10 marcados `[x]`; `npx vitest run` com 296 testes verdes (36 arquivos); Playwright `arranjo.spec.ts` + `celular.spec.ts` com 79 verdes (71 + 8) contra `vite preview` do build; `npm --prefix web run build`, `crapper` (limite 9.99, maior nota 9.8) e `dryer` limpos. Falta o lote 3 (web S3 a S6 e S8).
 - **Settled mid-build:** nada com o usuário. Decisões do construtor: abaixo de 768 px a `Tabela` não renderiza `<table>` (`ui/table.tsx` lê o contexto `Cartoes` e emite `div` com `role="listitem"` dentro de um `div role="list"`), porque o Playwright conta uma `<table display:contents>` como visível; o layout do cartão está em `index.css` sob `[data-cartoes]`, e as células de selo e de ações levam `data-celula`. `Tabela` ganhou a prop `erro` (sem ela, lista sem dados mostra os 3 esqueletos); `Situacao.tsx` saiu. Selo do chamado: `SeloDoChamado` em `chamados/Chamados.tsx` (também no cabeçalho do detalhe); verde é `bg-success/15 text-success`. Detalhe do chamado: o cartão de ações e o `Sheet` nunca coexistem no DOM (`useConsulta` em `ui/use-mobile.ts`), para não repetir os `id` dos formulários; "Encaminhar" e "Cancelar" fecham o `Sheet` antes de abrir o diálogo. O botão `xs` não existe em nenhuma tela, então C2 mede uma `<button>` com a classe de `buttonVariants({ size: 'xs' })`. As provas de arranjo rodam contra `vite preview` (porta 5199, `E2E_URL`): não há `webServer` no `playwright.config.ts`, e o service worker do build é necessário para `cabeçalho: borda, ...`.
 - **Abandoned:** nada. Em aberto para quem verifica: (1) as 6 asserções de `arranjo.spec.ts` acima, fora dos nomes da lista fechada. (2) `Cabecalho` ganhou a prop `linha` (só Cadastros a usa). (3) `Matriculas` mostra os erros por linha como cartões a 360 px, sem o cabeçalho "Linha"/"Motivo".
+
+### Lote 3 (web S3 a S6 e S8) - edições em asserções existentes (lista fechada, item 5, e o que ela não nomeia)
+
+Vitest (cada uma só acrescenta o item novo ou troca o texto que o AC troca; nenhuma asserção saiu):
+- `acesso/acesso.test.tsx`: `link ativo da barra lateral` (7 para 8 links), `cabeçalho num único nav por papel`, `grupos por assunto na barra e na gaveta`, `grupos por papel`, os ícones do menu e `título do cabeçalho por rota` ganham "Aparência" (AC 23; não estão nomeadas na lista, que só fala de Playwright para a barra). `primeiro acesso mostra a mensagem da API no lugar do formulário` e `definir senha envia o token do link e mostra Senha criada` passam a conferir só as chamadas `POST` (`chamadas.filter(...)`): as telas leem `GET /api/instituicoes/{slug}` (AC 36, AC 53) e a lista de corpos ganhou um `undefined` (não nomeadas). `painel de entrada sem foco e sem ícones`: de 0 `svg` para exatamente a ilustração `boas-vindas` (AC 47; não nomeada).
+- `acesso/textos.test.tsx`: "Aparência" na lista do cabeçalho; a raiz ganha a frase de hoje (AC 37); "One" sai das listas de Login, Primeiro acesso e Criar senha (AC 32).
+- Texto de vazio (AC 45): `administracao/admin.test.tsx` e `usuarios.test.tsx` (Usuários: "Cadastre a equipe ou importe as matrículas."), `administracao/textos.test.tsx` (Usuários e "Nada cadastrado" em Cadastros, que mantém "Nenhum item cadastrado."), `chamados/listas.test.tsx` e `textos.test.tsx` ("Fila em dia", "Nenhuma solicitação", "Falar com o assistente"), `conhecimento/artigos.test.tsx`, `documentos.test.tsx`, `textos.test.tsx` e `edicao.test.tsx` (a asserção de ausência passou para o texto novo, para continuar a valer). `artigos.test.tsx` clica em "Novo" por nome exato: o vazio ganhou o botão "Novo artigo".
+- Indicadores (AC 46): `indicadores/indicadores.test.tsx` e `textos.test.tsx` trocam "Sem dados no período" por "Sem atendimentos neste período." (não nomeadas).
+- `assistente/textos.test.tsx`: "Olá! Eu sou Assistente." e as 2 perguntas de base entram na lista de literais (AC 38, AC 39).
+- `test/estrutura.test.ts`: `aparencia.test.tsx` na lista da raiz (o arquivo é nomeado por este `checks.md`, como `tabela.test.tsx`) e `ilustracoes` como segunda pasta sem tela, ao lado de `ui` (AC 44). `test/interface.test.ts`: `bloco()` passa a ler `var(--marca, base)` como `base`; os valores de base que as asserções comparam não mudam (AC 31). `test/util.tsx`: helper `instituicao()`.
+
+Playwright (`e2e/arranjo.spec.ts`; medido contra `vite preview` e contra a imagem na 8085):
+- `telas de acesso centralizadas /` (AC 37): o cartão sai, e a caixa medida é o bloco de ilustração, "One" e textos. `linha da marca na entrada` (AC 32): no lugar da palavra "One", o quadrado de 40 px com as iniciais "CG" em `bg-primary`, e abaixo de 1024 px abaixo da faixa de 128 px (não nomeada). `posição do conteúdo do painel`: o bloco de texto é achado por `h2/..` (o painel agora tem a ilustração ao lado; não nomeada). `lista vazia centralizada` (AC 45): a altura de 96 px do cartão sai, e o título e a ilustração ficam no centro da célula. `alertas de Indicadores` (AC 46): sem dados, o bloco "Sem atendimentos neste período." no lugar do alerta (não nomeada). `e2e/simulada.ts` ganhou a aparência (`semAparencia`, `comAparencia`), as rotas de imagem e `/api/admin/aparencia`, e a tela Aparência entrou em `Telas`.
+- `playwright.config.ts`: `workers: 1`, porque `anexos.spec.ts` e `aparencia-real.spec.ts` dividem o limitador de login da API (5 por minuto por IP, L-066) e rodando em paralelo tomavam 429.
+
+- **Boundary:** lote 3 (web S3 a S6 e S8) fechado em `e5fc7c1` (tela, marca, ilustrações, Vitest) e `3e4f05b` (arranjo e e2e real), mais o commit deste handoff: C23 a C26, C28, C29, C33 a C50, C56 e C61 a C64 marcados `[x]`; **C27 fica aberto** (ver abaixo). Contagens em `HEAD`: `api.Tests` 518 verdes (`dotnet build api` e `has-pending-model-changes` limpos); Vitest 329 verdes (40 arquivos); `crapper` no limite 9.99 sai 0 (maior nota 9.8, `Sidebar`); `dryer` sem candidato com a lista de C62 mais `src/aparencia.tsx`; Playwright `arranjo` + `celular` + `aparencia` 84 verdes contra `vite preview`; e2e real inteiro 109 verdes contra a imagem de `3e4f05b` na porta 8085 (instituição `e2e`, banco `one_aparencia_e2e`, bucket `one-aparencia-e2e`; contêiner, imagem, banco, bucket e worktree removidos).
+- **Settled mid-build:** nada com o usuário. Decisões do construtor: (1) **C27 não fecha**: o check pede `#224fa7` → "7,47:1", mas a regra do servidor (`ContrasteDaCor.cs`, WCAG 2.x, a que o próprio C27 manda usar) dá 7,65; `#767676` 4,54 e `#ffd700` 1,40 batem. O teste e a tela usam 7,65 (`aparencia.test.tsx` e `administracao/aparencia.test.tsx` comentam o porquê); falta alguém corrigir o valor do check. (2) `AplicaAparencia` fica ao lado de `Routes` e lê o `slug` por `useMatch`, e `iniciais` mudou para `aparencia.tsx` (reexportada por `Autenticado.tsx`). (3) Os tokens derivam por variáveis auxiliares (`--marca-sutil`, `--marca-clara`, `--marca-sutil-escuro`, `--marca-sutil-preto`), todas `color-mix(... var(--marca) ...)`: sem `--marca` ficam inválidas e `var(--aux, base)` cai no valor de hoje; `--primary`, `--sidebar-primary` e `--ring` do `:root` são exatamente `var(--marca, base)`. (4) Na tela Aparência as imagens são escolhidas localmente (miniatura `blob:`) e só sobem no "Salvar" (`PUT` e depois um `POST` por imagem); "Remover" de uma imagem escolhida e ainda não salva só a descarta, e de uma salva abre o `Confirmar` e faz o `DELETE`. (5) O login tem o logo duas vezes no DOM (faixa e coluna), cada uma visível em uma faixa de largura; a faixa escura sobre a imagem do painel é um degradê (`bg-linear-to-t`), para o bloco de texto continuar filho direto do painel. (6) As 6 ilustrações são dados (lista de formas por nome) desenhados por um `Desenho` só, porque o `dryer` achava duplicata (nota 0.81) entre os 6 JSX. (7) Nenhuma linha de `api/` mudou.
+- **Abandoned:** nada. Em aberto para quem verifica: (1) C27 (valor 7,47 do check contra 7,65 do servidor). (2) As edições acima que a lista fechada não nomeia (`acesso.test.tsx` x3 grupos, `primeiro acesso`/`definir senha` por `POST`, `painel de entrada sem foco e sem ícones`, Indicadores, `linha da marca na entrada`, `posição do conteúdo do painel`, `alertas de Indicadores`). (3) `playwright.config.ts` com `workers: 1`.
