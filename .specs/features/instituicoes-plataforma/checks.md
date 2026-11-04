@@ -49,7 +49,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OperadorComandoTests.
 **C4** - [x] As 6 rotas de `/api/plataforma` respondem `403` com `detail` "Só operadores da plataforma podem usar esta área." para `ADMINISTRADOR`, `ATENDENTE` e `ALUNO` (18 pedidos), e `401` sem sessão (6 pedidos) (AC 4, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Rotas_403_sem_operador_e_401_sem_sessao"`
 
-**C5** - O grupo "Plataforma", com o link "Instituições" (ícone `Building2`) para `/{slug}/instituicoes`, aparece por último na barra lateral e na gaveta para um usuário com `OPERADOR` e `ADMINISTRADOR`. Não aparece para `ADMINISTRADOR`, `ATENDENTE` nem `ALUNO` sem `OPERADOR` (AC 5, door 4)
+**C5** - [x] O grupo "Plataforma", com o link "Instituições" (ícone `Building2`) para `/{slug}/instituicoes`, aparece por último na barra lateral e na gaveta para um usuário com `OPERADOR` e `ADMINISTRADOR`. Não aparece para `ADMINISTRADOR`, `ATENDENTE` nem `ALUNO` sem `OPERADOR` (AC 5, door 4)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "grupo Plataforma só para operador"`
 
 **C6** - [x] Um admin salva pela tela Usuários (`PUT` da rota de usuário de `<base>`) um usuário com `ADMINISTRADOR` e `OPERADOR`, enviando `papeis: ["ADMINISTRADOR"]`: a resposta é `200`, e o usuário continua com `OPERADOR` no banco. Enviando `["ATENDENTE"]` com setor, ele fica com `ATENDENTE` e `OPERADOR` (AC 6)
@@ -87,23 +87,23 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_
 **C13** - [x] `InstituicaoComandoTests` passa inteiro sem edição de asserção (AC 13, AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests"`
 
-**C14** - Na tela Instituições, a lista simulada com 2 instituições mostra:
+**C14** - [x] Na tela Instituições, a lista simulada com 2 instituições mostra:
 - por linha, o nome, o endereço `/{slug}` em texto pequeno, o selo "Ativa" ou "Desativada", o número de administradores e a data de criação;
 - o menu de ações com "Importar carga", "Reenviar acesso do admin" e "Desativar" na ativa, e "Reativar" no lugar de "Desativar" na inativa;
 - o botão "Nova instituição" no cabeçalho (AC 14)
 
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "lista com selo, administradores e ações"`
 
-**C15** - A 1440 px, "Nova instituição" fica à direita do título, com o mesmo `top` (1 px). A 390 px, as linhas viram cartões (`role="listitem"`), sem `<table>` visível, e `scrollWidth` ≤ 390 (Screens)
+**C15** - [x] A 1440 px, "Nova instituição" fica à direita do título, com o mesmo `top` (1 px). A 390 px, as linhas viram cartões (`role="listitem"`), sem `<table>` visível, e `scrollWidth` ≤ 390 (Screens)
 Proof: `cd web && npx playwright test e2e/instituicoes.spec.ts -g "arranjo Instituições"`
 
-**C16** - Digitar "Centro Universitário São José & Cia" no Nome preenche o Endereço com "centro-universitario-sao-jose-cia". Editar o Endereço para "csj" e depois mudar o Nome deixa "csj". O fuso começa em `America/Sao_Paulo`, e a lista de fusos tem só fusos `America/*` do Brasil (AC 15)
+**C16** - [x] Digitar "Centro Universitário São José & Cia" no Nome preenche o Endereço com "centro-universitario-sao-jose-cia". Editar o Endereço para "csj" e depois mudar o Nome deixa "csj". O fuso começa em `America/Sao_Paulo`, e a lista de fusos tem só fusos `America/*` do Brasil (AC 15)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "endereço segue o nome até ser editado"`
 
-**C17** - Criar com sucesso faz `POST /api/plataforma/instituicoes` com `{slug, nome, fuso, admin {cpf, nome, email}}`. Depois, o `Dialog` fecha, o alerta mostra "Instituição Faculdade Demo criada. Enviamos o link de primeiro acesso para admin@demo.edu.br." com um link para `/demo`, e a lista é buscada de novo (AC 16)
+**C17** - [x] Criar com sucesso faz `POST /api/plataforma/instituicoes` com `{slug, nome, fuso, admin {cpf, nome, email}}`. Depois, o `Dialog` fecha, o alerta mostra "Instituição Faculdade Demo criada. Enviamos o link de primeiro acesso para admin@demo.edu.br." com um link para `/demo`, e a lista é buscada de novo (AC 16)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "criar fecha, avisa e recarrega a lista"`
 
-**C18** - Um `400` com `errors["admin.email"]` mostra o texto abaixo do campo E-mail do administrador. Um `409` mostra "Esse endereço já está em uso." abaixo do Endereço. Nos dois casos, os 6 campos mantêm o que foi digitado (AC 17)
+**C18** - [x] Um `400` com `errors["admin.email"]` mostra o texto abaixo do campo E-mail do administrador. Um `409` mostra "Esse endereço já está em uso." abaixo do Endereço. Nos dois casos, os 6 campos mantêm o que foi digitado (AC 17)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "erro da API no campo sem perder o formulário"`
 
 ### S3 - Carga inicial pela tela (P1)
@@ -118,7 +118,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Carga
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Carga_invalida_400_413_404"`
 
-**C21** - Na tela, "Importar carga" abre um `Dialog` com `CampoArquivo` que aceita `.json` e faz `POST` multipart com o campo `arquivo`. Com sucesso, mostra "Importados: 2 setores, 1 cursos, 3 categorias, 2 regras, 5 artigos." com os números da resposta. Com `400`, mostra cada erro da lista numa linha (AC 21)
+**C21** - [x] Na tela, "Importar carga" abre um `Dialog` com `CampoArquivo` que aceita `.json` e faz `POST` multipart com o campo `arquivo`. Com sucesso, mostra "Importados: 2 setores, 1 cursos, 3 categorias, 2 regras, 5 artigos." com os números da resposta. Com `400`, mostra cada erro da lista numa linha (AC 21)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "importar carga mostra o resumo ou os erros"`
 
 ### S4 - Desativar, reativar e reenviar acesso (P1)
@@ -148,7 +148,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Reenv
 **C27** - [x] `carga`, `desativar`, `reativar` e `reenviar-acesso` com o slug "nao-existe" respondem `404` com `detail` "Instituição não encontrada." (4 pedidos) (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_inexistente_404"`
 
-**C28** - No menu da linha, na tela:
+**C28** - [x] No menu da linha, na tela:
 - "Desativar" abre o `Confirmar` com "Desativar Faculdade Demo? Ninguém dessa instituição consegue entrar até você reativar."; confirmar faz o `POST .../desativar`, e a linha mostra o selo "Desativada";
 - "Reativar" faz o `POST` direto e mostra "Instituição reativada.";
 - "Reenviar acesso do admin" faz o `POST` direto e mostra "Enviamos o link para 2 administrador(es)." com o `enviados` da resposta (AC 28)
@@ -169,15 +169,15 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Igno
 **C32** - [x] `dotnet build api` passa com a barreira CA1502 (AD-018)
 Proof: `dotnet build api`
 
-**C33** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 4 da lista fechada (AC 5)
+**C33** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 4 da lista fechada (AC 5)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
-**C34** - O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
+**C34** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx | grep -q "No duplicate candidates found"`
 
-**C35** - A suíte de arranjo (`arranjo.spec.ts`, `celular.spec.ts`, `aparencia.spec.ts`, `instituicoes.spec.ts`) passa inteira com a API simulada (Screens)
+**C35** - [x] A suíte de arranjo (`arranjo.spec.ts`, `celular.spec.ts`, `aparencia.spec.ts`, `instituicoes.spec.ts`) passa inteira com a API simulada (Screens)
 Proof: `cd web && npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts e2e/instituicoes.spec.ts`
 
 **C36** - De ponta a ponta, na imagem própria:
@@ -236,4 +236,4 @@ e `acesso.test.tsx` somam ~260 KB (~65k), mais ~35k de código e testes novos. T
 - `ArquiteturaTests`: mensagens 68 (`Um_arquivo_por_caso_de_uso`, `Resposta_por_caso_de_uso`), fatia `Instituicoes` 6 de 68, handlers 68 (`Um_handler_por_mensagem_no_mesmo_arquivo`, `Handler_sem_HttpContext`), `Map*` 71 (`Map_so_nos_casos_de_uso`), `Entrada` aninhadas 31 e rotas com corpo JSON 31 (`Entrada_por_caso_de_uso`, `AsEntradas` com 31 nomes), mensagens com JSON 59 (`Resposta_por_caso_de_uso`; `ComRespostaAninhada` com 20 nomes).
 - `MediatorTests.AgirNoChamado_so_nas_9_acoes`: 68 mensagens, (9, 59).
 - `SessaoTests.Sem_cookie_401_em_toda_rota_privada`: 64 rotas privadas.
-- `web/`: contagens e grupos do menu em `acesso.test.tsx` e nos testes de arranjo da barra (anotados no commit da fatia web).
+- `web/`: nenhuma contagem nem grupo existente mudou (o menu novo só aparece para `OPERADOR`, que nenhum teste antigo usa): a edição 4 da lista fechada não foi preciso fazer.

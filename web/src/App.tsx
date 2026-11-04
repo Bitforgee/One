@@ -6,6 +6,7 @@ import { DefinirSenha, Login, PrimeiroAcesso, Raiz, TrocarSenha } from './acesso
 import { AplicaAparencia } from './aparencia'
 import { Aparencia } from './administracao/Aparencia'
 import { Cadastros } from './administracao/Cadastros'
+import { Instituicoes } from './administracao/Instituicoes'
 import { Matriculas } from './administracao/Matriculas'
 import { Usuarios } from './administracao/Usuarios'
 import { Assistente } from './assistente/Assistente'
@@ -65,6 +66,7 @@ function Rotas() {
             <Route path="matriculas" element={<Matriculas />} />
             <Route path="cadastros" element={<Cadastros />} />
             <Route path="aparencia" element={<Aparencia />} />
+            <Route path="instituicoes" element={<Instituicoes />} />
           </Route>
         </Route>
       </Routes>

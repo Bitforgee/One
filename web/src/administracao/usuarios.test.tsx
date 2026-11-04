@@ -77,6 +77,19 @@ describe('usuários', () => {
     ])
   })
 
+  // instituicoes-plataforma AC 6: OPERADOR não é papel da tela; a lista não o mostra e o PUT não o devolve (a API o preserva)
+  it('usuário com OPERADOR edita sem enviar o papel', async () => {
+    const dona = { ...carla, id: 3, nome: 'Dona', email: 'dona@univag.edu.br', papeis: ['ADMINISTRADOR', 'OPERADOR'], setores: [] }
+    const chamadas = usuarios({ 'GET /api/admin/usuarios': () => [200, [dona]], 'PUT /api/admin/usuarios/3': () => [200, {}] })
+    expect(await item('Dona')).toHaveTextContent(/Administrador$/)
+    await escolher('Dona', 'Editar')
+    const d = within(await screen.findByRole('dialog'))
+    expect(d.queryByLabelText('Operador')).not.toBeInTheDocument()
+    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(posts(chamadas)).toHaveLength(1))
+    expect(posts(chamadas)[0][2].papeis).toEqual(['ADMINISTRADOR'])
+  })
+
   it('sem o papel de atendente, os setores somem', async () => {
     usuarios()
     await userEvent.click(await screen.findByRole('button', { name: /Novo/ }))

@@ -26,15 +26,16 @@ export function useLeituras<T extends Record<string, unknown>>(urls: Record<keyo
   return { dados: data, erro: error?.message, recarregar: () => cliente.invalidateQueries({ queryKey: chave }) }
 }
 
-type Gravacao = { chamar: () => Promise<unknown>; aviso: string; depois?: () => void }
+// `aviso` pode vir da resposta da gravação (por exemplo, quantos receberam).
+type Gravacao = { chamar: () => Promise<unknown>; aviso: string | ((resultado: unknown) => string); depois?: () => void }
 
 // Uma gravação: o toast só aparece no sucesso (door 13); o erro fica em `error`, para o Alert da tela ou do diálogo.
 export function useGravacao(recarregar: () => Promise<unknown>) {
   return useMutation({
     mutationFn: ({ chamar }: Gravacao) => chamar(),
-    onSuccess: async (_, { aviso, depois }) => {
+    onSuccess: async (resultado, { aviso, depois }) => {
       depois?.()
-      toast.success(aviso)
+      toast.success(typeof aviso === 'function' ? aviso(resultado) : aviso)
       await recarregar()
     },
   })

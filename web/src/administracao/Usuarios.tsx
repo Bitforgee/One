@@ -26,7 +26,8 @@ const Papeis: [string, string][] = [
 type Ficha = Pick<Usuario, 'cpf' | 'nome' | 'email' | 'papeis' | 'setores'> & { id?: number; senhaTemporaria: string }
 type Edicao = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; setores: Setor[] }
 const Novo: Ficha = { cpf: '', nome: '', email: '', papeis: ['ATENDENTE'], setores: [], senhaTemporaria: '' }
-const ficha = (u: Usuario): Ficha => ({ id: u.id, cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: '' })
+const daTela = (papeis: string[]) => papeis.filter((p) => Papeis.some(([valor]) => valor === p)) // OPERADOR só pelo comando
+const ficha = (u: Usuario): Ficha => ({ id: u.id, cpf: u.cpf, nome: u.nome, email: u.email, papeis: daTela(u.papeis), setores: u.setores, senhaTemporaria: '' })
 const corpo = (u: Ficha) => ({ cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: u.senhaTemporaria || undefined })
 
 function alternar<T>(lista: T[], valor: T) {
@@ -37,7 +38,7 @@ const Colunas = [{ titulo: 'Nome' }, { titulo: 'CPF', largo: true }, { titulo: '
 
 function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario; setores: Map<number, string>; editar: () => void; desativar: () => void; pendente: boolean }) {
   const papeis = new Map(Papeis)
-  const perfil = u.papeis.map((p) => papeis.get(p)).join(', ') + (u.setores.length > 0 ? ` · ${u.setores.map((s) => setores.get(s)).join(', ')}` : '')
+  const perfil = daTela(u.papeis).map((p) => papeis.get(p)).join(', ') + (u.setores.length > 0 ? ` · ${u.setores.map((s) => setores.get(s)).join(', ')}` : '')
   return (
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>

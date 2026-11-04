@@ -35,6 +35,12 @@ export const comAparencia = {
 // um PNG de 1 x 1 para as rotas de imagem
 const Png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAwS2OUAAAAABJRU5ErkJggg==', 'base64')
 
+// instituicoes-plataforma: o que GET /api/plataforma/instituicoes devolve (uma ativa com nome longo e uma desativada)
+export const InstituicoesSimuladas = [
+  { slug: 'univag', nome: 'Centro Universitário de Várzea Grande', fuso: 'America/Cuiaba', ativa: true, criadaEm: '2026-11-02T12:00:00Z', administradores: 2 },
+  { slug: 'faculdade-antiga', nome: 'Faculdade Antiga', fuso: 'America/Sao_Paulo', ativa: false, criadaEm: '2026-09-15T12:00:00Z', administradores: 0 },
+]
+
 // API simulada: o teste mede só o layout de cada tela.
 // `aparencia` é o que GET /api/instituicoes/univag e GET /api/admin/aparencia devolvem ao lado do nome.
 // Com `extremos`, Fila, Artigos, Documentos e Usuários ganham uma linha com os textos longos de C13.
@@ -93,6 +99,8 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
         versao: { id: 1, numero: 3, nomeArquivo: 'regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf', paginas: 42, criadaEm: '2026-11-02T12:00:00Z' } }
       return json(200, mais([documento], { ...documento, id: 2, titulo: TituloLongo }))
     }
+    if (caminho === '/api/plataforma/instituicoes') return json(rota.request().method() === 'GET' ? 200 : 201, rota.request().method() === 'GET' ? InstituicoesSimuladas : InstituicoesSimuladas[0])
+    if (caminho.startsWith('/api/plataforma/instituicoes/')) return json(200, { slug: caminho.split('/')[4], ativa: true, enviados: 2, setores: 2, cursos: 1, categorias: 3, regras: 2, artigos: 5 })
     return json(404, { status: 404, detail: 'Recurso não encontrado.' })
   })
 }
