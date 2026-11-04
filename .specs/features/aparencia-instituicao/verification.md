@@ -2,201 +2,201 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: 5b355d9..179d088 (proofs run at HEAD `161411c`; `5dc1977..161411c` is `protecao-injecao` and a ROADMAP doc, not judged here)
-**Round**: 1 - full
+**Diff range**: 5b355d9..5f35a14 (proofs run at HEAD `5f35a14`; HEAD moved to `224d84b` during the run, a `protecao-injecao` checks edit with no code. `5dc1977`, `301eb16`, `beb4de3`, `161411c`, `5b53ce7`, `a2906dd` belong to other features and are not judged)
+**Round**: 2 - scoped (fix diff `e2e3bcb..5f35a14`, plus every round-1 verdict that was not PASS; all proofs re-run in full at HEAD; the screen enumeration was redone for every screen, as the orchestrator asked)
 **Verifier**: fresh sub-agent with no inherited context (author != verifier), dispatched by the orchestrator
 
-Why FAIL, in one line each:
-1. Surviving mutant on C7: removing `data-celula="selo"` from the state cell moves the badge under the card's first line, and `listas viram cartões abaixo de 768` still passes, because its badge assertions sit inside `if (await selo.count())` (`web/e2e/celular.spec.ts:95`).
-2. `## Screens` decides arrangements no check reaches: the suggested questions in 1 column on mobile and 2 on desktop, centered (Assistente sem conversa); the login texts at the base of the image panel; the assistant photo to the left of the bubble; "Contato do atendimento" below the ticket number; the 32 px and 24 px icon sizes and "icon before the title" in the shell.
-3. AC 2 says "todo `Button`", but C2 measures 4 of the 8 sizes in `web/src/ui/button.tsx:22-31`. `lg`, `icon-xs` and `icon-sm` are used on screens (`Autenticado.tsx`, `assistente/Anexos.tsx`), and `icon-lg` exists. None of them has a 44 px proof.
+Why FAIL, in one line:
+1. Surviving mutant on C65. Removing `items-center` from the welcome `<section>` (`web/src/assistente/Assistente.tsx:208`) moves the 64 px photo and the grid of suggestions to the left edge, and `sugestões centralizadas em 1 e 2 colunas` still passes. The test measures the centre of the heading's parent (`web/e2e/aparencia.spec.ts:151-152`). That parent is the full-width `<section>`, so its centre equals the centre of `main` whatever happens to its contents. With the fault at 1440 px: the section is x=464 w=768 (centre 848, the same as `main`), the photo is at x=464 and the grid is at x=464 w=576 (centre 752).
 
-All 64 proofs that ran are green, and every edit to an existing assertion is on the closed list.
+Round 1 (`179d088`, FAIL) found three things: the C7 badge assertion was conditional and a fault survived it; `## Screens` arrangements had no check (the suggestions grid and centring, the login texts at the base, the photo to the left of the bubble, the contact below the ticket number, and the 32/24 px shell icon); and C2 measured 4 of the 8 `Button` sizes. The amendments in `e2e3bcb` and the fixes in `94b373b` close all of these except the centring in C65 (above). C2 and C7 now pass, and their faults are killed.
 
 ## Binding sources
 
-The plan marks these as binding: its own `## Screens` and `## Landing` (doors 1-11), plus the sources in `## Sources`.
+Verified at `5f35a14`. Every `## Screens` bullet was re-enumerated against the checks. The non-screen sources carry from round 1 (`179d088`): the fix touched none of them.
 
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
-| plan `## Landing` doors 1-11 | yes - `plan.md:105-117` | none. Door 10 (JSON-path error names) is proven by C14 (`Erros(json, "login.titulo")`, `AparenciaAdminTests.cs:167`) and C18 (`arquivo`, `:274`). Door 11 (`removida_em`) is proven by C21 | - |
-| plan `## Screens` - Login, Primeiro acesso, Criar senha >= 1024 | yes - `plan.md:126-130`; screenshots `com/sem-light-1440-Login` | none | the title, phrase and items sit "sobre uma faixa escura na base" of the image panel. C38 only asserts that they are inside the panel box (`web/e2e/aparencia.spec.ts:105-106`). Nothing asserts that they are at the base or on the dark band (`Acesso.tsx:84` `mt-auto`, `:110` gradient) |
-| plan `## Screens` - Login < 1024 | yes - `plan.md:131-132`; screenshots `*-390-Login` | none | - (C38 `aparencia.spec.ts:111-117`, C50 `:129-130`) |
-| plan `## Screens` - Raiz `/` | yes - `plan.md:133-134` | none | - (C40 `aparencia.test.tsx:209`; `arranjo.spec.ts` `telas de acesso centralizadas /`) |
-| plan `## Screens` - Casca autenticada | yes - `plan.md:135-137`; screenshots `*-AssistenteVazio` | none | the 32 px sidebar icon, the 24 px mobile-top icon, and the mobile icon sitting "antes do título da tela". C35/C36 assert presence and `src` only (`aparencia.test.tsx:105,125-126`) |
-| plan `## Screens` - Assistente sem conversa | yes - `plan.md:138-140`; screenshots `com-light-1440-AssistenteVazio`, `sem-light-390-AssistenteVazio` | none | the welcome block is centered; the questions are pills in a grid of 1 column on mobile and 2 on desktop. C41 asserts text, order and the 64 px round photo (`boasvindas.test.tsx:27-31`). A search of `web/e2e` for the suggested questions finds only the fixture (`simulada.ts:32`), so no proof measures the arrangement |
-| plan `## Screens` - Assistente com conversa | yes - `plan.md:141` | none | the photo is "à esquerda" of the bubble. C44 asserts the `img`, its `size-6` and its `alt` (`boasvindas.test.tsx:75-83`), not its side |
-| plan `## Screens` - Transferido | yes - `plan.md:142-143` | none | the "Contato do atendimento" block sits "abaixo do número do chamado". C45 asserts the block's contents (`boasvindas.test.tsx:114-118`), not its position |
-| plan `## Screens` - Menu (barra e gaveta) | yes - `plan.md:144-145` | none | - (C46 `aparencia.test.tsx:222,237`) |
-| plan `## Screens` - Listas | yes - `plan.md:146-151`; screenshot `com-light-390-Fila` | none | the badge to the right on the first line: the C7 assertion exists, but it is conditional and a real regression survives it (see Faults) |
-| plan `## Screens` - Detalhe do chamado < 1024 | yes - `plan.md:152-153` | none | - (C8) |
-| plan `## Screens` - Indicadores | yes - `plan.md:154-155` | none | - (C5, C49) |
-| plan `## Screens` - Cadastros < 768 | yes - `plan.md:156` | none | - (C6) |
-| plan `## Screens` - Aparência | yes - `plan.md:157-159`; screenshots `com-light-1440-Aparência`, `sem-dark-390-Aparência` | none | the controls for each image (thumbnail, "Enviar imagem", "Remover") are asserted only for Logo (`administracao/aparencia.test.tsx:124,161,163`); the other 3 images have no proof. Door 7 calls the preview "uma réplica pequena do login", but its initials read "CE" (`PreviaAparencia.tsx:21` `nome.slice(0, 2)`) while the login reads "CG" (`aparencia.tsx:104-107` `iniciais`) |
-| STATE.md AD-008, AD-021, AD-027, AD-029, AD-030 | yes - `.specs/STATE.md:14,27,33,35,36` | none. One deploy for all institutions (door 5), MinIO behind the API (door 4), default blue kept when there is no colour (C33), the shell header and the `login-02` grid kept | - |
-| design audit 04/11 (15 screens, 390 and 1440 px) | no repo artifact. Its findings exist only as `plan.md:10-20`; compared against that text | none | - (each finding has a check: alert C1, empty states C48, 44 px C2, ticket actions C8, badge colour C3) |
-| user request 04/11 | only through `plan.md:22-29` and the confirmed Assumptions | none | - |
+| plan `## Landing` doors 1-11 | yes - `plan.md:105-117` (carried from 179d088) | none | - |
+| `## Screens` Login, Primeiro acesso, Criar senha >= 1024 | yes - `plan.md:126-130` | none | - (logo/initials C35 + `arranjo.spec.ts` `linha da marca na entrada`; image cover C38; texts at the base on the dark band C66 `aparencia.spec.ts:164,168`; illustration without an image C50, with the texts at the base below it by `arranjo.spec.ts:1546`) |
+| `## Screens` Login < 1024 | yes - `plan.md:131-132` | none | - (C38 `aparencia.spec.ts:111-117`, C50) |
+| `## Screens` Raiz `/` | yes - `plan.md:133-134` | none | - (C40) |
+| `## Screens` Casca autenticada | yes - `plan.md:135-137` | none | - (logo on the open bar C35; icon 32 px collapsed C69 `aparencia.spec.ts:211-212`; 24 px before the title on mobile, icon and initials, C69 `:223-226`; links C36) |
+| `## Screens` Assistente sem conversa | yes - `plan.md:138-140` | none | "centralizados": no proof can fail on it. C65's centring assertion (`aparencia.spec.ts:152`) measures the full-width `<section>`, not the photo, the text or the grid inside it (surviving mutant, see Faults). Covered: the 1/2-column grid (C65 `:146-149`), the 64 px round photo, the text and the order of questions (C41) |
+| `## Screens` Assistente com conversa | yes - `plan.md:141` | none | - (C67 `aparencia.spec.ts:184-185`, C44) |
+| `## Screens` Transferido | yes - `plan.md:142-143` | none | - (C68 `aparencia.spec.ts:200`, C45) |
+| `## Screens` Menu | yes - `plan.md:144-145` | none | - (C46) |
+| `## Screens` Listas | yes - `plan.md:146-151` | none | - (C4, C48; cards with the badge on the right C7, now unconditional `celular.spec.ts:105`) |
+| `## Screens` Detalhe do chamado < 1024 | yes - `plan.md:152-153` | none | - (C8, C9) |
+| `## Screens` Indicadores | yes - `plan.md:154-155` | none | - (C5, C49) |
+| `## Screens` Cadastros < 768 | yes - `plan.md:156` | none | - (C6) |
+| `## Screens` Aparência | yes - `plan.md:157-159` | none | - (C28; each of the 4 images with thumbnail, "Enviar imagem" and "Remover" C70 `administracao/aparencia.test.tsx:193-206`; preview initials equal the login's C71 `:228-229`) |
+| STATE.md AD-008, AD-021, AD-027, AD-029, AD-030 | yes (carried from 179d088) | none | - |
+| design audit 04/11, user request 04/11 | only through `plan.md:10-29` (carried from 179d088) | none | - |
 
-Blanket exemptions: none. `checks.md` does not exempt visual fidelity, and the plan puts only colour, spacing and font weight on the tokens (`plan.md:124`).
+Blanket exemptions: none. The plan puts only colour, spacing and font weight on the tokens (`plan.md:124`).
 
 ## Checks
 
-API proofs were run as one xUnit v3 process over the whole `api.Tests` assembly at HEAD (see Gate), in `-c Release`. Smart App Control blocked the freshly built Debug `One.Api.Tests.dll` with `0x800711C7`; the Release build loaded. Web unit tests: one `npx vitest run` over the whole suite. Layout tests: one Playwright run of the 3 layout specs against `vite preview` of the HEAD build on :5199. Real e2e: the whole suite against a HEAD image on :8085. Every named test below appears individually as passed in those reports.
+Proofs were run at `5f35a14` as follows:
+- API: one xUnit v3 process of the Release `One.Api.Tests.exe` over the whole assembly, excluding `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo`, which then ran alone.
+- Vitest: `npx vitest run` over the whole suite.
+- Layout: one Playwright run of the 3 layout specs against `vite preview` of the HEAD build on :5199.
+- Real e2e: the whole suite against a HEAD image on :8085.
+
+Every test named below appears individually as passed in those reports (the xUnit XML and the Vitest and Playwright JSON). For files the fix did not touch, the citations carry from `179d088`. Citations in `celular.spec.ts` and `administracao/aparencia.test.tsx` are refreshed.
 
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
-| C1 | alert text in 1 line, full-width column | PW `alerta sem ícone em uma linha` passed | `web/e2e/celular.spec.ts:30` `expect(medidas.altura).toBeLessThanOrEqual(medidas.linha * 1.5)`; `:31` `\|coluna - conteudo\| <= 1` | PASS |
-| C2 | 44 px for default, sm, icon and xs Buttons, Input, NativeSelect and Tabela actions; 36 at 1024 | PW `alvos de toque de 44 px abaixo de 768` passed | `celular.spec.ts:39,41,43,44,46,48,50` `toBeGreaterThanOrEqual(44)`; `:53` `toBe(36)` | PASS (as written; see Coverage for the sizes AC 2 claims and C2 leaves out) |
-| C3 | badge class per group, base text | VT `selo de estado com cor por grupo` passed | `web/src/tabela.test.tsx:35` `expect(screen.getByText(texto)).toHaveClass(classe)` over the 5 states at `:26-30` | PASS |
-| C4 | 3 skeletons, no Spinner | VT `carregando mostra 3 esqueletos` passed | `tabela.test.tsx:43` `toHaveLength(3)`; `:44` `queryByRole('status')` absent | PASS |
-| C5 | no ellipsis or overflow; a 40-character label in <= 2 lines | PW `Indicadores sem texto cortado` passed | `celular.spec.ts:66` `expect(cortados).toEqual([])`; `:71` `tspan` count `<= 2` | PASS |
-| C6 | selector and "Novo" share a top | PW `Cadastros seletor e Novo na mesma linha` passed | `celular.spec.ts:80` `\|seletor.y - novo.y\| <= 1` | PASS |
-| C7 | 6 lists become cards; badge on the right with the same top; main column below; tables at 1024 | PW `listas viram cartões abaixo de 768` passed | `celular.spec.ts:91` `table:visible` count 0; `:98-99` badge top and right, inside `if (await selo.count())` at `:95`; `:107` table at 1024 | FAIL - the assertion is conditional on the same `data-celula` attribute that drives the layout (`index.css:153-154`); the mutant survived |
-| C8 | fixed "Ações" >= 44 px at 390 and 1023; bottom Sheet with the same buttons; none at 1024 | PW `Ações do chamado no rodapé abaixo de 1024` passed | `celular.spec.ts:115` count 0 at 1024; `:123` `{posicao:'fixed', fundo:'0px'}`; `:124` `>= 44`; `:129` Sheet bottom 800; `:130` `toEqual(nomesNoCartao)` | PASS |
-| C9 | action in the Sheet closes it and updates the badge | PW `ação no Sheet fecha e atualiza` passed | `celular.spec.ts:149` dialog `toBeHidden()`; `:150` `toHaveText('Em atendimento')` | PASS |
-| C10 | no horizontal scroll at 360 px | PW `sem rolagem horizontal a 360` passed | `celular.spec.ts:158` `scrollWidth <= 360` over 6 lists and the detail | PASS |
-| C11 | GET admin returns 200 with exactly 6 null keys, then the saved values | xUnit `AparenciaAdminTests.Get_sem_aparencia_devolve_nulos` passed | `api.Tests/AparenciaAdminTests.cs:43` `HttpStatusCode.OK`; `:45` exact keys; `:46-52` nulls; `:56-60` values after the PUT | PASS |
-| C12 | PUT saves; an absent or null field returns to default; institution B untouched | xUnit `Put_grava_e_campo_ausente_volta_ao_padrao` passed | `AparenciaAdminTests.cs:76` saved row tuple; `:92-94` `Assert.Null(linha2.Cor)`, `LoginTitulo` null, others kept; `:97-98` B null | PASS |
-| C13 | invalid colour returns 400 with `errors.cor` and saves nothing, 4 inputs; `#767676` and `#224fa7` accepted | xUnit `Cor_invalida_ou_sem_contraste_400` (6 cases) passed | `AparenciaAdminTests.cs:102-107` InlineData; `:122` `BadRequest`; `:123` `Assert.Equal([RecusaDaCor], Erros(..., "cor"))`; `:125` `Assert.Null(linha.Cor)`; `:118-119` accepted | PASS |
-| C14 | 400 on the right field, limit in the text, nothing saved; 12 limits on both sides of the edge; invalid e-mail | xUnit `Limites_dos_textos_400` (12 cases) and `Email_de_contato_invalido_400` passed | `AparenciaAdminTests.cs:130-132` 12 rows; `:159` accepted at max; `:166` `BadRequest` at max+1; `:168` `m.Contains(max.ToString())`; `:169` not saved; e-mail `:181-183` | PASS (precision: see Findings) |
-| C15 | upload: 200 `{logo,1}`, key prefix, same bytes, row with sha256; re-upload gives v2, one row, new key, old object kept | xUnit `Enviar_imagem_grava_e_reenviar_sobe_a_versao` passed | `AparenciaAdminTests.cs:198-203`; `:208` versao 2; `:209-216` single row, new key, both objects present | PASS |
-| C16 | 415 for GIF logo, PDF login, JPEG icone, nothing saved; JPEG accepted for 3 types | xUnit `Tipo_de_imagem_recusado_415` passed | `AparenciaAdminTests.cs:225-227` `UnsupportedMediaType`; `:229-230` no row, no object; `:232-233` 3 accepted | PASS |
-| C17 | 413 with the limit at 1 MiB+1 and 3 MiB+1, nothing saved; exact limits accepted | xUnit `Imagem_acima_do_limite_413` passed | `AparenciaAdminTests.cs:246` `RequestEntityTooLarge`; `:247` `"{limite/Mb} MB"`; `:249-250` nothing saved; `:253` OK at the limit | PASS |
-| C18 | icon 400 for 512x511 and 511x511; 512 and 1024 accepted | xUnit `Icone_nao_quadrado_ou_pequeno_400` (4 cases) passed | `AparenciaAdminTests.cs:257-260`; `:273-276` 400, message on `arquivo`, nothing saved; `:270` OK | PASS |
-| C19 | unknown type returns 404 on POST and DELETE | xUnit `Tipo_desconhecido_404` passed | `AparenciaAdminTests.cs:284-285` `HttpStatusCode.NotFound` | PASS |
-| C20 | MinIO down: 503, row unchanged | xUnit `Minio_fora_503_sem_mudar_a_imagem` passed | `AparenciaAdminTests.cs:298` `ServiceUnavailable`; `:300` same `(Versao, Chave, Hash)` | PASS |
-| C21 | DELETE gives 204 and marks the row removed with the object kept; both reads return null; public 404; 2nd DELETE 404; re-upload never reuses a version | xUnit `Remover_imagem_204_e_objeto_fica` and `Reenviar_depois_de_remover_nao_repete_versao` passed | `AparenciaAdminTests.cs:312` `NoContent`; `:314` `RemovidaEm` set; `:315` key in bucket; `:316-318` nulls and 404; `:319` 404; `:321` versao 2; `:335` versao 3, `:331` `?v=2` 404 | PASS |
-| C22 | 12 requests: 403 for aluno and atendente, 401 anonymous; isolation between A and B | xUnit `Rotas_de_admin_403_e_401` passed | `AparenciaAdminTests.cs:362` `Unauthorized` or `Forbidden` per caller over 3x4 requests; `:372-376` B sees null and gets 404 on DELETE | PASS |
-| C23 | "Aparência" link with Palette after Cadastros, admin only, `/{slug}/aparencia`; bar and drawer | VT `link Aparência só para administrador` passed (and `acesso.test.tsx` `grupos por assunto na barra e na gaveta`) | `web/src/administracao/aparencia.test.tsx:46` absent for ALUNO/ATENDENTE; `:49` `href '/univag/aparencia'`; `:50` `lucide-palette`; `:52` group order | PASS |
-| C24 | preview changes before saving, 4 cases | VT `prévia muda antes de salvar` passed | `administracao/aparencia.test.tsx:64` `toHaveStyle({backgroundColor: Cor})`; `:68` blob img; `:71` title; `:74` `'Olá! Eu sou Vagner.'` | PASS |
-| C25 | PUT with the form; "Aparência salva."; query invalidated; `--marca` without reload | VT `salvar mostra Aparência salva e aplica sem recarregar` passed | `administracao/aparencia.test.tsx:92` text; `:94-95` url and body; `:96` `--marca` equals Cor; `:97` GET public > 1 | PASS |
-| C26 | API error shown, form kept: 400 under the colour field; 413/415/503 in the image block | VT `erro da API aparece e o formulário fica` passed | `administracao/aparencia.test.tsx:108` error container holds the colour field; `:109-110` values kept; `:123-126` alert text, in the image block, thumbnail kept | PASS |
-| C27 | swatch and "Contraste com o branco: N,NN:1"; 7,65 / 4,54 / 1,40; Salvar disabled for `#ffd700`; pure `contraste()` | VT `contraste ao lado da cor e Salvar desabilitado` and `contraste calcula a razão WCAG` passed | `administracao/aparencia.test.tsx:142` text; `:143` `amostra` background; `:145-146` enabled/disabled; `web/src/aparencia.test.tsx:42-44` `toBe('7.65'/'4.54'/'1.40')` | PASS |
-| C28 | 1440: form left and preview right, same top, sticky; 390: preview above, "Ocultar prévia"; section order | PW `arranjo Aparência` passed | `web/e2e/aparencia.spec.ts:23-25`; `:31` sorted ys over Marca, Login, Assistente, Contato, Salvar; `:35` preview above; `:40` collapsed | PASS |
-| C29 | "Remover" opens Confirmar "Remover a imagem?", DELETE, thumbnail disappears | VT `remover imagem pede confirmação` passed | `administracao/aparencia.test.tsx:164` dialog name; `:165` no DELETE before; `:167` thumbnail gone; `:168` DELETE url | PASS |
-| C30 | public GET returns 200 with `nome` and the 6 keys, `imagens.logo` a number; inactive returns 404 | xUnit `AparenciaPublicaTests.Instituicao_publica_traz_a_aparencia` passed | `api.Tests/AparenciaPublicaTests.cs:28,30,31,36-37`; `:40` `NotFound` | PASS |
-| C31 | anonymous image GET: 200, same bytes, content type, exact Cache-Control | xUnit `Imagem_publica_com_cache_imutavel` passed | `AparenciaPublicaTests.cs:52-55` `Assert.Equal("public, max-age=31536000, immutable", ...)` | PASS |
-| C32 | image route 404 in 4 cases; 503 with MinIO down | xUnit `Imagem_publica_404_e_503` passed | `AparenciaPublicaTests.cs:68-71` `NotFound` x4; `:75` `ServiceUnavailable` | PASS |
-| C33 | "Entrar" background equals `#8a1538` (Claro) and `color-mix(... 55%, white)` (Escuro, Preto); base blue without colour | PW `cor da instituição nos três temas` passed | `aparencia.spec.ts:73` `expect(fundo).toBe(esperado)` over the 5 cases at `:61-65` | PASS |
-| C34 | tokens derive from `var(--marca, base)` in 3 themes; `--marca` on `<html>` only with a colour | VT `marca no html só com cor` and `tokens derivam de marca nos três temas` passed | `web/src/aparencia.test.tsx:52` `--marca` equals Cor; `:58-59` removed; `:78-79` token is `var(--marca…, base)` and derives from `var(--marca)`; `:82-84` dark mix and foreground | PASS |
-| C35 | logo `img` src and alt, <= 40 px in the login and in the open bar; without logo, initials and no "One" | VT `logo no login e na barra` and PW `logo até 40 px no login` passed | `aparencia.test.tsx:94` src; `:95` `h-10`; `:105` bar src; `:113-114` no "One", initials; `aparencia.spec.ts:85` height `<= 41`; `:86` alt equals nome | PASS |
-| C36 | icon in icon and apple-touch links, collapsed bar and mobile top; without icon, default links and initials in `bg-primary` | VT `ícone na aba, na barra recolhida e no topo` passed | `aparencia.test.tsx:122-123` hrefs; `:125` bar img; `:126` header img; `:133-136` default links, no img, `span.bg-primary` 'U' | PASS |
-| C37 | `document.title` is `nomeCurto` or `nome`; theme-color is the colour or `#224fa7` | VT `título e theme-color da instituição` passed | `aparencia.test.tsx:143-144`; `:150-151` (base `index.html:6` is `#224fa7`); `:156` | PASS |
-| C38 | 1440: image box equals the panel, `object-fit: cover`, `alt=""`, texts on it; 390: 128 px band above `h1`, logo inside | PW `imagem do login no painel e na faixa` passed | `aparencia.spec.ts:98` box per side; `:99` `'cover'`; `:100` alt; `:105-106` texts within the panel; `:111` 128; `:113` band above h1; `:114-117` logo inside | PASS |
-| C39 | institution login texts, or the base texts | VT `textos do login da instituição ou os de base` passed | `aparencia.test.tsx:176-180`; `:185-188` | PASS |
-| C40 | Boas-vindas svg above `h1` "One" at `/` | VT `raiz com a ilustração Boas-vindas` passed | `aparencia.test.tsx:209` `compareDocumentPosition(titulo) & FOLLOWING` | PASS |
-| C41 | 64 px round photo with alt; "Olá! Eu sou Vagner."; 4 buttons in order; defaults without appearance | VT `boas-vindas com nome, foto e perguntas` and `boas-vindas padrão sem aparência` passed | `web/src/assistente/boasvindas.test.tsx:27` `toHaveClass('size-16','rounded-full')`; `:28-31`; `:39-42` | PASS |
-| C42 | 2 default questions | VT `perguntas padrão` passed | `boasvindas.test.tsx:51` `toEqual([Boleto, Atestado])` | PASS |
-| C43 | tapping a suggestion POSTs `{mensagem}`, then the bubble shows it and the suggestions disappear | VT `tocar na sugestão envia a pergunta` passed | `boasvindas.test.tsx:60` `toEqual([['/api/conversas', { mensagem: Atestado }]])`; `:61-63` | PASS |
-| C44 | 24 px photo with alt on assistant bubbles only; no photo, no img | VT `foto do assistente nos balões` passed | `boasvindas.test.tsx:75` count; `:78` `size-6`; `:81-83` none on the student's bubble | PASS |
-| C45 | "Contato do atendimento" with time, `tel:6536886000`, `mailto:`; only the filled fields; absent when there is no contact | VT `contato na transferência` passed | `boasvindas.test.tsx:114` null without contact; `:117-118` texts and `hrefs` equal per case at `:105-107` | PASS |
-| C46 | "Contato" item above the user in bar and drawer, Dialog with the same links; absent without contact | VT `item Contato no menu só com contato` passed | `aparencia.test.tsx:222` index before the user; `:226-227` links; `:237` drawer; `:245` absent | PASS |
-| C47 | exactly 6 SVGs, `aria-hidden`, `data-ilustracao`, only currentColor, none or tokens, no image or href | VT `6 ilustrações só com currentColor e tokens` passed | `web/src/ilustracoes/ilustracoes.test.tsx:13` exact exports; `:19-20` aria-hidden and kebab name; `:25` fill/stroke in Permitidos; `:28,32` no colour literal; `:29-30` no external URL or href | PASS |
-| C48 | 6 empty lists show illustration, title, phrase and button; buttons navigate or open dialogs | VT `vazio ilustrado nas 6 listas` (6 cases) passed | `tabela.test.tsx:52` svg; `:53` title; `:55` buttons `toEqual(botao ? [botao] : [])`; `:58` href; `:62` dialog | PASS |
-| C49 | Indicadores without data: Grafico svg and the phrase | VT `Indicadores sem dados com ilustração` passed | `aparencia.test.tsx:259-260` | PASS |
-| C50 | no login image: boas-vindas svg in the panel at 1440 and the band at 390 | PW `ilustração no login sem imagem` passed | `aparencia.spec.ts:129` count 1; `:130` inside `lg:flex` / `lg:hidden` ancestor | PASS |
-| C51 | multipart/alternative; text/plain equals Corpo (CRLF normalized); text/html part | xUnit `EmailMarcaTests.Email_vai_com_texto_e_html` passed | `api.Tests/EmailMarcaTests.cs:50` `Contains("multipart/alternative", raw)`; `:51` `Assert.Equal(Corpo, Texto(msg))`; `:52` HTML; `:59` first-access HTML carries the colour | PASS (precision: see Findings) |
-| C52 | colour header, `cid:logo` with alt, inline bytes, name; escaping and `<br>`; default `#224fa7` without `cid:` | xUnit `Html_com_cor_logo_e_corpo_escapado` passed | `EmailMarcaTests.cs:71-77`; `:79` `ContentID` logo; `:81` same bytes; `:85-86` default colour, no `cid:` | PASS |
-| C53 | MinIO down: sent in the same cycle, no `cid:`, name in text | xUnit `Minio_fora_envia_sem_logo` passed | `EmailMarcaTests.cs:100` one `Agendador.Executar()` under `MinioFora()`; `:102` `EnviadoEm` set; `:105-106` | PASS |
-| C54 | manifest 200, content type and every field; defaults without appearance | xUnit `ManifestoTests.Manifesto_da_instituicao` and `Manifesto_padrao_sem_aparencia` passed | `api.Tests/ManifestoTests.cs:24-25`; `:27` tuple `("...","Univag","/univag/","/univag/","standalone","#8a1538","#ffffff")`; `:31-36` icons; `:49-54` defaults | PASS |
-| C55 | manifest 404 for nonexistent and inactive | xUnit `Manifesto_404` passed | `ManifestoTests.cs:64-65` `NotFound` | PASS |
-| C56 | manifest link `href` per slug; base at `/` | VT `manifesto da instituição no link` passed | `aparencia.test.tsx:163` `/api/instituicoes/univag/manifest.webmanifest`; `:167` `/manifest.webmanifest` | PASS |
-| C57 | whole API suite passes; existing edits only items 1-4 | whole assembly, see Gate | assertion-edit audit below, `RetratoTests.cs:39,43,46`, `AdminTests` 29 -> 33, `ArquiteturaTests`, `MediatorTests`, `SessaoTests` - all items 1-3 (`AdminTests` by the 04/11 amendment) | PASS |
-| C58 | `rotas.txt` gains exactly 6 lines (2 anonymous, 4 admin), none removed | xUnit `RetratoTests.Tabela_de_rotas_igual_a_da_base` passed | `api.Tests/RetratoTests.cs:51` `Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva)`; `git diff` of `rotas.txt` is `+6/-0` | PASS |
-| C59 | door 1 nullable snake_case columns; unique `(instituicao_id, tipo)` under the filter; no pending model changes | xUnit `ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro`, `Tabelas_snake_case_e_datas_timestamptz` and `AparenciaAdminTests.Tabelas_da_aparencia` passed; `dotnet ef migrations has-pending-model-changes` (see Gate) | `AparenciaAdminTests.cs:385` all 11 columns nullable; `:389` the columns of `imagem_instituicao`; `:392` unique index; `api.Tests/ArquiteturaTests.cs:20` `imagem_instituicao` in the tenant tables | PASS |
-| C60 | `dotnet build api` with CA1502 | see Gate | build output `0 Erro(s)` | PASS |
-| C61 | whole Vitest suite and the web build pass; edits only from item 5 | `npx vitest run`: 329/329 (40 files); `npm --prefix web run build` exit 0 | assertion-edit audit below | PASS |
-| C62 | crapper 9.99 exit 0; dryer finds no candidate | `npm --prefix web run coverage` then `crapper ... --threshold 9.99`, exit 0; the `dryer` command from C62, `No duplicate candidates found.` | `web/.metrics/crap.edn`, `dry.edn` | PASS |
-| C63 | the 3 layout specs pass whole | `npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts` against :5199: 84 expected, 0 unexpected | per-test titles above | PASS |
-| C64 | real e2e: admin customizes, login shows the logo and colour, manifest has the icon; whole e2e suite passes | `E2E_URL=http://localhost:8085 npx playwright test` against a HEAD image: 109 expected, 0 unexpected; `admin personaliza a aparência e o login muda` passed | `web/e2e/aparencia-real.spec.ts:83` "Aparência salva."; `:86` sidebar logo; `:95-96` login logo src and natural width; `:104` button background; `:111-112` manifest colour and icons; `:118` Cache-Control | PASS |
+| C1 | alert text in 1 line, full-width column | PW `alerta sem ícone em uma linha` passed | `web/e2e/celular.spec.ts:30` `toBeLessThanOrEqual(medidas.linha * 1.5)`; `:31` column vs content `<= 1` | PASS |
+| C2 | 44 px for the 8 Button sizes, Input, NativeSelect, Tabela actions; 36 at 1024 | PW `alvos de toque de 44 px abaixo de 768` passed | `celular.spec.ts:53` `for (const tamanho of nomes) expect(medidos[tamanho], \`Button ${tamanho}\`).toBeGreaterThanOrEqual(44)` over the 8 names at `:38`: real default, icon, sm, icon-sm and icon-xs; test buttons for lg, xs and icon-lg, which no screen uses (`Autenticado.tsx:139` `size="lg"` is a `SidebarMenuButton`); `:55,:57,:59` Input, NativeSelect, actions; `:62` `toBe(36)` | PASS |
+| C3 | badge class per group | VT `selo de estado com cor por grupo` passed | `web/src/tabela.test.tsx:35` `toHaveClass(classe)` (carried) | PASS |
+| C4 | 3 skeletons, no Spinner | VT `carregando mostra 3 esqueletos` passed | `tabela.test.tsx:43` `toHaveLength(3)`; `:44` (carried) | PASS |
+| C5 | no ellipsis or overflow; 40 chars in <= 2 lines | PW `Indicadores sem texto cortado` passed | `celular.spec.ts:75` `expect(cortados).toEqual([])`; `:80` tspan `<= 2` | PASS |
+| C6 | selector and "Novo" on the same top | PW `Cadastros seletor e Novo na mesma linha` passed | `celular.spec.ts:89` `\|seletor.y - novo.y\| <= 1` | PASS |
+| C7 | 6 lists as cards; 1 badge per card asserted before measuring; badge right, same top; title below; tables at 1024 | PW `listas viram cartões abaixo de 768` passed | `celular.spec.ts:105` `expect(...[data-celula=selo] [data-slot=badge]).count()).toBe(await cartoes.count())` for Fila and Minhas, no `if` on the badge; `:109-110` top and right; `:112` title below; `:100` no table; `:116` table at 1024 | PASS |
+| C8 | fixed "Ações" >= 44; bottom Sheet with the same buttons; none at 1024 | PW `Ações do chamado no rodapé abaixo de 1024` passed | `celular.spec.ts:124` count 0; `:132` `{posicao:'fixed', fundo:'0px'}`; `:133` `>= 44`; `:138` bottom 800; `:139` `toEqual(nomesNoCartao)` | PASS |
+| C9 | Sheet action closes it and updates the badge | PW `ação no Sheet fecha e atualiza` passed | `celular.spec.ts:158` `toBeHidden()`; `:159` `toHaveText('Em atendimento')` | PASS |
+| C10 | no horizontal scroll at 360 | PW `sem rolagem horizontal a 360` passed | `celular.spec.ts:167` `scrollWidth <= 360` | PASS |
+| C11 | GET admin 200 with 6 null keys, then the values | xUnit `Get_sem_aparencia_devolve_nulos` passed | `api.Tests/AparenciaAdminTests.cs:43` `HttpStatusCode.OK`; `:45-52` (carried) | PASS |
+| C12 | PUT saves; absent/null back to default; B untouched | xUnit `Put_grava_e_campo_ausente_volta_ao_padrao` passed | `AparenciaAdminTests.cs:92-94` `Assert.Null(linha2.Cor)`; `:97-98` (carried) | PASS |
+| C13 | invalid colour 400 `errors.cor`, nothing saved; 2 accepted | xUnit `Cor_invalida_ou_sem_contraste_400` x6 passed | `AparenciaAdminTests.cs:122` `BadRequest`; `:123` `Erros(..., "cor")`; `:125` (carried) | PASS |
+| C14 | 12 limits on both sides, 24 requests, plus the invalid e-mail | xUnit `Limites_dos_textos_400` x12 and `Email_de_contato_invalido_400` passed (both `Proof:` lines now select them) | `AparenciaAdminTests.cs:159` accepted at max; `:166` `BadRequest` at max+1; `:168` limit in the text; `:181-183` e-mail (carried) | PASS |
+| C15 | upload v1, then re-upload v2 with the old object kept | xUnit `Enviar_imagem_grava_e_reenviar_sobe_a_versao` passed | `AparenciaAdminTests.cs:198-216` (carried) | PASS |
+| C16 | 415 x3, nothing saved; JPEG accepted for 3 types | xUnit `Tipo_de_imagem_recusado_415` passed | `AparenciaAdminTests.cs:225-233` (carried) | PASS |
+| C17 | 413 with the limit; exact limits accepted | xUnit `Imagem_acima_do_limite_413` passed | `AparenciaAdminTests.cs:246-253` (carried) | PASS |
+| C18 | icon 400 for 512x511 and 511x511 | xUnit `Icone_nao_quadrado_ou_pequeno_400` x4 passed | `AparenciaAdminTests.cs:270-276` (carried) | PASS |
+| C19 | unknown type 404 | xUnit `Tipo_desconhecido_404` passed | `AparenciaAdminTests.cs:284-285` (carried) | PASS |
+| C20 | MinIO down 503, row unchanged | xUnit `Minio_fora_503_sem_mudar_a_imagem` passed | `AparenciaAdminTests.cs:298,300` (carried) | PASS |
+| C21 | DELETE 204, row marked, object kept; 404s; no reused version | xUnit `Remover_imagem_204_e_objeto_fica` and `Reenviar_depois_de_remover_nao_repete_versao` passed | `AparenciaAdminTests.cs:312-321,331,335` (carried) | PASS |
+| C22 | 403/401 over 12 requests; A/B isolation | xUnit `Rotas_de_admin_403_e_401` passed | `AparenciaAdminTests.cs:362,372-376` (carried) | PASS |
+| C23 | "Aparência" link, admin only | VT `link Aparência só para administrador` passed | `web/src/administracao/aparencia.test.tsx:47` absent for ALUNO/ATENDENTE; `:50` href; `:51` palette | PASS |
+| C24 | preview changes before saving, 4 cases | VT `prévia muda antes de salvar` passed | `administracao/aparencia.test.tsx:65` `toHaveStyle({ backgroundColor: Cor })`; `:69,:72,:75` | PASS |
+| C25 | PUT, "Aparência salva.", `--marca` without reload | VT `salvar mostra Aparência salva e aplica sem recarregar` passed | `administracao/aparencia.test.tsx:93` text; `:95-98` | PASS |
+| C26 | API error shown, form kept | VT `erro da API aparece e o formulário fica` passed | `administracao/aparencia.test.tsx:109` `toContainElement(...'Cor principal')`; `:124-127` | PASS |
+| C27 | contrast 7,65 / 4,54 / 1,40; Salvar disabled | VT `contraste ao lado da cor e Salvar desabilitado` and `contraste calcula a razão WCAG` passed | `administracao/aparencia.test.tsx:143` text; `:146-147`; `web/src/aparencia.test.tsx:42-44` | PASS |
+| C28 | 1440 two columns sticky; 390 preview above, collapsible; section order | PW `arranjo Aparência` passed | `web/e2e/aparencia.spec.ts:23-25,31,35,40` | PASS |
+| C29 | Remover asks Confirmar, DELETE, thumbnail gone | VT `remover imagem pede confirmação` passed | `administracao/aparencia.test.tsx:165` dialog; `:169` `toEqual(['/api/admin/aparencia/imagens/logo'])` | PASS |
+| C30 | public GET 200 with the keys; inactive 404 | xUnit `Instituicao_publica_traz_a_aparencia` passed | `api.Tests/AparenciaPublicaTests.cs:28-40` (carried) | PASS |
+| C31 | anonymous image with immutable cache | xUnit `Imagem_publica_com_cache_imutavel` passed | `AparenciaPublicaTests.cs:55` `Assert.Equal("public, max-age=31536000, immutable", ...)` (carried) | PASS |
+| C32 | image 404 x4, 503 | xUnit `Imagem_publica_404_e_503` passed | `AparenciaPublicaTests.cs:68-75` (carried) | PASS |
+| C33 | "Entrar" background in 3 themes, with and without colour | PW `cor da instituição nos três temas` passed | `aparencia.spec.ts:73` `expect(fundo).toBe(esperado)` | PASS |
+| C34 | tokens from `var(--marca, base)`; `--marca` only with a colour | VT `marca no html só com cor`, `tokens derivam de marca nos três temas` passed | `web/src/aparencia.test.tsx:52,58-59,78-84` (carried) | PASS |
+| C35 | logo src/alt <= 40 px; initials without a logo | VT `logo no login e na barra`, PW `logo até 40 px no login` passed | `aparencia.test.tsx:94-114`; `aparencia.spec.ts:85-86` | PASS |
+| C36 | icon links, collapsed bar, mobile top; defaults | VT `ícone na aba, na barra recolhida e no topo` passed | `aparencia.test.tsx:122-136` (carried) | PASS |
+| C37 | title and theme-color | VT `título e theme-color da instituição` passed | `aparencia.test.tsx:143-156` (carried) | PASS |
+| C38 | panel image box, cover, alt; 128 px band | PW `imagem do login no painel e na faixa` passed | `aparencia.spec.ts:98-117` | PASS |
+| C39 | login texts or the base texts | VT `textos do login da instituição ou os de base` passed | `aparencia.test.tsx:176-188` (carried) | PASS |
+| C40 | Boas-vindas above h1 at `/` | VT `raiz com a ilustração Boas-vindas` passed | `aparencia.test.tsx:209` (carried) | PASS |
+| C41 | 64 px photo, greeting, 4 buttons; defaults | VT `boas-vindas com nome, foto e perguntas`, `boas-vindas padrão sem aparência` passed | `web/src/assistente/boasvindas.test.tsx:27-31,39-42` (carried) | PASS |
+| C42 | 2 default questions | VT `perguntas padrão` passed | `boasvindas.test.tsx:51` (carried) | PASS |
+| C43 | tapping a suggestion POSTs it | VT `tocar na sugestão envia a pergunta` passed | `boasvindas.test.tsx:60-63` (carried) | PASS |
+| C44 | 24 px photo on assistant bubbles only | VT `foto do assistente nos balões` passed | `boasvindas.test.tsx:75-83` (carried) | PASS |
+| C45 | contact block in Transferido | VT `contato na transferência` passed | `boasvindas.test.tsx:114-118` (carried) | PASS |
+| C46 | "Contato" menu item | VT `item Contato no menu só com contato` passed | `aparencia.test.tsx:222-245` (carried) | PASS |
+| C47 | 6 SVGs, tokens only | VT `6 ilustrações só com currentColor e tokens` passed | `web/src/ilustracoes/ilustracoes.test.tsx:13-32` (carried) | PASS |
+| C48 | illustrated empty state in 6 lists | VT `vazio ilustrado nas 6 listas` x6 passed | `tabela.test.tsx:52-62` (carried) | PASS |
+| C49 | Indicadores without data | VT `Indicadores sem dados com ilustração` passed | `aparencia.test.tsx:259-260` (carried) | PASS |
+| C50 | illustration without a login image | PW `ilustração no login sem imagem` passed | `aparencia.spec.ts:129-130` | PASS |
+| C51 | `EmailSaida` mail is multipart/alternative; text/plain equals Corpo; html part | xUnit `EmailMarcaTests.Email_vai_com_texto_e_html` passed | `api.Tests/EmailMarcaTests.cs:50` `Contains("multipart/alternative", raw)`; `:51` `Assert.Equal(Corpo, Texto(msg))`; `:52` (carried; the amended claim now matches the test's generic `EmailSaida`) | PASS |
+| C52 | colour, `cid:logo`, escaping; defaults | xUnit `Html_com_cor_logo_e_corpo_escapado` passed | `EmailMarcaTests.cs:71-86` (carried) | PASS |
+| C53 | MinIO down: sent without logo | xUnit `Minio_fora_envia_sem_logo` passed | `EmailMarcaTests.cs:100-106` (carried) | PASS |
+| C54 | manifest fields; defaults | xUnit `Manifesto_da_instituicao`, `Manifesto_padrao_sem_aparencia` passed | `api.Tests/ManifestoTests.cs:24-36,49-54` (carried) | PASS |
+| C55 | manifest 404 | xUnit `Manifesto_404` passed | `ManifestoTests.cs:64-65` (carried) | PASS |
+| C56 | manifest link per slug | VT `manifesto da instituição no link` passed | `aparencia.test.tsx:163,167` (carried) | PASS |
+| C57 | whole API suite; existing edits on items 1-4 only | 534 passed (see Gate) | `api.Tests/RetratoTests.cs:51` and the round-1 audit; the fix changed no file under `api/` or `api.Tests/` (`git diff e2e3bcb..94b373b -- api api.Tests` empty) | PASS |
+| C58 | `rotas.txt` +6, none removed | xUnit `RetratoTests.Tabela_de_rotas_igual_a_da_base` passed | `RetratoTests.cs:51` `Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva)` | PASS |
+| C59 | door 1 columns, unique index, no pending changes | xUnit `Toda_entidade_tem_instituicao_e_filtro`, `Tabelas_snake_case_e_datas_timestamptz`, `Tabelas_da_aparencia` passed; `has-pending-model-changes` clean | `AparenciaAdminTests.cs:385-392`; `api.Tests/ArquiteturaTests.cs:20` (carried) | PASS |
+| C60 | `dotnet build api` with CA1502 | `0 Erro(s)` | build output at `5f35a14`; `api/One.Api.csproj:9` `<WarningsAsErrors>...CA1502...` | PASS |
+| C61 | whole Vitest and the web build; edits on item 5 only | Vitest 331/331 (40 files); build exit 0 | the fix edits only tests this feature created (`celular.spec.ts` C2/C7 bodies, per the approved amendment) and adds tests (`aparencia.spec.ts:134-229`, `administracao/aparencia.test.tsx:181-232`). No pre-existing assertion was edited | PASS |
+| C62 | crapper 9.99 exit 0; dryer clean | `npm --prefix web run coverage`, `crapper ... --threshold 9.99` exit 0; the C62 `dryer` command prints `No duplicate candidates found.` | `web/.metrics/crap.edn:1` | PASS |
+| C63 | the 3 layout specs pass whole | Playwright against :5199: 89 expected, 0 unexpected | per-test results in the JSON report; `aparencia.spec.ts:139,156,171,190,203` are the 5 new ones | PASS |
+| C64 | real e2e: admin customizes; login logo and colour; manifest icon; whole e2e suite | `E2E_URL=http://localhost:8085 npx playwright test` against a HEAD image: 114 expected, 0 unexpected; `admin personaliza a aparência e o login muda` passed | `web/e2e/aparencia-real.spec.ts:83,86,95-96,104,111-112,118` (carried) | PASS |
+| C65 | 1 column at 390 and 2 at 1440; welcome block centred within 1 px | PW `sugestões centralizadas em 1 e 2 colunas` passed | `aparencia.spec.ts:146` distinct `left` count `toBe(colunas)`; `:148` 2 rows; `:149` same left; `:152` `perto(bloco.x + bloco.width / 2, area.x + area.width / 2, ...)` with `bloco` = the heading's parent, the full-width `<section>` (`:151`) | FAIL - the centring assertion cannot fail while the section stays full width; the fault that left-aligns the photo and the grid survived (see Faults) |
+| C66 | text block base within 48 px of the panel base; on a gradient element containing it | PW `textos do login na base sobre a faixa` passed | `aparencia.spec.ts:164` `toBeLessThanOrEqual(48)`; `:168` `faixas.some(... contains bloco)` `toBe(true)` | PASS |
+| C67 | assistant photo right <= bubble left, vertical overlap, at 390 and 1440 | PW `foto do assistente à esquerda do balão` passed | `aparencia.spec.ts:180` count `> 0`; `:184` `foto.x + foto.width <= b.x + 1`; `:185` overlap `toBe(true)` | PASS |
+| C68 | contact block top > ticket number bottom | PW `contato abaixo do número do chamado` passed | `aparencia.spec.ts:200` `expect(contato.y).toBeGreaterThan(numero.y + numero.height)` | PASS |
+| C69 | icon 32x32 on the collapsed bar; 24x24 before the title at 390, icon and initials | PW `ícone de 32 e 24 px antes do título` passed | `aparencia.spec.ts:211-212` `perto(..., 32)`; `:223-224` `perto(..., 24)`; `:225` `m.x + m.width <= t.x + 1`; `:226` vertical centre `<= 2` | PASS |
+| C70 | 4 image types: thumbnail src, Enviar, Remover; POST and DELETE per type; none without a version | VT `as 4 imagens com miniatura, enviar e remover` passed | `administracao/aparencia.test.tsx:193` `toHaveAttribute('src', \`/api/instituicoes/univag/imagens/${tipo}?v=7\`)`; `:196-197` exactly 1 Remover and 1 thumbnail; `:201` POST url `toEqual([...${tipo}])`; `:206` DELETE url `toEqual([...${tipo}])` | PASS |
+| C71 | preview initials equal the login's, for 2 names | VT `iniciais da prévia iguais às do login` passed | `administracao/aparencia.test.tsx:228` `expect(daPrevia, nome).toBe(doLogin)`; `:229` `toBe(iniciais(nome))` | PASS |
 
-### Edits to existing assertions (`git diff 5b355d9..179d088 -- api.Tests web/src web/e2e`)
+### Edits to existing assertions (fix diff `e2e3bcb..94b373b`)
 
-Each hunk was mapped to its enclosing test and compared with the closed list.
-- `api.Tests`: the `sucessos.txt` line (item 1); `rotas.txt` +6 and `RetratoTests` 67/64/65/5 -> 73/70/71/7 (item 2); `AdminTests.Sem_papel_admin_403` 29 -> 33 (item 3, 04/11 amendment); `ArquiteturaTests`, `MediatorTests` and `SessaoTests` counts and lists, each only gaining this feature's items (item 3). Nothing removed.
-- `web/e2e/arranjo.spec.ts`: 21 hunks in `compositor visível…`, `arranjo Assistente`, `detalhe em uma coluna a ${largura} px`, `arranjo listas de chamados`, `telas de acesso centralizadas`, `arranjo Artigos e Documentos`, `arranjo administração`, `Detalhe: cartão da equipe…`, `botões pequenos em linha…`, `Matrículas: …`, `Cadastros: detalhe pequeno…`, `rótulo do gráfico…`, `alertas de Indicadores`, `colunas largas somem no estreito`, `lista vazia centralizada`, `cabeçalho: borda…`, `valores de tipo e bordas`, `texto das linhas de 14 px`, `linha da marca na entrada`, `posição do conteúdo do painel`. Every one is named in item 5 or its two 04/11 extensions.
-- Vitest: `acesso.test.tsx` (menu counts and groups, icons, header title with "Aparência"; the POST filter in first access and set password; 1 `boas-vindas` svg), `acesso/textos.test.tsx`, the empty-text and Spinner -> skeleton edits in `administracao/*`, `chamados/*` and `conhecimento/*`, `indicadores/*` ("Sem atendimentos neste período."; `rotulo` -> `linhasDoRotulo`), `assistente/textos.test.tsx`, `test/estrutura.test.ts`, `test/interface.test.ts`. All are inside item 5 or the 04/11 extensions.
-
-Weakenings on the list, accepted because the list names them: the POST filter (`acesso.test.tsx:326,338`) now ignores GET calls; `lista vazia centralizada` drops the 96 px row height; the "valores de tipo e bordas" footer goes from <= 24 px to <= 48 px. No edit is outside the list.
+- `web/e2e/celular.spec.ts`: only the bodies of `alvos de toque de 44 px abaixo de 768` (C2) and `listas viram cartões abaixo de 768` (C7) changed. Both are this feature's own tests, created in `5b355d9..179d088`. Both edits strengthen them, as the 04/11 round-1 amendment asks: 4 to 8 sizes, and the `if (await selo.count())` was removed.
+- `web/e2e/aparencia.spec.ts` and `web/src/administracao/aparencia.test.tsx`: tests added only. The `import` lines changed, and no assertion was edited.
+- No pre-existing (`<base>`) assertion was touched. The round-1 audit of `5b355d9..179d088` carries from `179d088`: every edit there is on the closed list or its 04/11 extensions.
 
 ## Coverage
 
+Recomputed at `5f35a14` for the rows the fix touched. The rest carry from `179d088`, where the members were taken from the plan, `ui/button.tsx` and the code.
+
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| `GET /api/instituicoes/{slug}` statuses (2) | plan `## Surface` | 200 `AparenciaPublicaTests.cs:28` · 404 `:40` | - |
-| image route statuses (3) | plan `## Surface` | 200 `AparenciaPublicaTests.cs:52` · 404 `:68-71` · 503 `:75` | - |
-| manifest statuses (2) | plan `## Surface` | 200 `ManifestoTests.cs:24` · 404 `:64-65` | - |
-| `GET /api/admin/aparencia` statuses (3) | plan `## Surface` | 200 `AparenciaAdminTests.cs:43` · 401/403 `:362` | - |
-| `PUT /api/admin/aparencia` statuses (4) | plan `## Surface` | 200 `:71` · 400 `:122,:166,:181` · 401/403 `:362` | - |
-| `POST .../imagens/{tipo}` statuses (8) | plan `## Surface` | 200 `:196` · 400 `:273` · 401/403 `:362` · 404 `:284` · 413 `:246` · 415 `:225-227` · 503 `:298` | - |
-| `DELETE .../imagens/{tipo}` statuses (4) | plan `## Surface` | 204 `:312` · 401/403 `:362` · 404 `:285,:319` | - |
-| image types (4) | door 2 | logo, icone, login, assistente: `:225-233`, `:246-253` | - |
-| text limits (12) + invalid e-mail | AC 14 | 12 TheoryData rows `AparenciaAdminTests.cs:130-132`, both sides of each edge; e-mail `:173-183` | - |
-| colour edges (6) | AC 13 | InlineData `:102-107` | - |
-| themes with and without colour (5) | AC 31 | `aparencia.spec.ts:61-65` | - |
-| derived tokens (4 x 3 themes) | `web/src/index.css`, AC 31 | `aparencia.test.tsx:72-79` (`.black` inherits 3 tokens from `.dark`, AD-027 `class="dark black"`) | - |
-| brand places (8) | AC 32-34, 53 | C35 to C37 and C56 lines above | - |
-| badge states (5) | `chamado.ts` states | `tabela.test.tsx:26-30` | - |
-| `Button` sizes AC 2 covers ("todo `Button`") (8) | `web/src/ui/button.tsx:22-31` | default, xs, icon, sm: `celular.spec.ts:39-44` | `lg` (used in `Autenticado.tsx`), `icon-xs`, `icon-sm` (used in `assistente/Anexos.tsx`), `icon-lg` - no 44 px proof |
-| other 44 px components (4) | AC 2 | Input `:46` · NativeSelect `:48` · Tabela actions `:50` · ticket "Ações" `:124` | - |
-| lists (6) | plan `## Screens` Listas | C7 `celular.spec.ts:87-108`, C10 `:156-158`, C48 `tabela.test.tsx:9-16` | - (badge member weak: see Faults) |
-| illustrations (6) | door 9 | `ilustracoes.test.tsx:13` and per-screen C40, C41, C48, C49, C50 | - |
-| contact fields (3) | AC 42 | `boasvindas.test.tsx:105-107` | - |
-| e-mail variants (3) | AC 49-50 | `EmailMarcaTests.cs:71,85,105` | - |
-| one-way doors (11) | plan `## Landing` | 1 C12, C59 · 2 C15, C59 · 3 C12, C22 · 4 C31 · 5 C54, C56 · 6 C51, C52 · 7 C23, C28 · 8 C13, C27, C33 · 9 C47 · 10 C14 (`AparenciaAdminTests.cs:167`), C18 (`:274`) · 11 C21 | - (the checks table lists 9 doors: stale, but 10 and 11 are proven) |
-| startup: appearance applied (2 places) | read directly | `web/src/App.tsx:48` `<AplicaAparencia />` beside `Routes`; `acesso/Acesso.tsx:119` and `Autenticado.tsx:263` `useInstituicao(slug)` | - |
+| route statuses: public GET (2), image (3), manifest (2), admin GET (3), PUT (4), POST (8), DELETE (4) | plan `## Surface` (carried from 179d088) | as in round 1: `AparenciaPublicaTests.cs:28,40,52,68-75`, `ManifestoTests.cs:24,64-65`, `AparenciaAdminTests.cs:43,71,122,166,181,196,225,246,273,284,285,298,312,319,362` | - |
+| `Button` sizes, AC 2 "todo `Button`" (8) | `web/src/ui/button.tsx:23-30` | default, sm, icon, icon-sm, icon-xs on real screens; lg, xs and icon-lg (unused by any `Button`, grep of `size=` over `web/src`) on test buttons: all at `celular.spec.ts:53` | - |
+| other 44 px targets (4) | AC 2 | Input `celular.spec.ts:55` · NativeSelect `:57` · Tabela actions `:59` · ticket "Ações" `:133` | - |
+| lists with a state badge (2) and lists (6) | plan `## Screens` Listas | badge Fila, Minhas `celular.spec.ts:105-112`; 6 lists `:100`, C10 `:167`, C48 `tabela.test.tsx:9-16` | - |
+| Aparência images (4) | door 2, `## Screens` Aparência | logo, icone, login, assistente: table at `administracao/aparencia.test.tsx:183`, asserted `:193-206` | - |
+| shell brand places at 390/1440 (4) | `## Screens` Casca autenticada | open-bar logo C35 · collapsed icon 32 px `aparencia.spec.ts:211` · mobile icon 24 px `:223` · mobile initials 24 px `:223` | - |
+| suggestion grid widths (2) | `## Screens` Assistente sem conversa | 390 one column `aparencia.spec.ts:146-149` · 1440 two columns `:146,148` | - |
+| centred contents of the welcome block (3: photo, text, grid) | `## Screens` Assistente sem conversa "centralizados" | only the full-width section is measured (`aparencia.spec.ts:152`) | photo, grid (the fault moved both, and the test passed); text only by its full-width parent |
+| preview initials names (2) | C71 | `administracao/aparencia.test.tsx:213` table, `:228-229` | - |
+| image types, text limits, colour edges, themes, tokens, brand places (8), badge states (5), illustrations (6), contact fields (3), e-mail variants (3) | carried from 179d088 | as round 1 | - |
+| one-way doors (11) | plan `## Landing` | 1 C12, C59 · 2 C15, C59, C70 · 3 C12, C22 · 4 C31 · 5 C54, C56 · 6 C51, C52 · 7 C23, C28, C71 · 8 C13, C27, C33 · 9 C47 · 10 C14, C18 · 11 C21 | - |
+| startup: appearance applied (2 places) | read directly (carried from 179d088) | `web/src/App.tsx:48` `<AplicaAparencia />`; `acesso/Acesso.tsx:119`, `Autenticado.tsx:263` | - |
 
 ## Swept existing
 
-- authorization: `api/Administracao/AdminRotas.cs:14-15`. The `/admin` group's filter returns 403 unless the user is `Administrador`, and `:23` maps `AparenciaRotas.MapearAdmin(admin)` inside it. Present.
-- data lifecycle: `api/Armazenamento.cs:22`. `PutBucketVersioningAsync(... VersionStatus.Enabled)`. Present.
-- observability: `api/Agendador.cs:89` `LogError(..., "Agendador falhou no item ...")`. Present.
+Carried from `179d088`. The fix touched none of these files.
+- authorization: `api/Administracao/AdminRotas.cs:14-15,23`. Present.
+- data lifecycle: `api/Armazenamento.cs:22`, a versioned bucket. Present.
+- observability: `api/Agendador.cs:89`. Present.
+
+## Test policy rows
+
+`checks.md` carries no `Test policy` section, so the repo's conventions decide the level. The arrangement claims are measured in Chromium and the HTTP claims cross the boundary.
 
 ## Faults injected
 
-Each fault was made in `git worktree add D:/one-verif-wt HEAD`; web faults ran with a junction to `web/node_modules`. Independent faults were batched per proof surface, and each kill was attributed by its own assertion message. The real tree's `git status --porcelain` was identical before and after (3 untracked dirs only).
+Each fault was made in a scratch `git worktree add --detach <scratchpad>/wtf HEAD`, with a junction to `web/node_modules`. The 6 layout faults were batched into one build served on :5198, one fault per targeted test, and each kill is attributed by its own assertion message. A second build swapped in the C65 grid fault and the C66 gradient fault. The real tree's `git status --porcelain` was identical before and after (the 3 untracked dirs only).
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| S1: `AGUARDANDO_ALUNO` badge `bg-warning-subtle` -> `bg-primary-subtle` | `web/src/chamados/Chamados.tsx:21` | yes - C3 `tabela.test.tsx:35` "Expected the element to have class" |
-| S1: alert back to `grid-cols-[0_1fr]` (the original bug) | `web/src/ui/alert.tsx` cva base | yes - C1 `celular.spec.ts:30` "Expected <= 30, Received 77" |
-| S2: Sheet breakpoint `(max-width: 1023px)` -> `767px` | `web/src/chamados/ChamadoDetalhe.tsx:242` | yes - C8 times out finding "Ações" at 1023 |
-| S2: state cell loses `data-celula="selo"`; the badge drops to its own row (measured: first cell y=78, badge y=198) | `web/src/chamados/Chamados.tsx:59` | no - survived; C7 `listas viram cartões abaixo de 768` passed, its badge asserts skipped by `if (await selo.count())` at `celular.spec.ts:95` |
-| S3 web: preview ignores the colour (`const cor = undefined`) | `web/src/administracao/PreviaAparencia.tsx:68` | yes - C24 `administracao/aparencia.test.tsx:64` |
-| S4 web: theme-color always the base (`d?.cor ?? null` -> `null`) | `web/src/aparencia.tsx:75` | yes - C37 `aparencia.test.tsx:144` "expected '#224fa7' to be '#8a1538'" |
-| S4 web: login image `object-cover` -> `object-contain` | `web/src/acesso/Acesso.tsx:104` | yes - C38 `aparencia.spec.ts:99` "Expected cover, Received contain" |
-| S5: contact block always rendered (`temContato(contato) &&` -> `true &&`) | `web/src/assistente/Assistente.tsx:230` | yes - C45 `boasvindas.test.tsx:114` "expected <section> to be null" |
-| S6: illustration fill literal `#dbe4f5` instead of `var(--primary-subtle)` | `web/src/ilustracoes/index.tsx:5` | yes - C47 `ilustracoes.test.tsx:25` "BoasVindas fill ... to include '#dbe4f5'" |
-| S3 API: `ContrasteDaCor.Minimo` 4.5 -> 4.4 | `api/Instituicoes/ContrasteDaCor.cs:8` | yes - C13 `AparenciaAdminTests.cs:122` `(#777777, aceita: False)` "Expected: BadRequest, Actual: OK" |
-| S4 API: Cache-Control drops `immutable` | `api/Instituicoes/BaixarImagemInstituicao.cs:10` | yes - C31 `AparenciaPublicaTests.cs:55` "Expected public, max-age=31536000, immutable" |
-| S7: e-mail body lines not escaped (`.Select(Escapar)` -> `.Select(s => s)`) | `api/Email.cs:64` | yes - C52 `EmailMarcaTests.cs:74` "Assert.Contains() Failure: Sub-string not found" |
-| S8: manifest `start_url` without the trailing slash | `api/Instituicoes/ManifestoInstituicao.cs:49` | yes - C54 `ManifestoTests.cs:27` start_url "/univag" vs "/univag/" |
+| round-1 survivor: state cell loses `data-celula="selo"` | `web/src/chamados/Chamados.tsx:59` | yes - C7 `celular.spec.ts:105` "Fila: 1 selo por cartão, Expected 1, Received 0" |
+| C2: `lg` loses `max-md:h-11` | `web/src/ui/button.tsx:26` | yes - C2 `celular.spec.ts:53` "Button lg, Expected >= 44, Received 40" |
+| C65: welcome `<section>` loses `items-center` (photo and pill grid go to the left; measured: grid centre 752 vs area centre 848) | `web/src/assistente/Assistente.tsx:208` | no - survived; `sugestões centralizadas em 1 e 2 colunas` passed, because `:152` measures the full-width section |
+| C65: grid `grid-cols-1` -> `grid-cols-2` (2 columns on mobile) | `web/src/assistente/Assistente.tsx:212` | yes - C65 `aparencia.spec.ts:146` "390 px: colunas, Expected 1, Received 2" |
+| C66: text block loses `mt-auto` (texts go to the top of the panel) | `web/src/acesso/Acesso.tsx:84` | yes - C66 `aparencia.spec.ts:164` "Expected <= 48, Received 620" |
+| C66: gradient band removed | `web/src/acesso/Acesso.tsx:110` | yes - C66 `aparencia.spec.ts:168` "faixa com gradiente cobre o bloco, Expected true, Received false" |
+| C67: photo wrapper `flex-row-reverse` (photo on the right) | `web/src/Balao.tsx:51` | yes - C67 `aparencia.spec.ts:184` "390 px: foto à esquerda, Received 338.19" |
+| C68: contact block moved above the "Protocolo" alert | `web/src/assistente/Assistente.tsx:229-234` | yes - C68 `aparencia.spec.ts:200` "Expected > 860, Received 714" |
+| C69: mobile top `Sigla` `size-6` -> `size-8` | `web/src/Autenticado.tsx:233` | yes - C69 `aparencia.spec.ts:223` "com ícone: largura, Received 8" |
+| C70: DELETE always to `/imagens/logo` | `web/src/administracao/Aparencia.tsx:212` | yes - C70 `administracao/aparencia.test.tsx:206` "icone: expected ['/api/admin/aparencia/imagens/logo'] to deeply equal [...]" |
+| C71: preview back to `nome.slice(0, 2)` | `web/src/administracao/PreviaAparencia.tsx:23` | yes - C71 `administracao/aparencia.test.tsx:228` "expected 'CE' to be 'CG'" |
+
+Round-1 faults on surfaces the fix did not touch (C1, C3, C8, C24, C37, C38, C45, C47, C13, C31, C52, C54: all killed) carry from `179d088`.
 
 ## Findings
 
-About the checks:
-1. **C7 assertion is conditional (surviving mutant).** `celular.spec.ts:94-104` asserts the badge only when `[data-celula=selo] [data-slot=badge]` exists. That attribute is also what places the badge (`index.css:153-154`), so losing it breaks the layout and silences the test at once. Fila and Minhas solicitações always have a badge, so the test should require `count() > 0` for them.
-2. **AC 2 is over-claimed by C2:** "todo `Button`" is proven on 4 of 8 sizes, and 3 of the unproven ones are on real screens.
-3. **Arrangement gaps from `## Screens`** (Binding sources table): the suggestions grid and centering, login texts at the base of the image panel, the assistant photo on the left, contact below the ticket number, and the shell icon sizes and order. All are visibly right in the screenshots, but no check would catch them regressing.
-4. **Precision:** C14 says "13 limites, 26 pedidos", but it lists 12 limits (10 lengths + 2 counts), and the invalid e-mail is a separate test (`Email_de_contato_invalido_400`) that C14's `Proof:` filter (`~Limites_dos_textos_400`) does not select. The e-mail case is proven only in the full run.
-5. **Precision:** C51 names the first-access e-mail, but the multipart and `text/plain == Corpo` assertions (`EmailMarcaTests.cs:50-51`) are on a generic `EmailSaida`. The first-access mail is checked only for the colour (`:59`). Both go through `Email.Enviar`, so this is not a gap in the behaviour.
-6. **Precision:** C26 "abaixo do campo de cor" is asserted as "same container" (`administracao/aparencia.test.tsx:108`), not as a position.
-7. The `checks.md` Coverage row "one-way doors (9)" is stale: the plan has 11. Doors 10 and 11 are proven (see Coverage).
-
-About the screens (screenshots at 390 and 1440, with and without appearance, light and dark, simulated API):
-8. The Aparência preview's initials are "CE" (`PreviaAparencia.tsx:21`, first two letters), while the login it replicates shows "CG" (`iniciais`, `aparencia.tsx:104-107`). No check covers the preview's identity row.
-9. Without an icon, the mobile top bar shows no initials before the title (`sem-light-390-AssistenteVazio`). AC 33's "sem ícone, as iniciais" is read for the bar only by C36, and the plan's mobile sentence names only the icon. Ambiguous, not counted as a contradiction.
-10. Without a logo, the < 1024 band shows the illustration, and the initials sit below the band rather than inside it (`sem-light-390-Login`). The plan puts "o logo" in the band, so with no logo this is consistent.
-11. Everything else seen matches `## Screens`: a two-column login with the image and text at the base; the illustration above the text without an image; root `/`; a 1/2-column suggestions grid; the photo left of the bubble; the "Contato" item above the user; cards with the badge right; the fixed "Ações" bar; a two-column Aparência with the preview on the right, and a collapsible preview above the form at 390.
+1. **C65 centring is vacuous (surviving mutant, FAIL).** `aparencia.spec.ts:151` takes `heading.locator('xpath=..')`, which is the `<section>` that fills the content column, so its centre always equals the centre of `main`. The test should measure what the design centres: the photo, the heading text box (or a `w-fit` wrapper) and the suggestions grid. It is also a precision gap in the C65 text: "o centro horizontal do bloco de boas-vindas" names a box that is full width by construction. Suggested wording: "the centres of the photo, of `h2` and of the grid of questions are within 1 px of the centre of the content area".
+2. Stale text in `checks.md`, outside any proof:
+   - line 6 says "9 one-way doors" (the plan has 11);
+   - the Coverage row `componentes com 44 px` still says "`Button` (4 tamanhos)" (C2 now has 8);
+   - the row `limites de texto e e-mail inválido (14)` says "os 13", while C14 says 12 limits plus the e-mail (13 members).
+3. The C51 text in `checks.md:255-256` is broken. The `\r\n` inside backticks was a literal line break even before the amendment, and the amendment note was inserted in the middle of that code span. The claim still reads correctly once the line break is ignored.
+4. Two Vitest tests outside this feature (`assistente.test.tsx` `limite destaca Falar com atendente` and `conversa.test.tsx` `o limite conta só as mensagens do aluno...`) timed out at 5 s in a first full run that shared the CPU with the API suite. Both files pass alone (33/33), and the clean full rerun is 331/331. The timeouts come from load, not from this diff.
+5. `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` was run alone, as the brief asks (passed in 3 s). It is known to hang under full parallelism and is outside this feature.
 
 ## Gate
 
-- `api.Tests` (whole assembly, xUnit v3 in-process runner, Release, HEAD `161411c`): 534 passed, 0 failed. Run as 533 in one process (`-method-` excluding `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo`), plus that test alone (passed in 3 s). In two full parallel runs that one push test hung with no DB activity (`[Long Running Test]` past 7 min). It is outside this feature: the feature touched one line of `Agendador.cs` (the e-mail call), not push. It is flaky under parallelism, not a failure of this diff
+- `api.Tests` (xUnit v3 Release executable, HEAD `5f35a14`): 534 passed, 0 failed. 533 ran in one process with `-method-` excluding the push test, and the push test ran alone.
 - `dotnet build api`: `0 Erro(s)`; `dotnet ef migrations has-pending-model-changes --project api`: "No changes have been made to the model since the last migration."
-- Vitest: 329 passed, 0 failed (40 files); `npm --prefix web run build` exit 0
-- Playwright layout (arranjo, celular, aparencia) against `vite preview` :5199: 84 passed, 0 failed
-- Playwright e2e whole suite against the HEAD image on :8085 (own DB `one_verif_e2e`, own bucket `one-verif-e2e`, institution `e2e`): 109 passed, 0 failed
+- Vitest: 331 passed, 0 failed (40 files); `npm --prefix web run build` exit 0
+- Playwright layout (arranjo, celular, aparencia) against `vite preview` :5199: 89 passed, 0 failed
+- Playwright e2e, whole suite, against the HEAD image on :8085 (own DB `one_verif2_e2e`, own bucket `one-verif2-e2e`, institution `e2e` with admin `admin-verif2@e2e.one`): 114 passed, 0 failed
 - crapper 9.99: exit 0; dryer: `No duplicate candidates found.`
-- Environment: the first `dotnet test` attempts failed to load the freshly built Debug test DLL (Smart App Control, `0x800711C7`). One VSTest run of the Release build hung with no DB activity and was stopped. The verdict uses the xUnit executable run.
-- Cleanup: e2e container `one-verif-aparencia` and its image removed, DB `one_verif_e2e` dropped, bucket `one-verif-e2e` removed, preview servers on :5198 and :5199 stopped, both worktrees unregistered (`git worktree list` shows only `D:/one-system`). The safety check refused to remove the empty folder `D:/one-verif-wt` (with an empty `web/`), so it is left for the user. The real-tree porcelain is unchanged except for this report. Mailpit keeps the e2e messages for `admin-verif@e2e.one`.
-- HEAD moved to `5b53ce7` (docs for another feature) during the run. No code under `api/`, `api.Tests` or `web/` changed after `161411c`.
+- Cleanup:
+  - removed: container `one-verif-aparencia2` and its image, DB `one_verif2_e2e`, bucket `one-verif2-e2e`, the preview servers on :5198 and :5199, both scratch worktrees (`git worktree list` shows only `D:/one-system`);
+  - nothing was left outside the repo; the round-1 folder `D:/one-verif-wt` no longer exists;
+  - Mailpit keeps the e2e messages for `admin-verif2@e2e.one`;
+  - the real-tree porcelain is unchanged except for this report.

@@ -438,6 +438,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api.Tests/Infra/Cenario.cs:11 (api.Tests)
 - last seen: 2026-11-04T21:45:40Z
 
+### L-072 - Meça centralização nos elementos centralizados, nunca no contêiner de largura total que os contém; o contêiner sempre fica no centro.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: aparencia-instituicao
+- evidence: web/e2e/aparencia.spec.ts:151 (web/e2e)
+- last seen: 2026-11-04T22:02:57Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

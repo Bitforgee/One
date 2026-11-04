@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 72,
+  "next_id": 73,
   "lessons": [
     {
       "id": "L-001",
@@ -1296,6 +1296,24 @@
       ],
       "created": "2026-11-04T21:45:40Z",
       "last_seen": "2026-11-04T21:45:40Z"
+    },
+    {
+      "id": "L-072",
+      "key": "surviving_mutant::meca centralizacao nos elementos centralizados nunca no conteiner de largura total que os contem o conteiner sempre fica no centro",
+      "text": "Meça centralização nos elementos centralizados, nunca no contêiner de largura total que os contém; o contêiner sempre fica no centro.",
+      "signal": "surviving_mutant",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "aparencia-instituicao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/aparencia.spec.ts:151 (web/e2e)"
+      ],
+      "created": "2026-11-04T22:02:57Z",
+      "last_seen": "2026-11-04T22:02:57Z"
     }
   ]
 }
