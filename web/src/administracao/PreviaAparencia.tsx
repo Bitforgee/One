@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { Sigla } from '../aparencia'
 import { BoasVindas, Conversa } from '../ilustracoes'
 
 export type ImagensDaPrevia = { logo?: string; login?: string; assistente?: string }
@@ -16,16 +17,10 @@ export type DadosDaPrevia = {
 
 const Base = { titulo: 'Atendimento ao estudante', frase: 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.' }
 
-const Inicial = ({ nome }: { nome: string }) => (
-  <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-    {nome.slice(0, 2).toUpperCase()}
-  </span>
-)
-
 function PreviaDoLogin({ d, cor }: { d: DadosDaPrevia; cor?: string }) {
   return (
     <div className="flex flex-col gap-3 rounded-md border p-3">
-      {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Inicial nome={d.nome} />}
+      {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Sigla nome={d.nome} icone={null} />}
       <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-md bg-primary-subtle">
         {d.imagens.login ? <img src={d.imagens.login} alt="" className="absolute inset-0 size-full object-cover" /> : <BoasVindas className="h-full text-muted-foreground" />}
       </div>

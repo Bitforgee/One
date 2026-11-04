@@ -224,13 +224,13 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
 }
 
 // Cabeçalho do inset (door 3): botão, separador, o único h1 da tela; à direita, avisos (aluno) e tema.
-function Topo({ titulo, aluno, slug, icone }: { titulo: string; aluno: boolean; slug?: string; icone: number | null }) {
+function Topo({ titulo, aluno, slug, icone, nome }: { titulo: string; aluno: boolean; slug?: string; icone: number | null; nome: string }) {
   return (
     <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background/90 backdrop-blur">
       <div className="flex w-full min-w-0 items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ms-1" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-        {slug && icone && <img src={urlDaImagem(slug, 'icone', icone)} alt="" className="size-6 shrink-0 rounded-sm object-cover md:hidden" />}
+        <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />
         <h1 className="truncate text-base font-medium">{titulo}</h1>
         <div className="ms-auto flex shrink-0 items-center gap-1">
           {aluno && <AvisosPush />}
@@ -288,7 +288,7 @@ export function Autenticado() {
     <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar}>
       <Barra me={me} itens={itens} slug={slug} sair={sair} ap={ap} />
       <SidebarInset className="min-w-0">
-        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} slug={slug} icone={ap.imagens.icone} />
+        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} />
         <div className="@container/main flex-1 px-4 py-4 md:py-6 lg:px-6">
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </div>

@@ -131,3 +131,100 @@ test.describe('S6 ilustrações', () => {
     }
   })
 })
+
+// S9: arranjos de ## Screens (C65 a C69)
+const noIcone = (page: Page) => page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
+
+test.describe('S9 arranjos das telas', () => {
+  test('sugestões centralizadas em 1 e 2 colunas', async ({ page }) => {
+    await simularApi(page, undefined, false, comAparencia)
+    for (const [largura, colunas] of [[390, 1], [1440, 2]] as const) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await page.goto('/univag/assistente')
+      const botoes = comAparencia.assistente.perguntas.map((p) => page.getByRole('button', { name: p, exact: true }))
+      const caixas = await Promise.all(botoes.map(caixa))
+      expect(new Set(caixas.map((c) => Math.round(c.x))).size, `${largura} px: colunas`).toBe(colunas)
+      if (colunas === 1) caixas.slice(1).forEach((c, i) => expect(c.y, `${largura} px: top crescente`).toBeGreaterThan(caixas[i].y))
+      else expect(new Set(caixas.map((c) => Math.round(c.y))).size, `${largura} px: linhas`).toBe(2)
+      for (const c of caixas.slice(1)) if (colunas === 1) perto(c.x, caixas[0].x, `${largura} px: mesmo left`)
+      const bloco = await caixa(page.getByRole('heading', { name: 'Olá! Eu sou Vagner.' }).locator('xpath=..'))
+      const area = await caixa(page.getByRole('main'))
+      perto(bloco.x + bloco.width / 2, area.x + area.width / 2, `${largura} px: centro do bloco`)
+    }
+  })
+
+  test('textos do login na base sobre a faixa', async ({ page }) => {
+    await simularApi(page, undefined, false, aparencia({ logo: 3, login: 1 }))
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/univag')
+    const foto = imagem(page, 'login')
+    await foto.waitFor()
+    const painel = foto.locator('xpath=..')
+    const [p, bloco] = [await caixa(painel), await caixa(painel.getByRole('heading', { name: 'Fale com a Univag' }).locator('xpath=..'))]
+    expect(p.y + p.height - (bloco.y + bloco.height), 'base do bloco a até 48 px da base do painel').toBeLessThanOrEqual(48)
+    const faixas = await painel.locator('*').evaluateAll((els) =>
+      els.filter((e) => getComputedStyle(e).backgroundImage.includes('linear-gradient')).map((e) => e.getBoundingClientRect().toJSON()),
+    )
+    expect(faixas.some((f) => f.left <= bloco.x + 1 && f.top <= bloco.y + 1 && f.right >= bloco.x + bloco.width - 1 && f.bottom >= bloco.y + bloco.height - 1), 'faixa com gradiente cobre o bloco').toBe(true)
+  })
+
+  test('foto do assistente à esquerda do balão', async ({ page }) => {
+    await simularApi(page, undefined, false, comAparencia)
+    for (const largura of [390, 1440]) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await page.goto('/univag/assistente')
+      await page.getByLabel('Mensagem').fill('preciso do boleto do semestre, onde encontro a segunda via?')
+      await page.getByRole('button', { name: /Enviar/ }).click()
+      await page.getByText('Isso resolveu?').waitFor()
+      const baloes = page.locator('.is-assistant')
+      expect(await baloes.count(), `${largura} px: balões do assistente`).toBeGreaterThan(0)
+      for (const balao of await baloes.all()) {
+        const foto = await caixa(balao.locator('xpath=preceding-sibling::img[1]'))
+        const b = await caixa(balao)
+        expect(foto.x + foto.width, `${largura} px: foto à esquerda`).toBeLessThanOrEqual(b.x + 1)
+        expect(foto.y < b.y + b.height && foto.y + foto.height > b.y, `${largura} px: sobreposição vertical`).toBe(true)
+      }
+    }
+  })
+
+  test('contato abaixo do número do chamado', async ({ page }) => {
+    await simularApi(page, undefined, false, comAparencia)
+    await page.route('**/api/atendimento-direto', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ numero: 'ONE-123', estado: 'ABERTO', setor: 'Secretaria' }) }))
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/univag/assistente')
+    await page.getByLabel('Mensagem').fill('quero falar com alguém sobre o meu boleto')
+    await page.getByRole('button', { name: 'Falar com atendente' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+    const numero = await caixa(page.getByText(/Protocolo ONE-123/))
+    const contato = await caixa(page.getByRole('heading', { name: 'Contato do atendimento' }))
+    expect(contato.y, 'bloco de contato abaixo do número').toBeGreaterThan(numero.y + numero.height)
+  })
+
+  test('ícone de 32 e 24 px antes do título', async ({ page }) => {
+    await noIcone(page)
+    await simularApi(page, undefined, false, aparencia({ icone: 2 }))
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/univag/fila')
+    const barra = imagem(page, 'icone')
+    await barra.waitFor()
+    const b = await caixa(barra)
+    perto(b.width, 32, 'barra recolhida: largura')
+    perto(b.height, 32, 'barra recolhida: altura')
+
+    await page.unrouteAll()
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const [rotulo, aparenciaDaCasca] of [['com ícone', aparencia({ icone: 2 })], ['sem ícone', aparencia({})]] as const) {
+      await simularApi(page, undefined, false, aparenciaDaCasca)
+      await page.goto('/univag/fila')
+      const titulo = page.locator('header h1')
+      await titulo.waitFor()
+      const marca = page.locator('header').locator(rotulo === 'com ícone' ? 'img[src*="/imagens/icone"]' : 'span.bg-primary')
+      const [m, t] = [await caixa(marca), await caixa(titulo)]
+      perto(m.width, 24, `${rotulo}: largura`)
+      perto(m.height, 24, `${rotulo}: altura`)
+      expect(m.x + m.width, `${rotulo}: antes do título`).toBeLessThanOrEqual(t.x + 1)
+      expect(Math.abs(m.y + m.height / 2 - (t.y + t.height / 2)), `${rotulo}: centro vertical`).toBeLessThanOrEqual(2)
+      await page.unrouteAll()
+    }
+  })
+})

@@ -59,7 +59,7 @@ Um filtro que não seleciona teste nenhum sai com código 0 (L-002). O construto
 **C1** - [x] A 390 px, a mensagem "Há erros no arquivo." do `Alert` de Matrículas ocupa 1 linha (altura do texto ≤ 1,5 × `line-height`). Um `Alert` sem ícone tem o texto com a largura do conteúdo do alerta, com tolerância de 1 px (AC 1)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alerta sem ícone em uma linha"`
 
-**C2** - A 390 px, a altura medida é ≥ 44 px para: `Button` nos 8 tamanhos de `ui/button.tsx` (`default`, `sm`, `lg`, `xs`, `icon`, `icon-xs`, `icon-sm`, `icon-lg`), um de cada, em tela real quando o tamanho é usado e num botão de teste com as classes de `buttonVariants` quando não é (emenda aprovada pelo usuário em 04/11, rodada 1), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
+**C2** - [x] A 390 px, a altura medida é ≥ 44 px para: `Button` nos 8 tamanhos de `ui/button.tsx` (`default`, `sm`, `lg`, `xs`, `icon`, `icon-xs`, `icon-sm`, `icon-lg`), um de cada, em tela real quando o tamanho é usado e num botão de teste com as classes de `buttonVariants` quando não é (emenda aprovada pelo usuário em 04/11, rodada 1), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alvos de toque de 44 px abaixo de 768"`
 
 **C3** - [x] O selo de estado do chamado tem a classe de fundo por grupo, para os 5 estados: `ABERTO` e `EM_ATENDIMENTO` → `bg-primary-subtle`; `AGUARDANDO_ALUNO` → `bg-warning-subtle`; `RESOLVIDO` e `FECHADO` → a classe de `success` escolhida. O texto de cada selo é o de `<base>` (AC 3)
@@ -76,7 +76,7 @@ Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "Cadastros seletor 
 
 ### S2 - Listas e chamado pensados para o celular (P1) · ~8 files · ~80 KB · ~22k
 
-**C7** - A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`): Nas listas com estado (Fila e Minhas solicitações), o teste afirma que existe 1 selo por cartão antes de medir a posição, sem condicionar a medida à existência do selo (L-069) (emenda aprovada pelo usuário em 04/11, rodada 1)
+**C7** - [x] A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`): Nas listas com estado (Fila e Minhas solicitações), o teste afirma que existe 1 selo por cartão antes de medir a posição, sem condicionar a medida à existência do selo (L-069) (emenda aprovada pelo usuário em 04/11, rodada 1)
 - O selo de estado, quando a lista tem estado, fica à direita da primeira coluna e com o mesmo `top` (1 px).
 - A coluna principal fica abaixo das duas.
 
@@ -332,26 +332,26 @@ Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test`
 
 Acrescentados com aprovação do usuário em 04/11, depois da rodada 1 da verificação.
 
-**C65** - Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, o centro horizontal do bloco de boas-vindas fica a no máximo 1 px do centro da área de conteúdo (Screens: Assistente sem conversa)
+**C65** - [x] Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, o centro horizontal do bloco de boas-vindas fica a no máximo 1 px do centro da área de conteúdo (Screens: Assistente sem conversa)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`
 
-**C66** - A 1440 px, com imagem de login, a base do bloco de título, frase e itens fica a no máximo 48 px da base do painel. O bloco fica sobre um elemento do painel com `background-image` `linear-gradient` cuja caixa contém a caixa do bloco (Screens: Login ≥ 1024 px)
+**C66** - [x] A 1440 px, com imagem de login, a base do bloco de título, frase e itens fica a no máximo 48 px da base do painel. O bloco fica sobre um elemento do painel com `background-image` `linear-gradient` cuja caixa contém a caixa do bloco (Screens: Login ≥ 1024 px)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "textos do login na base sobre a faixa"`
 
-**C67** - Com foto do assistente, a 390 e a 1440 px, a `img` do assistente de cada balão `ASSISTENTE` tem `right` ≤ `left` do balão e se sobrepõe a ele na vertical (Screens: Assistente com conversa)
+**C67** - [x] Com foto do assistente, a 390 e a 1440 px, a `img` do assistente de cada balão `ASSISTENTE` tem `right` ≤ `left` do balão e se sobrepõe a ele na vertical (Screens: Assistente com conversa)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "foto do assistente à esquerda do balão"`
 
-**C68** - Na tela "Transferido", com contato, o `top` do bloco "Contato do atendimento" é maior que o `bottom` do número do chamado (Screens: Transferido)
+**C68** - [x] Na tela "Transferido", com contato, o `top` do bloco "Contato do atendimento" é maior que o `bottom` do número do chamado (Screens: Transferido)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "contato abaixo do número do chamado"`
 
-**C69** - Medidas do ícone na casca:
+**C69** - [x] Medidas do ícone na casca:
 - com ícone, a 1440 px, a `img` do ícone na barra recolhida mede 32×32 px (1 px);
 - a 390 px, a do topo mede 24×24 px, com `right` ≤ `left` do título da tela e centro vertical a no máximo 2 px do centro do título;
 - sem ícone, a 390 px, as iniciais em `bg-primary` (24×24 px) ocupam a mesma posição antes do título (Screens: Casca autenticada; AC 33)
 
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ícone de 32 e 24 px antes do título"`
 
-**C70** - Na tela Aparência, para cada um dos 4 tipos (`logo`, `icone`, `login`, `assistente`), table-driven:
+**C70** - [x] Na tela Aparência, para cada um dos 4 tipos (`logo`, `icone`, `login`, `assistente`), table-driven:
 - com versão, a seção mostra a miniatura com `src` `/api/instituicoes/{slug}/imagens/{tipo}?v={versao}`, o botão "Enviar imagem" e o botão "Remover";
 - "Enviar imagem" faz o `POST` multipart para o tipo;
 - "Remover" abre o `Confirmar` e faz o `DELETE` do tipo;
@@ -359,7 +359,7 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ícone de 32 e 2
 
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "as 4 imagens com miniatura, enviar e remover"`
 
-**C71** - Sem logo, as iniciais da prévia da tela Aparência são iguais às do login para o mesmo nome, em 2 nomes: "Centro Universitário de Várzea Grande" e "Faculdade Demo". As duas telas usam a mesma função `iniciais` (AC 24)
+**C71** - [x] Sem logo, as iniciais da prévia da tela Aparência são iguais às do login para o mesmo nome, em 2 nomes: "Centro Universitário de Várzea Grande" e "Faculdade Demo". As duas telas usam a mesma função `iniciais` (AC 24)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "iniciais da prévia iguais às do login"`
 
 ## Coverage
@@ -490,3 +490,6 @@ Playwright (`e2e/arranjo.spec.ts`; medido contra `vite preview` e contra a image
 - **Boundary:** lote 3 (web S3 a S6 e S8) fechado em `e5fc7c1` (tela, marca, ilustrações, Vitest) e `3e4f05b` (arranjo e e2e real), mais o commit deste handoff: C23 a C26, C28, C29, C33 a C50, C56 e C61 a C64 marcados `[x]`; **C27 fica aberto** (ver abaixo). Contagens em `HEAD`: `api.Tests` 518 verdes (`dotnet build api` e `has-pending-model-changes` limpos); Vitest 329 verdes (40 arquivos); `crapper` no limite 9.99 sai 0 (maior nota 9.8, `Sidebar`); `dryer` sem candidato com a lista de C62 mais `src/aparencia.tsx`; Playwright `arranjo` + `celular` + `aparencia` 84 verdes contra `vite preview`; e2e real inteiro 109 verdes contra a imagem de `3e4f05b` na porta 8085 (instituição `e2e`, banco `one_aparencia_e2e`, bucket `one-aparencia-e2e`; contêiner, imagem, banco, bucket e worktree removidos).
 - **Settled mid-build:** nada com o usuário. Decisões do construtor: (1) **C27 não fecha**: o check pede `#224fa7` → "7,47:1", mas a regra do servidor (`ContrasteDaCor.cs`, WCAG 2.x, a que o próprio C27 manda usar) dá 7,65; `#767676` 4,54 e `#ffd700` 1,40 batem. O teste e a tela usam 7,65 (`aparencia.test.tsx` e `administracao/aparencia.test.tsx` comentam o porquê); falta alguém corrigir o valor do check. (2) `AplicaAparencia` fica ao lado de `Routes` e lê o `slug` por `useMatch`, e `iniciais` mudou para `aparencia.tsx` (reexportada por `Autenticado.tsx`). (3) Os tokens derivam por variáveis auxiliares (`--marca-sutil`, `--marca-clara`, `--marca-sutil-escuro`, `--marca-sutil-preto`), todas `color-mix(... var(--marca) ...)`: sem `--marca` ficam inválidas e `var(--aux, base)` cai no valor de hoje; `--primary`, `--sidebar-primary` e `--ring` do `:root` são exatamente `var(--marca, base)`. (4) Na tela Aparência as imagens são escolhidas localmente (miniatura `blob:`) e só sobem no "Salvar" (`PUT` e depois um `POST` por imagem); "Remover" de uma imagem escolhida e ainda não salva só a descarta, e de uma salva abre o `Confirmar` e faz o `DELETE`. (5) O login tem o logo duas vezes no DOM (faixa e coluna), cada uma visível em uma faixa de largura; a faixa escura sobre a imagem do painel é um degradê (`bg-linear-to-t`), para o bloco de texto continuar filho direto do painel. (6) As 6 ilustrações são dados (lista de formas por nome) desenhados por um `Desenho` só, porque o `dryer` achava duplicata (nota 0.81) entre os 6 JSX. (7) Nenhuma linha de `api/` mudou.
 - **Abandoned:** nada. Em aberto para quem verifica: (1) C27 (valor 7,47 do check contra 7,65 do servidor). (2) As edições acima que a lista fechada não nomeia (`acesso.test.tsx` x3 grupos, `primeiro acesso`/`definir senha` por `POST`, `painel de entrada sem foco e sem ícones`, Indicadores, `linha da marca na entrada`, `posição do conteúdo do painel`, `alertas de Indicadores`). (3) `playwright.config.ts` com `workers: 1`.
+- **Boundary (rodada 1):** C7 sem `if` na medida do selo (conta 1 selo por cartão antes); C2 mede os 8 tamanhos (real: default, icon, sm, icon-sm, icon-xs; `lg` e `xs` num botão de teste); C65 a C69 em `e2e/aparencia.spec.ts`, C70 e C71 em `administracao/aparencia.test.tsx`. Código: `PreviaAparencia` usa `Sigla` (a mesma `iniciais` do login, C71); o topo do celular mostra as iniciais `size-6` quando não há ícone (C69).
+- **Settled mid-build (rodada 1):** nada com o usuário. `ui/button.tsx` já tinha 44 px abaixo de 768 nos 8 tamanhos, então não mudou. O balão do assistente é achado por `.is-assistant` e a foto por `preceding-sibling::img`. C14 e C51 seguem sem marca, para o orquestrador.
+- **Abandoned (rodada 1):** nada.

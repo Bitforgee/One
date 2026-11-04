@@ -34,14 +34,23 @@ test.describe('S1 celular', () => {
   test('alvos de toque de 44 px abaixo de 768', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page)
-    // Button: default (Novo, em Artigos), xs (nenhuma tela usa: a classe vem do cva), icon (Enviar) e sm (Sim, do Assistente)
+    // Button, os 8 tamanhos de ui/button.tsx: em tela real quando algum uso existe, senão num botão de teste com as classes de buttonVariants
+    const nomes = ['default', 'sm', 'lg', 'xs', 'icon', 'icon-xs', 'icon-sm', 'icon-lg'] as const
+    const medidos: Record<string, number> = {}
     await abrirTela(page, 'Artigos')
-    expect(await altura(page.getByRole('button', { name: 'Novo' }))).toBeGreaterThanOrEqual(44)
-    await page.evaluate((classe) => document.body.insertAdjacentHTML('beforeend', `<button id="xs" class="${classe}">x</button>`), buttonVariants({ size: 'xs' }))
-    expect(await altura(page.locator('#xs'))).toBeGreaterThanOrEqual(44)
+    medidos.default = await altura(page.getByRole('button', { name: 'Novo' }))
     await abrirTela(page, 'Assistente')
-    expect(await altura(page.getByRole('button', { name: 'Enviar' }))).toBeGreaterThanOrEqual(44)
-    expect(await altura(page.locator('[data-slot=button][data-size=sm]'))).toBeGreaterThanOrEqual(44)
+    medidos.icon = await altura(page.getByRole('button', { name: 'Enviar' }))
+    medidos.sm = await altura(page.locator('[data-slot=button][data-size=sm]'))
+    medidos['icon-sm'] = await altura(page.getByRole('button', { name: 'Anexar arquivo' }))
+    await page.locator('input[type=file]').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('x') })
+    medidos['icon-xs'] = await altura(page.getByRole('button', { name: 'Remover foto.png' }))
+    // lg não tem uso em tela (o lg da casca é SidebarMenuButton, não Button); falta só ele, e vai pelo botão de teste
+    for (const tamanho of nomes.filter((n) => !(n in medidos))) {
+      await page.evaluate(([id, classe]) => document.body.insertAdjacentHTML('beforeend', `<button id="${id}" class="${classe}">x</button>`), [`t-${tamanho}`, buttonVariants({ size: tamanho })])
+      medidos[tamanho] = await altura(page.locator(`#t-${tamanho}`))
+    }
+    for (const tamanho of nomes) expect(medidos[tamanho], `Button ${tamanho}`).toBeGreaterThanOrEqual(44)
     await abrirTela(page, 'Login')
     expect(await altura(page.getByLabel('CPF'))).toBeGreaterThanOrEqual(44)
     await abrirTela(page, 'Cadastros')
@@ -91,16 +100,16 @@ test.describe('S2 celular', () => {
       expect(await principal.locator('table:visible').count(), nome).toBe(0)
       const cartoes = principal.getByRole('listitem')
       expect(await cartoes.count(), nome).toBeGreaterThan(0)
-      const selo = cartoes.first().locator('[data-celula=selo] [data-slot=badge]').first()
-      if (await selo.count()) {
+      if (nome === 'Fila' || nome === 'Minhas solicitações') {
+        // C7: 1 selo por cartão antes de medir (L-069): sem selo o teste falha, não pula
+        expect(await cartoes.locator('[data-celula=selo] [data-slot=badge]').count(), `${nome}: 1 selo por cartão`).toBe(await cartoes.count())
+        const selo = cartoes.first().locator('[data-celula=selo] [data-slot=badge]')
         const primeira = await caixa(cartoes.first().locator('[data-slot=table-cell]').first())
         const s = await caixa(selo)
         expect(Math.abs(s.y - primeira.y), `${nome}: selo no mesmo top`).toBeLessThanOrEqual(1)
         expect(s.x, `${nome}: selo à direita`).toBeGreaterThanOrEqual(primeira.x + primeira.width - 1)
-        if (nome === 'Fila' || nome === 'Minhas solicitações') {
-          const titulo = await caixa(cartoes.first().locator('[data-slot=table-cell]').nth(1))
-          expect(titulo.y, `${nome}: título abaixo`).toBeGreaterThanOrEqual(Math.max(primeira.y + primeira.height, s.y + s.height) - 1)
-        }
+        const titulo = await caixa(cartoes.first().locator('[data-slot=table-cell]').nth(1))
+        expect(titulo.y, `${nome}: título abaixo`).toBeGreaterThanOrEqual(Math.max(primeira.y + primeira.height, s.y + s.height) - 1)
       }
       await page.setViewportSize({ width: 1024, height: 800 })
       await abrirTela(page, nome)

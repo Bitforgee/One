@@ -1,6 +1,7 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { iniciais } from '../aparencia'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 // aparencia-instituicao S3 (AC 23 a AC 27, AC 21 na tela). As cores entram em pedaços: interface.test.ts proíbe cor literal em src/.
@@ -175,5 +176,58 @@ describe('tela Aparência', () => {
     fireEvent.click(botao)
     expect(screen.getByRole('button', { name: 'Mostrar prévia' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Marca', 'Login', 'Assistente', 'Contato'])
+  })
+
+  // C70 (AC 15, AC 21)
+  it('as 4 imagens com miniatura, enviar e remover', async () => {
+    const tipos = [['logo', 'Logo'], ['icone', 'Ícone do app'], ['login', 'Imagem do login'], ['assistente', 'Foto do assistente']] as const
+    for (const [tipo, rotulo] of tipos) {
+      const imagens = { logo: null, icone: null, login: null, assistente: null, [tipo]: 7 }
+      const chamadas = rotas({
+        'GET /api/admin/aparencia': () => [200, aparencia({ imagens })],
+        'PUT /api/admin/aparencia': () => [200, aparencia()],
+        [`POST /api/admin/aparencia/imagens/${tipo}`]: () => [200, { tipo, versao: 8 }],
+        [`DELETE /api/admin/aparencia/imagens/${tipo}`]: () => [204, undefined],
+      })
+      const { unmount } = abrir('/univag/aparencia')
+      expect(await screen.findByRole('img', { name: `Miniatura: ${rotulo}` }), tipo).toHaveAttribute('src', `/api/instituicoes/univag/imagens/${tipo}?v=7`)
+      expect(screen.getByRole('button', { name: `Enviar imagem: ${rotulo}` })).toBeInTheDocument()
+      // sem versão nos outros 3 tipos: nem miniatura nem "Remover"
+      expect(screen.getAllByRole('button', { name: /^Remover imagem:/ }), tipo).toHaveLength(1)
+      expect(document.querySelectorAll('img[alt^="Miniatura:"]'), tipo).toHaveLength(1)
+
+      await userEvent.upload(screen.getByLabelText(`Arquivo: ${rotulo}`), arquivo('nova.png'))
+      await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+      await waitFor(() => expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url)).toEqual([`/api/admin/aparencia/imagens/${tipo}`]))
+      expect(chamadas.find((c) => c.metodo === 'POST')!.corpo.arquivo, tipo).toBeInstanceOf(File)
+
+      await userEvent.click(screen.getByRole('button', { name: `Remover imagem: ${rotulo}` }))
+      await userEvent.click(within(await screen.findByRole('dialog', { name: 'Remover a imagem?' })).getByRole('button', { name: 'Remover' }))
+      await waitFor(() => expect(chamadas.filter((c) => c.metodo === 'DELETE').map((c) => c.url), tipo).toEqual([`/api/admin/aparencia/imagens/${tipo}`]))
+      unmount()
+    }
+  })
+
+  // C71 (AC 24)
+  it('iniciais da prévia iguais às do login', async () => {
+    for (const nome of ['Centro Universitário de Várzea Grande', 'Faculdade Demo']) {
+      const sigla = (raiz: ParentNode) => raiz.querySelector('span.bg-primary[aria-hidden=true]')!.textContent
+      api({
+        'GET /api/auth/me': () => [200, { ...admin, instituicao: { ...admin.instituicao, nome } }],
+        'GET /api/admin/aparencia': () => [200, aparencia()],
+        'GET /api/instituicoes/univag': () => [200, instituicao({ nome })],
+      })
+      const prévia = abrir('/univag/aparencia')
+      const daPrevia = sigla(await screen.findByRole('region', { name: 'Prévia' }))
+      prévia.unmount()
+
+      api({ 'GET /api/instituicoes/univag': () => [200, instituicao({ nome })] })
+      abrir('/univag')
+      await screen.findByLabelText('CPF')
+      const doLogin = await waitFor(() => sigla(document.body))
+      expect(daPrevia, nome).toBe(doLogin)
+      expect(daPrevia, nome).toBe(iniciais(nome))
+      cleanup()
+    }
   })
 })
