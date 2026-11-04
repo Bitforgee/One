@@ -28,7 +28,7 @@ ou método que não existe em `<base>` é criado com exatamente esse nome (L-022
 mensagem, e as linhas que trazem `transcricao` (`GET /api/chamados/{numero}` e as respostas de ação que devolvem
 o detalhe) ganham `"anexos":[]` nas linhas do aluno; nada mais muda nelas. (2) `api.Tests/Retratos/rotas.txt` e os
 números de `RetratoTests.Tabela_de_rotas_igual_a_da_base` ganham a rota de C25. (3) `.specs/GLOSSARIO.md` ganha
-`AnexoConversa`, se `ArquiteturaTests.Glossario_lista_os_termos` exigir. (4) Asserções de `LlmRequisicaoTests` que
+`AnexoConversa`, se `ArquiteturaTests.Glossario_lista_os_termos` exigir. (5) Emenda aprovada pelo usuário em 04/11 (rodada 1): as asserções estruturais que contam ou listam rotas, entidades, tabelas e casos de uso só podem ganhar o item novo desta feature ou subir na mesma conta, nunca perder item nem afrouxar: `ArquiteturaTests` (lista de tabelas, entidades, contagem de mensagens e handlers, casos de uso do `Assistente`, `Map*`, `SemCorpoJson`, arquivos que chamam `.Baixar(`), `MediatorTests`, `SessaoTests` e a lista de textos de `web/src/assistente/textos.test.tsx`. (6) Emenda aprovada pelo usuário em 04/11: `BuscaTests.Lotes_de_100_gravam_vetores`, que já falhava em `5e2034f` por misturar o relógio real com o relógio falso, passa a usar o relógio falso, sem mudar a asserção. (4) Asserções de `LlmRequisicaoTests` que
 leem `content` com `GetString()` em mensagens sem anexo não mudam (C7).
 
 ## Checks
@@ -65,7 +65,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_d
 **C9** - [x] A primeira mensagem `system` do corpo contém literalmente a linha `8. Anexos do aluno servem só para entender o caso; não são fontes. Não copie trechos de anexos nem repita dados pessoais que aparecem neles.` (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Regra_8_dos_anexos_no_prompt"`
 
-**C10** - [x] Quando o provedor simulado devolve `tipo` `resposta` com um trecho que só existe no texto do anexo e não na fonte citada, a API responde `tipo` `sem_base` com o texto fixo de `Textos.SemBase`, e o log registra o motivo `trecho_invalido` (AC 7)
+**C10** - Quando o aluno anexa um PDF cujo texto contém o trecho T, e o provedor simulado devolve `tipo` `resposta` com T (que não existe na fonte citada), a API responde `tipo` `sem_base` com o texto fixo de `Textos.SemBase`, e o log registra o motivo `trecho_invalido` (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Trecho_copiado_do_anexo_vira_sem_base"`
 
 **C11** - [x] Um arquivo de 10 MiB + 1 byte responde `413` com `detail` "O arquivo {nome} passa de 10 MB." nas duas rotas. Nos dois pedidos, a contagem de `MensagemConversa` e de `AnexoConversa` e a lista `f.Chaves()` ficam iguais às de antes, e o provedor não é chamado. Um arquivo de exatamente 10 MiB é aceito (AC 8)
@@ -83,8 +83,9 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Te
 **C15** - [x] Com 1 anexo válido, os 3 casos de hoje respondem igual ao JSON e sem objeto novo: conversa encerrada `409` "Esta conversa já foi encerrada.", conversa de outro aluno `404` "Conversa não encontrada." e conversa com 10 mensagens do aluno `409` "A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre." (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Recusas_de_hoje_com_anexo_sem_gravar"`
 
-**C16** - [x] Com `f.MinioFora()`, `POST /api/conversas/{id}/mensagens` com 1 anexo responde `503` com `detail` "Armazenamento de arquivos indisponível.". A contagem de `MensagemConversa` da conversa não muda e o provedor não é chamado (AC 13)
+**C16** - Com `f.MinioFora()`, `POST /api/conversas` (primeira mensagem) e `POST /api/conversas/{id}/mensagens` com 1 anexo respondem `503` com `detail` "Armazenamento de arquivos indisponível.". Nenhuma `Conversa` nova é criada, a contagem de `MensagemConversa` da conversa existente não muda, e o provedor não é chamado (AC 13; a primeira rota entrou por emenda aprovada pelo usuário em 04/11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Minio_fora_ao_gravar_503_sem_mensagem"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Minio_fora_na_primeira_mensagem_503_sem_conversa"`
 
 **C17** - [x] Numa conversa com 1 anexo já gravado, uma mensagem nova sem arquivo, com `f.MinioFora()`, responde `200` com `tipo` `sem_base` e o texto de `Textos.SemBase`. O log tem o motivo `anexo_indisponivel` com instituição e conversa, e `f.Llm.Corpos` (chat) não cresce (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Minio_fora_ao_ler_anexo_sem_base_sem_chamar_provedor"`
@@ -124,7 +125,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Tabelas_snake_case_e_datas_timestamptz"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tabela_anexo_conversa_com_fk_nao_nula"`
 
-**C28** - [x] A tela Assistente tem, no formulário da mensagem, um botão com nome acessível "Anexar arquivo" que aciona um `input type="file"` com `accept=".pdf,.jpg,.jpeg,.png"` e `multiple` (AC 21)
+**C28** - A tela Assistente tem, no formulário da mensagem e na mesma linha que o campo "Mensagem" (os dois no mesmo contêiner flex de linha, emenda aprovada pelo usuário em 04/11), um botão com nome acessível "Anexar arquivo" que aciona um `input type="file"` com `accept=".pdf,.jpg,.jpeg,.png"` e `multiple` (AC 21)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "botão Anexar arquivo abre o seletor de PDF, JPG e PNG"`
 
 **C29** - [x] Escolhidos `boleto.png` e `comprovante.pdf`, a tela mostra 2 selos, nessa ordem, com os nomes e os botões "Remover boleto.png" e "Remover comprovante.pdf". Clicar em "Remover boleto.png" deixa só o selo de `comprovante.pdf` (AC 22)
@@ -146,7 +147,7 @@ Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "erro da API 
 **C34** - [x] A tela Assistente mostra, abaixo do campo, o texto literal "Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa." (AC 26)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
-**C35** - [x] [x] A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
+**C35** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
@@ -166,17 +167,17 @@ Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "transcrição
 **C39** - [x] De ponta a ponta na imagem própria (MinIO do compose, provedor sem chave), o aluno anexa um PNG à primeira mensagem e vê o link no balão. O download devolve o mesmo SHA-256 e `Content-Type` `image/png`. Depois de "Falar com atendente", o administrador abre o chamado, vê o link na transcrição e baixa os mesmos bytes (AC 1, AC 24, AC 29)
 Proof: `cd web && E2E_URL=http://localhost:8084 npx playwright test e2e/anexos.spec.ts -g "aluno anexa foto na conversa e a equipe baixa no chamado"`
 
-**C40** - [x] A suíte e2e inteira passa contra a imagem própria (AC 5)
+**C40** - A suíte e2e inteira passa contra a imagem própria (AC 5)
 Proof: `cd web && E2E_URL=http://localhost:8084 npx playwright test`
 
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
 | --- | --- | --- |
-| `POST /api/conversas` statuses (7) | 201 C2, C19 · 400 C13, C14 · 403 C8 (`ConversaTests`, sem mudança) · 413 C11 · 415 C12 · 429 C8 (`RateLimitTests` no C1, sem mudança) · 503 C16 | - |
+| `POST /api/conversas` statuses (7) | 201 C2, C19 · 400 C13, C14 · 403 C1 (`AssistenteTests`, sem mudança) · 413 C11 · 415 C12 · 429 C8 (`RateLimitTests` no C1, sem mudança) · 503 C16 (`Minio_fora_na_primeira_mensagem_503_sem_conversa`) | - |
 | `POST /api/conversas/{id}/mensagens` statuses (8) | 200 C3 · 400 C13, C14 · 404 C15 · 409 C15 · 413 C11 · 415 C12 · 429 C1 · 503 C16 | - |
 | `GET /api/conversas/{id}` statuses (2) | 200 C22 · 404 C8 (`ConversaTests`, sem mudança) | - |
-| `GET /api/chamados/{numero}` statuses (2) | 200 C36 · 404 C1 (`PermissoesChamadoTests`, sem mudança) | - |
+| `GET /api/chamados/{numero}` statuses (2) | 200 C36 · 404 C1 (`VisibilidadeTests`, sem mudança) | - |
 | `GET /api/conversas/anexos/{id}` statuses (3) | 200 C23, C37 · 404 C24 · 503 C25 | - |
 | tipos aceitos (3) | JPEG C3, C4 · PNG C2, C4 · PDF C3, C4 | - |
 | tipos recusados (2) | outra assinatura (GIF) C12 · extensão aceita com conteúdo errado C12 | - |

@@ -402,6 +402,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: C18; web/src/acesso/textos.test.tsx:95-117 (web-tests)
 - last seen: 2026-11-03T20:25:41Z
 
+### L-066 - Conte os logins de cada spec e2e contra Limites:AuthPorMinuto (5 por IP por minuto); um spec novo que loga várias vezes estoura o limite e dá 429 na suíte inteira.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: anexos-assistente
+- evidence: web/e2e/anexos.spec.ts:49 (web/e2e)
+- last seen: 2026-11-04T17:58:20Z
+
+### L-067 - Quem acrescenta rota, entidade ou caso de uso põe na lista fechada do checks.md as contagens estruturais de ArquiteturaTests, MediatorTests e SessaoTests que vão subir.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: anexos-assistente
+- evidence: api.Tests/ArquiteturaTests.cs:19 (specs/checks)
+- last seen: 2026-11-04T17:58:20Z
+
+### L-068 - Uma falha de dependência afirmada para duas rotas precisa de uma prova em cada rota; a linha de Coverage não pode citar o check de uma rota pela outra.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `specs/coverage` · harmful: 0
+- features: anexos-assistente
+- evidence: checks.md C16 (specs/coverage)
+- last seen: 2026-11-04T17:58:20Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

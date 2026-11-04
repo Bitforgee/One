@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 66,
+  "next_id": 69,
   "lessons": [
     {
       "id": "L-001",
@@ -1188,6 +1188,60 @@
       ],
       "created": "2026-11-03T20:25:41Z",
       "last_seen": "2026-11-03T20:25:41Z"
+    },
+    {
+      "id": "L-066",
+      "key": "gate_fail::conte os logins de cada spec e2e contra limites authporminuto 5 por ip por minuto um spec novo que loga varias vezes estoura o limite e da 429 na suite inteira",
+      "text": "Conte os logins de cada spec e2e contra Limites:AuthPorMinuto (5 por IP por minuto); um spec novo que loga várias vezes estoura o limite e dá 429 na suíte inteira.",
+      "signal": "gate_fail",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "anexos-assistente"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/anexos.spec.ts:49 (web/e2e)"
+      ],
+      "created": "2026-11-04T17:58:20Z",
+      "last_seen": "2026-11-04T17:58:20Z"
+    },
+    {
+      "id": "L-067",
+      "key": "spec_deviation::quem acrescenta rota entidade ou caso de uso poe na lista fechada do checks md as contagens estruturais de arquiteturatests mediatortests e sessaotests que vao subir",
+      "text": "Quem acrescenta rota, entidade ou caso de uso põe na lista fechada do checks.md as contagens estruturais de ArquiteturaTests, MediatorTests e SessaoTests que vão subir.",
+      "signal": "spec_deviation",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "anexos-assistente"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api.Tests/ArquiteturaTests.cs:19 (specs/checks)"
+      ],
+      "created": "2026-11-04T17:58:20Z",
+      "last_seen": "2026-11-04T17:58:20Z"
+    },
+    {
+      "id": "L-068",
+      "key": "spec_precision_gap::uma falha de dependencia afirmada para duas rotas precisa de uma prova em cada rota a linha de coverage nao pode citar o check de uma rota pela outra",
+      "text": "Uma falha de dependência afirmada para duas rotas precisa de uma prova em cada rota; a linha de Coverage não pode citar o check de uma rota pela outra.",
+      "signal": "spec_precision_gap",
+      "scope": "specs/coverage",
+      "status": "candidate",
+      "features": [
+        "anexos-assistente"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C16 (specs/coverage)"
+      ],
+      "created": "2026-11-04T17:58:20Z",
+      "last_seen": "2026-11-04T17:58:20Z"
     }
   ]
 }
