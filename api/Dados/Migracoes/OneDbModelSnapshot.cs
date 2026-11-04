@@ -1007,6 +1007,57 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("email_saida");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.ImagemInstituicao", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Chave")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave");
+
+                    b.Property<string>("Conteudo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("conteudo");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("char(64)")
+                        .HasColumnName("hash");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<long>("Tamanho")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
+                    b.Property<int>("Versao")
+                        .HasColumnType("integer")
+                        .HasColumnName("versao");
+
+                    b.HasKey("Id")
+                        .HasName("pk_imagem_instituicao");
+
+                    b.HasIndex("InstituicaoId", "Tipo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_imagem_instituicao_instituicao_id_tipo");
+
+                    b.ToTable("imagem_instituicao");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Instituicao", b =>
                 {
                     b.Property<long>("Id")
@@ -1016,9 +1067,37 @@ namespace One.Api.Dados.Migracoes
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AssistenteBoasVindas")
+                        .HasColumnType("text")
+                        .HasColumnName("assistente_boas_vindas");
+
+                    b.Property<string>("AssistenteNome")
+                        .HasColumnType("text")
+                        .HasColumnName("assistente_nome");
+
+                    b.PrimitiveCollection<string[]>("AssistentePerguntas")
+                        .HasColumnType("text[]")
+                        .HasColumnName("assistente_perguntas");
+
                     b.Property<bool>("Ativa")
                         .HasColumnType("boolean")
                         .HasColumnName("ativa");
+
+                    b.Property<string>("ContatoEmail")
+                        .HasColumnType("text")
+                        .HasColumnName("contato_email");
+
+                    b.Property<string>("ContatoHorario")
+                        .HasColumnType("text")
+                        .HasColumnName("contato_horario");
+
+                    b.Property<string>("ContatoTelefone")
+                        .HasColumnType("text")
+                        .HasColumnName("contato_telefone");
+
+                    b.Property<string>("Cor")
+                        .HasColumnType("text")
+                        .HasColumnName("cor");
 
                     b.Property<DateTime>("CriadaEm")
                         .HasColumnType("timestamp with time zone")
@@ -1029,10 +1108,26 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("text")
                         .HasColumnName("fuso");
 
+                    b.Property<string>("LoginFrase")
+                        .HasColumnType("text")
+                        .HasColumnName("login_frase");
+
+                    b.PrimitiveCollection<string[]>("LoginItens")
+                        .HasColumnType("text[]")
+                        .HasColumnName("login_itens");
+
+                    b.Property<string>("LoginTitulo")
+                        .HasColumnType("text")
+                        .HasColumnName("login_titulo");
+
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("nome");
+
+                    b.Property<string>("NomeCurto")
+                        .HasColumnType("text")
+                        .HasColumnName("nome_curto");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -1798,6 +1893,16 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_email_saida_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.ImagemInstituicao", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_imagem_instituicao_instituicoes_instituicao_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Push.PushSaida", b =>

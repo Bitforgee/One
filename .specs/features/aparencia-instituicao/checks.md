@@ -92,44 +92,44 @@ Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "sem rolagem horizo
 
 ### S3 - A tela Aparência (P1) · ~16 files · ~120 KB · ~35k
 
-**C11** - `GET /api/admin/aparencia` de um `ADMINISTRADOR` de uma instituição sem aparência responde `200` com exatamente as chaves `nomeCurto`, `cor`, `login`, `assistente`, `contato` e `imagens`, todas `null` ou com subcampos `null`/listas vazias. Depois de um `PUT`, devolve os valores gravados (AC 11)
+**C11** - [x] `GET /api/admin/aparencia` de um `ADMINISTRADOR` de uma instituição sem aparência responde `200` com exatamente as chaves `nomeCurto`, `cor`, `login`, `assistente`, `contato` e `imagens`, todas `null` ou com subcampos `null`/listas vazias. Depois de um `PUT`, devolve os valores gravados (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Get_sem_aparencia_devolve_nulos"`
 
-**C12** - Um `PUT /api/admin/aparencia` com todos os campos válidos responde `200` com os mesmos valores e grava em `instituicao`. Um segundo `PUT` com `login.titulo` ausente e `cor` `null` deixa os dois `null` e mantém os outros. Uma instituição B não é alterada (AC 12, door 1, door 3)
+**C12** - [x] Um `PUT /api/admin/aparencia` com todos os campos válidos responde `200` com os mesmos valores e grava em `instituicao`. Um segundo `PUT` com `login.titulo` ausente e `cor` `null` deixa os dois `null` e mantém os outros. Uma instituição B não é alterada (AC 12, door 1, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Put_grava_e_campo_ausente_volta_ao_padrao"`
 
-**C13** - `PUT` com `cor` inválida responde `400` com `errors.cor` "Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela." e não grava nada, em 4 entradas: `224fa7` (sem `#`), `#224fa` (5 dígitos), `#ffd700` (contraste 1,4:1) e `#767676` + 1 grau, isto é `#777777` (contraste 4,48:1). Aceita `#767676` (4,54:1) e `#224fa7` (AC 13, door 8)
+**C13** - [x] `PUT` com `cor` inválida responde `400` com `errors.cor` "Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela." e não grava nada, em 4 entradas: `224fa7` (sem `#`), `#224fa` (5 dígitos), `#ffd700` (contraste 1,4:1) e `#767676` + 1 grau, isto é `#777777` (contraste 4,48:1). Aceita `#767676` (4,54:1) e `#224fa7` (AC 13, door 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Cor_invalida_ou_sem_contraste_400"`
 
-**C14** - O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (13 limites, 26 pedidos):
+**C14** - [x] O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (13 limites, 26 pedidos):
 - tamanho máximo: `nomeCurto` 12, `login.titulo` 60, `login.frase` 160, cada `login.itens` 80, `assistente.nome` 40, `assistente.boasVindas` 300, cada `assistente.perguntas` 100, `contato.horario` 120, `contato.telefone` 30 e `contato.email` 120;
 - quantidade máxima: 3 `login.itens` e 4 `assistente.perguntas`;
 - `contato.email` "nao-e-email" (inválido) (AC 14)
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Limites_dos_textos_400"`
 
-**C15** - `POST /api/admin/aparencia/imagens/logo` com um PNG válido responde `200` com `{tipo:"logo", versao:1}`, grava o objeto com chave começando por `{instituicaoId}/aparencia/`, com os mesmos bytes, e 1 linha `imagem_instituicao` com `conteudo` `image/png`, `tamanho` e `hash` SHA-256. Um segundo envio responde `versao:2`, deixa 1 linha só e uma chave nova, e o objeto antigo continua no bucket (AC 15, door 2)
+**C15** - [x] `POST /api/admin/aparencia/imagens/logo` com um PNG válido responde `200` com `{tipo:"logo", versao:1}`, grava o objeto com chave começando por `{instituicaoId}/aparencia/`, com os mesmos bytes, e 1 linha `imagem_instituicao` com `conteudo` `image/png`, `tamanho` e `hash` SHA-256. Um segundo envio responde `versao:2`, deixa 1 linha só e uma chave nova, e o objeto antigo continua no bucket (AC 15, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Enviar_imagem_grava_e_reenviar_sobe_a_versao"`
 
-**C16** - Responde `415`, sem gravar linha nem objeto, em 3 casos: um GIF como `logo`, um PDF como `login` e um JPEG como `icone`. Um JPEG como `login`, `logo` e `assistente` é aceito (AC 16)
+**C16** - [x] Responde `415`, sem gravar linha nem objeto, em 3 casos: um GIF como `logo`, um PDF como `login` e um JPEG como `icone`. Um JPEG como `login`, `logo` e `assistente` é aceito (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Tipo_de_imagem_recusado_415"`
 
-**C17** - Responde `413` com o limite, sem gravar nada, para `logo`, `icone` e `assistente` de 1 MiB + 1 byte e `login` de 3 MiB + 1 byte. Os quatro tipos aceitam exatamente 1 MiB e 3 MiB (AC 17)
+**C17** - [x] Responde `413` com o limite, sem gravar nada, para `logo`, `icone` e `assistente` de 1 MiB + 1 byte e `login` de 3 MiB + 1 byte. Os quatro tipos aceitam exatamente 1 MiB e 3 MiB (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Imagem_acima_do_limite_413"`
 
-**C18** - O `icone` responde `400` "O ícone deve ser um PNG quadrado de pelo menos 512 px.", sem gravar nada, com PNG de 512×511 e de 511×511. Aceita 512×512 e 1024×1024. A largura e a altura vêm do `IHDR` (AC 18)
+**C18** - [x] O `icone` responde `400` "O ícone deve ser um PNG quadrado de pelo menos 512 px.", sem gravar nada, com PNG de 512×511 e de 511×511. Aceita 512×512 e 1024×1024. A largura e a altura vêm do `IHDR` (AC 18)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Icone_nao_quadrado_ou_pequeno_400"`
 
-**C19** - `POST` e `DELETE /api/admin/aparencia/imagens/fundo` respondem `404` (AC 19)
+**C19** - [x] `POST` e `DELETE /api/admin/aparencia/imagens/fundo` respondem `404` (AC 19)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Tipo_desconhecido_404"`
 
-**C20** - Com `f.MinioFora()`, o `POST` de um `logo` válido responde `503`, e a linha `imagem_instituicao` existente fica com a versão e a chave de antes (AC 20)
+**C20** - [x] Com `f.MinioFora()`, o `POST` de um `logo` válido responde `503`, e a linha `imagem_instituicao` existente fica com a versão e a chave de antes (AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Minio_fora_503_sem_mudar_a_imagem"`
 
-**C21** - `DELETE /api/admin/aparencia/imagens/logo` responde `204`, apaga a linha e deixa o objeto em `f.Chaves()`. Um segundo `DELETE` responde `404` (AC 21)
+**C21** - [x] `DELETE /api/admin/aparencia/imagens/logo` responde `204`, apaga a linha e deixa o objeto em `f.Chaves()`. Um segundo `DELETE` responde `404` (AC 21)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Remover_imagem_204_e_objeto_fica"`
 
-**C22** - As 4 rotas de `/api/admin/aparencia` respondem `403` para `ALUNO` e para `ATENDENTE`, e `401` sem sessão, em 12 pedidos. O admin da instituição A nunca lê nem altera a aparência de B (AC 22, door 3)
+**C22** - [x] As 4 rotas de `/api/admin/aparencia` respondem `403` para `ALUNO` e para `ATENDENTE`, e `401` sem sessão, em 12 pedidos. O admin da instituição A nunca lê nem altera a aparência de B (AC 22, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Rotas_de_admin_403_e_401"`
 
 **C23** - O link "Aparência", com ícone `Palette`, aparece no grupo "Administração", depois de "Cadastros", na barra e na gaveta para `ADMINISTRADOR`. Não aparece para `ALUNO` nem para `ATENDENTE`. Leva a `/{slug}/aparencia` (AC 23, door 7)
@@ -164,13 +164,13 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "remove
 
 ### S4 - A marca da instituição no app (P1) · ~14 files · ~110 KB · ~32k
 
-**C30** - `GET /api/instituicoes/{slug}` responde `200` com `nome` igual ao de `<base>` e as chaves `nomeCurto`, `cor`, `login`, `assistente`, `contato` e `imagens {logo, icone, login, assistente}`. Com logo enviado, `imagens.logo` é a versão atual (número) e os outros tipos são `null`. Uma instituição inativa responde `404` (AC 28)
+**C30** - [x] `GET /api/instituicoes/{slug}` responde `200` com `nome` igual ao de `<base>` e as chaves `nomeCurto`, `cor`, `login`, `assistente`, `contato` e `imagens {logo, icone, login, assistente}`. Com logo enviado, `imagens.logo` é a versão atual (número) e os outros tipos são `null`. Uma instituição inativa responde `404` (AC 28)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaPublicaTests.Instituicao_publica_traz_a_aparencia"`
 
-**C31** - `GET /api/instituicoes/{slug}/imagens/logo?v=1`, sem cookie, responde `200` com os mesmos bytes, o `Content-Type` do arquivo e `Cache-Control` exatamente `public, max-age=31536000, immutable` (AC 29, door 4)
+**C31** - [x] `GET /api/instituicoes/{slug}/imagens/logo?v=1`, sem cookie, responde `200` com os mesmos bytes, o `Content-Type` do arquivo e `Cache-Control` exatamente `public, max-age=31536000, immutable` (AC 29, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaPublicaTests.Imagem_publica_com_cache_imutavel"`
 
-**C32** - A rota de imagem responde `404` em 4 casos: instituição inexistente, instituição inativa, tipo sem imagem e tipo desconhecido. Com `f.MinioFora()`, responde `503` (AC 30)
+**C32** - [x] A rota de imagem responde `404` em 4 casos: instituição inexistente, instituição inativa, tipo sem imagem e tipo desconhecido. Com `f.MinioFora()`, responde `503` (AC 30)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaPublicaTests.Imagem_publica_404_e_503"`
 
 **C33** - Com a aparência simulada com `cor` `#8a1538`, a 1024 px, o fundo computado do botão "Entrar" é igual ao de um elemento de referência pintado com `#8a1538` no tema Claro. Nos temas Escuro e Preto, é igual ao de um elemento pintado com `color-mix(in oklch, #8a1538 55%, white)`. Sem `cor`, o fundo é igual ao `oklch(0.45 0.15 262)` de `<base>` no Claro e ao `oklch(0.72 0.12 262)` no Escuro (AC 31, door 8)
@@ -248,10 +248,10 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no 
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
 
-**C51** - O e-mail de primeiro acesso de uma instituição com cor e logo chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual, byte a byte, ao `Corpo` da `EmailSaida`, e há uma parte `text/html` (AC 48, door 6)
+**C51** - [x] O e-mail de primeiro acesso de uma instituição com cor e logo chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual, byte a byte, ao `Corpo` da `EmailSaida`, e há uma parte `text/html` (AC 48, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Email_vai_com_texto_e_html"`
 
-**C52** - O HTML desse e-mail contém:
+**C52** - [x] O HTML desse e-mail contém:
 - um elemento com `background-color:#8a1538`;
 - `<img src="cid:logo"` com `alt` igual ao nome da instituição, e um anexo inline com `Content-ID` `logo` com os mesmos bytes do logo;
 - o nome da instituição.
@@ -260,12 +260,12 @@ Com o `Corpo` contendo `<script>` e `&`, o HTML tem `&lt;script&gt;` e `&amp;`, 
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Html_com_cor_logo_e_corpo_escapado"`
 
-**C53** - Com `f.MinioFora()` no momento do envio, o e-mail de uma instituição com logo é enviado (`EnviadoEm` preenchido no mesmo ciclo do `Agendador`), sem `cid:` e com o nome em texto (AC 50)
+**C53** - [x] Com `f.MinioFora()` no momento do envio, o e-mail de uma instituição com logo é enviado (`EnviadoEm` preenchido no mesmo ciclo do `Agendador`), sem `cid:` e com o nome em texto (AC 50)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Minio_fora_envia_sem_logo"`
 
 ### S8 - App instalado com a marca (P2) · ~5 files · ~30 KB · ~10k
 
-**C54** - `GET /api/instituicoes/univag/manifest.webmanifest`, sem cookie, com `nomeCurto` "Univag", cor `#8a1538` e ícone na versão 2, responde `200` com `Content-Type` `application/manifest+json` e um JSON com:
+**C54** - [x] `GET /api/instituicoes/univag/manifest.webmanifest`, sem cookie, com `nomeCurto` "Univag", cor `#8a1538` e ícone na versão 2, responde `200` com `Content-Type` `application/manifest+json` e um JSON com:
 - `name` igual ao `nome` e `short_name` "Univag";
 - `start_url` e `scope` "/univag/";
 - `display` "standalone";
@@ -277,7 +277,7 @@ Sem `nomeCurto`, sem cor e sem ícone: `short_name` são as iniciais do nome, `t
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ManifestoTests.Manifesto_da_instituicao"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ManifestoTests.Manifesto_padrao_sem_aparencia"`
 
-**C55** - O manifesto responde `404` para instituição inexistente e para instituição inativa (AC 52)
+**C55** - [x] O manifesto responde `404` para instituição inexistente e para instituição inativa (AC 52)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ManifestoTests.Manifesto_404"`
 
 **C56** - Nas telas com `slug`, `<link rel="manifest">` tem `href` igual a `/api/instituicoes/univag/manifest.webmanifest`. Na raiz `/`, ele fica com o `href` de `<base>` (AC 53)
@@ -285,13 +285,13 @@ Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "manifesto da institu
 
 ### S0 - Invariantes e barreiras (P1)
 
-**C57** - A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 4 da lista fechada (Surface, door 1 a 6)
+**C57** - [x] A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 4 da lista fechada (Surface, door 1 a 6)
 Proof: `dotnet test api.Tests`
 
-**C58** - `rotas.txt` ganha exatamente as 7 linhas das rotas do `Surface`: 3 anônimas, `anonimo=True`, e 4 de admin, `autorizacao=True`. Nenhuma linha some (Surface)
+**C58** - [x] `rotas.txt` ganha exatamente as 7 linhas das rotas do `Surface`: 3 anônimas, `anonimo=True`, e 4 de admin, `autorizacao=True`. Nenhuma linha some (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
-**C59** - As tabelas `instituicao` e `imagem_instituicao` ficam com:
+**C59** - [x] As tabelas `instituicao` e `imagem_instituicao` ficam com:
 - as colunas novas da door 1, todas anuláveis, em snake_case;
 - o índice único `(instituicao_id, tipo)`, com `instituicao_id` sob o filtro global;
 - `has-pending-model-changes` limpo (door 1, door 2)
@@ -299,7 +299,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_d
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro|FullyQualifiedName~ArquiteturaTests.Tabelas_snake_case_e_datas_timestamptz|FullyQualifiedName~AparenciaAdminTests.Tabelas_da_aparencia"`
 Proof: `dotnet ef migrations has-pending-model-changes --project api`
 
-**C60** - `dotnet build api` passa com a barreira CA1502 (AD-018)
+**C60** - [x] `dotnet build api` passa com a barreira CA1502 (AD-018)
 Proof: `dotnet build api`
 
 **C61** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 5 da lista fechada, cada uma listada no `## Handoff` (AC 1 a AC 53)

@@ -20,5 +20,6 @@ public static class AdminRotas
         RegraRotas.Mapear(admin);
         ArtigoRotas.MapearAdmin(admin);
         DocumentoRotas.MapearAdmin(admin);
+        Instituicoes.AparenciaRotas.MapearAdmin(admin);
     }
 }

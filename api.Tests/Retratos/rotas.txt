@@ -5,6 +5,8 @@ POST /api/auth/logout anonimo=True autorizacao=True limite=-
 GET /api/auth/me anonimo=False autorizacao=True limite=-
 POST /api/auth/senha anonimo=False autorizacao=True limite=-
 GET /api/instituicoes/{slug} anonimo=True autorizacao=True limite=-
+GET /api/instituicoes/{slug}/imagens/{tipo} anonimo=True autorizacao=True limite=-
+GET /api/instituicoes/{slug}/manifest.webmanifest anonimo=True autorizacao=True limite=-
 POST /api/conversas anonimo=False autorizacao=True limite=mensagens
 POST /api/conversas/{id:long}/mensagens anonimo=False autorizacao=True limite=mensagens
 GET /api/conversas/{id:long} anonimo=False autorizacao=True limite=-
@@ -60,6 +62,10 @@ GET /api/admin/documentos anonimo=False autorizacao=True limite=-
 POST /api/admin/documentos anonimo=False autorizacao=True limite=-
 POST /api/admin/documentos/{id:long}/versoes anonimo=False autorizacao=True limite=-
 POST /api/admin/documentos/{id:long}/arquivar anonimo=False autorizacao=True limite=-
+GET /api/admin/aparencia anonimo=False autorizacao=True limite=-
+PUT /api/admin/aparencia anonimo=False autorizacao=True limite=-
+POST /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
+DELETE /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
 GET /api/push/chave anonimo=False autorizacao=True limite=-
 POST /api/push/subscricao anonimo=False autorizacao=True limite=-
 DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-

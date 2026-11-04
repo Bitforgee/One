@@ -1,7 +1,7 @@
 POST /api/auth/login aluno 200 {"id":0,"nome":"Ana Aluna","papeis":["ALUNO"],"deveTrocarSenha":false,"instituicao":{"slug":"retrato","nome":"Univag"}}
 POST /api/auth/primeiro-acesso anonimo 202 {"mensagem":"Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição."}
 GET /api/auth/me aluno 200 {"id":0,"nome":"Ana Aluna","cpfMascarado":"***.222.333-**","papeis":["ALUNO"],"deveTrocarSenha":false,"instituicao":{"slug":"retrato","nome":"Univag","fuso":"America/Cuiaba"},"matriculas":[{"id":0,"numero":"2026000001","curso":"Análise e Desenvolvimento de Sistemas","semestre":3,"situacao":"ATIVA"}]}
-GET /api/instituicoes/{slug} anonimo 200 {"nome":"Univag"}
+GET /api/instituicoes/{slug} anonimo 200 {"nome":"Univag","nomeCurto":null,"cor":null,"login":{"titulo":null,"frase":null,"itens":[]},"assistente":{"nome":null,"boasVindas":null,"perguntas":[]},"contato":{"horario":null,"telefone":null,"email":null},"imagens":{"logo":null,"icone":null,"login":null,"assistente":null}}
 GET /api/admin/setores admin 200 [{"id":0,"nome":"Triagem","triagem":true,"ativo":true}]
 POST /api/admin/setores admin 201 {"id":0,"nome":"Financeiro","triagem":false,"ativo":true}
 PUT /api/admin/setores/{id} admin 200 {"id":0,"nome":"Financeiro e Bolsas","triagem":false,"ativo":true}

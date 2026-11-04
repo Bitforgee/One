@@ -36,7 +36,7 @@ public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email 
                 await db.SaveChangesAsync();
                 try
                 {
-                    await email.Enviar(instituicao.Nome, u.Email, $"[{instituicao.Nome}] Crie sua senha",
+                    await email.Enviar(db, instituicao, u.Email, $"[{instituicao.Nome}] Crie sua senha",
                         $"Olá, {u.Nome}.\n\nPara criar sua senha no One, abra o link abaixo. Ele vale por 60 minutos e só pode ser usado uma vez.\n\n{Tokens.Link(cfg, instituicao.Slug, token)}\n");
                 }
                 catch (Exception e)

@@ -35,6 +35,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<TrechoFonte> TrechosFonte => Set<TrechoFonte>();
     public DbSet<SubscricaoPush> SubscricoesPush => Set<SubscricaoPush>();
     public DbSet<PushSaida> PushesSaida => Set<PushSaida>();
+    public DbSet<ImagemInstituicao> ImagensInstituicao => Set<ImagemInstituicao>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -43,6 +44,11 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         {
             e.Property(x => x.Slug).HasMaxLength(30);
             e.HasIndex(x => x.Slug).IsUnique();
+        });
+        mb.Entity<ImagemInstituicao>(e =>
+        {
+            e.Property(x => x.Hash).HasColumnType("char(64)");
+            e.HasIndex(nameof(ImagemInstituicao.InstituicaoId), nameof(ImagemInstituicao.Tipo)).IsUnique();
         });
         mb.Entity<Usuario>(e =>
         {

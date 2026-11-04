@@ -194,7 +194,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         var instituicao = await db.Instituicoes.SingleAsync(i => i.Id == e.InstituicaoId);
         try
         {
-            await email.Enviar(instituicao.Nome, e.Destinatario, e.Assunto, e.Corpo);
+            await email.Enviar(db, instituicao, e.Destinatario, e.Assunto, e.Corpo);
             e.EnviadoEm = agora;
         }
         catch (Exception falha)

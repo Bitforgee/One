@@ -137,6 +137,7 @@ public class Program
         var api = app.MapGroup("/api").RequireAuthorization();
         AuthRotas.Mapear(api);
         InstituicaoRotas.Mapear(api);
+        Instituicoes.AparenciaRotas.Mapear(api);
         ConversaRotas.Mapear(api);
         ChamadoRotas.Mapear(api);
         ArtigoRotas.Mapear(api);

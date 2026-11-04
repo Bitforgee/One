@@ -63,3 +63,5 @@ uma vez no código, num grupo de constantes de `api/Dados/Entidades.cs`; cada pr
 | --- | --- | --- |
 | `SubscricaoPush` | `Push:ChavePublica`, `ChavePrivada`, `Assunto` | inscrição de um navegador de um usuário para receber avisos; o `endpoint` é único no banco inteiro e um novo `POST` do mesmo endpoint a move para quem ativou por último |
 | `PushSaida` | `Push:*` | aviso a enviar a uma `SubscricaoPush`, com tentativas e próxima tentativa como o `EmailSaida`; o texto não é guardado, o agendador monta o JSON a partir do número do chamado |
+| `Aparência` | `instituicao.nome_curto`, `cor`, `login_*`, `assistente_*`, `contato_*` | o que a instituição personaliza: cor (contraste 4,5:1 com o branco), textos do login, nome e perguntas do assistente, contato do atendimento e as imagens; todo campo é opcional e nulo é o padrão do One; vive em `api/Instituicoes/` |
+| `ImagemInstituicao` | `Armazenamento:*` | uma imagem da instituição por `tipo` (`logo`, `icone`, `login`, `assistente`), no máximo uma por tipo; trocar sobe a `versao` e grava objeto novo, remover só apaga a linha e o objeto fica no bucket |
