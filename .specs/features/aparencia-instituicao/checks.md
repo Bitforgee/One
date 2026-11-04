@@ -385,3 +385,31 @@ Estimativa:
   2. Web S1 e S2: C1 a C10 (~51k).
   3. Web S3 a S6 e S8: C23 a C29, C33 a C50, C56, C61 a C64 (~58k, lendo o diff dos lotes 1 e 2).
 - Mecanismo: handoff em 3 lotes sequenciais, escolha do usuário em 04/11 ("3 lotes em sequência")
+
+### Lote 1 (API) - valores de `<base>` (`5b355d9`) que a lista fechada deixou subir
+
+| Asserção | Base | Agora |
+| --- | --- | --- |
+| `RetratoTests.Tabela_de_rotas_igual_a_da_base`: total de rotas / com 1 método / com autorização | 67 / 64 / 65 | 73 / 70 / 71 |
+| `RetratoTests.Tabela_de_rotas_igual_a_da_base`: rotas anônimas | 5 | 7 (as 2 novas ao fim) |
+| `RetratoTests.Admin_403_com_detail_nas_29_rotas` (nome mantido: outros `checks.md` o citam) | 29 | 33 |
+| `AdminTests.Sem_papel_admin_403` (não está na lista fechada; a mesma conta de rotas `/admin`) | 29 | 33 |
+| `ArquiteturaTests`: mensagens e handlers (4 asserções) | 62 | 68 |
+| `ArquiteturaTests`: fatia `Instituicoes` | 0 | 6 |
+| `ArquiteturaTests`: `Map*` | 65 | 71 |
+| `ArquiteturaTests`: entidades / `Entrada` aninhadas e rotas com corpo JSON / mensagens com corpo JSON | 27 / 30 / 55 | 28 / 31 / 59 |
+| `MediatorTests`: mensagens / `(ações, outras)` | 62 / (9, 53) | 68 / (9, 59) |
+| `SessaoTests`: rotas privadas | 60 | 64 |
+
+Edições em asserções existentes (todas só acrescentam o item novo ou sobem a mesma conta):
+- `sucessos.txt`: a linha de `GET /api/instituicoes/{slug}` ganhou os campos novos com `null` e listas vazias (AC 28).
+- `rotas.txt`: 6 linhas novas, nenhuma some. O `Surface` tem 7 linhas, mas a de `GET /api/instituicoes/{slug}` já existe: as rotas novas são 6 (2 anônimas, 4 de admin), e `C58` diz "7 linhas / 3 anônimas" por contar a existente.
+- `ArquiteturaTests`: `TabelasDaInstituicao` ganhou `imagem_instituicao`; `EntidadesPorPasta[""]` ganhou `ImagemInstituicao`; `AsEntradas` ganhou `AlterarAparencia`; `SemCorpoJson` ganhou `RemoverImagemInstituicao` e `BaixarImagemInstituicao`; `ComRespostaAninhada` ganhou `VerAparencia`, `AlterarAparencia`, `EnviarImagemInstituicao` e `ManifestoInstituicao`; `ReferenciasEntreFatias` ganhou `(Acesso, Instituicoes)` e `(Administracao, Instituicoes)`; `Baixar_so_com_chave_de_coluna_do_banco` ganhou `Email.cs` e `Instituicoes/BaixarImagemInstituicao.cs`.
+- `SessaoTests.Publicas` e a lista de anônimas de `RetratoTests` ganharam as 2 rotas anônimas novas.
+- `.specs/GLOSSARIO.md`: `Aparência` e `ImagemInstituicao`.
+
+- **Boundary:** lote 1 (API) fechado em `06d68a8`: C11 a C22, C30 a C32, C51 a C55 e C57 a C60 marcados `[x]`; `dotnet test api.Tests` com 517 testes verdes; `dotnet build api` e `has-pending-model-changes` limpos. Falta o web (lotes 2 e 3).
+- **Settled mid-build:** nada com o usuário. Decisões do construtor: o `Landing` ganhou a linha 10 (nomes dos campos nos `400`, pontuados por caminho JSON); a aparência vai em `AparenciaDados`, que a `Resposta` de `VerInstituicao`, `VerAparencia` e `AlterarAparencia` herdam; o e-mail não guarda HTML, `Email.Enviar(db, instituicao, ...)` monta no envio e espera o logo até 3 s; no Mailpit a parte `text/plain` chega com CRLF (SMTP), então `EmailMarcaTests` compara o `Corpo` depois de trocar `
+` por `
+`; texto ou lista vazios no `PUT` viram `null` (padrão).
+- **Abandoned:** nada. Em aberto para quem verifica: (1) `DELETE` e novo envio do mesmo tipo recomeçam a `versao` em 1, e a URL `?v=1` do logo antigo está `immutable` no cache do navegador (door 4); o plano manda apagar a linha, então a versão não sobrevive. (2) `C58` diz 7 linhas e 3 anônimas, mas são 6 novas (2 anônimas); a conta bate com o `Surface` sem a linha já existente. (3) `AdminTests.Sem_papel_admin_403` também conta as rotas `/admin` e subiu de 29 para 33, fora dos 3 arquivos que a lista fechada nomeia.
