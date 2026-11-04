@@ -256,22 +256,22 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
       <Label htmlFor="mensagem" className="sr-only">
         Mensagem
       </Label>
-      <Textarea
-        id="mensagem"
-        rows={1}
-        maxLength={1000}
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        onKeyDown={(e) => enviarComEnter(e, vazio)}
-        placeholder="Escreva sua dúvida"
-        className="max-h-52 min-h-10 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
-      />
+      <div className="flex items-end gap-1.5">
+        <BotaoAnexar anexos={anexos} />
+        <Textarea
+          id="mensagem"
+          rows={1}
+          maxLength={1000}
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={(e) => enviarComEnter(e, vazio)}
+          placeholder="Escreva sua dúvida"
+          className="max-h-52 min-h-10 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
+        />
+      </div>
       <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>
       <div className="flex items-end justify-between gap-1.5">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <BotaoAnexar anexos={anexos} />
-          {acoes}
-        </div>
+        <div className="flex flex-wrap items-center gap-1.5">{acoes}</div>
         <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
           {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
         </Button>

@@ -39,14 +39,28 @@ async function tokenDoEmail(request: APIRequestContext, para: string) {
 }
 
 async function primeiroAcesso(request: APIRequestContext, cpf: string, email: string) {
+  await vaga()
   const r = await request.post('/api/auth/primeiro-acesso', { data: { instituicao: slug, cpf } })
   expect(r.status()).toBe(202)
   return tokenDoEmail(request, email)
 }
 
 async function entrar(request: APIRequestContext, cpf: string, senha: string) {
+  await vaga()
   const r = await request.post('/api/auth/login', { data: { instituicao: slug, cpf, senha } })
   expect(r.status()).toBe(200)
+}
+
+// O limitador "auth" da API é de 5 por minuto por IP (login e primeiro acesso): espera a janela em vez de tomar 429.
+const autenticacoes: number[] = []
+async function vaga(): Promise<void> {
+  const agora = Date.now()
+  while (autenticacoes.length && agora - autenticacoes[0] >= 61_000) autenticacoes.shift()
+  if (autenticacoes.length >= 5) {
+    await new Promise((r) => setTimeout(r, 61_000 - (agora - autenticacoes[0])))
+    return vaga()
+  }
+  autenticacoes.push(agora)
 }
 
 const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex')
@@ -113,6 +127,7 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
 async function adminLogado(playwright: PlaywrightWorkerArgs['playwright'], baseURL: string | undefined) {
   const admin = await playwright.request.newContext({ baseURL })
   // o outro teste deste arquivo já pode ter feito o primeiro acesso (a senha é a mesma)
+  await vaga()
   if ((await admin.post('/api/auth/login', { data: { instituicao: slug, cpf: adminCpf, senha: senhaAdmin } })).status() !== 200) {
     const token = await primeiroAcesso(admin, adminCpf, adminEmail)
     expect((await admin.post('/api/auth/definir-senha', { data: { token, novaSenha: senhaAdmin } })).ok()).toBeTruthy()
@@ -174,9 +189,8 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   await expect(protocolo).toBeVisible()
   const numero = (await protocolo.textContent())!.replace('Abrir a solicitação ', '').trim()
 
-  const equipe = await browser.newContext({ baseURL })
+  const equipe = await browser.newContext({ baseURL, storageState: await admin.storageState() })
   const painel = await equipe.newPage()
-  await entrar(painel.request, adminCpf, senhaAdmin)
   await painel.goto(`/${slug}/chamados/${numero}`)
   const doChamado = painel.getByRole('link', { name: 'boleto.png' })
   await expect(doChamado).toBeVisible()

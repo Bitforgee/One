@@ -42,6 +42,11 @@ describe('anexos na conversa com o assistente', () => {
 
     expect(abriu).toHaveBeenCalledTimes(1)
     expect(anexar().closest('form')).not.toBeNull()
+    // mesma linha: o botão e o campo "Mensagem" dividem o contêiner flex de linha
+    const linha = anexar().parentElement!
+    expect(linha).toContainElement(screen.getByLabelText('Mensagem'))
+    expect(linha).toHaveClass('flex')
+    expect(linha).not.toHaveClass('flex-col')
   })
 
   // C29 (AC 22)

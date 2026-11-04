@@ -86,10 +86,11 @@ public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Trecho_copiado_do_anexo_vira_sem_base()
     {
         var c = await Cenario.Criar(f);
-        // o trecho só existe no texto do anexo, não na fonte citada
-        f.Llm.Devolver(Cenario.Resposta("Seu boleto vence dia 15.", [c.Boleto.Id], (c.Boleto.Id, "Vencimento em 15/11 para Maria Silva")));
+        // o trecho T está no texto do PDF anexo e não existe na fonte citada
+        const string t = "Vencimento em 15/11 para Maria Silva";
+        f.Llm.Devolver(Cenario.Resposta("Seu boleto vence dia 15.", [c.Boleto.Id], (c.Boleto.Id, t)));
 
-        var r = await Nova(c.Cliente, "esse boleto está certo?", ("boleto.png", Png()));
+        var r = await Nova(c.Cliente, "esse boleto está certo?", ("boleto.pdf", Pdfs.Criar(t)));
         var j = await r.Json();
 
         Assert.Equal("sem_base", j.GetProperty("resposta").GetProperty("tipo").GetString());
@@ -214,6 +215,22 @@ public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Conflict, cheiaR.StatusCode);
         Assert.Equal("A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre.", await Detalhe(cheiaR));
         Assert.Equal(antes, await Estado(c));
+    }
+
+    [Fact]
+    public async Task Minio_fora_na_primeira_mensagem_503_sem_conversa()
+    {
+        var c = await Cenario.Criar(f);
+        var antes = await f.Db(c.Instituicao.Id, db => db.Conversas.CountAsync());
+        var chamadas = f.Llm.Corpos.Count;
+
+        HttpResponseMessage r;
+        using (f.MinioFora()) r = await Nova(c.Cliente, "oi", ("a.png", Png()));
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, r.StatusCode);
+        Assert.Equal("Armazenamento de arquivos indisponível.", await Detalhe(r));
+        Assert.Equal(antes, await f.Db(c.Instituicao.Id, db => db.Conversas.CountAsync()));
+        Assert.Equal(chamadas, f.Llm.Corpos.Count);
     }
 
     [Fact]

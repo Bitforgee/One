@@ -77,7 +77,12 @@ def main():
         with urllib.request.urlopen(req, timeout=120) as r:
             status, texto = r.status, r.read().decode()
     except urllib.error.HTTPError as e:
-        print(f"HTTP {e.code}: {e.read().decode()[:500]}", file=sys.stderr)
+        # nunca o corpo: um 401 da OpenAI traz um trecho mascarado da chave
+        try:
+            erro = json.loads(e.read().decode()).get("error") or {}
+        except ValueError:
+            erro = {}
+        print(f"HTTP {e.code} type={erro.get('type')} code={erro.get('code')}", file=sys.stderr)
         return 1
     except urllib.error.URLError as e:
         print(f"falha de rede: {e.reason}", file=sys.stderr)

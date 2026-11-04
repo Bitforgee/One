@@ -134,7 +134,7 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         var content = Usuario(f.Llm.UltimoCorpo)[^1].GetProperty("content");
         var partes = content.EnumerateArray().ToList();
         Assert.Equal(4, partes.Count);
-        Assert.Equal("""{"type":"text","text":"esse boleto está certo?"}""", partes[0].GetRawText().Replace("á", "á").Replace("á", "á"));
+        Assert.Equal("""{"type":"text","text":"esse boleto está certo?"}""", partes[0].GetRawText());
         Assert.Equal($$$"""{"type":"image_url","image_url":{"url":"data:image/jpeg;base64,{{{Convert.ToBase64String(jpg)}}}"}}""", partes[1].GetRawText());
         Assert.Equal($$$"""{"type":"image_url","image_url":{"url":"data:image/png;base64,{{{Convert.ToBase64String(png)}}}"}}""", partes[2].GetRawText());
         Assert.Equal($$$"""{"type":"file","file":{"filename":"anexo-3.pdf","file_data":"data:application/pdf;base64,{{{Convert.ToBase64String(pdf)}}}"}}""", partes[3].GetRawText());
