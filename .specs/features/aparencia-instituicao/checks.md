@@ -12,7 +12,7 @@ commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
 | --- | --- | --- |
 | `api.Tests` | xUnit v3 com `OneFactory` (`f.MinioFora()`, `f.Chaves()`, `f.Objeto()`); e-mail lido no Mailpit por `PrimeiroAcessoTests.EmailNoMailpit` ou um leitor da API do Mailpit no mesmo padrão | `docker compose up -d postgres mailpit minio`; uma só execução de `dotnet test` por vez |
 | `web/` unidade | Vitest (jsdom): `cd web && npx vitest run <arquivo> -t "<nome>"` | `npm --prefix web ci` |
-| `web/` arranjo | Playwright com a API simulada (`e2e/simulada.ts`, que passa a responder a aparência), medindo com `boundingBox()` e `getComputedStyle` em px CSS, tolerância de 1 px: `cd web && npx playwright test e2e/<arquivo> -g "<nome>"` | o `webServer` do `playwright.config.ts` |
+| `web/` arranjo | Playwright com a API simulada (`e2e/simulada.ts`, que passa a responder a aparência), medindo com `boundingBox()` e `getComputedStyle` em px CSS, tolerância de 1 px: `cd web && npx playwright test e2e/<arquivo> -g "<nome>"` | o `playwright.config.ts` não tem `webServer`: `npm --prefix web run build`, `npx vite preview --port 5199` em `web/` e `E2E_URL=http://localhost:5199` (alguns testes precisam do service worker do build) |
 | `web/` e2e real | Playwright contra uma imagem própria na porta 8085, no padrão de `arquivos-minio` e `anexos-assistente` | ver `## Handoff` |
 | barreiras | `dotnet build api` (CA1502, AD-018); `crapper` e `dryer` em `web/` (AD-018); mutação suspensa (AD-025) | `npm --prefix web run coverage` |
 
@@ -46,7 +46,8 @@ Um filtro que não seleciona teste nenhum sai com código 0 (L-002). O construto
    - `arranjo Assistente` (AC 38);
    - `painel no celular`, `painel cabeçalho` e `barra com fundo, borda e instituição` (AC 33);
    - `Matrículas: ... resultado em Alert ...` (AC 1);
-   - as asserções de texto de vazio e de `Spinner` das listas (AC 4, AC 45).
+   - as asserções de texto de vazio e de `Spinner` das listas (AC 4, AC 45);
+   - emenda aprovada pelo usuário em 04/11, depois do lote 2: `compositor visível com a conversa maior que a tela` e `cabeçalho: borda, título numa linha e botões de 36 px` (AC 2), `colunas largas somem no estreito`, `lista vazia centralizada` e `texto das linhas de 14 px` (AC 7), `valores de tipo e bordas` (AC 5), e a exceção com nome de `src/tabela.test.tsx` em `web/src/test/estrutura.test.ts`.
 
    Cada edição fica listada no `## Handoff` com o AC que a força.
 
