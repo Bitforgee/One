@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 69,
+  "next_id": 71,
   "lessons": [
     {
       "id": "L-001",
@@ -1242,6 +1242,42 @@
       ],
       "created": "2026-11-04T17:58:20Z",
       "last_seen": "2026-11-04T17:58:20Z"
+    },
+    {
+      "id": "L-069",
+      "key": "surviving_mutant::nao condicione uma assercao de arranjo a if await x count se o elemento some o teste passa sem medir nada afirme a contagem antes",
+      "text": "Não condicione uma asserção de arranjo a if (await x.count()); se o elemento some, o teste passa sem medir nada. Afirme a contagem antes.",
+      "signal": "surviving_mutant",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "aparencia-instituicao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/celular.spec.ts:95 (web/e2e)"
+      ],
+      "created": "2026-11-04T21:19:21Z",
+      "last_seen": "2026-11-04T21:19:21Z"
+    },
+    {
+      "id": "L-070",
+      "key": "ac_gap::de um check a cada frase de arranjo de screens ao escrever checks md inclusive colunas por largura posicao de icone e de faixa",
+      "text": "Dê um check a cada frase de arranjo de ## Screens ao escrever checks.md, inclusive colunas por largura, posição de ícone e de faixa.",
+      "signal": "ac_gap",
+      "scope": "specs/ui",
+      "status": "candidate",
+      "features": [
+        "aparencia-instituicao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "plan.md ## Screens (specs/ui)"
+      ],
+      "created": "2026-11-04T21:19:21Z",
+      "last_seen": "2026-11-04T21:19:21Z"
     }
   ]
 }

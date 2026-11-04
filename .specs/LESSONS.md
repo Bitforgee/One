@@ -420,6 +420,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md C16 (specs/coverage)
 - last seen: 2026-11-04T17:58:20Z
 
+### L-069 - Não condicione uma asserção de arranjo a if (await x.count()); se o elemento some, o teste passa sem medir nada. Afirme a contagem antes.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: aparencia-instituicao
+- evidence: web/e2e/celular.spec.ts:95 (web/e2e)
+- last seen: 2026-11-04T21:19:21Z
+
+### L-070 - Dê um check a cada frase de arranjo de ## Screens ao escrever checks.md, inclusive colunas por largura, posição de ícone e de faixa.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/ui` · harmful: 0
+- features: aparencia-instituicao
+- evidence: plan.md ## Screens (specs/ui)
+- last seen: 2026-11-04T21:19:21Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
