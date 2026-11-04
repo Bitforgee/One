@@ -146,7 +146,7 @@ Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "erro da API 
 **C34** - [x] A tela Assistente mostra, abaixo do campo, o texto literal "Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa." (AC 26)
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
-**C35** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
+**C35** - [x] [x] A suíte Vitest inteira e `npm --prefix web run build` passam. O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
@@ -163,10 +163,10 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Do
 **C38** - [x] Na tela do chamado, a transcrição mostra cada anexo do aluno como link com o nome, para `/api/conversas/anexos/{id}` (AC 29)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "transcrição mostra os anexos do aluno como links"`
 
-**C39** - De ponta a ponta na imagem própria (MinIO do compose, provedor sem chave), o aluno anexa um PNG à primeira mensagem e vê o link no balão. O download devolve o mesmo SHA-256 e `Content-Type` `image/png`. Depois de "Falar com atendente", o administrador abre o chamado, vê o link na transcrição e baixa os mesmos bytes (AC 1, AC 24, AC 29)
+**C39** - [x] De ponta a ponta na imagem própria (MinIO do compose, provedor sem chave), o aluno anexa um PNG à primeira mensagem e vê o link no balão. O download devolve o mesmo SHA-256 e `Content-Type` `image/png`. Depois de "Falar com atendente", o administrador abre o chamado, vê o link na transcrição e baixa os mesmos bytes (AC 1, AC 24, AC 29)
 Proof: `cd web && E2E_URL=http://localhost:8084 npx playwright test e2e/anexos.spec.ts -g "aluno anexa foto na conversa e a equipe baixa no chamado"`
 
-**C40** - A suíte e2e inteira passa contra a imagem própria (AC 5)
+**C40** - [x] A suíte e2e inteira passa contra a imagem própria (AC 5)
 Proof: `cd web && E2E_URL=http://localhost:8084 npx playwright test`
 
 ## Coverage
@@ -219,3 +219,8 @@ os testes novos. API: `Assistente.cs`, `NovaConversa.cs`, `NovaMensagem.cs`, `Co
 
 - S1 = ~45k, S2 entra com ~70k e S3 com ~88k no total, abaixo do orçamento de 150k: um construtor só, sem pergunta
 - Mecanismo: um construtor
+
+- **Boundary:** C2 a C40 fechados em `HEAD` (commits `5715f0a` API, `358de6a` web, `6008a2a` e2e e layout; este handoff vai no commit seguinte). Contagens: `api.Tests` 474, 473 verdes; Vitest 294 verdes (35 arquivos); e2e 94 verdes na imagem própria (porta 8084, instituição `e2e`; contêiner, imagem, banco `one_anexos_e2e`, bucket `one-anexos-e2e` e worktree removidos). **C1 fica aberto**: a única falha da suíte é `BuscaTests.Lotes_de_100_gravam_vetores`, que já falha em `<base>` (`5e2034f`), sem relação com a feature: o teste semeia `ProximaTentativa = DateTime.UtcNow.AddDays(-1)` (relógio real, 04/11) e o `Agendador` roda com o relógio simulado do `OneFactory` em 02/11, então nada vence. `<base>` = `5e2034f`; `RetratoTests.Tabela_de_rotas_igual_a_da_base` em `<base>`: 66 rotas, 63 de método único, 64 com autorização (agora 67, 64 e 65). C20 passa (HTTP 200, a `gpt-6-luna` descreveu o PDF e a imagem).
+- **Settled mid-build:** (1) `anexos` na transcrição só na resposta da equipe (`TranscricaoDaEquipe`), porque `ArquiteturaTests.Nenhum_corpo_tipado_object` congela as 3 propriedades de `TranscricaoDoAluno` (Landing linha 5, escrita depois do código; a aluna já vê os próprios anexos em `GET /api/conversas/{id}`); no retrato, só as linhas `ALUNO` da equipe ganham `"anexos":[]`, as do assistente não trazem o campo. (2) Edições obrigatórias em asserções existentes além da lista fechada, todas aditivas: `ArquiteturaTests` (`anexo_conversa` em `TabelasDaInstituicao`; 61→62 mensagens e handlers, `Assistente` 7→8, 64→65 `Map*`, 26→27 entidades, `AnexoConversa` em `EntidadesPorPasta`, `BaixarAnexoConversa` em `SemCorpoJson`, `Assistente.cs` e `BaixarAnexoConversa.cs` na lista de quem chama `Baixar`), `MediatorTests` (9,52→9,53), `SessaoTests` (59→60) e, no web, o literal novo da ajuda em `textos.test.tsx` (lista de textos visíveis). (3) `Entrada` continua aninhada em `NovaConversa` e `NovaMensagem` com `BindAsync` e `.Accepts<...>("application/json", "multipart/form-data")`, para o `Entrada_por_caso_de_uso` seguir valendo. (4) Limite de corpo por rota: `RequestSizeLimitAttribute` como metadata do endpoint (`.WithMetadata`), 31 MiB + 1 MiB de multipart; o `OneFactory` (TestServer) não impõe os 30 MB, então só o e2e prova o limite no Kestrel (3 x 10 MiB, 201). (5) Os objetos são gravados antes da mensagem (503 sem mensagem), o contrário do `ResponderChamado`; o `Assistente` lê os anexos por uma consulta ao `OneDb` e `Baixar(a.Chave)`. (6) O balão com anexos só entra depois do sucesso e os links vêm de `GET /api/conversas/{id}` (a resposta do envio não traz ids); sem anexos o fluxo antigo (balão antes da resposta) fica como era. (7) O texto de ajuda fica dentro da caixa do compositor, abaixo do campo, para o `arranjo.spec.ts` ("compositor perto do fundo") seguir verde. (8) `LinkDeAnexo.tsx` na raiz do `web/`, usado pelas fatias `assistente` e `chamados`. (9) No e2e o administrador ganha o papel de atendente da triagem para abrir o chamado.
+- **Abandoned:** `anexos` em `TranscricaoDoAluno`; `Content` de partes como objetos anônimos (`ArquiteturaTests.Objetos_anonimos_so_fora_das_respostas` conta 8 em `Assistente.cs`, viraram records); `EntradaMensagem` como tipo de topo (quebra `Entrada_por_caso_de_uso`); balão otimista também com anexos (o `400`/`413`/`415`/`503` precisa manter texto e selos).
+
