@@ -462,6 +462,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks C10 (api.Tests)
 - last seen: 2026-11-04T23:29:06Z
 
+### L-076 - Meça o alinhamento contra a borda que o check nomeia; usar um vizinho como substituto consome a tolerância e deixa passar um erro de 1 px.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: instituicoes-plataforma
+- evidence: web/e2e/instituicoes.spec.ts:22 (web/e2e)
+- last seen: 2026-11-04T23:49:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

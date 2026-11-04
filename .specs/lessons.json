@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 76,
+  "next_id": 77,
   "lessons": [
     {
       "id": "L-001",
@@ -1368,6 +1368,24 @@
       ],
       "created": "2026-11-04T23:29:06Z",
       "last_seen": "2026-11-04T23:29:06Z"
+    },
+    {
+      "id": "L-076",
+      "key": "spec_precision_gap::meca o alinhamento contra a borda que o check nomeia usar um vizinho como substituto consome a tolerancia e deixa passar um erro de 1 px",
+      "text": "Meça o alinhamento contra a borda que o check nomeia; usar um vizinho como substituto consome a tolerância e deixa passar um erro de 1 px.",
+      "signal": "spec_precision_gap",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "instituicoes-plataforma"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/instituicoes.spec.ts:22 (web/e2e)"
+      ],
+      "created": "2026-11-04T23:49:12Z",
+      "last_seen": "2026-11-04T23:49:12Z"
     }
   ]
 }

@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/instituicoes-plataforma/plan.md`
 
-38 checks em 5 slices · 4 one-way doors · 0 perguntas abertas
+38 checks em 6 slices · 5 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md`
 e este `checks.md`, gravado no `## Handoff`.
