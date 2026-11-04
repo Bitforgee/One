@@ -103,7 +103,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.P
 **C13** - [x] `PUT` com `cor` inválida responde `400` com `errors.cor` "Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela." e não grava nada, em 4 entradas: `224fa7` (sem `#`), `#224fa` (5 dígitos), `#ffd700` (contraste 1,4:1) e `#767676` + 1 grau, isto é `#777777` (contraste 4,48:1). Aceita `#767676` (4,54:1) e `#224fa7` (AC 13, door 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Cor_invalida_ou_sem_contraste_400"`
 
-**C14** - O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (12 limites nos dois lados da borda, 24 pedidos, mais o e-mail inválido) (emenda aprovada pelo usuário em 04/11, rodada 1):
+**C14** - [x] O `PUT` responde `400` no campo certo, com o limite no texto, e não grava nada. Cada limite é testado exatamente no valor aceito e no valor + 1 (12 limites nos dois lados da borda, 24 pedidos, mais o e-mail inválido) (emenda aprovada pelo usuário em 04/11, rodada 1):
 - tamanho máximo: `nomeCurto` 12, `login.titulo` 60, `login.frase` 160, cada `login.itens` 80, `assistente.nome` 40, `assistente.boasVindas` 300, cada `assistente.perguntas` 100, `contato.horario` 120, `contato.telefone` 30 e `contato.email` 120;
 - quantidade máxima: 3 `login.itens` e 4 `assistente.perguntas`;
 - `contato.email` "nao-e-email" (inválido) (AC 14)
@@ -252,7 +252,7 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no 
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
 
-**C51** - Um e-mail da fila `EmailSaida` de uma instituição com cor e logo (o caminho que envia os e-mails de aviso e, pelo mesmo `Email.Enviar`, o de primeiro acesso) chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega ` (emenda aprovada pelo usuário em 04/11, rodada 1)
+**C51** - [x] Um e-mail da fila `EmailSaida` de uma instituição com cor e logo (o caminho que envia os e-mails de aviso e, pelo mesmo `Email.Enviar`, o de primeiro acesso) chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega ` (emenda aprovada pelo usuário em 04/11, rodada 1)
 `; emenda aprovada pelo usuário em 04/11), e há uma parte `text/html` (AC 48, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Email_vai_com_texto_e_html"`
 
