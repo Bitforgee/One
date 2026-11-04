@@ -144,3 +144,6 @@ Tamanho: `Assistente.cs` (12 KB), `Conferencia.cs` (1,5 KB), `Pergunta.cs` (0,5 
 Bem abaixo do orçamento de 150k: um construtor só, sem pergunta.
 
 - Mecanismo: um construtor
+- **Boundary:** 301eb16 - 534 testes da API verdes (`dotnet test api.Tests`), `dotnet build api` sem erro (CA1502 ok).
+- **Settled mid-build:** nada.
+- **Abandoned:** nada. Nenhuma asserção existente mudou; nenhum teste comparava o texto inteiro de `Regras`.
