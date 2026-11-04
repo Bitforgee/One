@@ -385,8 +385,10 @@ test.describe('acesso', () => {
         await page.goto(caminho)
         const rotulo = `${caminho} a ${largura}`
         if (caminho === '/') {
-          const cartao = page.locator('[data-slot=card]')
-          await cartao.waitFor()
+          // AC 37: sem cartão; a ilustração, "One", a frase e o texto, centralizados no bloco de até 384 px
+          const titulo = page.getByRole('heading', { name: 'One' })
+          await titulo.waitFor()
+          const cartao = titulo.locator('xpath=../..')
           const c = await caixa(cartao)
           expect(c.width, rotulo).toBeLessThanOrEqual(384)
           expect(Math.abs(c.x + c.width / 2 - largura / 2), rotulo).toBeLessThanOrEqual(1)
@@ -1014,7 +1016,8 @@ test.describe('painel', () => {
         await page.route('**/api/indicadores*', (r) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(corpo) }))
         await page.setViewportSize({ width: w, height: 800 })
         await page.goto('/univag/indicadores')
-        const alerta = page.getByRole('main').getByRole('alert')
+        // AC 46: sem atendimentos, a ilustração e o texto no lugar do alerta, no mesmo bloco e abaixo da linha de ferramentas
+        const alerta = status === 200 ? page.getByRole('main').getByText('Sem atendimentos neste período.').locator('xpath=..') : page.getByRole('main').getByRole('alert')
         await alerta.waitFor()
         const rotulo = `${status} a ${w} px`
         const [a, f, bloco] = [await caixa(alerta), await caixa(page.locator('main form')), await caixa(page.locator('main > div > div').first())]
@@ -1181,7 +1184,11 @@ test.describe('painel', () => {
       const celula = page.locator('[data-slot=table-cell]', { hasText: 'Nenhum chamado na fila dos seus setores.' }) // célula de tabela ou de cartão (AC 7)
       await celula.waitFor()
       expect(await celula.evaluate((e) => getComputedStyle(e).textAlign), `${w} px: alinhamento`).toBe('center')
-      expect(Math.abs((await caixa(page.locator('[data-slot=table-row]').last())).height - 96 - (w < 768 ? 26 : 0)), `${w} px: altura da linha`).toBeLessThanOrEqual(1) // o cartão soma o recuo de 12 px e a borda de 1 px em cima e embaixo
+      // AC 45: a ilustração e o título ficam no centro da célula (a linha deixou de ter 96 px por causa do desenho e do título)
+      const [c, titulo, desenho] = [await caixa(celula), await caixa(celula.getByText('Fila em dia')), await caixa(celula.locator('svg[data-ilustracao]'))]
+      expect(Math.abs(titulo.x + titulo.width / 2 - (c.x + c.width / 2)), `${w} px: título centrado`).toBeLessThanOrEqual(1)
+      expect(Math.abs(desenho.x + desenho.width / 2 - (c.x + c.width / 2)), `${w} px: ilustração centrada`).toBeLessThanOrEqual(1)
+      expect(desenho.y + desenho.height, `${w} px: ilustração acima do título`).toBeLessThanOrEqual(titulo.y + 1)
     }
   })
 
@@ -1375,14 +1382,16 @@ test.describe('entrada institucional', () => {
       for (const [w, recuo] of [[360, 24], [767, 24], [768, 40], [1280, 40]] as const) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
-        const one = marca(page).getByText('One', { exact: true })
-        const o = await caixa(one)
-        // a palavra no lugar do ícone de capelo: sem svg, sem link nem botão, no canto do recuo
+        // AC 32 e AC 35: no lugar da palavra "One", as iniciais num quadrado de 40 px em bg-primary; abaixo de 1024 px, a faixa de 128 px vem antes
+        const sigla = marca(page).locator('span')
+        const o = await caixa(sigla)
+        expect(await marca(page).getByText('One').count(), `${r}: sem "One"`).toBe(0)
         expect(await marca(page).locator('svg').count(), `${r}: sem ícone`).toBe(0)
-        expect(await estilo(one, 'font-size', 'font-weight', 'color'), `${r}: "One"`).toEqual(['18px', '700', await cor(page, '--foreground')])
-        expect(await one.locator('xpath=ancestor-or-self::a | ancestor-or-self::button').count(), `${r}: sem link nem botão`).toBe(0)
+        expect(await estilo(sigla, 'width', 'height', 'background-color', 'font-weight'), `${r}: iniciais`).toEqual(['40px', '40px', await cor(page, '--primary'), '700'])
+        expect(await sigla.textContent(), `${r}: iniciais`).toBe('CG')
+        expect(await sigla.locator('xpath=ancestor-or-self::a | ancestor-or-self::button').count(), `${r}: sem link nem botão`).toBe(0)
         perto(o.x, recuo, `${r}: x da linha`)
-        perto(o.y, recuo, `${r}: topo`)
+        perto(o.y, recuo + (w < 1024 ? 128 : 0), `${r}: topo`)
       }
   })
 
@@ -1533,7 +1542,7 @@ test.describe('entrada institucional', () => {
       for (const [w, h] of [[1024, 740], [1440, 900]] as const) {
         await ir(page, caminho, w, h)
         const r = `${caminho} a ${w}x${h}`
-        const [p, c] = [await caixa(painel(page)), await caixa(painel(page).locator('> div'))]
+        const [p, c] = [await caixa(painel(page)), await caixa(page.locator('h2').locator('xpath=..'))]
         perto(c.y + c.height, p.y + p.height - 40, `${r}: base`)
         perto(c.x, w / 2 + 41, `${r}: x`)
         expect(c.width, `${r}: largura`).toBeLessThanOrEqual(448 + 1)

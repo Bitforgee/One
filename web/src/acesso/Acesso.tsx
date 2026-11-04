@@ -49,10 +49,13 @@ export function Raiz() {
 }
 
 // O logo (até 40 px de altura) ou, sem ele, as iniciais da instituição num quadrado bg-primary (AC 32).
-function Identidade({ slug, d, className }: { slug?: string; d?: InstituicaoPublica; className?: string }) {
-  if (!slug || !d) return <div className="h-10" />
-  if (d.imagens.logo) return <img src={urlDaImagem(slug, 'logo', d.imagens.logo)} alt={d.nome} className={`h-10 w-auto max-w-full self-start object-contain ${className ?? ''}`} />
-  return <Sigla nome={d.nome} icone={null} className="size-10" />
+function Identidade({ slug, d, className = '' }: { slug?: string; d?: InstituicaoPublica; className?: string }) {
+  const logo = slug && d?.imagens.logo
+  return (
+    <div className={`flex h-10 items-center ${className}`}>
+      {logo ? <img src={urlDaImagem(slug, 'logo', logo)} alt={d.nome} className="h-10 w-auto max-w-full object-contain" /> : d && <Sigla nome={d.nome} icone={null} className="size-10" />}
+    </div>
+  )
 }
 
 // Abaixo de 1024 px: uma faixa de 128 px com a imagem do login (ou a ilustração) e o logo.
@@ -71,16 +74,19 @@ function Faixa({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
 }
 
 // Os textos do painel: os da instituição ou, campo a campo, os de base (AC 36).
+const Sobre = { raiz: 'text-white', frase: 'text-white/85', linha: 'border-white/30' }
+const Sobrio = { raiz: '', frase: 'text-muted-foreground', linha: '' }
+
 function Textos({ d, escuro }: { d?: InstituicaoPublica; escuro: boolean }) {
   const itens = d?.login.itens.length ? d.login.itens : Itens
-  const linha = escuro ? 'border-white/30' : ''
+  const cor = escuro ? Sobre : Sobrio
   return (
-    <div className="max-w-md">
+    <div className={`relative mt-auto max-w-md ${cor.raiz}`}>
       <h2 className="text-3xl font-semibold tracking-tight">{d?.login.titulo ?? TituloBase}</h2>
-      <p className={`mt-2 ${escuro ? 'text-white/85' : 'text-muted-foreground'}`}>{d?.login.frase ?? Frase}</p>
-      <ul className={`mt-6 border-t ${linha}`}>
+      <p className={`mt-2 ${cor.frase}`}>{d?.login.frase ?? Frase}</p>
+      <ul className={`mt-6 border-t ${cor.linha}`}>
         {itens.map((texto) => (
-          <li key={texto} className={`border-b py-3 ${linha}`}>
+          <li key={texto} className={`border-b py-3 ${cor.linha}`}>
             {texto}
           </li>
         ))}
@@ -101,9 +107,8 @@ function Painel({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
           <BoasVindas className="mx-auto h-48 w-full text-muted-foreground" />
         </div>
       )}
-      <div className={imagem ? 'relative -m-10 mt-auto bg-black/70 p-10 text-white' : 'mt-auto'}>
-        <Textos d={d} escuro={!!imagem} />
-      </div>
+      {imagem && <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3/4 bg-linear-to-t from-black/85 via-black/65 to-transparent" />}
+      <Textos d={d} escuro={!!imagem} />
     </div>
   )
 }
@@ -113,10 +118,10 @@ function Entrada({ titulo, descricao, children }: { titulo: ReactNode; descricao
   const { slug } = useParams()
   const { data } = useInstituicao(slug)
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="grid min-h-svh max-lg:grid-rows-[auto_1fr] lg:grid-cols-2">
       <Faixa slug={slug} d={data} />
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <Identidade slug={slug} d={data} className="max-lg:hidden" />
+        <Identidade slug={slug} d={data} className={data?.imagens.logo ? 'max-lg:hidden' : ''} />
         <div className="flex flex-1 items-center justify-center">
           <div className="flex w-full max-w-xs flex-col gap-6">
             <H1>{titulo}</H1>

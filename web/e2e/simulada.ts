@@ -22,14 +22,31 @@ export const chamadoSimulado = (estado = 'EM_ATENDIMENTO') => ({
   acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
 })
 
+// A aparência de GET /api/instituicoes/univag sem nada definido e com tudo definido (aparencia-instituicao AC 28).
+export const semAparencia = {
+  nomeCurto: null, cor: null, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, boasVindas: null, perguntas: [] },
+  contato: { horario: null, telefone: null, email: null }, imagens: { logo: null, icone: null, login: null, assistente: null },
+}
+export const comAparencia = {
+  nomeCurto: 'Univag', cor: '#8a1538', login: { titulo: 'Fale com a Univag', frase: 'Aqui você resolve tudo sobre a sua vida acadêmica.', itens: ['Boletos', 'Matrícula', 'Documentos'] },
+  assistente: { nome: 'Vagner', boasVindas: 'Oi! Posso ajudar com boletos e matrícula.', perguntas: ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?'] },
+  contato: { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: 'atendimento@univag.edu.br' }, imagens: { logo: 3, icone: 2, login: 1, assistente: 4 },
+}
+// um PNG de 1 x 1 para as rotas de imagem
+const Png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAwS2OUAAAAABJRU5ErkJggg==', 'base64')
+
 // API simulada: o teste mede só o layout de cada tela.
+// `aparencia` é o que GET /api/instituicoes/univag e GET /api/admin/aparencia devolvem ao lado do nome.
 // Com `extremos`, Fila, Artigos, Documentos e Usuários ganham uma linha com os textos longos de C13.
-export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false) {
+export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false, aparencia: object = semAparencia) {
   const mais = <T,>(linhas: T[], extra: T) => (extremos ? [...linhas, extra] : linhas)
   await page.route('**/api/**', (rota) => {
     const caminho = new URL(rota.request().url()).pathname
     const json = (status: number, corpo: unknown) => rota.fulfill({ status, contentType: 'application/json', body: JSON.stringify(corpo) })
-    if (caminho === '/api/instituicoes/univag') return json(200, { nome: 'Centro Universitário de Várzea Grande' })
+    if (caminho === '/api/instituicoes/univag') return json(200, { nome: 'Centro Universitário de Várzea Grande', ...aparencia })
+    if (/^\/api\/instituicoes\/univag\/imagens\/\w+$/.test(caminho)) return rota.fulfill({ status: 200, contentType: 'image/png', body: Png })
+    if (caminho === '/api/admin/aparencia') return json(200, aparencia)
+    if (caminho.startsWith('/api/admin/aparencia/imagens/')) return json(200, { tipo: caminho.split('/').pop(), versao: 4 })
     if (caminho === '/api/auth/me')
       return json(200, {
         id: 1,
@@ -113,6 +130,7 @@ export const Telas: [string, string, (p: Page) => Promise<void>][] = [
   ],
   ['Cadastros', '/univag/cadastros', async (p) => void (await p.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').waitFor())],
   ['Raiz', '/', async (p) => void (await p.getByText('Abra o endereço da sua instituição, por exemplo /univag.').waitFor())],
+  ['Aparência', '/univag/aparencia', async (p) => void (await p.getByLabel('Cor principal').waitFor())],
   ['Primeiro acesso', '/univag/primeiro-acesso', async (p) => void (await p.getByLabel('CPF').waitFor())],
   ['Criar senha', '/univag/definir-senha?token=x', async (p) => void (await p.getByLabel('Nova senha').waitFor())],
   ['Trocar senha', '/univag/trocar-senha', async (p) => void (await p.getByLabel('Senha atual').waitFor())],

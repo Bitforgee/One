@@ -40,7 +40,8 @@ describe('acesso', () => {
     for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']) {
       const { unmount } = abrir(caminho)
       const painel = (await screen.findByRole('heading', { name: 'Atendimento ao estudante', hidden: true })).parentElement!.parentElement!
-      expect(painel.querySelectorAll('svg'), caminho).toHaveLength(0)
+      // AC 47: sem imagem de login, o painel traz a ilustração Boas-vindas e mais nenhum ícone
+      expect([...painel.querySelectorAll('svg')].map((v) => v.getAttribute('data-ilustracao')), caminho).toEqual(['boas-vindas'])
       expect(painel.querySelectorAll('a, button, input, select, textarea, [tabindex]'), caminho).toHaveLength(0)
       unmount()
     }
