@@ -374,7 +374,7 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "inicia
 | `POST /api/admin/aparencia/imagens/{tipo}` statuses (8) | 200 C15 · 400 C18 · 401 C22 · 403 C22 · 404 C19 · 413 C17 · 415 C16 · 503 C20 | - |
 | `DELETE /api/admin/aparencia/imagens/{tipo}` statuses (4) | 204 C21 · 401 C22 · 403 C22 · 404 C19, C21 | - |
 | tipos de imagem (4) | `logo` C15, C16, C17 · `icone` C16, C17, C18 · `login` C16, C17 · `assistente` C16, C17 | - |
-| limites de texto e e-mail inválido (13) | C14, table-driven sobre os 12 nos dois lados da borda e o e-mail inválido | - |
+| limites de texto e e-mail inválido (13) | C14, table-driven sobre os 13 (12 limites nos dois lados da borda e o e-mail inválido) | - |
 | bordas da cor (6) | sem `#` C13 · 5 dígitos C13 · `#ffd700` C13 · `#777777` C13 · `#767676` aceito C13 · `#224fa7` aceito C13 | - |
 | temas com cor (3) e sem cor (2) | Claro C33 · Escuro C33 · Preto C33 · sem cor Claro C33 · sem cor Escuro C33 | - |
 | tokens derivados (4) | `--primary` C34 · `--sidebar-primary` C34 · `--primary-subtle` C34 · `--ring` C34 | - |
