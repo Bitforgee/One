@@ -38,88 +38,88 @@ leem `content` com `GetString()` em mensagens sem anexo não mudam (C7).
 **C1** - A suíte inteira da API passa em `HEAD`; as únicas edições em asserções existentes são as da lista fechada acima (AC 5)
 Proof: `dotnet test api.Tests`
 
-**C2** - `POST /api/conversas` em `multipart/form-data` com `mensagem` "esse boleto está certo?" e 1 PNG em `anexos` responde `201` com exatamente as chaves `conversaId` e `resposta {tipo, texto}`. Grava 1 `AnexoConversa` ligado à mensagem do aluno, com `nome` igual ao nome enviado, `tipo` `image/png`, `tamanho` igual ao número de bytes e `hash` igual ao SHA-256 hexadecimal minúsculo dos bytes. A `chave` começa com `{instituicaoId}/anexos-conversa/`, e `f.Objeto(chave)` devolve os mesmos bytes (AC 1, door 1)
+**C2** - [x] `POST /api/conversas` em `multipart/form-data` com `mensagem` "esse boleto está certo?" e 1 PNG em `anexos` responde `201` com exatamente as chaves `conversaId` e `resposta {tipo, texto}`. Grava 1 `AnexoConversa` ligado à mensagem do aluno, com `nome` igual ao nome enviado, `tipo` `image/png`, `tamanho` igual ao número de bytes e `hash` igual ao SHA-256 hexadecimal minúsculo dos bytes. A `chave` começa com `{instituicaoId}/anexos-conversa/`, e `f.Objeto(chave)` devolve os mesmos bytes (AC 1, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Primeira_mensagem_com_anexo_grava_objeto_e_linha"`
 
-**C3** - `POST /api/conversas/{id}/mensagens` em multipart com `mensagem` e 3 arquivos (JPEG, PNG, PDF) responde `200` com exatamente a chave `resposta {tipo, texto}`, e grava 3 `AnexoConversa` na mensagem do aluno, com os tipos `image/jpeg`, `image/png` e `application/pdf` (AC 1, door 2)
+**C3** - [x] `POST /api/conversas/{id}/mensagens` em multipart com `mensagem` e 3 arquivos (JPEG, PNG, PDF) responde `200` com exatamente a chave `resposta {tipo, texto}`, e grava 3 `AnexoConversa` na mensagem do aluno, com os tipos `image/jpeg`, `image/png` e `application/pdf` (AC 1, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Mensagem_com_tres_anexos_grava_os_tres"`
 
-**C4** - No corpo enviado ao provedor (`f.Llm.UltimoCorpo`), a mensagem `user` com JPEG, PNG e PDF tem `content` como lista de exatamente 4 partes, nesta ordem: `{"type":"text","text":<texto mascarado>}`; `{"type":"image_url","image_url":{"url":"data:image/jpeg;base64,<base64 dos bytes>"}}`; o mesmo para `image/png`; e `{"type":"file","file":{"filename":"anexo-3.pdf","file_data":"data:application/pdf;base64,<base64 dos bytes>"}}`. Nenhuma parte tem a chave `detail`. O `<n>` de `anexo-<n>.pdf` é a posição do anexo na conversa, de 1 a 3 (AC 2, door 3)
+**C4** - [x] No corpo enviado ao provedor (`f.Llm.UltimoCorpo`), a mensagem `user` com JPEG, PNG e PDF tem `content` como lista de exatamente 4 partes, nesta ordem: `{"type":"text","text":<texto mascarado>}`; `{"type":"image_url","image_url":{"url":"data:image/jpeg;base64,<base64 dos bytes>"}}`; o mesmo para `image/png`; e `{"type":"file","file":{"filename":"anexo-3.pdf","file_data":"data:application/pdf;base64,<base64 dos bytes>"}}`. Nenhuma parte tem a chave `detail`. O `<n>` de `anexo-<n>.pdf` é a posição do anexo na conversa, de 1 a 3 (AC 2, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Anexos_vao_como_partes_da_mensagem"`
 
-**C5** - Num turno seguinte sem arquivo, o anexo de uma mensagem do aluno que ainda está entre as 10 últimas volta no corpo como parte daquela mensagem. Quando a conversa semeada tem a mensagem com anexo fora das 10 últimas, nenhuma parte `image_url` nem `file` vai no corpo (AC 2)
+**C5** - [x] Num turno seguinte sem arquivo, o anexo de uma mensagem do aluno que ainda está entre as 10 últimas volta no corpo como parte daquela mensagem. Quando a conversa semeada tem a mensagem com anexo fora das 10 últimas, nenhuma parte `image_url` nem `file` vai no corpo (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Anexo_reenviado_enquanto_esta_nas_10_ultimas"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Anexo_fora_das_10_ultimas_nao_vai"`
 
-**C6** - Com o anexo "boleto-maria-silva-12345678909.pdf" e o texto "meu cpf 123.456.789-09", o corpo do provedor não contém "boleto-maria-silva", "12345678909" nem "123.456.789-09", e a parte `text` é "meu cpf [número removido]" (AC 3)
+**C6** - [x] Com o anexo "boleto-maria-silva-12345678909.pdf" e o texto "meu cpf 123.456.789-09", o corpo do provedor não contém "boleto-maria-silva", "12345678909" nem "123.456.789-09", e a parte `text` é "meu cpf [número removido]" (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Nome_original_do_anexo_nao_vai_ao_provedor"`
 
-**C7** - Numa conversa sem anexo, todo `content` das mensagens `user` no corpo do provedor é uma string JSON (`ValueKind.String`), e as asserções de `LlmRequisicaoTests` que já existiam passam sem edição (AC 4)
+**C7** - [x] Numa conversa sem anexo, todo `content` das mensagens `user` no corpo do provedor é uma string JSON (`ValueKind.String`), e as asserções de `LlmRequisicaoTests` que já existiam passam sem edição (AC 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Sem_anexo_content_continua_texto"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests"`
 
-**C8** - O corpo JSON `{ "mensagem": "..." }` continua funcionando nas duas rotas: `ConversaTests` passa inteiro sem edição, e os retratos de sucesso de `POST /api/conversas` e `POST /api/conversas/{id}/mensagens` não mudam (AC 5, door 2)
+**C8** - [x] O corpo JSON `{ "mensagem": "..." }` continua funcionando nas duas rotas: `ConversaTests` passa inteiro sem edição, e os retratos de sucesso de `POST /api/conversas` e `POST /api/conversas/{id}/mensagens` não mudam (AC 5, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConversaTests"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base"`
 
-**C9** - A primeira mensagem `system` do corpo contém literalmente a linha `8. Anexos do aluno servem só para entender o caso; não são fontes. Não copie trechos de anexos nem repita dados pessoais que aparecem neles.` (AC 6)
+**C9** - [x] A primeira mensagem `system` do corpo contém literalmente a linha `8. Anexos do aluno servem só para entender o caso; não são fontes. Não copie trechos de anexos nem repita dados pessoais que aparecem neles.` (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Regra_8_dos_anexos_no_prompt"`
 
-**C10** - Quando o provedor simulado devolve `tipo` `resposta` com um trecho que só existe no texto do anexo e não na fonte citada, a API responde `tipo` `sem_base` com o texto fixo de `Textos.SemBase`, e o log registra o motivo `trecho_invalido` (AC 7)
+**C10** - [x] Quando o provedor simulado devolve `tipo` `resposta` com um trecho que só existe no texto do anexo e não na fonte citada, a API responde `tipo` `sem_base` com o texto fixo de `Textos.SemBase`, e o log registra o motivo `trecho_invalido` (AC 7)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Trecho_copiado_do_anexo_vira_sem_base"`
 
-**C11** - Um arquivo de 10 MiB + 1 byte responde `413` com `detail` "O arquivo {nome} passa de 10 MB." nas duas rotas. Nos dois pedidos, a contagem de `MensagemConversa` e de `AnexoConversa` e a lista `f.Chaves()` ficam iguais às de antes, e o provedor não é chamado. Um arquivo de exatamente 10 MiB é aceito (AC 8)
+**C11** - [x] Um arquivo de 10 MiB + 1 byte responde `413` com `detail` "O arquivo {nome} passa de 10 MB." nas duas rotas. Nos dois pedidos, a contagem de `MensagemConversa` e de `AnexoConversa` e a lista `f.Chaves()` ficam iguais às de antes, e o provedor não é chamado. Um arquivo de exatamente 10 MiB é aceito (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Arquivo_acima_de_10_MB_413_sem_gravar"`
 
-**C12** - Responde `415` com `detail` "O arquivo {nome} não é PDF, JPG nem PNG." nas duas rotas para 2 entradas: bytes de GIF (`GIF89a`) e um `foto.png` com conteúdo de texto. Nos dois pedidos, nada é gravado (mensagem, anexo, objeto) e o provedor não é chamado (AC 9)
+**C12** - [x] Responde `415` com `detail` "O arquivo {nome} não é PDF, JPG nem PNG." nas duas rotas para 2 entradas: bytes de GIF (`GIF89a`) e um `foto.png` com conteúdo de texto. Nos dois pedidos, nada é gravado (mensagem, anexo, objeto) e o provedor não é chamado (AC 9)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tipo_recusado_415_sem_gravar"`
 
-**C13** - O limite de 3 anexos por conversa, em 3 casos. A primeira mensagem com 4 arquivos responde `400` com `errors.anexos` "A conversa aceita até 3 anexos.". Uma conversa com 2 anexos que recebe mais 2 responde o mesmo `400`. Uma conversa com 2 que recebe mais 1 responde `200`. Nos dois `400`, nada é gravado e o provedor não é chamado (AC 10)
+**C13** - [x] O limite de 3 anexos por conversa, em 3 casos. A primeira mensagem com 4 arquivos responde `400` com `errors.anexos` "A conversa aceita até 3 anexos.". Uma conversa com 2 anexos que recebe mais 2 responde o mesmo `400`. Uma conversa com 2 que recebe mais 1 responde `200`. Nos dois `400`, nada é gravado e o provedor não é chamado (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Quarto_anexo_400_sem_gravar"`
 
-**C14** - Com 1 anexo válido, `mensagem` vazia e `mensagem` de 1001 caracteres respondem `400` com `errors.mensagem` "A mensagem deve ter de 1 a 1000 caracteres.", sem objeto novo em `f.Chaves()` (AC 11)
+**C14** - [x] Com 1 anexo válido, `mensagem` vazia e `mensagem` de 1001 caracteres respondem `400` com `errors.mensagem` "A mensagem deve ter de 1 a 1000 caracteres.", sem objeto novo em `f.Chaves()` (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Texto_invalido_com_anexo_400_sem_gravar"`
 
-**C15** - Com 1 anexo válido, os 3 casos de hoje respondem igual ao JSON e sem objeto novo: conversa encerrada `409` "Esta conversa já foi encerrada.", conversa de outro aluno `404` "Conversa não encontrada." e conversa com 10 mensagens do aluno `409` "A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre." (AC 12)
+**C15** - [x] Com 1 anexo válido, os 3 casos de hoje respondem igual ao JSON e sem objeto novo: conversa encerrada `409` "Esta conversa já foi encerrada.", conversa de outro aluno `404` "Conversa não encontrada." e conversa com 10 mensagens do aluno `409` "A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre." (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Recusas_de_hoje_com_anexo_sem_gravar"`
 
-**C16** - Com `f.MinioFora()`, `POST /api/conversas/{id}/mensagens` com 1 anexo responde `503` com `detail` "Armazenamento de arquivos indisponível.". A contagem de `MensagemConversa` da conversa não muda e o provedor não é chamado (AC 13)
+**C16** - [x] Com `f.MinioFora()`, `POST /api/conversas/{id}/mensagens` com 1 anexo responde `503` com `detail` "Armazenamento de arquivos indisponível.". A contagem de `MensagemConversa` da conversa não muda e o provedor não é chamado (AC 13)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Minio_fora_ao_gravar_503_sem_mensagem"`
 
-**C17** - Numa conversa com 1 anexo já gravado, uma mensagem nova sem arquivo, com `f.MinioFora()`, responde `200` com `tipo` `sem_base` e o texto de `Textos.SemBase`. O log tem o motivo `anexo_indisponivel` com instituição e conversa, e `f.Llm.Corpos` (chat) não cresce (AC 14)
+**C17** - [x] Numa conversa com 1 anexo já gravado, uma mensagem nova sem arquivo, com `f.MinioFora()`, responde `200` com `tipo` `sem_base` e o texto de `Textos.SemBase`. O log tem o motivo `anexo_indisponivel` com instituição e conversa, e `f.Llm.Corpos` (chat) não cresce (AC 14)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Minio_fora_ao_ler_anexo_sem_base_sem_chamar_provedor"`
 
-**C18** - A linha de log "Chamada ao provedor de IA" traz o campo `Anexos` com 3 num turno que mandou 3 anexos e com 0 numa conversa sem anexo (AC 15)
+**C18** - [x] A linha de log "Chamada ao provedor de IA" traz o campo `Anexos` com 3 num turno que mandou 3 anexos e com 0 numa conversa sem anexo (AC 15)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~LlmRequisicaoTests.Log_traz_a_quantidade_de_anexos"`
 
-**C19** - Um pedido com 3 arquivos de exatamente 10 MiB cada (PNG pela assinatura) responde `201`, e não o `413` do limite de corpo do servidor (AC 16)
+**C19** - [x] Um pedido com 3 arquivos de exatamente 10 MiB cada (PNG pela assinatura) responde `201`, e não o `413` do limite de corpo do servidor (AC 16)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tres_arquivos_de_10_MB_aceitos"`
 
-**C20** - A OpenAI real aceita a forma da porta 3 com o modelo de `api/appsettings.json` (`gpt-6-luna`): um pedido com `reasoning_effort` `none`, `response_format` `json_object`, um PNG em `image_url` com data URL e um PDF em `file` com `file_data` e `filename` `anexo-1.pdf` responde `200` com `choices[0].message.content` não vazio. O script sai 0, e sai 1 sem a chave (door 3)
+**C20** - [x] A OpenAI real aceita a forma da porta 3 com o modelo de `api/appsettings.json` (`gpt-6-luna`): um pedido com `reasoning_effort` `none`, `response_format` `json_object`, um PNG em `image_url` com data URL e um PDF em `file` com `file_data` e `filename` `anexo-1.pdf` responde `200` com `choices[0].message.content` não vazio. O script sai 0, e sai 1 sem a chave (door 3)
 Proof: `python .specs/features/anexos-assistente/provedor_aceita_anexos.py`
 
-**C21** - `dotnet build api` passa com a barreira CA1502 (nenhum método acima de 10 de complexidade) e sem migração pendente (AD-018)
+**C21** - [x] `dotnet build api` passa com a barreira CA1502 (nenhum método acima de 10 de complexidade) e sem migração pendente (AD-018)
 Proof: `dotnet build api`
 Proof: `dotnet ef migrations has-pending-model-changes --project api`
 
 ### S2 - O aluno vê e baixa os anexos na conversa (P1) · ~8 files · ~80 KB · ~25k
 
-**C22** - `GET /api/conversas/{id}` traz em cada mensagem `anexos`, cada item com exatamente as chaves `id`, `nome`, `tipo` e `tamanho`, na ordem de envio. A mensagem sem anexo traz `[]`, e o corpo não contém `chave` nem `hash` (AC 17)
+**C22** - [x] `GET /api/conversas/{id}` traz em cada mensagem `anexos`, cada item com exatamente as chaves `id`, `nome`, `tipo` e `tamanho`, na ordem de envio. A mensagem sem anexo traz `[]`, e o corpo não contém `chave` nem `hash` (AC 17)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Ver_conversa_lista_anexos_sem_chave_nem_hash"`
 
-**C23** - O aluno dono pede `GET /api/conversas/anexos/{id}` e recebe `200`, com os mesmos bytes enviados, `Content-Type` igual ao `tipo`, `Content-Disposition` com o `nome` e `Content-Length` igual ao `tamanho` (AC 18, door 4)
+**C23** - [x] O aluno dono pede `GET /api/conversas/anexos/{id}` e recebe `200`, com os mesmos bytes enviados, `Content-Type` igual ao `tipo`, `Content-Disposition` com o `nome` e `Content-Length` igual ao `tamanho` (AC 18, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Download_pelo_aluno_dono"`
 
-**C24** - `GET /api/conversas/anexos/{id}` responde `404` com `detail` "Anexo não encontrado." em 5 casos, sem ler objeto (`f.LeiturasDeObjeto` não muda): outro aluno da mesma instituição; atendente da instituição com a conversa sem chamado; atendente de outro setor que não abre o chamado criado da conversa; usuário de outra instituição; id que não existe (AC 19, door 4)
+**C24** - [x] `GET /api/conversas/anexos/{id}` responde `404` com `detail` "Anexo não encontrado." em 5 casos, sem ler objeto (`f.LeiturasDeObjeto` não muda): outro aluno da mesma instituição; atendente da instituição com a conversa sem chamado; atendente de outro setor que não abre o chamado criado da conversa; usuário de outra instituição; id que não existe (AC 19, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Download_negado_404_sem_abrir_objeto"`
 
-**C25** - Com `f.MinioFora()`, o aluno dono pede `GET /api/conversas/anexos/{id}` e recebe `503` (AC 20)
+**C25** - [x] Com `f.MinioFora()`, o aluno dono pede `GET /api/conversas/anexos/{id}` e recebe `503` (AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Download_com_minio_fora_503"`
 
-**C26** - `api.Tests/Retratos/rotas.txt` ganha exatamente a linha `GET /api/conversas/anexos/{id:long} anonimo=False autorizacao=True limite=-` e não perde nenhuma. Em `RetratoTests.Tabela_de_rotas_igual_a_da_base`, cada número que conta essa rota sobe 1 (os valores de `<base>` ficam gravados no `## Handoff`, L-021) e nenhuma outra asserção muda (Surface)
+**C26** - [x] `api.Tests/Retratos/rotas.txt` ganha exatamente a linha `GET /api/conversas/anexos/{id:long} anonimo=False autorizacao=True limite=-` e não perde nenhuma. Em `RetratoTests.Tabela_de_rotas_igual_a_da_base`, cada número que conta essa rota sobe 1 (os valores de `<base>` ficam gravados no `## Handoff`, L-021) e nenhuma outra asserção muda (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
-**C27** - A tabela `anexo_conversa` tem `instituicao_id` com o filtro global, colunas em snake_case e `mensagem_conversa_id` não nulo, com chave estrangeira para `mensagem_conversa` (Relations, door 1)
+**C27** - [x] A tabela `anexo_conversa` tem `instituicao_id` com o filtro global, colunas em snake_case e `mensagem_conversa_id` não nulo, com chave estrangeira para `mensagem_conversa` (Relations, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Tabelas_snake_case_e_datas_timestamptz"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Tabela_anexo_conversa_com_fk_nao_nula"`
@@ -154,10 +154,10 @@ Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/c
 
 ### S3 - O atendente recebe os anexos no chamado transferido (P1) · ~5 files · ~60 KB · ~18k
 
-**C36** - `GET /api/chamados/{numero}`, pedido pelo atendente do setor de um chamado transferido de uma conversa com 1 anexo, traz `anexos` com exatamente `id`, `nome`, `tipo` e `tamanho` na linha da transcrição do aluno que anexou, e `[]` nas outras linhas do aluno (AC 27)
+**C36** - [x] `GET /api/chamados/{numero}`, pedido pelo atendente do setor de um chamado transferido de uma conversa com 1 anexo, traz `anexos` com exatamente `id`, `nome`, `tipo` e `tamanho` na linha da transcrição do aluno que anexou, e `[]` nas outras linhas do aluno (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Transcricao_do_chamado_traz_anexos_do_aluno"`
 
-**C37** - O atendente que abre esse chamado pede `GET /api/conversas/anexos/{id}` e recebe `200` com os mesmos bytes (AC 28, door 4)
+**C37** - [x] O atendente que abre esse chamado pede `GET /api/conversas/anexos/{id}` e recebe `200` com os mesmos bytes (AC 28, door 4)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AnexoConversaTests.Download_pelo_atendente_do_chamado"`
 
 **C38** - Na tela do chamado, a transcrição mostra cada anexo do aluno como link com o nome, para `/api/conversas/anexos/{id}` (AC 29)

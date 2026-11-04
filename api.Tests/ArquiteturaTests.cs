@@ -16,7 +16,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "usuario", "usuario_papel", "setor", "atendente_setor", "curso", "matricula", "categoria", "regra_roteamento",
         "artigo", "versao_artigo", "token_acesso", "conversa", "mensagem_conversa", "citacao_artigo", "chamado",
-        "mensagem_chamado", "anexo", "evento_chamado", "resposta_pronta", "email_saida",
+        "mensagem_chamado", "anexo", "anexo_conversa", "evento_chamado", "resposta_pronta", "email_saida",
         "documento", "versao_documento", "trecho_fonte", "subscricao_push", "push_saida",
     ];
 
@@ -368,8 +368,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Um_arquivo_por_caso_de_uso()
     {
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(61, mensagens.Count);
-        var porFatia = new Dictionary<string, int> { ["Acesso"] = 6, ["Assistente"] = 7, ["Chamados"] = 16, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 20, ["Instituicoes"] = 0 };
+        Assert.Equal(62, mensagens.Count);
+        var porFatia = new Dictionary<string, int> { ["Acesso"] = 6, ["Assistente"] = 8, ["Chamados"] = 16, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 20, ["Instituicoes"] = 0 };
         foreach (var (fatia, n) in porFatia)
             Assert.True(mensagens.Count(t => t.Namespace == $"One.Api.{fatia}") == n, $"{fatia}: {mensagens.Count(t => t.Namespace == $"One.Api.{fatia}")}, esperado {n}");
         var declaraMensagem = new Regex(@"\b(class|record|struct)\s+\w+[^{;]*?:\s*[^{;]*?(\bIRequest<|\bIAcaoChamado\b)");
@@ -392,7 +392,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto)
             .Select(t => (handler: t, contrato: Fechado(t, typeof(Mediator.IRequestHandler<,>)))).Where(x => x.contrato is not null).ToList();
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(61, handlers.Count);
+        Assert.Equal(62, handlers.Count);
         Assert.Equal(mensagens.Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))),
             handlers.Select(h => h.contrato!.GetGenericArguments()[0]).Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))));
         foreach (var (handler, contrato) in handlers)
@@ -412,7 +412,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(x => x.maps.Count > 0).ToDictionary(x => x.arquivo, x => x.maps);
         var casos = Mensagens().Select(m => Relativo(ArquivoDo(m.mensagem))).ToHashSet();
 
-        Assert.Equal(64, porArquivo.Values.Sum(m => m.Count));
+        Assert.Equal(65, porArquivo.Values.Sum(m => m.Count));
         foreach (var caso in casos)
             Assert.True(porArquivo.GetValueOrDefault(caso)?.Count == 1, $"{caso}: {porArquivo.GetValueOrDefault(caso)?.Count ?? 0} Map*");
         Assert.Equal([".MapFallback(", ".MapFallbackToFile("], porArquivo["Program.cs"].Order());
@@ -442,7 +442,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (mensagem, _) in Mensagens())
             Assert.All(mensagem.GetProperties(), p => Assert.DoesNotContain(p.PropertyType, proibidos));
         var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => Fechado(t, typeof(Mediator.IRequestHandler<,>)) is not null).ToList();
-        Assert.Equal(61, handlers.Count);
+        Assert.Equal(62, handlers.Count);
         foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
             foreach (var c in t.GetConstructors())
                 Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
@@ -525,7 +525,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         [""] = ["Instituicao"],
         ["Chamados"] = ["Chamado", "MensagemChamado", "Anexo", "EventoChamado"],
-        ["Conversas"] = ["Conversa", "MensagemConversa", "CitacaoArtigo"],
+        ["Conversas"] = ["Conversa", "MensagemConversa", "CitacaoArtigo", "AnexoConversa"],
         ["Artigos"] = ["Artigo", "VersaoArtigo"],
         ["Documentos"] = ["Documento", "VersaoDocumento"],
         ["Trechos"] = ["TrechoFonte"],
@@ -543,7 +543,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var modelo = await f.Db(null, db => Task.FromResult(db.Model));
         var tipos = modelo.GetEntityTypes().Select(e => e.ClrType).ToList();
-        Assert.Equal(26, tipos.Count);
+        Assert.Equal(27, tipos.Count);
         Assert.Equal(EntidadesPorPasta.Values.SelectMany(n => n).Order(), tipos.Select(t => t.Name).Order());
         foreach (var (pasta, nomes) in EntidadesPorPasta)
             foreach (var nome in nomes)
@@ -737,7 +737,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    static readonly string[] SemCorpoJson = ["DefinirSenha", "TrocarSenha", "BaixarAnexo", "BaixarVersaoDocumento", "AtivarPush", "DesativarPush"];
+    static readonly string[] SemCorpoJson = ["DefinirSenha", "TrocarSenha", "BaixarAnexo", "BaixarAnexoConversa", "BaixarVersaoDocumento", "AtivarPush", "DesativarPush"];
 
     static readonly string[] ComRespostaAninhada =
     [
@@ -771,7 +771,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Resposta_por_caso_de_uso()
     {
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(61, mensagens.Count);
+        Assert.Equal(62, mensagens.Count);
         var comJson = mensagens.Where(m => !SemCorpoJson.Contains(m.Name)).ToList();
         Assert.Equal(55, comJson.Count);
 
@@ -961,7 +961,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Baixar_so_com_chave_de_coluna_do_banco()
     {
         var chamam = CodigoApi().Where(p => Regex.IsMatch(SemComentarios(p), @"\.Baixar\(")).Select(Relativo).Order().ToList();
-        Assert.Equal(["Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs"], chamam);
+        Assert.Equal(["Assistente/Assistente.cs", "Assistente/BaixarAnexoConversa.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs"], chamam);
         foreach (var arquivo in chamam)
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));

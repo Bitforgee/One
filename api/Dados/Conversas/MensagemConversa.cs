@@ -14,5 +14,6 @@ public class MensagemConversa : IDaInstituicao
     public string? Resumo { get; set; }
     public DateTime CriadaEm { get; set; }
     public List<CitacaoArtigo> Citacoes { get; set; } = [];
+    public List<AnexoConversa> Anexos { get; set; } = [];
     public List<long>? TrechosBuscados { get; set; }
 }

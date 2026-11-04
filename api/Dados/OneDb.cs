@@ -23,6 +23,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<Conversa> Conversas => Set<Conversa>();
     public DbSet<MensagemConversa> MensagensConversa => Set<MensagemConversa>();
     public DbSet<CitacaoArtigo> Citacoes => Set<CitacaoArtigo>();
+    public DbSet<AnexoConversa> AnexosConversa => Set<AnexoConversa>();
     public DbSet<Chamado> Chamados => Set<Chamado>();
     public DbSet<MensagemChamado> MensagensChamado => Set<MensagemChamado>();
     public DbSet<Anexo> Anexos => Set<Anexo>();
@@ -143,6 +144,12 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         mb.Entity<Anexo>(e =>
         {
             e.HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
+            e.Property(x => x.Hash).HasColumnType("char(64)");
+            e.HasIndex(x => x.Chave).IsUnique();
+        });
+        mb.Entity<AnexoConversa>(e =>
+        {
+            e.HasOne<MensagemConversa>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemConversaId);
             e.Property(x => x.Hash).HasColumnType("char(64)");
             e.HasIndex(x => x.Chave).IsUnique();
         });

@@ -49,6 +49,7 @@ uma vez no código, num grupo de constantes de `api/Dados/Entidades.cs`; cada pr
 | Termo | Chave | Significado |
 | --- | --- | --- |
 | `Armazenamento` | `Armazenamento:Endpoint`, `Chave`, `Segredo`, `Bucket` | o único código que fala com o MinIO (`api/Armazenamento.cs`): grava os bytes de anexos e PDFs sob chave nova `{instituicaoId}/{anexos ou documentos}/{guid}`, lê pela chave da linha e nunca apaga; o banco guarda só chave, hash SHA-256 e tamanho |
+| `AnexoConversa` | `anexo_conversa` | o arquivo (PDF, JPG ou PNG, até 10 MB, até 3 por conversa) que o aluno anexou a uma mensagem da conversa com o assistente; vive em `{instituicaoId}/anexos-conversa/{guid}`, é lido pela IA só como contexto (nunca como fonte) e a equipe o recebe na transcrição do chamado transferido. O `Anexo` continua sendo só o do chamado |
 
 ## Tempo real (`/api/tempo-real`)
 

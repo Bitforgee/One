@@ -11,7 +11,9 @@ public sealed record VerConversa(long Id, Usuario Usuario) : IRequest<IResult>
     {
         public sealed record DaConversa(long Id, DateTime CriadaEm);
 
-        public sealed record DaMensagem(string Autor, string Texto, string? Tipo, DateTime CriadaEm);
+        public sealed record DaMensagem(string Autor, string Texto, string? Tipo, DateTime CriadaEm, IReadOnlyList<DoAnexo> Anexos);
+
+        public sealed record DoAnexo(long Id, string Nome, string Tipo, long Tamanho);
     }
 
     public static void Mapear(RouteGroupBuilder g) =>
@@ -26,7 +28,7 @@ public sealed class VerConversaHandler(OneDb db) : IRequestHandler<VerConversa, 
         if (conversa is null) return NaoEncontrada();
         var chamadoNumero = await db.Chamados.Where(c => c.ConversaId == m.Id).Select(c => c.Numero).FirstOrDefaultAsync();
         return Results.Ok(new VerConversa.Resposta(new(conversa.Id, conversa.CriadaEm),
-            [.. conversa.Mensagens.OrderBy(x => x.Id).Select(x => new VerConversa.Resposta.DaMensagem(x.Autor, x.Texto, x.TipoFinal, x.CriadaEm))],
+            [.. conversa.Mensagens.OrderBy(x => x.Id).Select(x => new VerConversa.Resposta.DaMensagem(x.Autor, x.Texto, x.TipoFinal, x.CriadaEm, [.. x.Anexos.OrderBy(a => a.Id).Select(a => new VerConversa.Resposta.DoAnexo(a.Id, a.Nome, a.Tipo, a.Tamanho))]))],
             conversa.Desfecho, chamadoNumero));
     }
 }

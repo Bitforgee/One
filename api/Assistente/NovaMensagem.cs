@@ -7,7 +7,10 @@ namespace One.Api.Assistente;
 
 public sealed record NovaMensagem(long Id, NovaMensagem.Entrada Corpo, Usuario Usuario) : IRequest<IResult>
 {
-    public sealed record Entrada(string? Mensagem);
+    public sealed record Entrada(string? Mensagem, IReadOnlyList<IFormFile> Anexos)
+    {
+        public static async ValueTask<Entrada?> BindAsync(HttpContext ctx) => await LerEntrada(ctx) is { } e ? new(e.Mensagem, e.Anexos) : null;
+    }
 
     public sealed record Resposta([property: JsonPropertyName("resposta")] Resposta.DoAssistente Assistente)
     {
@@ -15,10 +18,11 @@ public sealed record NovaMensagem(long Id, NovaMensagem.Entrada Corpo, Usuario U
     }
 
     public static void Mapear(RouteGroupBuilder g) =>
-        g.MapPost("/conversas/{id:long}/mensagens", (long id, NovaMensagem.Entrada i, HttpContext ctx, IMediator m) => m.Send(new NovaMensagem(id, i, ctx.Usuario()))).RequireRateLimiting("mensagens");
+        g.MapPost("/conversas/{id:long}/mensagens", (long id, NovaMensagem.Entrada i, HttpContext ctx, IMediator m) => m.Send(new NovaMensagem(id, i, ctx.Usuario())))
+            .Accepts<NovaMensagem.Entrada>("application/json", "multipart/form-data").RequireRateLimiting("mensagens").WithMetadata(LimiteDoCorpo);
 }
 
-public sealed class NovaMensagemHandler(OneDb db, Assistente assistente, TimeProvider relogio) : IRequestHandler<NovaMensagem, IResult>
+public sealed class NovaMensagemHandler(OneDb db, Assistente assistente, Armazenamento armazenamento, TimeProvider relogio) : IRequestHandler<NovaMensagem, IResult>
 {
     const int LimiteMensagensDoAluno = 10;
 
@@ -31,7 +35,10 @@ public sealed class NovaMensagemHandler(OneDb db, Assistente assistente, TimePro
         if (conversa.Mensagens.Count(x => x.Autor == Aluno) >= LimiteMensagensDoAluno)
             return Problemas.Erro(409, "A conversa chegou ao limite de 10 mensagens. Fale com um atendente ou encerre.");
 
-        var r = await Responder(db, assistente, conversa, m.Corpo.Mensagem!, relogio.GetUtcNow().UtcDateTime);
+        var (lidos, recusa) = await LerAnexos(m.Corpo.Anexos, conversa.Mensagens.Sum(x => x.Anexos.Count));
+        if (recusa is not null) return recusa;
+
+        var r = await Responder(db, assistente, armazenamento, conversa, m.Usuario.InstituicaoId, m.Corpo.Mensagem!, lidos, relogio.GetUtcNow().UtcDateTime);
         return Results.Ok(new NovaMensagem.Resposta(new(r.TipoFinal, r.Texto)));
     }
 }

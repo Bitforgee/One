@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Assistente;
 using One.Api.Conhecimento;
 using One.Api.Dados;
 
@@ -13,7 +15,7 @@ public sealed record DetalheChamado(
 {
     public sealed record DaMatricula(string Numero, string Curso, int Semestre);
 
-    public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes);
+    public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DoAnexo>? Anexos);
 
     public sealed record TranscricaoDoAluno(string Autor, string Texto, DateTime CriadaEm);
 
@@ -31,7 +33,7 @@ public sealed record DetalheChamado(
         public static readonly DaEquipe Nada = new(null, null, null, [], null, null, null);
     }
 
-    record LinhaDaTranscricao(long Id, string Autor, string Texto, DateTime CriadaEm, List<CitacaoArtigo> Citacoes);
+    record LinhaDaTranscricao(long Id, string Autor, string Texto, DateTime CriadaEm, List<CitacaoArtigo> Citacoes, IReadOnlyList<DoAnexo>? Anexos = null);
 
     record AnexoLido(long Id, long MensagemChamadoId, string Nome, string Tipo, long Tamanho);
 
@@ -44,6 +46,7 @@ public sealed record DetalheChamado(
             .ToDictionaryAsync(x => x.Id, x => x.Nome);
         var transcricao = await db.MensagensConversa.Where(m => m.ConversaId == c.ConversaId).OrderBy(m => m.Id)
             .Select(m => new LinhaDaTranscricao(m.Id, m.Autor, m.Texto, m.CriadaEm, m.Citacoes)).ToListAsync();
+        if (equipe) transcricao = await ComAnexos(db, c, transcricao);
         var daEquipe = equipe ? await Equipe(db, c, nomes, transcricao) : DaEquipe.Nada;
 
         return new DetalheChamado(
@@ -53,10 +56,18 @@ public sealed record DetalheChamado(
             c.ResponsavelId is { } r ? nomes[r] : null, c.CriadoEm, c.ResolvidoEm, matricula,
             daEquipe.Solicitante, daEquipe.Resumo, daEquipe.OrigemCategoria,
             [.. transcricao.Select(m => equipe
-                ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id))
+                ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id), m.Anexos)
                 : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))],
             await DasMensagens(db, c, equipe, nomes), daEquipe.Eventos, PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId),
             daEquipe.Setores, daEquipe.Categorias);
+    }
+
+    // Só as linhas do aluno levam `anexos` (a lista pode ser vazia); as do assistente ficam sem o campo.
+    static async Task<List<LinhaDaTranscricao>> ComAnexos(OneDb db, Chamado c, List<LinhaDaTranscricao> transcricao)
+    {
+        var anexos = (await db.AnexosConversa.Where(x => db.MensagensConversa.Any(m => m.Id == x.MensagemConversaId && m.ConversaId == c.ConversaId)).OrderBy(x => x.Id).ToListAsync())
+            .ToLookup(x => x.MensagemConversaId);
+        return [.. transcricao.Select(m => m.Autor != ConversaRotas.Aluno ? m : m with { Anexos = [.. anexos[m.Id].Select(x => new DoAnexo(x.Id, x.Nome, x.Tipo, x.Tamanho))] })];
     }
 
     static async Task<IReadOnlyList<DaMensagem>> DasMensagens(OneDb db, Chamado c, bool equipe, Dictionary<long, string> nomes)

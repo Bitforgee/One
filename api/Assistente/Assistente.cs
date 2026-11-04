@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Conhecimento;
 using One.Api.Dados;
@@ -24,7 +25,7 @@ public static class Textos
 public record Trecho(long FonteId, string? Texto);
 public record SaidaModelo(string? Tipo, string? Texto, List<long>? FonteIds, List<Trecho>? Trechos, long? CategoriaId, string? Resumo);
 
-public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db, Embeddings embeddings)
+public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db, Embeddings embeddings, Armazenamento armazenamento)
 {
     public const string Autor = "ASSISTENTE";
 
@@ -40,6 +41,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         5. Se faltar informação para escolher a orientação certa, faça uma pergunta curta, de até 200 caracteres e terminada em "?", com tipo "pergunta".
         6. Se nenhuma fonte responde, devolva tipo "sem_base". Se o aluno pedir um atendente, devolva tipo "transferir".
         7. Em "categoriaId", sugira a categoria do assunto entre as categorias abaixo. Em "resumo", resuma o caso em uma frase para o atendente, sem dados pessoais.
+        8. Anexos do aluno servem só para entender o caso; não são fontes. Não copie trechos de anexos nem repita dados pessoais que aparecem neles.
         Devolva apenas um objeto JSON: {"tipo":"resposta"|"pergunta"|"sem_base"|"transferir","texto":"...","fonteIds":[12],"trechos":[{"fonteId":12,"texto":"..."}],"categoriaId":3,"resumo":"..."}
         """;
 
@@ -66,14 +68,20 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         catch (Exception e) when (e is HttpRequestException or OperationCanceledException or JsonException or InvalidOperationException)
         {
             log.LogWarning(e, "Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", "busca_indisponivel", conversa.InstituicaoId, conversa.Id);
-            return new MensagemConversa { Autor = Autor, Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] };
+            return SemBase(modelo);
         }
         log.LogInformation("Busca de fontes: instituicao={InstituicaoId} conversa={ConversaId} trechos={Trechos} distancias={Distancias} duracaoMs={DuracaoMs}",
             conversa.InstituicaoId, conversa.Id, string.Join(",", fontes.Select(f => f.Id)),
             string.Join(",", fontes.Select(f => f.Distancia.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))),
             (long)relogio.GetElapsedTime(inicioBusca).TotalMilliseconds);
 
-        var corpo = await Corpo(conversa, modelo, fontes);
+        var anexos = await LerAnexos(conversa);
+        if (anexos is null)
+        {
+            log.LogWarning("Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", "anexo_indisponivel", conversa.InstituicaoId, conversa.Id);
+            return SemBase(modelo);
+        }
+        var corpo = await Corpo(conversa, modelo, fontes, anexos);
         var inicio = relogio.GetTimestamp();
         var (saida, motivoDoProvedor, uso) = await Chamar(corpo);
         var (tipoFinal, motivo, citacoes) = motivoDoProvedor is null ? Classificar(saida!, fontes, conversa) : (Tipos.SemBase, motivoDoProvedor, []);
@@ -81,9 +89,9 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         if (motivo is not null)
             log.LogWarning("Assistente respondeu sem_base por {Motivo} (instituição {InstituicaoId}, conversa {ConversaId})", motivo, conversa.InstituicaoId, conversa.Id);
         log.LogInformation(
-            "Chamada ao provedor de IA: instituicao={InstituicaoId} modelo={Modelo} duracaoMs={DuracaoMs} entradaComCache={EntradaComCache} entradaSemCache={EntradaSemCache} saida={TokensSaida} tipoDevolvido={TipoDevolvido} tipoFinal={TipoFinal} artigos={Artigos}",
+            "Chamada ao provedor de IA: instituicao={InstituicaoId} modelo={Modelo} duracaoMs={DuracaoMs} entradaComCache={EntradaComCache} entradaSemCache={EntradaSemCache} saida={TokensSaida} tipoDevolvido={TipoDevolvido} tipoFinal={TipoFinal} artigos={Artigos} anexos={Anexos}",
             conversa.InstituicaoId, modelo, (long)relogio.GetElapsedTime(inicio).TotalMilliseconds, uso.ComCache, uso.SemCache, uso.Saida,
-            saida?.Tipo, tipoFinal, ArtigosCitados(saida, fontes));
+            saida?.Tipo, tipoFinal, ArtigosCitados(saida, fontes), anexos.Count);
 
         return new MensagemConversa
         {
@@ -100,14 +108,59 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         };
     }
 
+    MensagemConversa SemBase(string modelo) =>
+        new() { Autor = Autor, Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] };
+
+    static List<MensagemConversa> Janela(Conversa conversa) => conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10).ToList();
+
+    record ParteTexto(string Type, string Text);
+    record ParteImagem(string Type, [property: JsonPropertyName("image_url")] Url ImageUrl);
+    record ParteArquivo(string Type, Arquivo File);
+    record Url([property: JsonPropertyName("url")] string Endereco);
+    record Arquivo(string Filename, [property: JsonPropertyName("file_data")] string FileData);
+    record ParaOProvedor(long Id, string Chave, string Tipo);
+
+    // Os anexos das mensagens do aluno que estão no histórico, como data URL; null quando o armazenamento não responde.
+    async Task<Dictionary<long, string>?> LerAnexos(Conversa conversa)
+    {
+        var mensagens = Janela(conversa).Select(m => m.Id).ToList();
+        var anexos = await db.AnexosConversa.Where(x => mensagens.Contains(x.MensagemConversaId)).OrderBy(x => x.Id).Select(x => new ParaOProvedor(x.Id, x.Chave, x.Tipo)).ToListAsync();
+        var lidos = new Dictionary<long, string>();
+        try
+        {
+            foreach (var a in anexos)
+            {
+                using var ms = new MemoryStream();
+                await using (var fluxo = await armazenamento.Baixar(a.Chave)) await fluxo.CopyToAsync(ms);
+                lidos[a.Id] = $"data:{a.Tipo};base64,{Convert.ToBase64String(ms.ToArray())}";
+            }
+        }
+        catch (ArmazenamentoIndisponivel) { return null; }
+        return lidos;
+    }
+
+    // Texto mascarado primeiro; depois cada anexo na ordem de envio. O nome original nunca sai daqui: o PDF vai como anexo-<posição na conversa>.pdf.
+    static object Conteudo(MensagemConversa m, Dictionary<long, int> posicoes, Dictionary<long, string> anexos)
+    {
+        var texto = Mascara.Aplicar(m.Texto);
+        if (m.Anexos.Count == 0) return texto;
+        var partes = new List<object> { new ParteTexto("text", texto) };
+        foreach (var a in m.Anexos.OrderBy(x => x.Id))
+            partes.Add(a.Tipo == Arquivos.Pdf
+                ? new ParteArquivo("file", new($"anexo-{posicoes[a.Id]}.pdf", anexos[a.Id]))
+                : new ParteImagem("image_url", new(anexos[a.Id])));
+        return partes;
+    }
+
     static string ArtigosCitados(SaidaModelo? saida, List<Fonte> fontes) =>
         string.Join(",", (saida?.FonteIds ?? []).Select(id => fontes.FirstOrDefault(f => f.Id == id)?.ArtigoId).OfType<long>());
 
-    async Task<object> Corpo(Conversa conversa, string modelo, List<Fonte> fontes)
+    async Task<object> Corpo(Conversa conversa, string modelo, List<Fonte> fontes, Dictionary<long, string> anexos)
     {
         var categorias = await db.Categorias.Where(c => c.Ativa).OrderBy(c => c.Id).Select(c => new { id = c.Id, nome = c.Nome }).ToListAsync();
-        var historico = conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10)
-            .Select(m => new { role = m.Autor == Autor ? "assistant" : "user", content = Mascara.Aplicar(m.Texto) });
+        var posicoes = conversa.Mensagens.OrderBy(m => m.Id).SelectMany(m => m.Anexos.OrderBy(a => a.Id)).Select((a, i) => (a.Id, Posicao: i + 1)).ToDictionary(x => x.Id, x => x.Posicao);
+        var historico = Janela(conversa)
+            .Select(m => new { role = m.Autor == Autor ? "assistant" : "user", content = Conteudo(m, posicoes, anexos) });
         return new
         {
             model = modelo,

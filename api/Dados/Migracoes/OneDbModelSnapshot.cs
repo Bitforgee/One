@@ -629,6 +629,63 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("mensagem_chamado");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.Conversas.AnexoConversa", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Chave")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("chave");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("char(64)")
+                        .HasColumnName("hash");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<long>("MensagemConversaId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("mensagem_conversa_id");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<long>("Tamanho")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_anexo_conversa");
+
+                    b.HasIndex("Chave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_anexo_conversa_chave");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_anexo_conversa_instituicao_id");
+
+                    b.HasIndex("MensagemConversaId")
+                        .HasDatabaseName("ix_anexo_conversa_mensagem_conversa_id");
+
+                    b.ToTable("anexo_conversa");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Conversas.CitacaoArtigo", b =>
                 {
                     b.Property<long>("Id")
@@ -1619,6 +1676,23 @@ namespace One.Api.Dados.Migracoes
                         .HasConstraintName("fk_mensagem_chamado_instituicao_instituicao_id");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.Conversas.AnexoConversa", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_anexo_conversa_instituicoes_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Conversas.MensagemConversa", null)
+                        .WithMany("Anexos")
+                        .HasForeignKey("MensagemConversaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_anexo_conversa_mensagens_conversa_mensagem_conversa_id");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Conversas.CitacaoArtigo", b =>
                 {
                     b.HasOne("One.Api.Dados.Instituicao", null)
@@ -1909,6 +1983,8 @@ namespace One.Api.Dados.Migracoes
 
             modelBuilder.Entity("One.Api.Dados.Conversas.MensagemConversa", b =>
                 {
+                    b.Navigation("Anexos");
+
                     b.Navigation("Citacoes");
                 });
 
