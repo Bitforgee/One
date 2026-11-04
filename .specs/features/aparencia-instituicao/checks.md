@@ -48,6 +48,7 @@ Um filtro que não seleciona teste nenhum sai com código 0 (L-002). O construto
    - `Matrículas: ... resultado em Alert ...` (AC 1);
    - as asserções de texto de vazio e de `Spinner` das listas (AC 4, AC 45);
    - emenda aprovada pelo usuário em 04/11, depois do lote 2: `compositor visível com a conversa maior que a tela` e `cabeçalho: borda, título numa linha e botões de 36 px` (AC 2), `colunas largas somem no estreito`, `lista vazia centralizada` e `texto das linhas de 14 px` (AC 7), `valores de tipo e bordas` (AC 5), e a exceção com nome de `src/tabela.test.tsx` em `web/src/test/estrutura.test.ts`.
+   - emenda aprovada pelo usuário em 04/11, depois do lote 3: em `acesso.test.tsx`, as contagens e os grupos do menu com o link "Aparência" (AC 23), os testes de primeiro acesso e definir senha passando a filtrar as chamadas `POST` (AC 28, a tela também busca a aparência) e o painel de entrada esperando 1 ilustração `boas-vindas` (AC 47); o texto de Indicadores vazio (AC 46); e em `arranjo.spec.ts`, `linha da marca na entrada` (AC 32), `posição do conteúdo do painel` (AC 35) e `alertas de Indicadores` (AC 46).
 
    Cada edição fica listada no `## Handoff` com o AC que a força.
 
@@ -154,7 +155,7 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "salvar
 
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "erro da API aparece e o formulário fica"`
 
-**C27** - Ao lado do campo de cor, a tela mostra uma amostra com `background-color` igual à cor e o texto "Contraste com o branco: N,NN:1". O valor é calculado pela mesma regra do servidor: `#224fa7` → "7,47:1", `#767676` → "4,54:1", `#ffd700` → "1,40:1". "Salvar" fica desabilitado com `#ffd700` e habilitado com `#767676`. Uma função pura `contraste(hex)` é testada sobre os 3 valores (AC 27, door 8)
+**C27** - [x] Ao lado do campo de cor, a tela mostra uma amostra com `background-color` igual à cor e o texto "Contraste com o branco: N,NN:1". O valor é calculado pela mesma regra do servidor: `#224fa7` → "7,65:1" (valor corrigido com aprovação do usuário em 04/11; o texto aprovado dizia 7,47 por erro de conta), `#767676` → "4,54:1", `#ffd700` → "1,40:1". "Salvar" fica desabilitado com `#ffd700` e habilitado com `#767676`. Uma função pura `contraste(hex)` é testada sobre os 3 valores (AC 27, door 8)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "contraste ao lado da cor e Salvar desabilitado"`
 Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "contraste calcula a razão WCAG"`
 
