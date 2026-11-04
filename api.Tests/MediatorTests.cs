@@ -26,7 +26,7 @@ public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
     {
         using var escopo = f.Services.CreateScope();
         var mensagens = ArquiteturaTests.Mensagens();
-        Assert.Equal(68, mensagens.Count);
+        Assert.Equal(74, mensagens.Count);
         var (acoes, outras) = (0, 0);
         foreach (var (mensagem, resposta) in mensagens)
         {
@@ -42,6 +42,6 @@ public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
                 Assert.True(behaviors.Count == 0, $"{mensagem.Name}: {behaviors.Count} behaviors");
             }
         }
-        Assert.Equal((9, 59), (acoes, outras));
+        Assert.Equal((9, 65), (acoes, outras));
     }
 }

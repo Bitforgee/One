@@ -52,7 +52,7 @@ public static class UsuarioRotas
         u.Cpf = Cpf.Normalizar(cpf)!;
         u.Nome = nome!;
         u.Email = email!;
-        u.Papeis.RemoveAll(p => !papeis!.Contains(p.Papel));
+        u.Papeis.RemoveAll(p => p.Papel != Papeis.Operador && !papeis!.Contains(p.Papel)); // OPERADOR só pelo comando (door 1)
         u.Papeis.AddRange(papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
         if (senhaTemporaria is not null)
         {

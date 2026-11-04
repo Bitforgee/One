@@ -37,37 +37,37 @@ Arquivos novos em `web/`: `src/administracao/instituicoes.test.tsx`, `e2e/instit
 
 ### S1 - Operador e acesso à área da plataforma (P1)
 
-**C1** - `instituicao operador --slug univag --cpf <cpf de um usuário ativo>` sai com 0, imprime exatamente "Operador {nome} adicionado." e grava 1 linha `usuario_papel` com `OPERADOR` para esse usuário. Rodar de novo sai 0 sem segunda linha (AC 1, door 1)
+**C1** - [x] `instituicao operador --slug univag --cpf <cpf de um usuário ativo>` sai com 0, imprime exatamente "Operador {nome} adicionado." e grava 1 linha `usuario_papel` com `OPERADOR` para esse usuário. Rodar de novo sai 0 sem segunda linha (AC 1, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OperadorComandoTests.Adicionar_operador_sai_0"`
 
-**C2** - O mesmo comando com `--remover` sai 0, imprime "Operador {nome} removido." e apaga a linha `OPERADOR`, mantendo os outros papéis do usuário (AC 2)
+**C2** - [x] O mesmo comando com `--remover` sai 0, imprime "Operador {nome} removido." e apaga a linha `OPERADOR`, mantendo os outros papéis do usuário (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OperadorComandoTests.Remover_operador_sai_0"`
 
-**C3** - O comando sai com 1, escreve o erro em `erro` e não grava nada em 3 casos: slug inexistente, CPF sem usuário na instituição e usuário inativo (AC 3)
+**C3** - [x] O comando sai com 1, escreve o erro em `erro` e não grava nada em 3 casos: slug inexistente, CPF sem usuário na instituição e usuário inativo (AC 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~OperadorComandoTests.Operador_invalido_sai_1"`
 
-**C4** - As 6 rotas de `/api/plataforma` respondem `403` com `detail` "Só operadores da plataforma podem usar esta área." para `ADMINISTRADOR`, `ATENDENTE` e `ALUNO` (18 pedidos), e `401` sem sessão (6 pedidos) (AC 4, door 2)
+**C4** - [x] As 6 rotas de `/api/plataforma` respondem `403` com `detail` "Só operadores da plataforma podem usar esta área." para `ADMINISTRADOR`, `ATENDENTE` e `ALUNO` (18 pedidos), e `401` sem sessão (6 pedidos) (AC 4, door 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Rotas_403_sem_operador_e_401_sem_sessao"`
 
 **C5** - O grupo "Plataforma", com o link "Instituições" (ícone `Building2`) para `/{slug}/instituicoes`, aparece por último na barra lateral e na gaveta para um usuário com `OPERADOR` e `ADMINISTRADOR`. Não aparece para `ADMINISTRADOR`, `ATENDENTE` nem `ALUNO` sem `OPERADOR` (AC 5, door 4)
 Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "grupo Plataforma só para operador"`
 
-**C6** - Um admin salva pela tela Usuários (`PUT` da rota de usuário de `<base>`) um usuário com `ADMINISTRADOR` e `OPERADOR`, enviando `papeis: ["ADMINISTRADOR"]`: a resposta é `200`, e o usuário continua com `OPERADOR` no banco. Enviando `["ATENDENTE"]` com setor, ele fica com `ATENDENTE` e `OPERADOR` (AC 6)
+**C6** - [x] Um admin salva pela tela Usuários (`PUT` da rota de usuário de `<base>`) um usuário com `ADMINISTRADOR` e `OPERADOR`, enviando `papeis: ["ADMINISTRADOR"]`: a resposta é `200`, e o usuário continua com `OPERADOR` no banco. Enviando `["ATENDENTE"]` com setor, ele fica com `ATENDENTE` e `OPERADOR` (AC 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Editar_usuario_preserva_operador"`
 
-**C7** - Criar ou editar usuário com `papeis: ["OPERADOR"]` ou `["ADMINISTRADOR","OPERADOR"]` responde `400` com `errors.papeis` "Escolha ao menos um papel." e não grava (AC 7, door 1)
+**C7** - [x] Criar ou editar usuário com `papeis: ["OPERADOR"]` ou `["ADMINISTRADOR","OPERADOR"]` responde `400` com `errors.papeis` "Escolha ao menos um papel." e não grava (AC 7, door 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Tela_usuarios_nao_da_operador"`
 
 ### S2 - Listar e criar (P1)
 
-**C8** - Com 3 instituições (B ativa, A ativa, C inativa, além da do operador), `GET /api/plataforma/instituicoes` responde `200`:
+**C8** - [x] Com 3 instituições (B ativa, A ativa, C inativa, além da do operador), `GET /api/plataforma/instituicoes` responde `200`:
 - uma lista com todas, cada item com exatamente `slug`, `nome`, `fuso`, `ativa`, `criadaEm` e `administradores`;
 - a ordem: as ativas por nome (A, B e a do operador, na ordem alfabética), depois C;
 - `administradores` conta só os usuários ativos com `ADMINISTRADOR`: 2 ativos e 1 inativo dão 2 (AC 8)
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Listar_todas_ativas_primeiro"`
 
-**C9** - `POST /api/plataforma/instituicoes` com `slug` "demo", `nome` "Faculdade Demo", `fuso` "America/Cuiaba" e um admin válido responde `201`, com `Location` `/api/plataforma/instituicoes/demo` e o corpo da instituição (`ativa` true, `administradores` 1). No banco, a instituição "demo" tem:
+**C9** - [x] `POST /api/plataforma/instituicoes` com `slug` "demo", `nome` "Faculdade Demo", `fuso` "America/Cuiaba" e um admin válido responde `201`, com `Location` `/api/plataforma/instituicoes/demo` e o corpo da instituição (`ativa` true, `administradores` 1). No banco, a instituição "demo" tem:
 - 1 setor "Triagem" com `triagem` true;
 - 1 categoria "Não classificado" com `padrao` true;
 - 1 usuário com `ADMINISTRADOR`, o CPF normalizado, o nome e o e-mail;
@@ -75,16 +75,16 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Lista
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_instituicao_201"`
 
-**C10** - Depois de C9, existe 1 `EmailSaida` com `instituicao_id` da "demo", `Destinatario` igual ao e-mail do admin, `Assunto` "[Faculdade Demo] Crie sua senha" e `Corpo` contendo o link `.../demo/definir-senha?token=` de um token válido do admin. A linha é gravada na mesma transação: com o commit simulado falhando (`f.Commit`), nada da instituição nem o e-mail fica (AC 10)
+**C10** - [x] Depois de C9, existe 1 `EmailSaida` com `instituicao_id` da "demo", `Destinatario` igual ao e-mail do admin, `Assunto` "[Faculdade Demo] Crie sua senha" e `Corpo` contendo o link `.../demo/definir-senha?token=` de um token válido do admin. A linha é gravada na mesma transação: com o commit simulado falhando (`f.Commit`), nada da instituição nem o e-mail fica (AC 10)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_grava_o_email_na_mesma_transacao"`
 
-**C11** - O `POST` responde `400` no campo e não grava nada em 7 casos: `slug` "ab" (curto), `slug` "Demo" (maiúscula), `nome` vazio, `fuso` "Brasil/Cuiaba", `admin.cpf` "111.111.111-11", `admin.nome` vazio e `admin.email` "x". Os campos são `slug`, `nome`, `fuso`, `admin.cpf`, `admin.nome` e `admin.email` (AC 11)
+**C11** - [x] O `POST` responde `400` no campo e não grava nada em 7 casos: `slug` "ab" (curto), `slug` "Demo" (maiúscula), `nome` vazio, `fuso` "Brasil/Cuiaba", `admin.cpf` "111.111.111-11", `admin.nome` vazio e `admin.email` "x". Os campos são `slug`, `nome`, `fuso`, `admin.cpf`, `admin.nome` e `admin.email` (AC 11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Criar_invalido_400"`
 
-**C12** - Um `POST` com o `slug` de uma instituição que já existe (ativa ou inativa) responde `409` com `detail` "Esse endereço já está em uso." e não grava nada (AC 12)
+**C12** - [x] Um `POST` com o `slug` de uma instituição que já existe (ativa ou inativa) responde `409` com `detail` "Esse endereço já está em uso." e não grava nada (AC 12)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_repetido_409"`
 
-**C13** - `InstituicaoComandoTests` passa inteiro sem edição de asserção (AC 13, AC 20)
+**C13** - [x] `InstituicaoComandoTests` passa inteiro sem edição de asserção (AC 13, AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests"`
 
 **C14** - Na tela Instituições, a lista simulada com 2 instituições mostra:
@@ -108,10 +108,10 @@ Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "err
 
 ### S3 - Carga inicial pela tela (P1)
 
-**C19** - `POST .../demo/carga` com o JSON de exemplo de `InstituicaoComandoTests.Carga_valida_sai_0` responde `200` com exatamente `setores`, `cursos`, `categorias`, `regras` e `artigos`, iguais às quantidades que o comando imprime para o mesmo arquivo. Os registros ficam na "demo" e não na instituição do operador (AC 18, door 3)
+**C19** - [x] `POST .../demo/carga` com o JSON de exemplo de `InstituicaoComandoTests.Carga_valida_sai_0` responde `200` com exatamente `setores`, `cursos`, `categorias`, `regras` e `artigos`, iguais às quantidades que o comando imprime para o mesmo arquivo. Os registros ficam na "demo" e não na instituição do operador (AC 18, door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Carga_pela_rota_grava_na_instituicao_do_slug"`
 
-**C20** - Respostas da rota de carga, sem gravar nada:
+**C20** - [x] Respostas da rota de carga, sem gravar nada:
 - `400` com `errors` listando cada erro para o arquivo "{" (JSON inválido) e para um arquivo com uma regra de categoria inexistente;
 - `413` para um arquivo de 2 MiB + 1 byte;
 - `404` "Instituição não encontrada." para um slug inexistente (AC 19)
@@ -123,29 +123,29 @@ Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "imp
 
 ### S4 - Desativar, reativar e reenviar acesso (P1)
 
-**C22** - `POST .../demo/desativar` responde `200` com `{slug:"demo", ativa:false}`. Depois:
+**C22** - [x] `POST .../demo/desativar` responde `200` com `{slug:"demo", ativa:false}`. Depois:
 - `GET /api/instituicoes/demo` responde `404`;
 - `POST /api/auth/login` na "demo" responde como instituição inexistente, igual a `<base>`;
 - o cliente do admin da "demo", logado antes, recebe `401` em `GET /api/auth/me` (AC 22)
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Desativar_bloqueia_login_e_sessao"`
 
-**C23** - `desativar` com o slug da instituição do próprio operador responde `409` com `detail` "Você não pode desativar a instituição em que está.", e `ativa` continua true (AC 23)
+**C23** - [x] `desativar` com o slug da instituição do próprio operador responde `409` com `detail` "Você não pode desativar a instituição em que está.", e `ativa` continua true (AC 23)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Nao_desativa_a_propria"`
 
-**C24** - `POST .../demo/reativar` depois de desativar responde `200` com `{slug:"demo", ativa:true}`, e o login do admin da "demo" volta a responder `200` (AC 24)
+**C24** - [x] `POST .../demo/reativar` depois de desativar responde `200` com `{slug:"demo", ativa:true}`, e o login do admin da "demo" volta a responder `200` (AC 24)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Reativar_volta_o_login"`
 
-**C25** - Com 2 administradores ativos e 1 inativo na "demo", `POST .../demo/reenviar-acesso` responde `202` com `{enviados:2}`, cria 2 tokens novos e 2 `EmailSaida` com o link, um para cada admin ativo, e nenhum para o inativo (AC 25)
+**C25** - [x] Com 2 administradores ativos e 1 inativo na "demo", `POST .../demo/reenviar-acesso` responde `202` com `{enviados:2}`, cria 2 tokens novos e 2 `EmailSaida` com o link, um para cada admin ativo, e nenhum para o inativo (AC 25)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Reenviar_acesso_para_admins_ativos"`
 
-**C26** - `reenviar-acesso` responde `409` sem gravar token nem e-mail em 2 casos:
+**C26** - [x] `reenviar-acesso` responde `409` sem gravar token nem e-mail em 2 casos:
 - instituição sem admin ativo: "Esta instituição não tem administrador ativo para receber o acesso.";
 - instituição desativada: "A instituição está desativada." (AC 26)
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Reenviar_sem_admin_ou_desativada_409"`
 
-**C27** - `carga`, `desativar`, `reativar` e `reenviar-acesso` com o slug "nao-existe" respondem `404` com `detail` "Instituição não encontrada." (4 pedidos) (AC 27)
+**C27** - [x] `carga`, `desativar`, `reativar` e `reenviar-acesso` com o slug "nao-existe" respondem `404` com `detail` "Instituição não encontrada." (4 pedidos) (AC 27)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PlataformaTests.Slug_inexistente_404"`
 
 **C28** - No menu da linha, na tela:
@@ -160,13 +160,13 @@ Proof: `cd web && npx vitest run src/administracao/instituicoes.test.tsx -t "des
 **C29** - A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 3 e 5 da lista fechada (Surface)
 Proof: `dotnet test api.Tests`
 
-**C30** - `rotas.txt` ganha exatamente as 6 linhas do `Surface`, todas `anonimo=False autorizacao=True limite=-`, e nenhuma linha some (Surface)
+**C30** - [x] `rotas.txt` ganha exatamente as 6 linhas do `Surface`, todas `anonimo=False autorizacao=True limite=-`, e nenhuma linha some (Surface)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
-**C31** - Nenhum arquivo de `api/` fora de `api/Instituicoes/` (os casos de uso da plataforma), `api/Sessao.cs`, `api/Acesso/*` e `api/Agendador.cs` atribui `InstituicaoAtual` além dos de `<base>`. `IgnoreQueryFilters` continua só no agendador e no comando (door 3)
+**C31** - [x] Nenhum arquivo de `api/` fora de `api/Instituicoes/` (os casos de uso da plataforma), `api/Sessao.cs`, `api/Acesso/*` e `api/Agendador.cs` atribui `InstituicaoAtual` além dos de `<base>`. `IgnoreQueryFilters` continua só no agendador e no comando (door 3)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ArquiteturaTests.IgnoreQueryFilters_so_no_agendador_e_no_comando|FullyQualifiedName~PlataformaTests.InstituicaoAtual_so_onde_ja_era_e_na_plataforma"`
 
-**C32** - `dotnet build api` passa com a barreira CA1502 (AD-018)
+**C32** - [x] `dotnet build api` passa com a barreira CA1502 (AD-018)
 Proof: `dotnet build api`
 
 **C33** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só as do item 4 da lista fechada (AC 5)
@@ -230,3 +230,10 @@ e `acesso.test.tsx` somam ~260 KB (~65k), mais ~35k de código e testes novos. T
 150k: um construtor só, sem pergunta.
 
 - Mecanismo: um construtor
+
+**Base (`5b53ce7`), valores que a lista fechada deixa subir, anotados antes de mudar:**
+- `RetratoTests.Tabela_de_rotas_igual_a_da_base`: 73 rotas, 70 com um só método, 71 com autorização; `rotas.txt` com 71 linhas de rota antes dos 2 fallbacks.
+- `ArquiteturaTests`: mensagens 68 (`Um_arquivo_por_caso_de_uso`, `Resposta_por_caso_de_uso`), fatia `Instituicoes` 6 de 68, handlers 68 (`Um_handler_por_mensagem_no_mesmo_arquivo`, `Handler_sem_HttpContext`), `Map*` 71 (`Map_so_nos_casos_de_uso`), `Entrada` aninhadas 31 e rotas com corpo JSON 31 (`Entrada_por_caso_de_uso`, `AsEntradas` com 31 nomes), mensagens com JSON 59 (`Resposta_por_caso_de_uso`; `ComRespostaAninhada` com 20 nomes).
+- `MediatorTests.AgirNoChamado_so_nas_9_acoes`: 68 mensagens, (9, 59).
+- `SessaoTests.Sem_cookie_401_em_toda_rota_privada`: 64 rotas privadas.
+- `web/`: contagens e grupos do menu em `acesso.test.tsx` e nos testes de arranjo da barra (anotados no commit da fatia web).

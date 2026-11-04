@@ -69,5 +69,11 @@ DELETE /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite
 GET /api/push/chave anonimo=False autorizacao=True limite=-
 POST /api/push/subscricao anonimo=False autorizacao=True limite=-
 DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-
+GET /api/plataforma/instituicoes anonimo=False autorizacao=True limite=-
+POST /api/plataforma/instituicoes anonimo=False autorizacao=True limite=-
+POST /api/plataforma/instituicoes/{slug}/carga anonimo=False autorizacao=True limite=-
+POST /api/plataforma/instituicoes/{slug}/desativar anonimo=False autorizacao=True limite=-
+POST /api/plataforma/instituicoes/{slug}/reativar anonimo=False autorizacao=True limite=-
+POST /api/plataforma/instituicoes/{slug}/reenviar-acesso anonimo=False autorizacao=True limite=-
 * /api/{**resto} anonimo=False autorizacao=False limite=-
 GET,HEAD {*path:nonfile} anonimo=False autorizacao=False limite=-

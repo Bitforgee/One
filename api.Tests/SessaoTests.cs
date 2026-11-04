@@ -31,7 +31,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.Equal(64, privadas.Count); // RAG C37: mais as 5 de documentos; tempo-real-signalr: mais o negotiate e o WebSocket do hub (sem método declarado, o upgrade é GET)
+        Assert.Equal(70, privadas.Count); // RAG C37: mais as 5 de documentos; tempo-real-signalr: mais o negotiate e o WebSocket do hub (sem método declarado, o upgrade é GET)
 
         foreach (var (metodo, padrao) in privadas)
         {

@@ -203,9 +203,11 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
 public class AtrasoDoCommit : DbTransactionInterceptor
 {
     public TimeSpan Atraso { get; set; }
+    public bool Falhar { get; set; } // instituicoes-plataforma C10: o commit falha, e a transação inteira deve sumir
 
     public override async ValueTask<InterceptionResult> TransactionCommittingAsync(System.Data.Common.DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
     {
+        if (Falhar) throw new InvalidOperationException("commit simulado");
         if (Atraso > TimeSpan.Zero) await Task.Delay(Atraso, cancellationToken);
         return result;
     }
