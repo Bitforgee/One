@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/aparencia-instituicao/plan.md`
 
-71 checks em 9 slices · 9 one-way doors · 0 perguntas abertas
+71 checks em 9 slices · 11 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o
 commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
@@ -252,8 +252,8 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no 
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
 
-**C51** - [x] Um e-mail da fila `EmailSaida` de uma instituição com cor e logo (o caminho que envia os e-mails de aviso e, pelo mesmo `Email.Enviar`, o de primeiro acesso) chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega ` (emenda aprovada pelo usuário em 04/11, rodada 1)
-`; emenda aprovada pelo usuário em 04/11), e há uma parte `text/html` (AC 48, door 6)
+**C51** - [x] Um e-mail da fila `EmailSaida` de uma instituição com cor e logo (o caminho que envia os e-mails de aviso e, pelo mesmo `Email.Enviar`, o de primeiro acesso) chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega `
+`; emenda aprovada pelo usuário em 04/11, rodada 1), e há uma parte `text/html` (AC 48, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Email_vai_com_texto_e_html"`
 
 **C52** - [x] O HTML desse e-mail contém:
@@ -332,7 +332,7 @@ Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test`
 
 Acrescentados com aprovação do usuário em 04/11, depois da rodada 1 da verificação.
 
-**C65** - [x] Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, o centro horizontal do bloco de boas-vindas fica a no máximo 1 px do centro da área de conteúdo (Screens: Assistente sem conversa)
+**C65** - Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, os centros horizontais da foto (ou ilustração) do assistente, do título "Olá! Eu sou …" e da grade de perguntas ficam, cada um, a no máximo 1 px do centro da área de conteúdo (precisão acrescentada em 04/11 depois da rodada 2: o contêiner de largura total não mede centralização) (Screens: Assistente sem conversa)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`
 
 **C66** - [x] A 1440 px, com imagem de login, a base do bloco de título, frase e itens fica a no máximo 48 px da base do painel. O bloco fica sobre um elemento do painel com `background-image` `linear-gradient` cuja caixa contém a caixa do bloco (Screens: Login ≥ 1024 px)
@@ -374,13 +374,13 @@ Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "inicia
 | `POST /api/admin/aparencia/imagens/{tipo}` statuses (8) | 200 C15 · 400 C18 · 401 C22 · 403 C22 · 404 C19 · 413 C17 · 415 C16 · 503 C20 | - |
 | `DELETE /api/admin/aparencia/imagens/{tipo}` statuses (4) | 204 C21 · 401 C22 · 403 C22 · 404 C19, C21 | - |
 | tipos de imagem (4) | `logo` C15, C16, C17 · `icone` C16, C17, C18 · `login` C16, C17 · `assistente` C16, C17 | - |
-| limites de texto e e-mail inválido (14) | C14, table-driven sobre os 13 nos dois lados da borda e o e-mail inválido | - |
+| limites de texto e e-mail inválido (13) | C14, table-driven sobre os 12 nos dois lados da borda e o e-mail inválido | - |
 | bordas da cor (6) | sem `#` C13 · 5 dígitos C13 · `#ffd700` C13 · `#777777` C13 · `#767676` aceito C13 · `#224fa7` aceito C13 | - |
 | temas com cor (3) e sem cor (2) | Claro C33 · Escuro C33 · Preto C33 · sem cor Claro C33 · sem cor Escuro C33 | - |
 | tokens derivados (4) | `--primary` C34 · `--sidebar-primary` C34 · `--primary-subtle` C34 · `--ring` C34 | - |
 | lugares da marca (8) | `<title>` C37 · `theme-color` C37 · `icon` C36 · `apple-touch-icon` C36 · `manifest` C56 · logo no login C35 · logo na barra C35 · ícone recolhido e no topo C36 | - |
 | estados do selo (5) | `ABERTO` C3 · `EM_ATENDIMENTO` C3 · `AGUARDANDO_ALUNO` C3 · `RESOLVIDO` C3 · `FECHADO` C3 | - |
-| componentes com 44 px (5) | `Button` (4 tamanhos) C2 · `Input` C2 · `NativeSelect` C2 · ações da `Tabela` C2 · "Ações" do chamado C8 | - |
+| componentes com 44 px (5) | `Button` (8 tamanhos) C2 · `Input` C2 · `NativeSelect` C2 · ações da `Tabela` C2 · "Ações" do chamado C8 | - |
 | listas (6) | Fila · Minhas solicitações · Artigos · Documentos · Usuários · Cadastros: C7 (cartões), C10 (360 px), C48 (vazio), table-driven sobre as 6 | - |
 | ilustrações (6) | `BoasVindas` C40, C50 · `Conversa` C41 · `CaixaVazia` C48 · `Documento` C48 · `Pessoas` C48 · `Grafico` C49 · as 6 C47 | - |
 | campos de contato (3) | horário C45 · telefone C45 · e-mail C45 | - |
