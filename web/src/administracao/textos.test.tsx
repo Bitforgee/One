@@ -47,10 +47,11 @@ describe('textos', () => {
     const fixture = ['Carla', 'Bia', 'Davi', ...Fixture, '000.000.000-01', '000.000.000-02', '000.000.000-03', 'carla@univag.edu.br', 'bia@univag.edu.br', 'davi@univag.edu.br']
     const leituras = (usuarios: unknown[]) => ({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, usuarios], 'GET /api/admin/setores': () => [200, setores] }) as Record<string, Rota>
 
-    // carregando: só o status "Carregando"
+    // carregando: só os 3 esqueletos
     api({ ...leituras([]), 'GET /api/admin/usuarios': () => new Promise(() => {}) })
     let montada = abrir('/univag/usuarios')
-    expect(await within(await screen.findByRole('main')).findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
+    await screen.findByRole('main')
+    await waitFor(() => expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3))
     t.conferir(tela())
     montada.unmount()
 

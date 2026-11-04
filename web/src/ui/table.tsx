@@ -3,6 +3,9 @@
 import * as React from "react"
 import { cn } from "@/ui/utils"
 
+// Dentro da Tabela abaixo de 768 px não há <table>: linhas e células saem como div, e a linha é um item de lista.
+export const Cartoes = React.createContext(false)
+
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
@@ -52,8 +55,11 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+  const cartao = React.useContext(Cartoes)
+  const Tag: React.ElementType = cartao ? "div" : "tr"
   return (
-    <tr
+    <Tag
+      role={cartao ? "listitem" : undefined}
       data-slot="table-row"
       className={cn(
         "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
@@ -78,8 +84,10 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 }
 
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+  const cartao = React.useContext(Cartoes)
+  const Tag: React.ElementType = cartao ? "div" : "td"
   return (
-    <td
+    <Tag
       data-slot="table-cell"
       className={cn(
         "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",

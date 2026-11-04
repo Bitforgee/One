@@ -150,7 +150,7 @@ describe('cadastros', () => {
     api({ 'GET /api/auth/me': () => [200, admin], ...pendentes })
     abrir('/univag/cadastros')
     await aba('Regras')
-    expect(screen.getAllByRole('status', { name: 'Carregando' }).length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
     await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
     const d = within(await screen.findByRole('dialog'))
     expect(within(d.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria'])

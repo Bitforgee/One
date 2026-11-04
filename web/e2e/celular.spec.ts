@@ -1,0 +1,161 @@
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { buttonVariants } from '../src/ui/button'
+import { chamadoSimulado, simularApi, Telas } from './simulada'
+
+// Arranjo do celular medido com boundingBox() e getComputedStyle: px CSS, tolerância de 1 px (checks.md).
+test.use({ serviceWorkers: 'block' })
+
+const caixa = async (l: Locator) => (await l.boundingBox())!
+async function abrirTela(page: Page, nome: string) {
+  const [, caminho, esperar] = Telas.find(([n]) => n === nome)!
+  await page.goto(caminho)
+  await esperar(page)
+}
+const altura = async (l: Locator) => (await caixa(l.first())).height
+const Listas = ['Fila', 'Minhas solicitações', 'Artigos', 'Documentos', 'Usuários', 'Cadastros']
+
+test.describe('S1 celular', () => {
+  test('alerta sem ícone em uma linha', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await abrirTela(page, 'Matrículas')
+    const alerta = page.locator('[data-slot=alert]', { hasText: 'Há erros no arquivo.' })
+    const medidas = await alerta.evaluate((a) => {
+      const estilo = getComputedStyle(a)
+      const texto = document.createRange()
+      texto.selectNodeContents(a)
+      const conteudo = a.clientWidth - parseFloat(estilo.paddingLeft) - parseFloat(estilo.paddingRight)
+      return { altura: texto.getBoundingClientRect().height, linha: parseFloat(estilo.lineHeight), coluna: parseFloat(estilo.gridTemplateColumns), conteudo }
+    })
+    expect(medidas.altura).toBeLessThanOrEqual(medidas.linha * 1.5)
+    expect(Math.abs(medidas.coluna - medidas.conteudo)).toBeLessThanOrEqual(1)
+  })
+
+  test('alvos de toque de 44 px abaixo de 768', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    // Button: default (Novo, em Artigos), xs (nenhuma tela usa: a classe vem do cva), icon (Enviar) e sm (Sim, do Assistente)
+    await abrirTela(page, 'Artigos')
+    expect(await altura(page.getByRole('button', { name: 'Novo' }))).toBeGreaterThanOrEqual(44)
+    await page.evaluate((classe) => document.body.insertAdjacentHTML('beforeend', `<button id="xs" class="${classe}">x</button>`), buttonVariants({ size: 'xs' }))
+    expect(await altura(page.locator('#xs'))).toBeGreaterThanOrEqual(44)
+    await abrirTela(page, 'Assistente')
+    expect(await altura(page.getByRole('button', { name: 'Enviar' }))).toBeGreaterThanOrEqual(44)
+    expect(await altura(page.locator('[data-slot=button][data-size=sm]'))).toBeGreaterThanOrEqual(44)
+    await abrirTela(page, 'Login')
+    expect(await altura(page.getByLabel('CPF'))).toBeGreaterThanOrEqual(44)
+    await abrirTela(page, 'Cadastros')
+    expect(await altura(page.getByLabel('Cadastro'))).toBeGreaterThanOrEqual(44)
+    await abrirTela(page, 'Usuários')
+    expect(await altura(page.getByRole('button', { name: /^Ações de/ }))).toBeGreaterThanOrEqual(44)
+    await page.setViewportSize({ width: 1024, height: 800 })
+    await abrirTela(page, 'Artigos')
+    expect(await altura(page.getByRole('button', { name: 'Novo' }))).toBe(36)
+  })
+
+  test('Indicadores sem texto cortado', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page, undefined, true)
+    await abrirTela(page, 'Indicadores')
+    await page.locator('.recharts-yAxis-tick-labels text').first().waitFor()
+    const cortados = await page.evaluate(() =>
+      [...document.querySelectorAll('main [data-slot=card] *')]
+        .filter((e) => getComputedStyle(e).textOverflow === 'ellipsis' || (!(e instanceof SVGElement) && e.clientWidth > 0 && e.scrollWidth > e.clientWidth))
+        .map((e) => e.outerHTML.slice(0, 80)),
+    )
+    expect(cortados).toEqual([])
+    // frase de destaque inteira; rótulo de 40 caracteres em até 2 linhas
+    await expect(page.getByText('Resolvidas sem reabertura, sobre as conversas com desfecho')).toBeVisible()
+    const rotulo = page.locator('.recharts-yAxis-tick-labels text', { hasText: 'Financeiro' })
+    expect((await rotulo.textContent())!.replace(/\s/g, '')).toBe('Financeiro>Boletosemensalidades2026')
+    expect(await rotulo.locator('tspan').count()).toBeLessThanOrEqual(2)
+  })
+
+  test('Cadastros seletor e Novo na mesma linha', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await abrirTela(page, 'Cadastros')
+    const seletor = await caixa(page.getByLabel('Cadastro'))
+    const novo = await caixa(page.getByRole('button', { name: 'Novo' }))
+    expect(Math.abs(seletor.y - novo.y)).toBeLessThanOrEqual(1)
+  })
+})
+
+test.describe('S2 celular', () => {
+  test('listas viram cartões abaixo de 768', async ({ page }) => {
+    await simularApi(page)
+    for (const nome of Listas) {
+      await page.setViewportSize({ width: 390, height: 844 })
+      await abrirTela(page, nome)
+      const principal = page.getByRole('main')
+      expect(await principal.locator('table:visible').count(), nome).toBe(0)
+      const cartoes = principal.getByRole('listitem')
+      expect(await cartoes.count(), nome).toBeGreaterThan(0)
+      const selo = cartoes.first().locator('[data-celula=selo] [data-slot=badge]').first()
+      if (await selo.count()) {
+        const primeira = await caixa(cartoes.first().locator('[data-slot=table-cell]').first())
+        const s = await caixa(selo)
+        expect(Math.abs(s.y - primeira.y), `${nome}: selo no mesmo top`).toBeLessThanOrEqual(1)
+        expect(s.x, `${nome}: selo à direita`).toBeGreaterThanOrEqual(primeira.x + primeira.width - 1)
+        if (nome === 'Fila' || nome === 'Minhas solicitações') {
+          const titulo = await caixa(cartoes.first().locator('[data-slot=table-cell]').nth(1))
+          expect(titulo.y, `${nome}: título abaixo`).toBeGreaterThanOrEqual(Math.max(primeira.y + primeira.height, s.y + s.height) - 1)
+        }
+      }
+      await page.setViewportSize({ width: 1024, height: 800 })
+      await abrirTela(page, nome)
+      expect(await page.getByRole('main').locator('table:visible').count(), `${nome} a 1024`).toBeGreaterThan(0)
+    }
+  })
+
+  test('Ações do chamado no rodapé abaixo de 1024', async ({ page }) => {
+    await simularApi(page)
+    await page.setViewportSize({ width: 1024, height: 800 })
+    await abrirTela(page, 'Detalhe do chamado')
+    expect(await page.getByRole('button', { name: 'Ações', exact: true }).count()).toBe(0)
+    const nomesNoCartao = await page.locator('[data-slot=card]', { has: page.getByText('Ações', { exact: true }) }).getByRole('button').allInnerTexts()
+    expect(nomesNoCartao.length).toBeGreaterThan(0)
+    for (const largura of [390, 1023]) {
+      await page.setViewportSize({ width: largura, height: 800 })
+      await abrirTela(page, 'Detalhe do chamado')
+      const botao = page.getByRole('button', { name: 'Ações', exact: true })
+      const estilo = await botao.evaluate((b) => ({ posicao: getComputedStyle(b).position, fundo: getComputedStyle(b).bottom }))
+      expect(estilo, `${largura} px`).toEqual({ posicao: 'fixed', fundo: '0px' })
+      expect(await altura(botao)).toBeGreaterThanOrEqual(44)
+      await botao.click()
+      const folha = page.getByRole('dialog')
+      await expect(folha).toBeVisible()
+      const f = await caixa(folha)
+      expect(f.y + f.height, 'vem de baixo').toBeCloseTo(800, 0)
+      expect((await folha.getByRole('button').allInnerTexts()).filter((t) => t !== 'Close' && t !== ''), `${largura} px`).toEqual(nomesNoCartao)
+    }
+  })
+
+  test('ação no Sheet fecha e atualiza', async ({ page }) => {
+    await simularApi(page)
+    let assumido = false
+    const json = (estado: string) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(chamadoSimulado(estado)) })
+    await page.route('**/api/chamados/ONE-123', (rota) => rota.fulfill(json(assumido ? 'EM_ATENDIMENTO' : 'ABERTO')))
+    await page.route('**/api/chamados/ONE-123/assumir', (rota) => {
+      assumido = true
+      return rota.fulfill(json('EM_ATENDIMENTO'))
+    })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await abrirTela(page, 'Detalhe do chamado')
+    const selo = page.getByRole('main').locator('[data-slot=badge]').first()
+    await expect(selo).toHaveText('Aberto')
+    await page.getByRole('button', { name: 'Ações', exact: true }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Assumir' }).click()
+    await expect(page.getByRole('dialog')).toBeHidden()
+    await expect(selo).toHaveText('Em atendimento')
+  })
+
+  test('sem rolagem horizontal a 360', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await simularApi(page, undefined, true)
+    for (const nome of [...Listas, 'Detalhe do chamado']) {
+      await abrirTela(page, nome)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), nome).toBeLessThanOrEqual(360)
+    }
+  })
+})

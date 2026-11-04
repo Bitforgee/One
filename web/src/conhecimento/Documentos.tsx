@@ -8,7 +8,6 @@ import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
-import { Situacao } from '../Situacao'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
@@ -53,13 +52,13 @@ function LinhaDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; n
       <CelulaLargo>{d.categoria}</CelulaLargo>
       <CelulaLargo>{versao}</CelulaLargo>
       <CelulaLargo>{d.versao.nomeArquivo}</CelulaLargo>
-      <TableCell>
+      <TableCell data-celula="selo">
         <div className="flex gap-1">
           <SeloIndexacao valor={d.indexacao} />
           <SeloEstado estado={d.estado} />
         </div>
       </TableCell>
-      <TableCell className="text-end">
+      <TableCell data-celula="acoes" className="text-end">
         {d.estado === 'ATIVO' && (
           <MenuAcoes nome={d.titulo} pendente={pendente}>
             <DropdownMenuItem disabled={pendente} onSelect={novaVersao}>
@@ -128,8 +127,7 @@ export function Documentos() {
       </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!envio} />
-      <Situacao itens={documentos} erro={erro} />
-      <Tabela colunas={Colunas} itens={documentos}>
+      <Tabela colunas={Colunas} itens={documentos} erro={erro}>
         {documentos?.map((d) => (
           <LinhaDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
         ))}

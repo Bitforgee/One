@@ -1,18 +1,17 @@
 import { BookText, FileText } from 'lucide-react'
 import { Balao, Quebravel } from '../Balao'
-import { Estados, frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
+import { frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { LinkDeAnexo } from '../LinkDeAnexo'
-import { Badge } from '../ui/badge'
 import { Card, CardContent } from '../ui/card'
-import { responsavel } from './Chamados'
+import { responsavel, SeloDoChamado } from './Chamados'
 
 export function Cabecalho({ c }: { c: Chamado }) {
   return (
     <>
       <h2 className="text-2xl font-semibold tracking-tight break-words">{c.titulo}</h2>
       <p className="mb-0 flex flex-wrap items-center gap-2">
-        <Badge>{Estados[c.estado]}</Badge>
+        <SeloDoChamado estado={c.estado} />
         <span className="text-sm text-muted-foreground">
           {c.setor} · {c.categoria} · {responsavel(c.responsavel)}
         </span>

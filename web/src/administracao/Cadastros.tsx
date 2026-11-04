@@ -7,7 +7,6 @@ import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
-import { Situacao } from '../Situacao'
 import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -61,9 +60,9 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
 
 // Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
-function ListaDaAba({ itens, linha, editar }: { itens?: { id: number }[]; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
+function ListaDaAba({ itens, erro, linha, editar }: { itens?: { id: number }[]; erro?: string; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
   return (
-    <Tabela colunas={Colunas} itens={itens}>
+    <Tabela colunas={Colunas} itens={itens} erro={erro}>
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
@@ -207,8 +206,8 @@ export function Cadastros() {
     <div className="flex flex-col gap-2">
       <ErroDe erro={erro} />
       <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)} className="gap-2">
-        <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })}>
-          <NativeSelect aria-label="Cadastro" className="w-full @4xl/main:hidden" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
+        <Cabecalho linha botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })}>
+          <NativeSelect aria-label="Cadastro" className="w-full min-w-0 @4xl/main:hidden" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
             {abas.map((k) => (
               <option key={k} value={k}>
                 {Titulos[k]}
@@ -225,8 +224,7 @@ export function Cadastros() {
         </Cabecalho>
         {abas.map((k) => (
           <TabsContent key={k} value={k} className="flex flex-col gap-2">
-            <Situacao itens={dados?.[k]} erro={erro} />
-            <ListaDaAba itens={dados?.[k]} linha={(x) => linhas(dados!)[k](x)} editar={(x) => setEditando(ficha(x))} />
+            <ListaDaAba itens={dados?.[k]} erro={erro} linha={(x) => linhas(dados!)[k](x)} editar={(x) => setEditando(ficha(x))} />
           </TabsContent>
         ))}
       </Tabs>

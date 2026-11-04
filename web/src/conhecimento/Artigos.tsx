@@ -7,7 +7,6 @@ import { Campo } from '../Campo'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
-import { Situacao } from '../Situacao'
 import { Periodo } from '../Periodo'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -63,13 +62,13 @@ function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edit
       <CelulaLargo>{a.categoria}</CelulaLargo>
       <CelulaLargo>{versao}</CelulaLargo>
       <CelulaLargo>{validade(a)}</CelulaLargo>
-      <TableCell>
+      <TableCell data-celula="selo">
         <div className="flex gap-1">
           <SeloIndexacao valor={a.indexacao} />
           <SeloEstado estado={a.estado} />
         </div>
       </TableCell>
-      <TableCell className="text-end">
+      <TableCell data-celula="acoes" className="text-end">
         <MenuAcoes nome={a.versao.titulo} pendente={pendente}>
           <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
           {a.estado !== 'ATIVO' && (
@@ -142,8 +141,7 @@ export function Artigos() {
       </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Situacao itens={artigos} erro={erro} />
-      <Tabela colunas={Colunas} itens={artigos}>
+      <Tabela colunas={Colunas} itens={artigos} erro={erro}>
         {artigos?.map((a) => (
           <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
         ))}

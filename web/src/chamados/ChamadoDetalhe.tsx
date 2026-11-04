@@ -4,6 +4,7 @@ import { useParams } from 'react-router'
 import { api, ErroApi } from '../api'
 import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
+import { useConsulta } from '../ui/use-mobile'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { useSessao } from '../sessao'
@@ -14,6 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect, NativeSelectOption } from '../ui/native-select'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { Spinner } from '../ui/spinner'
 import { Textarea } from '../ui/textarea'
 import { Carregando } from './Chamados'
@@ -233,10 +235,44 @@ function CampoMotivo({ id, rotulo, valor, setValor }: Campo & { id: string; rotu
 
 const ACOES = ['assumir', 'confirmar', 'encaminhar', 'cancelar', 'resolver', 'reclassificar', 'duplicado', 'rejeitar']
 
+const AlertaDaAcao = ({ erro }: { erro: Error | null }) => erro && <Alert variant="destructive">{erro.message}</Alert>
+
+// O cartão de ações; abaixo de 1024 px (AC 8) vira uma barra fixa no rodapé com o botão "Ações", que abre as mesmas ações num Sheet.
+function CaixaDeAcoes({ folha, setFolha, erro, children }: { folha: boolean; setFolha: (aberta: boolean) => void; erro: ReactNode; children: ReactNode }) {
+  if (!useConsulta('(max-width: 1023px)'))
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ações</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">{children}</CardContent>
+      </Card>
+    )
+  return (
+    <>
+      <Button className="fixed inset-x-0 bottom-0 z-30 h-11 rounded-none pb-[env(safe-area-inset-bottom)]" onClick={() => setFolha(true)}>
+        Ações
+      </Button>
+      <Sheet open={folha} onOpenChange={setFolha}>
+        <SheetContent side="bottom" aria-describedby={undefined} className="max-h-[85dvh]">
+          <SheetHeader>
+            <SheetTitle>Ações</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 overflow-y-auto p-4 pt-0">
+            {erro}
+            {children}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}
+
 type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
 
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
   // Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
+  const [folha, setFolha] = useState(false)
   const acao = useMutation({
     mutationFn: async ({ caminho, corpo }: Pedido) => {
       try {
@@ -248,6 +284,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
     },
     onSuccess: (novo, { depois }) => {
       setChamado(novo)
+      setFolha(false)
       depois?.()
     },
   })
@@ -264,9 +301,33 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const pendente = acao.isPending
   const acoes = { pode, executar, pendente }
   const limparMotivo = () => setMotivo('')
+  const erro = <AlertaDaAcao erro={acao.error} />
+  const abrir = (m: 'encaminhar' | 'cancelar') => {
+    setFolha(false)
+    setModal(m)
+  }
+  const painel = (
+    <>
+      <BotoesDeAcao {...acoes} abrir={abrir} />
+      <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
+        id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
+      <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
+        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
+        <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
+          <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
+        </NativeSelect>
+      </FormLinha>
+      <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
+        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
+        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
+      </FormLinha>
+      <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
+        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
+    </>
+  )
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 @5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto grid max-w-3xl gap-4 max-lg:pb-14 @5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]">
       <div className="flex min-w-0 flex-col gap-4">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
@@ -274,30 +335,11 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
         <Responder c={c} equipe={equipe} {...acoes} />
       </div>
       <div className="flex min-w-0 flex-col gap-4">
-        {acao.error && <Alert variant="destructive">{acao.error.message}</Alert>}
+        {!folha && erro}
         {ACOES.some(pode) && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Ações</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <BotoesDeAcao {...acoes} abrir={setModal} />
-              <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
-                id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
-              <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
-                id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
-                <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
-                  <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
-                </NativeSelect>
-              </FormLinha>
-              <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
-                id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
-                <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
-              </FormLinha>
-              <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
-                id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
-            </CardContent>
-          </Card>
+          <CaixaDeAcoes folha={folha} setFolha={setFolha} erro={erro}>
+            {painel}
+          </CaixaDeAcoes>
         )}
         <Historico eventos={c.eventos} fuso={fuso} />
       </div>

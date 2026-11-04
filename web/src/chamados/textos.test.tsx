@@ -144,7 +144,7 @@ describe('textos', () => {
     rota(() => new Promise(() => {}))
     let montada = abrir(caminho)
     await screen.findByRole('heading', { level: 1 })
-    expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
     t.conferir(tela())
     montada.unmount()
 

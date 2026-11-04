@@ -142,7 +142,7 @@ function Painel({ dados }: { dados: Indicadores }) {
               <CardDescription>{rotulo}</CardDescription>
               <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</CardTitle>
             </div>
-            <div className="line-clamp-1 text-sm text-muted-foreground">{rodape}</div>
+            <div className="text-sm text-muted-foreground">{rodape}</div>
           </Card>
         ))}
       </div>

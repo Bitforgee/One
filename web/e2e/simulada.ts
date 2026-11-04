@@ -4,6 +4,24 @@ import type { Page } from '@playwright/test'
 const TituloLongo = 'Boleto'.repeat(20)
 const EmailLongo = 'e'.repeat(46) + '@univag.edu.br'
 
+const longo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
+
+// O chamado ONE-123 como a equipe o recebe; `estado` deixa o teste do Sheet ver a troca.
+export const chamadoSimulado = (estado = 'EM_ATENDIMENTO') => ({
+  numero: 'ONE-123', titulo: longo, estado, motivoFechamento: null, setor: 'Coordenação de Análise e Desenvolvimento de Sistemas',
+  categoria: 'Financeiro > Boletos e mensalidades', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', resolvidoEm: null,
+  matricula: { numero: '2000567890', curso: 'Análise e Desenvolvimento de Sistemas', semestre: 3 }, solicitante: 'Ana Beatriz', origemCategoria: 'IA',
+  resumo: 'Aluna pede a segunda via do boleto de novembro com valor corrigido.',
+  transcricao: [
+    { autor: 'ALUNO', texto: longo, criadaEm: '2026-11-02T12:00:00Z' },
+    { autor: 'ASSISTENTE', texto: 'O boleto fica em https://portal.univag.edu.br/financeiro/boletos/segunda-via', criadaEm: '2026-11-02T12:00:05Z',
+      fontes: [{ versaoArtigoId: 1, titulo: 'Como emitir a segunda via do boleto do semestre', trechos: ['https://portal.univag.edu.br/financeiro/boletos/segunda-via'], atualizado: true }] },
+  ],
+  mensagens: [{ id: 1, tipo: 'NOTA', texto: 'Conferir com a tesouraria antes de responder.', autor: 'Carla Regina de Souza', doAluno: false, criadaEm: '2026-11-02T12:10:00Z' }],
+  eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
+  acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
+})
+
 // API simulada: o teste mede só o layout de cada tela.
 // Com `extremos`, Fila, Artigos, Documentos e Usuários ganham uma linha com os textos longos de C13.
 export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false) {
@@ -24,28 +42,13 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
       })
     if (caminho === '/api/conversas')
       return json(201, { conversaId: 1, resposta: { tipo: 'resposta', texto: 'O boleto do semestre fica no Portal do Aluno: https://portal.univag.edu.br/financeiro/boletos/segunda-via' } })
-    const longo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
     if (caminho === '/api/chamados' && rota.request().url().includes('escopo=fila'))
       {
       const fila = { numero: 'ONE-123', titulo: longo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', dias: 12 }
       return json(200, mais([fila], { ...fila, numero: 'ONE-124', titulo: TituloLongo }))
     }
     if (caminho === '/api/chamados') return json(200, [{ numero: 'ONE-123', titulo: longo, estado: 'EM_ATENDIMENTO', criadoEm: '2026-11-02T12:00:00Z' }])
-    if (caminho === '/api/chamados/ONE-123')
-      return json(200, {
-        numero: 'ONE-123', titulo: longo, estado: 'EM_ATENDIMENTO', motivoFechamento: null, setor: 'Coordenação de Análise e Desenvolvimento de Sistemas',
-        categoria: 'Financeiro > Boletos e mensalidades', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', resolvidoEm: null,
-        matricula: { numero: '2000567890', curso: 'Análise e Desenvolvimento de Sistemas', semestre: 3 }, solicitante: 'Ana Beatriz', origemCategoria: 'IA',
-        resumo: 'Aluna pede a segunda via do boleto de novembro com valor corrigido.',
-        transcricao: [
-          { autor: 'ALUNO', texto: longo, criadaEm: '2026-11-02T12:00:00Z' },
-          { autor: 'ASSISTENTE', texto: 'O boleto fica em https://portal.univag.edu.br/financeiro/boletos/segunda-via', criadaEm: '2026-11-02T12:00:05Z',
-            fontes: [{ versaoArtigoId: 1, titulo: 'Como emitir a segunda via do boleto do semestre', trechos: ['https://portal.univag.edu.br/financeiro/boletos/segunda-via'], atualizado: true }] },
-        ],
-        mensagens: [{ id: 1, tipo: 'NOTA', texto: 'Conferir com a tesouraria antes de responder.', autor: 'Carla Regina de Souza', doAluno: false, criadaEm: '2026-11-02T12:10:00Z' }],
-        eventos: [{ tipo: 'TRANSICAO', ator: 'Carla Regina de Souza', de: 'AGUARDANDO_ALUNO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:10:00Z' }],
-        acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
-      })
+    if (caminho === '/api/chamados/ONE-123') return json(200, chamadoSimulado())
     if (caminho === '/api/admin/usuarios')
       {
       const usuario = { id: 1, cpf: '12345678909', nome: 'Carla Regina de Souza Albuquerque', email: 'carla.regina.albuquerque@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ATENDENTE', 'ADMINISTRADOR'], setores: [1] }
@@ -64,7 +67,7 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
       return json(200, {
         semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.6543, taxaEscalonamento: 0.2, taxaAbandono: 0.1457, taxaPerguntasSemArtigo: 0.12,
         chamadosAbertos: 321, chamadosResolvidos: 1200, tempoPrimeiraRespostaHoras: 12.75, tempoResolucaoHoras: 123.25, roteamentoCorreto: 0.91, taxaReabertura: 0.05,
-        principaisCategorias: { porConversas: [{ categoria: 'Financeiro > Boletos e mensalidades', total: 1000 }], porChamados: [{ categoria: 'Acadêmico > Notas e frequência', total: 300 }] },
+        principaisCategorias: { porConversas: [{ categoria: extremos ? 'Financeiro > Boletos e mensalidades 2026' : 'Financeiro > Boletos e mensalidades', total: 1000 }], porChamados: [{ categoria: 'Acadêmico > Notas e frequência', total: 300 }] },
         indicadorPrincipal: 0.7123,
       })
     if (caminho === '/api/admin/documentos')
@@ -105,7 +108,7 @@ export const Telas: [string, string, (p: Page) => Promise<void>][] = [
       await p.locator('input[type=file]').setInputFiles({ name: 'matriculas.csv', mimeType: 'text/csv', buffer: Buffer.from('cpf;nome') })
       await p.getByRole('button', { name: 'Importar' }).click()
       await p.getByRole('dialog').getByRole('button', { name: 'Importar' }).click()
-      await p.getByRole('cell', { name: /não confere/ }).waitFor()
+      await p.getByText(/não confere/).waitFor()
     },
   ],
   ['Cadastros', '/univag/cadastros', async (p) => void (await p.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').waitFor())],

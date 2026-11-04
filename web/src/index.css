@@ -139,3 +139,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Tabela abaixo de 768 px: cada linha é um cartão (sem <table>; ver ui/table.tsx). O primeiro filho e os marcados com
+   data-celula ficam na 1ª linha do cartão; os demais ocupam a linha toda. */
+[data-cartoes] [data-slot='table-row'] { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; row-gap: 0.25rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+[data-cartoes] [data-slot='table-cell'] { grid-column: 1 / -1; padding: 0; white-space: normal; }
+[data-cartoes] [data-slot='table-cell']:first-child { grid-column: 1; grid-row: 1; }
+[data-cartoes] [data-celula] { display: flex; justify-content: flex-end; grid-row: 1; align-self: start; margin-inline-start: 0.5rem; }
+[data-cartoes] [data-celula='selo'] { grid-column: 2; }
+[data-cartoes] [data-celula='acoes'] { grid-column: 3; }

@@ -13,6 +13,16 @@ import { UrlDaFila, useFilaAberta } from '../tempo-real'
 type ItemMeu = { numero: string; titulo: string; estado: string; criadoEm: string }
 type ItemFila = ItemMeu & { categoria: string; responsavel: string | null; dias: number }
 
+// O selo de estado por grupo de cor (AC 3): em andamento, à espera do aluno e concluído.
+const CoresDoEstado: Record<string, string> = {
+  ABERTO: 'bg-primary-subtle text-primary',
+  EM_ATENDIMENTO: 'bg-primary-subtle text-primary',
+  AGUARDANDO_ALUNO: 'bg-warning-subtle text-foreground',
+  RESOLVIDO: 'bg-success/15 text-success',
+  FECHADO: 'bg-success/15 text-success',
+}
+export const SeloDoChamado = ({ estado }: { estado: string }) => <Badge className={CoresDoEstado[estado]}>{Estados[estado]}</Badge>
+
 export function Carregando() {
   return <Spinner className="size-8" />
 }
@@ -22,13 +32,12 @@ export function Carregando() {
 function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas }: { url: string; vazio: ReactNode; largas?: { titulo: string; valor: (c: T) => string }[] }) {
   const { slug } = useParams()
   const navegar = useNavigate()
-  const { data: itens, error, isPending } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
+  const { data: itens, error } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
   const colunas = [{ titulo: 'Número' }, { titulo: 'Título' }, ...(largas ?? []).map(({ titulo }) => ({ titulo, largo: true })), { titulo: 'Estado' }]
   return (
     <div className="flex flex-col gap-2">
       {error && <Alert variant="destructive">{error.message}</Alert>}
-      {isPending && <Carregando />}
-      <Tabela colunas={colunas} itens={itens} vazio={vazio}>
+      <Tabela colunas={colunas} itens={itens} vazio={vazio} erro={error}>
         {itens?.map((c) => {
           const caminho = `/${slug}/chamados/${c.numero}`
           return (
@@ -46,8 +55,8 @@ function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas }: { url: strin
               {largas?.map((l) => (
                 <CelulaLargo key={l.titulo}>{l.valor(c)}</CelulaLargo>
               ))}
-              <TableCell>
-                <Badge variant="secondary">{Estados[c.estado]}</Badge>
+              <TableCell data-celula="selo">
+                <SeloDoChamado estado={c.estado} />
               </TableCell>
             </TableRow>
           )

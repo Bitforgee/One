@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
-import { rotulo } from './Grafico'
+import { linhasDoRotulo } from './Grafico'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 
@@ -239,12 +239,10 @@ describe('indicadores', () => {
     })
   })
 
-  // redesign-institucional C20 (AC 20): bordas 17, 18 e 19 caracteres
+  // aparencia-instituicao C5 (AC 5): até 2 linhas, sem reticências
   it('rótulo do gráfico', () => {
-    expect(rotulo('a'.repeat(17))).toBe('a'.repeat(17))
-    expect(rotulo('a'.repeat(18))).toBe('a'.repeat(18))
-    expect(rotulo('b'.repeat(19))).toBe(`${'b'.repeat(17)}…`)
-    expect(rotulo('Financeiro > Boletos e mensalidades')).toBe('Financeiro > Bole…')
+    expect(linhasDoRotulo('a'.repeat(24))).toEqual(['a'.repeat(24)])
+    expect(linhasDoRotulo('Financeiro > Boletos e mensalidades')).toEqual(['Financeiro > Boletos', 'e mensalidades'])
+    expect(linhasDoRotulo('Acadêmico > Notas e frequência dos alunos')).toHaveLength(2)
   })
 })
-

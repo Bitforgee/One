@@ -54,40 +54,40 @@ Um filtro que não seleciona teste nenhum sai com código 0 (L-002). O construto
 
 ### S1 - Alertas legíveis e toque confortável no celular (P1) · ~12 files · ~70 KB · ~20k
 
-**C1** - A 390 px, a mensagem "Há erros no arquivo." do `Alert` de Matrículas ocupa 1 linha (altura do texto ≤ 1,5 × `line-height`). Um `Alert` sem ícone tem o texto com a largura do conteúdo do alerta, com tolerância de 1 px (AC 1)
+**C1** - [x] A 390 px, a mensagem "Há erros no arquivo." do `Alert` de Matrículas ocupa 1 linha (altura do texto ≤ 1,5 × `line-height`). Um `Alert` sem ícone tem o texto com a largura do conteúdo do alerta, com tolerância de 1 px (AC 1)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alerta sem ícone em uma linha"`
 
-**C2** - A 390 px, a altura medida é ≥ 44 px para: `Button` nos tamanhos `default`, `sm`, `icon` e `xs` (um de cada, na tela de teste de Artigos e no Assistente), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
+**C2** - [x] A 390 px, a altura medida é ≥ 44 px para: `Button` nos tamanhos `default`, `sm`, `icon` e `xs` (um de cada, na tela de teste de Artigos e no Assistente), `Input` (CPF do login), `NativeSelect` (Cadastros) e o botão "Ações" de uma linha da `Tabela`. A 1024 px, o `Button` `default` mantém 36 px (AC 2)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "alvos de toque de 44 px abaixo de 768"`
 
-**C3** - O selo de estado do chamado tem a classe de fundo por grupo, para os 5 estados: `ABERTO` e `EM_ATENDIMENTO` → `bg-primary-subtle`; `AGUARDANDO_ALUNO` → `bg-warning-subtle`; `RESOLVIDO` e `FECHADO` → a classe de `success` escolhida. O texto de cada selo é o de `<base>` (AC 3)
+**C3** - [x] O selo de estado do chamado tem a classe de fundo por grupo, para os 5 estados: `ABERTO` e `EM_ATENDIMENTO` → `bg-primary-subtle`; `AGUARDANDO_ALUNO` → `bg-warning-subtle`; `RESOLVIDO` e `FECHADO` → a classe de `success` escolhida. O texto de cada selo é o de `<base>` (AC 3)
 Proof: `cd web && npx vitest run src/tabela.test.tsx -t "selo de estado com cor por grupo"`
 
-**C4** - Com a lista ainda carregando, a `Tabela` mostra 3 elementos `[data-slot="skeleton"]` e nenhum `Spinner` (AC 4)
+**C4** - [x] Com a lista ainda carregando, a `Tabela` mostra 3 elementos `[data-slot="skeleton"]` e nenhum `Spinner` (AC 4)
 Proof: `cd web && npx vitest run src/tabela.test.tsx -t "carregando mostra 3 esqueletos"`
 
-**C5** - A 390 px em Indicadores, nenhuma frase de destaque e nenhum rótulo de barra tem `text-overflow: ellipsis`, e nenhum tem `scrollWidth` > `clientWidth`. Um rótulo de 40 caracteres ocupa no máximo 2 linhas (AC 5)
+**C5** - [x] A 390 px em Indicadores, nenhuma frase de destaque e nenhum rótulo de barra tem `text-overflow: ellipsis`, e nenhum tem `scrollWidth` > `clientWidth`. Um rótulo de 40 caracteres ocupa no máximo 2 linhas (AC 5)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "Indicadores sem texto cortado"`
 
-**C6** - A 390 px em Cadastros, o seletor de lista e o botão "Novo" têm o mesmo `top`, com tolerância de 1 px (AC 6)
+**C6** - [x] A 390 px em Cadastros, o seletor de lista e o botão "Novo" têm o mesmo `top`, com tolerância de 1 px (AC 6)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "Cadastros seletor e Novo na mesma linha"`
 
 ### S2 - Listas e chamado pensados para o celular (P1) · ~8 files · ~80 KB · ~22k
 
-**C7** - A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`):
+**C7** - [x] A 390 px, nas 6 listas (Fila, Minhas solicitações, Artigos, Documentos, Usuários, Cadastros), nenhum `<table>` está visível, e cada item é um cartão (`role="listitem"`):
 - O selo de estado, quando a lista tem estado, fica à direita da primeira coluna e com o mesmo `top` (1 px).
 - A coluna principal fica abaixo das duas.
 
 A 1024 px, as 6 listas continuam em `<table>` (AC 7)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "listas viram cartões abaixo de 768"`
 
-**C8** - A 390 px e a 1023 px, o detalhe do chamado tem um botão "Ações" fixo (`position: fixed`), com `bottom` a 0 ou ao recuo da área segura e altura ≥ 44 px. Tocar nele abre um `Sheet` (`role="dialog"`) que vem de baixo, com os mesmos botões de ação que o cartão mostra a 1024 px, na mesma ordem. A 1024 px, não há botão "Ações" (AC 8)
+**C8** - [x] A 390 px e a 1023 px, o detalhe do chamado tem um botão "Ações" fixo (`position: fixed`), com `bottom` a 0 ou ao recuo da área segura e altura ≥ 44 px. Tocar nele abre um `Sheet` (`role="dialog"`) que vem de baixo, com os mesmos botões de ação que o cartão mostra a 1024 px, na mesma ordem. A 1024 px, não há botão "Ações" (AC 8)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "Ações do chamado no rodapé abaixo de 1024"`
 
-**C9** - A 390 px, tocar em "Ações" e depois em "Assumir" (com a API simulada devolvendo o chamado em `EM_ATENDIMENTO`) fecha o `Sheet`, e o selo do chamado mostra o novo estado (AC 9)
+**C9** - [x] A 390 px, tocar em "Ações" e depois em "Assumir" (com a API simulada devolvendo o chamado em `EM_ATENDIMENTO`) fecha o `Sheet`, e o selo do chamado mostra o novo estado (AC 9)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "ação no Sheet fecha e atualiza"`
 
-**C10** - A 360 px, `document.documentElement.scrollWidth` ≤ 360 nas 6 listas e no detalhe do chamado, inclusive com os textos longos de `simularApi(page, papeis, true)` (AC 10)
+**C10** - [x] A 360 px, `document.documentElement.scrollWidth` ≤ 360 nas 6 listas e no detalhe do chamado, inclusive com os textos longos de `simularApi(page, papeis, true)` (AC 10)
 Proof: `cd web && npx playwright test e2e/celular.spec.ts -g "sem rolagem horizontal a 360"`
 
 ### S3 - A tela Aparência (P1) · ~16 files · ~120 KB · ~35k
@@ -414,3 +414,24 @@ Edições em asserções existentes (todas só acrescentam o item novo ou sobem 
 - **Boundary:** cauda do lote 1 (API) em `850b615`: door 11 (`removida_em`, migration `ImagemRemovida`), C21, C51 e C58 marcados `[x]`; `dotnet test api.Tests` com 518 testes verdes; `dotnet build api` e `has-pending-model-changes` limpos. `Tabelas_da_aparencia` ganhou a coluna `removida_em`.
 - **Settled mid-build:** nada com o usuário. Decisões do construtor: o `Landing` ganhou a linha 10 (nomes dos campos nos `400`, pontuados por caminho JSON); a aparência vai em `AparenciaDados`, que a `Resposta` de `VerInstituicao`, `VerAparencia` e `AlterarAparencia` herdam; o e-mail não guarda HTML, `Email.Enviar(db, instituicao, ...)` monta no envio e espera o logo até 3 s; no Mailpit a parte `text/plain` chega com CRLF (SMTP), então `EmailMarcaTests` compara o `Corpo` depois de trocar `\r\n` por `\n`; texto ou lista vazios no `PUT` viram `null` (padrão).
 - **Abandoned:** nada. Em aberto para quem verifica: (1) [resolvido pela door 11 em `850b615`] `DELETE` e novo envio do mesmo tipo recomeçam a `versao` em 1, e a URL `?v=1` do logo antigo está `immutable` no cache do navegador (door 4); o plano manda apagar a linha, então a versão não sobrevive. (2) `C58` diz 7 linhas e 3 anônimas, mas são 6 novas (2 anônimas); a conta bate com o `Surface` sem a linha já existente. (3) `AdminTests.Sem_papel_admin_403` também conta as rotas `/admin` e subiu de 29 para 33, fora dos 3 arquivos que a lista fechada nomeia.
+
+### Lote 2 (web S1 e S2) - edições em asserções existentes (lista fechada, item 5)
+
+Vitest:
+- `indicadores/indicadores.test.tsx`, `rótulo do gráfico`: `rotulo()` (corte em 17 caracteres + "…") virou `linhasDoRotulo()` (até 2 linhas, sem reticências), com os valores de C5 (AC 5).
+- `chamados/listas.test.tsx` `lista carregando mostra o Spinner e nada mais` (agora `... 3 esqueletos ...`), `chamados/textos.test.tsx` (Fila e Minhas solicitações carregando), `administracao/usuarios.test.tsx` `carregando mostra o Spinner` (agora `... 3 esqueletos`), `administracao/textos.test.tsx` (Usuários carregando) e `administracao/cadastros.test.tsx` `o editor abre antes de as listas chegarem`: o `status "Carregando"` da lista virou os 3 `[data-slot="skeleton"]` (AC 4).
+- `test/estrutura.test.ts`: `tabela.test.tsx` entra em `Raiz` (o arquivo é nomeado por este `checks.md` na raiz de `src/`) e o laço de testes de tela o ignora. Acrescenta uma exceção nomeada, não afrouxa nenhuma outra (AC 4).
+
+Playwright (`e2e/arranjo.spec.ts`; a 360 px as listas são cartões e não há `<table>`, os botões têm 44 px e as ações do chamado estão no `Sheet`):
+- `rótulo do gráfico numa linha` (agora `... em até 2 linhas sem reticências`): 2 `tspan`, texto sem "…" (AC 5).
+- `arranjo listas de chamados`, `arranjo Artigos e Documentos`, `arranjo administração`, `Cadastros: detalhe pequeno embaixo do nome`: `row`/`table` viram `listitem`/`list` (AC 6, AC 7).
+- `detalhe em uma coluna a 360 px` e `Detalhe: cartão da equipe antes da conversa e ações que quebram em linhas`: o cartão de ações sai da ordem a 360 px, e os botões são medidos no `Sheet` (AC 8).
+- `botões pequenos em linha em Artigos, Documentos e Usuários`: `row` vira `listitem`, o "⋮" tem 44 px e não mais ≤ 36 (AC 2, AC 7).
+- `arranjo Assistente`: a 360 px "Falar com atendente" e "Encerrar" quebram em 2 linhas com o enviar de 44 px; a asserção passa a pedir `Encerrar` abaixo de `Falar`, alinhado ao enviar (AC 2).
+- `Matrículas: ...`: `cell` vira `getByText` do motivo e some o `columnheader` (sem `<table>` a 360 px; AC 1, AC 7).
+- `restantes que nenhuma linha da lista fechada nomeia, mas que medem o arranjo que o plano muda` (o Verifier decide): `compositor visível com a conversa maior que a tela` (mede o compositor inteiro em vez do botão "Falar", AC 2); `colunas largas somem no estreito` (cabeçalho `thead` medido só a 1280 px, linha de detalhe dentro de `listitem`, AC 7); `lista vazia centralizada` (célula `[data-slot=table-cell]`, cartão de 96 + 26 px, AC 7); `cabeçalho: borda, título numa linha e botões de 36 px` (44 px abaixo de 768 px, AC 2); `valores de tipo e bordas` (o rodapé do destaque não é mais cortado e cabe em até 2 linhas, AC 5); `texto das linhas de 14 px` (`[data-slot=table-cell]`, AC 7).
+- `e2e/simulada.ts` (não é asserção): `chamadoSimulado(estado)` exportado; com `extremos`, a categoria de Indicadores tem 40 caracteres; a espera de Matrículas usa `getByText`.
+
+- **Boundary:** lote 2 (web S1 e S2) fechado em `<sha-do-lote-2>`: C1 a C10 marcados `[x]`; `npx vitest run` com 296 testes verdes (36 arquivos); Playwright `arranjo.spec.ts` + `celular.spec.ts` com 79 verdes (71 + 8) contra `vite preview` do build; `npm --prefix web run build`, `crapper` (limite 9.99, maior nota 9.8) e `dryer` limpos. Falta o lote 3 (web S3 a S6 e S8).
+- **Settled mid-build:** nada com o usuário. Decisões do construtor: abaixo de 768 px a `Tabela` não renderiza `<table>` (`ui/table.tsx` lê o contexto `Cartoes` e emite `div` com `role="listitem"` dentro de um `div role="list"`), porque o Playwright conta uma `<table display:contents>` como visível; o layout do cartão está em `index.css` sob `[data-cartoes]`, e as células de selo e de ações levam `data-celula`. `Tabela` ganhou a prop `erro` (sem ela, lista sem dados mostra os 3 esqueletos); `Situacao.tsx` saiu. Selo do chamado: `SeloDoChamado` em `chamados/Chamados.tsx` (também no cabeçalho do detalhe); verde é `bg-success/15 text-success`. Detalhe do chamado: o cartão de ações e o `Sheet` nunca coexistem no DOM (`useConsulta` em `ui/use-mobile.ts`), para não repetir os `id` dos formulários; "Encaminhar" e "Cancelar" fecham o `Sheet` antes de abrir o diálogo. O botão `xs` não existe em nenhuma tela, então C2 mede uma `<button>` com a classe de `buttonVariants({ size: 'xs' })`. As provas de arranjo rodam contra `vite preview` (porta 5199, `E2E_URL`): não há `webServer` no `playwright.config.ts`, e o service worker do build é necessário para `cabeçalho: borda, ...`.
+- **Abandoned:** nada. Em aberto para quem verifica: (1) as 6 asserções de `arranjo.spec.ts` acima, fora dos nomes da lista fechada. (2) `Cabecalho` ganhou a prop `linha` (só Cadastros a usa). (3) `Matriculas` mostra os erros por linha como cartões a 360 px, sem o cabeçalho "Linha"/"Motivo".

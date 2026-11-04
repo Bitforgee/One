@@ -45,11 +45,11 @@ describe('usuários', () => {
     expect(screen.queryByRole('button', { name: 'Ações de Bia' })).not.toBeInTheDocument()
   })
 
-  it('carregando mostra o Spinner', async () => {
+  it('carregando mostra 3 esqueletos', async () => {
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => new Promise(() => {}), 'GET /api/admin/setores': () => [200, setores] })
     abrir('/univag/usuarios')
     expect(await screen.findByRole('heading', { name: 'Usuários' })).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'Carregando' })).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
   })
 
   it('editar troca papéis, setores e a senha temporária', async () => {

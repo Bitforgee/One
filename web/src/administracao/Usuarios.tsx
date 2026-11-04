@@ -8,7 +8,6 @@ import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
-import { Situacao } from '../Situacao'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -47,8 +46,8 @@ function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario;
       <CelulaLargo>{u.cpf}</CelulaLargo>
       <CelulaLargo>{u.email}</CelulaLargo>
       <CelulaLargo>{perfil}</CelulaLargo>
-      <TableCell>{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
-      <TableCell className="text-end">
+      <TableCell data-celula="selo">{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
+      <TableCell data-celula="acoes" className="text-end">
         {u.ativo && (
           <MenuAcoes nome={u.nome} pendente={pendente}>
             <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
@@ -126,8 +125,7 @@ export function Usuarios() {
       <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Situacao itens={dados?.usuarios} erro={erro} />
-      <Tabela colunas={Colunas} itens={dados?.usuarios}>
+      <Tabela colunas={Colunas} itens={dados?.usuarios} erro={erro}>
         {dados?.usuarios.map((u) => (
           <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}

@@ -72,11 +72,12 @@ describe('listas de chamados', () => {
     esperaLinhaVazia('Você ainda não tem solicitações. Fale com o assistente.', 3)
   })
 
-  it('lista carregando mostra o Spinner e nada mais', async () => {
+  it('lista carregando mostra 3 esqueletos e nada mais', async () => {
     lista('fila', () => new Promise(() => {}))
     abrir('/univag/fila')
     expect(await screen.findByRole('heading', { name: 'Fila' })).toBeInTheDocument()
-    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')
+    expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByText('Nenhum chamado na fila dos seus setores.')).not.toBeInTheDocument()
   })
 

@@ -7,7 +7,7 @@ const arquivos = Object.keys(fontes).map((c) => c.replace('/src/', ''))
 const texto = (arquivo: string) => fontes[`/src/${arquivo}`]
 
 const Fatias = ['acesso', 'administracao', 'assistente', 'chamados', 'conhecimento', 'indicadores']
-const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'AvisosPush.tsx', 'datas.ts', 'main.tsx', 'push.ts', 'sessao.ts', 'sw.test.ts', 'sw.ts', 'tempo-real.ts', 'tempo-real.test.ts']
+const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'AvisosPush.tsx', 'datas.ts', 'main.tsx', 'push.ts', 'sessao.ts', 'sw.test.ts', 'sw.ts', 'tempo-real.ts', 'tempo-real.test.ts', 'tabela.test.tsx']
 // Pacotes que só o código copiado dos registros (shadcn/ui, AI Elements) importa (door 3)
 const SoDaUi = /from ['"](?:radix-ui|@radix-ui\/[^'"]+|class-variance-authority|use-stick-to-bottom|clsx|tailwind-merge)['"]/
 const ForaDaUi = /(?:from|import)\s*['"](?:\.\.\/|@\/(?!ui\/))/
@@ -32,7 +32,7 @@ it('estrutura em fatias', () => {
 
   // cada teste de tela mora numa fatia e abre ao menos uma tela dessa fatia
   const caminhos = fatiaPorCaminho()
-  const testes = arquivos.filter((a) => a.endsWith('.test.tsx'))
+  const testes = arquivos.filter((a) => a.endsWith('.test.tsx') && !Raiz.includes(a))
   expect(testes.length).toBeGreaterThan(0)
   for (const teste of testes) {
     expect(Fatias, teste).toContain(pasta(teste))
