@@ -71,7 +71,7 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
             await f.Db(i.Id, async db =>
             {
                 var versao = await db.VersoesArtigo.Where(v => v.ArtigoId == artigo.Id).Select(v => v.Id).SingleAsync();
-                db.TrechosFonte.AddRange(Enumerable.Range(0, 125).Select(n => new TrechoFonte { VersaoArtigoId = versao, Ordem = n, Texto = $"trecho {n}", ProximaTentativa = DateTime.UtcNow.AddDays(-1) }));
+                db.TrechosFonte.AddRange(Enumerable.Range(0, 125).Select(n => new TrechoFonte { VersaoArtigoId = versao, Ordem = n, Texto = $"trecho {n}", ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime.AddDays(-1) }));
                 await db.SaveChangesAsync();
             });
         }
