@@ -6,7 +6,7 @@ import { abrir, api, me, type Rota } from '../test/util'
 
 // Linha 12 de ## Screens (Indicadores); os valores dos cartões e dos rankings vêm do fixture, como a tela os formata.
 const Indicadores = [
-  'Indicadores', 'De', 'Até', 'Consultar', 'Sem dados no período',
+  'Indicadores', 'De', 'Até', 'Consultar', 'Sem atendimentos neste período.',
   'Indicador principal', 'Alunos ativos', 'Conversas', 'Autoatendimento', 'Escalonamento', 'Abandono', 'Perguntas sem artigo',
   'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura',
   '12,3%', '1,5 h', '—',
@@ -45,7 +45,7 @@ describe('textos', () => {
 
     // sem dados
     let montada = indicadores(() => [200, { ...base, semDados: true }])
-    await screen.findByText('Sem dados no período')
+    await screen.findByText('Sem atendimentos neste período.')
     t.conferir(tela())
     montada.unmount()
 

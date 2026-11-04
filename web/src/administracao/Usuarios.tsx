@@ -8,6 +8,7 @@ import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Marca } from '../Marca'
+import { Pessoas } from '../ilustracoes'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -125,7 +126,12 @@ export function Usuarios() {
       <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Tabela colunas={Colunas} itens={dados?.usuarios} erro={erro}>
+      <Tabela
+        colunas={Colunas}
+        itens={dados?.usuarios}
+        erro={erro}
+        vazio={{ Ilustracao: Pessoas, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
+      >
         {dados?.usuarios.map((u) => (
           <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}

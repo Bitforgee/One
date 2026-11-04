@@ -1,0 +1,75 @@
+import type { CSSProperties } from 'react'
+import { BoasVindas, Conversa } from '../ilustracoes'
+
+export type ImagensDaPrevia = { logo?: string; login?: string; assistente?: string }
+export type DadosDaPrevia = {
+  nome: string
+  cor: string
+  loginTitulo: string
+  loginFrase: string
+  loginItens: string[]
+  assistenteNome: string
+  boasVindas: string
+  perguntas: string[]
+  imagens: ImagensDaPrevia
+}
+
+const Base = { titulo: 'Atendimento ao estudante', frase: 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.' }
+
+const Inicial = ({ nome }: { nome: string }) => (
+  <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+    {nome.slice(0, 2).toUpperCase()}
+  </span>
+)
+
+function PreviaDoLogin({ d, cor }: { d: DadosDaPrevia; cor?: string }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-md border p-3">
+      {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Inicial nome={d.nome} />}
+      <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-md bg-primary-subtle">
+        {d.imagens.login ? <img src={d.imagens.login} alt="" className="absolute inset-0 size-full object-cover" /> : <BoasVindas className="h-full text-muted-foreground" />}
+      </div>
+      <p className="m-0 text-base font-semibold">{d.loginTitulo || Base.titulo}</p>
+      <p className="m-0 text-muted-foreground">{d.loginFrase || Base.frase}</p>
+      <ul className="m-0 list-none p-0">
+        {d.loginItens.map((i) => (
+          <li key={i} className="border-t py-1">
+            {i}
+          </li>
+        ))}
+      </ul>
+      <button type="button" tabIndex={-1} className="h-9 rounded-md bg-primary px-4 text-primary-foreground" style={{ backgroundColor: cor }}>
+        Entrar
+      </button>
+    </div>
+  )
+}
+
+function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-md border p-3 text-center">
+      {d.imagens.assistente ? <img src={d.imagens.assistente} alt="" className="size-12 rounded-full object-cover" /> : <Conversa className="h-16 w-24 text-muted-foreground" />}
+      <p className="m-0 font-semibold">{`Olá! Eu sou ${d.assistenteNome || 'Assistente'}.`}</p>
+      <p className="m-0 text-muted-foreground empty:hidden">{d.boasVindas}</p>
+      <div className="flex flex-wrap justify-center gap-1">
+        {d.perguntas.map((p) => (
+          <span key={p} className="rounded-full border px-3 py-1 text-xs">
+            {p}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Uma réplica pequena do login e do balão do assistente com os valores do formulário, antes de salvar (AC 24).
+// A cor vai em --primary só aqui dentro, e no botão, para o resto do app não mudar antes de salvar.
+export function PreviaAparencia({ dados: d }: { dados: DadosDaPrevia }) {
+  const cor = d.cor || undefined
+  return (
+    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 text-sm" style={{ '--primary': cor } as CSSProperties}>
+      <PreviaDoLogin d={d} cor={cor} />
+      <PreviaDoAssistente d={d} />
+    </div>
+  )
+}

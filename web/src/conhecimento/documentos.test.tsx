@@ -26,7 +26,7 @@ describe('documentos', () => {
       'POST /api/admin/documentos/1/arquivar': () => [200, {}],
     })
     const tela = abrir('/univag/documentos')
-    expect(await screen.findByText('Nenhum item cadastrado.')).toBeInTheDocument()
+    expect(await screen.findByText('PDFs como regulamentos e calendários também alimentam o assistente.')).toBeInTheDocument()
     tela.unmount()
 
     lista = [documento(1, 'Regulamento de estágio', 'INDEXADO', 12), documento(2, 'Calendário', 'PENDENTE', 1)]

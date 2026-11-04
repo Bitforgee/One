@@ -8,6 +8,8 @@ import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Periodo } from '../Periodo'
+import { Documento } from '../ilustracoes'
+import { Button } from '../ui/button'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
@@ -141,7 +143,12 @@ export function Artigos() {
       </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Tabela colunas={Colunas} itens={artigos} erro={erro}>
+      <Tabela
+        colunas={Colunas}
+        itens={artigos}
+        erro={erro}
+        vazio={{ Ilustracao: Documento, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
+      >
         {artigos?.map((a) => (
           <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
         ))}

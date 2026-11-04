@@ -3,7 +3,9 @@ import { ArrowUp, ExternalLink, Hand, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
+import { Contato, temContato, urlDaImagem, useAparencia, type InstituicaoPublica } from '../aparencia'
 import { useChamado, type Anexo } from '../chamado'
+import { Conversa as ConversaIlustracao } from '../ilustracoes'
 import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Balao } from '../Balao'
 import { useSessao } from '../sessao'
@@ -134,7 +136,7 @@ function Links({ links }: { links: string[] }) {
   )
 }
 
-function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso: string; digitando: boolean }) {
+function Conversa({ mensagens, fuso, digitando, foto }: { mensagens: Mensagem[]; fuso: string; digitando: boolean; foto?: { src: string; alt: string } }) {
   return (
     <Conversation className="overflow-y-visible">
       {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
@@ -143,7 +145,7 @@ function Conversa({ mensagens, fuso, digitando }: { mensagens: Mensagem[]; fuso:
           // no assistente os links viram botões abaixo do texto; a mensagem do aluno fica como ele escreveu
           const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
           return (
-            <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.em} fuso={fuso}>
+            <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.em} fuso={fuso} foto={m.autor === 'ASSISTENTE' ? foto : undefined}>
               {m.anexos?.map((a) => <LinkDeAnexo key={a.id} href={`/api/conversas/anexos/${a.id}`} nome={a.nome} tamanho={a.tamanho} />)}
               {links.length > 0 && <Links links={links} />}
               {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}
@@ -192,13 +194,45 @@ function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void
   )
 }
 
+// A foto do assistente (AC 41), com o nome como `alt`; sem foto, nada.
+const fotoDoAssistente = (slug: string | undefined, ap: InstituicaoPublica) =>
+  slug && ap.imagens.assistente ? { src: urlDaImagem(slug, 'assistente', ap.imagens.assistente), alt: ap.assistente.nome ?? 'Assistente' } : undefined
+
+const Exemplo = 'Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”'
+const PerguntasPadrao = ['Como emito o boleto do semestre?', 'Posso abonar falta com atestado?']
+
+// Sem conversa: quem é o assistente, o que ele diz de início e as perguntas para começar (AC 38 a AC 40).
+function BoasVindas({ ap, foto, perguntar, pendente }: { ap: InstituicaoPublica; foto?: { src: string; alt: string }; perguntar: (p: string) => void; pendente: boolean }) {
+  const perguntas = ap.assistente.perguntas.length ? ap.assistente.perguntas : PerguntasPadrao
+  return (
+    <section className="my-6 flex flex-col items-center gap-3 text-center">
+      {foto ? <img src={foto.src} alt={foto.alt} className="size-16 rounded-full object-cover" /> : <ConversaIlustracao className="h-24 w-32 text-muted-foreground" />}
+      <h2 className="m-0 text-xl font-semibold">{`Olá! Eu sou ${ap.assistente.nome ?? 'Assistente'}.`}</h2>
+      <p className="m-0 text-muted-foreground">{ap.assistente.boasVindas ?? Exemplo}</p>
+      <div className="grid w-full max-w-xl grid-cols-1 gap-2 md:grid-cols-2">
+        {perguntas.map((p) => (
+          <Button key={p} variant="outline" className="h-auto min-h-11 justify-start rounded-full px-4 py-2 text-start whitespace-normal" disabled={pendente} onClick={() => perguntar(p)}>
+            {p}
+          </Button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // Depois da transferência, as respostas públicas do atendente aparecem aqui, relidas a cada 15 s.
-function Transferido({ transferido, fuso }: { transferido: Transferencia; fuso: string }) {
+function Transferido({ transferido, fuso, contato }: { transferido: Transferencia; fuso: string; contato: InstituicaoPublica['contato'] }) {
   const { slug } = useParams()
   const { chamado } = useChamado(transferido.numero)
   return (
     <>
       <Alert>{`Transferido para ${transferido.setor}. Protocolo ${transferido.numero}.`}</Alert>
+      {temContato(contato) && (
+        <section className="my-2 flex flex-col gap-1">
+          <h2 className="m-0 text-sm font-semibold">Contato do atendimento</h2>
+          <Contato contato={contato} />
+        </section>
+      )}
       <div className="my-2 flex flex-col gap-2">
         {chamado?.mensagens
           .filter((m) => m.tipo === 'PUBLICA')
@@ -354,6 +388,9 @@ function Erro({ erro }: { erro: Error | null }) {
 
 export function Assistente() {
   const { me } = useSessao()
+  const { slug } = useParams()
+  const ap = useAparencia(slug, me.instituicao.nome)
+  const foto = fotoDoAssistente(slug, ap)
   const fuso = me.instituicao.fuso
   const ativas = me.matriculas.filter((m) => m.situacao === 'ATIVA')
   const [matriculaId, setMatriculaId] = useState('')
@@ -423,13 +460,11 @@ export function Assistente() {
         <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />
         {AvisoExterno}
       </p>
-      {mensagens.length === 0 && (
-        <p className="my-2 text-muted-foreground">Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”</p>
-      )}
-      <Conversa mensagens={mensagens} fuso={fuso} digitando={envio.isPending} />
+      {mensagens.length === 0 && <BoasVindas ap={ap} foto={foto} perguntar={(p) => envio.mutate(p)} pendente={envio.isPending} />}
+      <Conversa mensagens={mensagens} fuso={fuso} digitando={envio.isPending} foto={foto} />
       <Seguimento ultima={ultima} avaliada={avaliada} desfecho={desfecho} explicar={explicar} avaliar={avaliar} pendente={acao.isPending} transferir={() => abrir('atendente')} />
       {transferido ? (
-        <Transferido transferido={transferido} fuso={fuso} />
+        <Transferido transferido={transferido} fuso={fuso} contato={ap.contato} />
       ) : desfecho ? (
         <Encerrada desfecho={desfecho} />
       ) : (

@@ -7,7 +7,9 @@ const arquivos = Object.keys(fontes).map((c) => c.replace('/src/', ''))
 const texto = (arquivo: string) => fontes[`/src/${arquivo}`]
 
 const Fatias = ['acesso', 'administracao', 'assistente', 'chamados', 'conhecimento', 'indicadores']
-const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'AvisosPush.tsx', 'datas.ts', 'main.tsx', 'push.ts', 'sessao.ts', 'sw.test.ts', 'sw.ts', 'tempo-real.ts', 'tempo-real.test.ts', 'tabela.test.tsx']
+// Pastas que não são telas: ui (registros) e ilustracoes (SVGs próprios, aparencia-instituicao door 9)
+const SemTela = ['ui', 'ilustracoes']
+const Raiz = ['App.tsx', 'Autenticado.tsx', 'acao.tsx', 'api.ts', 'AvisosPush.tsx', 'datas.ts', 'main.tsx', 'push.ts', 'sessao.ts', 'sw.test.ts', 'sw.ts', 'tempo-real.ts', 'tempo-real.test.ts', 'tabela.test.tsx', 'aparencia.test.tsx']
 // Pacotes que só o código copiado dos registros (shadcn/ui, AI Elements) importa (door 3)
 const SoDaUi = /from ['"](?:radix-ui|@radix-ui\/[^'"]+|class-variance-authority|use-stick-to-bottom|clsx|tailwind-merge)['"]/
 const ForaDaUi = /(?:from|import)\s*['"](?:\.\.\/|@\/(?!ui\/))/
@@ -27,12 +29,12 @@ function fatiaPorCaminho(): Record<string, string> {
 
 it('estrutura em fatias', () => {
   const pastas = [...new Set(arquivos.map(pasta).filter((p) => p !== '' && p !== 'test'))].sort()
-  expect(pastas).toEqual([...Fatias, 'ui'])
+  expect(pastas).toEqual([...Fatias, ...SemTela].sort())
   expect(arquivos.filter((a) => a.startsWith('telas/'))).toEqual([])
 
   // cada teste de tela mora numa fatia e abre ao menos uma tela dessa fatia
   const caminhos = fatiaPorCaminho()
-  const testes = arquivos.filter((a) => a.endsWith('.test.tsx') && !Raiz.includes(a))
+  const testes = arquivos.filter((a) => a.endsWith('.test.tsx') && !Raiz.includes(a) && !SemTela.includes(pasta(a)))
   expect(testes.length).toBeGreaterThan(0)
   for (const teste of testes) {
     expect(Fatias, teste).toContain(pasta(teste))

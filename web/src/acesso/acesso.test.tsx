@@ -197,7 +197,7 @@ describe('acesso', () => {
     abrir('/univag/fila')
     const nav = await screen.findByRole('navigation')
     const links = await within(nav).findAllByRole('link')
-    expect(links.length).toBe(7)
+    expect(links.length).toBe(8) // + Aparência (AC 23)
     for (const link of links) {
       const ativo = link.textContent === 'Fila'
       expect(link.getAttribute('aria-current'), link.textContent!).toBe(ativo ? 'page' : null)
@@ -242,7 +242,7 @@ describe('acesso', () => {
     for (const [papel, links] of [
       ['ALUNO', ['Assistente', 'Minhas solicitações']],
       ['ATENDENTE', ['Fila', 'Indicadores']],
-      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros']], // barra-lateral-grupos: ordem dos grupos
+      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência']], // barra-lateral-grupos: ordem dos grupos
     ] as const) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
@@ -273,6 +273,7 @@ describe('acesso', () => {
       ['Usuários', 'lucide-users'],
       ['Matrículas', 'lucide-upload'],
       ['Cadastros', 'lucide-settings'],
+      ['Aparência', 'lucide-palette'],
     ]) {
       const svg = icone(nav.getByRole('link', { name: rotulo }))
       expect(svg, rotulo).toHaveClass(classe)
@@ -322,7 +323,7 @@ describe('acesso', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Enviar link' }))
     expect(await screen.findByText('Se o CPF estiver cadastrado, enviamos um link para o e-mail.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Enviar link' })).not.toBeInTheDocument()
-    expect(chamadas.map((c) => c.corpo)).toEqual([{ instituicao: 'univag', cpf: '12345678909' }])
+    expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.corpo)).toEqual([{ instituicao: 'univag', cpf: '12345678909' }]) // a leitura da aparência (GET) é de AC 36
   })
 
   it('definir senha envia o token do link e mostra Senha criada', async () => {
@@ -334,7 +335,7 @@ describe('acesso', () => {
     expect(await screen.findByText(/Senha criada/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Entre com o CPF e a nova senha.' })).toHaveAttribute('href', '/univag')
     expect(screen.queryByLabelText('Nova senha')).not.toBeInTheDocument()
-    expect(chamadas.map((c) => c.corpo)).toEqual([{ token: 'abc123', novaSenha: 'senha-boa-123' }])
+    expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.corpo)).toEqual([{ token: 'abc123', novaSenha: 'senha-boa-123' }])
   })
 
   it('troca de senha por vontade própria não mostra o aviso da senha temporária', async () => {
@@ -419,7 +420,7 @@ describe('barra lateral com grupos', () => {
   const Esperado = [
     ['Atendimento', ['Assistente', 'Minhas solicitações', 'Fila', 'Indicadores']],
     ['Conhecimento', ['Artigos', 'Documentos']],
-    ['Administração', ['Usuários', 'Matrículas', 'Cadastros']],
+    ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência']],
   ]
   // [título do grupo, rótulos dos links dentro dele], na ordem do DOM
   const grupos = (raiz: HTMLElement) => within(raiz).getAllByRole('group').map((g) => [g.getAttribute('aria-labelledby') && document.getElementById(g.getAttribute('aria-labelledby')!)?.textContent, within(g).getAllByRole('link').map((l) => l.textContent)])
@@ -444,7 +445,7 @@ describe('barra lateral com grupos', () => {
   it.each([
     [['ALUNO'], [['Atendimento', ['Assistente', 'Minhas solicitações']]]],
     [['ATENDENTE'], [['Atendimento', ['Fila', 'Indicadores']]]],
-    [['ADMINISTRADOR'], [['Atendimento', ['Indicadores']], ['Conhecimento', ['Artigos', 'Documentos']], ['Administração', ['Usuários', 'Matrículas', 'Cadastros']]]],
+    [['ADMINISTRADOR'], [['Atendimento', ['Indicadores']], ['Conhecimento', ['Artigos', 'Documentos']], ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência']]]],
   ])('grupos por papel (%j)', async (papeis, esperado) => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis })] })
     abrir('/univag/trocar-senha')
@@ -534,6 +535,7 @@ describe('barra lateral com grupos', () => {
     ['usuarios', 'Usuários'],
     ['matriculas', 'Matrículas'],
     ['cadastros', 'Cadastros'],
+    ['aparencia', 'Aparência'],
     ['chamados/ONE-7', 'ONE-7'],
     ['trocar-senha', 'Trocar senha'],
   ])('título do cabeçalho por rota (%s)', async (caminho, titulo) => {

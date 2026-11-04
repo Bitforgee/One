@@ -1,12 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, ChartColumn, ChevronsUpDown, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, ChartColumn, ChevronsUpDown, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, type Me } from './api'
+import { Contato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
 import { AvisosPush } from './AvisosPush'
 import type { Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Separator } from './ui/separator'
@@ -25,14 +27,11 @@ const Menu = [
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'usuarios', rotulo: 'Usuários', Icone: Users },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'matriculas', rotulo: 'Matrículas', Icone: Upload },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'cadastros', rotulo: 'Cadastros', Icone: Settings },
+  { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'aparencia', rotulo: 'Aparência', Icone: Palette },
 ]
 const Grupos = ['Atendimento', 'Conhecimento', 'Administração']
 
-// Primeira letra da primeira e da última palavra (AC 6): "Ana Beatriz Souza" -> "AS".
-export function iniciais(nome: string) {
-  const partes = nome.trim().split(/\s+/).filter(Boolean)
-  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
-}
+export { iniciais }
 
 type Item = (typeof Menu)[number]
 
@@ -159,22 +158,55 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
   )
 }
 
-function Barra({ me, itens, slug, sair }: { me: Me; itens: Item[]; slug?: string; sair: () => void }) {
+// O item "Contato" do rodapé (AC 43): abre um diálogo com horário, telefone e e-mail da instituição.
+function ContatoDoMenu({ contato }: { contato: InstituicaoPublica['contato'] }) {
+  const [aberto, setAberto] = useState(false)
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton tooltip="Contato" onClick={() => setAberto(true)}>
+          <Phone aria-hidden="true" />
+          <span className="group-data-[collapsible=icon]:sr-only">Contato</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <Dialog open={aberto} onOpenChange={setAberto}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Contato do atendimento</DialogTitle>
+          </DialogHeader>
+          <Contato contato={contato} />
+        </DialogContent>
+      </Dialog>
+    </SidebarMenu>
+  )
+}
+
+// O logo quando a barra está aberta; o ícone (ou as iniciais) quando recolhida e sempre que não há logo.
+function CabecalhoDaBarra({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
+  const logo = ap.imagens.logo
+  return (
+    <div className="flex items-center gap-2 p-1.5">
+      {logo && slug && <img src={urlDaImagem(slug, 'logo', logo)} alt={ap.nome} className="h-8 w-auto max-w-40 object-contain group-data-[collapsible=icon]:hidden" />}
+      <span className={logo ? 'hidden group-data-[collapsible=icon]:flex' : 'flex'}>
+        <Sigla slug={slug} nome={me.instituicao.nome} icone={ap.imagens.icone} />
+      </span>
+      {!logo && (
+        <div className="grid min-w-0 text-sm leading-tight">
+          <span className="font-semibold group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
+            {me.instituicao.nome}
+          </span>
+          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:sr-only">One</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: string; sair: () => void; ap: InstituicaoPublica }) {
   return (
     <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 p-1.5">
-          {/* as iniciais da instituição no lugar de um ícone genérico; recolhida, é o que fica */}
-          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-md bg-foreground text-xs font-bold text-background">
-            {iniciais(me.instituicao.nome)}
-          </span>
-          <div className="grid min-w-0 text-sm leading-tight">
-            <span className="font-semibold group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
-              {me.instituicao.nome}
-            </span>
-            <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:sr-only">One</span>
-          </div>
-        </div>
+        <CabecalhoDaBarra me={me} slug={slug} ap={ap} />
       </SidebarHeader>
       <SidebarContent role="navigation">
         {Grupos.map((nome) => ({ nome, doGrupo: itens.filter((i) => i.grupo === nome) }))
@@ -184,6 +216,7 @@ function Barra({ me, itens, slug, sair }: { me: Me; itens: Item[]; slug?: string
           ))}
       </SidebarContent>
       <SidebarFooter>
+        {temContato(ap.contato) && <ContatoDoMenu contato={ap.contato} />}
         <MenuUsuario me={me} sair={sair} />
       </SidebarFooter>
     </Sidebar>
@@ -191,12 +224,13 @@ function Barra({ me, itens, slug, sair }: { me: Me; itens: Item[]; slug?: string
 }
 
 // Cabeçalho do inset (door 3): botão, separador, o único h1 da tela; à direita, avisos (aluno) e tema.
-function Topo({ titulo, aluno }: { titulo: string; aluno: boolean }) {
+function Topo({ titulo, aluno, slug, icone }: { titulo: string; aluno: boolean; slug?: string; icone: number | null }) {
   return (
     <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background/90 backdrop-blur">
       <div className="flex w-full min-w-0 items-center gap-1 px-4 lg:gap-2 lg:px-6">
         <SidebarTrigger className="-ms-1" />
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+        {slug && icone && <img src={urlDaImagem(slug, 'icone', icone)} alt="" className="size-6 shrink-0 rounded-sm object-cover md:hidden" />}
         <h1 className="truncate text-base font-medium">{titulo}</h1>
         <div className="ms-auto flex shrink-0 items-center gap-1">
           {aluno && <AvisosPush />}
@@ -226,6 +260,7 @@ export function Autenticado() {
   const cliente = useQueryClient()
   const barra = useBarra()
   const { data: me, isError } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
+  const { data: instituicao } = useInstituicao(slug)
   useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
 
   if (isError) return <Navigate to={`/${slug}`} replace />
@@ -238,6 +273,7 @@ export function Autenticado() {
   if (me.instituicao.slug !== slug) return <Navigate to={`/${me.instituicao.slug}`} replace />
   if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return <Navigate to={`/${slug}/trocar-senha`} replace />
 
+  const ap = instituicao ?? normalizar({ nome: me.instituicao.nome })
   const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
 
@@ -250,9 +286,9 @@ export function Autenticado() {
   // O main é o SidebarInset; o contêiner de largura (door 5) leva os recuos, para as consultas medirem só a área útil.
   return (
     <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar}>
-      <Barra me={me} itens={itens} slug={slug} sair={sair} />
+      <Barra me={me} itens={itens} slug={slug} sair={sair} ap={ap} />
       <SidebarInset className="min-w-0">
-        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} />
+        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} slug={slug} icone={ap.imagens.icone} />
         <div className="@container/main flex-1 px-4 py-4 md:py-6 lg:px-6">
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </div>

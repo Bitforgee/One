@@ -8,7 +8,7 @@ import { abrir, api, escolher, me, type Rota } from '../test/util'
 const Artigos = [
   'Artigos', 'Novo', 'Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.',
   'Indexando', 'Indexado', 'Falhou', 'RASCUNHO', 'ATIVO', 'ARQUIVADO', 'versão', 'válido de', 'válido até', 'Editar', 'Ativar', 'Arquivar',
-  'Nenhum item cadastrado.', 'Versão', 'Validade', 'Situação',
+  'Nenhum artigo', 'Os artigos são a base das respostas do assistente.', 'Versão', 'Validade', 'Situação',
   'Novo artigo', 'Editar artigo', 'Salvar cria uma nova versão; as anteriores ficam guardadas.',
   'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.',
   'Título', 'Perguntas relacionadas (uma por linha)', 'Categoria', 'Escolha a categoria', 'Resposta', 'Links (um por linha, com https://)',
@@ -58,7 +58,7 @@ describe('textos', () => {
     // vazia
     servir('artigos', [])
     let montada = abrir('/univag/artigos')
-    await screen.findByText('Nenhum item cadastrado.')
+    await screen.findByText('Os artigos são a base das respostas do assistente.')
     t.conferir(tela())
     montada.unmount()
 

@@ -34,7 +34,7 @@ describe('administração', () => {
       'POST /api/admin/matriculas/importacao': () => [400, { status: 400, detail: 'Linhas inválidas.', erros: [{ linha: 3, motivo: 'CPF inválido' }] }],
     })
     let montada = abrir('/univag/usuarios')
-    await screen.findByText('Nenhum item cadastrado.')
+    await screen.findByText('Cadastre a equipe ou importe as matrículas.')
     expect(cabecalhos()).toEqual(['Nome', 'CPF', 'E-mail', 'Papéis', 'Situação', ''])
     montada.unmount()
 
@@ -65,8 +65,8 @@ describe('administração', () => {
       'GET /api/admin/respostas-prontas': () => [200, []],
     })
     const montada = abrir('/univag/usuarios')
-    await screen.findByText('Nenhum item cadastrado.')
-    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+    await screen.findByText('Cadastre a equipe ou importe as matrículas.')
+    esperaLinhaVazia('Cadastre a equipe ou importe as matrículas.', 6)
     montada.unmount()
 
     abrir('/univag/cadastros')

@@ -8,6 +8,8 @@ import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
+import { Documento } from '../ilustracoes'
+import { Button } from '../ui/button'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
@@ -127,7 +129,17 @@ export function Documentos() {
       </Cabecalho>
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} oculto={!!envio} />
-      <Tabela colunas={Colunas} itens={documentos} erro={erro}>
+      <Tabela
+        colunas={Colunas}
+        itens={documentos}
+        erro={erro}
+        vazio={{
+          Ilustracao: Documento,
+          titulo: 'Nenhum documento',
+          frase: 'PDFs como regulamentos e calendários também alimentam o assistente.',
+          acao: <Button onClick={() => setEnvio({ titulo: '', categoriaId: '' })}>Novo documento</Button>,
+        }}
+      >
         {documentos?.map((d) => (
           <LinhaDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
         ))}

@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { lazy, Suspense, useState } from 'react'
 import { api } from '../api'
+import { Grafico as GraficoVazio } from '../ilustracoes'
 import { dia, Periodo } from '../Periodo'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
@@ -205,7 +206,12 @@ export function Indicadores() {
         </div>
       </form>
       {error && <Alert variant="destructive">{error.message}</Alert>}
-      {dados?.semDados && <Alert>Sem dados no período</Alert>}
+      {dados?.semDados && (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <GraficoVazio className="h-24 w-32 text-muted-foreground" />
+          <p className="m-0 text-muted-foreground">Sem atendimentos neste período.</p>
+        </div>
+      )}
       {dados && !dados.semDados && <Painel dados={dados} />}
     </div>
   )

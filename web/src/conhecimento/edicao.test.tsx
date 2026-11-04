@@ -81,7 +81,7 @@ describe('artigos', () => {
     abrir('/univag/artigos')
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao carregar.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.queryByText('Nenhum item cadastrado.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Os artigos são a base das respostas do assistente.')).not.toBeInTheDocument()
   })
 })
 

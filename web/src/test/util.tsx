@@ -50,6 +50,20 @@ export function me(parcial: Partial<Me> = {}): Me {
   }
 }
 
+// O que GET /api/instituicoes/univag devolve sem aparência definida (aparencia-instituicao AC 28); `parcial` sobrescreve.
+export function instituicao(parcial: Record<string, unknown> = {}) {
+  return {
+    nome: 'Univag',
+    nomeCurto: null,
+    cor: null,
+    login: { titulo: null, frase: null, itens: [] },
+    assistente: { nome: null, boasVindas: null, perguntas: [] },
+    contato: { horario: null, telefone: null, email: null },
+    imagens: { logo: null, icone: null, login: null, assistente: null },
+    ...parcial,
+  }
+}
+
 // Chamado como o aluno o recebe; a equipe recebe também resumo, fontes e eventos.
 export function chamado(parcial: Partial<Chamado> = {}): Chamado {
   return {

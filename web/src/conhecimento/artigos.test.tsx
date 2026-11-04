@@ -15,8 +15,8 @@ describe('artigos', () => {
     })
     abrir('/univag/artigos')
 
-    expect(await screen.findByText('Nenhum item cadastrado.')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    expect(await screen.findByText('Os artigos são a base das respostas do assistente.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Novo' }))
     const dialogo = within(await screen.findByRole('dialog'))
     expect(dialogo.getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria', 'Acadêmico'])
     await userEvent.type(dialogo.getByLabelText('Título'), 'Faltas não são abonadas')
@@ -26,7 +26,7 @@ describe('artigos', () => {
     await userEvent.type(dialogo.getByLabelText(/Links/), 'https://univag.edu.br/estatuto')
     await userEvent.click(dialogo.getByRole('button', { name: 'Salvar' }))
 
-    await screen.findByText('Nenhum item cadastrado.')
+    await screen.findByText('Os artigos são a base das respostas do assistente.')
     expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({
       titulo: 'Faltas não são abonadas',
       perguntas: ['posso abonar falta?', 'falta com atestado?'],
@@ -67,14 +67,14 @@ describe('artigos', () => {
   it('lista vazia numa linha', async () => {
     servir('artigos', [])
     let montada = abrir('/univag/artigos')
-    await screen.findByText('Nenhum item cadastrado.')
-    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+    await screen.findByText('Os artigos são a base das respostas do assistente.')
+    esperaLinhaVazia('Os artigos são a base das respostas do assistente.', 6)
     montada.unmount()
 
     servir('documentos', [])
     montada = abrir('/univag/documentos')
-    await screen.findByText('Nenhum item cadastrado.')
-    esperaLinhaVazia('Nenhum item cadastrado.', 6)
+    await screen.findByText('PDFs como regulamentos e calendários também alimentam o assistente.')
+    esperaLinhaVazia('PDFs como regulamentos e calendários também alimentam o assistente.', 6)
   })
 
   // layout-painel C25 (AC 25): por estado do artigo

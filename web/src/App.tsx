@@ -2,7 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
 import { Route, Routes } from 'react-router'
-import { Centro, DefinirSenha, Login, PrimeiroAcesso, TrocarSenha } from './acesso/Acesso'
+import { DefinirSenha, Login, PrimeiroAcesso, Raiz, TrocarSenha } from './acesso/Acesso'
+import { AplicaAparencia } from './aparencia'
+import { Aparencia } from './administracao/Aparencia'
 import { Cadastros } from './administracao/Cadastros'
 import { Matriculas } from './administracao/Matriculas'
 import { Usuarios } from './administracao/Usuarios'
@@ -13,7 +15,6 @@ import { Fila, Solicitacoes } from './chamados/Chamados'
 import { Artigos } from './conhecimento/Artigos'
 import { Documentos } from './conhecimento/Documentos'
 import { Indicadores } from './indicadores/Indicadores'
-import { Card, CardContent } from './ui/card'
 import { Toaster } from './ui/sonner'
 import { ThemeProvider } from './ui/theme-provider'
 
@@ -41,41 +42,32 @@ export function App() {
   )
 }
 
-function Raiz() {
-  return (
-    <Centro>
-      <Card>
-        <CardContent className="text-center text-muted-foreground">
-          <p className="text-xl font-semibold text-primary">One</p>
-          <p className="mb-0">Abra o endereço da sua instituição, por exemplo /univag.</p>
-        </CardContent>
-      </Card>
-    </Centro>
-  )
-}
-
 function Rotas() {
   return (
-    <Routes>
-      <Route path="/" element={<Raiz />} />
-      <Route path="/:slug">
-        <Route index element={<Login />} />
-        <Route path="primeiro-acesso" element={<PrimeiroAcesso />} />
-        <Route path="definir-senha" element={<DefinirSenha />} />
-        <Route element={<Autenticado />}>
-          <Route path="trocar-senha" element={<TrocarSenha />} />
-          <Route path="assistente" element={<Assistente />} />
-          <Route path="solicitacoes" element={<Solicitacoes />} />
-          <Route path="chamados/:numero" element={<ChamadoDetalhe />} />
-          <Route path="fila" element={<Fila />} />
-          <Route path="artigos" element={<Artigos />} />
-          <Route path="documentos" element={<Documentos />} />
-          <Route path="indicadores" element={<Indicadores />} />
-          <Route path="usuarios" element={<Usuarios />} />
-          <Route path="matriculas" element={<Matriculas />} />
-          <Route path="cadastros" element={<Cadastros />} />
+    <>
+      <AplicaAparencia />
+      <Routes>
+        <Route path="/" element={<Raiz />} />
+        <Route path="/:slug">
+          <Route index element={<Login />} />
+          <Route path="primeiro-acesso" element={<PrimeiroAcesso />} />
+          <Route path="definir-senha" element={<DefinirSenha />} />
+          <Route element={<Autenticado />}>
+            <Route path="trocar-senha" element={<TrocarSenha />} />
+            <Route path="assistente" element={<Assistente />} />
+            <Route path="solicitacoes" element={<Solicitacoes />} />
+            <Route path="chamados/:numero" element={<ChamadoDetalhe />} />
+            <Route path="fila" element={<Fila />} />
+            <Route path="artigos" element={<Artigos />} />
+            <Route path="documentos" element={<Documentos />} />
+            <Route path="indicadores" element={<Indicadores />} />
+            <Route path="usuarios" element={<Usuarios />} />
+            <Route path="matriculas" element={<Matriculas />} />
+            <Route path="cadastros" element={<Cadastros />} />
+            <Route path="aparencia" element={<Aparencia />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   )
 }

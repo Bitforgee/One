@@ -26,7 +26,7 @@ describe('indicadores', () => {
     await userEvent.type(screen.getByLabelText('Até'), '2026-10-31')
     await userEvent.click(screen.getByRole('button', { name: 'Consultar' }))
 
-    expect(await screen.findByText('Sem dados no período')).toBeInTheDocument()
+    expect(await screen.findByText('Sem atendimentos neste período.')).toBeInTheDocument()
     expect(screen.queryByText('Autoatendimento')).not.toBeInTheDocument()
   })
 
@@ -46,7 +46,7 @@ describe('indicadores', () => {
       'GET /api/indicadores?de=2026-11-01&ate=2026-11-15': () => (vez++ === 0 ? [200, vazio] : new Promise((resolve) => (responder = () => resolve([200, vazio])))),
     })
     abrir('/univag/indicadores')
-    await screen.findByText('Sem dados no período')
+    await screen.findByText('Sem atendimentos neste período.')
     const consultar = screen.getByRole('button', { name: 'Consultar' })
     expect(consultar).toBeEnabled()
     expect(within(consultar).queryByRole('status')).not.toBeInTheDocument()
@@ -88,7 +88,7 @@ describe('indicadores', () => {
     expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])
     const porChamados = screen.getByText('Categorias por chamados').closest('[data-slot=card]') as HTMLElement
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
-    expect(screen.queryByText('Sem dados no período')).not.toBeInTheDocument()
+    expect(screen.queryByText('Sem atendimentos neste período.')).not.toBeInTheDocument()
     expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(1)
     // os rankings ficam um embaixo do outro no celular e lado a lado a partir de 896 px do main
     expect(conversas.parentElement).toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')

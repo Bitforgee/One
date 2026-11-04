@@ -69,7 +69,7 @@ describe('listas de chamados', () => {
     lista('meus', () => [200, []])
     abrir('/univag/solicitacoes')
     await screen.findByText(/Você ainda não tem solicitações/)
-    esperaLinhaVazia('Você ainda não tem solicitações. Fale com o assistente.', 3)
+    esperaLinhaVazia('Você ainda não tem solicitações.', 3)
   })
 
   it('lista carregando mostra 3 esqueletos e nada mais', async () => {

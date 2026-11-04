@@ -174,7 +174,7 @@ describe('textos', () => {
 
   it('textos Minhas solicitações', async () => {
     const itens = ['ABERTO', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO', 'RESOLVIDO', 'FECHADO'].map((e, i) => item(i + 1, e))
-    await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Você ainda não tem solicitações. ', 'Fale com o assistente', '.', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
+    await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
   })
 
   it('textos Fila', async () => {
@@ -182,6 +182,6 @@ describe('textos', () => {
       item(1, 'ABERTO', { categoria: 'Boleto', responsavel: null, dias: 1 }),
       item(2, 'EM_ATENDIMENTO', { categoria: 'Matrícula', responsavel: 'Carla', dias: 3 }),
     ]
-    await lista('/univag/fila', 'fila', ['Fila', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado', 'Boleto · sem responsável · 1 dia', 'Matrícula · Carla · 3 dias', 'sem responsável', '1 dia', 'Carla', '3 dias'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
+    await lista('/univag/fila', 'fila', ['Fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado', 'Boleto · sem responsável · 1 dia', 'Matrícula · Carla · 3 dias', 'sem responsável', '1 dia', 'Carla', '3 dias'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
   })
 })

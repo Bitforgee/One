@@ -6,7 +6,8 @@ import { Message, MessageContent } from './ui/message'
 
 const MensagemAnimada = motion.create(Message)
 
-type BalaoProps = { doAluno: boolean; autor?: string; nota?: boolean; texto: string; em: string; fuso: string; children?: ReactNode }
+type Foto = { src: string; alt: string }
+type BalaoProps = { doAluno: boolean; autor?: string; nota?: boolean; texto: string; em: string; fuso: string; foto?: Foto; children?: ReactNode }
 
 // Balão da conversa (Assistente e detalhe do chamado): aluno à direita em bg-primary-subtle; assistente e atendente à
 // esquerda em bg-muted; nota interna em bg-warning-subtle com o selo. O texto vai como texto puro (AD-012); o que vem
@@ -23,15 +24,15 @@ export function Quebravel({ texto }: { texto: string }) {
   ))
 }
 
-export function Balao({ doAluno, autor, nota, texto, em, fuso, children }: BalaoProps) {
+export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, children }: BalaoProps) {
   const cor = doAluno ? 'ms-auto rounded-br-sm bg-primary-subtle' : nota ? 'me-auto rounded-bl-sm bg-warning-subtle' : 'me-auto rounded-bl-sm bg-muted'
-  return (
+  const balao = (
     <MensagemAnimada
       from={doAluno ? 'user' : 'assistant'}
       initial={{ y: 8 }}
       animate={{ y: 0 }}
       transition={{ ease: 'easeOut' }}
-      className={`w-fit max-w-[90%] gap-1 rounded-2xl px-3.5 py-2.5 ${cor}`}
+      className={`w-fit ${foto ? 'max-w-full' : 'max-w-[90%]'} gap-1 rounded-2xl px-3.5 py-2.5 ${cor}`}
     >
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold empty:hidden">
         {autor}
@@ -43,5 +44,13 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, children }: Balao
       {children}
       <div className="text-end text-xs text-muted-foreground">{formatarData(em, fuso)}</div>
     </MensagemAnimada>
+  )
+  // a foto do assistente (AC 41) fica à esquerda do balão
+  if (!foto) return balao
+  return (
+    <div className="me-auto flex w-fit max-w-[90%] items-start gap-2">
+      <img src={foto.src} alt={foto.alt} className="size-6 shrink-0 rounded-full object-cover" />
+      {balao}
+    </div>
   )
 }

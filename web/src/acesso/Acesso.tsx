@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useState, type ComponentProps, type ReactNode } from 'react'
 import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
+import { Sigla, urlDaImagem, useInstituicao, type InstituicaoPublica } from '../aparencia'
+import { BoasVindas } from '../ilustracoes'
 import { telaInicial, useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
 import { Input } from '../ui/input'
@@ -24,35 +26,106 @@ export function Centro({ children }: { children: ReactNode }) {
   )
 }
 
+const TituloBase = 'Atendimento ao estudante'
+const Frase = 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.'
 const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 
-// Duas colunas a partir de 1024 px: o formulário à esquerda, alinhado à esquerda; à direita um painel neutro só com texto, sem ícones nem degradê.
+const H1 = ({ children }: { children: ReactNode }) => <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
+
+// A raiz sem instituição: a ilustração, "One", a frase e o que fazer (AC 37).
+export function Raiz() {
+  return (
+    <Centro>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <BoasVindas className="h-40 w-52 text-muted-foreground" />
+        <div className="text-primary">
+          <H1>One</H1>
+        </div>
+        <p className="m-0 text-muted-foreground">{Frase}</p>
+        <p className="m-0 text-muted-foreground">Abra o endereço da sua instituição, por exemplo /univag.</p>
+      </div>
+    </Centro>
+  )
+}
+
+// O logo (até 40 px de altura) ou, sem ele, as iniciais da instituição num quadrado bg-primary (AC 32).
+function Identidade({ slug, d, className }: { slug?: string; d?: InstituicaoPublica; className?: string }) {
+  if (!slug || !d) return <div className="h-10" />
+  if (d.imagens.logo) return <img src={urlDaImagem(slug, 'logo', d.imagens.logo)} alt={d.nome} className={`h-10 w-auto max-w-full self-start object-contain ${className ?? ''}`} />
+  return <Sigla nome={d.nome} icone={null} className="size-10" />
+}
+
+// Abaixo de 1024 px: uma faixa de 128 px com a imagem do login (ou a ilustração) e o logo.
+function Faixa({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
+  const imagem = slug && d?.imagens.login
+  return (
+    <div className="relative h-32 overflow-hidden bg-primary-subtle lg:hidden">
+      {imagem ? <img src={urlDaImagem(slug, 'login', imagem)} alt="" className="absolute inset-0 size-full object-cover" /> : <BoasVindas className="mx-auto h-full text-muted-foreground" />}
+      {slug && d?.imagens.logo && (
+        <div className="absolute start-4 bottom-3 rounded-md bg-background/90 p-1">
+          <Identidade slug={slug} d={d} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Os textos do painel: os da instituição ou, campo a campo, os de base (AC 36).
+function Textos({ d, escuro }: { d?: InstituicaoPublica; escuro: boolean }) {
+  const itens = d?.login.itens.length ? d.login.itens : Itens
+  const linha = escuro ? 'border-white/30' : ''
+  return (
+    <div className="max-w-md">
+      <h2 className="text-3xl font-semibold tracking-tight">{d?.login.titulo ?? TituloBase}</h2>
+      <p className={`mt-2 ${escuro ? 'text-white/85' : 'text-muted-foreground'}`}>{d?.login.frase ?? Frase}</p>
+      <ul className={`mt-6 border-t ${linha}`}>
+        {itens.map((texto) => (
+          <li key={texto} className={`border-b py-3 ${linha}`}>
+            {texto}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// A partir de 1024 px, o painel direito: a imagem do login inteira com os textos sobre uma faixa escura, ou a ilustração sobre bg-primary-subtle.
+function Painel({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
+  const imagem = slug && d?.imagens.login
+  return (
+    <div className="relative hidden flex-col border-l bg-muted p-10 lg:flex">
+      {imagem ? (
+        <img src={urlDaImagem(slug, 'login', imagem)} alt="" className="absolute inset-0 size-full object-cover" />
+      ) : (
+        <div className="rounded-xl bg-primary-subtle p-6">
+          <BoasVindas className="mx-auto h-48 w-full text-muted-foreground" />
+        </div>
+      )}
+      <div className={imagem ? 'relative -m-10 mt-auto bg-black/70 p-10 text-white' : 'mt-auto'}>
+        <Textos d={d} escuro={!!imagem} />
+      </div>
+    </div>
+  )
+}
+
+// Duas colunas a partir de 1024 px: o formulário à esquerda, alinhado à esquerda, e à direita o painel da instituição.
 function Entrada({ titulo, descricao, children }: { titulo: ReactNode; descricao?: string; children: ReactNode }) {
+  const { slug } = useParams()
+  const { data } = useInstituicao(slug)
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
+      <Faixa slug={slug} d={data} />
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="text-lg leading-6 font-bold tracking-tight">One</div>
+        <Identidade slug={slug} d={data} className="max-lg:hidden" />
         <div className="flex flex-1 items-center justify-center">
           <div className="flex w-full max-w-xs flex-col gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
+            <H1>{titulo}</H1>
             {descricao && <p className="-mt-5 text-sm text-muted-foreground">{descricao}</p>}
             {children}
           </div>
         </div>
       </div>
-      <div className="relative hidden flex-col border-l bg-muted p-10 lg:flex">
-        <div className="mt-auto max-w-md">
-          <h2 className="text-3xl font-semibold tracking-tight">Atendimento ao estudante</h2>
-          <p className="mt-2 text-muted-foreground">Dúvidas, solicitações e respostas da sua instituição em um só lugar.</p>
-          <ul className="mt-6 border-t">
-            {Itens.map((texto) => (
-              <li key={texto} className="border-b py-3">
-                {texto}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <Painel slug={slug} d={data} />
     </div>
   )
 }
@@ -97,7 +170,7 @@ const schemaLogin = z.object({ cpf: obrigatorio, senha: obrigatorio })
 export function Login() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { data: instituicao, isError, isPending } = useQuery({ queryKey: ['instituicao', slug], queryFn: () => api<{ nome: string }>(`/api/instituicoes/${slug}`) })
+  const { data: instituicao, isError, isPending } = useInstituicao(slug)
 
   if (isError)
     return (

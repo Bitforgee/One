@@ -23,7 +23,7 @@ const semEspacos = (t: string) => t.replace(/\s+/g, '')
 function bloco(seletor: string): Record<string, string> {
   const corpo = css.slice(css.indexOf(`${seletor} {`)).split('}')[0]
   const valores: Record<string, string> = {}
-  for (const [, nome, valor] of corpo.matchAll(/(--[\w-]+):\s*([^;]+);/g)) valores[nome] = valor.trim().replace(/^oklch\((.*)\)$/, '$1')
+  for (const [, nome, valor] of corpo.matchAll(/(--[\w-]+):\s*([^;]+);/g)) valores[nome] = valor.trim().replace(/^var\(--[\w-]+, (.*)\)$/, '$1').replace(/^oklch\((.*)\)$/, '$1') // o fallback de var(--marca, base) é o valor de base
   return valores
 }
 

@@ -10,6 +10,9 @@ const Assistente = [
   'Assistente',
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.',
   'Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”',
+  'Olá! Eu sou Assistente.', // AC 38 e AC 39: o assistente sem conversa e as duas perguntas de base
+  'Como emito o boleto do semestre?',
+  'Posso abonar falta com atestado?',
   'Resposta gerada por IA com base nas orientações da instituição.',
   'digitando…',
   'Isso resolveu?',

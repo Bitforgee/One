@@ -6,7 +6,7 @@ import { abrir, api, me } from '../test/util'
 
 // Linha 0 de ## Screens (casca); "Tema" e "Alternar barra lateral" são só nomes acessíveis, conferidos por papel.
 const Papeis = ['Administrador', 'Atendente', 'Aluno'] // layout-painel: o papel no botão do usuário (novo)
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Sair', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Sair', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
 const Instituicao = 'Univag' // nome da instituição do fixture
 const Nome = me().nome // barra-lateral-grupos: o nome do usuário no rodapé da barra e na gaveta
 
@@ -58,7 +58,7 @@ const Instituicoes = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univ
 
 describe('textos das telas de acesso', () => {
   it('textos raiz', () => {
-    const t = estados(['One', 'Abra o endereço da sua instituição, por exemplo /univag.'])
+    const t = estados(['One', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Abra o endereço da sua instituição, por exemplo /univag.']) // AC 37: a ilustração e a frase
     api({})
     const { container } = abrir('/')
     t.conferir(container)
@@ -66,7 +66,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Login', async () => {
-    const t = estados(['One', 'Entre com seu CPF e sua senha.', 'CPF', 'Senha', 'Entrar', 'Primeiro acesso ou esqueci minha senha', 'Instituição não encontrada.', ...Painel])
+    const t = estados(['Entre com seu CPF e sua senha.', 'CPF', 'Senha', 'Entrar', 'Primeiro acesso ou esqueci minha senha', 'Instituição não encontrada.', ...Painel])
     // carregando: só o status "Carregando"
     api({ 'GET /api/instituicoes/univag': () => new Promise(() => {}) })
     let montada = abrir('/univag')
@@ -93,7 +93,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Primeiro acesso', async () => {
-    const t = estados(['One', 'Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel])
+    const t = estados(['Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel])
     api({ 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'Link enviado.' }] })
     const { container } = abrir('/univag/primeiro-acesso')
     t.conferir(container)
@@ -105,7 +105,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Criar senha', async () => {
-    const t = estados(['One', 'Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. ', 'Entre com o CPF e a nova senha.', ...Painel])
+    const t = estados(['Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. ', 'Entre com o CPF e a nova senha.', ...Painel])
     api({ 'POST /api/auth/definir-senha': () => [204, undefined] })
     const { container } = abrir('/univag/definir-senha?token=t')
     t.conferir(container)
@@ -119,8 +119,8 @@ describe('textos das telas de acesso', () => {
   // login-institucional C26: o estado de erro de cada formulário mostra só os textos de hoje e o detail da API
   it('textos dos erros de Primeiro acesso e Criar senha', async () => {
     for (const [caminho, rota, campo, botao, literais] of [
-      ['/univag/primeiro-acesso', 'POST /api/auth/primeiro-acesso', 'CPF', 'Enviar link', ['One', 'Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel]],
-      ['/univag/definir-senha?token=vencido', 'POST /api/auth/definir-senha', 'Nova senha', 'Salvar senha', ['One', 'Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', ...Painel]],
+      ['/univag/primeiro-acesso', 'POST /api/auth/primeiro-acesso', 'CPF', 'Enviar link', ['Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel]],
+      ['/univag/definir-senha?token=vencido', 'POST /api/auth/definir-senha', 'Nova senha', 'Salvar senha', ['Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', ...Painel]],
     ] as const) {
       const t = estados([...literais])
       api({ [rota]: () => Recusa })

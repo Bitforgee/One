@@ -1,5 +1,6 @@
 import { EllipsisVertical } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
+import { CaixaVazia } from './ilustracoes'
 import { useConsulta } from './ui/use-mobile'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -13,12 +14,16 @@ export const Principal = 'whitespace-normal [overflow-wrap:anywhere]'
 
 export type Coluna = { titulo: string; largo?: boolean }
 
+// O estado vazio de uma lista (AC 45): a ilustração, o título, a frase e, quando a lista tem, o botão de ação.
+export type Vazio = { Ilustracao: ComponentType<{ className?: string }>; titulo: string; frase: ReactNode; acao?: ReactNode }
+const SemItens: Vazio = { Ilustracao: CaixaVazia, titulo: 'Nada cadastrado', frase: 'Nenhum item cadastrado.' }
+
 // Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7).
 const useEstreito = () => useConsulta('(max-width: 767px)')
 
 // A caixa com borda das listas (padrão do data-table do template); lista vazia, uma linha só com o texto de vazio (AC 24).
 // Lista ainda não chegada: 3 esqueletos (AC 4); com `erro`, nada (a tela mostra o erro).
-export function Tabela({ colunas, itens, vazio = 'Nenhum item cadastrado.', erro, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: ReactNode; erro?: unknown; children: ReactNode }) {
+export function Tabela({ colunas, itens, vazio = SemItens, erro, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: Vazio; erro?: unknown; children: ReactNode }) {
   const cartoes = useEstreito()
   if (!itens)
     return erro ? null : (
@@ -31,8 +36,13 @@ export function Tabela({ colunas, itens, vazio = 'Nenhum item cadastrado.', erro
   const corpo =
     itens.length === 0 ? (
       <TableRow>
-        <TableCell colSpan={colunas.length} className="h-24 text-center text-muted-foreground">
-          {vazio}
+        <TableCell colSpan={colunas.length} className="text-center">
+          <div className="flex flex-col items-center gap-2 py-4">
+            <vazio.Ilustracao className="h-24 w-32 text-muted-foreground" />
+            <p className="m-0 font-medium">{vazio.titulo}</p>
+            <p className="m-0 text-sm whitespace-normal text-muted-foreground">{vazio.frase}</p>
+            {vazio.acao}
+          </div>
         </TableCell>
       </TableRow>
     ) : (

@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { api } from '../api'
 import { Estados } from '../chamado'
@@ -7,7 +6,9 @@ import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
 import { Spinner } from '../ui/spinner'
 import { TableCell, TableRow } from '../ui/table'
-import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
+import { CaixaVazia } from '../ilustracoes'
+import { Button } from '../ui/button'
+import { CelulaLargo, Detalhe, Principal, Tabela, type Vazio } from '../Tabela'
 import { UrlDaFila, useFilaAberta } from '../tempo-real'
 
 type ItemMeu = { numero: string; titulo: string; estado: string; criadoEm: string }
@@ -29,7 +30,7 @@ export function Carregando() {
 
 // Fila e Minhas solicitações: a mesma tabela de chamados; a linha inteira abre o chamado e o número é o link (AC 23).
 // `largas` são as colunas "largo": cabeçalhos e células, nesta ordem, entre o título e o estado.
-function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas }: { url: string; vazio: ReactNode; largas?: { titulo: string; valor: (c: T) => string }[] }) {
+function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas }: { url: string; vazio: Vazio; largas?: { titulo: string; valor: (c: T) => string }[] }) {
   const { slug } = useParams()
   const navegar = useNavigate()
   const { data: itens, error } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
@@ -76,7 +77,7 @@ export function Fila() {
   return (
     <ListaDeChamados<ItemFila>
       url={UrlDaFila}
-      vazio="Nenhum chamado na fila dos seus setores."
+      vazio={{ Ilustracao: CaixaVazia, titulo: 'Fila em dia', frase: 'Nenhum chamado na fila dos seus setores.' }}
       largas={[
         { titulo: 'Categoria', valor: (c) => c.categoria },
         { titulo: 'Responsável', valor: (c) => responsavel(c.responsavel) },
@@ -91,15 +92,16 @@ export function Solicitacoes() {
   return (
     <ListaDeChamados
       url="/api/chamados?escopo=meus"
-      vazio={
-        <>
-          Você ainda não tem solicitações.{' '}
-          <Link to={`/${slug}/assistente`} className="text-primary">
-            Fale com o assistente
-          </Link>
-          .
-        </>
-      }
+      vazio={{
+        Ilustracao: CaixaVazia,
+        titulo: 'Nenhuma solicitação',
+        frase: 'Você ainda não tem solicitações.',
+        acao: (
+          <Button asChild>
+            <Link to={`/${slug}/assistente`}>Falar com o assistente</Link>
+          </Button>
+        ),
+      }}
     />
   )
 }

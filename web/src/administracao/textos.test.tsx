@@ -6,7 +6,7 @@ import { abrir, api, escolher, me, type Rota } from '../test/util'
 
 // Linhas 13, 14 e 15 de ## Screens (Usuários, Matrículas, Cadastros); nomes, CPF, números e arquivos vêm do fixture.
 const Usuarios = [
-  'Usuários', 'Novo', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum item cadastrado.',
+  'Usuários', 'Novo', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.',
   'Novo usuário', 'Editar usuário', 'Nome', 'E-mail', 'Papéis', 'Setores do atendente', 'Senha temporária (opcional)',
   'Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.', 'Cancelar', 'Salvar',
   'A pessoa perde o acesso na próxima requisição. Conversas, chamados e histórico ficam guardados; os chamados em que ela era responsável voltam para a fila do setor.',
@@ -21,7 +21,7 @@ const Matriculas = [
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']
 const Cadastros = [
   'Cadastros', 'Novo', 'Detalhe', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
-  'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'setor', 'coordenação do curso', '·', 'Nenhum item cadastrado.',
+  'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'setor', 'coordenação do curso', '·', 'Nada cadastrado', 'Nenhum item cadastrado.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Destino', 'Setor fixo', 'Coordenação do curso da matrícula', 'Setor', 'Escolha o setor', 'Escolha a categoria', 'Título', 'Texto',
   'Cancelar', 'Salvar', 'Cadastro salvo.',
@@ -58,7 +58,7 @@ describe('textos', () => {
     // vazia
     api(leituras([]))
     montada = abrir('/univag/usuarios')
-    await screen.findByText('Nenhum item cadastrado.')
+    await screen.findByText('Cadastre a equipe ou importe as matrículas.')
     t.conferir(tela())
     montada.unmount()
 

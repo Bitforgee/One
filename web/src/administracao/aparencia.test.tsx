@@ -1,0 +1,179 @@
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { abrir, api, instituicao, me, type Rota } from '../test/util'
+
+// aparencia-instituicao S3 (AC 23 a AC 27, AC 21 na tela). As cores entram em pedaços: interface.test.ts proíbe cor literal em src/.
+const hex = (digitos: string) => '#' + digitos
+const Cor = hex('8a1538')
+const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
+const aparencia = (parcial: Record<string, unknown> = {}) => {
+  const { nome: _, ...resto } = instituicao(parcial)
+  return resto
+}
+const arquivo = (nome: string) => new File(['x'], nome, { type: 'image/png' })
+
+const rotas = (extra: Record<string, Rota> = {}, atual: object = aparencia()) =>
+  api({
+    'GET /api/auth/me': () => [200, admin],
+    'GET /api/admin/aparencia': () => [200, atual],
+    'GET /api/instituicoes/univag': () => [200, instituicao()],
+    ...extra,
+  })
+
+async function digitar(rotulo: string | RegExp, texto: string) {
+  const campo = await screen.findByLabelText(rotulo)
+  await userEvent.clear(campo)
+  await userEvent.type(campo, texto)
+}
+
+beforeEach(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:imagem-nova')
+  URL.revokeObjectURL = vi.fn()
+})
+afterEach(() => {
+  document.documentElement.removeAttribute('style')
+})
+
+describe('tela Aparência', () => {
+  // C23 (AC 23, door 7)
+  it('link Aparência só para administrador', async () => {
+    for (const [papel, ve] of [['ALUNO', false], ['ATENDENTE', false], ['ADMINISTRADOR', true]] as const) {
+      api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
+      const { unmount } = abrir('/univag/trocar-senha')
+      await screen.findByRole('button', { name: 'Alternar barra lateral' })
+      const nav = within(await screen.findByRole('navigation'))
+      if (!ve) expect(nav.queryByRole('link', { name: 'Aparência' }), papel).not.toBeInTheDocument()
+      else {
+        const link = nav.getByRole('link', { name: 'Aparência' })
+        expect(link).toHaveAttribute('href', '/univag/aparencia')
+        expect(link.querySelector('svg')).toHaveClass('lucide-palette')
+        const grupo = within(nav.getByRole('group', { name: 'Administração' }))
+        expect(grupo.getAllByRole('link').map((l) => l.textContent)).toEqual(['Usuários', 'Matrículas', 'Cadastros', 'Aparência'])
+      }
+      unmount()
+    }
+  })
+
+  // C24 (AC 24)
+  it('prévia muda antes de salvar', async () => {
+    rotas()
+    abrir('/univag/aparencia')
+    await digitar('Cor principal', Cor)
+    const previa = within(screen.getByRole('region', { name: 'Prévia' }))
+    expect(previa.getByRole('button', { name: 'Entrar' })).toHaveStyle({ backgroundColor: Cor })
+
+    expect(document.querySelector('[aria-label="Prévia"] img[src^="blob:"]')).toBeNull()
+    await userEvent.upload(screen.getByLabelText('Arquivo: Logo'), arquivo('logo.png'))
+    expect(document.querySelector('[aria-label="Prévia"] img[src^="blob:"]')).not.toBeNull()
+
+    await digitar('Título do login', 'Fale com a Univag')
+    expect(previa.getByText('Fale com a Univag')).toBeInTheDocument()
+
+    await digitar('Nome do assistente', 'Vagner')
+    expect(previa.getByText('Olá! Eu sou Vagner.')).toBeInTheDocument()
+  })
+
+  // C25 (AC 25)
+  it('salvar mostra Aparência salva e aplica sem recarregar', async () => {
+    let salva: object = instituicao()
+    const chamadas = rotas({
+      'GET /api/instituicoes/univag': () => [200, salva],
+      'PUT /api/admin/aparencia': (corpo) => {
+        salva = instituicao({ nomeCurto: corpo.nomeCurto, cor: corpo.cor })
+        return [200, { ...salva, nome: undefined }]
+      },
+    })
+    abrir('/univag/aparencia')
+    await digitar('Nome curto', 'Univag')
+    await digitar('Cor principal', Cor)
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    expect(await screen.findByText('Aparência salva.')).toBeInTheDocument()
+    const put = chamadas.find((c) => c.metodo === 'PUT')!
+    expect(put.url).toBe('/api/admin/aparencia')
+    expect(put.corpo).toMatchObject({ nomeCurto: 'Univag', cor: Cor, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, perguntas: [] }, contato: { horario: null, telefone: null, email: null } })
+    await waitFor(() => expect(document.documentElement.style.getPropertyValue('--marca')).toBe(Cor))
+    expect(chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/instituicoes/univag').length).toBeGreaterThan(1) // a consulta foi invalidada e relida
+  })
+
+  // C26 (AC 26)
+  it('erro da API aparece e o formulário fica', async () => {
+    rotas({ 'PUT /api/admin/aparencia': () => [400, { status: 400, detail: 'Escolha uma cor mais escura.', errors: { cor: ['Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.'] } }] })
+    const { unmount } = abrir('/univag/aparencia')
+    await digitar('Título do login', 'Fale com a Univag')
+    await digitar('Cor principal', hex('767676'))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    const erro = await screen.findByText('Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.')
+    expect(erro.closest('div')).toContainElement(screen.getByLabelText('Cor principal')) // abaixo do campo de cor
+    expect(screen.getByLabelText('Cor principal')).toHaveValue(hex('767676'))
+    expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
+    unmount()
+
+    for (const [status, detail] of [[413, 'A imagem passa de 1 MB.'], [415, 'Envie uma imagem PNG ou JPEG.'], [503, 'Armazenamento indisponível.']] as const) {
+      rotas({
+        'PUT /api/admin/aparencia': () => [200, aparencia()],
+        'POST /api/admin/aparencia/imagens/logo': () => [status, { status, title: 'Erro', detail }],
+      })
+      const montada = abrir('/univag/aparencia')
+      await digitar('Título do login', 'Fale com a Univag')
+      await userEvent.upload(await screen.findByLabelText('Arquivo: Logo'), arquivo('logo.png'))
+      await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+      const alerta = await screen.findByRole('alert')
+      expect(alerta, String(status)).toHaveTextContent(detail)
+      expect(alerta.closest('div')!.parentElement).toContainElement(screen.getByRole('button', { name: 'Enviar imagem: Logo' })) // no bloco da imagem
+      expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
+      expect(document.querySelector('img[alt="Miniatura: Logo"]')).toHaveAttribute('src', 'blob:imagem-nova') // a escolhida continua
+      expect(screen.queryByText('Aparência salva.')).not.toBeInTheDocument()
+      montada.unmount()
+    }
+  })
+
+  // C27 (AC 27, door 8)
+  it('contraste ao lado da cor e Salvar desabilitado', async () => {
+    rotas()
+    abrir('/univag/aparencia')
+    for (const [cor, texto, habilitado] of [
+      [hex('224fa7'), 'Contraste com o branco: 7,65:1', true], // C27 pede 7,47:1; a regra do servidor dá 7,65 (ver o ## Handoff)
+      [hex('767676'), 'Contraste com o branco: 4,54:1', true],
+      [hex('ffd700'), 'Contraste com o branco: 1,40:1', false],
+    ] as const) {
+      await digitar('Cor principal', cor)
+      expect(screen.getByText(texto)).toBeInTheDocument()
+      expect(screen.getByTestId('amostra')).toHaveStyle({ backgroundColor: cor })
+      const salvar = screen.getByRole('button', { name: 'Salvar' })
+      if (habilitado) expect(salvar).toBeEnabled()
+      else expect(salvar).toBeDisabled()
+    }
+  })
+
+  // C29 (AC 21, Observable)
+  it('remover imagem pede confirmação', async () => {
+    let logo: number | null = 3
+    const chamadas = rotas({
+      'GET /api/admin/aparencia': () => [200, aparencia({ imagens: { logo, icone: null, login: null, assistente: null } })],
+      'DELETE /api/admin/aparencia/imagens/logo': () => {
+        logo = null
+        return [204, undefined]
+      },
+    })
+    abrir('/univag/aparencia')
+    const miniatura = await screen.findByRole('img', { name: 'Miniatura: Logo' })
+    expect(miniatura).toHaveAttribute('src', '/api/instituicoes/univag/imagens/logo?v=3')
+    await userEvent.click(screen.getByRole('button', { name: 'Remover imagem: Logo' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Remover a imagem?' })
+    expect(chamadas.some((c) => c.metodo === 'DELETE')).toBe(false)
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Remover' }))
+    await waitFor(() => expect(screen.queryByRole('img', { name: 'Miniatura: Logo' })).not.toBeInTheDocument())
+    expect(chamadas.filter((c) => c.metodo === 'DELETE').map((c) => c.url)).toEqual(['/api/admin/aparencia/imagens/logo'])
+  })
+
+  it('a prévia recolhe e mostra de novo', async () => {
+    rotas()
+    abrir('/univag/aparencia')
+    const botao = await screen.findByRole('button', { name: 'Ocultar prévia' })
+    fireEvent.click(botao)
+    expect(screen.getByRole('button', { name: 'Mostrar prévia' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Marca', 'Login', 'Assistente', 'Contato'])
+  })
+})
