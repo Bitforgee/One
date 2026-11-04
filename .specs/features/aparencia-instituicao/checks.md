@@ -332,7 +332,7 @@ Proof: `cd web && E2E_URL=http://localhost:8085 npx playwright test`
 
 Acrescentados com aprovação do usuário em 04/11, depois da rodada 1 da verificação.
 
-**C65** - Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, os centros horizontais da foto (ou ilustração) do assistente, do título "Olá! Eu sou …" e da grade de perguntas ficam, cada um, a no máximo 1 px do centro da área de conteúdo (precisão acrescentada em 04/11 depois da rodada 2: o contêiner de largura total não mede centralização) (Screens: Assistente sem conversa)
+**C65** - [x] Sem conversa, com 4 perguntas sugeridas: a 390 px, os 4 botões têm o mesmo `left` (1 px) e `top` crescente (1 coluna); a 1440 px, ficam em 2 colunas (2 valores distintos de `left`, 2 linhas). Nas duas larguras, os centros horizontais da foto (ou ilustração) do assistente, do título "Olá! Eu sou …" e da grade de perguntas ficam, cada um, a no máximo 1 px do centro da área de conteúdo (precisão acrescentada em 04/11 depois da rodada 2: o contêiner de largura total não mede centralização) (Screens: Assistente sem conversa)
 Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`
 
 **C66** - [x] A 1440 px, com imagem de login, a base do bloco de título, frase e itens fica a no máximo 48 px da base do painel. O bloco fica sobre um elemento do painel com `background-image` `linear-gradient` cuja caixa contém a caixa do bloco (Screens: Login ≥ 1024 px)
@@ -493,3 +493,4 @@ Playwright (`e2e/arranjo.spec.ts`; medido contra `vite preview` e contra a image
 - **Boundary (rodada 1):** C7 sem `if` na medida do selo (conta 1 selo por cartão antes); C2 mede os 8 tamanhos (real: default, icon, sm, icon-sm, icon-xs; `lg` e `xs` num botão de teste); C65 a C69 em `e2e/aparencia.spec.ts`, C70 e C71 em `administracao/aparencia.test.tsx`. Código: `PreviaAparencia` usa `Sigla` (a mesma `iniciais` do login, C71); o topo do celular mostra as iniciais `size-6` quando não há ícone (C69).
 - **Settled mid-build (rodada 1):** nada com o usuário. `ui/button.tsx` já tinha 44 px abaixo de 768 nos 8 tamanhos, então não mudou. O balão do assistente é achado por `.is-assistant` e a foto por `preceding-sibling::img`. C14 e C51 seguem sem marca, para o orquestrador.
 - **Abandoned (rodada 1):** nada.
+- **Boundary (C65, rodada 2):** o teste de C65 mede o centro da foto, do texto do título (por `Range`, pois o `<h2>` de largura total sempre cai no centro) e da grade, contra o centro do `main`; falha sem `items-center` em `Assistente.tsx`. Marcação inalterada.

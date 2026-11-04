@@ -147,9 +147,13 @@ test.describe('S9 arranjos das telas', () => {
       if (colunas === 1) caixas.slice(1).forEach((c, i) => expect(c.y, `${largura} px: top crescente`).toBeGreaterThan(caixas[i].y))
       else expect(new Set(caixas.map((c) => Math.round(c.y))).size, `${largura} px: linhas`).toBe(2)
       for (const c of caixas.slice(1)) if (colunas === 1) perto(c.x, caixas[0].x, `${largura} px: mesmo left`)
-      const bloco = await caixa(page.getByRole('heading', { name: 'Olá! Eu sou Vagner.' }).locator('xpath=..'))
       const area = await caixa(page.getByRole('main'))
-      perto(bloco.x + bloco.width / 2, area.x + area.width / 2, `${largura} px: centro do bloco`)
+      const titulo = page.getByRole('heading', { name: 'Olá! Eu sou Vagner.' })
+      const foto = page.locator('section:has(h2) > img, section:has(h2) > svg').first()
+      // o título é medido pelo texto (o <h2> de largura total sempre cai no centro)
+      const texto = await titulo.evaluate((h) => { const r = document.createRange(); r.selectNodeContents(h); return r.getBoundingClientRect().toJSON() })
+      for (const [nome, c] of [['foto', await caixa(foto)], ['título', texto], ['grade', await caixa(botoes[0].locator('xpath=..'))]] as const)
+        perto(c.x + c.width / 2, area.x + area.width / 2, `${largura} px: centro da ${nome}`)
     }
   })
 
