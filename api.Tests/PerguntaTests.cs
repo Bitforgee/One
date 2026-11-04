@@ -22,4 +22,12 @@ public class PerguntaTests
         Assert.True(Pergunta.Aceita("Qual o seu curso?", [Tipos.Pergunta, Tipos.Resposta]), "2ª pergunta seguida, depois de uma resposta");
         Assert.False(Pergunta.Aceita("Qual o seu curso?", [Tipos.Pergunta, Tipos.Pergunta]), "3ª pergunta seguida");
     }
+
+    [Fact]
+    public void Pergunta_com_link_e_recusada()
+    {
+        Assert.False(Pergunta.Aceita("Acesse http://golpe.com para confirmar?", []));
+        Assert.False(Pergunta.Aceita("Qual é o seu curso em https://univag.edu.br?", []));
+        Assert.True(Pergunta.Aceita("Qual é o seu curso?", []));
+    }
 }

@@ -35,4 +35,33 @@ public class ConferenciaTests
         Assert.False(Conferencia.TrechoConfere(Pedaco(19), artigo));
         Assert.False(Conferencia.TrechoConfere(Pedaco(401), artigo));
     }
+
+    [Fact]
+    public void Teto_do_texto_700()
+    {
+        Assert.True(Conferencia.TextoDentroDoTeto(new string('a', 700)));
+        Assert.False(Conferencia.TextoDentroDoTeto(new string('a', 701)));
+        Assert.True(Conferencia.TextoDentroDoTeto("   " + new string('a', 700)));
+        Assert.True(Conferencia.TextoDentroDoTeto(new string('a', 700) + "   "));
+        Assert.False(Conferencia.TextoDentroDoTeto("   "));
+        Assert.False(Conferencia.TextoDentroDoTeto(null));
+    }
+
+    [Theory]
+    [InlineData("dia 10", "dia 10 de cada mês", true)]
+    [InlineData("dia 30", "dia 10 de cada mês", false)]
+    [InlineData("R$ 1.250,00", "R$ 1.250,00", true)]
+    [InlineData("R$ 1.350,00", "R$ 1.250,00", false)]
+    [InlineData("10/12/2026", "até 10/12/2026", true)]
+    [InlineData("dia 05", "dia 5", true)]
+    [InlineData("sem número nenhum", "dia 10", true)]
+    public void Numeros_conferem(string texto, string fonte, bool esperado) =>
+        Assert.Equal(esperado, Conferencia.NumerosConferem(texto, [fonte]));
+
+    [Fact]
+    public void Numeros_conferem_com_mensagem_do_aluno()
+    {
+        Assert.False(Conferencia.NumerosConferem("turma 3", ["dia 10 de cada mês"]));
+        Assert.True(Conferencia.NumerosConferem("turma 3", ["dia 10 de cada mês", "sou da turma 3"]));
+    }
 }

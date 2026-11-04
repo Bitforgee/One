@@ -17,6 +17,22 @@ public static partial class Conferencia
         return Url().Matches(texto).All(m => permitidos.Contains(m.Value.TrimEnd('.', ',', ';', ':', '!', '?')));
     }
 
+    public const int TetoTexto = 700;
+
+    public static bool TextoDentroDoTeto(string? texto) => texto?.Trim().Length is > 0 and <= TetoTexto;
+
+    public static bool TemLink(string texto) => Url().IsMatch(texto);
+
+    // Cada sequência de dígitos do texto, sem zeros à esquerda, tem de existir nos textos permitidos.
+    public static bool NumerosConferem(string texto, IEnumerable<string> permitidos)
+    {
+        var validos = permitidos.SelectMany(Numeros).ToHashSet();
+        return Numeros(texto).All(validos.Contains);
+    }
+
+    static IEnumerable<string> Numeros(string s) => Digitos().Matches(s).Select(m => m.Value.TrimStart('0'));
+
+    [GeneratedRegex(@"\d+")] private static partial Regex Digitos();
     [GeneratedRegex(@"\s+")] private static partial Regex Espacos();
     [GeneratedRegex(@"https?://[^\s<>()""']+", RegexOptions.IgnoreCase)] private static partial Regex Url();
 }

@@ -8,6 +8,6 @@ public static class Pergunta
     {
         var aparado = texto?.Trim() ?? "";
         var terceiraSeguida = ultimosTipos.Count >= 2 && ultimosTipos.Take(2).All(t => t == Tipos.Pergunta);
-        return aparado.Length is > 0 and <= Maximo && aparado.EndsWith('?') && !terceiraSeguida;
+        return aparado.Length is > 0 and <= Maximo && aparado.EndsWith('?') && !terceiraSeguida && !Conferencia.TemLink(aparado);
     }
 }
