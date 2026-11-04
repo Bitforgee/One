@@ -52,6 +52,7 @@ async function entrar(request: APIRequestContext, cpf: string, senha: string) {
 }
 
 // O limitador "auth" da API é de 5 por minuto por IP (login e primeiro acesso): espera a janela em vez de tomar 429.
+test.describe.configure({ timeout: 150_000 }) // inclui a espera da janela do limitador
 const autenticacoes: number[] = []
 async function vaga(): Promise<void> {
   const agora = Date.now()
