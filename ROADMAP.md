@@ -1,8 +1,9 @@
 # One: roadmap
 
-- **Data:** 04/11/2026 (anexos na conversa com o assistente verificados; aparência por instituição, com revisão
-  visual e do celular, e proteção contra prompt injection construídas, com a verificação em andamento; chave da
-  OpenAI no `.env` e respondendo. Próximo: fechar as duas verificações e a Etapa 5, que depende dos dados da Univag)
+- **Data:** 04/11/2026, fim do dia (verificados no `main`: anexos na conversa, aparência por instituição com revisão
+  visual e do celular, proteção contra prompt injection e a tela de instituições para operadores da plataforma.
+  Em andamento: a revisão de UI/UX, com pesquisa, auditoria, plano e 65 checks prontos. Próximo: construir a
+  revisão em 3 lotes e a Etapa 5, que depende dos dados da Univag)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -17,7 +18,9 @@
   - `.specs/features/anexos-assistente/`: fotos e PDFs na conversa, lidos pela IA (04/11), 29 critérios, 40 checks;
   - `.specs/features/aparencia-instituicao/`: aparência por instituição, revisão visual e celular (04/11), 53 critérios, 64 checks;
   - `.specs/features/protecao-injecao/`: proteção contra prompt injection (04/11), 9 checks;
-  - `.specs/STATE.md`: decisões AD-001 a AD-032;
+  - `.specs/features/instituicoes-plataforma/`: tela de instituições para o papel `OPERADOR` (04/11), 28 critérios, 38 checks;
+  - `.specs/features/revisao-ux/`: pesquisa, auditoria, plano e 65 checks da revisão de UI/UX (04/11), construção pendente;
+  - `.specs/STATE.md`: decisões AD-001 a AD-033;
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -52,8 +55,8 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 249 commits em `main`, só nesta máquina. Desde 04/11 o trabalho é feito direto na `main` (pedido do usuário); a branch `visual-sem-cara-de-ia` foi incorporada por avanço rápido |
-| Testes | Em 04/11: API 534, web (Vitest) 329, arranjo com a API simulada 84, e2e real contra o contêiner 109. O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`) |
+| Código | 276 commits em `main`, só nesta máquina. Desde 04/11 o trabalho é feito direto na `main` (pedido do usuário); a branch `visual-sem-cara-de-ia` foi incorporada por avanço rápido |
+| Testes | No fim de 04/11: API 568, web (Vitest) 340, arranjo com a API simulada 93, e2e real contra o contêiner 119. O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`). `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` às vezes trava quando a suíte roda em paralelo e passa sozinho em 3 s: investigar |
 | Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
 | Chave da OpenAI no `.env` | **Colocada.** Em 04/11 uma chamada real ao `gpt-6-luna` com imagem e PDF respondeu 200 (`provedor_aceita_anexos.py`, C20 de `anexos-assistente`). O ensaio de ponta a ponta da Etapa 5 continua por fazer |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
@@ -65,8 +68,10 @@ hospedagem e ensaio.
 | Domínio rico e contratos (`dominio-e-contratos`) | 41 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só pelo C27 (`Agendador.cs` mudou só nos comentários removidos a pedido do usuário), aceito pelo usuário. 28 falhas injetadas, todas pegas; API 329, nenhuma migração |
 | Visual de 03/11 (`redesign-institucional`, `barra-lateral-grupos`, `historico-legivel`, `layout-painel`, `login-institucional`) | Todas verificadas em 03/11 (AD-027 a AD-030). Em 04/11, `2512a37` deixou login, barra, painel e compositor com menos cara de modelo, e `688aedc` transformou os links da resposta do assistente em botões |
 | Anexos na conversa (`anexos-assistente`) | 40 checks provados; verificação independente **aprovada** em 04/11 (rodada 2). O aluno anexa fotos (JPG, PNG) e PDFs, até 10 MB cada e 3 por conversa, com texto obrigatório; a IA lê o anexo na própria requisição ao `gpt-6-luna`, mas a resposta continua só das fontes (AD-012); o atendente baixa os anexos na transcrição do chamado. O modelo continua o `gpt-6-luna`: o `gpt-4o-mini` custa mais por token e por imagem e será desligado em 14/01/2027 (AD-031). A rodada 1 reprovou por login demais no e2e, um teste velho de relógio e uma rota sem prova de 503 |
-| Aparência da instituição (`aparencia-instituicao`) | 64 checks, construída em 3 lotes em 04/11 (`06d68a8..179d088`); **verificação independente em andamento**. O admin define, na tela nova "Aparência" com prévia, logo, ícone do app, cor (recusada abaixo de 4,5:1 de contraste), imagem e textos do login, nome, foto, boas-vindas e até 4 perguntas sugeridas do assistente, e o contato do atendimento. Entram também os e-mails com a marca, o manifesto do app por instituição, 6 ilustrações próprias, os alertas consertados (saíam uma palavra por linha), alvos de 44 px e listas em cartões no celular, e as ações do chamado num botão fixo (AD-032) |
-| Proteção contra prompt injection (`protecao-injecao`) | 9 checks, construída em 04/11 (`301eb16`); **verificação independente pendente**. Regra no prompt de que o aluno é dado e não instrução, resposta de até 700 caracteres, números da resposta conferidos com as fontes citadas e as mensagens do aluno, e pergunta de volta sem link. Por decisão do usuário, a cópia longa do texto da fonte não é bloqueada: o risco de vazar artigo interno (AD-012) continua aceito |
+| Aparência da instituição (`aparencia-instituicao`) | 71 checks; verificação independente **aprovada** em 04/11 (rodada 4, a 4ª autorizada pelo usuário). O admin define, na tela "Aparência" com prévia, logo, ícone do app, cor (recusada abaixo de 4,5:1 de contraste), imagem e textos do login, o assistente (nome, foto, boas-vindas, até 4 perguntas) e o contato; mais e-mails com a marca, manifesto do app por instituição, 6 ilustrações próprias, alertas consertados, alvos de 44 px e listas em cartões no celular (AD-032). As rodadas 1 a 3 reprovaram por testes que não mediam o que diziam (selo condicional, centralização medida no contêiner), nunca por defeito no código, exceto as iniciais da prévia ("CE" contra "CG"), corrigidas |
+| Proteção contra prompt injection (`protecao-injecao`) | 9 checks; verificação independente **aprovada** em 04/11 (rodada 3). Regra no prompt de que o aluno é dado e não instrução, resposta de até 700 caracteres, números da resposta conferidos inteiros só com as fontes citadas (nunca com os do aluno), dígitos fora de 0-9 recusados e pergunta de volta sem link. Riscos aceitos: cópia longa do texto da fonte (artigo interno, AD-012), número por extenso, números dentro de links e um valor reescrito ("R$ 1250,00" contra "R$ 1.250,00") virar "não encontrei" |
+| Instituições pela tela (`instituicoes-plataforma`) | 38 checks; verificação independente **aprovada** em 04/11 (rodada 2). Papel `OPERADOR`, dado só pelo comando `instituicao operador`, com a tela "Instituições": listar, criar (o admin recebe o link de primeiro acesso por e-mail, na mesma transação), importar a carga JSON, desativar e reativar (nunca a própria) e reenviar o acesso. Só as rotas `/api/plataforma` gravam em outra instituição (AD-033). O comando `instituicao criar` continua como era |
+| Revisão de UI/UX (`revisao-ux`) | Pedido do usuário em 04/11, com as decisões de design delegadas. Pesquisa (15 princípios com fontes: NN/g, Baymard, WCAG, HIG, Material, GOV.UK, Lei 15.263/2025) e auditoria medida (44 achados, 150 capturas) prontas; plano com 43 critérios e 65 checks. Destaques: barra de abas para o aluno no celular, "Isso resolveu?" sob a resposta, listas densas com o próximo passo, ação principal do atendente na barra, diálogos em tela cheia no celular, campos de 16 px, neutros tingidos pela cor da instituição. Construção em 3 lotes, pendente |
 | Perguntas que bloqueiam o uso real | 6 abertas (ver "Decisões e bloqueios") |
 
 ### O que já funciona
