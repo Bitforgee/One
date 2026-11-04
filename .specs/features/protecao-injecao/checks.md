@@ -59,7 +59,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Teto
 
 ### S3 - Números conferidos (P1)
 
-**C4** - [x] A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 10 casos:
+**C4** - A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 10 casos:
 - "dia 10" com fonte "dia 10 de cada mês" → verdadeiro;
 - "dia 30" com a mesma fonte → falso;
 - "R$ 1.250,00" com fonte "R$ 1.250,00" → verdadeiro;
@@ -112,7 +112,7 @@ Proof: `dotnet build api`
 | --- | --- | --- |
 | motivos novos ou reaproveitados (3) | `texto_longo` C2, C8 · `numero_sem_fonte` C5 · `pergunta_invalida` com link C7 | - |
 | borda do teto (3) | 700 aceito C2, C3 · 701 recusado C2, C3 · aparado C3 | - |
-| formas de número (10) | inteiro aceito C4 · inteiro inventado C4 · valor com separadores aceito C4 · valor inventado C4 · valor composto de pedaços C4 · data C4 · zero à esquerda C4 · sem dígito C4 · sobrescrito C4 · circulado C4 | - |
+| formas de número (13) | inteiro aceito C4 · inteiro inventado C4 · valor com `.` aceito C4 · valor inventado C4 · valor composto de pedaços C4 · `,` como parte do número C4 · `/` como parte do número C4 · data C4 · zero à esquerda C4 · sem dígito C4 · sobrescrito C4 · circulado C4 · largura total C4 | - |
 | origens de número permitida (1) e negadas (3) | fonte citada C5 · fonte só buscada C5 · mensagem do aluno C6 · pedido do aluno para escrever um número C6 | - |
 | perguntas com link (2) | `http` C7 · `https` C7 | - |
 | posições novas na ordem das conferências (4) | texto longo antes de trecho C8 · texto longo antes de número C8 · trecho antes de número C8 · link antes de número C8 | - |
