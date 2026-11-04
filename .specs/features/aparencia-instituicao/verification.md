@@ -1,41 +1,41 @@
 # Aparência da instituição e revisão visual - verification
 
-**Verdict**: FAIL
+**Verdict**: PASS
 **Profile**: ui
-**Diff range**: 5b355d9..3327feb for this feature. Proofs ran at HEAD `7590bc1`. `224d84b` and `7590bc1` belong to `protecao-injecao` and are judged here only for whether they reach this feature's proofs.
-**Round**: 3 - scoped. Fix diff `5f35a14..3327feb`, restricted to this feature: `checks.md` in `b9d2435` and `8106a24`, and `web/e2e/aparencia.spec.ts` in `3327feb`. Plus the one round-2 verdict that was not PASS (C65). All proofs re-ran in full at HEAD `7590bc1`.
+**Diff range**: 5b355d9..02bc20f for this feature. Proofs ran at HEAD `2d984d7`. `224d84b`, `7590bc1` and `2d984d7` belong to `protecao-injecao` and are judged here only for whether they reach this feature's proofs.
+**Round**: 4 - scoped (a 4th round past the three-round bound, approved by the user). Fix diff `795b859..2d984d7`, restricted to this feature: `checks.md` in `dc3fb9c` and `02bc20f` (the C65 amendment and a build note), and `web/e2e/aparencia.spec.ts` in `02bc20f`. Plus the one round-3 verdict that was not PASS (C65). All proofs re-ran in full at HEAD `2d984d7`.
 **Verifier**: fresh sub-agent with no inherited context (author != verifier), dispatched by the orchestrator
 
-Why FAIL:
-1. The round-2 survivor is now killed. Removing `items-center` from the welcome `<section>` fails C65: at 390 px the photo is 147 px off centre. Faults that move only the grid or only the title are killed too.
-2. The centred set is still not fully proven. The design (`plan.md:138-140`) centres four items: the photo (or, with no photo, the illustration `Conversa`), "Olá! Eu sou {nome}.", the welcome text and the grid. C65 names three of them and leaves out the welcome text, and its test only renders the photo variant. Two faults that each move one element survived: the welcome paragraph moved 227 px off centre (fault D), and the illustration moved 320 px off centre (fault E).
+Why PASS:
+1. The two round-3 survivors are killed. Moving only the welcome paragraph off centre fails C65 (390 px, with photo: 22.4 px off). Moving only the `Conversa` illustration fails it in the new no-photo run (390 px, without photo: 115 px off).
+2. The faults that move only the grid (1440 px: 96 px off) or only the title (390 px: 85.0 px off) are still killed by the rewritten test.
+3. The amended C65 now names all four centred items of the design (`plan.md:138-140`), and the test renders both variants (photo, and `imagens.assistente: null`). Every proof is green at HEAD.
 
 Earlier rounds:
 - Round 1 (`179d088`, FAIL): the C7 badge assertion was conditional, the `## Screens` arrangements had no checks, and C2 measured 4 of the 8 sizes.
 - Round 2 (`5f35a14`, FAIL on C65 only): the test measured the full-width `<section>`, and removing `items-center` survived.
-
-This is round 3, the last before the user decides.
+- Round 3 (`7590bc1`, FAIL on C65 only): C65 left out the welcome text, and the test never rendered the illustration variant. Faults D (paragraph) and E (illustration) survived.
 
 ## Binding sources
 
-Step 1 re-ran at `7590bc1` only for the screen whose check the fix touched (Assistente sem conversa). Every other row is carried from `5f35a14`. Citations into `aparencia.spec.ts` are refreshed: the fix added 4 lines at 150-156, so every line from 152 on moved by +4.
+Step 1 re-ran at `2d984d7` only for the screen whose check the fix touched (Assistente sem conversa); `plan.md` is unchanged since `5f35a14`. Every other row is carried from `5f35a14`. Citations into `aparencia.spec.ts` are refreshed at `2d984d7`: the C65 test grew by 8 lines (139-166), so every line from 168 on moved by +8.
 
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
 | plan `## Landing` doors 1-11 | yes - `plan.md:105-117` (carried from 179d088) | none | - |
-| `## Screens` Login, Primeiro acesso, Criar senha >= 1024 | yes - `plan.md:126-130` (carried from 5f35a14) | none | - (logo/initials C35 + `arranjo.spec.ts` `linha da marca na entrada`; image cover C38; texts at the base on the dark band C66 `aparencia.spec.ts:168,172`; illustration without an image C50, with the texts at the base below it by `arranjo.spec.ts:1546`) |
-| `## Screens` Login < 1024 | yes - `plan.md:131-132` (carried from 5f35a14) | none | - (C38 `aparencia.spec.ts:111-117`, C50) |
-| `## Screens` Raiz `/` | yes - `plan.md:133-134` (carried from 5f35a14) | none | - (C40) |
-| `## Screens` Casca autenticada | yes - `plan.md:135-137` (carried from 5f35a14) | none | - (logo on the open bar C35; icon 32 px collapsed C69 `aparencia.spec.ts:215-216`; 24 px before the title on mobile, icon and initials, C69 `:227-230`; links C36) |
-| `## Screens` Assistente sem conversa | yes - `plan.md:138-140`, re-read at HEAD (the fix touched C65, the check for this screen) | none | the welcome text ("as boas-vindas", which the design lists among the centred items) has no check: C65 names the photo, the title and the grid only, and a fault that moves only the paragraph 227 px off centre survived (fault D). The illustration ("sem foto, a ilustração `Conversa`") is named by C65 but never rendered by its test, and a fault that moves only the illustration 320 px off centre survived (fault E). Covered: photo, title text and grid centred (C65 `aparencia.spec.ts:156`, faults A-C killed); 1/2-column grid (C65 `:146-149`); 64 px photo, text and order of questions (C41) |
-| `## Screens` Assistente com conversa | yes - `plan.md:141` (carried from 5f35a14) | none | - (C67 `aparencia.spec.ts:188-189`, C44) |
-| `## Screens` Transferido | yes - `plan.md:142-143` (carried from 5f35a14) | none | - (C68 `aparencia.spec.ts:204`, C45) |
-| `## Screens` Menu | yes - `plan.md:144-145` (carried from 5f35a14) | none | - (C46) |
-| `## Screens` Listas | yes - `plan.md:146-151` (carried from 5f35a14) | none | - (C4, C48; cards with the badge on the right C7, now unconditional `celular.spec.ts:105`) |
-| `## Screens` Detalhe do chamado < 1024 | yes - `plan.md:152-153` (carried from 5f35a14) | none | - (C8, C9) |
-| `## Screens` Indicadores | yes - `plan.md:154-155` (carried from 5f35a14) | none | - (C5, C49) |
-| `## Screens` Cadastros < 768 | yes - `plan.md:156` (carried from 5f35a14) | none | - (C6) |
-| `## Screens` Aparência | yes - `plan.md:157-159` (carried from 5f35a14) | none | - (C28; each of the 4 images with thumbnail, "Enviar imagem" and "Remover" C70 `administracao/aparencia.test.tsx:193-206`; preview initials equal the login's C71 `:228-229`) |
+| `## Screens` Login, Primeiro acesso, Criar senha >= 1024 | yes - `plan.md:126-130` (carried from 5f35a14); covered by logo/initials C35 + `arranjo.spec.ts` `linha da marca na entrada`; image cover C38; texts at the base on the dark band C66 `aparencia.spec.ts:176,180`; illustration without an image C50, with the texts at the base below it by `arranjo.spec.ts:1546` | none | - |
+| `## Screens` Login < 1024 | yes - `plan.md:131-132` (carried from 5f35a14); covered by C38 `aparencia.spec.ts:111-117`, C50 | none | - |
+| `## Screens` Raiz `/` | yes - `plan.md:133-134` (carried from 5f35a14); covered by C40 | none | - |
+| `## Screens` Casca autenticada | yes - `plan.md:135-137` (carried from 5f35a14); covered by logo on the open bar C35; icon 32 px collapsed C69 `aparencia.spec.ts:223-224`; 24 px before the title on mobile, icon and initials, C69 `:235-238`; links C36 | none | - |
+| `## Screens` Assistente sem conversa | yes - `plan.md:138-140`, re-read at `2d984d7` (the fix touched C65, the check for this screen); covered by photo or, with no photo, the illustration `Conversa`, the title text, the welcome text and the grid, each centred within 1 px: C65 `aparencia.spec.ts:157-163`, run with the photo and with `imagens.assistente: null` `:141`; faults D, E, G, T killed; 1/2-column grid C65 `:148-151`; 64 px photo, text and order of questions C41 | none | - |
+| `## Screens` Assistente com conversa | yes - `plan.md:141` (carried from 5f35a14); covered by C67 `aparencia.spec.ts:196-197`, C44 | none | - |
+| `## Screens` Transferido | yes - `plan.md:142-143` (carried from 5f35a14); covered by C68 `aparencia.spec.ts:212`, C45 | none | - |
+| `## Screens` Menu | yes - `plan.md:144-145` (carried from 5f35a14); covered by C46 | none | - |
+| `## Screens` Listas | yes - `plan.md:146-151` (carried from 5f35a14); covered by C4, C48; cards with the badge on the right C7, now unconditional `celular.spec.ts:105` | none | - |
+| `## Screens` Detalhe do chamado < 1024 | yes - `plan.md:152-153` (carried from 5f35a14); covered by C8, C9 | none | - |
+| `## Screens` Indicadores | yes - `plan.md:154-155` (carried from 5f35a14); covered by C5, C49 | none | - |
+| `## Screens` Cadastros < 768 | yes - `plan.md:156` (carried from 5f35a14); covered by C6 | none | - |
+| `## Screens` Aparência | yes - `plan.md:157-159` (carried from 5f35a14); covered by C28; each of the 4 images with thumbnail, "Enviar imagem" and "Remover" C70 `administracao/aparencia.test.tsx:193-206`; preview initials equal the login's C71 `:228-229` | none | - |
 | STATE.md AD-008, AD-021, AD-027, AD-029, AD-030 | yes (carried from 179d088) | none | - |
 | design audit 04/11, user request 04/11 | only through `plan.md:10-29` (carried from 179d088) | none | - |
 
@@ -43,13 +43,13 @@ Blanket exemptions: none (carried from 5f35a14; `plan.md:124` assigns only colou
 
 ## Checks
 
-Proofs ran at `7590bc1` (HEAD) as follows:
-- API: one xUnit v3 process of the Release `One.Api.Tests.exe`, built at HEAD, over the whole assembly except `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo`: 535 passed, 0 failed. That test then ran alone: 1 passed.
+Proofs ran at `2d984d7` (HEAD) as follows:
+- API: one xUnit v3 process of the Release `One.Api.Tests.exe`, built at HEAD, over the whole assembly except `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo`: 538 passed, 0 failed. That test then ran alone: 1 passed.
 - Vitest: `cd web && npx vitest run` over the whole suite: 331 passed, 0 failed (40 files).
 - Layout: `npm --prefix web run build`, then `npx vite preview --port 5199`, then one Playwright run of the `arranjo`, `celular` and `aparencia` specs: 89 expected, 0 unexpected, 0 flaky.
 - Real e2e (C64): carried from `5f35a14` (see the C64 row).
 
-Every test named below appears individually as passed in those reports (the xUnit XML and the Vitest and Playwright JSON). Citations into files the fix did not touch carry from `5f35a14`. Citations into `web/e2e/aparencia.spec.ts` are refreshed at `7590bc1`.
+Every test named below appears individually as passed in those reports (the xUnit XML and the Vitest and Playwright JSON). Citations into files the fix did not touch carry from `5f35a14`. Citations into `web/e2e/aparencia.spec.ts` are refreshed at `2d984d7`.
 
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
@@ -58,7 +58,7 @@ Every test named below appears individually as passed in those reports (the xUni
 | C3 | badge class per group | VT `selo de estado com cor por grupo` passed | `web/src/tabela.test.tsx:35` `toHaveClass(classe)` (carried) | PASS |
 | C4 | 3 skeletons, no Spinner | VT `carregando mostra 3 esqueletos` passed | `tabela.test.tsx:43` `toHaveLength(3)`; `:44` (carried) | PASS |
 | C5 | no ellipsis or overflow; 40 chars in <= 2 lines | PW `Indicadores sem texto cortado` passed | `celular.spec.ts:75` `expect(cortados).toEqual([])`; `:80` tspan `<= 2` | PASS |
-| C6 | selector and "Novo" on the same top | PW `Cadastros seletor e Novo na mesma linha` passed | `celular.spec.ts:89` `\|seletor.y - novo.y\| <= 1` | PASS |
+| C6 | selector and "Novo" on the same top | PW `Cadastros seletor e Novo na mesma linha` passed | `celular.spec.ts:89` absolute difference of `seletor.y` and `novo.y` `<= 1` | PASS |
 | C7 | 6 lists as cards; 1 badge per card asserted before measuring; badge right, same top; title below; tables at 1024 | PW `listas viram cartões abaixo de 768` passed | `celular.spec.ts:105` `expect(...[data-celula=selo] [data-slot=badge]).count()).toBe(await cartoes.count())` for Fila and Minhas, no `if` on the badge; `:109-110` top and right; `:112` title below; `:100` no table; `:116` table at 1024 | PASS |
 | C8 | fixed "Ações" >= 44; bottom Sheet with the same buttons; none at 1024 | PW `Ações do chamado no rodapé abaixo de 1024` passed | `celular.spec.ts:124` count 0; `:132` `{posicao:'fixed', fundo:'0px'}`; `:133` `>= 44`; `:138` bottom 800; `:139` `toEqual(nomesNoCartao)` | PASS |
 | C9 | Sheet action closes it and updates the badge | PW `ação no Sheet fecha e atualiza` passed | `celular.spec.ts:158` `toBeHidden()`; `:159` `toHaveText('Em atendimento')` | PASS |
@@ -109,37 +109,37 @@ Every test named below appears individually as passed in those reports (the xUni
 | C54 | manifest fields; defaults | xUnit `Manifesto_da_instituicao`, `Manifesto_padrao_sem_aparencia` passed | `api.Tests/ManifestoTests.cs:24-36,49-54` (carried) | PASS |
 | C55 | manifest 404 | xUnit `Manifesto_404` passed | `ManifestoTests.cs:64-65` (carried) | PASS |
 | C56 | manifest link per slug | VT `manifesto da instituição no link` passed | `aparencia.test.tsx:163,167` (carried) | PASS |
-| C57 | whole API suite; existing edits on items 1-4 only | 536 passed at HEAD (see Gate) | `api.Tests/RetratoTests.cs:51`; the fix `5f35a14..3327feb` changed no file under `api/` or `api.Tests/`. `7590bc1` changed `api/Assistente/*` and two test files of `protecao-injecao`, outside this feature | PASS |
+| C57 | whole API suite; existing edits on items 1-4 only | 539 passed at `2d984d7` (see Gate) | `api.Tests/RetratoTests.cs:51`; this feature's fixes `5f35a14..02bc20f` changed no file under `api/` or `api.Tests/`. `7590bc1` and `2d984d7` changed `api/Assistente/*` and two test files of `protecao-injecao`, outside this feature | PASS |
 | C58 | `rotas.txt` +6, none removed | xUnit `RetratoTests.Tabela_de_rotas_igual_a_da_base` passed | `RetratoTests.cs:51` `Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva)` | PASS |
 | C59 | door 1 columns, unique index, no pending changes | xUnit `Toda_entidade_tem_instituicao_e_filtro`, `Tabelas_snake_case_e_datas_timestamptz`, `Tabelas_da_aparencia` passed; `has-pending-model-changes` clean | `AparenciaAdminTests.cs:385-392`; `api.Tests/ArquiteturaTests.cs:20` (carried) | PASS |
 | C60 | `dotnet build api` with CA1502 | `0 Erro(s)` | build output at `5f35a14`; `api/One.Api.csproj:9` `<WarningsAsErrors>...CA1502...` | PASS |
-| C61 | whole Vitest and the web build; edits on item 5 only | Vitest 331/331 (40 files) at HEAD; `npm --prefix web run build` exit 0 | the fix edits only the body of C65's own test (`aparencia.spec.ts:150-156`, created by this feature in round 1); no pre-existing assertion was edited | PASS |
+| C61 | whole Vitest and the web build; edits on item 5 only | Vitest 331/331 (40 files) at `2d984d7`; `npm --prefix web run build` exit 0 | the fix edits only the body of C65's own test (`aparencia.spec.ts:139-166`, created by this feature in round 1); no pre-existing assertion was edited | PASS |
 | C62 | crapper 9.99 exit 0; dryer clean | `npm --prefix web run coverage`, `crapper ... --threshold 9.99` exit 0; the C62 `dryer` command prints `No duplicate candidates found.` | `web/.metrics/crap.edn:1` | PASS |
-| C63 | the 3 layout specs pass whole | Playwright against :5199 at HEAD: 89 expected, 0 unexpected, 0 flaky | per-test results in the JSON report; `aparencia.spec.ts:139,160,175,194,207` are the 5 round-1 additions | PASS |
-| C64 | real e2e: admin customizes; login logo and colour; manifest icon; whole e2e suite | `E2E_URL=http://localhost:8085 npx playwright test` against the `5f35a14` image (round 2): 114 expected, 0 unexpected; `admin personaliza a aparência e o login muda` passed | `web/e2e/aparencia-real.spec.ts:83,86,95-96,104,111-112,118` (carried) | PASS (carried from 5f35a14: the fix changed only `web/e2e/aparencia.spec.ts`; `7590bc1` changed `Conferir`, which runs only on a model answer of `tipo` `resposta`, and the real e2e runs with no provider key, so every assistant answer is `sem_base` before `Conferir` - `anexos.spec.ts:127`) |
-| C65 | 1 column at 390 and 2 at 1440; centres of the photo (or illustration), the title "Olá! Eu sou …" and the grid each within 1 px of the content centre | PW `sugestões centralizadas em 1 e 2 colunas` passed at HEAD | `web/e2e/aparencia.spec.ts:146` distinct `left` count `toBe(colunas)`; `:148` 2 rows; `:149` same left; `:156` `perto(c.x + c.width / 2, area.x + area.width / 2, ...)` over `foto` (`:152`, `section:has(h2) > img, section:has(h2) > svg`), the title text by `Range` (`:154`) and the grid (`botoes[0]` parent) | FAIL - photo, title and grid are now proven (faults A, B, C killed), but the illustration named in the claim is never rendered: the test runs only with `comAparencia` (`imagens.assistente: 4`), and a fault that moves only the illustration survived (fault E) |
-| C66 | text block base within 48 px of the panel base; on a gradient element containing it | PW `textos do login na base sobre a faixa` passed | `aparencia.spec.ts:168` `toBeLessThanOrEqual(48)`; `:172` `faixas.some(... contains bloco)` `toBe(true)` | PASS |
-| C67 | assistant photo right <= bubble left, vertical overlap, at 390 and 1440 | PW `foto do assistente à esquerda do balão` passed | `aparencia.spec.ts:184` count `> 0`; `:188` `foto.x + foto.width <= b.x + 1`; `:189` overlap `toBe(true)` | PASS |
-| C68 | contact block top > ticket number bottom | PW `contato abaixo do número do chamado` passed | `aparencia.spec.ts:204` `expect(contato.y).toBeGreaterThan(numero.y + numero.height)` | PASS |
-| C69 | icon 32x32 on the collapsed bar; 24x24 before the title at 390, icon and initials | PW `ícone de 32 e 24 px antes do título` passed | `aparencia.spec.ts:215-216` `perto(..., 32)`; `:227-228` `perto(..., 24)`; `:229` `m.x + m.width <= t.x + 1`; `:230` vertical centre `<= 2` | PASS |
+| C63 | the 3 layout specs pass whole | Playwright against :5199 at `2d984d7`: 89 expected, 0 unexpected, 0 flaky | per-test results in the JSON report; `aparencia.spec.ts:139,168,183,202,215` are the 5 round-1 additions | PASS |
+| C64 | real e2e: admin customizes; login logo and colour; manifest icon; whole e2e suite | `E2E_URL=http://localhost:8085 npx playwright test` against the `5f35a14` image (round 2): 114 expected, 0 unexpected; `admin personaliza a aparência e o login muda` passed | `web/e2e/aparencia-real.spec.ts:83,86,95-96,104,111-112,118` (carried) | PASS (carried from 5f35a14: since then this feature's fixes changed only `web/e2e/aparencia.spec.ts` and `checks.md`; `2d984d7` changed only `api.Tests/ConferenciaTests.cs`; `7590bc1` changed `Conferir`, which runs only on a model answer of `tipo` `resposta`, and the real e2e runs with no provider key, so every assistant answer is `sem_base` before `Conferir` - `anexos.spec.ts:127`) |
+| C65 | 1 column at 390 and 2 at 1440; centres of the photo (or, with `imagens.assistente: null`, the illustration `Conversa`), the title "Olá! Eu sou …", the welcome text and the grid each within 1 px of the content centre | PW `sugestões centralizadas em 1 e 2 colunas` passed at `2d984d7` | `web/e2e/aparencia.spec.ts:141` runs over `[comAparencia, aparencia({ assistente: null })]`; `:148` distinct `left` count `toBe(colunas)`; `:150` 2 rows; `:151` same left; `:163` `perto(c.x + c.width / 2, area.x + area.width / 2, ...)` over `foto` (`:153,157`, `section:has(h2) > img, section:has(h2) > svg`), the title text and the welcome text by `Range` (`:155,158-159`) and the grid (`:160`) | PASS - faults D, E, G and T each fail it (see Faults) |
+| C66 | text block base within 48 px of the panel base; on a gradient element containing it | PW `textos do login na base sobre a faixa` passed | `aparencia.spec.ts:176` `toBeLessThanOrEqual(48)`; `:180` `faixas.some(... contains bloco)` `toBe(true)` | PASS |
+| C67 | assistant photo right <= bubble left, vertical overlap, at 390 and 1440 | PW `foto do assistente à esquerda do balão` passed | `aparencia.spec.ts:192` count `> 0`; `:196` `foto.x + foto.width <= b.x + 1`; `:197` overlap `toBe(true)` | PASS |
+| C68 | contact block top > ticket number bottom | PW `contato abaixo do número do chamado` passed | `aparencia.spec.ts:212` `expect(contato.y).toBeGreaterThan(numero.y + numero.height)` | PASS |
+| C69 | icon 32x32 on the collapsed bar; 24x24 before the title at 390, icon and initials | PW `ícone de 32 e 24 px antes do título` passed | `aparencia.spec.ts:223-224` `perto(..., 32)`; `:235-236` `perto(..., 24)`; `:237` `m.x + m.width <= t.x + 1`; `:238` vertical centre `<= 2` | PASS |
 | C70 | 4 image types: thumbnail src, Enviar, Remover; POST and DELETE per type; none without a version | VT `as 4 imagens com miniatura, enviar e remover` passed | `administracao/aparencia.test.tsx:193` `toHaveAttribute('src', \`/api/instituicoes/univag/imagens/${tipo}?v=7\`)`; `:196-197` exactly 1 Remover and 1 thumbnail; `:201` POST url `toEqual([...${tipo}])`; `:206` DELETE url `toEqual([...${tipo}])` | PASS |
 | C71 | preview initials equal the login's, for 2 names | VT `iniciais da prévia iguais às do login` passed | `administracao/aparencia.test.tsx:228` `expect(daPrevia, nome).toBe(doLogin)`; `:229` `toBe(iniciais(nome))` | PASS |
 
-### Edits to existing assertions (fix diff `5f35a14..3327feb`)
+### Edits to existing assertions (fix diff `795b859..02bc20f`)
 
-- `web/e2e/aparencia.spec.ts`: only the body of `sugestões centralizadas em 1 e 2 colunas` (C65) changed. This feature created that test in round 1. The edit replaces the section-centre assertion, which could never fail, with three element centres, as the 04/11 round-2 amendment to C65 asks. Nothing else changed.
-- `checks.md`: C65 was sharpened (an approved amendment), and stale texts were fixed: 11 doors, 8 `Button` sizes, 13 in the text-limits row, and the C51 note moved out of the code span. No `Proof:` line changed.
+- `web/e2e/aparencia.spec.ts`: only the body of `sugestões centralizadas em 1 e 2 colunas` (C65) changed. This feature created that test in round 1. The edit wraps the existing measurement in a loop over two fixtures (`comAparencia` and `aparencia({ assistente: null })`) and adds the welcome text to the measured elements, as the amended C65 asks. No assertion was weakened: the 1 px tolerance, the column, row and `left` assertions are unchanged. Nothing else in the file changed.
+- `checks.md`: C65 was amended (approved by the user on 04/11 after round 3), and a build note was added under the build log. No `Proof:` line changed.
 
 ## Coverage
 
-Recomputed at `7590bc1` for the rows the fix touched. The rest carry from `5f35a14`.
+Recomputed at `2d984d7` for the row the fix touched. The rest carry from `5f35a14`.
 
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| centred items of the welcome block (4: photo or illustration, title, welcome text, grid) | `plan.md:138-140` (the design is the authority, not the code) | photo `aparencia.spec.ts:156` (fault A killed) · title text by `Range` `:154,156` (fault C killed) · grid `:156` (fault B killed at 1440; at 390 the grid is full width, so it is centred by construction) | welcome text `<p>` (not in C65; fault D survived) · illustration variant (named in C65, never rendered by the test; fault E survived) |
-| suggestion grid widths (2) | `plan.md:139-140` | 390 one column `aparencia.spec.ts:146-149` · 1440 two columns `:146,148` | - |
-| text limits and invalid e-mail (13) | C14 text after `8106a24` (12 limits + the e-mail) | carried from 5f35a14: `AparenciaAdminTests.cs:159,166,168,181-183` | - |
-| `Button` sizes (8), other 44 px targets (4), lists (6), images (4), shell brand places (4), preview names (2), route statuses, image types, colour edges, themes, tokens, brand places (8), badge states (5), illustrations (6), contact fields (3), e-mail variants (3), one-way doors (11), startup places (2) | carried from 5f35a14 | as in round 2 (`celular.spec.ts:53,55,57,59,100,105`; `administracao/aparencia.test.tsx:183-229`; C69 is now at `aparencia.spec.ts:215,227`) | - |
+| centred items of the welcome block (4: photo or illustration, title, welcome text, grid) | `plan.md:138-140` (the design is the authority, not the code) | photo `aparencia.spec.ts:157,163` (with photo) · illustration `Conversa` `:157,163` in the `assistente: null` run (fault E killed) · title text by `Range` `:158,163` (fault T killed) · welcome text by `Range` `:159,163` (fault D killed) · grid `:160,163` (fault G killed at 1440; at 390 the grid is full width, so it is centred by construction) | - |
+| photo variants (2: with photo, without) | `plan.md:138-139` | with `comAparencia` (`imagens.assistente: 4`) · without, `aparencia({ assistente: null })` `aparencia.spec.ts:10,141` | - |
+| suggestion grid widths (2) | `plan.md:139-140` | 390 one column `aparencia.spec.ts:148-151` · 1440 two columns `:148,150` | - |
+| text limits and invalid e-mail (13), `Button` sizes (8), other 44 px targets (4), lists (6), images (4), shell brand places (4), preview names (2), route statuses, image types, colour edges, themes, tokens, brand places (8), badge states (5), illustrations (6), contact fields (3), e-mail variants (3), one-way doors (11), startup places (2) | carried from 5f35a14 | as in round 2 (`AparenciaAdminTests.cs:159,166,168,181-183`; `celular.spec.ts:53,55,57,59,100,105`; `administracao/aparencia.test.tsx:183-229`; C69 is now at `aparencia.spec.ts:223,235`) | - |
 
 ## Swept existing
 
@@ -150,46 +150,40 @@ Carried from `5f35a14`, since the fix touched none of these files. All three are
 
 ## Test policy rows
 
-`checks.md` has no `Test policy` section (re-checked at `7590bc1`), so the repo's conventions decide the level: the arrangement claims are measured in Chromium against `vite preview`, and the HTTP claims cross the boundary. Carried from 5f35a14.
+`checks.md` has no `Test policy` section (re-checked at `2d984d7`), so the repo's conventions decide the level: the arrangement claims are measured in Chromium against `vite preview`, and the HTTP claims cross the boundary. Carried from 5f35a14.
 
 ## Faults injected
 
-Verified at `7590bc1`. Each fault ran in a scratch worktree (`git worktree add --detach <scratchpad>/wt HEAD`) with a junction to `web/node_modules`. Each was built with `npm --prefix web run build`, served by `vite preview` on :5198, and checked with `npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`.
-
-Faults D and E shared one build. The test passed, so both survived. A scratch probe spec, deleted afterwards, measured where each element went. At HEAD the same probe measured the paragraph at 848.0 and the illustration at 848, against a `main` centre of 848.
-
-The real tree's `git status --porcelain` was the same before and after: only the 3 untracked dirs.
+Verified at `2d984d7`. Each fault ran in a scratch worktree (`git worktree add --detach <scratchpad>/wt HEAD`) with a junction to `web/node_modules`. Each was one `sed` on `web/src/assistente/Assistente.tsx`, then `npm run build`, `vite preview` on :5198, and `npx playwright test e2e/aparencia.spec.ts -g "sugestões centralizadas em 1 e 2 colunas"`, then `git checkout` of the file before the next fault. The real tree's `git status --porcelain` was the same before and after, apart from an untracked `.specs/features/revisao-ux/` that another agent created meanwhile.
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| A: welcome `<section>` loses `items-center` (the round-2 survivor) | `web/src/assistente/Assistente.tsx:208` | yes - C65 `aparencia.spec.ts:156` "390 px: centro da foto, Expected <= 1, Received 147" |
-| B: the grid alone gets `self-start` | `web/src/assistente/Assistente.tsx:212` | yes - C65 `:156` "1440 px: centro da grade, Received 96" (390 px passed, because there the grid is full width) |
-| C: the title alone gets `self-start` | `web/src/assistente/Assistente.tsx:210` | yes - C65 `:156` "390 px: centro da título, Received 85.02" |
-| D: the welcome paragraph alone gets `self-start` (probe: centre 620.6 vs 848) | `web/src/assistente/Assistente.tsx:211` | no - survived; C65 passed, because C65 does not name the welcome text |
-| E: the illustration `Conversa` alone gets `self-start` (probe with no assistant image: centre 528 vs 848) | `web/src/assistente/Assistente.tsx:209` | no - survived; C65 passed, because the test always has a photo (`web/e2e/simulada.ts:33` `assistente: 4`) |
+| D: the welcome paragraph alone gets `self-start` (the round-3 survivor) | `web/src/assistente/Assistente.tsx:211` | yes - C65 `aparencia.spec.ts:163` "390 px, com foto: centro de texto de boas-vindas, Expected <= 1, Received 22.40" |
+| E: the illustration `Conversa` alone gets `self-start` (the round-3 survivor) | `web/src/assistente/Assistente.tsx:209` | yes - C65 `:163` "390 px, sem foto: centro de foto, Received 115". The with-photo runs passed first, so this also shows the no-photo run executes and measures the SVG |
+| G: the grid alone gets `self-start` | `web/src/assistente/Assistente.tsx:212` | yes - C65 `:163` "1440 px, com foto: centro de grade, Received 96" |
+| T: the title alone gets `self-start` | `web/src/assistente/Assistente.tsx:210` | yes - C65 `:163` "390 px, com foto: centro de título, Received 85.02" |
 
 Faults on surfaces this fix did not touch carry from earlier rounds, all killed:
+- from round 3 (`7590bc1`): A (`items-center` removed from the `<section>`; the rewritten test still measures the photo first, so the same assertion applies);
 - from round 2 (`5f35a14`): C2, C7, the C65 grid columns, C66 (two faults), C67, C68, C69, C70, C71;
 - from round 1: C1, C3, C8, C13, C24, C31, C37, C38, C45, C47, C52, C54.
 
 ## Findings
 
-1. **C65 does not cover the whole centred set (FAIL).** The design centres the welcome text, and C65 does not mention it, so fault D survived. Suggested wording: add "o texto de boas-vindas" to the measured elements, measured by `Range` like the title (`aparencia.spec.ts:154`).
-2. **The illustration half of C65 has no proof (FAIL).** C65 says "da foto (ou ilustração)", but the test runs only with `comAparencia`, which has an assistant image, so fault E survived. Fix: run the same measurement once more with `imagens.assistente: null`. The selector at `:152` already accepts an `svg`.
-3. This is round 3, so under the three-round bound it goes to the user rather than back to a builder. Both gaps are small: one more element and one more fixture in the same test.
-4. `checks.md` C51 (lines 255-256): the amendment note is now outside the code span. The span still holds a raw line break where `\r\n` was meant, but the claim still reads correctly once the line break is ignored. Cosmetic.
-5. The other stale texts from round 2 are fixed: `checks.md:6` says 11 doors, the 44 px row says 8 sizes, and the text-limits row says 13.
-6. `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` ran alone, as the brief asks: 1 passed in 3 s. It is outside this feature.
+1. **C65 is now fully proven (closes round-3 findings 1 and 2).** All four centred items are measured, and both photo variants are rendered. The four requested faults are killed.
+2. Minor, not a check failure: the no-photo run does not assert that an `<svg>`, rather than an `<img>`, is what `foto` resolves to. Fault E shows that today it is the SVG. A later change that rendered a fallback `<img>` with no assistant image would be measured silently in its place.
+3. Round-3 finding 4 (cosmetic line break inside the C51 code span) is unchanged.
+4. `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` ran alone, as the brief asks: 1 passed in 3 s. It is outside this feature.
 
 ## Gate
 
-- `api.Tests` (Release `One.Api.Tests.exe`, built at HEAD `7590bc1`): 536 passed, 0 failed (535 in one process with the push test excluded by `-method-`, plus the push test alone).
+- `api.Tests` (Release `One.Api.Tests.exe`, built at HEAD `2d984d7`): 539 passed, 0 failed (538 in one process with the push test excluded by `-method-`, plus the push test alone).
 - `dotnet build api`: `0 Erro(s)` at HEAD. `has-pending-model-changes`: carried from 5f35a14, since no entity or migration changed after it.
 - Vitest: 331 passed, 0 failed (40 files). `npm --prefix web run build`: exit 0.
-- Playwright layout (arranjo, celular, aparencia) against `vite preview` on :5199: 89 passed, 0 failed.
+- Playwright layout (arranjo, celular, aparencia) against `vite preview` on :5199: 89 passed, 0 failed, 0 flaky.
 - Playwright real e2e: carried from 5f35a14 (114 passed).
-- crapper 9.99 and dryer: carried from 5f35a14, since the fix changed no file under `web/src`.
+- crapper 9.99 and dryer: carried from 5f35a14, since no file under `web/src` changed after it.
 - Cleanup:
-  - the preview servers on :5198 and :5199 were stopped;
+  - the preview servers on :5198 and :5199 were stopped (the :5197 dev server of another agent was left alone);
   - the `node_modules` junction was deleted before the worktree was removed, and `git worktree list` shows only `D:/one-system`;
-  - the real-tree porcelain is unchanged except for this report.
+  - the real-tree porcelain is unchanged except for this report and the other agent's `.specs/features/revisao-ux/`.
