@@ -55,13 +55,9 @@ public class ConferenciaTests
     [InlineData("10/12/2026", "até 10/12/2026", true)]
     [InlineData("dia 05", "dia 5", true)]
     [InlineData("sem número nenhum", "dia 10", true)]
+    [InlineData("R$ 10.250,00", "dia 10 e R$ 1.250,00", false)]
+    [InlineData("dia ³⁰", "dia 30", false)]
+    [InlineData("passo ①", "passo 1", false)]
     public void Numeros_conferem(string texto, string fonte, bool esperado) =>
         Assert.Equal(esperado, Conferencia.NumerosConferem(texto, [fonte]));
-
-    [Fact]
-    public void Numeros_conferem_com_mensagem_do_aluno()
-    {
-        Assert.False(Conferencia.NumerosConferem("turma 3", ["dia 10 de cada mês"]));
-        Assert.True(Conferencia.NumerosConferem("turma 3", ["dia 10 de cada mês", "sou da turma 3"]));
-    }
 }

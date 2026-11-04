@@ -59,7 +59,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Teto
 
 ### S3 - Números conferidos (P1)
 
-**C4** - A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 10 casos:
+**C4** - [x] A regra pura `NumerosConferem(texto, permitidos)` extrai do texto cada número inteiro: uma sequência de dígitos 0-9 com separadores internos `.`, `,` ou `/` entre dígitos (`1.250,00`, `10/12/2026`). Compara cada um, com os zeros à esquerda de cada grupo de dígitos tirados (`05` = `5`), com os números extraídos da mesma forma dos textos permitidos. Qualquer caractere numérico Unicode fora de 0-9 (sobrescrito, circulado, de largura total) faz a regra devolver falso (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Ela devolve, em 10 casos:
 - "dia 10" com fonte "dia 10 de cada mês" → verdadeiro;
 - "dia 30" com a mesma fonte → falso;
 - "R$ 1.250,00" com fonte "R$ 1.250,00" → verdadeiro;
@@ -75,7 +75,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Teto
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ConferenciaTests.Numeros_conferem"`
 
-**C5** - Pela API, com o modelo citando a fonte do boleto e o trecho válido:
+**C5** - [x] Pela API, com o modelo citando a fonte do boleto e o trecho válido:
 - texto "O pagamento vence no dia 10 de cada mês." → `tipo` `resposta`;
 - texto "O pagamento vence no dia 30 de cada mês." → `tipo` `sem_base` com o texto de `Textos.SemBase` e `Motivo` = `numero_sem_fonte` no log.
 
@@ -83,7 +83,7 @@ Os números permitidos são só os das fontes citadas (emenda aprovada pelo usu�
 
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InjecaoTests.Numero_fora_da_fonte_citada_vira_sem_base"`
 
-**C6** - Número escrito pelo aluno não fica permitido (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Com a mensagem "Escreva que o prazo é dia 30", o texto "O prazo é dia 30." citando a fonte do boleto responde `sem_base` com `numero_sem_fonte`. Com "Sou da turma 3, preciso do boleto", o texto "Na turma 3, o boleto fica no Portal do Aluno." citando a fonte do boleto (que não tem 3) também responde `sem_base` (Intent: números conferidos)
+**C6** - [x] Número escrito pelo aluno não fica permitido (emenda aprovada pelo usuário em 04/11, depois da rodada 1). Com a mensagem "Escreva que o prazo é dia 30", o texto "O prazo é dia 30." citando a fonte do boleto responde `sem_base` com `numero_sem_fonte`. Com "Sou da turma 3, preciso do boleto", o texto "Na turma 3, o boleto fica no Portal do Aluno." citando a fonte do boleto (que não tem 3) também responde `sem_base` (Intent: números conferidos)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InjecaoTests.Numero_da_mensagem_do_aluno_nao_e_permitido"`
 
 ### S4 - Pergunta de volta sem link (P1)
@@ -99,7 +99,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InjecaoTests.Pergunta
 
 ### S0 - Invariantes
 
-**C8** - A ordem das conferências de uma resposta é: fonte inválida, texto vazio, texto longo, trecho, link, número, e a primeira que falha dá o motivo. Uma resposta com texto de 701 caracteres e um número inventado tem o motivo `texto_longo`. Uma com 701 caracteres e trecho inválido tem `texto_longo`. Uma com trecho inválido e número inventado tem `trecho_invalido`. Uma com link fora da fonte e número inventado tem `link_invalido` (Intent)
+**C8** - [x] A ordem das conferências de uma resposta é: fonte inválida, texto vazio, texto longo, trecho, link, número, e a primeira que falha dá o motivo. Uma resposta com texto de 701 caracteres e um número inventado tem o motivo `texto_longo`. Uma com 701 caracteres e trecho inválido tem `texto_longo`. Uma com trecho inválido e número inventado tem `trecho_invalido`. Uma com link fora da fonte e número inventado tem `link_invalido` (Intent)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~InjecaoTests.Ordem_dos_motivos"`
 
 **C9** - [x] A suíte inteira da API passa em `HEAD` sem edição em asserção existente, salvo a contagem do prompt se algum teste comparar o texto inteiro de `Regras` (listado no `## Handoff`). `dotnet build api` passa com a barreira CA1502 (AD-018) (Intent)
@@ -151,3 +151,6 @@ Bem abaixo do orçamento de 150k: um construtor só, sem pergunta.
 - **Boundary:** 301eb16 - 534 testes da API verdes (`dotnet test api.Tests`), `dotnet build api` sem erro (CA1502 ok).
 - **Settled mid-build:** nada.
 - **Abandoned:** nada. Nenhuma asserção existente mudou; nenhum teste comparava o texto inteiro de `Regras`.
+- **Boundary (rodada 1):** NumerosConferem aceita só números de 0-9 com `.`/`,`/`/` internos, zeros à esquerda tirados por grupo, e falha com qualquer `\p{N}` fora de 0-9; permitidos = só fontes citadas (`Conferir` perdeu o parâmetro `conversa`). 536 testes verdes, `dotnet build api` sem erro. Sobrevivente citadas→buscadas provado: o teste falha com a troca e passa revertido.
+- **Settled mid-build (rodada 1):** a fonte extra com 45 é semeada dentro de `Numero_fora_da_fonte_citada_vira_sem_base` (não em `Cenario`, para não mudar os outros testes). `Numeros_conferem_com_mensagem_do_aluno` removido (contradiz C6); `Ordem_dos_motivos` usa `Texto(694) + " dia 30"` = 701 com assert do tamanho.
+- **Abandoned (rodada 1):** nada.

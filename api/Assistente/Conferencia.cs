@@ -23,16 +23,21 @@ public static partial class Conferencia
 
     public static bool TemLink(string texto) => Url().IsMatch(texto);
 
-    // Cada sequência de dígitos do texto, sem zeros à esquerda, tem de existir nos textos permitidos.
+    // Números inteiros (com . , / internos) do texto têm de existir nos textos permitidos, com zeros à esquerda de cada grupo tirados.
+    // Qualquer caractere numérico fora de 0-9 recusa o texto.
     public static bool NumerosConferem(string texto, IEnumerable<string> permitidos)
     {
+        if (OutroNumerico().IsMatch(texto)) return false;
         var validos = permitidos.SelectMany(Numeros).ToHashSet();
         return Numeros(texto).All(validos.Contains);
     }
 
-    static IEnumerable<string> Numeros(string s) => Digitos().Matches(s).Select(m => m.Value.TrimStart('0'));
+    static IEnumerable<string> Numeros(string s) =>
+        Digitos().Matches(s).Select(m => Grupos().Replace(m.Value, g => g.Value.TrimStart('0')));
 
-    [GeneratedRegex(@"\d+")] private static partial Regex Digitos();
+    [GeneratedRegex(@"[0-9]+(?:[.,/][0-9]+)*")] private static partial Regex Digitos();
+    [GeneratedRegex(@"[0-9]+")] private static partial Regex Grupos();
+    [GeneratedRegex(@"(?![0-9])\p{N}")] private static partial Regex OutroNumerico();
     [GeneratedRegex(@"\s+")] private static partial Regex Espacos();
     [GeneratedRegex(@"https?://[^\s<>()""']+", RegexOptions.IgnoreCase)] private static partial Regex Url();
 }

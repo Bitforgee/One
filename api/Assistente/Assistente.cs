@@ -182,7 +182,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         switch (saida.Tipo)
         {
             case Tipos.Resposta:
-                var (citacoes, motivo) = Conferir(saida, fontes, conversa);
+                var (citacoes, motivo) = Conferir(saida, fontes);
                 return (motivo is null ? Tipos.Resposta : Tipos.SemBase, motivo, citacoes);
             case Tipos.Pergunta:
                 var ultimas = conversa.Mensagens.Where(m => m.Autor == Autor).OrderByDescending(m => m.Id).Take(2).Select(m => m.TipoFinal).ToList();
@@ -202,7 +202,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         _ => Textos.SemBase,
     };
 
-    static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<Fonte> buscadas, Conversa conversa)
+    static (List<CitacaoArtigo>, string?) Conferir(SaidaModelo saida, List<Fonte> buscadas)
     {
         var ids = saida.FonteIds?.Distinct().ToList() ?? [];
         var citadas = ids.Select(id => buscadas.FirstOrDefault(f => f.Id == id)).ToList();
@@ -213,7 +213,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         var trechos = saida.Trechos ?? [];
         if (!TrechosConferem(trechos, citadas!)) return ([], "trecho_invalido");
         if (!Conferencia.LinksConferem(saida.Texto!, citadas.SelectMany(f => f!.Links))) return ([], "link_invalido");
-        if (!NumerosConferem(saida.Texto!, citadas!, conversa)) return ([], "numero_sem_fonte");
+        if (!Conferencia.NumerosConferem(saida.Texto!, citadas.Select(f => f!.Texto))) return ([], "numero_sem_fonte");
 
         return (citadas.Select(f => new CitacaoArtigo
         {
@@ -224,10 +224,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
 
     static string? MotivoDoTexto(string? texto) =>
         string.IsNullOrWhiteSpace(texto) ? "texto_vazio" : Conferencia.TextoDentroDoTeto(texto) ? null : "texto_longo";
-
-    // Números permitidos: os das fontes citadas e os das mensagens do aluno, já mascaradas.
-    static bool NumerosConferem(string texto, List<Fonte> citadas, Conversa conversa) =>
-        Conferencia.NumerosConferem(texto, citadas.Select(f => f.Texto).Concat(conversa.Mensagens.Where(m => m.Autor != Autor).Select(m => Mascara.Aplicar(m.Texto))));
 
     static bool TrechosConferem(List<Trecho> trechos, List<Fonte> citadas) =>
         trechos.All(t => citadas.FirstOrDefault(f => f.Id == t.FonteId) is { } f && Conferencia.TrechoConfere(t.Texto, f.Texto))

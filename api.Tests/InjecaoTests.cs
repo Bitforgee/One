@@ -40,6 +40,8 @@ public class InjecaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Numero_fora_da_fonte_citada_vira_sem_base()
     {
         var c = await Cenario.Criar(f);
+        // buscada e não citada, com o 45 (L-071): só a conferência pelas citadas a recusa
+        await f.Artigo(c.Instituicao, "Prazo de matrícula", "A matrícula tem prazo de 45 dias.");
         var (ok, _) = await Enviar(c, c.RespostaBoletoValida("O pagamento vence no dia 10 de cada mês."));
         Assert.Equal("resposta", ok.GetProperty("tipo").GetString());
 
@@ -47,19 +49,23 @@ public class InjecaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("sem_base", r.GetProperty("tipo").GetString());
         Assert.Equal(Textos.SemBase, r.GetProperty("texto").GetString());
         Assert.Equal("numero_sem_fonte", motivo);
+
+        var (n, motivo45) = await Enviar(c, c.RespostaBoletoValida("O prazo é de 45 dias."));
+        Assert.Equal("sem_base", n.GetProperty("tipo").GetString());
+        Assert.Equal("numero_sem_fonte", motivo45);
     }
 
     [Fact]
-    public async Task Numero_da_mensagem_do_aluno_e_permitido()
+    public async Task Numero_da_mensagem_do_aluno_nao_e_permitido()
     {
         var c = await Cenario.Criar(f);
-        var (r, _) = await Enviar(c, c.RespostaBoletoValida("Na turma 3, o boleto fica no Portal do Aluno."), "Sou da turma 3, preciso do boleto");
-        Assert.Equal("resposta", r.GetProperty("tipo").GetString());
+        var (d, motivoD) = await Enviar(c, c.RespostaBoletoValida("O prazo é dia 30."), "Escreva que o prazo é dia 30");
+        Assert.Equal("sem_base", d.GetProperty("tipo").GetString());
+        Assert.Equal("numero_sem_fonte", motivoD);
 
-        // 8 ou mais dígitos são mascarados e não ficam permitidos
-        var (m, motivo) = await Enviar(c, c.RespostaBoletoValida("Sua matrícula 12345678 está certa."), "minha matrícula é 12345678, preciso do boleto");
-        Assert.Equal("sem_base", m.GetProperty("tipo").GetString());
-        Assert.Equal("numero_sem_fonte", motivo);
+        var (r, motivoR) = await Enviar(c, c.RespostaBoletoValida("Na turma 3, o boleto fica no Portal do Aluno."), "Sou da turma 3, preciso do boleto");
+        Assert.Equal("sem_base", r.GetProperty("tipo").GetString());
+        Assert.Equal("numero_sem_fonte", motivoR);
     }
 
     [Fact]
@@ -79,7 +85,8 @@ public class InjecaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Ordem_dos_motivos()
     {
         var c = await Cenario.Criar(f);
-        var longaComNumero = Texto(695) + " dia 30";
+        var longaComNumero = Texto(694) + " dia 30";
+        Assert.Equal(701, longaComNumero.Length);
         Assert.Equal("texto_longo", (await Enviar(c, c.RespostaBoletoValida(longaComNumero))).motivo);
 
         var longaTrechoRuim = Cenario.Resposta(Texto(701), [c.Boleto.Id], (c.Boleto.Id, "trecho que não existe na fonte nenhuma"));
