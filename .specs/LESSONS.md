@@ -432,6 +432,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: plan.md ## Screens (specs/ui)
 - last seen: 2026-11-04T21:19:21Z
 
+### L-071 - Quando um check distingue dois conjuntos (citadas x buscadas), a massa de teste precisa de um membro que só exista no conjunto excluído; sem ele, trocar um pelo outro passa.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api.Tests` · harmful: 0
+- features: protecao-injecao
+- evidence: api.Tests/Infra/Cenario.cs:11 (api.Tests)
+- last seen: 2026-11-04T21:45:40Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

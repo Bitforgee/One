@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 71,
+  "next_id": 72,
   "lessons": [
     {
       "id": "L-001",
@@ -1278,6 +1278,24 @@
       ],
       "created": "2026-11-04T21:19:21Z",
       "last_seen": "2026-11-04T21:19:21Z"
+    },
+    {
+      "id": "L-071",
+      "key": "surviving_mutant::quando um check distingue dois conjuntos citadas x buscadas a massa de teste precisa de um membro que so exista no conjunto excluido sem ele trocar um pelo outro passa",
+      "text": "Quando um check distingue dois conjuntos (citadas x buscadas), a massa de teste precisa de um membro que só exista no conjunto excluído; sem ele, trocar um pelo outro passa.",
+      "signal": "surviving_mutant",
+      "scope": "api.Tests",
+      "status": "candidate",
+      "features": [
+        "protecao-injecao"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "api.Tests/Infra/Cenario.cs:11 (api.Tests)"
+      ],
+      "created": "2026-11-04T21:45:40Z",
+      "last_seen": "2026-11-04T21:45:40Z"
     }
   ]
 }
