@@ -233,9 +233,7 @@ export function Instituicoes() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Nova instituição" Icone={Plus} aoClicar={criacao.abrir}>
-        <h2 className="m-0 flex h-9 items-center text-lg font-semibold">Instituições</h2>
-      </Cabecalho>
+      <Cabecalho botao="Nova instituição" Icone={Plus} aoClicar={criacao.abrir} />
       <ErroDe erro={erro} />
       <ErroDe erro={acao.error} />
       {criacao.criada && <AvisoDeCriacao criada={criacao.criada} />}
