@@ -1035,6 +1035,10 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
 
+                    b.Property<DateTimeOffset?>("RemovidaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removida_em");
+
                     b.Property<long>("Tamanho")
                         .HasColumnType("bigint")
                         .HasColumnName("tamanho");

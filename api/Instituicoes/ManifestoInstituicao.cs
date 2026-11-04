@@ -45,7 +45,7 @@ public sealed class ManifestoInstituicaoHandler(OneDb db) : IRequestHandler<Mani
         var i = await db.Instituicoes.FirstOrDefaultAsync(x => x.Slug == m.Slug && x.Ativa, ct);
         if (i is null) return Problemas.Erro(404, "Instituição não encontrada.");
         db.InstituicaoAtual = i.Id;
-        var versao = await db.ImagensInstituicao.Where(x => x.Tipo == TiposDeImagem.Icone).Select(x => (int?)x.Versao).FirstOrDefaultAsync(ct);
+        var versao = await db.ImagensInstituicao.Where(x => x.Tipo == TiposDeImagem.Icone && x.RemovidaEm == null).Select(x => (int?)x.Versao).FirstOrDefaultAsync(ct);
         var resposta = new ManifestoInstituicao.Resposta(i.Nome, i.NomeCurto ?? ManifestoInstituicao.Iniciais(i.Nome), $"/{i.Slug}/", $"/{i.Slug}/", "standalone",
             i.Cor ?? ManifestoInstituicao.CorPadrao, "#ffffff", ManifestoInstituicao.Icones(i.Slug, versao));
         return Results.Json(resposta, contentType: "application/manifest+json");

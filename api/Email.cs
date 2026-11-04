@@ -38,7 +38,7 @@ public partial class Email(IConfiguration cfg, Armazenamento armazenamento, ILog
     async Task<(byte[] Bytes, string Tipo)?> Logo(OneDb db, long instituicaoId)
     {
         // o filtro global já restringe à instituição atual, que os dois chamadores definem antes de enviar
-        var imagem = await db.ImagensInstituicao.Where(x => x.InstituicaoId == instituicaoId && x.Tipo == "logo").Select(x => new LogoGuardado(x.Conteudo, x.Chave)).FirstOrDefaultAsync();
+        var imagem = await db.ImagensInstituicao.Where(x => x.InstituicaoId == instituicaoId && x.Tipo == "logo" && x.RemovidaEm == null).Select(x => new LogoGuardado(x.Conteudo, x.Chave)).FirstOrDefaultAsync();
         if (imagem is null) return null;
         using var prazo = new CancellationTokenSource(PrazoDoLogo);
         try

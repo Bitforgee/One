@@ -310,9 +310,32 @@ public class AparenciaAdminTests(OneFactory f) : IClassFixture<OneFactory>
         var r = await admin.DeleteAsync($"{Url}/imagens/logo");
 
         Assert.Equal(HttpStatusCode.NoContent, r.StatusCode);
-        Assert.Empty(await Linhas(i.Id));
+        var linha = Assert.Single(await Linhas(i.Id));
+        Assert.NotNull(linha.RemovidaEm);
         Assert.Contains(chave, await f.Chaves());
+        Assert.Equal(JsonValueKind.Null, (await (await admin.GetAsync(Url)).Json()).GetProperty("imagens").GetProperty("logo").ValueKind);
+        Assert.Equal(JsonValueKind.Null, (await (await f.Cliente().GetAsync($"/api/instituicoes/{i.Slug}")).Json()).GetProperty("imagens").GetProperty("logo").ValueKind);
+        Assert.Equal(HttpStatusCode.NotFound, (await f.Cliente().GetAsync($"/api/instituicoes/{i.Slug}/imagens/logo?v=1")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await admin.DeleteAsync($"{Url}/imagens/logo")).StatusCode);
+        var reenvio = await ImagemTeste.Enviar(admin, "logo", ImagemTeste.Png());
+        Assert.Equal(2, (await reenvio.Json()).GetProperty("versao").GetInt32());
+    }
+
+    [Fact]
+    public async Task Reenviar_depois_de_remover_nao_repete_versao()
+    {
+        var (i, admin) = await Admin();
+        await ImagemTeste.Enviar(admin, "logo", ImagemTeste.Png());
+        await ImagemTeste.Enviar(admin, "logo", ImagemTeste.Png(tamanho: 80));
+        await admin.DeleteAsync($"{Url}/imagens/logo");
+        Assert.Equal(HttpStatusCode.NotFound, (await f.Cliente().GetAsync($"/api/instituicoes/{i.Slug}/imagens/logo?v=2")).StatusCode);
+
+        var r = await ImagemTeste.Enviar(admin, "logo", ImagemTeste.Png());
+
+        Assert.Equal(3, (await r.Json()).GetProperty("versao").GetInt32());
+        var linha = Assert.Single(await Linhas(i.Id));
+        Assert.Null(linha.RemovidaEm);
+        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().GetAsync($"/api/instituicoes/{i.Slug}/imagens/logo?v=3")).StatusCode);
     }
 
     [Fact]
@@ -363,7 +386,7 @@ public class AparenciaAdminTests(OneFactory f) : IClassFixture<OneFactory>
 
         var imagem = await f.Db(null, db => db.Database.SqlQueryRaw<string>(
             "select column_name as \"Value\" from information_schema.columns where table_name = 'imagem_instituicao'").ToListAsync());
-        Assert.Equal(new[] { "id", "instituicao_id", "tipo", "conteudo", "tamanho", "hash", "chave", "versao" }.Order(), imagem.Order());
+        Assert.Equal(new[] { "id", "instituicao_id", "tipo", "conteudo", "tamanho", "hash", "chave", "versao", "removida_em" }.Order(), imagem.Order());
         var indice = await f.Db(null, db => db.Database.SqlQueryRaw<string>(
             "select indexdef as \"Value\" from pg_indexes where tablename = 'imagem_instituicao' and indexdef like '%UNIQUE%'").ToListAsync());
         Assert.Contains(indice, d => d.Contains("(instituicao_id, tipo)"));

@@ -126,7 +126,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.T
 **C20** - [x] Com `f.MinioFora()`, o `POST` de um `logo` válido responde `503`, e a linha `imagem_instituicao` existente fica com a versão e a chave de antes (AC 20)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Minio_fora_503_sem_mudar_a_imagem"`
 
-**C21** - `DELETE /api/admin/aparencia/imagens/logo` responde `204`, marca a imagem como removida sem apagar a linha e deixa o objeto em `f.Chaves()`: `GET /api/admin/aparencia` e `GET /api/instituicoes/{slug}` passam a devolver `imagens.logo` `null`, e a rota pública da imagem responde `404`. Um segundo `DELETE` responde `404`. Um novo envio do mesmo tipo depois da remoção responde `versao` igual à anterior + 1, nunca uma versão já usada (AC 21, door 11; emenda aprovada pelo usuário em 04/11)
+**C21** - [x] `DELETE /api/admin/aparencia/imagens/logo` responde `204`, marca a imagem como removida sem apagar a linha e deixa o objeto em `f.Chaves()`: `GET /api/admin/aparencia` e `GET /api/instituicoes/{slug}` passam a devolver `imagens.logo` `null`, e a rota pública da imagem responde `404`. Um segundo `DELETE` responde `404`. Um novo envio do mesmo tipo depois da remoção responde `versao` igual à anterior + 1, nunca uma versão já usada (AC 21, door 11; emenda aprovada pelo usuário em 04/11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Remover_imagem_204_e_objeto_fica"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AparenciaAdminTests.Reenviar_depois_de_remover_nao_repete_versao"`
 
@@ -249,7 +249,7 @@ Proof: `cd web && npx playwright test e2e/aparencia.spec.ts -g "ilustração no 
 
 ### S7 - E-mails com a marca (P2) · ~5 files · ~40 KB · ~12k
 
-**C51** - O e-mail de primeiro acesso de uma instituição com cor e logo chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega `
+**C51** - [x] O e-mail de primeiro acesso de uma instituição com cor e logo chega ao Mailpit como `multipart/alternative`. A parte `text/plain` é igual ao `Corpo` da `EmailSaida` com as quebras de linha normalizadas (o SMTP entrega `
 `; emenda aprovada pelo usuário em 04/11), e há uma parte `text/html` (AC 48, door 6)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailMarcaTests.Email_vai_com_texto_e_html"`
 
@@ -290,7 +290,7 @@ Proof: `cd web && npx vitest run src/aparencia.test.tsx -t "manifesto da institu
 **C57** - [x] A suíte inteira da API passa em `HEAD`. As únicas edições em asserções existentes são as dos itens 1 a 4 da lista fechada (Surface, door 1 a 6)
 Proof: `dotnet test api.Tests`
 
-**C58** - `rotas.txt` ganha exatamente 6 linhas, as rotas novas do `Surface` (`GET /api/instituicoes/{slug}` já existia): 2 anônimas (`anonimo=True`, imagem e manifesto) e 4 de admin (`autorizacao=True`), e nenhuma linha some (Surface; emenda aprovada pelo usuário em 04/11)
+**C58** - [x] `rotas.txt` ganha exatamente 6 linhas, as rotas novas do `Surface` (`GET /api/instituicoes/{slug}` já existia): 2 anônimas (`anonimo=True`, imagem e manifesto) e 4 de admin (`autorizacao=True`), e nenhuma linha some (Surface; emenda aprovada pelo usuário em 04/11)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_igual_a_da_base"`
 
 **C59** - [x] As tabelas `instituicao` e `imagem_instituicao` ficam com:

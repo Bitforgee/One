@@ -21,7 +21,7 @@ public record AparenciaDados(string? NomeCurto, string? Cor, LoginAparencia Logi
 {
     public static AparenciaDados De(Instituicao i, IEnumerable<ImagemInstituicao> imagens)
     {
-        int? Versao(string tipo) => imagens.FirstOrDefault(x => x.Tipo == tipo)?.Versao;
+        int? Versao(string tipo) => imagens.FirstOrDefault(x => x.Tipo == tipo && x.RemovidaEm is null)?.Versao;
         return new(i.NomeCurto, i.Cor,
             new LoginAparencia(i.LoginTitulo, i.LoginFrase, i.LoginItens ?? []),
             new AssistenteAparencia(i.AssistenteNome, i.AssistenteBoasVindas, i.AssistentePerguntas ?? []),

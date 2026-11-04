@@ -33,7 +33,7 @@ public sealed class BaixarImagemInstituicaoHandler(OneDb db, Armazenamento armaz
         var i = await db.Instituicoes.FirstOrDefaultAsync(x => x.Slug == m.Slug && x.Ativa, ct);
         if (i is null || !TiposDeImagem.Todos.Contains(m.Tipo)) return Problemas.Erro(404, "Imagem não encontrada.");
         db.InstituicaoAtual = i.Id;
-        var imagem = await db.ImagensInstituicao.Where(x => x.Tipo == m.Tipo).Select(x => new ImagemBaixada(x.Conteudo, x.Chave, x.Tamanho)).FirstOrDefaultAsync(ct);
+        var imagem = await db.ImagensInstituicao.Where(x => x.Tipo == m.Tipo && x.RemovidaEm == null).Select(x => new ImagemBaixada(x.Conteudo, x.Chave, x.Tamanho)).FirstOrDefaultAsync(ct);
         return imagem is null ? Problemas.Erro(404, "Imagem não encontrada.")
             : BaixarImagemInstituicao.ComCache(Armazenamento.ComTamanho(Results.Stream(await armazenamento.Baixar(imagem.Chave), imagem.Conteudo), imagem.Tamanho));
     }
