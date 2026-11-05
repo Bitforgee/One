@@ -97,6 +97,11 @@
   --input: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.58 0 none));
 }
 
+/* C54: no claro, a borda dos campos do form tingido (bg-muted) precisa de 3:1; o token global fica como está, só este escopo o escurece */
+.form-resposta:not(.dark *) {
+  --input: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.63 0 none));
+}
+
 /* A prévia da Aparência (AC 38): a cor do formulário vira --primary como o app a faz, clareada no escuro */
 .previa-marca {
   --primary: var(--marca-previa);
