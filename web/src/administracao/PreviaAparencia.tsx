@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { Sigla } from '../aparencia'
 import { BoasVindas, Conversa } from '../ilustracoes'
+import { Button } from '../ui/button'
 
 export type ImagensDaPrevia = { logo?: string; login?: string; assistente?: string }
 export type DadosDaPrevia = {
@@ -17,7 +18,7 @@ export type DadosDaPrevia = {
 
 const Base = { titulo: 'Atendimento ao estudante', frase: 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.' }
 
-function PreviaDoLogin({ d, cor }: { d: DadosDaPrevia; cor?: string }) {
+function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
   return (
     <div className="flex flex-col gap-3 rounded-md border p-3">
       {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Sigla nome={d.nome} icone={null} />}
@@ -33,9 +34,9 @@ function PreviaDoLogin({ d, cor }: { d: DadosDaPrevia; cor?: string }) {
           </li>
         ))}
       </ul>
-      <button type="button" tabIndex={-1} className="h-9 rounded-md bg-primary px-4 text-primary-foreground" style={{ backgroundColor: cor }}>
+      <Button type="button" tabIndex={-1}>
         Entrar
-      </button>
+      </Button>
     </div>
   )
 }
@@ -58,12 +59,12 @@ function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
 }
 
 // Uma réplica pequena do login e do balão do assistente com os valores do formulário, antes de salvar (AC 24).
-// A cor vai em --primary só aqui dentro, e no botão, para o resto do app não mudar antes de salvar.
+// A cor vai em --marca-previa só aqui dentro (index.css a transforma em --primary como o app, claro ou escuro), para o resto do app não mudar antes de salvar.
 export function PreviaAparencia({ dados: d }: { dados: DadosDaPrevia }) {
   const cor = d.cor || undefined
   return (
-    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 text-sm" style={{ '--primary': cor } as CSSProperties}>
-      <PreviaDoLogin d={d} cor={cor} />
+    <div className={`flex flex-col gap-4 rounded-lg border bg-card p-4 text-sm ${cor ? 'previa-marca' : ''}`} style={{ '--marca-previa': cor } as CSSProperties}>
+      <PreviaDoLogin d={d} />
       <PreviaDoAssistente d={d} />
     </div>
   )

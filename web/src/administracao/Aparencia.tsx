@@ -12,8 +12,10 @@ import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet'
 import { Skeleton } from '../ui/skeleton'
 import { Textarea } from '../ui/textarea'
+import { useConsulta } from '../ui/use-mobile'
 import { CampoImagem } from './CampoImagem'
 import { PreviaAparencia } from './PreviaAparencia'
 
@@ -175,18 +177,32 @@ const daPrevia = (nome: string, v: Valores, miniatura: (t: Tipo) => string | und
   imagens: { logo: miniatura('logo'), login: miniatura('login'), assistente: miniatura('assistente') },
 })
 
-// A prévia: à direita e fixa a partir de 1024 px; abaixo disso, acima do formulário e recolhível.
-function PreviaRecolhivel({ dados }: { dados: Parameters<typeof PreviaAparencia>[0]['dados'] }) {
-  const [aberta, setAberta] = useState(true)
+type DadosDaPreviaProp = Parameters<typeof PreviaAparencia>[0]['dados']
+
+// A prévia: à direita e fixa a partir de 1024 px; abaixo disso, só pelo botão "Ver prévia", que a abre numa folha.
+const PreviaLateral = ({ dados }: { dados: DadosDaPreviaProp }) => (
+  <section aria-label="Prévia" className="sticky top-16">
+    <PreviaAparencia dados={dados} />
+  </section>
+)
+
+function VerPrevia({ dados }: { dados: DadosDaPreviaProp }) {
   return (
-    <section aria-label="Prévia" className="order-first flex flex-col gap-2 lg:sticky lg:top-16 lg:order-last">
-      <Button type="button" variant="outline" className="self-start lg:hidden" aria-expanded={aberta} onClick={() => setAberta((a) => !a)}>
-        {aberta ? 'Ocultar prévia' : 'Mostrar prévia'}
-      </Button>
-      <div className={aberta ? '' : 'max-lg:hidden'}>
-        <PreviaAparencia dados={dados} />
-      </div>
-    </section>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button type="button" variant="outline">
+          Ver prévia
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="bottom" aria-describedby={undefined} className="max-h-[90dvh]">
+        <SheetHeader>
+          <SheetTitle>Prévia</SheetTitle>
+        </SheetHeader>
+        <div className="overflow-y-auto p-4 pt-0">
+          <PreviaAparencia dados={dados} />
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 
@@ -197,6 +213,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
   const [falhas, setFalhas] = useState<Falhas>({ campos: {}, imagens: {} })
   const [removendo, setRemovendo] = useState<Tipo>()
   const blobs = useBlobs(escolhidas)
+  const estreito = useConsulta('(max-width: 1023px)')
   const reler = () => Promise.all([cliente.invalidateQueries({ queryKey: ['aparencia-admin'] }), cliente.invalidateQueries({ queryKey: ['instituicao', slug] })])
 
   const salvar = useMutation({
@@ -222,7 +239,6 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start">
-      <PreviaRecolhivel dados={daPrevia(nome, valores, miniatura)} />
       <form
         noValidate
         className="flex min-w-0 flex-col gap-6"
@@ -246,10 +262,14 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
         ))}
         <ErroDe erro={falhas.geral} />
         {remover.error && <Alert variant="destructive">{remover.error.message}</Alert>}
-        <BotaoAcao type="submit" className="self-start" pendente={salvar.isPending} disabled={corProibida(valores.cor)}>
-          Salvar
-        </BotaoAcao>
+        <div className="flex flex-wrap gap-2">
+          <BotaoAcao type="submit" pendente={salvar.isPending} disabled={corProibida(valores.cor)}>
+            Salvar
+          </BotaoAcao>
+          {estreito && <VerPrevia dados={daPrevia(nome, valores, miniatura)} />}
+        </div>
       </form>
+      {!estreito && <PreviaLateral dados={daPrevia(nome, valores, miniatura)} />}
       <Confirmar
         aberto={!!removendo}
         fechar={() => setRemovendo(undefined)}
@@ -271,8 +291,8 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
 export function Aparencia() {
   const { slug } = useParams()
   const { me } = useSessao()
-  const { data, error } = useQuery({ queryKey: ['aparencia-admin'], queryFn: () => api<object>('/api/admin/aparencia') })
-  if (error) return <ErroDe erro={error} />
+  const { data, error, refetch } = useQuery({ queryKey: ['aparencia-admin'], queryFn: () => api<object>('/api/admin/aparencia') })
+  if (error) return <ErroDe erro={error} oque="a aparência" tentar={() => void refetch()} />
   if (!data)
     return (
       <div aria-busy="true" className="flex flex-col gap-2">

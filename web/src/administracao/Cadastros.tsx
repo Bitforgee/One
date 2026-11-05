@@ -3,8 +3,9 @@ import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction 
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
+import { ErroDoCampo } from '../Campo'
 import { Editor } from '../Editor'
-import { ErroDe } from '../ErroDe'
+import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
@@ -20,7 +21,8 @@ type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; regr
 type Aba = keyof Listas
 // O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
 type Ficha = Record<string, any>
-type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas }
+type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas; erros: Record<string, string> }
+const CamposComErro = ['nome', 'titulo', 'texto', 'setorId', 'categoriaId', 'setorCoordenacaoId', 'destino']
 
 const Titulos: Record<Aba, string> = { setores: 'Setores', categorias: 'Categorias', cursos: 'Cursos', regras: 'Regras', prontas: 'Respostas prontas' }
 const Rotas: Record<Aba, string> = { setores: 'setores', categorias: 'categorias', cursos: 'cursos', regras: 'regras', prontas: 'respostas-prontas' }
@@ -60,15 +62,15 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
 
 // Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
-function ListaDaAba({ itens, erro, linha, editar }: { itens?: { id: number }[]; erro?: string; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
+function ListaDaAba({ itens, erro, linha, editar }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
   return (
     <Tabela colunas={Colunas} itens={itens} erro={erro}>
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
-          <TableRow key={x.id}>
+          <TableRow key={x.id} className="h-12 min-h-12 cursor-pointer" onClick={() => editar(x)}>
             <TableCell className={Principal}>
-              <button type="button" onClick={() => editar(x)} className="text-start font-medium hover:underline">
+              <button type="button" className="text-start font-medium hover:underline">
                 {principal}
               </button>
               {detalhe && <Detalhe>{detalhe}</Detalhe>}
@@ -81,24 +83,27 @@ function ListaDaAba({ itens, erro, linha, editar }: { itens?: { id: number }[]; 
   )
 }
 
-const campo = ({ setEditando, editando }: Campos, k: string) => ({
+const campo = ({ setEditando, editando, erros }: Campos, k: string, id: string) => ({
   value: editando[k],
+  'aria-invalid': !!erros[k],
+  'aria-describedby': erros[k] ? `${id}-erro` : undefined,
   onChange: (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [k]: e.target.value }),
 })
 
-function Rotulado({ id, rotulo, children }: { id: string; rotulo: string; children: ReactNode }) {
+function Rotulado({ id, rotulo, erro, children }: { id: string; rotulo: string; erro?: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={id}>{rotulo}</Label>
       {children}
+      <ErroDoCampo id={id} erro={erro} />
     </div>
   )
 }
 
 function CampoNome(c: Campos) {
   return (
-    <Rotulado id="cad-nome" rotulo="Nome">
-      <Input id="cad-nome" {...campo(c, 'nome')} />
+    <Rotulado id="cad-nome" rotulo="Nome" erro={c.erros.nome}>
+      <Input id="cad-nome" {...campo(c, 'nome', 'cad-nome')} />
     </Rotulado>
   )
 }
@@ -130,8 +135,8 @@ const CamposDeCategoria = (c: Campos) => <NomeEMarcas c={c} marcas={[['cad-ativa
 // Lista nativa de um cadastro (door 5): a primeira opção, vazia, pede a escolha.
 function Escolha({ c, id, rotulo, chave, vazio, itens }: { c: Campos; id: string; rotulo: string; chave: string; vazio: string; itens?: { id: number; nome: string }[] }) {
   return (
-    <Rotulado id={id} rotulo={rotulo}>
-      <NativeSelect id={id} className="w-full" {...campo(c, chave)}>
+    <Rotulado id={id} rotulo={rotulo} erro={c.erros[chave]}>
+      <NativeSelect id={id} className="w-full" {...campo(c, chave, id)}>
         <Opcoes vazio={vazio} itens={itens} />
       </NativeSelect>
     </Rotulado>
@@ -149,8 +154,8 @@ function CamposDeRegra(c: Campos) {
   return (
     <>
       <Escolha c={c} id="cad-categoria" rotulo="Categoria" chave="categoriaId" vazio="Escolha a categoria" itens={c.dados?.categorias.filter((x) => !x.padrao)} />
-      <Rotulado id="cad-destino" rotulo="Destino">
-        <NativeSelect id="cad-destino" className="w-full" {...campo(c, 'destino')}>
+      <Rotulado id="cad-destino" rotulo="Destino" erro={c.erros.destino}>
+        <NativeSelect id="cad-destino" className="w-full" {...campo(c, 'destino', 'cad-destino')}>
           <option value="SETOR">Setor fixo</option>
           <option value="COORDENACAO_CURSO">Coordenação do curso da matrícula</option>
         </NativeSelect>
@@ -163,11 +168,11 @@ function CamposDeRegra(c: Campos) {
 const CamposDePronta = (c: Campos) => (
   <>
     <Escolha c={c} id="cad-setor-pronta" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />
-    <Rotulado id="cad-titulo" rotulo="Título">
-      <Input id="cad-titulo" {...campo(c, 'titulo')} />
+    <Rotulado id="cad-titulo" rotulo="Título" erro={c.erros.titulo}>
+      <Input id="cad-titulo" {...campo(c, 'titulo', 'cad-titulo')} />
     </Rotulado>
-    <Rotulado id="cad-texto" rotulo="Texto">
-      <Textarea id="cad-texto" rows={4} maxLength={4000} {...campo(c, 'texto')} />
+    <Rotulado id="cad-texto" rotulo="Texto" erro={c.erros.texto}>
+      <Textarea id="cad-texto" rows={4} maxLength={4000} {...campo(c, 'texto', 'cad-texto')} />
     </Rotulado>
   </>
 )
@@ -204,7 +209,7 @@ export function Cadastros() {
 
   return (
     <div className="flex flex-col gap-2">
-      <ErroDe erro={erro} />
+      <ErroDe erro={erro} oque="os cadastros" tentar={recarregar} />
       <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)} className="gap-2">
         <Cabecalho linha botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })}>
           <NativeSelect aria-label="Cadastro" className="w-full min-w-0 @4xl/main:hidden" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
@@ -229,8 +234,8 @@ export function Cadastros() {
         ))}
       </Tabs>
 
-      <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
-        {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} />}
+      <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+        {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>
     </div>
   )

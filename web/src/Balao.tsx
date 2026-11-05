@@ -36,7 +36,7 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, children }:
     >
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold empty:hidden">
         {autor}
-        {nota && <Badge>Nota interna</Badge>}
+        {nota && <Badge variant="outline">Nota interna</Badge>}
       </div>
       <MessageContent className="w-full max-w-[68ch] text-base leading-relaxed break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
         <Quebravel texto={texto} />

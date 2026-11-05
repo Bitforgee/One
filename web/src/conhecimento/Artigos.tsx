@@ -3,9 +3,9 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao } from '../acao'
 import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo } from '../Campo'
+import { Campo, ErroDoCampo } from '../Campo'
 import { Editor } from '../Editor'
-import { ErroDe } from '../ErroDe'
+import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Periodo } from '../Periodo'
 import { Documento } from '../ilustracoes'
@@ -16,7 +16,7 @@ import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
 import { Textarea } from '../ui/textarea'
-import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
+import { ConfirmarArquivar, IconeIndexacao, SeloEstado, useCatalogo, type Categoria, type Indexacao } from './comum'
 import { Resposta } from './Resposta'
 
 type Versao = { id: number; numero: number; titulo: string; perguntas: string[]; resposta: string; links: string[] }
@@ -58,17 +58,15 @@ function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edit
   return (
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>
-        {a.versao.titulo}
+        <span>{a.versao.titulo}</span>
+        <IconeIndexacao valor={a.indexacao} />
         <Detalhe>{[a.categoria, versao, validade(a)].filter(Boolean).join(' · ')}</Detalhe>
       </TableCell>
       <CelulaLargo>{a.categoria}</CelulaLargo>
       <CelulaLargo>{versao}</CelulaLargo>
       <CelulaLargo>{validade(a)}</CelulaLargo>
       <TableCell data-celula="selo">
-        <div className="flex gap-1">
-          <SeloIndexacao valor={a.indexacao} />
-          <SeloEstado estado={a.estado} />
-        </div>
+        <SeloEstado estado={a.estado} />
       </TableCell>
       <TableCell data-celula="acoes" className="text-end">
         <MenuAcoes nome={a.versao.titulo} pendente={pendente}>
@@ -89,42 +87,47 @@ function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; edit
   )
 }
 
-function CamposDoArtigo({ editando, setEditando, categorias }: { editando: Rascunho; setEditando: Dispatch<SetStateAction<Rascunho | undefined>>; categorias: Categoria[] }) {
+function CamposDoArtigo({ editando, setEditando, categorias, erros }: { editando: Rascunho; setEditando: Dispatch<SetStateAction<Rascunho | undefined>>; categorias: Categoria[]; erros: Record<string, string> }) {
   const muda = (chave: keyof Rascunho) => (e: { target: { value: string } }) => setEditando((r) => r && { ...r, [chave]: e.target.value })
   return (
     <>
       <p className="text-sm text-muted-foreground">{editando.id ? 'Salvar cria uma nova versão; as anteriores ficam guardadas.' : 'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.'}</p>
-      <Campo id="titulo" rotulo="Título" maxLength={200} value={editando.titulo} onChange={muda('titulo')} />
+      <Campo id="titulo" rotulo="Título" maxLength={200} value={editando.titulo} erro={erros.titulo} onChange={muda('titulo')} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="perguntas">Perguntas relacionadas (uma por linha)</Label>
-        <Textarea id="perguntas" rows={3} value={editando.perguntas} onChange={muda('perguntas')} />
+        <Textarea id="perguntas" rows={3} value={editando.perguntas} aria-invalid={!!erros.perguntas} aria-describedby={erros.perguntas ? 'perguntas-erro' : undefined} onChange={muda('perguntas')} />
+        <ErroDoCampo id="perguntas" erro={erros.perguntas} />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="categoria">Categoria</Label>
-        <NativeSelect id="categoria" className="w-full" value={editando.categoriaId} onChange={muda('categoriaId')}>
+        <NativeSelect id="categoria" className="w-full" value={editando.categoriaId} aria-invalid={!!erros.categoriaId} aria-describedby={erros.categoriaId ? 'categoria-erro' : undefined} onChange={muda('categoriaId')}>
           <Opcoes vazio="Escolha a categoria" itens={categorias} />
         </NativeSelect>
+        <ErroDoCampo id="categoria" erro={erros.categoriaId} />
       </div>
       <Resposta valor={editando.resposta} aoMudar={(resposta) => setEditando((r) => r && { ...r, resposta })} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="links">Links (um por linha, com https://)</Label>
-        <Textarea id="links" rows={2} value={editando.links} onChange={muda('links')} />
+        <Textarea id="links" rows={2} value={editando.links} aria-invalid={!!erros.links} aria-describedby={erros.links ? 'links-erro' : undefined} onChange={muda('links')} />
+        <ErroDoCampo id="links" erro={erros.links} />
       </div>
       <div className="grid grid-cols-2 items-end gap-2">
-        <Campo id="visivelDe" rotulo="Válido de (opcional)" type="date" value={editando.visivelDe} onChange={muda('visivelDe')} />
-        <Campo id="visivelAte" rotulo="Válido até (opcional)" type="date" value={editando.visivelAte} onChange={muda('visivelAte')} />
+        <Campo id="visivelDe" rotulo="Válido de (opcional)" type="date" value={editando.visivelDe} erro={erros.visivelDe} onChange={muda('visivelDe')} />
+        <Campo id="visivelAte" rotulo="Válido até (opcional)" type="date" value={editando.visivelAte} erro={erros.visivelAte} onChange={muda('visivelAte')} />
       </div>
       <Periodo rotulo="Escolher validade no calendário" className="self-start" setDe={(visivelDe) => setEditando((r) => r && { ...r, visivelDe })} setAte={(visivelAte) => setEditando((r) => r && { ...r, visivelAte })} />
     </>
   )
 }
 
+const CamposComErro = ['titulo', 'perguntas', 'categoriaId', 'links', 'visivelDe', 'visivelAte']
 const Avisos = { ativar: 'Artigo ativado.', arquivar: 'Artigo arquivado.' }
 const tituloDaJanela = (r?: Rascunho) => (r?.id ? 'Editar artigo' : 'Novo artigo')
 
 // S7: a base interna que o assistente usa como fonte; nunca aparece para o aluno.
 export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
+  const vazia = artigos?.length === 0
   const [editando, setEditando] = useState<Rascunho>()
   const [arquivar, setArquivar] = useState<Artigo>()
   const acao = useGravacao(recarregar)
@@ -138,10 +141,10 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })}>
+      <Cabecalho botao={vazia ? undefined : 'Novo'} Icone={Plus} aoClicar={() => setEditando({ ...Novo })}>
         <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
       </Cabecalho>
-      <ErroDe erro={erro} />
+      <ErroDe erro={erro} oque="os artigos" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Tabela
         colunas={Colunas}
@@ -154,8 +157,8 @@ export function Artigos() {
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
-        {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} />}
+      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+        {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 
       <ConfirmarArquivar tipo="artigo" titulo={arquivar?.versao.titulo} aberto={!!arquivar} fechar={() => setArquivar(undefined)} arquivar={() => mudar(arquivar!, 'arquivar')} />

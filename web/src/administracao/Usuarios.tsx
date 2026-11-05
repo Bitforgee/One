@@ -6,15 +6,16 @@ import { Cabecalho } from '../Cabecalho'
 import { Campo } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
-import { ErroDe } from '../ErroDe'
+import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Pessoas } from '../ilustracoes'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
+import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { TableCell, TableRow } from '../ui/table'
-import type { Setor, Usuario } from './comum'
+import { cpfFormatado, type Setor, type Usuario } from './comum'
 
 const Papeis: [string, string][] = [
   ['ALUNO', 'Aluno'],
@@ -43,9 +44,9 @@ function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario;
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>
         {u.nome}
-        <Detalhe>{[u.cpf, u.email, perfil].join(' · ')}</Detalhe>
+        <Detalhe>{[cpfFormatado(u.cpf), u.email, perfil].join(' · ')}</Detalhe>
       </TableCell>
-      <CelulaLargo>{u.cpf}</CelulaLargo>
+      <CelulaLargo>{cpfFormatado(u.cpf)}</CelulaLargo>
       <CelulaLargo>{u.email}</CelulaLargo>
       <CelulaLargo>{perfil}</CelulaLargo>
       <TableCell data-celula="selo">{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
@@ -87,20 +88,30 @@ function PapeisESetores({ editando, setEditando, setores }: Edicao) {
   )
 }
 
-function CamposDoUsuario({ editando, setEditando, setores }: Edicao) {
+function CamposDoUsuario({ editando, setEditando, setores, erros }: Edicao & { erros: Record<string, string> }) {
   const muda = (chave: 'cpf' | 'nome' | 'email' | 'senhaTemporaria') => (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [chave]: e.target.value })
   return (
     <>
-      <Campo id="cpf" rotulo="CPF" inputMode="numeric" value={editando.cpf} onChange={muda('cpf')} />
-      <Campo id="nome" rotulo="Nome" value={editando.nome} onChange={muda('nome')} />
-      <Campo id="email" rotulo="E-mail" type="email" value={editando.email} onChange={muda('email')} />
+      <Campo id="cpf" rotulo="CPF" inputMode="numeric" value={editando.cpf} erro={erros.cpf} onChange={muda('cpf')} />
+      <Campo id="nome" rotulo="Nome" value={editando.nome} erro={erros.nome} onChange={muda('nome')} />
+      <Campo id="email" rotulo="E-mail" type="email" value={editando.email} erro={erros.email} onChange={muda('email')} />
       <PapeisESetores editando={editando} setEditando={setEditando} setores={setores} />
       <div className="flex flex-col gap-2">
-        <Campo id="senha" rotulo="Senha temporária (opcional)" type="password" autoComplete="new-password" value={editando.senhaTemporaria} onChange={muda('senhaTemporaria')} />
+        <Campo id="senha" rotulo="Senha temporária (opcional)" type="password" autoComplete="new-password" value={editando.senhaTemporaria} erro={erros.senhaTemporaria} onChange={muda('senhaTemporaria')} />
         <p className="text-sm text-muted-foreground">Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.</p>
       </div>
     </>
   )
+}
+
+const CamposComErro = ['cpf', 'nome', 'email', 'senhaTemporaria']
+const semAcento = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
+// A busca casa o nome e o e-mail sem caixa nem acento, e o CPF com ou sem máscara.
+function casa(u: Usuario, busca: string) {
+  const t = semAcento(busca.trim())
+  const digitos = t.replace(/\D/g, '')
+  return !t || semAcento(u.nome).includes(t) || semAcento(u.email).includes(t) || cpfFormatado(u.cpf).includes(t) || (digitos !== '' && u.cpf.includes(digitos))
 }
 
 const tituloDaJanela = (f?: Ficha) => (f?.id ? 'Editar usuário' : 'Novo usuário')
@@ -110,9 +121,11 @@ export function Usuarios() {
   const { dados, erro, recarregar } = useLeituras<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
   const [editando, setEditando] = useState<Ficha>()
   const [desativar, setDesativar] = useState<Usuario>()
+  const [busca, setBusca] = useState('')
   const acao = useGravacao(recarregar)
   const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
+  const usuarios = dados?.usuarios.filter((u) => casa(u, busca))
 
   const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/usuarios', editando!.id, corpo(editando!)), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
 
@@ -125,21 +138,22 @@ export function Usuarios() {
   return (
     <div className="flex flex-col gap-2">
       <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
-      <ErroDe erro={erro} />
+      <ErroDe erro={erro} oque="os usuários" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
+      <Input type="search" aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
       <Tabela
         colunas={Colunas}
-        itens={dados?.usuarios}
+        itens={usuarios}
         erro={erro}
-        vazio={{ Ilustracao: Pessoas, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
+        vazio={busca.trim() ? { Ilustracao: Pessoas, titulo: 'Nenhum resultado', frase: 'Nenhum usuário combina com a busca.' } : { Ilustracao: Pessoas, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
       >
-        {dados?.usuarios.map((u) => (
+        {usuarios?.map((u) => (
           <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />}>
-        {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} />}
+      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+        {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} erros={errosDeCampo(acao.error)} />}
       </Editor>
 
       <Confirmar aberto={!!desativar} fechar={() => setDesativar(undefined)} titulo={`Desativar ${desativar?.nome}?`} botao="Desativar" destrutivo confirmar={confirmarDesativar}>

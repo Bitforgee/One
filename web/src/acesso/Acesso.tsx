@@ -38,9 +38,7 @@ export function Raiz() {
     <Centro>
       <div className="flex flex-col items-center gap-3 text-center">
         <BoasVindas className="h-40 w-52 text-muted-foreground" />
-        <div className="text-primary">
-          <H1>One</H1>
-        </div>
+        <H1>One</H1>
         <p className="m-0 text-muted-foreground">{Frase}</p>
         <p className="m-0 text-muted-foreground">Abra o endereço da sua instituição, por exemplo /univag.</p>
       </div>
@@ -82,7 +80,7 @@ function Textos({ d, escuro }: { d?: InstituicaoPublica; escuro: boolean }) {
   const cor = escuro ? Sobre : Sobrio
   return (
     <div className={`relative mt-auto max-w-md ${cor.raiz}`}>
-      <h2 className="text-3xl font-semibold tracking-tight">{d?.login.titulo ?? TituloBase}</h2>
+      <h2 className="text-2xl font-semibold tracking-tight">{d?.login.titulo ?? TituloBase}</h2>
       <p className={`mt-2 ${cor.frase}`}>{d?.login.frase ?? Frase}</p>
       <ul className={`mt-6 border-t ${cor.linha}`}>
         {itens.map((texto) => (

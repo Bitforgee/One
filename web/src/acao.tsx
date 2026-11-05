@@ -23,7 +23,7 @@ export function useLeituras<T extends Record<string, unknown>>(urls: Record<keyo
     queryKey: chave,
     queryFn: async () => Object.fromEntries(await Promise.all(Object.entries(urls).map(async ([k, url]) => [k, await api(url as string)]))) as T,
   })
-  return { dados: data, erro: error?.message, recarregar: () => cliente.invalidateQueries({ queryKey: chave }) }
+  return { dados: data, erro: error ?? undefined, recarregar: () => cliente.invalidateQueries({ queryKey: chave }) }
 }
 
 // `aviso` pode vir da resposta da gravação (por exemplo, quantos receberam).

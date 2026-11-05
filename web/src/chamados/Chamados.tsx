@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router'
 import { api } from '../api'
 import { Estados } from '../chamado'
-import { Alert } from '../ui/alert'
+import { ErroDe } from '../ErroDe'
 import { Badge } from '../ui/badge'
 import { Spinner } from '../ui/spinner'
 import { TableCell, TableRow } from '../ui/table'
@@ -68,7 +68,8 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
   )
 }
 
-type Larga<T> = { titulo: string; valor: (c: T, aberto: string) => string }
+// `celula` é o texto da coluna, quando difere do que vai para a linha de detalhe do estreito; `uma` mantém a célula numa linha só.
+type Larga<T> = { titulo: string; valor: (c: T, aberto: string) => string; celula?: (c: T, aberto: string) => string; uma?: boolean }
 
 // A linha da tabela (a partir de 768 px): número, título com o detalhe do estreito, colunas largas e o estado; para o aluno, a data e o próximo passo ficam sob o selo.
 function LinhaDaTabela<T extends ItemMeu>({ c, caminho, aberto, largas, fila }: { c: T; caminho: string; aberto: string; largas?: Larga<T>[]; fila?: boolean }) {
@@ -85,7 +86,9 @@ function LinhaDaTabela<T extends ItemMeu>({ c, caminho, aberto, largas, fila }: 
         {largas && <Detalhe>{largas.map((l) => l.valor(c, aberto)).join(' · ')}</Detalhe>}
       </TableCell>
       {largas?.map((l) => (
-        <CelulaLargo key={l.titulo}>{l.valor(c, aberto)}</CelulaLargo>
+        <CelulaLargo key={l.titulo} className={l.uma ? 'whitespace-nowrap' : undefined}>
+          {(l.celula ?? l.valor)(c, aberto)}
+        </CelulaLargo>
       ))}
       <TableCell data-celula="selo" className="whitespace-normal">
         <SeloDoChamado estado={c.estado} />
@@ -107,11 +110,11 @@ function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas, fila }: { url:
   const { me } = useSessao()
   const navegar = useNavigate()
   const estreito = useEstreito()
-  const { data: itens, error } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
+  const { data: itens, error, refetch } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
   const colunas = [{ titulo: 'Número' }, { titulo: 'Título' }, ...(largas ?? []).map(({ titulo }) => ({ titulo, largo: true })), { titulo: 'Estado' }]
   return (
     <div className="flex flex-col gap-2">
-      {error && <Alert variant="destructive">{error.message}</Alert>}
+      <ErroDe erro={error} oque={fila ? 'a fila' : 'suas solicitações'} tentar={() => void refetch()} />
       {fila && !!itens?.length && <p className="m-0 text-sm text-muted-foreground">Mais antigos primeiro</p>}
       <Tabela colunas={colunas} itens={itens} vazio={vazio} erro={error} densa>
         {itens?.map((c) => {
@@ -141,7 +144,7 @@ export function Fila() {
       largas={[
         { titulo: 'Categoria', valor: (c) => c.categoria },
         { titulo: 'Responsável', valor: (c) => responsavel(c.responsavel) },
-        { titulo: 'Dias', valor: (_, aberto) => aberto },
+        { titulo: 'Aberto', valor: (_, aberto) => aberto, celula: (_, aberto) => aberto.replace(/^aberto /, ''), uma: true },
       ]}
       fila
     />

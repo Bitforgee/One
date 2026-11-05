@@ -79,7 +79,7 @@ export function useChamado(numero?: string) {
   })
   return {
     chamado: data,
-    erro: error?.message,
+    erro: error ?? undefined,
     carregar: async () => void (await refetch()),
     setChamado: (c: Chamado) => cliente.setQueryData(chave, c),
   }

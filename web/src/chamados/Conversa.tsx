@@ -3,6 +3,7 @@ import { Balao, Quebravel } from '../Balao'
 import { frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { LinkDeAnexo } from '../LinkDeAnexo'
+import { Links, separarLinks } from '../LinksDaResposta'
 import { Card, CardContent } from '../ui/card'
 import { responsavel, SeloDoChamado } from './Chamados'
 
@@ -64,12 +65,17 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-semibold">Conversa com o assistente</h2>
-      {c.transcricao.map((m, i) => (
-        <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={m.texto} em={m.criadaEm} fuso={fuso}>
-          {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
-          {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
-        </Balao>
-      ))}
+      {c.transcricao.map((m, i) => {
+        // como no chat do aluno: os links do assistente viram botões abaixo do texto (AC 46)
+        const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
+        return (
+          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.criadaEm} fuso={fuso}>
+            {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
+            {links.length > 0 && <Links links={links} />}
+            {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
+          </Balao>
+        )
+      })}
     </section>
   )
 }

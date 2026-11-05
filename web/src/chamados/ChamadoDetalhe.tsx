@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { api, ErroApi } from '../api'
+import { ErroDe } from '../ErroDe'
 import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
 import { useConsulta } from '../ui/use-mobile'
@@ -316,12 +317,19 @@ type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
 type Modal = 'encaminhar' | 'cancelar'
 type Motivo = { motivo: string; setMotivo: (m: string) => void }
 
-// Os formulários e botões das ações do chamado (o cartão a 1024 px, o Sheet "Mais" ou a página do aluno).
-function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo }: { c: Chamado; acoes: Acoes; abrir: (m: Modal) => void; semAssumir: boolean } & Motivo) {
-  const { pode, executar, pendente } = acoes
+// O que foi digitado nos formulários vive em `Detalhe`: a folha "Mais" desmonta ao fechar e o texto não se perde (AC 44).
+function useCamposDaAcao() {
   const [resolucao, setResolucao] = useState('')
   const [categoriaId, setCategoriaId] = useState('')
   const [original, setOriginal] = useState('')
+  return { resolucao, setResolucao, categoriaId, setCategoriaId, original, setOriginal }
+}
+type CamposDaAcao = ReturnType<typeof useCamposDaAcao>
+
+// Os formulários e botões das ações do chamado (o cartão a 1024 px, o Sheet "Mais" ou a página do aluno).
+function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo, campos }: { c: Chamado; acoes: Acoes; abrir: (m: Modal) => void; semAssumir: boolean; campos: CamposDaAcao } & Motivo) {
+  const { pode, executar, pendente } = acoes
+  const { resolucao, setResolucao, categoriaId, setCategoriaId, original, setOriginal } = campos
   return (
     <>
       <BotoesDeAcao {...acoes} abrir={abrir} semAssumir={semAssumir} />
@@ -408,6 +416,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const acao = useMutacaoDoChamado(c, carregar, setChamado, setFolha)
   const [motivo, setMotivo] = useState('') // o mesmo motivo serve à rejeição, ao encaminhamento e ao cancelamento
   const [modal, setModal] = useState<Modal>()
+  const campos = useCamposDaAcao()
   const celular = useConsulta('(max-width: 1023px)')
   const equipe = c.eventos !== null
   const pode = (a: string) => c.acoes.includes(a)
@@ -421,7 +430,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   }
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
   const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
-  const painel = <PainelDeAcoes c={c} acoes={acoes} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} />
+  const painel = <PainelDeAcoes c={c} acoes={acoes} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
   return (
     <div className={gradeDoDetalhe(equipe, !!barra)}>
       <div className="flex min-w-0 flex-col gap-4">
@@ -446,7 +455,7 @@ export function ChamadoDetalhe() {
   const { numero } = useParams()
   const { me } = useSessao()
   const { chamado, erro, carregar, setChamado } = useChamado(numero!)
-  if (erro && !chamado) return <Alert variant="destructive">{erro}</Alert>
+  if (erro && !chamado) return <ErroDe erro={erro} oque={me.papeis.some((p) => ['ATENDENTE', 'ADMINISTRADOR'].includes(p)) ? 'o chamado' : 'a solicitação'} tentar={() => void carregar()} />
   if (!chamado) return <Carregando />
   return <Detalhe c={chamado} fuso={me.instituicao.fuso} carregar={carregar} setChamado={setChamado} />
 }

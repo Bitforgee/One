@@ -1,3 +1,4 @@
+import { CircleAlert, CircleCheck, Clock } from 'lucide-react'
 import { useLeituras } from '../acao'
 import { Confirmar } from '../Confirmar'
 import { Badge } from '../ui/badge'
@@ -6,14 +7,15 @@ export type Indexacao = 'PENDENTE' | 'INDEXADO' | 'FALHOU'
 export type Categoria = { id: number; nome: string; ativa: boolean }
 
 // RAG: o assistente só busca o que já tem embedding; o agendador indexa em segundo plano.
-const Indexacoes = { PENDENTE: ['Indexando', 'secondary', ''], INDEXADO: ['Indexado', 'default', 'bg-success'], FALHOU: ['Falhou', 'destructive', ''] } as const
-export function SeloIndexacao({ valor }: { valor: Indexacao | null }) {
+// A indexação é um ícone com nome e dica iguais ao valor, ao lado do título; só a situação é selo (AC 33).
+const Indexacoes = { PENDENTE: ['Indexando', Clock, 'text-muted-foreground'], INDEXADO: ['Indexado', CircleCheck, 'text-success'], FALHOU: ['Falhou', CircleAlert, 'text-destructive'] } as const
+export function IconeIndexacao({ valor }: { valor: Indexacao | null }) {
   if (!valor) return null
-  const [rotulo, variant, cor] = Indexacoes[valor]
+  const [rotulo, Icone, cor] = Indexacoes[valor]
   return (
-    <Badge variant={variant} className={cor} title="Indexação para a busca do assistente">
-      {rotulo}
-    </Badge>
+    <Icone role="img" aria-label={rotulo} className={`ms-1 inline size-4 align-text-bottom ${cor}`}>
+      <title>{rotulo}</title>
+    </Icone>
   )
 }
 

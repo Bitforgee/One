@@ -1,10 +1,11 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useId, useState } from 'react'
 import { api } from '../api'
 import { Grafico as GraficoVazio } from '../ilustracoes'
-import { dia, Periodo } from '../Periodo'
-import { Alert } from '../ui/alert'
+import { ErroDe } from '../ErroDe'
+import { dia } from '../Periodo'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
@@ -99,6 +100,8 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
 }
 
 function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[]; cor: string }) {
+  const [aberta, setAberta] = useState(false)
+  const id = useId()
   return (
     <Card className="min-w-0 gap-2">
       <CardHeader>
@@ -110,7 +113,15 @@ function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[
             <Grafico linhas={linhas} cor={cor} />
           </Suspense>
         )}
-        <TabelaRanking linhas={linhas} />
+        <Button variant="ghost" size="sm" className="self-start" aria-expanded={aberta} aria-controls={id} onClick={() => setAberta(!aberta)}>
+          {aberta ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+          Ver tabela
+        </Button>
+        {aberta && (
+          <div id={id}>
+            <TabelaRanking linhas={linhas} />
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -118,10 +129,10 @@ function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[
 
 // Os 4 de destaque (layout-painel AC 16), com o rodapé que diz o que o número mede; os outros 9 ficam compactos.
 const Destaques: [string, string][] = [
-  ['Indicador principal', 'Resolvidas sem reabertura, sobre as conversas com desfecho'],
-  ['Chamados abertos agora', 'Chamados não fechados neste momento'],
-  ['Autoatendimento', 'Resolvidas pelo assistente, sobre as conversas com desfecho'],
-  ['Tempo até a 1ª resposta', 'Da abertura à primeira resposta pública'],
+  ['Indicador principal', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'],
+  ['Chamados abertos agora', 'Chamados não fechados neste momento.'],
+  ['Autoatendimento', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
+  ['Tempo até a 1ª resposta', 'Da abertura à primeira resposta pública.'],
 ]
 
 // Os 13 cartões (4 de destaque e 9 compactos) e os rankings que a API manda; as grades seguem a largura do main (door 5).
@@ -136,12 +147,12 @@ function Painel({ dados }: { dados: Indicadores }) {
   return (
     <>
       {/* um quadro só, com linhas de 1 px entre as células (gap-px sobre bg-border), em vez de cartões soltos */}
-      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border bg-border @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border @5xl/main:grid-cols-4">
         {Destaques.map(([rotulo, rodape]) => (
-          <Card key={rotulo} className="gap-3 rounded-none border-0 p-5">
+          <Card key={rotulo} className="gap-3 rounded-none border-0 p-4 @xl/main:p-5">
             <div className="flex flex-col gap-1">
               <CardDescription>{rotulo}</CardDescription>
-              <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</CardTitle>
+              <CardTitle className="text-2xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</CardTitle>
             </div>
             <div className="text-sm text-muted-foreground">{rodape}</div>
           </Card>
@@ -152,7 +163,7 @@ function Painel({ dados }: { dados: Indicadores }) {
           // o último de uma lista ímpar ocupa a linha toda em 2 colunas, para não sobrar célula vazia
           <Card key={rotulo} className={`gap-1 rounded-none border-0 px-5 py-4 ${i === compactos.length - 1 && compactos.length % 2 ? 'col-span-2 @3xl/main:col-span-1' : ''}`}>
             <div className="text-sm text-muted-foreground">{rotulo}</div>
-            <div className="text-xl font-semibold tabular-nums">{valor}</div>
+            <div className="text-base font-semibold tabular-nums">{valor}</div>
           </Card>
         ))}
       </div>
@@ -174,7 +185,7 @@ export function Indicadores() {
   const [ate, setAte] = useState(dia(hoje))
   // cada "Consultar" é uma consulta nova, mesmo com o período igual; os cartões anteriores ficam até a resposta
   const [consulta, setConsulta] = useState({ de, ate, vez: 0 })
-  const { data: dados, error, isFetching } = useQuery({
+  const { data: dados, error, isFetching, refetch } = useQuery({
     queryKey: ['indicadores', consulta],
     queryFn: () => api<Indicadores>(`/api/indicadores?de=${consulta.de}&ate=${consulta.ate}`),
     placeholderData: keepPreviousData,
@@ -197,15 +208,12 @@ export function Indicadores() {
           <Label htmlFor="ate">Até</Label>
           <Input id="ate" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
-        <div className="col-span-2 flex items-start gap-2">
-          <Periodo rotulo="Escolher período no calendário" className="h-auto min-h-9 flex-1 whitespace-normal @3xl/main:flex-none" setDe={setDe} setAte={setAte} />
-          <Button type="submit" disabled={isFetching}>
-            {isFetching && <Spinner />}
-            Consultar
-          </Button>
-        </div>
+        <Button type="submit" className="col-span-2 @3xl/main:col-span-1" disabled={isFetching}>
+          {isFetching && <Spinner />}
+          Consultar
+        </Button>
       </form>
-      {error && <Alert variant="destructive">{error.message}</Alert>}
+      <ErroDe erro={error} oque="os indicadores" tentar={() => void refetch()} />
       {dados?.semDados && (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
           <GraficoVazio className="h-24 w-32 text-muted-foreground" />

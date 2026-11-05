@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { ArrowUp, ExternalLink, Hand, ShieldAlert } from 'lucide-react'
+import { ArrowUp, Hand, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
@@ -8,6 +8,7 @@ import { useChamado, type Anexo } from '../chamado'
 import { Conversa as ConversaIlustracao } from '../ilustracoes'
 import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Balao } from '../Balao'
+import { Links, separarLinks } from '../LinksDaResposta'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
@@ -98,44 +99,6 @@ function transferir(conversaId: number | undefined, descricao: string, matricula
   return conversaId === undefined
     ? api<Transferencia>('/api/atendimento-direto', { descricao, ...escolha })
     : api<Transferencia>(`/api/conversas/${conversaId}/transferir`, escolha)
-}
-
-// Mesma regra de URL do backend (Conferencia.Url), que já recusa a resposta com link fora das fontes citadas.
-// O link sai do texto com os dois-pontos e o espaço antes dele; a pontuação final fica ("via: https://x." -> "via.").
-export function separarLinks(texto: string) {
-  const links: string[] = []
-  const limpo = texto.replace(/\s*:?\s*(https?:\/\/[^\s<>()"']+)/gi, (_, url: string) => {
-    const link = url.replace(/[.,;:!?]+$/, '')
-    if (!links.includes(link)) links.push(link)
-    return url.slice(link.length)
-  })
-  const final = limpo.replace(/\s*\(\s*\)/g, '').replace(/[ \t]+([.,;!?])/g, '$1').trim()
-  // o link fechava a resposta sem pontuação: a frase que sobra ganha o ponto final
-  const semPonto = /https?:\/\/[^\s<>()"']+$/i.test(texto.trim()) && /[\p{L}\p{N}]$/u.test(final)
-  return { texto: semPonto ? `${final}.` : final, links }
-}
-
-// Domínio e caminho, sem o www.: "portal.univag.edu.br/financeiro/boletos"
-const rotulo = (link: string) => {
-  if (!URL.canParse(link)) return link
-  const u = new URL(link)
-  return u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? u.pathname.replace(/\/$/, '') : '')
-}
-
-function Links({ links }: { links: string[] }) {
-  return (
-    <div className="flex flex-wrap gap-2 pt-1">
-      {links.map((link) => (
-        <Button key={link} asChild variant="outline" size="sm" className="max-w-full rounded-full bg-background">
-          <a href={link} target="_blank" rel="noreferrer">
-            <ExternalLink aria-hidden="true" />
-            <span className="truncate">{rotulo(link)}</span>
-            <span className="sr-only"> (abre em nova aba)</span>
-          </a>
-        </Button>
-      ))}
-    </div>
-  )
 }
 
 function Conversa({ mensagens, fuso, digitando, foto, depois }: { mensagens: Mensagem[]; fuso: string; digitando: boolean; foto?: { src: string; alt: string }; depois: ReactNode }) {
@@ -414,6 +377,8 @@ function FalhaDoEnvio({ erro, reenviar }: { erro: Error; reenviar: () => void })
     </Alert>
   )
 }
+
+export { separarLinks }
 
 export function Assistente() {
   const { me } = useSessao()

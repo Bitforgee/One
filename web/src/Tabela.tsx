@@ -73,7 +73,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
   )
 }
 
-export const CelulaLargo = ({ children }: { children?: ReactNode }) => <TableCell className={`${Largo} ${Principal}`}>{children}</TableCell>
+export const CelulaLargo = ({ children, className = '' }: { children?: ReactNode; className?: string }) => <TableCell className={`${Largo} ${Principal} ${className}`}>{children}</TableCell>
 
 // A linha de 12 px sob a coluna principal, só no estreito: os valores "largo" unidos por " · " (AC 22).
 export const Detalhe = ({ children }: { children: ReactNode }) => <div className="text-xs text-muted-foreground md:@2xl/main:hidden">{children}</div>

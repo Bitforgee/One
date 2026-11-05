@@ -1,16 +1,16 @@
 import { useMutation } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
-import { useId, useState, type ComponentProps } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router'
 import { useGravacao, useLeituras } from '../acao'
 import { api, ErroApi } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo } from '../Campo'
+import { Campo, ErroDoCampo } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Confirmar } from '../Confirmar'
 import { formatarData } from '../datas'
 import { Editor } from '../Editor'
-import { ErroDe } from '../ErroDe'
+import { ErroDe, errosDeCampo } from '../ErroDe'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
@@ -42,24 +42,9 @@ type Ficha = { nome: string; slug: string; slugEditado: boolean; fuso: string; a
 const Nova: Ficha = { nome: '', slug: '', slugEditado: false, fuso: Fusos[0], adminNome: '', cpf: '', email: '' }
 const corpo = (f: Ficha) => ({ slug: f.slug, nome: f.nome, fuso: f.fuso, admin: { cpf: f.cpf, nome: f.adminNome, email: f.email } })
 
-// O texto de cada campo que a API recusou: o 400 traz `errors` por campo e o 409, o endereço repetido.
-function errosDeCampo(erro: unknown): Record<string, string> {
-  if (!(erro instanceof ErroApi)) return {}
-  if (erro.status === 409) return { slug: erro.message }
-  return Object.fromEntries(Object.entries<string[]>(erro.corpo?.errors ?? {}).map(([campo, textos]) => [campo, textos[0]]))
-}
-
-function CampoDoForm({ id, rotulo, erro, ...props }: { id: string; rotulo: string; erro?: string } & ComponentProps<'input'>) {
-  return (
-    <div className="flex flex-col gap-1">
-      <Campo id={id} rotulo={rotulo} aria-invalid={!!erro} aria-describedby={erro ? `${id}-erro` : undefined} {...props} />
-      {erro && (
-        <p id={`${id}-erro`} className="text-sm text-destructive">
-          {erro}
-        </p>
-      )}
-    </div>
-  )
+// O 400 traz `errors` por campo e o 409, o endereço repetido.
+function errosDaCriacao(erro: unknown): Record<string, string> {
+  return erro instanceof ErroApi && erro.status === 409 ? { slug: erro.message } : errosDeCampo(erro)
 }
 
 function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Partial<Ficha>) => void; erros: Record<string, string> }) {
@@ -67,20 +52,16 @@ function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Pa
   const texto = (chave: 'adminNome' | 'cpf' | 'email') => (e: { target: { value: string } }) => mudar({ [chave]: e.target.value })
   return (
     <>
-      <CampoDoForm id="nome" rotulo="Nome" value={ficha.nome} erro={erros.nome} onChange={(e) => mudar({ nome: e.target.value, ...(ficha.slugEditado ? {} : { slug: enderecoDe(e.target.value) }) })} />
-      <div className="flex flex-col gap-1">
+      <Campo id="nome" rotulo="Nome" value={ficha.nome} erro={erros.nome} onChange={(e) => mudar({ nome: e.target.value, ...(ficha.slugEditado ? {} : { slug: enderecoDe(e.target.value) }) })} />
+      <div className="flex flex-col gap-2">
         <Label htmlFor="endereco">Endereço</Label>
         <div className="flex items-center gap-1">
           <span aria-hidden="true">/</span>
           <Input id="endereco" value={ficha.slug} aria-invalid={!!erros.slug} aria-describedby={erros.slug ? 'endereco-erro' : undefined} onChange={(e) => mudar({ slug: e.target.value, slugEditado: true })} />
         </div>
-        {erros.slug && (
-          <p id="endereco-erro" className="text-sm text-destructive">
-            {erros.slug}
-          </p>
-        )}
+        <ErroDoCampo id="endereco" erro={erros.slug} />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="fuso">Fuso horário</Label>
         <NativeSelect id="fuso" className="w-full" value={ficha.fuso} onChange={(e) => mudar({ fuso: e.target.value })}>
           {Fusos.map((f) => (
@@ -89,15 +70,15 @@ function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Pa
             </option>
           ))}
         </NativeSelect>
-        {erros.fuso && <p className="text-sm text-destructive">{erros.fuso}</p>}
+        <ErroDoCampo id="fuso" erro={erros.fuso} />
       </div>
       <fieldset aria-labelledby={grupo} className="flex flex-col gap-3">
         <legend id={grupo} className="mb-2 text-sm font-medium">
           Primeiro administrador
         </legend>
-        <CampoDoForm id="admin-nome" rotulo="Nome" value={ficha.adminNome} erro={erros['admin.nome']} onChange={texto('adminNome')} />
-        <CampoDoForm id="admin-cpf" rotulo="CPF" inputMode="numeric" value={ficha.cpf} erro={erros['admin.cpf']} onChange={texto('cpf')} />
-        <CampoDoForm id="admin-email" rotulo="E-mail" type="email" value={ficha.email} erro={erros['admin.email']} onChange={texto('email')} />
+        <Campo id="admin-nome" rotulo="Nome" value={ficha.adminNome} erro={erros['admin.nome']} onChange={texto('adminNome')} />
+        <Campo id="admin-cpf" rotulo="CPF" inputMode="numeric" value={ficha.cpf} erro={erros['admin.cpf']} onChange={texto('cpf')} />
+        <Campo id="admin-email" rotulo="E-mail" type="email" value={ficha.email} erro={erros['admin.email']} onChange={texto('email')} />
       </fieldset>
     </>
   )
@@ -167,7 +148,7 @@ function Linha({ i, importar, desativar, agir, pendente }: { i: Item; importar: 
           {i.administradores} {i.administradores === 1 ? 'administrador' : 'administradores'} · criada em {criada}
         </Detalhe>
       </TableCell>
-      <TableCell data-celula="selo">{i.ativa ? <Badge>Ativa</Badge> : <Badge variant="secondary">Desativada</Badge>}</TableCell>
+      <TableCell data-celula="selo">{i.ativa ? <Badge className="bg-accent text-foreground">Ativa</Badge> : <Badge variant="secondary">Desativada</Badge>}</TableCell>
       <CelulaLargo>{i.administradores}</CelulaLargo>
       <CelulaLargo>{criada}</CelulaLargo>
       <TableCell data-celula="acoes" className="text-end">
@@ -199,7 +180,7 @@ function useCriacao(recarregar: () => Promise<unknown>) {
       await recarregar()
     },
   })
-  const campos = errosDeCampo(mutacao.error)
+  const campos = errosDaCriacao(mutacao.error)
   const geral = Object.keys(campos).length === 0 ? mutacao.error : null
   const abrir = () => {
     mutacao.reset()
@@ -234,7 +215,7 @@ export function Instituicoes() {
   return (
     <div className="flex flex-col gap-2">
       <Cabecalho botao="Nova instituição" Icone={Plus} aoClicar={criacao.abrir} />
-      <ErroDe erro={erro} />
+      <ErroDe erro={erro} oque="as instituições" tentar={recarregar} />
       <ErroDe erro={acao.error} />
       {criacao.criada && <AvisoDeCriacao criada={criacao.criada} />}
       <Tabela colunas={Colunas} itens={dados?.lista} erro={erro}>

@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { useGravacao } from '../acao'
 import { api } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo } from '../Campo'
+import { Campo, ErroDoCampo } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
-import { ErroDe } from '../ErroDe'
+import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Documento } from '../ilustracoes'
 import { Button } from '../ui/button'
@@ -15,7 +15,7 @@ import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
-import { ConfirmarArquivar, SeloEstado, SeloIndexacao, useCatalogo, type Categoria, type Indexacao } from './comum'
+import { ConfirmarArquivar, IconeIndexacao, SeloEstado, useCatalogo, type Categoria, type Indexacao } from './comum'
 
 type Documento = {
   id: number
@@ -48,17 +48,15 @@ function LinhaDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; n
   return (
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>
-        {d.titulo}
+        <span>{d.titulo}</span>
+        <IconeIndexacao valor={d.indexacao} />
         <Detalhe>{[d.categoria, versao, d.versao.nomeArquivo].join(' · ')}</Detalhe>
       </TableCell>
       <CelulaLargo>{d.categoria}</CelulaLargo>
       <CelulaLargo>{versao}</CelulaLargo>
       <CelulaLargo>{d.versao.nomeArquivo}</CelulaLargo>
       <TableCell data-celula="selo">
-        <div className="flex gap-1">
-          <SeloIndexacao valor={d.indexacao} />
-          <SeloEstado estado={d.estado} />
-        </div>
+        <SeloEstado estado={d.estado} />
       </TableCell>
       <TableCell data-celula="acoes" className="text-end">
         {d.estado === 'ATIVO' && (
@@ -76,7 +74,7 @@ function LinhaDocumento({ d, novaVersao, arquivar, pendente }: { d: Documento; n
   )
 }
 
-function CamposDoEnvio({ envio, setEnvio, categorias }: { envio: Envio; setEnvio: (e: Envio) => void; categorias: Categoria[] }) {
+function CamposDoEnvio({ envio, setEnvio, categorias, erros }: { envio: Envio; setEnvio: (e: Envio) => void; categorias: Categoria[]; erros: Record<string, string> }) {
   return (
     <>
       <p className="text-sm text-muted-foreground">
@@ -84,12 +82,13 @@ function CamposDoEnvio({ envio, setEnvio, categorias }: { envio: Envio; setEnvio
       </p>
       {!envio.id && (
         <>
-          <Campo id="titulo-documento" rotulo="Título" maxLength={200} value={envio.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
+          <Campo id="titulo-documento" rotulo="Título" maxLength={200} value={envio.titulo} erro={erros.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria-documento">Categoria</Label>
-            <NativeSelect id="categoria-documento" className="w-full" value={envio.categoriaId} onChange={(e) => setEnvio({ ...envio, categoriaId: e.target.value })}>
+            <NativeSelect id="categoria-documento" className="w-full" value={envio.categoriaId} aria-invalid={!!erros.categoriaId} aria-describedby={erros.categoriaId ? 'categoria-documento-erro' : undefined} onChange={(e) => setEnvio({ ...envio, categoriaId: e.target.value })}>
               <Opcoes vazio="Escolha a categoria" itens={categorias} />
             </NativeSelect>
+            <ErroDoCampo id="categoria-documento" erro={erros.categoriaId} />
           </div>
         </>
       )}
@@ -105,6 +104,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias }: { envio: Envio; setEnvio
   )
 }
 
+const CamposComErro = ['titulo', 'categoriaId']
 const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Enviar PDF')
 const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos')
 
@@ -127,7 +127,7 @@ export function Documentos() {
       <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })}>
         <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       </Cabecalho>
-      <ErroDe erro={erro} />
+      <ErroDe erro={erro} oque="os documentos" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!envio} />
       <Tabela
         colunas={Colunas}
@@ -145,8 +145,8 @@ export function Documentos() {
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} />} botao="Enviar" desabilitado={!envio?.arquivo}>
-        {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} />}
+      <Editor titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
+        {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 
       <ConfirmarArquivar tipo="documento" titulo={arquivar?.titulo} aberto={!!arquivar} fechar={() => setArquivar(undefined)} arquivar={() => confirmarArquivar(arquivar!)} />
