@@ -110,7 +110,7 @@ describe('textos', () => {
 
     // inicial
     await screen.findByLabelText('Arquivo CSV')
-    t.conferir(tela())
+    t.conferir(tela(), ['1', '2', '3'])
 
     // confirmação "Importar {arquivo}?"
     await userEvent.upload(screen.getByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
@@ -120,14 +120,14 @@ describe('textos', () => {
     // erros por linha
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Importar' }))
     await screen.findByText('Linha 3', { exact: false })
-    t.conferir(tela(), ['alunos.csv', 'Há linhas inválidas.', '3', 'CPF inválido'])
+    t.conferir(tela(), ['1', '2', 'alunos.csv', 'Há linhas inválidas.', '3', 'CPF inválido'])
 
     // concluída
     falha = false
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
     await screen.findByText(/Importação concluída/)
-    t.conferir(tela(), ['alunos.csv', '2', '1'])
+    t.conferir(tela(), ['alunos.csv', '2', '1', '3'])
 
     t.todos()
   })

@@ -126,9 +126,14 @@ describe('Matrículas em 3 passos com modelo e erros por linha', () => {
     expect(passos.tagName).toBe('OL')
     const itens = within(passos).getAllByRole('listitem')
     expect(itens).toHaveLength(3)
-    expect(itens[0]).toHaveTextContent(/^Baixe o modelo/)
-    expect(itens[1]).toHaveTextContent(/^Preencha uma linha por aluno/)
-    expect(itens[2]).toHaveTextContent(/^Envie o arquivo/)
+    const titulos = ['Baixe o modelo', 'Preencha uma linha por aluno', 'Envie o arquivo']
+    titulos.forEach((titulo, i) => {
+      const n = String(i + 1)
+      expect(itens[i]).toHaveTextContent(new RegExp(`^${n} ${titulo}`))
+      expect(within(itens[i]).getByText(n)).toBeVisible()
+      expect(within(itens[i]).getByRole('heading', { name: `${n} ${titulo}` })).toBeInTheDocument()
+      expect(itens[i]).toHaveAccessibleName(new RegExp(`^${n} `))
+    })
   })
 
   it('Matrículas em 3 passos com modelo e erros por linha: Baixar modelo baixa o CSV com o cabeçalho', async () => {

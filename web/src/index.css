@@ -34,7 +34,7 @@
   --border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.93 0 none));
   --input: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.66 0 none));
   --ring: var(--marca, oklch(0.708 0 0));
-  --chart-1: var(--primary);
+  --chart-1: oklch(0.52 0 0);
   --chart-2: oklch(0.60 0.10 200);
   /* a cor da instituição (aparencia-instituicao door 8): sem --marca estas ficam inválidas e cada token cai no valor de base */
   --marca-sutil: color-mix(in oklch, var(--marca) 8%, white);
@@ -74,7 +74,7 @@
   --border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.27 0 none));
   --input: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.58 0 none));
   --ring: var(--marca-clara, oklch(0.556 0 0));
-  --chart-1: var(--primary);
+  --chart-1: oklch(0.72 0 0);
   --chart-2: oklch(0.75 0.10 200);
 }
 

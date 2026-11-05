@@ -39,10 +39,16 @@ function ErrosDaImportacao({ erros }: { erros: Erro[] }) {
   )
 }
 
-function Passo({ titulo, children }: { titulo: string; children: ReactNode }) {
+function Passo({ n, titulo, children }: { n: number; titulo: string; children: ReactNode }) {
   return (
-    <li className="flex flex-col gap-2 ps-1">
-      <p className="m-0 font-medium">{titulo}</p>
+    <li className="flex flex-col gap-2" aria-labelledby={`passo-${n}`}>
+      <h2 id={`passo-${n}`} className="m-0 flex items-center gap-2 text-base font-medium">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-sm">
+          {n}
+        </span>
+        {' '}
+        {titulo}
+      </h2>
       {children}
     </li>
   )
@@ -66,20 +72,20 @@ export function Matriculas() {
   return (
     <div className="flex flex-col gap-2">
       <Card className="gap-2 px-4 py-4">
-        <ol className="m-0 flex list-decimal flex-col gap-5 ps-5 marker:font-medium marker:text-muted-foreground">
-          <Passo titulo="Baixe o modelo">
+        <ol className="m-0 flex list-none flex-col gap-5 p-0">
+          <Passo n={1} titulo="Baixe o modelo">
             <Button type="button" variant="outline" className="self-start" onClick={baixarModelo}>
               <Download aria-hidden="true" />
               Baixar modelo (CSV)
             </Button>
           </Passo>
-          <Passo titulo="Preencha uma linha por aluno">
+          <Passo n={2} titulo="Preencha uma linha por aluno">
             <p className="m-0 text-sm text-muted-foreground">
               Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho <code className="break-all font-mono">{CabecalhoDoCsv}</code>. Alunos são atualizados pelo CPF e matrículas
               pelo número. Se alguma linha tiver erro, nada é importado.
             </p>
           </Passo>
-          <Passo titulo="Envie o arquivo">
+          <Passo n={3} titulo="Envie o arquivo">
             <CampoArquivo id="csv" rotulo="Arquivo CSV" accept=".csv,text/csv" multiple={false} arquivos={arquivo ? [arquivo] : []} setArquivos={([a]) => setArquivo(a)} />
             <BotaoAcao className="w-full md:w-auto md:self-start" pendente={importacao.isPending} disabled={!arquivo} onClick={() => setConfirmar(true)}>
               Importar

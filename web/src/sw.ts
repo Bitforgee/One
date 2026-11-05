@@ -18,7 +18,7 @@ declare global {
 }
 
 export const Negados = [/^\/api\//]
-const Padrao = { titulo: 'One', corpo: 'Seu chamado foi atualizado.' }
+const Padrao = { titulo: 'One', corpo: 'Sua solicitação foi atualizada.' }
 
 // door 4: {"titulo","corpo","url"}; qualquer outra coisa vira o texto padrão, sem tag nem url
 function lerCarga(texto: string | undefined) {

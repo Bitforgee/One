@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -62,7 +63,21 @@ describe('tela Aparência', () => {
     abrir('/univag/aparencia')
     await digitar('Cor principal', Cor)
     const previa = within(screen.getByRole('region', { name: 'Prévia' }))
-    expect(previa.getByRole('button', { name: 'Entrar' }).closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${Cor}`)
+    const entrar = previa.getByRole('button', { name: 'Entrar' })
+    expect(entrar.closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${Cor}`)
+    // a cor pintada (C71): o jsdom não resolve var() nem compila o Tailwind, então a cascata de index.css
+    // (`.previa-marca { --primary: var(--marca-previa) }`) e o `bg-primary` do botão são resolvidos aqui, em texto
+    const regra = readFileSync('src/index.css', 'utf8').match(/\.previa-marca \{\s*--primary: var\(--marca-previa\);\s*\}/)
+    expect(regra).not.toBeNull()
+    const marca = (entrar.closest('.previa-marca') as HTMLElement).style.getPropertyValue('--marca-previa')
+    const css = document.head.appendChild(document.createElement('style'))
+    css.textContent = `.previa-marca .bg-primary { background-color: ${marca}; }`
+    expect(entrar).toHaveClass('bg-primary')
+    const referencia = document.body.appendChild(document.createElement('div'))
+    referencia.style.backgroundColor = Cor
+    expect(getComputedStyle(entrar).backgroundColor).toBe(getComputedStyle(referencia).backgroundColor)
+    css.remove()
+    referencia.remove()
 
     expect(document.querySelector('[aria-label="Prévia"] img[src^="blob:"]')).toBeNull()
     await userEvent.upload(screen.getByLabelText('Arquivo: Logo'), arquivo('logo.png'))

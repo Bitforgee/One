@@ -912,6 +912,11 @@ test.describe('S4 listas', () => {
     await expect(aviso).toHaveCount(1)
     const [a, primeiro] = [await caixa(aviso), await caixa(page.getByRole('main').getByRole('listitem').first())]
     expect(a.y + a.height).toBeLessThanOrEqual(primeiro.y)
+    // a categoria quebra linha em vez de cortar
+    const categoria = page.getByRole('main').getByRole('listitem').first().getByText(/Financeiro > Boletos/)
+    const m = await categoria.evaluate((e) => ({ corte: getComputedStyle(e).textOverflow, sobra: e.scrollWidth - e.clientWidth }))
+    expect(m.corte).not.toBe('ellipsis')
+    expect(m.sobra).toBeLessThanOrEqual(0)
   })
 })
 
@@ -1372,6 +1377,8 @@ test.describe('S6 varreduras', () => {
       async (nome) => {
         await page.setViewportSize({ width: nome === 'Conta' ? 390 : 1440, height: 900 })
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+        // C57: o gráfico (carregado sob demanda) só conta depois que ao menos uma barra tem altura
+        if (nome === 'Indicadores') await page.waitForFunction(() => [...document.querySelectorAll('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')].some((b) => b.getBoundingClientRect().height > 0))
         const [primaria] = await Promise.all([referencia(page, '--primary')])
         const indevidos = await page.evaluate((alvo) => {
           const pintar = window.__ux.pintar

@@ -153,7 +153,7 @@ describe('anexos na conversa com o assistente', () => {
     expect(screen.queryByText(Ajuda)).not.toBeInTheDocument()
     await escolher('foto.png')
     const ajuda = await screen.findByText(Ajuda)
-
+    expect(ajuda).toBeVisible()
     // abaixo do campo: vem depois dele no documento
     expect(campo.compareDocumentPosition(ajuda) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

@@ -77,7 +77,7 @@ const Tokens: [string, string, string, string][] = [
   ['--destructive', '0.577 0.245 27.325', '0.704 0.191 22.216', '='],
   ['--border', tingido(6, '0.93 0 none'), tingido(5, '0.27 0 none'), tingido(5, '0.26 0 none')],
   ['--input', tingido(6, '0.66 0 none'), tingido(5, '0.58 0 none'), tingido(5, '0.58 0 none')],
-  ['--chart-1', 'var(--primary)', 'var(--primary)', '='],
+  ['--chart-1', '0.52 0 0', '0.72 0 0', '='],
   ['--chart-2', '0.60 0.10 200', '0.75 0.10 200', '='],
   ['--radius', '0.5rem', '0.5rem', '='],
 ]

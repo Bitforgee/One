@@ -27,7 +27,13 @@ describe('service worker', () => {
     ['array', '[]'],
     ['objeto vazio', '{}'],
   ])('push sem JSON legível mostra o texto padrão (%s)', (_, dados) => {
-    expect(push(dados).mostrar).toHaveBeenCalledWith('One', { body: 'Seu chamado foi atualizado.', tag: undefined, data: { url: undefined } })
+    expect(push(dados).mostrar).toHaveBeenCalledWith('One', { body: 'Sua solicitação foi atualizada.', tag: undefined, data: { url: undefined } })
+  })
+
+  it('texto reserva fala em solicitação', () => {
+    const [, opcoes] = push(null).mostrar.mock.calls[0] as unknown as [string, { body: string }]
+    expect(opcoes.body).toBe('Sua solicitação foi atualizada.')
+    expect(opcoes.body).not.toMatch(/chamado/i)
   })
 
   describe('toque na notificação', () => {

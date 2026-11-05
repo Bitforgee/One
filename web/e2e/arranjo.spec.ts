@@ -466,8 +466,8 @@ test.describe('administração', () => {
     const importar = page.getByRole('button', { name: 'Importar' })
     await importar.waitFor()
     const conteudo = async () => (await caixa(page.locator('main > div > div').first())).width
-    // o botão ocupa a largura do passo (conteúdo menos o recuo de 16 px de cada lado do cartão e os 24 px do número do passo)
-    expect(Math.abs((await caixa(importar)).width - ((await conteudo()) - 34 - 24))).toBeLessThanOrEqual(1)
+    // o botão ocupa a largura do passo (conteúdo menos o recuo de 16 px de cada lado do cartão)
+    expect(Math.abs((await caixa(importar)).width - ((await conteudo()) - 34))).toBeLessThanOrEqual(1)
     await page.setViewportSize({ width: 1024, height: 740 })
     expect((await caixa(importar)).width).toBeLessThan(await conteudo() - 34)
 
@@ -1093,6 +1093,7 @@ test.describe('painel', () => {
       for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 360 px: ${l}`).toHaveCount(0)
       const detalhe = page.getByRole('main').getByRole('listitem').locator('div.text-xs').first() // cartões abaixo de 768 px (AC 7)
       await expect(detalhe, caminho).toContainText(linha)
+      if (caminho === '/univag/fila') await expect(detalhe).toContainText('Carla Regina de Souza') // C33: o responsável volta à linha do celular
       expect(await detalhe.evaluate((e) => getComputedStyle(e).fontSize), caminho).toBe('12px')
 
       await page.setViewportSize({ width: 1280, height: 800 })

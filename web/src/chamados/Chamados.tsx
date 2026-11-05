@@ -39,12 +39,12 @@ const ProximoPasso: Record<string, string> = {
   FECHADO: 'Encerrada',
 }
 
-type Meta = { aberto: string; categoria?: string; proximo?: string }
+type Meta = { aberto: string; categoria?: string; responsavel?: string; proximo?: string }
 
 // A Fila mostra a categoria; Minhas solicitações, o próximo passo.
-const metaDa = (c: ItemMeu, aberto: string, fila?: boolean): Meta => (fila ? { aberto, categoria: (c as ItemFila).categoria } : { aberto, proximo: ProximoPasso[c.estado] })
+const metaDa = (c: ItemMeu, aberto: string, fila?: boolean): Meta => (fila ? { aberto, categoria: (c as ItemFila).categoria, responsavel: responsavel((c as ItemFila).responsavel) } : { aberto, proximo: ProximoPasso[c.estado] })
 
-// No celular a linha é densa: o assunto (com o número) em até 2 linhas, o selo e a data (e a categoria na Fila) e, para o aluno, o próximo passo.
+// No celular a linha é densa: o assunto (com o número) em até 2 linhas, o selo e a data (e, na Fila, a categoria e o responsável) e, para o aluno, o próximo passo.
 function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta: Meta }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
@@ -54,10 +54,11 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
         </Link>{' '}
         <span>{c.titulo}</span>
       </p>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground" data-linha="meta">
+      <div className="flex items-start gap-2 text-xs text-muted-foreground" data-linha="meta">
         <SeloDoChamado estado={c.estado} />
         <span className="shrink-0 leading-[22px]">{meta.aberto}</span>
-        {meta.categoria && <span className="min-w-0 truncate leading-[22px]">{meta.categoria}</span>}
+        {meta.categoria && <span className="min-w-0 flex-1 leading-[22px] [overflow-wrap:anywhere]">{meta.categoria}</span>}
+        {meta.responsavel && <span className="min-w-0 flex-1 leading-[22px] [overflow-wrap:anywhere]">{meta.responsavel}</span>}
       </div>
       {meta.proximo && (
         <p className="m-0 text-xs text-muted-foreground" data-linha="proximo">

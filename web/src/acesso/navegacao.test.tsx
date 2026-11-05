@@ -1,6 +1,8 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { App } from '../App'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 // revisao-ux S2 (door 1): a barra de abas do aluno no celular e a tela Conta.
@@ -117,5 +119,20 @@ describe('Conta', () => {
       expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
       expect(chamadas.filter((c) => c.metodo === 'POST' && c.url === '/api/auth/logout')).toHaveLength(1)
     })
+  })
+})
+
+describe('operador', () => {
+  // C70 (AC 9)
+  it.each(['fila', 'assistente', 'artigos'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: ['OPERADOR'] })] })
+    const Local = () => <output data-testid="local">{useLocation().pathname}</output>
+    render(
+      <MemoryRouter initialEntries={[`/univag/${rota}`]}>
+        <App />
+        <Local />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(screen.getByTestId('local')).toHaveTextContent('/univag/instituicoes'))
   })
 })

@@ -78,6 +78,7 @@ describe('listas de chamados revisadas', () => {
     for (const [linha, data] of [[primeira, 'aberto há 3 dias'], [segunda, 'aberto ontem']] as const) {
       expect(within(linha).getByText('Financeiro > Boletos e mensalidades')).toBeInTheDocument()
       expect(within(linha).getByText(data)).toBeInTheDocument()
+      expect(within(linha).getByText('sem responsável')).toBeInTheDocument()
     }
     expect(screen.queryByText(/Ana Beatriz|Coordenação de Sistemas/)).not.toBeInTheDocument()
     const aviso = screen.getByText('Mais antigos primeiro')
