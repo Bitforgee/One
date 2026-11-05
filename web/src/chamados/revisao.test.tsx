@@ -146,6 +146,28 @@ describe('detalhe do chamado revisado', () => {
   })
 })
 
+describe('folha de ações do chamado', () => {
+  // achado do e2e real (C64): a resposta tardia de "Assumir" não pode fechar a folha que o atendente abriu depois do clique
+  it('a resposta de uma ação da barra não fecha a folha aberta depois', async () => {
+    celular()
+    const aberto = chamado({ estado: 'ABERTO', eventos: [], solicitante: 'Ana', acoes: ['responder', 'nota', 'assumir', 'resolver', 'encaminhar'] })
+    let responder!: () => void
+    api({
+      'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE'], matriculas: [] })],
+      'GET /api/chamados/ONE-1': () => [200, aberto],
+      'POST /api/chamados/ONE-1/assumir': () => new Promise((resolve) => (responder = () => resolve([200, { ...aberto, estado: 'EM_ATENDIMENTO' }]))),
+    })
+    abrir('/univag/chamados/ONE-1')
+    await userEvent.click(await screen.findByRole('button', { name: 'Assumir' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Mais' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    responder()
+    // a barra (atrás da folha, fora da árvore acessível) troca "Assumir" por "Responder" e a folha segue aberta
+    await screen.findByRole('button', { name: 'Responder', hidden: true })
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+})
+
 describe('conversa com o assistente vista pela equipe', () => {
   // C68 (AC 46): o link da resposta do assistente vira botão também no detalhe da equipe
   it('links da resposta como botão na conversa da equipe', async () => {

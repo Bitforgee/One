@@ -377,7 +377,7 @@ function Dialogos({ c, modal, fechar, executar, motivo, setMotivo }: { c: Chamad
 }
 
 // Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
-function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChamado: (c: Chamado) => void, setFolha: (aberta: boolean) => void) {
+function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChamado: (c: Chamado) => void) {
   return useMutation({
     mutationFn: async ({ caminho, corpo }: Pedido) => {
       try {
@@ -389,7 +389,6 @@ function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChama
     },
     onSuccess: (novo, { depois }) => {
       setChamado(novo)
-      setFolha(false)
       depois?.()
     },
   })
@@ -413,7 +412,7 @@ function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: 
 
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
   const [folha, setFolha] = useState(false)
-  const acao = useMutacaoDoChamado(c, carregar, setChamado, setFolha)
+  const acao = useMutacaoDoChamado(c, carregar, setChamado)
   const [motivo, setMotivo] = useState('') // o mesmo motivo serve à rejeição, ao encaminhamento e ao cancelamento
   const [modal, setModal] = useState<Modal>()
   const campos = useCamposDaAcao()
@@ -423,6 +422,8 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const executar: Executar = (caminho, corpo, depois) => acao.mutate({ caminho, corpo, depois })
   const pendente = acao.isPending
   const acoes = { pode, executar, pendente }
+  // só a ação feita na folha a fecha: a resposta de uma ação da barra não fecha a folha que o atendente abriu depois dela
+  const dentroDaFolha: Executar = (caminho, corpo, depois) => executar(caminho, corpo, () => { setFolha(false); depois?.() })
   const erro = <AlertaDaAcao erro={acao.error} />
   const abrir = (m: Modal) => {
     setFolha(false)
@@ -430,7 +431,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   }
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
   const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
-  const painel = <PainelDeAcoes c={c} acoes={acoes} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
+  const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
   return (
     <div className={gradeDoDetalhe(equipe, !!barra)}>
       <div className="flex min-w-0 flex-col gap-4">
