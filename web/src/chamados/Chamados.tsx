@@ -56,9 +56,7 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
       </p>
       <div className="flex items-start gap-2 text-xs text-muted-foreground" data-linha="meta">
         <SeloDoChamado estado={c.estado} />
-        <span className="shrink-0 leading-[22px]">{meta.aberto}</span>
-        {meta.categoria && <span className="min-w-0 flex-1 leading-[22px] [overflow-wrap:anywhere]">{meta.categoria}</span>}
-        {meta.responsavel && <span className="min-w-0 flex-1 leading-[22px] [overflow-wrap:anywhere]">{meta.responsavel}</span>}
+        <span className="min-w-0 flex-1 leading-[22px]">{[meta.aberto, meta.categoria, meta.responsavel].filter(Boolean).join(' · ')}</span>
       </div>
       {meta.proximo && (
         <p className="m-0 text-xs text-muted-foreground" data-linha="proximo">

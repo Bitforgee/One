@@ -39,7 +39,7 @@ describe('listas de chamados revisadas', () => {
         await screen.findByText('ONE-1')
         const linha = linhas()[0]
         expect(within(linha).getByText('Aberto')).toBeInTheDocument()
-        expect(within(linha).getByText(texto)).toBeInTheDocument()
+        expect(within(linha).getByText(texto, { exact: false })).toBeInTheDocument()
         expect(linha.textContent).not.toMatch(/0 dias/)
         cleanup()
         vi.useRealTimers()
@@ -76,9 +76,9 @@ describe('listas de chamados revisadas', () => {
     await screen.findByText('ONE-1')
     const [primeira, segunda] = linhas()
     for (const [linha, data] of [[primeira, 'aberto há 3 dias'], [segunda, 'aberto ontem']] as const) {
-      expect(within(linha).getByText('Financeiro > Boletos e mensalidades')).toBeInTheDocument()
-      expect(within(linha).getByText(data)).toBeInTheDocument()
-      expect(within(linha).getByText('sem responsável')).toBeInTheDocument()
+      expect(within(linha).getByText('Financeiro > Boletos e mensalidades', { exact: false })).toBeInTheDocument()
+      expect(within(linha).getByText(data, { exact: false })).toBeInTheDocument()
+      expect(within(linha).getByText('sem responsável', { exact: false })).toBeInTheDocument()
     }
     expect(screen.queryByText(/Ana Beatriz|Coordenação de Sistemas/)).not.toBeInTheDocument()
     const aviso = screen.getByText('Mais antigos primeiro')

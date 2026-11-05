@@ -1476,4 +1476,65 @@ test.describe('S7 acréscimos', () => {
     await expect(linhas).toHaveCount(3)
     for (const [i, texto] of ['aberto hoje', 'aberto ontem', 'aberto há 2 dias'].entries()) await expect(linhas.nth(i)).toContainText(texto)
   })
+
+  // C72
+  test('detalhe da Fila em texto corrido no celular', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await listasDeChamados(page, Titulo104)
+    await page.goto('/univag/fila')
+    const linhas = page.getByRole('main').getByRole('listitem')
+    await expect(linhas).toHaveCount(2)
+    const meta = linhas.first().locator('[data-linha=meta]')
+    const detalhe = meta.getByText(/^aberto há 2 dias · Financeiro > Boletos e mensalidades · sem responsável$/)
+    await expect(detalhe).toHaveCount(1)
+    expect((await caixa(detalhe)).width, 'coluna do detalhe').toBeGreaterThanOrEqual(120)
+    const m = await detalhe.evaluate((e) => {
+      const s = getComputedStyle(e)
+      // cada linha renderizada acaba numa fronteira de palavra: o texto de cada Range por linha termina antes de um espaço ou no fim
+      const no = e.firstChild!
+      const texto = no.textContent!
+      const r = document.createRange()
+      const topos: number[] = []
+      for (let i = 0; i < texto.length; i++) {
+        r.setStart(no, i)
+        r.setEnd(no, i + 1)
+        topos.push(Math.round(r.getBoundingClientRect().top))
+      }
+      const partidas = topos.flatMap((t, i) => (i > 0 && t > topos[i - 1] && texto[i - 1] !== ' ' && texto[i] !== ' ' ? [i] : []))
+      return { overflowWrap: s.overflowWrap, wordBreak: s.wordBreak, partidas, linhas: new Set(topos).size }
+    })
+    expect(m.overflowWrap).not.toBe('anywhere')
+    expect(m.wordBreak).not.toBe('break-all')
+    expect(m.partidas, 'posições em que uma palavra foi partida').toEqual([])
+    expect(m.linhas).toBeGreaterThanOrEqual(1)
+  })
+
+  // C73
+  test('gráficos com a mesma cor calma', async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    for (const tema of Temas) {
+      for (const marca of Marcas) {
+        await emTema(page, tema, marca)
+        await page.goto('/univag/indicadores')
+        await page.getByText('Indicador principal').waitFor()
+        const barras = page.locator('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')
+        await expect(barras).toHaveCount(2)
+        await expect.poll(async () => (await Promise.all([0, 1].map((i) => barras.nth(i).boundingBox()))).every((b) => b && b.width > 0), `${tema} ${marca ?? 'sem cor'}: barras desenhadas`).toBe(true)
+        const rotulo = `${tema} ${marca ?? 'sem cor'}`
+        const [a, b] = await Promise.all([0, 1].map((i) => barras.nth(i).evaluate((e) => window.__ux.pintar(['#000', getComputedStyle(e).fill]))))
+        expect(a, `${rotulo}: mesma cor nos dois`).toEqual(b)
+        expect(a, `${rotulo}: não é --primary`).not.toEqual(await referencia(page, '--primary'))
+        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.closest('[data-slot=card]')!)))
+        expect(contraste(a, fundo), `${rotulo}: contraste contra o cartão`).toBeGreaterThanOrEqual(3)
+        // croma em oklch a partir do sRGB de 8 bits
+        const [r, g, bl] = a.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+        const [l, mm, ss] = [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl].map(Math.cbrt)
+        const croma = Math.hypot(1.9779984951 * l - 2.428592205 * mm + 0.4505937099 * ss, 0.0259040371 * l + 0.7827717662 * mm - 0.808675766 * ss)
+        expect(croma, `${rotulo}: croma`).toBeGreaterThan(0.02)
+      }
+    }
+  })
 })
