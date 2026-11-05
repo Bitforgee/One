@@ -55,32 +55,32 @@ ficam em `api.Tests/PushAgendadorTests.cs` e `web/src/sw.test.ts`.
 
 ### S1 - Payload com a marca e o texto do estado (P1)
 
-**C1** - Numa instituição com `nomeCurto` "Univag", o payload do aviso de um chamado `EM_ATENDIMENTO` é exatamente o JSON `{"titulo":"Univag","corpo":"Sua solicitação ONE-1 tem uma resposta nova.","url":"/univag/chamados/ONE-1","icone":"/api/instituicoes/univag/imagens/icone?v=2"}`, com o ícone na versão 2 enviado e não removido (Intent)
+**C1** - [x] Numa instituição com `nomeCurto` "Univag", o payload do aviso de um chamado `EM_ATENDIMENTO` é exatamente o JSON `{"titulo":"Univag","corpo":"Sua solicitação ONE-1 tem uma resposta nova.","url":"/univag/chamados/ONE-1","icone":"/api/instituicoes/univag/imagens/icone?v=2"}`, com o ícone na versão 2 enviado e não removido (Intent)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Payload_com_marca_da_instituicao"`
 
-**C2** - O `corpo` segue o estado do chamado no envio, em 5 casos (table-driven): `ABERTO` e `EM_ATENDIMENTO` → "Sua solicitação {n} tem uma resposta nova."; `AGUARDANDO_ALUNO` → "Sua solicitação {n} aguarda sua resposta."; `RESOLVIDO` → "Sua solicitação {n} foi resolvida."; `FECHADO` → "Sua solicitação {n} tem uma resposta nova." (Intent)
+**C2** - [x] O `corpo` segue o estado do chamado no envio, em 5 casos (table-driven): `ABERTO` e `EM_ATENDIMENTO` → "Sua solicitação {n} tem uma resposta nova."; `AGUARDANDO_ALUNO` → "Sua solicitação {n} aguarda sua resposta."; `RESOLVIDO` → "Sua solicitação {n} foi resolvida."; `FECHADO` → "Sua solicitação {n} tem uma resposta nova." (Intent)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Corpo_pelo_estado_do_chamado"`
 
-**C3** - Sem `nomeCurto`, o `titulo` é o `nome` da instituição. Sem ícone, ou com o ícone removido (AD-032, door 11), o `icone` é `/icons/icon-192.png` (Intent)
+**C3** - [x] Sem `nomeCurto`, o `titulo` é o `nome` da instituição. Sem ícone, ou com o ícone removido (AD-032, door 11), o `icone` é `/icons/icon-192.png` (Intent)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Payload_padrao_sem_aparencia"`
 
-**C4** - Nenhum payload contém "chamado", "Chamado" nem "One" como título, e continua sem nome, e-mail, CPF, texto da mensagem nem título do chamado (porta 4 da `web-push`), com os mesmos dados de teste de `Payload_exato_sem_dado_pessoal` (Intent)
+**C4** - [x] Nenhum payload contém "chamado", "Chamado" nem "One" como título, e continua sem nome, e-mail, CPF, texto da mensagem nem título do chamado (porta 4 da `web-push`), com os mesmos dados de teste de `Payload_exato_sem_dado_pessoal` (Intent)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Payload_exato_sem_dado_pessoal"`
 
 ### S2 - O service worker mostra o ícone (P1)
 
-**C5** - Com a carga `{"titulo":"Univag","corpo":"…","url":"/univag/chamados/ONE-1","icone":"/api/instituicoes/univag/imagens/icone?v=2"}`, o `showNotification` recebe o título "Univag" e as opções `body`, `tag` "ONE-1", `data.url` e `icon` "/api/instituicoes/univag/imagens/icone?v=2" (Intent)
+**C5** - [x] Com a carga `{"titulo":"Univag","corpo":"…","url":"/univag/chamados/ONE-1","icone":"/api/instituicoes/univag/imagens/icone?v=2"}`, o `showNotification` recebe o título "Univag" e as opções `body`, `tag` "ONE-1", `data.url` e `icon` "/api/instituicoes/univag/imagens/icone?v=2" (Intent)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "aviso com o ícone da instituição"`
 
-**C6** - O `icon` só é aceito se for uma string que começa com "/" (caminho do próprio app); qualquer outra coisa (`https://outro.site/x.png`, `javascript:x`, número, ausente) faz o aviso usar `/icons/icon-192.png`. A carga sem JSON legível continua com o texto padrão "Sua solicitação foi atualizada." e com o mesmo ícone padrão (Intent; segurança: o aviso não carrega imagem de fora)
+**C6** - [x] O `icon` só é aceito se for uma string que começa com "/" (caminho do próprio app); qualquer outra coisa (`https://outro.site/x.png`, `javascript:x`, número, ausente) faz o aviso usar `/icons/icon-192.png`. A carga sem JSON legível continua com o texto padrão "Sua solicitação foi atualizada." e com o mesmo ícone padrão (Intent; segurança: o aviso não carrega imagem de fora)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "ícone só do próprio app"`
 
 ### S0 - Invariantes
 
-**C7** - A rota pública do ícone (`GET /api/instituicoes/{slug}/imagens/icone?v={versao}`) responde `200` sem cookie, então o service worker consegue carregá-lo; a versão no payload é a mesma que `GET /api/instituicoes/{slug}` devolve em `imagens.icone` (Intent; AD-032)
+**C7** - [x] A rota pública do ícone (`GET /api/instituicoes/{slug}/imagens/icone?v={versao}`) responde `200` sem cookie, então o service worker consegue carregá-lo; a versão no payload é a mesma que `GET /api/instituicoes/{slug}` devolve em `imagens.icone` (Intent; AD-032)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Icone_do_payload_e_o_da_rota_publica"`
 
-**C8** - A suíte inteira da API e a suíte Vitest passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `dotnet build api` passa com a barreira CA1502, e `crapper` e `dryer` passam (comandos do `revisao-ux` C60 e C61) (Intent)
+**C8** - [x] A suíte inteira da API e a suíte Vitest passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `dotnet build api` passa com a barreira CA1502, e `crapper` e `dryer` passam (comandos do `revisao-ux` C60 e C61) (Intent)
 Proof: `dotnet test api.Tests`
 Proof: `cd web && npx vitest run`
 Proof: `dotnet build api`
@@ -116,3 +116,6 @@ Tamanho: `PushEnviador.cs`, `Agendador.cs`, `sw.ts`, `PushAgendadorTests.cs` e `
 novos. Um construtor só, sem pergunta.
 
 - Mecanismo: um construtor
+- **Boundary:** C1 a C8 verdes no `HEAD`: `dotnet test api.Tests` 577 verdes, `dotnet build api` sem aviso nem erro (CA1502 ok), Vitest 500 verdes em 49 arquivos, `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99, `dryer` sem candidato (lista do C60 mais `src/LinksDaResposta.tsx` e `src/Balao.tsx`). C9 (manual, no Chrome do usuario) fica sem marca; o contêiner `api` da 8080 precisa ser reconstruído pelo orquestrador.
+- **Settled mid-build:** (1) edições em asserções existentes, além da lista fechada, por consequência direta da mudança do payload: o auxiliar `Payload` de `PushAgendadorTests` passou de `(slug, numero)` para `(Instituicao, numero)` e esperado novo (titulo = nome, corpo "tem uma resposta nova.", icone padrão), o que atualiza `Envia_ao_endpoint_com_as_chaves_e_marca_enviado` e `Cada_item_usa_a_instituicao_da_linha` sem mudar o que provam; `PushEnviadorTests.Real_envia_post_cifrado_com_vapid` só ganhou os novos argumentos na chamada de `PayloadPush.De`. Da lista fechada: `Payload_exato_sem_dado_pessoal` (payload novo, 4 chaves, titulo "Univag", mais as asserções de que o titulo não é "One" e de que titulo e corpo não têm "chamado"; a `url` leva `/chamados/`, por isso o C4 olha só titulo e corpo), as três chamadas de `showNotification` de `sw.test.ts` ganharam `icon`, e C27 da `web-push` ganhou a nota. (2) `C1` usa o slug `univag-marca`, e não `univag`, porque o slug é único por fábrica e `Payload_exato_sem_dado_pessoal` já cria `univag`; o resto do JSON é o do check. (3) O JSON sai com `UnsafeRelaxedJsonEscaping`, para "solicitação" não virar `ção`; o conteúdo é o mesmo JSON. (4) A consulta do agendador usa dois `record` privados em vez de objetos anônimos, porque `ArquiteturaTests.Objetos_anonimos_so_fora_das_respostas` conta os anônimos por arquivo.
+- **Abandoned:** nada.
