@@ -983,7 +983,7 @@ test('dica nos ícones do rodapé com a barra recolhida, sem dica no usuário', 
     await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
     await expect(page.locator(`[data-slot=sidebar][data-state=${estado === 'aberta' ? 'expanded' : 'collapsed'}]`), `${estado}: estado da barra`).toHaveCount(1)
     const rodape = page.locator('[data-sidebar=footer]')
-    for (const nome of ['Alternar barra lateral', 'Tema']) {
+    for (const nome of ['Alternar barra lateral', 'Tema', 'Contato']) {
       const botao = rodape.getByRole('button', { name: nome })
       await expect(botao, `${estado}: ${nome}`).toHaveCount(1)
       await botao.hover()
@@ -1007,6 +1007,25 @@ test('dica nos ícones do rodapé com a barra recolhida, sem dica no usuário', 
     await page.mouse.move(700, 400, { steps: 5 })
     await page.mouse.move(800, 500, { steps: 5 })
     await expect(page.getByRole('tooltip'), `${estado}: nada preso depois do menu`).toHaveCount(0)
+  }
+})
+
+// C38: página nova, sem passar antes por outro ícone: o que abre por foco ao fechar o menu apareceria aqui
+test('sem dica presa depois de clicar fora do menu do usuário', async ({ page }) => {
+  await instalar(page)
+  await page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
+  await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  const usuario = page.locator('[data-sidebar=footer]').getByRole('button', { name: /Ana/ })
+  await expect(usuario, '1 linha do usuário').toHaveCount(1)
+  await usuario.hover()
+  await usuario.click()
+  await expect(page.getByRole('menuitem', { name: 'Sair' }), 'menu aberto').toHaveCount(1)
+  await page.waitForTimeout(400) // o clique de uma pessoa vem depois da animação de abertura
+  await page.mouse.click(800, 500)
+  await expect(page.getByRole('menuitem', { name: 'Sair' }), 'menu fechado').toHaveCount(0)
+  for (let i = 0; i < 6; i++) {
+    await expect(page.getByRole('tooltip'), `amostra ${i}: nenhuma dica`).toHaveCount(0, { timeout: 100 })
+    await page.waitForTimeout(250)
   }
 })
 

@@ -41,6 +41,7 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 | P3 | AC 12 e o clique em recolher | continua alternando aberta e recolhida, e o atalho do primitivo não muda (C13) |
 | P4 | O usuário sem setas continua abrindo "Sair" | continua: a linha é um botão com o mesmo menu (AD-028) (C10) |
 | P5 | Altura da caixa de envio não tinha número | com 1 linha de texto e sem anexo, o `form` mede ≤ 60 px (C15) |
+| P10 | Rodada 4 do Verifier: FAIL em C38, porque o teste não via a dica presa num caminho só por foco. O usuário escolheu em 05/11 "ajustar teste e fechar", sem novo Verifier | entra `sem dica presa depois de clicar fora do menu do usuário`, e Contato entra na lista de C38. **A feature fecha com risco aceito pelo usuário, não com PASS**: `verification.md` fica em FAIL na rodada 4, e o `validate_verification.py` sai 1 |
 | P9 | Rodada 3 do Verifier: a dica na linha do usuário ficava presa depois do menu e fazia o Esc da gaveta pedir 2 toques; 3 mutantes sobreviveram (F9, F10, F11). O usuário escolheu em 05/11 "tirar a dica e conferência curta" | a linha do usuário fica sem dica (as iniciais não são ícone), e C38 muda; entram C40 e C41. Uma última conferência olha só isso. O que ela achar além disso vira risco aceito pelo usuário, sem nova rodada |
 | P8 | Rodada 2 do Verifier: a folga do corte de 2 linhas mostrou o alto da 3ª; `## Screens` pedia "só ícones com dica" e faltava dica em recolher e no usuário | C36 a C39 só provam o que o plano aprovado já dizia; a dica entra sem nova decisão do usuário. A rodada 3 é a última antes de voltar ao usuário |
 | P7 | Rodada 1 do Verifier, 05/11 | **o usuário escolheu voltar a `--sidebar` `#000` no Preto** (AD-027 fica intacta): C7 passa a exigir a diferença entre marcas só no claro e no escuro e `#000` no Preto. C23 passa a medir o contêiner da tabela. Entram C31 a C35, do que a rodada achou |
@@ -182,8 +183,9 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 **C37** - [x] Com a coluna estreita, a 360 e a 390 px, a barra do ranking tem `top` ≥ o `bottom` do rótulo da categoria − 1 px, nas linhas com dados (P8; AC 19; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra do ranking embaixo do rótulo no estreito"`
 
-**C38** - [x] Com a barra recolhida, a 1280 px, passar o ponteiro em recolher e em Tema mostra 1 dica com o nome de cada um; com a barra aberta, não (controle). A linha do usuário não mostra dica em nenhum dos dois estados, e depois de abrir e fechar o menu dela não sobra dica na tela (P8, P9; `## Screens`)
+**C38** - [x] Com a barra recolhida, a 1280 px, passar o ponteiro em recolher, em Tema e em Contato mostra 1 dica com o nome de cada um; com a barra aberta, não (controle). A linha do usuário não mostra dica em nenhum dos dois estados, e depois de abrir e fechar o menu dela não sobra dica na tela (P8, P9; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "dica nos ícones do rodapé com a barra recolhida, sem dica no usuário"`
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "sem dica presa depois de clicar fora do menu do usuário"`
 
 **C39** - [x] O botão Fechar da gaveta (`Sheet`), com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P8; AC 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco inteiro no Fechar da gaveta"`
@@ -261,3 +263,9 @@ Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mec
 
 - Mecanismo: orquestrador; uma linha de produto (`tooltip={me.nome}` sai) e testes; escolha do usuário em 05/11.
 - **Edições em asserções existentes:** o teste de C38 muda de nome e de texto (P9); `Enviar da altura do campo` ganha `test.setTimeout(90_000)`, porque o Verifier achou que 2 páginas nos 30 s padrão são a causa provável da falha isolada, sem a reproduzir. Nenhum limite baixou.
+
+### Fechamento com risco aceito (P10)
+
+- Mecanismo: orquestrador, só testes, depois do FAIL da rodada 4; este ajuste não passou por Verifier independente.
+- **Edições em asserções existentes:** nenhuma de outra feature; o teste de C38 ganha Contato na lista, e entra 1 teste novo.
+- **Risco aceito e o que continua no produto:** Esc pede 2 toques a partir de Tema e Contato na gaveta; a barra recolhida corta `Aparência` em telas baixas; um contorno de 2 px fica nas iniciais depois de clicar fora, até o próximo clique, numa página nova; Safari, Firefox, aparelho físico e leitor de tela real não foram testados.
