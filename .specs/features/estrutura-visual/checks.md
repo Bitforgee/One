@@ -70,7 +70,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 
 ### S2 - Barra lateral e topo (P1) · 8 files · 75 KB · ~19k
 
-**C7** - [ ] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f` nos temas claro e escuro; no Preto, com as 3 marcas, `--sidebar` pinta `rgb(0, 0, 0)` (AD-027); o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (P7; AC 6)
+**C7** - [x] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f` nos temas claro e escuro; no Preto, com as 3 marcas, `--sidebar` pinta `rgb(0, 0, 0)` (AD-027); o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (P7; AC 6)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra tingida pela marca"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens da paleta"`
 
@@ -125,7 +125,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 **C22** - [x] Sem linhas no ranking, a seção mostra o título e o mesmo estado vazio de `<base>`, com 0 barras; com a API sem o ranking, a seção não aparece (AC 20)
 Proof: `cd web && npx vitest run src/indicadores/ranking.test.tsx -t "ranking vazio e ausente"`
 
-**C23** - [ ] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` no `table-container` do ranking e na linha, e `text-overflow` diferente de `ellipsis`, sem estouro horizontal da página (P7; AC 21)
+**C23** - [x] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` no `table-container` do ranking e na linha, e `text-overflow` diferente de `ellipsis`, sem estouro horizontal da página (P7; AC 21)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "categoria longa inteira nas 5 larguras"`
 
 **C24** - [x] `recharts` não está em `web/package.json` nem em `package-lock.json` como dependência direta; `web/src/indicadores/Grafico.tsx` não existe; o build não gera arquivo `Grafico-*` em `api/wwwroot/assets` (door 4)
@@ -159,19 +159,19 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "neutros mudam com a cor da instituição"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do form igual ao token no escuro e no preto"`
 
-**C31** - [ ] Com totais 999, 1000, 12345 e 1234567, a 360, 390, 768, 1024 e 1440 px, o total de cada linha do ranking ocupa 1 linha só (altura do `Range` do texto ≤ 1 `line-height`), e a categoria de 60 caracteres continua inteira (P7; AC 19, AC 21)
+**C31** - [x] Com totais 999, 1000, 12345 e 1234567, a 360, 390, 768, 1024 e 1440 px, o total de cada linha do ranking ocupa 1 linha só (altura do `Range` do texto ≤ 1 `line-height`), e a categoria de 60 caracteres continua inteira (P7; AC 19, AC 21)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "total do ranking em uma linha"`
 
-**C32** - [ ] Com `forcedColors: 'active'`, a 1440 px, o item ativo da barra continua com a barra visível de 3 px (± 1): medida como `border` sólida no elemento ou no `::before`, com largura ≥ 2 px e cor diferente da cor de fundo pintada; um link inativo não tem essa borda (P7; AC 7)
+**C32** - [x] Com `forcedColors: 'active'`, a 1440 px, o item ativo da barra continua com a barra visível de 3 px (± 1): medida como `border` sólida no elemento ou no `::before`, com largura ≥ 2 px e cor diferente da cor de fundo pintada; um link inativo não tem essa borda (P7; AC 7)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "item ativo visível com cores forçadas"`
 
-**C33** - [ ] A 390 px, nos cartões da Fila e de Minhas solicitações, a caixa do contorno do controle focado fica dentro de todo ancestral com `overflow` diferente de `visible`, inclusive `line-clamp`. A 1280 px, na primeira coluna da Fila, a caixa do contorno contém a caixa do texto do link, sem cruzar as letras. O botão Fechar de um diálogo, com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P7; AC 1)
+**C33** - [x] A 390 px, nos cartões da Fila e de Minhas solicitações, a caixa do contorno do controle focado fica dentro de todo ancestral com `overflow` diferente de `visible`, inclusive `line-clamp`. A 1280 px, na primeira coluna da Fila, a caixa do contorno contém a caixa do texto do link, sem cruzar as letras. O botão Fechar de um diálogo, com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P7; AC 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco inteiro nos cartões, na primeira coluna e no Fechar"`
 
-**C34** - [ ] O rodapé da barra aberta mostra, de cima para baixo: Contato, Tema, usuário e recolher. Na barra recolhida, com ponteiro grosso, o botão de recolher tem `x` ≥ 0 e a largura inteira dentro da barra (P7; AC 8, AC 9, AC 12)
+**C34** - [x] O rodapé da barra aberta mostra, de cima para baixo: Contato, Tema, usuário e recolher. Na barra recolhida, com ponteiro grosso, o botão de recolher tem `x` ≥ 0 e a largura inteira dentro da barra (P7; AC 8, AC 9, AC 12)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "ordem do rodapé e recolher dentro da barra"`
 
-**C35** - [ ] A 1440 px, com 1 linha de texto, "Enviar" e o campo da caixa de envio têm a mesma altura (± 1 px) e estão alinhados na vertical; a 390 px, os dois medem ≥ 44 px (P7; AC 14)
+**C35** - [x] A 1440 px, com 1 linha de texto, "Enviar" e o campo da caixa de envio têm a mesma altura (± 1 px) e estão alinhados na vertical; a 390 px, os dois medem ≥ 44 px (P7; AC 14)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Enviar da altura do campo"`
 
 ## Coverage
@@ -222,3 +222,7 @@ Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mec
 ### Correções da rodada 1 (P7)
 
 - Mecanismo: um construtor, depois do FAIL da rodada 1 do Verifier; a volta a `#000` é decisão do usuário em 05/11.
+- **Boundary:** `c5270df` (código e testes de C7, C23 e C31 a C35) e o commit deste handoff, sobre o `104706b`. Fechados: C7, C23, C31, C32, C33, C34 e C35; com C1 a C30, os 35 checks estão `[x]`. Resultado: Vitest 524 verdes em 55 arquivos; `npm --prefix web run build` ok; `crapper` sai 0 no limite 9.99; `dryer` sem candidato; `git diff --quiet 93d5889 HEAD -- api api.Tests` sai 0. Arranjo (C27) 193 verdes contra `vite preview` na 5199. E2E real: imagem do `c5270df` (`git archive HEAD | docker build`) na 8089, banco `one_estrutura`, bucket `one-estrutura`, instituição `e2e` e contêiner `one-estrutura-api` próprios, removidos ao fim: a suíte inteira, 229 testes, verde (8,6 min). Injeções à mão, todas pegas: total do ranking com `overflow-wrap:anywhere` nas duas células (`total do ranking em uma linha`), `nowrap` na categoria (`categoria longa inteira nas 5 larguras`, agora medindo o `table-container`), barra ativa de volta ao `background` (`item ativo visível com cores forçadas` e `item ativo com barra de 3 px`), o corte das 2 linhas sem a folga de 4 px (`foco inteiro nos cartões, na primeira coluna e no Fechar`), a tabela sem a folga à esquerda (o mesmo teste e `foco não cortado por overflow`), o Fechar sem `focus-visible:opacity-100` (o mesmo teste), Tema e usuário trocados (`ordem do rodapé e recolher dentro da barra`), o recolher sem `self-center` (o mesmo teste: x = -5), o Enviar de volta a 36 px (`Enviar da altura do campo`) e a barra do Preto tingida de novo (`barra tingida pela marca` e, no Vitest, `tokens da paleta` e `tokens de Visual`). Prints novos de Fila, Indicadores e Assistente, a 390 e 1440 px no claro, em `.playwright-mcp/estrutura/` (`depois-*`, sobrescritos).
+- **Settled mid-build:** (1) por decisão do usuário em 05/11 (P7), `--sidebar` do Preto volta a `oklch(0 0 0)`; o claro e o escuro seguem tingidos, e `--sidebar-foreground` sobre `#000` segue ≥ 4,5:1. A decisão (2) do build anterior deixa de valer. (2) A barra do item ativo é um `::before` de largura 0 com `border-left` de 3 px na cor de `--sidebar-primary`, no lugar do `background`; mantém os 3 px e o recorte `inset-y-1`, e C8 mede a borda do `::before`. (3) A tabela (`ui/table.tsx`) ganhou 4 px de folga à esquerda no contêiner (`-ms-1 ps-1`, o texto da primeira coluna continua alinhado), e o contorno de foco do contêiner deixou de entrar 2 px no controle: por isso o contorno do link da primeira coluna cerca as letras em vez de cruzá-las. O deslocamento negativo continua na barra lateral e na linha de pergunta. (4) O corte das 2 linhas dos cartões foi para um `span` interno com `-m-1 p-1`, que dá 4 px de folga ao contorno do link sem mudar a altura do `p[data-linha=assunto]`. (5) O recolher do rodapé, com a barra recolhida, centraliza (`self-center`), e fica em x = 2 com ponteiro grosso. (6) O botão Enviar tem `h-11` em todas as larguras, a altura do campo.
+- **Asserções existentes editadas:** `interface.test.ts` linha `--sidebar` de `Tokens`, coluna Preto de `tingido(8, '0.1 0 none')` para `0 0 0` (lista fechada, item 6; AC 6 e P7). `casca.spec.ts` (arquivo da própria feature): `barra tingida pela marca` (C7: no Preto exige `rgb(0,0,0)` com as 3 marcas, e a diferença entre marcas só no claro e no escuro), `item ativo com barra de 3 px` (C8: a barra do `::before` é lida pela borda, não pelo fundo; AC 7) e `categoria longa inteira nas 5 larguras` (C23: soma a medida do `table-container`; AC 21). Nenhuma outra asserção existente mudou, e nenhum limite baixou.
+- **Fora do escopo, registrado pelo Verifier e não feito:** o Esc que fecha a gaveta em 2 toques, as dicas que faltam no recolher e no usuário recolhidos, o arredondamento da barra do ranking, os itens do app fora dos checks e a mensagem sem internet.
