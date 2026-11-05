@@ -201,6 +201,7 @@ function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string
 
 // O período anterior de mesmo número de dias, terminando na véspera de `de` (identidade-visual AC 12).
 export function periodoAnterior(de: string, ate: string) {
+  if (!de || !ate) return null // campo vazio: sem período anterior, e nenhum pedido com NaN na URL
   const [d, a] = [de, ate].map((v) => v.split('-').map(Number))
   const dias = Math.round((Date.UTC(a[0], a[1] - 1, a[2]) - Date.UTC(d[0], d[1] - 1, d[2])) / 86_400_000) + 1
   const antes = (k: number) => dia(new Date(d[0], d[1] - 1, d[2] - k))

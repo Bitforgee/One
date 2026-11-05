@@ -191,7 +191,7 @@ function Perguntas({ perguntas, perguntar, pendente }: { perguntas: string[]; pe
     <ul className="m-0 flex w-full list-none flex-col p-0">
       {perguntas.map((p) => (
         <li key={p}>
-          <button type="button" disabled={pendente} onClick={() => perguntar(p)} className="flex min-h-12 w-full items-center gap-3 rounded-xs border-b px-2 py-2 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:opacity-50">
+          <button type="button" disabled={pendente} onClick={() => perguntar(p)} className="flex min-h-12 w-full items-center gap-3 rounded-xs border-b px-2 py-2 text-start text-base hover:bg-accent outline-none focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground disabled:opacity-50">
             <MessageCircleQuestion aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             <span className="flex-1">{p}</span>
             <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />

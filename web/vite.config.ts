@@ -31,6 +31,8 @@ export default defineConfig({
       injectManifest: {
         // só arquivos estáticos; nada de /api/* em cache
         globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
+        // só o subconjunto latino das fontes; o aluno não usa os outros alfabetos
+        globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*'],
       },
     }),
   ],
