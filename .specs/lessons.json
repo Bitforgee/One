@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 95,
+  "next_id": 96,
   "lessons": [
     {
       "id": "L-001",
@@ -1710,6 +1710,24 @@
       ],
       "created": "2026-11-05T11:16:28Z",
       "last_seen": "2026-11-05T11:16:28Z"
+    },
+    {
+      "id": "L-095",
+      "key": "surviving_mutant::corrects l 094 counting mentions of a selector is not enough either to prove where a css rule applies measure the computed value in the browser against a control because text has more spellings than any regex",
+      "text": "Corrects L-094: counting mentions of a selector is not enough either; to prove where a CSS rule applies, measure the computed value in the browser against a control, because text has more spellings than any regex",
+      "signal": "surviving_mutant",
+      "scope": "css-tokens",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F29 (round 5); web/e2e/identidade.spec.ts C57 (css-tokens)"
+      ],
+      "created": "2026-11-05T12:24:23Z",
+      "last_seen": "2026-11-05T12:24:23Z"
     }
   ]
 }

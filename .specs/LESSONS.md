@@ -576,6 +576,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md F18; web/src/test/interface.test.ts:193 (css-tokens)
 - last seen: 2026-11-05T11:16:28Z
 
+### L-095 - Corrects L-094: counting mentions of a selector is not enough either; to prove where a CSS rule applies, measure the computed value in the browser against a control, because text has more spellings than any regex
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `css-tokens` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md F29 (round 5); web/e2e/identidade.spec.ts C57 (css-tokens)
+- last seen: 2026-11-05T12:24:23Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
