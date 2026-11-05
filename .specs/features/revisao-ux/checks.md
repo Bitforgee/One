@@ -304,17 +304,17 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 
 ### S3 - Conversa com o assistente (P1) · ~14 files · ~112 KB · ~28k (no lote 2)
 
-**C21** - Depois de uma resposta `tipo: 'resposta'`, o grupo "Isso resolveu?" é o elemento seguinte ao último
+**C21** - [x] Depois de uma resposta `tipo: 'resposta'`, o grupo "Isso resolveu?" é o elemento seguinte ao último
 balão `.is-assistant`, dentro do `role="log"`. "Sim" e "Não" têm `data-variant="outline"`. Com 2 respostas, há 1
 grupo só, depois da segunda (AC 15)
 Proof: `cd web && npx vitest run src/assistente/revisao.test.tsx -t "Isso resolveu logo abaixo da última resposta"`
 
-**C22** - A 390×844, com 3 respostas longas, o `top` do texto "Isso resolveu?" fica entre o `bottom` do último
+**C22** - [x] A 390×844, com 3 respostas longas, o `top` do texto "Isso resolveu?" fica entre o `bottom` do último
 balão e esse `bottom` + 24 px. O grupo e os seus ancestrais até o `main` não têm `position` `fixed` nem `sticky`
 (AC 15; Screens: Assistente)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Isso resolveu no fluxo sob a resposta"`
 
-**C23** - A transferência para "Financeiro", com número `ONE-5`, deixa 3 coisas:
+**C23** - [x] A transferência para "Financeiro", com número `ONE-5`, deixa 3 coisas:
 - o convite "Quer explicar melhor ou falar com um atendente?", que estava na tela depois do "Não", passa a ter 0
   ocorrências;
 - a tela mostra "Sua solicitação ONE-5 foi para Financeiro", "A resposta chega em Solicitações e no seu e-mail.",
@@ -325,23 +325,23 @@ Sem contato, o bloco de contato não aparece, e o resto fica (2 casos) (AC 16)
 
 Proof: `cd web && npx vitest run src/assistente/revisao.test.tsx -t "transferência mostra para onde foi e tira o convite"`
 
-**C24** - A 390 px, depois da transferência com contato, o menor ancestral comum do título, da frase, do bloco de
+**C24** - [x] A 390 px, depois da transferência com contato, o menor ancestral comum do título, da frase, do bloco de
 contato e de "Ver solicitação" tem `border-width` ≥ 1 px nos 4 lados. Nenhum dos 4 fica dentro de outro elemento
 com borda dentro desse bloco (Screens: Transferido)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Transferido num bloco único com borda"`
 
-**C25** - A 1440 px, com o texto longo (`Longa` de `arranjo.spec.ts`), a largura do elemento de texto do balão é ≤
+**C25** - [x] A 1440 px, com o texto longo (`Longa` de `arranjo.spec.ts`), a largura do elemento de texto do balão é ≤
 a largura de 68 caracteres "0" na mesma fonte + 1 px. Vale em 2 lugares: no balão `.is-assistant` do Assistente e
 no balão da conversa do detalhe do chamado (AC 17)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "balão com até 68 caracteres de largura"`
 
-**C26** - A 390 e a 1440 px, o campo "Mensagem" mede altura ≥ 44 px. "Falar com atendente" tem `bottom` ≤ `top`
+**C26** - [x] A 390 e a 1440 px, o campo "Mensagem" mede altura ≥ 44 px. "Falar com atendente" tem `bottom` ≤ `top`
 do `form` do compositor, e nenhum outro `button` ou `a` se sobrepõe a ele na vertical (linha própria). Sem
 destaque, ele tem `data-variant="outline"` (P13) (AC 18; Screens: Assistente)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "compositor de 44 px e Falar com atendente na linha de cima"`
 Proof: `cd web && npx vitest run src/assistente/revisao.test.tsx -t "Falar com atendente outline fora do destaque"`
 
-**C27** - O texto "PDF ou foto, até 10 MB" aparece só em 2 condições (4 casos):
+**C27** - [x] O texto "PDF ou foto, até 10 MB" aparece só em 2 condições (4 casos):
 - na tela sem anexo, ele tem 0 ocorrências;
 - com o foco no botão "Anexar arquivo", ele aparece (1);
 - quando o foco sai, ele some (0);
@@ -351,7 +351,7 @@ O texto de `<base>` "Fotos e PDFs de até 10 MB, ..." tem 0 ocorrências (AC 19)
 
 Proof: `cd web && npx vitest run src/assistente/revisao.test.tsx -t "ajuda dos anexos só com arquivo ou clipe focado"`
 
-**C28** - Um envio que falha com `500` `detail` "Falha simulada" mostra, como último filho do `role="log"`,
+**C28** - [x] Um envio que falha com `500` `detail` "Falha simulada" mostra, como último filho do `role="log"`,
 depois do balão do aluno, um `role="alert"` com "Falha simulada" e o botão "Reenviar". Nada de alerta fica abaixo
 do compositor. "Reenviar" faz um segundo pedido com o mesmo corpo; com `201`, o alerta some, a resposta aparece e o
 balão do aluno continua 1 só. São 3 casos:
@@ -366,13 +366,13 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 
 ### S4 - Solicitações, fila e chamado (P1) · ~18 files · ~124 KB · ~31k (no lote 2)
 
-**C29** - A 390 px, em Fila (2 itens, `extremos`) e em Minhas solicitações (3 itens), cada `role="listitem"` tem
+**C29** - [x] A 390 px, em Fila (2 itens, `extremos`) e em Minhas solicitações (3 itens), cada `role="listitem"` tem
 `border-left-width` e `border-right-width` 0, `border-radius` 0 e `box-shadow` `none`. Entre 2 itens seguidos há
 uma divisória de 1 px ou mais: o `border-bottom-width` do primeiro ou o `border-top-width` do segundo, com distância
 ≤ 1 px entre eles. A 1024 px, as linhas da tabela têm `border-radius` 0 e `border-left-width` 0 (AC 21)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "listas em linhas com divisória e sem borda de cartão"`
 
-**C30** - Com o fuso `America/Cuiaba` e o relógio em `2026-11-04T15:00:00Z`, cada linha de Fila e de Minhas
+**C30** - [x] Com o fuso `America/Cuiaba` e o relógio em `2026-11-04T15:00:00Z`, cada linha de Fila e de Minhas
 solicitações mostra o selo de estado em texto e a data relativa por `criadoEm`:
 - `2026-11-04T13:00:00Z` → "aberto hoje";
 - `2026-11-03T15:00:00Z` → "aberto ontem";
@@ -384,7 +384,7 @@ aparece (P9) (AC 21; Screens: Fila)
 
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "data relativa aberto hoje ontem e há N dias"`
 
-**C31** - A 390 px, em cada linha de Minhas solicitações e da Fila, com o título longo de 104 caracteres:
+**C31** - [x] A 390 px, em cada linha de Minhas solicitações e da Fila, com o título longo de 104 caracteres:
 - o assunto ocupa no máximo 2 linhas (altura ≤ 2 × `line-height` + 1 px);
 - o selo e a data relativa têm o mesmo `top` (2 px), e esse `top` é ≥ o `bottom` do assunto − 1 px;
 - na Fila, a categoria fica na mesma linha de meta que a data (mesmo `top`, 2 px);
@@ -393,7 +393,7 @@ Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "data relativa
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "linha de solicitação em 3 linhas"`
 
-**C32** - Cada linha de Minhas solicitações mostra o próximo passo do estado (5 casos, table-driven):
+**C32** - [x] Cada linha de Minhas solicitações mostra o próximo passo do estado (5 casos, table-driven):
 - `ABERTO` e `EM_ATENDIMENTO` → "A equipe vai responder";
 - `AGUARDANDO_ALUNO` → "Responda para continuar";
 - `RESOLVIDO` → "Resolvida";
@@ -403,13 +403,13 @@ Nenhum dos 5 mostra data (P1) (AC 22)
 
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "próximo passo por estado"`
 
-**C33** - Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades") e a data relativa, e
+**C33** - [x] Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades") e a data relativa, e
 nenhuma mostra o nome do aluno nem o setor (P2). O texto "Mais antigos primeiro" vem antes da lista no DOM. A 390 px, o `bottom` desse texto é ≤ o `top` do primeiro item
 (AC 23; Screens: Fila)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "Fila com categoria, data e Mais antigos primeiro"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Mais antigos primeiro acima da Fila"`
 
-**C34** - A 390 e a 1023 px, como equipe, o detalhe tem uma barra com `position: fixed` e `bottom` 0, de altura ≥
+**C34** - [x] A 390 e a 1023 px, como equipe, o detalhe tem uma barra com `position: fixed` e `bottom` 0, de altura ≥
 44 px, por estado (as `acoes` são as que `PermissoesChamado` dá ao atendente que não é o responsável):
 
 | Estado | Botões da barra | O "Mais" abre um `Sheet` de baixo com |
@@ -424,23 +424,23 @@ A 1024 px não há barra (5 casos table-driven por largura) (AC 24)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "barra do detalhe com a ação principal do estado"`
 
-**C35** - A 390×844, em `EM_ATENDIMENTO`, um toque em "Responder" na barra deixa `document.activeElement` igual ao
+**C35** - [x] A 390×844, em `EM_ATENDIMENTO`, um toque em "Responder" na barra deixa `document.activeElement` igual ao
 campo "Responder" (`#resposta`). A caixa do campo fica inteira na janela, com `top` ≥ 49 px (abaixo do cabeçalho) e
 `bottom` ≤ `top` da barra (AC 25)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Responder rola até o campo e foca"`
 
-**C36** - Como aluno, a 390 e a 1280 px (2 casos), o detalhe em `ABERTO` não tem botão "Ações" nem "Mais" e não
+**C36** - [x] Como aluno, a 390 e a 1280 px (2 casos), o detalhe em `ABERTO` não tem botão "Ações" nem "Mais" e não
 tem elemento `fixed` fora do `nav` "Navegação". "Cancelar solicitação" é o último elemento focável do `main`, com
 `background-color` transparente e `color` igual a `var(--destructive)`. Tocar nele abre o `Dialog`
 "Cancelar a solicitação?", e confirmar faz `POST /api/chamados/ONE-123/cancelar` (AC 26)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "aluno cancela por botão de texto no fim do detalhe"`
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "aluno sem barra e Cancelar solicitação com confirmação"`
 
-**C37** - A 390×844 e a 1023×844, como equipe em `EM_ATENDIMENTO`, com a página rolada até o fim, o `bottom` de
+**C37** - [x] A 390×844 e a 1023×844, como equipe em `EM_ATENDIMENTO`, com a página rolada até o fim, o `bottom` de
 "Enviar" é ≤ o `top` da barra, e "Enviar" tem a altura inteira dentro da janela (AC 27; Screens: Detalhe)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Enviar inteiro acima da barra no fim do detalhe"`
 
-**C38** - Como equipe, não há campo "Responder" nem botão "Enviar" em 2 casos: `RESOLVIDO` com
+**C38** - [x] Como equipe, não há campo "Responder" nem botão "Enviar" em 2 casos: `RESOLVIDO` com
 `acoes: ['nota', 'reclassificar']` e `FECHADO` com `acoes: []`. Como aluno em `RESOLVIDO`, o campo
 "Responder (reabre a solicitação)" continua (AC 28)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "sem formulário de resposta para a equipe em RESOLVIDO e FECHADO"`
@@ -790,4 +790,32 @@ Estimativa:
   - `tabela.test.tsx` (item 8; AC 6, AC 43): `selo de estado com cor por grupo` troca `bg-primary-subtle` por `bg-accent`. **Fora da lista:** o usuário `admin` (fixture) ganhou `ALUNO`, porque `vazio ilustrado nas 6 listas` abre `/solicitacoes` e a guarda de papel (AC 9) o mandava para a Fila; só o fixture mudou.
   - `acesso/icones.test.tsx` (item 8; AC 10): `Tema traz Sun e a escolha Escuro traz Moon` afirma `Monitor` (Sistema, sem tema gravado) e, depois de escolher Escuro, `Moon` no botão.
   - `conhecimento/documentos.test.tsx` (`tela Documentos lista...` e `artigos mostram a indexação`), `conhecimento/edicao.test.tsx` (`ativar e arquivar aparecem...` e `documento arquivado não oferece...`) e `conhecimento/textos.test.tsx` (as 2 listas de literais) (item 8; AC 33 via C7): `ATIVO`, `ARQUIVADO` e `RASCUNHO` passam a `Ativo`, `Arquivado` e `Rascunho`; os ajudantes `de()` e `item()` pegam o primeiro de vários textos iguais (o título de teste "Rascunho" divide o texto com o selo).
+
+### Lote 2 (conversa e chamados)
+
+- **Boundary:** lote 2 fechado em `442326a`, `3c352e6` e `6992b22`, mais o commit deste handoff. C21 a C38 marcados `[x]`. C59 a C61 verdes no fim do lote e **sem marca** (fecham no lote 3): Vitest 416 verdes em 45 arquivos (399 do lote 1 mais 17 novos, 7 de `assistente/revisao.test.tsx` e 10 de `chamados/revisao.test.tsx`), `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99 (maior nota 9.8, `Sidebar`; `Detalhe` foi dividido em `PainelDeAcoes`, `Dialogos`, `ColunaDaEquipe`, `acoesDaBarra` e `useMutacaoDoChamado`, e `ListaDeChamados` em `LinhaDaTabela` e `metaDa`), `dryer` sem candidato, layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push` e `ux`) 127 verdes contra `vite preview` na 5199. `api/` não mudou; nenhum `dotnet test`. Capturas antes e depois (simulada, claro e escuro) em `.playwright-mcp/revisao-ux/lote2/`; o "antes" é de `994baac`, num worktree temporário já removido.
+- **Settled mid-build:** nada com o usuário; decisões do construtor, para o orquestrador e o Verifier:
+  1. A coluna do estado "Dias" da Fila segue com esse cabeçalho (o valor é "aberto há N dias"), porque `arranjo.spec.ts` `colunas pela largura do main` o afirma e não está na lista fechada; "Aberto" colidiria com o selo em `tabela.test.tsx`.
+  2. O assunto da linha densa leva o número na frente, em linha (`ONE-123 título`, até 2 linhas, o título num `span`); a linha de meta é selo, data e (na Fila) categoria truncada, para caberem os 3 no mesmo `top` a 390 px (C31). No desktop (tabela) o aluno vê a data e o próximo passo sob o selo, na coluna Estado, para o texto `ONE-3históricoResolvido` de `listas.test.tsx` seguir valendo.
+  3. "Cancelar solicitação" é um botão `ghost` com `text-destructive` dentro de `BotoesDeAcao`; sem a barra o aluno o recebe por último (`PainelDeAcoes` no fim da página), e a equipe com a ação artificial `cancelar` (fixture `Todas` de `acoes.test.tsx`) o vê no cartão.
+  4. A equipe sem `RESOLVIDO`/`FECHADO` não tem formulário mesmo com `nota` nas `acoes` (AC 28); o aluno em `RESOLVIDO` segue com o campo.
+  5. "Falar com atendente" fica numa linha acima da caixa do compositor; "Encerrar" desceu para a linha do "Enviar", dentro da caixa (C26 pede que nenhum outro botão divida a linha). Com o limite de mensagens, sem caixa, os dois seguem lado a lado.
+  6. O erro de envio no assistente guarda o pedido em `envio.variables`; "Reenviar" repete o pedido com `reenvio: true`, e só nesse caso o balão do aluno não entra de novo.
+  7. A ajuda dos anexos some quando o clipe perde o foco; a linha "até 3 por conversa" e o aviso de dados sensíveis saíram, como o texto novo pede.
+  8. O Sheet "Mais" se chama "Mais ações"; o estado dos formulários (`resolução`, `categoria`, `duplicado`) agora vive em `PainelDeAcoes`, que o Sheet desmonta ao fechar, então um texto digitado e não enviado se perde ao fechar a folha (antes ficava em `Detalhe`).
+  9. `scrollIntoView({ block: 'center' })` mais `focus({ preventScroll: true })` em "Responder" da barra; sem animação, para a medida de C35 ser imediata.
+  10. C25 mede o elemento de texto do balão (`MessageContent`, `max-w-[68ch]`).
+  11. O "Proof" de C22 pede 3 respostas longas; o teste manda 3 perguntas e responde cada uma com texto longo.
+- **Abandoned:** nada.
+- **Edições em asserções existentes** (lista fechada; AC que força cada uma):
+  - `e2e/arranjo.spec.ts` (item 3): `arranjo Assistente` (AC 18: sem o x igual de "Falar" e "Encerrar", agora em linhas diferentes); `Assistente: data pequena...` (AC 20: o erro fica depois do balão do aluno e acima do "Enviar"); `Detalhe: cartão da equipe...` (AC 24: abre "Mais" em vez de "Ações"); `colunas largas somem no estreito` (AC 21, só a linha de Fila: o detalhe passa a ser a categoria) e `texto das linhas de 14 px` (AC 21: a 360 px mede o assunto da linha densa).
+  - `e2e/celular.spec.ts` (item 4): `listas viram cartões abaixo de 768` (AC 21), `Ações do chamado no rodapé abaixo de 1024` e `ação no Sheet fecha e atualiza` (AC 24: "Mais" e a barra; a ação do Sheet passou a "Resolver", porque "Assumir" fica na barra em `ABERTO`).
+  - `e2e/aparencia.spec.ts` (item 5): `contato abaixo do número do chamado` lê o número do título "Sua solicitação ONE-123 foi para" (AC 16).
+  - `e2e/anexos.spec.ts` (item 7, e2e real; não rodou neste lote, é do C65): lê o número no título "Sua solicitação {número} foi para..." e confere o `href` de "Ver solicitação" (AC 16).
+  - `chamados/listas.test.tsx` (item 8): `Fila mostra cada chamado...` (relógio fixo e "aberto há N dias" no lugar de "N dia(s)") e `colunas das listas de chamados` (a coluna Dias traz "aberto há N dias") (AC 21, AC 23).
+  - `chamados/textos.test.tsx` (item 8): `textos Fila` (AC 21, AC 23) e, **fora da lista**, `textos Minhas solicitações` (AC 21, AC 22: a data relativa e o próximo passo são textos novos da mesma lista de literais; a lista que nomeia "textos Fila" e "a lista de literais" os cobre). O relógio fica fixo no `lista()`.
+  - `chamados/resposta.test.tsx` (item 8): `a equipe responde ao chamado resolvido sem o aviso de reabrir` afirma que não há formulário (AC 28).
+  - `assistente/transferencia.test.tsx`, `assistente/boasvindas.test.tsx`, `assistente/conversa.test.tsx` (item 8): "Transferido para X. Protocolo N." passa a "Sua solicitação N foi para X" e o link a "Ver solicitação" (AC 16).
+  - `assistente/textos.test.tsx` (item 8; AC 16, AC 19, AC 20): a lista de literais troca "Abrir a solicitação N" e o texto antigo da ajuda por "A resposta chega em Solicitações e no seu e-mail.", "Ver solicitação", "PDF ou foto, até 10 MB" e "Reenviar", e um estado novo (arquivo escolhido) cobre a ajuda.
+  - **Fora da lista:** `assistente/anexos.test.tsx`, `texto de ajuda dos anexos` (AC 19, C27: o texto antigo tem 0 ocorrências e a ajuda só vale com arquivo escolhido ou clipe focado; o teste passou a escolher um arquivo antes de procurar o texto novo). A lista fechada só nomeia `erro da API mantém texto e selos` nesse arquivo, que seguiu verde sem mudança.
 
