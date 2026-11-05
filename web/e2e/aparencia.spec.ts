@@ -120,35 +120,6 @@ test.describe('S4 marca da instituição', () => {
 const noIcone = (page: Page) => page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
 
 test.describe('S9 arranjos das telas', () => {
-  test('sugestões centralizadas em 1 e 2 colunas', async ({ page }) => {
-    // C65: com a foto e sem ela (a ilustração Conversa no lugar)
-    for (const dados of [comAparencia, aparencia({ assistente: null })]) {
-      await simularApi(page, undefined, false, dados)
-      for (const [largura, colunas] of [[390, 1], [1440, 2]] as const) {
-        await page.setViewportSize({ width: largura, height: 900 })
-        await page.goto('/univag/assistente')
-        const botoes = comAparencia.assistente.perguntas.map((p) => page.getByRole('button', { name: p, exact: true }))
-        const caixas = await Promise.all(botoes.map(caixa))
-        expect(new Set(caixas.map((c) => Math.round(c.x))).size, `${largura} px: colunas`).toBe(colunas)
-        if (colunas === 1) caixas.slice(1).forEach((c, i) => expect(c.y, `${largura} px: top crescente`).toBeGreaterThan(caixas[i].y))
-        else expect(new Set(caixas.map((c) => Math.round(c.y))).size, `${largura} px: linhas`).toBe(2)
-        for (const c of caixas.slice(1)) if (colunas === 1) perto(c.x, caixas[0].x, `${largura} px: mesmo left`)
-        const area = await caixa(page.getByRole('main'))
-        const foto = page.locator('section:has(h2) > img, section:has(h2) > svg').first()
-        // os textos são medidos pelo texto (o <h2> e o <p> de largura total sempre caem no centro)
-        const texto = (l: Locator) => l.evaluate((e) => { const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect().toJSON() })
-        const medidas = [
-          ['foto', await caixa(foto)],
-          ['título', await texto(page.getByRole('heading', { name: 'Olá! Eu sou Vagner.' }))],
-          ['texto de boas-vindas', await texto(page.getByText(comAparencia.assistente.boasVindas, { exact: true }))],
-          ['grade', await caixa(botoes[0].locator('xpath=..'))],
-        ] as const
-        for (const [nome, c] of medidas)
-          perto(c.x + c.width / 2, area.x + area.width / 2, `${largura} px, ${dados.imagens.assistente ? 'com' : 'sem'} foto: centro de ${nome}`)
-      }
-    }
-  })
-
   test('foto do assistente à esquerda do balão', async ({ page }) => {
     await simularApi(page, undefined, false, comAparencia)
     for (const largura of [390, 1440]) {

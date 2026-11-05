@@ -167,7 +167,7 @@ test.describe('Detalhe do chamado', () => {
   test('detalhe em duas colunas', async ({ page }) => {
     await abrirDetalhe(page, 1440)
     const acoes = await caixa(cartaoAcoes(page))
-    const historico = await caixa(page.locator('[data-slot=card]').filter({ has: page.getByRole('heading', { name: 'Histórico' }) }))
+    const historico = await caixa(page.locator('section').filter({ has: page.getByRole('heading', { name: 'Histórico' }) }))
     const titulo = await caixa(page.getByRole('heading', { level: 2 }).first())
     const resposta = await caixa(page.getByLabel('Responder'))
     expect(Math.abs(acoes.width - 320)).toBeLessThanOrEqual(1)
@@ -249,40 +249,44 @@ test.describe('Indicadores', () => {
     await expect(page.getByRole('button', { name: 'Escolher período no calendário' })).toHaveCount(0)
     expect(c.consultar.y).toBeGreaterThanOrEqual(c.de.y + c.de.height - 1)
 
-    const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
+    const rotulo = (r: string) => page.getByRole('main').getByText(r, { exact: true })
     const estilo = (l: Locator, propriedade: string) => l.evaluate((e, p) => getComputedStyle(e).getPropertyValue(p), propriedade)
-    // layout-painel door 5: as colunas seguem o main (976 px de conteúdo a 1280 px de janela com a barra aberta, 1136 px a 1440 px)
-    for (const [largura, destaque, compactos, rankings] of [[360, 2, 2, 1], [1280, 2, 3, 2], [1440, 4, 3, 2]]) {
+    const ranking = (titulo: string) => page.locator('section').filter({ has: page.getByRole('heading', { name: titulo }) })
+    // layout-painel door 5 e identidade-visual C28 a C30: as colunas seguem o main (976 px de conteúdo a 1280 px de janela com a barra aberta, 1136 px a 1440 px)
+    for (const [largura, faixa, lista, rankings] of [[360, 1, 1, 1], [1280, 3, 2, 2], [1440, 3, 2, 2]]) {
       await page.setViewportSize({ width: largura, height: 740 })
       await assentar(page)
-      const colunas = async (rotulos: string[]) => new Set((await Promise.all(rotulos.map((r) => caixa(cartao(r))))).map((b) => Math.round(b.x))).size
-      expect(await colunas(Destaques), `${largura} px: destaques`).toBe(destaque)
-      expect(await colunas(Compactos), `${largura} px: compactos`).toBe(compactos)
+      const colunas = async (rotulos: string[]) => new Set((await Promise.all(rotulos.map((r) => caixa(rotulo(r))))).map((b) => Math.round(b.x))).size
+      expect(await colunas(Destaques.slice(1)), `${largura} px: faixa`).toBe(faixa)
+      expect(await colunas(Compactos), `${largura} px: lista`).toBe(lista)
       expect(await colunas(['Categorias por conversas', 'Categorias por chamados']), `${largura} px: rankings`).toBe(rankings)
       if (rankings === 1) {
-        const [conversas, chamados] = await Promise.all([caixa(cartao('Categorias por conversas')), caixa(cartao('Categorias por chamados'))])
+        const [conversas, chamados] = await Promise.all([caixa(ranking('Categorias por conversas')), caixa(ranking('Categorias por chamados'))])
         expect(chamados.y, `${largura} px`).toBeGreaterThanOrEqual(conversas.y + conversas.height - 1)
       }
     }
 
-    // destaques: valor de 24 px ou mais com tabular-nums e rótulo de 14 px; compactos: valor de 16 px (AC 41: um só tamanho de título por tela); os destaques vêm antes
-    for (const rotulo of Destaques) {
-      const valor = cartao(rotulo).locator('[data-slot=card-title]')
-      expect(parseFloat(await estilo(valor, 'font-size')), rotulo).toBeGreaterThanOrEqual(24)
-      expect(await estilo(valor, 'font-variant-numeric'), rotulo).toContain('tabular-nums')
-      expect(parseFloat(await estilo(cartao(rotulo).locator('[data-slot=card-description]'), 'font-size')), rotulo).toBe(14)
-      expect((await caixa(cartao(rotulo))).y, rotulo).toBeLessThan((await caixa(cartao('Alunos ativos'))).y)
+    // principal: número de 40 px; faixa: valor de 24 px com tabular-nums e rótulo de 14 px; lista: valor de 16 px (AC 41: um só tamanho de título por tela); o principal e a faixa vêm antes da lista
+    const numero = page.getByRole('main').getByText('71,2%', { exact: true })
+    expect(parseFloat(await estilo(numero, 'font-size'))).toBe(40)
+    expect(await estilo(numero, 'font-variant-numeric')).toContain('tabular-nums')
+    for (const r of Destaques.slice(1)) {
+      const valor = rotulo(r).locator('xpath=following-sibling::div[1]')
+      expect(parseFloat(await estilo(valor, 'font-size')), r).toBeGreaterThanOrEqual(24)
+      expect(await estilo(valor, 'font-variant-numeric'), r).toContain('tabular-nums')
+      expect(parseFloat(await estilo(rotulo(r), 'font-size')), r).toBe(14)
+      expect((await caixa(rotulo(r))).y, r).toBeLessThan((await caixa(rotulo('Alunos ativos'))).y)
     }
-    for (const rotulo of Compactos) expect(Math.abs(parseFloat(await estilo(cartao(rotulo).locator('> div').nth(1), 'font-size')) - 16), rotulo).toBeLessThanOrEqual(0.5)
+    for (const r of Compactos) expect(Math.abs(parseFloat(await estilo(rotulo(r).locator('xpath=following-sibling::span[1]'), 'font-size')) - 16), r).toBeLessThanOrEqual(0.5)
 
     for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
-      const ranking = cartao(titulo)
-      const grafico = ranking.locator('.recharts-responsive-container')
+      const bloco = ranking(titulo)
+      const grafico = bloco.locator('.recharts-responsive-container')
       await grafico.waitFor()
+      expect((await caixa(grafico)).height).toBeGreaterThan(0)
+      await bloco.getByRole('button', { name: 'Ver tabela' }).click() // a tabela vem recolhida (AC 32); o clique rola a página: as caixas saem depois dele
       const g = await caixa(grafico)
-      expect(g.height).toBeGreaterThan(0)
-      await ranking.getByRole('button', { name: 'Ver tabela' }).click() // a tabela vem recolhida (AC 32)
-      expect((await caixa(ranking.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
+      expect((await caixa(bloco.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
     }
 
     await page.setViewportSize({ width: 1280, height: 740 }) // main de 976 px: a linha de ferramentas cabe numa linha
@@ -536,7 +540,7 @@ test.describe('arranjo restante', () => {
     await simularApi(page)
     await page.goto('/univag/chamados/ONE-123')
     await page.getByText('Resumo gerado por IA').waitFor()
-    const equipe = page.locator('[data-slot=card]').filter({ hasText: 'Resumo gerado por IA' })
+    const equipe = page.getByText('Resumo gerado por IA', { exact: true }).locator('..') // o bloco tingido do resumo, já sem ser cartão (AC 17)
     expect(await equipe.count()).toBe(1)
     const conversa = await caixa(page.locator('.is-user').first())
     expect(abaixo(await caixa(equipe), conversa)).toBe(true)
@@ -980,14 +984,14 @@ test.describe('painel', () => {
       await coluna.waitFor()
       expect(await padding(coluna), `acesso a ${w} px`).toBe(esperado)
     }
-    // os destaques ficam num quadro com divisórias de 1 px: a célula tem 250 px ou mais em qualquer coluna (150 px nas 2 colunas do celular, AC 32), e o valor fica em 24 px (AC 41)
+    // os destaques ficam numa faixa com divisórias de 1 px: o item tem 250 px ou mais em qualquer coluna (150 px no celular), e o valor fica em 24 px (AC 41)
     for (const w of [360, 1328, 1440]) {
       await page.setViewportSize({ width: w, height: 800 })
       await page.goto('/univag/indicadores')
-      const cartao = page.getByRole('main').getByText('Autoatendimento', { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
-      await cartao.waitFor()
-      expect((await caixa(cartao)).width, `cartão a ${w}`).toBeGreaterThanOrEqual(w === 360 ? 150 : 250)
-      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('24px')
+      const rotulo = page.getByRole('main').getByText('Autoatendimento', { exact: true }) // o destaque da faixa (sem caixa): o item ocupa a coluna
+      await rotulo.waitFor()
+      expect((await caixa(rotulo.locator('xpath=ancestor::div[2]'))).width, `destaque a ${w}`).toBeGreaterThanOrEqual(w === 360 ? 150 : 250)
+      expect(await rotulo.locator('xpath=following-sibling::div[1]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('24px')
     }
   })
 
@@ -1168,11 +1172,11 @@ test.describe('painel', () => {
       const celula = page.locator('[data-slot=table-cell]', { hasText: 'Nenhum chamado na fila dos seus setores.' }) // célula de tabela ou de cartão (AC 7)
       await celula.waitFor()
       expect(await celula.evaluate((e) => getComputedStyle(e).textAlign), `${w} px: alinhamento`).toBe('center')
-      // AC 45: a ilustração e o título ficam no centro da célula (a linha deixou de ter 96 px por causa do desenho e do título)
-      const [c, titulo, desenho] = [await caixa(celula), await caixa(celula.getByText('Fila em dia')), await caixa(celula.locator('svg[data-ilustracao]'))]
+      // AC 18: o ícone e o título ficam no centro da célula
+      const [c, titulo, desenho] = [await caixa(celula), await caixa(celula.getByText('Fila em dia')), await caixa(celula.locator('svg.lucide'))]
       expect(Math.abs(titulo.x + titulo.width / 2 - (c.x + c.width / 2)), `${w} px: título centrado`).toBeLessThanOrEqual(1)
-      expect(Math.abs(desenho.x + desenho.width / 2 - (c.x + c.width / 2)), `${w} px: ilustração centrada`).toBeLessThanOrEqual(1)
-      expect(desenho.y + desenho.height, `${w} px: ilustração acima do título`).toBeLessThanOrEqual(titulo.y + 1)
+      expect(Math.abs(desenho.x + desenho.width / 2 - (c.x + c.width / 2)), `${w} px: ícone centrado`).toBeLessThanOrEqual(1)
+      expect(desenho.y + desenho.height, `${w} px: ícone acima do título`).toBeLessThanOrEqual(titulo.y + 1)
     }
   })
 
@@ -1258,10 +1262,10 @@ test.describe('painel', () => {
       expect(e.grampo === '1' || e.quebra === 'nowrap', `rodapé "${texto}" sem corte`).toBe(false) // quebra linha em vez de cortar (AC 5)
       expect((await caixa(l)).height, `rodapé "${texto}" renderiza em até 2 linhas (AC 5)`).toBeLessThanOrEqual(48)
     }
-    expect((await estilo(page.locator('[data-slot=card-title]').first())).peso, 'valor do destaque').toBe('600')
-    // compactos: os cartões sem nenhum filho com data-slot
-    const compacto = page.locator('[data-slot=card]').filter({ hasNot: page.locator('[data-slot]') }).first()
-    const [rotulo, valor] = [await estilo(compacto.locator('> div').nth(0)), await estilo(compacto.locator('> div').nth(1))]
+    expect((await estilo(page.getByText('Autoatendimento', { exact: true }).locator('xpath=following-sibling::div[1]'))).peso, 'valor do destaque').toBe('600')
+    // compactos: as linhas da lista de rótulo e valor (sem cartão)
+    const compacto = page.getByText('Alunos ativos', { exact: true }).locator('..')
+    const [rotulo, valor] = [await estilo(compacto.locator('> span').nth(0)), await estilo(compacto.locator('> span').nth(1))]
     expect(rotulo.tam, 'rótulo do compacto').toBe('14px')
     expect(valor.peso, 'valor do compacto').toBe('600')
     expect(valor.num, 'valor do compacto').toContain('tabular-nums')
@@ -1373,8 +1377,9 @@ test.describe('entrada institucional', () => {
       const frase = page.getByText('Entre com seu CPF e sua senha.', { exact: true })
       expect(await estilo(frase, 'font-size', 'color'), `${r}: frase`).toEqual(['14px', await cor(page, '--muted-foreground')])
       const [h, f, cpf] = [await caixa(page.locator('h1')), await caixa(frase), await caixa(campo(page.getByLabel('CPF')))]
-      perto(f.y, h.y + h.height + 4, `${r}: frase`)
-      expect(cpf.y, `${r}: CPF depois da frase`).toBeGreaterThanOrEqual(f.y + f.height)
+      // o texto de apoio fica junto do formulário: depois do nome e logo acima do campo CPF (ordem ajustada em 05/11, depois do lote 1)
+      expect(f.y, `${r}: frase depois do nome`).toBeGreaterThanOrEqual(h.y + h.height)
+      perto(cpf.y, f.y + f.height + 16, `${r}: CPF logo depois da frase`)
     }
   })
 

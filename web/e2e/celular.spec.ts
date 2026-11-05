@@ -67,11 +67,16 @@ test.describe('S1 celular', () => {
     await simularApi(page, undefined, true)
     await abrirTela(page, 'Indicadores')
     await page.locator('.recharts-yAxis-tick-labels text').first().waitFor()
-    const cortados = await page.evaluate(() =>
-      [...document.querySelectorAll('main [data-slot=card] *')]
-        .filter((e) => getComputedStyle(e).textOverflow === 'ellipsis' || (!(e instanceof SVGElement) && e.clientWidth > 0 && e.scrollWidth > e.clientWidth))
-        .map((e) => e.outerHTML.slice(0, 80)),
-    )
+    const { varridos, cortados } = await page.evaluate(() => {
+      const todos = [...document.querySelectorAll('[class*="container/main"] *')] // o conteúdo da tela: a barra do topo, que fica dentro do main, tem o título com truncate
+      return {
+        varridos: todos.length,
+        cortados: todos
+          .filter((e) => getComputedStyle(e).textOverflow === 'ellipsis' || (!(e instanceof SVGElement) && e.clientWidth > 0 && e.scrollWidth > e.clientWidth))
+          .map((e) => e.outerHTML.slice(0, 80)),
+      }
+    })
+    expect(varridos, 'elementos varridos').toBeGreaterThan(0)
     expect(cortados).toEqual([])
     // frase de destaque inteira; rótulo de 40 caracteres em até 2 linhas
     await expect(page.getByText('Resolvidas sem reabertura, sobre as conversas com desfecho')).toBeVisible()

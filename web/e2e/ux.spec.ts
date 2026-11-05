@@ -1084,27 +1084,6 @@ test.describe('S5 diálogos e administração', () => {
     await expect(dialogo.locator('[data-slot=sheet-footer]').getByRole('button', { name: 'Salvar' })).toBeVisible()
   })
 
-  // C43 (AC 32)
-  test('destaques de Indicadores em 2 colunas no celular', async ({ page }) => {
-    await instalar(page)
-    await simularApi(page)
-    for (const [largura, colunas, linhas] of [[390, 2, 2], [1440, 4, 1]] as const) {
-      await page.setViewportSize({ width: largura, height: 900 })
-      await abrirTela(page, 'Indicadores')
-      const cartoes = page.locator('[data-slot=card]').filter({ has: page.getByText(/^(Indicador principal|Chamados abertos agora|Autoatendimento|Tempo até a 1ª resposta)$/) })
-      await expect(cartoes).toHaveCount(4)
-      const caixas = await Promise.all([0, 1, 2, 3].map((i) => caixa(cartoes.nth(i))))
-      const lefts = [...new Set(caixas.map((c) => Math.round(c.x)))]
-      const tops = [...new Set(caixas.map((c) => Math.round(c.y)))]
-      expect(lefts, `${largura}: colunas`).toHaveLength(colunas)
-      expect(tops, `${largura}: linhas`).toHaveLength(linhas)
-      if (linhas === 2) {
-        expect(Math.abs(caixas[0].y - caixas[1].y)).toBeLessThanOrEqual(1)
-        expect(Math.abs(caixas[2].y - caixas[3].y)).toBeLessThanOrEqual(1)
-      }
-    }
-  })
-
   // C45 (Screens: Artigos)
   test('Indexado em ícone ao lado do título', async ({ page }) => {
     await instalar(page)
@@ -1448,6 +1427,16 @@ test.describe('S7 acréscimos', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page)
     await listasDeChamados(page, Titulo104)
+    // as datas saem do relógio do próprio teste: "aberto há 2 dias" não depende do dia em que ele roda
+    const antes = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString()
+    await page.route(/\/api\/chamados\?escopo=fila/, (r) =>
+      r.fulfill(
+        json([
+          { numero: 'ONE-1', titulo: Titulo104, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: null, criadoEm: antes(2), dias: 2 },
+          { numero: 'ONE-2', titulo: 'Segunda via', categoria: 'Financeiro > Boletos e mensalidades', estado: 'ABERTO', responsavel: null, criadoEm: antes(1), dias: 1 },
+        ]),
+      ),
+    )
     await page.goto('/univag/fila')
     const linhas = page.getByRole('main').getByRole('listitem')
     await expect(linhas).toHaveCount(2)
@@ -1492,8 +1481,8 @@ test.describe('S7 acréscimos', () => {
         const [a, b] = await Promise.all([0, 1].map((i) => barras.nth(i).evaluate((e) => window.__ux.pintar(['#000', getComputedStyle(e).fill]))))
         expect(a, `${rotulo}: mesma cor nos dois`).toEqual(b)
         expect(a, `${rotulo}: não é --primary`).not.toEqual(await referencia(page, '--primary'))
-        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.closest('[data-slot=card]')!)))
-        expect(contraste(a, fundo), `${rotulo}: contraste contra o cartão`).toBeGreaterThanOrEqual(3)
+        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e)))
+        expect(contraste(a, fundo), `${rotulo}: contraste contra o fundo opaco mais próximo`).toBeGreaterThanOrEqual(3)
         // croma em oklch a partir do sRGB de 8 bits
         const [r, g, bl] = a.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
         const [l, mm, ss] = [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl].map(Math.cbrt)

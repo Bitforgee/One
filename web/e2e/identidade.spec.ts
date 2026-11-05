@@ -116,36 +116,41 @@ test('texto e controles em Public Sans', async ({ page }) => {
   for (const [tipo, n] of Object.entries(achados)) expect(n, `ao menos 1 elemento de ${tipo}`).toBeGreaterThan(0)
 })
 
-// C4, a parte do lote 1: Login, Primeiro acesso, Criar senha e a raiz. O lote 2 estende a mesma varredura ao Assistente sem conversa,
-// a Indicadores e ao detalhe do chamado.
+// C4: a varredura inteira mais o Assistente sem conversa. Serifa só em h1 ou h2 de conteúdo, no número principal de Indicadores e, na prévia da Aparência,
+// no nome e no título das boas-vindas (as cópias pequenas dos dois)
 test('serifa só em títulos de 20 px ou mais', async ({ page }) => {
+  test.setTimeout(300_000)
   const serifas: Record<string, number> = {}
-  for (const largura of [390, 1440])
-    for (const [nome, caminho] of [['Login', '/univag'], ['Primeiro acesso', '/univag/primeiro-acesso'], ['Criar senha', '/univag/definir-senha?token=t'], ['Raiz', '/']] as const) {
-      await page.unroute('**/api/**').catch(() => {})
-      await simularApi(page)
-      await page.setViewportSize({ width: largura, height: 900 })
-      await page.goto(caminho)
-      await page.locator('h1').waitFor()
-      const r = await page.evaluate(async () => {
-        await document.fonts.ready
-        const visivel = (e: Element) => e.checkVisibility() && e.getBoundingClientRect().width > 0
-        const serifa = (e: Element) => getComputedStyle(e).fontFamily.startsWith('"Source Serif 4 Variable"')
-        const todos = [...document.querySelectorAll('body *')].filter(visivel)
-        return {
-          serifas: todos.filter(serifa).map((e) => ({ tag: e.tagName, tam: parseFloat(getComputedStyle(e).fontSize) })),
-          titulos: todos.filter((e) => /^H[12]$/.test(e.tagName) && !e.closest('header')).map((e) => ({ tam: parseFloat(getComputedStyle(e).fontSize), serifa: serifa(e) })),
-        }
-      })
-      const rotulo = `${nome} a ${largura}`
-      for (const s of r.serifas) {
-        expect(s.tam, `${rotulo}: serifa com 20 px ou mais`).toBeGreaterThanOrEqual(20)
-        expect(['H1', 'H2'], `${rotulo}: serifa só em h1 ou h2`).toContain(s.tag)
+  const medir = async (nome: string, largura: number) => {
+    const r = await page.evaluate(async () => {
+      await document.fonts.ready
+      const visivel = (e: Element) => e.checkVisibility() && e.getBoundingClientRect().width > 0
+      const serifa = (e: Element) => getComputedStyle(e).fontFamily.startsWith('"Source Serif 4 Variable"')
+      const todos = [...document.querySelectorAll('body *')].filter(visivel)
+      const permitida = (e: Element) =>
+        (/^H[12]$/.test(e.tagName) && !e.closest('header')) ||
+        (e.matches('main div') && /^\d+(,\d)?%$/.test(e.textContent!.trim()) && e.children.length === 0) || // o número principal de Indicadores
+        (e.tagName === 'P' && !!e.closest('section[aria-label="Prévia"]'))
+      return {
+        serifas: todos.filter(serifa).map((e) => ({ tag: e.tagName, tam: parseFloat(getComputedStyle(e).fontSize), permitida: permitida(e), texto: (e.textContent ?? '').trim().slice(0, 30) })),
+        titulos: todos.filter((e) => /^H[12]$/.test(e.tagName) && !e.closest('header')).map((e) => ({ tam: parseFloat(getComputedStyle(e).fontSize), serifa: serifa(e) })),
       }
-      for (const t of r.titulos) expect(t.serifa, `${rotulo}: título de ${t.tam} px`).toBe(t.tam >= 20)
-      serifas[nome] = (serifas[nome] ?? 0) + r.serifas.length
+    })
+    const rotulo = `${nome} a ${largura}`
+    for (const s of r.serifas) {
+      expect(s.tam, `${rotulo}: serifa com 20 px ou mais em ${s.texto}`).toBeGreaterThanOrEqual(20)
+      expect(s.permitida, `${rotulo}: ${s.tag} em serifa: ${s.texto}`).toBe(true)
     }
-  for (const nome of ['Login', 'Raiz']) expect(serifas[nome], `serifa em ${nome}`).toBeGreaterThan(0)
+    for (const t of r.titulos) expect(t.serifa, `${rotulo}: título de ${t.tam} px`).toBe(t.tam >= 20)
+    serifas[nome] = (serifas[nome] ?? 0) + r.serifas.length
+  }
+  for (const largura of [390, 1440]) {
+    await page.setViewportSize({ width: largura, height: 900 })
+    await varrer(page, (nome) => medir(nome, largura), comAparencia)
+    await em(page, largura, '/univag/assistente', esperaAssistente)
+    await medir('Assistente sem conversa', largura)
+  }
+  for (const nome of ['Login', 'Assistente sem conversa', 'Indicadores', 'Detalhe do chamado', 'Raiz']) expect(serifas[nome], `serifa em ${nome}`).toBeGreaterThan(0)
 })
 
 // ---------- S1: raios ----------
@@ -391,14 +396,14 @@ test('login sem foto: logo, nome, textos, formulário e itens nessa ordem', asyn
       const lista = page.locator('ul').filter({ has: page.locator('li') })
       await expect(lista.locator('li'), `${rotulo}: itens`).toHaveCount(3)
       for (const [i, item] of caso.itens.entries()) await expect(lista.locator('li').nth(i)).toHaveText(item)
-      // o texto de apoio é o elemento que vem depois do nome no DOM
-      expect(await nome.evaluate((e) => e.nextElementSibling?.textContent), `${rotulo}: apoio logo depois do nome`).toBe('Entre com seu CPF e sua senha.')
+      // o texto de apoio é o elemento imediatamente antes do rótulo "CPF" no DOM (o campo que o contém)
+      expect(await page.getByText('CPF', { exact: true }).evaluate((e) => e.parentElement!.previousElementSibling?.textContent), `${rotulo}: apoio logo antes do rótulo CPF`).toBe('Entre com seu CPF e sua senha.')
       const ordem = [
         marca,
         nome,
-        apoio,
         page.getByRole('heading', { level: 2, name: caso.titulo }),
         page.getByText(caso.frase, { exact: true }),
+        apoio,
         page.getByText('CPF', { exact: true }),
         page.getByText('Senha', { exact: true }),
         page.getByRole('button', { name: 'Entrar' }),
@@ -598,4 +603,471 @@ test('raiz com One em serifa', async ({ page }) => {
       perto(c, largura / 2, `${largura}: centro do texto`)
     }
   }
+})
+
+// ---------- lote 2 (S3, S4 e S5): telas autenticadas ----------
+
+type Opcoes = { aparencia?: object; papeis?: string[]; rotas?: (p: Page) => Promise<unknown>; altura?: number }
+async function em(page: Page, largura: number, caminho: string, espera: (p: Page) => Promise<unknown>, { aparencia = comAparencia, papeis, rotas, altura = 900 }: Opcoes = {}) {
+  await page.unroute('**/api/**').catch(() => {})
+  await simularApi(page, papeis, false, aparencia)
+  await rotas?.(page)
+  await page.setViewportSize({ width: largura, height: altura })
+  await page.goto(caminho)
+  await espera(page)
+  await page.evaluate(() => document.fonts.ready)
+}
+const quatroLados = (l: Locator) => l.evaluate((e) => ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius'].map((p) => parseFloat(getComputedStyle(e)[p as 'borderTopLeftRadius'])))
+const Boasvindas = 'Oi! Posso ajudar com boletos e matrícula.'
+const Perguntas = comAparencia.assistente.perguntas
+const esperaAssistente = (p: Page) => p.getByLabel('Mensagem').waitFor()
+
+// C18
+test('título das boas-vindas em serifa de 24 px à esquerda', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/assistente', esperaAssistente)
+    // o `main` do app tem a barra do topo (o h1 "Assistente") dentro dele: o primeiro cabeçalho do conteúdo é o do contêiner `@container/main`
+    const titulo = page.locator('[class*="container/main"]').getByRole('heading').first()
+    await expect(titulo, `${largura}: primeiro cabeçalho`).toHaveText('Atendimento ao estudante · Univag')
+    expect(await familia(titulo), `${largura}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
+    expect(await estilo(titulo, 'font-size', 'text-align'), `${largura}: tamanho e alinhamento`).toEqual(['24px', 'start'])
+    const [t, formulario] = [await caixa(titulo), page.getByRole('main').locator('form')]
+    await expect(formulario).toHaveCount(1)
+    perto(t.x, (await caixa(formulario)).x, `${largura}: título alinhado ao compositor`)
+    const frase = page.getByText(Boasvindas, { exact: true })
+    const f = await caixa(frase)
+    expect(f.y, `${largura}: frase abaixo do título`).toBeGreaterThanOrEqual(t.y + t.height - 1)
+    perto(f.x, t.x, `${largura}: frase alinhada ao título`)
+  }
+})
+
+// C19 (a parte do Chromium)
+test('foto de 32 px ao lado do nome do assistente', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/assistente', esperaAssistente)
+    const foto = page.locator('img[src="/api/instituicoes/univag/imagens/assistente?v=4"]')
+    const texto = page.getByText('Vagner, assistente virtual', { exact: true })
+    await expect(foto, `${largura}: foto`).toHaveCount(1)
+    await expect(texto, `${largura}: texto`).toHaveCount(1)
+    const [f, t] = [await caixa(foto), await caixa(texto)]
+    perto(f.width, 32, `${largura}: largura`)
+    perto(f.height, 32, `${largura}: altura`)
+    for (const raio of await quatroLados(foto)) expect(raio, `${largura}: redonda`).toBeGreaterThanOrEqual(16)
+    expect(f.x + f.width, `${largura}: foto antes do texto`).toBeLessThanOrEqual(t.x + 1)
+    perto(f.y + f.height / 2, t.y + t.height / 2, `${largura}: centros verticais`, 2)
+    expect(parseFloat((await estilo(texto, 'font-size'))[0]), `${largura}: texto pequeno`).toBeLessThanOrEqual(14)
+  }
+})
+
+// C21
+test('solicitação em aberto com borda na cor de ação antes das perguntas', async ({ page }) => {
+  await instalar(page)
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/assistente', (p) => p.getByRole('link', { name: /Sua solicitação ONE-123 · Em atendimento/ }).waitFor())
+    const link = page.getByRole('link', { name: /Sua solicitação ONE-123 · Em atendimento/ })
+    await expect(link).toHaveCount(1)
+    const [esquerda, cima, direita, baixo, cor] = await estilo(link, 'border-left-width', 'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-color')
+    expect(parseFloat(esquerda), `${largura}: borda à esquerda`).toBeGreaterThanOrEqual(1)
+    expect([cima, direita, baixo], `${largura}: outras bordas`).toEqual(['0px', '0px', '0px'])
+    expect(await page.evaluate((c) => window.__ux.pintar(['#fff', c]), cor), `${largura}: cor de ação`).toEqual(await referencia(page, '--primary'))
+    const [l, primeira] = [await caixa(link), await caixa(page.getByRole('button', { name: Perguntas[0], exact: true }))]
+    expect(l.y + l.height, `${largura}: antes das perguntas`).toBeLessThanOrEqual(primeira.y + 1)
+  }
+})
+
+// C22
+test('perguntas em linhas de 48 px com ícone e seta', async ({ page }) => {
+  for (const largura of [390, 1440])
+    for (const [aparencia, perguntas] of [[comAparencia, Perguntas], [semAparencia, ['Como emito o boleto do semestre?', 'Posso abonar falta com atestado?']]] as const) {
+      await em(page, largura, '/univag/assistente', esperaAssistente, { aparencia })
+      const rotulo = `${largura} ${aparencia === semAparencia ? 'sem' : 'com'} aparência`
+      const linhas = perguntas.map((p) => page.getByRole('button', { name: p, exact: true }))
+      const caixas = []
+      for (const l of linhas) {
+        await expect(l, `${rotulo}: linha`).toHaveCount(1)
+        caixas.push(await caixa(l))
+      }
+      for (const [i, c] of caixas.entries()) {
+        expect(c.height, `${rotulo}: altura ${i}`).toBeGreaterThanOrEqual(48 - 1)
+        perto(c.x, caixas[0].x, `${rotulo}: mesmo left ${i}`)
+        perto(c.width, caixas[0].width, `${rotulo}: mesma largura ${i}`)
+        if (i > 0) {
+          expect(c.y, `${rotulo}: top crescente`).toBeGreaterThan(caixas[i - 1].y)
+          const [cima, baixo] = [await estilo(linhas[i - 1], 'border-bottom-width'), await estilo(linhas[i], 'border-top-width')]
+          expect(Math.max(parseFloat(cima[0]), parseFloat(baixo[0])), `${rotulo}: divisória ${i}`).toBeGreaterThanOrEqual(1)
+          expect(Math.abs(c.y - (caixas[i - 1].y + caixas[i - 1].height)), `${rotulo}: divisória encostada ${i}`).toBeLessThanOrEqual(1)
+        }
+        const [icone, seta, texto] = [linhas[i].locator('svg').first(), linhas[i].locator('svg').last(), await caixa(linhas[i].locator('span').first())]
+        await expect(icone).toHaveClass(/lucide-message-circle-question-mark/)
+        await expect(seta).toHaveClass(/lucide-chevron-right/)
+        const [ic, se] = [await caixa(icone), await caixa(seta)]
+        expect(ic.x + ic.width, `${rotulo}: ícone antes do texto ${i}`).toBeLessThanOrEqual(texto.x + 1)
+        expect(se.x, `${rotulo}: seta depois do texto ${i}`).toBeGreaterThanOrEqual(texto.x + texto.width - 1)
+        const [raio] = await quatroLados(linhas[i])
+        expect(raio, `${rotulo}: raio ${i}`).toBe(4)
+        expect(raio, `${rotulo}: sem pílula ${i}`).toBeLessThan(c.height / 2)
+      }
+    }
+})
+
+// ---------- S4: Indicadores ----------
+
+const corpoIndicadores = (principal: number) => ({
+  semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.6543, taxaEscalonamento: 0.2, taxaAbandono: 0.1457, taxaPerguntasSemArtigo: 0.12,
+  chamadosAbertos: 321, chamadosResolvidos: 1200, tempoPrimeiraRespostaHoras: 12.75, tempoResolucaoHoras: 123.25, roteamentoCorreto: 0.91, taxaReabertura: 0.05,
+  principaisCategorias: { porConversas: [{ categoria: 'Financeiro > Boletos e mensalidades', total: 1000 }], porChamados: [{ categoria: 'Acadêmico > Notas e frequência', total: 300 }] },
+  indicadorPrincipal: principal,
+})
+// o relógio em 5/11/2026: o período é 01/11 a 05/11 e o anterior, 27/10 a 31/10
+const comPrincipal = async (p: Page) => {
+  await p.clock.setFixedTime(new Date('2026-11-05T13:00:00Z'))
+  await p.route('**/api/indicadores*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoIndicadores(new URL(r.request().url()).searchParams.get('de') === '2026-10-27' ? 0.67 : 0.712)) }))
+}
+const esperaIndicadores = (p: Page) => p.getByText('71,2%', { exact: true }).waitFor()
+const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta']
+const Lista = ['Alunos ativos', 'Conversas', 'Escalonamento', 'Abandono', 'Perguntas sem artigo', 'Chamados resolvidos', 'Tempo de resolução', 'Roteamento correto', 'Reabertura']
+
+// Funções que rodam no navegador: o elemento com o texto próprio dado (dentro do main), o que o contém até o main e as caixas
+type Cadeia = { tag: string; card: boolean; bordas: number[]; transparente: boolean }
+type Caixa = { x: number; y: number; width: number; height: number }
+const noMain = `
+  const main = document.querySelector('[class*="container/main"]');
+  const achar = (t) => [...main.querySelectorAll('*')].find((e) => e.children.length === 0 && e.textContent === t);
+  const cadeia = (e) => { const c = []; for (let n = e; n && n !== main; n = n.parentElement) { const s = getComputedStyle(n); c.push({ tag: n.tagName, card: n.matches('[data-slot=card]'), bordas: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].map(parseFloat), transparente: s.backgroundColor === 'rgba(0, 0, 0, 0)' || s.backgroundColor === 'transparent' }); } return c; };
+  const caixa = (e) => e.getBoundingClientRect().toJSON();
+  const larguraDoMain = () => { const s = getComputedStyle(main); return main.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight); };
+`
+const semCaixa = (cadeia: Cadeia[], rotulo: string) => {
+  expect(cadeia.length, `${rotulo}: cadeia medida`).toBeGreaterThan(0)
+  for (const c of cadeia) {
+    expect(c.card, `${rotulo}: ${c.tag} não é cartão`).toBe(false)
+    expect(c.bordas.every((b) => b > 0), `${rotulo}: ${c.tag} sem borda nos 4 lados`).toBe(false)
+    expect(c.transparente, `${rotulo}: ${c.tag} sem fundo`).toBe(true)
+  }
+}
+const faixaDe = (page: Page) =>
+  page.evaluate(`(() => { ${noMain}
+    const ls = ${JSON.stringify(Faixa)}.map(achar);
+    let grade = ls[0].parentElement; while (!ls.every((l) => grade.contains(l))) grade = grade.parentElement;
+    const itens = ls.map((l) => { let n = l; while (n.parentElement !== grade) n = n.parentElement; return n; });
+    return { main: larguraDoMain(), itens: itens.map((i) => ({ caixa: caixa(i), bordas: [getComputedStyle(i).borderRightWidth, getComputedStyle(i).borderLeftWidth].map(parseFloat), cadeia: cadeia(i) })) };
+  })()`) as Promise<{ main: number; itens: { caixa: Caixa; bordas: number[]; cadeia: Cadeia[] }[] }>
+
+// C27
+test('Indicador principal em serifa de 40 px com a variação ao lado', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
+    await expect(page.getByText('Indicador principal', { exact: true })).toBeVisible()
+    const numero = page.getByText('71,2%', { exact: true })
+    expect(await familia(numero), `${largura}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
+    const [tam, numeros] = await estilo(numero, 'font-size', 'font-variant-numeric')
+    expect(tam, `${largura}: 40 px`).toBe('40px')
+    expect(numeros, `${largura}: tabular-nums`).toContain('tabular-nums')
+    const variacao = page.getByText('▲ 4,2 pts').filter({ hasText: 'vs. período anterior' })
+    await expect(variacao, `${largura}: variação`).toHaveCount(1)
+    const [n, v] = [await caixa(numero), await caixa(variacao)]
+    expect(v.x, `${largura}: variação à direita do número`).toBeGreaterThanOrEqual(n.x + n.width - 1)
+    expect(v.y < n.y + n.height && v.y + v.height > n.y, `${largura}: sobrepõe na vertical`).toBe(true)
+    const bloco = await caixa(page.getByText('Indicador principal', { exact: true }).locator('xpath=ancestor::section[1]'))
+    const formulario = await caixa(page.getByRole('main').locator('form').first())
+    const primeiro = await caixa(page.getByText(Faixa[0], { exact: true }))
+    expect(bloco.y, `${largura}: abaixo do formulário`).toBeGreaterThanOrEqual(formulario.y + formulario.height - 1)
+    expect(bloco.y + bloco.height, `${largura}: acima da faixa`).toBeLessThanOrEqual(primeiro.y + 1)
+  }
+})
+
+// C28
+test('3 destaques em faixa de 3 colunas sem caixa', async ({ page }) => {
+  for (const [largura, main, colunas] of [[1072, 768, 3], [1440, 1136, 3], [1071, 767, 1], [390, 0, 1]] as const) {
+    await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
+    const { main: m, itens } = await faixaDe(page)
+    const rotulo = `janela de ${largura}`
+    if (main) expect(Math.round(m), `${rotulo}: largura do main`).toBe(main)
+    else expect(m, `${rotulo}: main estreito`).toBeLessThan(768)
+    expect(itens, rotulo).toHaveLength(3)
+    expect(new Set(itens.map((i) => Math.round(i.caixa.x))).size, `${rotulo}: colunas`).toBe(colunas)
+    if (colunas === 3) {
+      for (const i of itens) {
+        perto(i.caixa.y, itens[0].caixa.y, `${rotulo}: mesmo top`)
+        perto(i.caixa.width, itens[0].caixa.width, `${rotulo}: mesma largura`)
+      }
+      for (const [k, i] of itens.slice(0, 2).entries()) expect(Math.max(i.bordas[0], itens[k + 1].bordas[1]), `${rotulo}: divisória ${k}`).toBeGreaterThanOrEqual(1)
+    } else
+      for (const [k, i] of itens.slice(1).entries()) {
+        perto(i.caixa.x, itens[0].caixa.x, `${rotulo}: mesmo left`)
+        expect(i.caixa.y, `${rotulo}: top crescente`).toBeGreaterThan(itens[k].caixa.y)
+      }
+    for (const [k, i] of itens.entries()) semCaixa(i.cadeia, `${rotulo}, destaque ${k}`)
+  }
+})
+
+type Linhas = {
+  main: number
+  faixaAte: number
+  ordem: boolean
+  linhas: { linha: Caixa; rotulo: Caixa; valor: Caixa; numeros: string; bordas: number[]; cadeia: Cadeia[] }[]
+}
+const listaDe = (page: Page) =>
+  page.evaluate(`(() => { ${noMain}
+    const linhas = ${JSON.stringify(Lista)}.map((t) => { const l = achar(t); return { rotulo: l, linha: l.parentElement, valor: l.parentElement.lastElementChild }; });
+    let item = achar(${JSON.stringify(Faixa[2])}); while (!item.parentElement.contains(achar(${JSON.stringify(Faixa[0])}))) item = item.parentElement;
+    return {
+      main: larguraDoMain(),
+      faixaAte: caixa(item).bottom,
+      ordem: linhas.every((l, i) => i === 0 || (linhas[i - 1].linha.compareDocumentPosition(l.linha) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0),
+      linhas: linhas.map((l) => ({ linha: caixa(l.linha), rotulo: caixa(l.rotulo), valor: caixa(l.valor), numeros: getComputedStyle(l.valor).fontVariantNumeric, bordas: [getComputedStyle(l.linha).borderTopWidth, getComputedStyle(l.linha).borderBottomWidth].map(parseFloat), cadeia: cadeia(l.linha) })),
+    };
+  })()`) as Promise<Linhas>
+
+// C29
+test('9 métricas em lista de rótulo e valor sem caixa', async ({ page }) => {
+  for (const [largura, main, colunas] of [[1072, 768, 2], [1440, 1136, 2], [1071, 767, 1], [390, 0, 1]] as const) {
+    await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
+    const r = await listaDe(page)
+    const rotulo = `janela de ${largura}`
+    if (main) expect(Math.round(r.main), `${rotulo}: largura do main`).toBe(main)
+    expect(r.ordem, `${rotulo}: ordem no DOM`).toBe(true)
+    expect(r.linhas, rotulo).toHaveLength(9)
+    expect(new Set(r.linhas.map((l) => Math.round(l.linha.x))).size, `${rotulo}: colunas`).toBe(colunas)
+    for (const [i, l] of r.linhas.entries()) {
+      perto(l.rotulo.x, l.linha.x, `${rotulo}: rótulo ${i} à esquerda`)
+      perto(l.valor.x + l.valor.width, l.linha.x + l.linha.width, `${rotulo}: valor ${i} à direita`)
+      expect(l.rotulo.y < l.valor.y + l.valor.height && l.rotulo.y + l.rotulo.height > l.valor.y, `${rotulo}: ${i} na mesma altura`).toBe(true)
+      expect(l.numeros, `${rotulo}: valor ${i}`).toContain('tabular-nums')
+      semCaixa(l.cadeia, `${rotulo}, linha ${i}`)
+    }
+    for (const x of new Set(r.linhas.map((l) => Math.round(l.linha.x)))) {
+      const coluna = r.linhas.filter((l) => Math.round(l.linha.x) === x).sort((a, b) => a.linha.y - b.linha.y)
+      for (const [i, l] of coluna.slice(1).entries()) {
+        const acima = coluna[i]
+        expect(Math.max(acima.bordas[1], l.bordas[0]), `${rotulo}: divisória`).toBeGreaterThanOrEqual(1)
+        expect(Math.abs(l.linha.y - (acima.linha.y + acima.linha.height)), `${rotulo}: divisória encostada`).toBeLessThanOrEqual(1)
+      }
+    }
+    expect(Math.min(...r.linhas.map((l) => l.linha.y)), `${rotulo}: lista abaixo da faixa`).toBeGreaterThanOrEqual(r.faixaAte - 1)
+  }
+})
+
+// C30
+test('gráficos sem cartão com o título', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
+    const graficos = page.locator('.recharts-responsive-container')
+    await expect(graficos, `${largura}: 2 gráficos`).toHaveCount(2)
+    const barras = page.locator('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')
+    await expect(barras).toHaveCount(2)
+    await expect.poll(async () => (await Promise.all([0, 1].map((i) => barras.nth(i).boundingBox()))).every((b) => b && b.height > 0), `${largura}: barras desenhadas`).toBe(true)
+    for (const [i, titulo] of ['Categorias por conversas', 'Categorias por chamados'].entries()) {
+      const [c, h] = [await caixa(graficos.nth(i)), await caixa(page.getByRole('heading', { name: titulo }))]
+      expect(h.y + h.height, `${largura}: ${titulo} acima do gráfico`).toBeLessThanOrEqual(c.y + 1)
+      expect(h.x < c.x + c.width && h.x + h.width > c.x, `${largura}: ${titulo} sobre o gráfico`).toBe(true)
+      const cadeia = (await page.evaluate(`(() => { ${noMain} return cadeia(document.querySelectorAll('.recharts-responsive-container')[${i}]) })()`)) as Cadeia[]
+      semCaixa(cadeia, `${largura}: ${titulo}`)
+    }
+    const r = await listaDe(page)
+    expect((await caixa(graficos.first())).y, `${largura}: gráficos abaixo da lista`).toBeGreaterThanOrEqual(Math.max(...r.linhas.map((l) => l.linha.y + l.linha.height)) - 1)
+  }
+})
+
+// ---------- S5: menos caixas e estados vazios com ícone ----------
+
+const semBordaNemFundo = (l: Locator) =>
+  l.evaluate((e) => {
+    const s = getComputedStyle(e)
+    return { bordas: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].map(parseFloat), transparente: s.backgroundColor === 'rgba(0, 0, 0, 0)' || s.backgroundColor === 'transparent' }
+  })
+const esperaAparencia = (p: Page) => p.getByLabel('Cor principal').waitFor()
+const esperaDetalhe = (p: Page) => p.getByText('Resumo gerado por IA').waitFor()
+
+// C32
+test('seções da Aparência sem caixa a 32 px', async ({ page }) => {
+  await em(page, 1440, '/univag/aparencia', esperaAparencia)
+  const secoes = page.locator('form section[aria-labelledby]')
+  await expect(secoes).toHaveCount(4)
+  const caixas: Caixa[] = []
+  for (const [i, nome] of ['Marca', 'Login', 'Assistente', 'Contato'].entries()) {
+    const secao = secoes.nth(i)
+    await expect(secao.getByRole('heading', { level: 2 }), nome).toHaveText(nome)
+    const m = await semBordaNemFundo(secao)
+    expect(m.bordas, `${nome}: sem borda`).toEqual([0, 0, 0, 0])
+    expect(m.transparente, `${nome}: sem fundo`).toBe(true)
+    const [s, h] = [await caixa(secao), await caixa(secao.getByRole('heading', { level: 2 }))]
+    perto(h.y, s.y, `${nome}: título no topo da seção`)
+    caixas.push(s)
+  }
+  for (const [i, c] of caixas.slice(1).entries()) perto(c.y - (caixas[i].y + caixas[i].height), 32, `espaço antes da seção ${i + 1}`)
+})
+
+// A coluna do detalhe é o filho da grade que contém o bloco; a cadeia vai do bloco até ela (exclusive)
+const cadeiaAteAColuna = (bloco: Locator) =>
+  bloco.evaluate((e) => {
+    const cadeia: { bordas: number[]; transparente: boolean; card: boolean }[] = []
+    let n: Element = e
+    while (getComputedStyle(n.parentElement!).display !== 'grid') {
+      const s = getComputedStyle(n)
+      cadeia.push({ bordas: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth].map(parseFloat), transparente: s.backgroundColor === 'rgba(0, 0, 0, 0)' || s.backgroundColor === 'transparent', card: n.matches('[data-slot=card]') })
+      n = n.parentElement!
+    }
+    return cadeia
+  })
+const respostaForm = (p: Page) => p.locator('form:has(#resposta)')
+const blocoDe = (p: Page, titulo: string) => p.getByRole('heading', { level: 2, name: titulo, exact: true }).locator('..')
+
+// C33
+test('Dados do aluno e Histórico sem caixa e com título', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/chamados/ONE-123', esperaDetalhe)
+    for (const titulo of ['Dados do aluno', 'Histórico']) {
+      const h = page.getByRole('heading', { level: 2, name: titulo, exact: true })
+      await expect(h, `${largura}: ${titulo}`).toHaveCount(1)
+      perto((await caixa(h)).y, (await caixa(blocoDe(page, titulo))).y, `${largura}: ${titulo} no topo do bloco`)
+    }
+    const historico = blocoDe(page, 'Histórico')
+    expect(await historico.evaluate((e) => e.closest('[data-slot=card]') === null), `${largura}: Histórico fora de cartão`).toBe(true)
+    const cadeia = await cadeiaAteAColuna(historico)
+    expect(cadeia.length, `${largura}: cadeia do Histórico`).toBeGreaterThan(0)
+    for (const c of cadeia) {
+      expect(c.bordas, `${largura}: sem borda`).toEqual([0, 0, 0, 0])
+      expect(c.transparente, `${largura}: sem fundo`).toBe(true)
+    }
+    const anterior = largura >= 1024 ? page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) }) : respostaForm(page)
+    await expect(anterior, `${largura}: bloco anterior`).toHaveCount(1)
+    const [h, a] = [await caixa(historico), await caixa(anterior)]
+    perto(h.y - (a.y + a.height), 32, `${largura}: 32 px depois do bloco anterior`)
+  }
+})
+
+// C34
+test('detalhe sem caixa e com fundo tingido só no que pede ação', async ({ page }) => {
+  await instalar(page)
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/chamados/ONE-123', esperaDetalhe)
+    const dados = blocoDe(page, 'Dados do aluno')
+    await expect(dados).toContainText('Ana Beatriz · matrícula 2000567890')
+    const cadeia = await cadeiaAteAColuna(dados)
+    expect(cadeia.length, `${largura}: cadeia dos dados`).toBeGreaterThan(0)
+    for (const c of cadeia) {
+      expect(c.bordas, `${largura}: dados sem borda`).toEqual([0, 0, 0, 0])
+      expect(c.transparente, `${largura}: dados sem fundo`).toBe(true)
+    }
+    const resumo = page.getByText('Resumo gerado por IA', { exact: true }).locator('..')
+    await expect(resumo).toContainText('Aluna pede a segunda via do boleto')
+    const fundoDaPagina = await referencia(page, '--background')
+    for (const [nome, bloco] of [['resumo', resumo], ['formulário de resposta', respostaForm(page)]] as const) {
+      const [fundo, transparente] = (await bloco.evaluate((e) => [getComputedStyle(e).backgroundColor, getComputedStyle(e).backgroundColor === 'rgba(0, 0, 0, 0)'])) as [string, boolean]
+      expect(transparente, `${largura}: ${nome} com fundo`).toBe(false)
+      expect(await page.evaluate((c) => window.__ux.pintar(['#fff', c]), fundo), `${largura}: ${nome} tingido`).not.toEqual(fundoDaPagina)
+    }
+    const caixas = []
+    for (const b of [dados, resumo, blocoDe(page, 'Conversa com o assistente'), blocoDe(page, 'Atendimento'), respostaForm(page)]) {
+      await expect(b).toHaveCount(1)
+      caixas.push(await caixa(b))
+    }
+    for (const [i, c] of caixas.slice(1).entries()) perto(c.y - (caixas[i].y + caixas[i].height), 32, `${largura}: 32 px antes do bloco ${i + 1}`)
+  }
+})
+
+type Vazio = { nome: string; caminho: string; frase: string; botao?: string; rotas?: (p: Page) => Promise<unknown>; espera?: (p: Page) => Promise<unknown>; papeis?: string[] }
+const vazio = (p: Page, re: RegExp | string, corpo: unknown = []) => p.route(re, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpo) }))
+const Vazios: Vazio[] = [
+  { nome: 'Fila', caminho: '/univag/fila', frase: 'Nenhum chamado na fila dos seus setores.', rotas: (p) => vazio(p, /\/api\/chamados\?escopo=fila/) },
+  { nome: 'Minhas solicitações', caminho: '/univag/solicitacoes', frase: 'Você ainda não tem solicitações.', botao: 'Falar com o assistente', rotas: (p) => vazio(p, /\/api\/chamados\?escopo=meus/) },
+  { nome: 'Artigos', caminho: '/univag/artigos', frase: 'Os artigos são a base das respostas do assistente.', botao: 'Novo artigo', rotas: (p) => vazio(p, '**/api/admin/artigos') },
+  { nome: 'Documentos', caminho: '/univag/documentos', frase: 'PDFs como regulamentos e calendários também alimentam o assistente.', botao: 'Novo documento', rotas: (p) => vazio(p, '**/api/admin/documentos') },
+  { nome: 'Usuários', caminho: '/univag/usuarios', frase: 'Cadastre a equipe ou importe as matrículas.', rotas: (p) => vazio(p, '**/api/admin/usuarios') },
+  {
+    nome: 'Usuários com busca',
+    caminho: '/univag/usuarios',
+    frase: 'Nenhum usuário combina com a busca.',
+    espera: async (p) => {
+      await p.getByText('Carla Regina de Souza Albuquerque').waitFor()
+      await p.getByLabel('Buscar por nome, CPF ou e-mail').fill('zzz')
+    },
+  },
+  { nome: 'Cadastros', caminho: '/univag/cadastros', frase: 'Nenhum item cadastrado.', rotas: (p) => vazio(p, '**/api/admin/setores') },
+  { nome: 'Indicadores sem dados', caminho: '/univag/indicadores', frase: 'Sem atendimentos neste período.', rotas: (p) => vazio(p, '**/api/indicadores*', { ...corpoIndicadores(0), semDados: true, indicadorPrincipal: null }) },
+]
+
+// C36
+test('vazio com ícone de 28 px centrado', async ({ page }) => {
+  test.setTimeout(120_000)
+  await instalar(page)
+  let medidas = 0
+  for (const largura of [390, 1440])
+    for (const v of Vazios) {
+      await em(page, largura, v.caminho, v.espera ?? ((p) => p.getByText(v.frase, { exact: true }).waitFor()), { rotas: v.rotas })
+      await page.getByText(v.frase, { exact: true }).waitFor()
+      const rotulo = `${v.nome} a ${largura}`
+      const frase = page.getByText(v.frase, { exact: true })
+      const celula = frase.locator('xpath=ancestor::*[@data-slot="table-cell"][1]')
+      const bloco = v.nome.startsWith('Indicadores') ? frase.locator('..') : celula
+      await expect(bloco, `${rotulo}: bloco`).toHaveCount(1)
+      const icone = bloco.locator('svg')
+      await expect(icone, `${rotulo}: ícone`).toHaveCount(1)
+      await expect(icone).toHaveClass(/lucide/)
+      const [i, b] = [await caixa(icone), await caixa(bloco)]
+      perto(i.width, 28, `${rotulo}: largura do ícone`)
+      perto(i.height, 28, `${rotulo}: altura do ícone`)
+      const cor = await icone.evaluate((e) => getComputedStyle(e).color)
+      expect(await page.evaluate((c) => window.__ux.pintar(['#fff', c]), cor), `${rotulo}: cor`).toEqual(await referencia(page, '--muted-foreground'))
+      const centro = b.x + b.width / 2
+      perto(i.x + i.width / 2, centro, `${rotulo}: centro do ícone`)
+      const texto = await frase.evaluate((e) => { const r = document.createRange(); r.selectNodeContents(e); const c = r.getBoundingClientRect(); return { x: c.x + c.width / 2 } })
+      perto(texto.x, centro, `${rotulo}: centro da frase`)
+      const f = await caixa(frase)
+      expect(i.y + i.height, `${rotulo}: ícone acima da frase`).toBeLessThanOrEqual(f.y + 1)
+      const botoes = bloco.locator('button, a')
+      await expect(botoes, `${rotulo}: botão`).toHaveCount(v.botao ? 1 : 0)
+      if (v.botao) {
+        await expect(botoes).toHaveText(v.botao)
+        const bt = await caixa(botoes)
+        perto(bt.x + bt.width / 2, centro, `${rotulo}: centro do botão`)
+        expect(f.y + f.height, `${rotulo}: frase acima do botão`).toBeLessThanOrEqual(bt.y + 1)
+      }
+      expect(await page.locator('svg[data-ilustracao]').count(), `${rotulo}: sem ilustração`).toBe(0)
+      medidas++
+    }
+  expect(medidas).toBe(16)
+})
+
+// C38
+test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/matriculas', (p) => p.getByRole('heading', { level: 2 }).first().waitFor())
+    const planilha = page.locator('svg[data-ilustracao="planilha"]')
+    await expect(planilha, `${largura}: Planilha`).toHaveCount(1)
+    const [s, passo] = [await caixa(planilha), await caixa(page.locator('ol > li').nth(1))]
+    expect(s.height, `${largura}: altura`).toBeGreaterThan(0)
+    expect(s.x >= passo.x - 1 && s.y >= passo.y - 1 && s.x + s.width <= passo.x + passo.width + 1 && s.y + s.height <= passo.y + passo.height + 1, `${largura}: dentro do 2º passo`).toBe(true)
+    const nomes = ['cpf', 'nome', 'email', 'matricula', 'curso', 'semestre', 'situacao']
+    const textos = planilha.locator('text')
+    await expect(textos).toHaveText(nomes)
+    const caixas = []
+    for (const [i, nome] of nomes.entries()) {
+      await expect(textos.nth(i), `${largura}: ${nome}`).toBeVisible()
+      const c = await caixa(textos.nth(i))
+      expect(c.x >= s.x - 1 && c.x + c.width <= s.x + s.width + 1 && c.y >= s.y - 1 && c.y + c.height <= s.y + s.height + 1, `${largura}: ${nome} dentro do svg`).toBe(true)
+      perto(c.y, caixas[0]?.y ?? c.y, `${largura}: ${nome} no mesmo top`)
+      if (i > 0) expect(c.x, `${largura}: ${nome} à direita`).toBeGreaterThan(caixas[i - 1].x)
+      caixas.push(c)
+    }
+  }
+})
+
+// C39 (a parte do Chromium)
+test('prévia com serifa e perguntas em linhas', async ({ page }) => {
+  await em(page, 1440, '/univag/aparencia', esperaAparencia)
+  const previa = page.getByRole('region', { name: 'Prévia' })
+  for (const texto of [Nome, 'Atendimento ao estudante · Univag']) {
+    const t = previa.getByText(texto, { exact: true })
+    await expect(t, texto).toHaveCount(1)
+    expect(await familia(t), `${texto}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
+  }
+  for (const pergunta of Perguntas) {
+    const linha = previa.getByText(pergunta, { exact: true }).locator('xpath=ancestor::li[1]')
+    await expect(linha, pergunta).toHaveCount(1)
+    const [raio, c] = [(await quatroLados(linha))[0], await caixa(linha)]
+    expect(raio, `${pergunta}: sem pílula`).toBeLessThan(c.height / 2)
+  }
+  expect(await previa.evaluate((e) => [e, ...e.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundImage.includes('gradient')).length), 'sem gradiente na prévia').toBe(0)
 })
