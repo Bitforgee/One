@@ -546,6 +546,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md finding 8, C8, vite.config.ts:33 (web)
 - last seen: 2026-11-05T06:33:45Z
 
+### L-090 - When a check names a role, assert something only that role's view shows; a session role in a fixture does not change a screen decided by the response
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md fault border only for staff, web/e2e/identidade.spec.ts:1135 (web)
+- last seen: 2026-11-05T07:20:57Z
+
+### L-091 - A dark variant override on a component with state variants also beats its focus and invalid styles; measure those states after any class override
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 2, web/src/chamados/ChamadoDetalhe.tsx:116 (web)
+- last seen: 2026-11-05T07:20:57Z
+
+### L-092 - Give fixtures the optional data that renders conditional controls, or contrast sweeps never see those controls
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 1, web/src/chamados/ChamadoDetalhe.tsx:55 (web)
+- last seen: 2026-11-05T07:20:57Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

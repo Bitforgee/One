@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 90,
+  "next_id": 93,
   "lessons": [
     {
       "id": "L-001",
@@ -1620,6 +1620,60 @@
       ],
       "created": "2026-11-05T06:33:45Z",
       "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-090",
+      "key": "surviving_mutant::when a check names a role assert something only that role s view shows a session role in a fixture does not change a screen decided by the response",
+      "text": "When a check names a role, assert something only that role's view shows; a session role in a fixture does not change a screen decided by the response",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md fault border only for staff, web/e2e/identidade.spec.ts:1135 (web)"
+      ],
+      "created": "2026-11-05T07:20:57Z",
+      "last_seen": "2026-11-05T07:20:57Z"
+    },
+    {
+      "id": "L-091",
+      "key": "spec_deviation::a dark variant override on a component with state variants also beats its focus and invalid styles measure those states after any class override",
+      "text": "A dark variant override on a component with state variants also beats its focus and invalid styles; measure those states after any class override",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 2, web/src/chamados/ChamadoDetalhe.tsx:116 (web)"
+      ],
+      "created": "2026-11-05T07:20:57Z",
+      "last_seen": "2026-11-05T07:20:57Z"
+    },
+    {
+      "id": "L-092",
+      "key": "spec_deviation::give fixtures the optional data that renders conditional controls or contrast sweeps never see those controls",
+      "text": "Give fixtures the optional data that renders conditional controls, or contrast sweeps never see those controls",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 1, web/src/chamados/ChamadoDetalhe.tsx:55 (web)"
+      ],
+      "created": "2026-11-05T07:20:57Z",
+      "last_seen": "2026-11-05T07:20:57Z"
     }
   ]
 }
