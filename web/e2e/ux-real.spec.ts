@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type APIResponse } from '@playwright/test'
+import { expect, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 
 // revisao-ux C63: e2e real, sem simulada.ts. Contra E2E_URL (a imagem própria da feature, porta 8087) e o Mailpit do compose.
 // A instituição `e2e` tem um administrador (123.456.789-09 / admin@e2e.one) criado por `dotnet One.Api.dll instituicao criar`.
@@ -36,6 +36,24 @@ async function limitado(chamar: () => Promise<APIResponse>) {
     await dormir(62_000)
   }
   throw new Error('o limitador de autenticação não liberou')
+}
+
+// O login pela tela: se o limitador (compartilhado com os outros specs reais do mesmo IP, L-066) recusar, espera a janela e tenta de novo.
+async function entrarPelaTela(page: Page, cpf: string, senha: string, destino: RegExp) {
+  for (let tentativa = 0; tentativa < 3; tentativa++) {
+    await folga(2)
+    await page.goto(`/${slug}`)
+    await page.getByLabel('CPF').fill(cpf)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    try {
+      await page.waitForURL(destino, { timeout: 8_000 })
+      return
+    } catch {
+      await dormir(62_000)
+    }
+  }
+  await expect(page).toHaveURL(destino)
 }
 
 async function tokenDoEmail(request: APIRequestContext, para: string) {
@@ -84,10 +102,7 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
   const contexto = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } })
   const page = await contexto.newPage()
   await primeiroAcesso(page.request, alunoCpf, alunoEmail, senhaAluno)
-  await page.goto(`/${slug}`)
-  await page.getByLabel('CPF').fill(alunoCpf)
-  await page.getByLabel('Senha').fill(senhaAluno)
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  await entrarPelaTela(page, alunoCpf, senhaAluno, new RegExp(`/${slug}/assistente$`))
 
   // 1. cai no Assistente, com a aba marcada
   const barra = page.getByRole('navigation', { name: 'Navegação' })
@@ -169,12 +184,7 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
     }).observe(document, { childList: true, subtree: true })
   })
   await primeiroAcesso(page.request, atendenteCpf, atendenteEmail, senhaAluno)
-  await page.goto(`/${slug}`)
-  await page.getByLabel('CPF').fill(atendenteCpf)
-  await page.getByLabel('Senha').fill(senhaAluno)
-  await folga(2) // deixa 2 chamadas de folga para outros specs na mesma janela do limitador
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(new RegExp(`/${slug}/fila$`))
+  await entrarPelaTela(page, atendenteCpf, senhaAluno, new RegExp(`/${slug}/fila$`))
 
   const cliques: string[] = []
   const clicar = async (nome: string, alvo = page.getByRole('button', { name: nome, exact: true })) => {
