@@ -198,6 +198,10 @@ Listas que se varrem e um chamado que se resolve com poucos toques.
 27. The system SHALL reservar, abaixo do conteúdo do detalhe, a altura da barra fixa, de modo que o botão "Enviar" fique inteiro visível ao rolar até o fim
 28. WHILE o chamado está `RESOLVIDO` ou `FECHADO`, o sistema SHALL não mostrar o formulário de resposta para a equipe
 
+44. WHEN a folha de ações do chamado fecha e abre de novo THEN o sistema SHALL manter o que foi digitado na resolução, na reclassificação e no duplicado, até o envio ou a saída da tela (decisão delegada pelo usuário em 04/11, depois do lote 2)
+45. WHILE a largura é 768 px ou mais, a Fila SHALL mostrar a coluna "Aberto" com "hoje", "ontem" ou "há N dias", cada valor numa linha só (decisão delegada em 04/11, depois do lote 2)
+46. The system SHALL mostrar os links das respostas do assistente como botões também na conversa vista pela equipe no detalhe do chamado, como no chat do aluno (decisão delegada em 04/11, depois do lote 2; auditoria 17)
+
 **Independent test:** a 390 px como atendente, assumir, responder e resolver um chamado: 6 cliques e 1 só abertura de `Sheet` (a auditoria contou 4 trocas entre folha e página).
 
 ### S5: Formulários, erros e administração (P1)

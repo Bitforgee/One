@@ -122,6 +122,8 @@ os checks abaixo afirmam.
 | P15 | O teste independente de S4 manda "contar os toques". O fluxo novo tem os mesmos 6 cliques da auditoria (que contou 8 interações, 2 delas de digitação) | C64 afirma 6 cliques e 1 abertura de `Sheet`, contra 4 trocas entre folha e página da auditoria. O ganho está nas trocas, não nos cliques | não |
 | P16 | AC 41 fala de "15 telas"; `Telas` (`e2e/simulada.ts`) tem 16, mais Conta e Instituições | C55 varre `Telas`, mais Conta e Instituições | não |
 
+
+Extensão da lista fechada por decisão delegada em 04/11, depois do lote 2: `assistente/anexos.test.tsx` "texto de ajuda dos anexos" (AC 19) e `chamados/textos.test.tsx` "textos Minhas solicitações" (AC 21, AC 22); e, para o C67, os testes de `arranjo.spec.ts` e `tabela.test.tsx` que leem o cabeçalho "Dias" (AC 45).
 ## Checks
 
 ### S1 - Toque, campos e contraste (P1) · ~33 files · ~194 KB · ~48k (com S2 e os tokens de S6)
@@ -680,6 +682,19 @@ Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test e2e/ux-real.
 **C65** - A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8087. A única edição no e2e real
 fora de `ux-real.spec.ts` é o item 7 da lista fechada (Flow 1: a navegação muda)
 Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test`
+
+### S7 - Acréscimos depois do lote 2 (P1)
+
+Decisão delegada pelo usuário em 04/11, depois de olhar as capturas do lote 2.
+
+**C66** - Como equipe, a 390 px, digitar "Boleto reemitido" em "Resolução" na folha "Mais", fechar a folha pelo X e abrir de novo deixa o campo com "Boleto reemitido"; o mesmo vale para a categoria escolhida em "Reclassificar" e para o número em "Duplicado". Depois de enviar a resolução com sucesso, o campo volta vazio (AC 44)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "folha de ações guarda o que foi digitado"`
+
+**C67** - A 1440 px, a Fila tem o cabeçalho de coluna "Aberto" (e não "Dias") e as células "hoje", "ontem" e "há 2 dias" para os 3 chamados simulados, cada célula com altura de uma linha (altura ≤ 1,5 × `line-height`); a 390 px as linhas continuam com "aberto hoje/ontem/há N dias" (AC 45)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Fila com coluna Aberto em uma linha"`
+
+**C68** - No detalhe do chamado visto pela equipe, uma resposta do assistente com `https://portal.univag.edu.br/financeiro/boletos/segunda-via` no texto mostra esse link como botão (`a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos/segunda-via`) e o texto do balão não contém `https://` (AC 46)
+Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "links da resposta como botão na conversa da equipe"`
 
 ## Coverage
 
