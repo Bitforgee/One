@@ -168,7 +168,7 @@ contém `inter-`, e todo pedido é da origem do app (AC 1, door 1)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "Public Sans e Source Serif 4 carregadas e nenhuma Inter"`
 
-**C3** - A 390 e a 1440 px, nas telas da varredura, todo elemento visível com texto próprio, ou campo, que é ou fica
+**C3** - [x] A 390 e a 1440 px, nas telas da varredura, todo elemento visível com texto próprio, ou campo, que é ou fica
 dentro de um destes 7 tipos tem `fontFamily` começando por `"Public Sans Variable"`:
 - `body` (o texto corrido);
 - `button` e `[data-slot=button]`;
@@ -183,7 +183,7 @@ topo em sans)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "texto e controles em Public Sans"`
 
-**C4** - A 390 e a 1440 px, na varredura mais o Assistente sem conversa e a raiz `/`:
+**C4** - [x] A 390 e a 1440 px, na varredura mais o Assistente sem conversa e a raiz `/`:
 - todo elemento visível com `fontFamily` começando por `"Source Serif 4 Variable"` mede `font-size` ≥ 20 px e é um
   destes 5: `h1` ou `h2` fora do `header`, o número principal de Indicadores, o nome da instituição no login, o
   título das boas-vindas ou "One" na raiz;
@@ -211,7 +211,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "raio pelo papel do componente"`
 
-**C6** - A 390 e a 1440 px, nas telas da varredura com `comAparencia`, todo elemento visível com o menor lado ≥ 8 px
+**C6** - [x] A 390 e a 1440 px, nas telas da varredura com `comAparencia`, todo elemento visível com o menor lado ≥ 8 px
 e `border-radius` ≥ metade do menor lado − 1 px (pílula ou círculo) é um destes (P4):
 - avatar ou foto: a `img` da foto do assistente e as iniciais do usuário no botão do usuário;
 - um botão só de ícone circular: "Enviar" do compositor, o botão de avisos (ícone `Bell` ou `BellOff`) ou "Tema";
@@ -251,7 +251,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login sem foto em coluna única de até 400 px"`
 
-**C10** - No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
+**C10** - [x] No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
 − 1 px, nesta ordem:
 1. o logo (`img[src*="/imagens/logo"]`, altura ≤ 49 px) ou as iniciais;
 2. o nome "Centro Universitário de Várzea Grande";
@@ -332,7 +332,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 ### S3 - Assistente que não parece chatbot de prateleira (P1) · ~7 files · ~64 KB · ~16k
 
-**C17** - Sem conversa, o Assistente mostra um `h2` e a frase de boas-vindas em 4 casos:
+**C17** - [x] Sem conversa, o Assistente mostra um `h2` e a frase de boas-vindas em 4 casos:
 - `nomeCurto` "Univag" e `boasVindas` "Oi! Posso ajudar com boletos e matrícula." → "Atendimento ao estudante ·
   Univag" e essa frase;
 - `nomeCurto` "Univag" sem `boasVindas` → "Atendimento ao estudante · Univag" e "Respostas com base nas normas da
@@ -345,7 +345,7 @@ Nos 4 casos, "Olá! Eu sou" e "Pergunte, por exemplo" têm 0 ocorrências, e nã
 
 Proof: `cd web && npx vitest run src/assistente/identidade.test.tsx -t "boas-vindas institucional sem Olá Eu sou"`
 
-**C18** - Sem conversa, a 390 e a 1440 px, com `comAparencia`:
+**C18** - [x] Sem conversa, a 390 e a 1440 px, com `comAparencia`:
 - o título "Atendimento ao estudante · Univag" é o primeiro cabeçalho do `main`, com `fontFamily` começando por
   `"Source Serif 4 Variable"`, `font-size` 24 px e `text-align` `start`;
 - o `left` do título fica a no máximo 1 px do `left` do `form` do compositor;
@@ -354,7 +354,7 @@ Proof: `cd web && npx vitest run src/assistente/identidade.test.tsx -t "boas-vin
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "título das boas-vindas em serifa de 24 px à esquerda"`
 
-**C19** - Sem conversa, 3 casos:
+**C19** - [x] Sem conversa, 3 casos:
 - com foto (`imagens.assistente` 4) e `nome` "Vagner": uma `img` com `src`
   `/api/instituicoes/univag/imagens/assistente?v=4` e o texto "Vagner, assistente virtual";
 - sem foto, com `nome` "Vagner": o texto, e nenhuma `img` nas boas-vindas;
@@ -367,7 +367,7 @@ Screens: Assistente sem conversa, item 3)
 Proof: `cd web && npx vitest run src/assistente/identidade.test.tsx -t "assistente virtual com e sem foto"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "foto de 32 px ao lado do nome do assistente"`
 
-**C20** - Sem conversa, com `GET /api/chamados?escopo=meus` simulado, table-driven sobre 8 casos:
+**C20** - [x] Sem conversa, com `GET /api/chamados?escopo=meus` simulado, table-driven sobre 8 casos:
 
 | Lista devolvida | A tela mostra |
 | --- | --- |
@@ -384,13 +384,13 @@ Quando há link, ele vem antes da primeira pergunta no DOM (AC 10)
 
 Proof: `cd web && npx vitest run src/assistente/identidade.test.tsx -t "solicitação em aberto antes das perguntas"`
 
-**C21** - Sem conversa, com a simulada (`ONE-123` `EM_ATENDIMENTO` em Minhas solicitações) e `#8a1538`, a 390 e a
+**C21** - [x] Sem conversa, com a simulada (`ONE-123` `EM_ATENDIMENTO` em Minhas solicitações) e `#8a1538`, a 390 e a
 1440 px, o link "Sua solicitação ONE-123 · Em atendimento" tem `border-left-width` ≥ 1 px com `border-left-color`
 pintada igual à de `var(--primary)`, as outras 3 bordas com largura 0, e `bottom` ≤ o `top` da primeira linha de
 pergunta + 1 px (Screens: Assistente sem conversa, item 4)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "solicitação em aberto com borda na cor de ação antes das perguntas"`
 
-**C22** - Sem conversa, a 390 e a 1440 px, em 2 casos (`comAparencia`, 4 perguntas; `semAparencia`, as 2 perguntas
+**C22** - [x] Sem conversa, a 390 e a 1440 px, em 2 casos (`comAparencia`, 4 perguntas; `semAparencia`, as 2 perguntas
 padrão), as perguntas são `button`s em linhas:
 - cada linha mede altura ≥ 48 px, e todas têm o mesmo `left` e a mesma largura (1 px), com `top` crescente;
 - entre 2 linhas seguidas há uma divisória de 1 px: o `border-bottom-width` da de cima ou o `border-top-width` da de
@@ -408,7 +408,7 @@ Proof: `cd web && npx vitest run src/assistente/boasvindas.test.tsx -t "tocar na
 
 ### S4 - Indicadores com hierarquia (P1) · ~8 files · ~46 KB · ~12k
 
-**C23** - Cada consulta faz exatamente 2 `GET /api/indicadores`: a do período e a do período anterior de mesmo
+**C23** - [x] Cada consulta faz exatamente 2 `GET /api/indicadores`: a do período e a do período anterior de mesmo
 número de dias, terminando na véspera de `de`. Com o relógio em 5/11/2026, 3 casos:
 - ao abrir: `de=2026-11-01&ate=2026-11-05` e `de=2026-10-27&ate=2026-10-31`;
 - "Consultar" com 2026-03-01 a 2026-03-31: `de=2026-03-01&ate=2026-03-31` e `de=2026-01-29&ate=2026-02-28`;
@@ -416,7 +416,7 @@ número de dias, terminando na véspera de `de`. Com o relógio em 5/11/2026, 3 
 
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "período anterior de mesmo tamanho"`
 
-**C24** - Com o período atual em `indicadorPrincipal` 0,712, o Indicador principal mostra "71,2%" e, ao lado,
+**C24** - [x] Com o período atual em `indicadorPrincipal` 0,712, o Indicador principal mostra "71,2%" e, ao lado,
 "vs. período anterior" com a variação, em 3 casos:
 - anterior 0,670 → "▲ 4,2 pts";
 - anterior 0,722 → "▼ 1,0 pt";
@@ -424,19 +424,19 @@ Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "períod
 
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "variação contra o período anterior"`
 
-**C25** - Com o atual em 0,712, a tela mostra "71,2%", sem "▲", "▼", "= sem variação" nem "vs. período anterior", e
+**C25** - [x] Com o atual em 0,712, a tela mostra "71,2%", sem "▲", "▼", "= sem variação" nem "vs. período anterior", e
 sem `role="alert"`, em 3 casos: o anterior responde `500`; o anterior tem `semDados` `true`; o anterior tem
 `indicadorPrincipal` `null`. No mesmo teste, um caso de controle com o anterior em 0,670 mostra "▲ 4,2 pts" (AC 13)
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "sem variação quando o anterior falha ou não tem dados"`
 
-**C26** - Arredondamento e plural da variação, com o atual em 0,7123 (P5), 3 casos:
+**C26** - [x] Arredondamento e plural da variação, com o atual em 0,7123 (P5), 3 casos:
 - anterior 0,7121 → "= sem variação";
 - anterior 0,6933 → "▲ 1,9 pt";
 - anterior 0,6923 → "▲ 2,0 pts" (AC 12)
 
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "arredondamento e plural da variação"`
 
-**C27** - Com o relógio fixo em 5/11/2026 e as 2 consultas simuladas (atual 0,712, anterior 0,670), a 390 e a
+**C27** - [x] Com o relógio fixo em 5/11/2026 e as 2 consultas simuladas (atual 0,712, anterior 0,670), a 390 e a
 1440 px:
 - o rótulo "Indicador principal" está visível;
 - o número "71,2%" tem `fontFamily` começando por `"Source Serif 4 Variable"`, `font-size` 40 px e
@@ -448,7 +448,7 @@ Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "arredon
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "Indicador principal em serifa de 40 px com a variação ao lado"`
 
-**C28** - Os 3 destaques "Chamados abertos agora", "Autoatendimento" e "Tempo até a 1ª resposta" (P13):
+**C28** - [x] Os 3 destaques "Chamados abertos agora", "Autoatendimento" e "Tempo até a 1ª resposta" (P13):
 - com o contêiner `main` de 768 px (janela de 1072 px com a barra aberta) e de 1136 px (janela de 1440 px): 3 valores
   distintos de `left`, o mesmo `top` (1 px) e larguras iguais (1 px); entre 2 destaques vizinhos há uma divisória
   vertical de 1 px (o `border-right-width` do da esquerda ou o `border-left-width` do da direita);
@@ -461,7 +461,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "3 destaques em faixa de 3 colunas sem caixa"`
 
-**C29** - As outras 9 métricas ("Alunos ativos", "Conversas", "Escalonamento", "Abandono", "Perguntas sem artigo",
+**C29** - [x] As outras 9 métricas ("Alunos ativos", "Conversas", "Escalonamento", "Abandono", "Perguntas sem artigo",
 "Chamados resolvidos", "Tempo de resolução", "Roteamento correto", "Reabertura", nesta ordem no DOM) são linhas de
 rótulo e valor (P13):
 - com o contêiner `main` de 768 px (janela de 1072 px) e de 1136 px (janela de 1440 px), 2 valores distintos de
@@ -477,7 +477,7 @@ rótulo e valor (P13):
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "9 métricas em lista de rótulo e valor sem caixa"`
 
-**C30** - A 390 e a 1440 px, cada um dos 2 gráficos (`.recharts-responsive-container`, depois de pelo menos 1 barra
+**C30** - [x] A 390 e a 1440 px, cada um dos 2 gráficos (`.recharts-responsive-container`, depois de pelo menos 1 barra
 com altura > 0, L-077) tem acima dele o seu cabeçalho, "Categorias por conversas" ou "Categorias por chamados"
 (`bottom` do cabeçalho ≤ `top` do gráfico + 1 px, com sobreposição horizontal). Nenhum ancestral do gráfico até o
 `main` (exclusive) é `[data-slot=card]`, tem borda nos 4 lados ou `background-color` diferente de transparente. O
@@ -486,7 +486,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 ### S5 - Menos caixas e estados vazios com ícone (P1) · ~17 files · ~135 KB · ~34k
 
-**C31** - Em `web/src`, fora dos testes, nenhum arquivo importa de `ilustracoes` outro nome que `Planilha`, e só
+**C31** - [x] Em `web/src`, fora dos testes, nenhum arquivo importa de `ilustracoes` outro nome que `Planilha`, e só
 `administracao/Matriculas.tsx` o importa. `ilustracoes/index.tsx` exporta exatamente `Planilha`, que desenha um
 `svg` com `aria-hidden="true"`, `data-ilustracao="planilha"`, só `currentColor`, `none`, `var(--primary)` e
 `var(--primary-subtle)` como cor, e nenhum `<image>` nem `href` externo, como as de `aparencia-instituicao` C47
@@ -494,14 +494,14 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 Proof: `cd web && npx vitest run src/identidade.test.tsx -t "ilustrações só com Planilha em Matrículas"`
 Proof: `cd web && npx vitest run src/ilustracoes/ilustracoes.test.tsx -t "Planilha só com currentColor e tokens"`
 
-**C32** - Na Aparência a 1440 px, as 4 seções "Marca", "Login", "Assistente" e "Contato" (`section[aria-labelledby]`):
+**C32** - [x] Na Aparência a 1440 px, as 4 seções "Marca", "Login", "Assistente" e "Contato" (`section[aria-labelledby]`):
 - têm `border-width` 0 nos 4 lados e `background-color` transparente;
 - entre 2 seções seguidas, o `top` da de baixo menos o `bottom` da de cima é 32 px (1 px);
 - o `h2` de cada seção tem `top` a no máximo 1 px do `top` dela (AC 17; Screens: Detalhe do chamado e Aparência)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "seções da Aparência sem caixa a 32 px"`
 
-**C33** - No detalhe do chamado `ONE-123` visto pela equipe, a 390 e a 1440 px (P7):
+**C33** - [x] No detalhe do chamado `ONE-123` visto pela equipe, a 390 e a 1440 px (P7):
 - há um `h2` "Dados do aluno" e um `h2` "Histórico"; o `top` de cada um fica a no máximo 1 px do `top` do seu bloco
   (o dos dados do aluno e o da lista de eventos);
 - o bloco do Histórico não fica dentro de `[data-slot=card]`, e ele e cada ancestral dele até a coluna (exclusive)
@@ -513,7 +513,7 @@ A Conta fica fora do AC 17 e não muda (P8) (AC 17; Screens: Detalhe do chamado 
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "Dados do aluno e Histórico sem caixa e com título"`
 
-**C34** - No detalhe do chamado `ONE-123` visto pela equipe, a 390 e a 1440 px (P7):
+**C34** - [x] No detalhe do chamado `ONE-123` visto pela equipe, a 390 e a 1440 px (P7):
 - o bloco dos dados do aluno ("Ana Beatriz · matrícula 2000567890 · …"), e cada ancestral dele até a coluna
   (exclusive), têm `border-width` 0 e `background-color` transparente;
 - o bloco "Resumo gerado por IA" (o menor elemento com o título e o texto do resumo) e o `form` da resposta têm
@@ -524,7 +524,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "detalhe sem caixa e com fundo tingido só no que pede ação"`
 
-**C35** - Com a lista vazia, o bloco do vazio tem exatamente 1 `svg`, com a classe `lucide`, a frase e, quando a
+**C35** - [x] Com a lista vazia, o bloco do vazio tem exatamente 1 `svg`, com a classe `lucide`, a frase e, quando a
 lista tem, o botão; a página não tem `svg[data-ilustracao]`. Table-driven sobre 8 casos:
 
 | Tela | Frase | Botão |
@@ -543,7 +543,7 @@ O título de hoje de cada lista fica (P6) (AC 18)
 Proof: `cd web && npx vitest run src/tabela.test.tsx -t "vazio com ícone nas 6 listas"`
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "Indicadores sem dados com ícone"`
 
-**C36** - Nos 8 casos de C35, a 390 e a 1440 px (16 medidas, table-driven):
+**C36** - [x] Nos 8 casos de C35, a 390 e a 1440 px (16 medidas, table-driven):
 - o ícone mede 28×28 px (1 px), com `color` pintada igual à de `var(--muted-foreground)`;
 - o centro horizontal do ícone, o do texto da frase e o do botão (quando há) ficam a no máximo 1 px do centro do
   bloco do vazio (a célula da lista, ou o bloco abaixo do formulário em Indicadores);
@@ -552,18 +552,18 @@ Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "Indicad
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "vazio com ícone de 28 px centrado"`
 
-**C37** - Em Matrículas, o 2º item da `ol` ("Preencha uma linha por aluno") contém o `svg[data-ilustracao="planilha"]`,
+**C37** - [x] Em Matrículas, o 2º item da `ol` ("Preencha uma linha por aluno") contém o `svg[data-ilustracao="planilha"]`,
 o único `svg[data-ilustracao]` da página. Os elementos `text` dele, em ordem, são exatamente `cpf`, `nome`,
 `email`, `matricula`, `curso`, `semestre` e `situacao`, iguais ao cabeçalho do CSV de "Baixar modelo (CSV)" separado
 por `;` (AC 19)
 Proof: `cd web && npx vitest run src/administracao/identidade.test.tsx -t "Planilha no passo 2 com as 7 colunas"`
 
-**C38** - A 390 e a 1440 px, em Matrículas, a Planilha tem altura > 0 e fica dentro da caixa do 2º passo. Os 7 nomes
+**C38** - [x] A 390 e a 1440 px, em Matrículas, a Planilha tem altura > 0 e fica dentro da caixa do 2º passo. Os 7 nomes
 de coluna estão visíveis, cada um dentro da caixa do `svg`, com o mesmo `top` (1 px) e `left` crescente na ordem de
 C37 (Screens: Matrículas)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "Planilha mostra as 7 colunas numa linha"`
 
-**C39** - A prévia da Aparência, com os dados de `comAparencia`, mostra:
+**C39** - [x] A prévia da Aparência, com os dados de `comAparencia`, mostra:
 - no login: o logo, o nome da instituição, "Fale com a Univag", a frase, os 3 itens e "Entrar"; sem foto de login,
   nenhuma `img` de login; com a foto de login escolhida no formulário, a `img` dela;
 - nas boas-vindas: "Atendimento ao estudante · Univag", "Oi! Posso ajudar com boletos e matrícula.", "Vagner, assistente
@@ -579,28 +579,28 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 ### S0 - Invariantes e barreiras (P1)
 
-**C40** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só
+**C40** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só
 as da lista fechada, cada uma listada no `## Handoff` com o seu AC (AC 1 a AC 22)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
-**C41** - O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais, com
+**C41** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais, com
 a lista do `revisao-ux` C60 mais `src/LinksDaResposta.tsx` e `src/Balao.tsx` (`push-com-marca`). `src/ilustracoes`
 continua na lista, com a `Planilha`. Um arquivo novo na raiz de `web/src` entra na lista no mesmo commit que o cria
 (L-031) (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx src/LinksDaResposta.tsx src/Balao.tsx | grep -q "No duplicate candidates found"`
 
-**C42** - A suíte de arranjo passa inteira com a API simulada: `arranjo.spec.ts`, `celular.spec.ts`,
+**C42** - [x] A suíte de arranjo passa inteira com a API simulada: `arranjo.spec.ts`, `celular.spec.ts`,
 `aparencia.spec.ts`, `instituicoes.spec.ts`, `push.spec.ts`, `ux.spec.ts`, `plataforma.spec.ts` e
 `identidade.spec.ts` (Screens)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts e2e/plataforma.spec.ts e2e/identidade.spec.ts`
 
-**C43** - Nenhum arquivo de `api/` nem de `api.Tests/` muda entre `<base>` e `HEAD` (Flow: sem mudança de API;
+**C43** - [x] Nenhum arquivo de `api/` nem de `api.Tests/` muda entre `<base>` e `HEAD` (Flow: sem mudança de API;
 Surface: None)
 Proof: `git diff --quiet <base> HEAD -- api api.Tests`
 
-**C44** - De ponta a ponta, na imagem própria (porta 8089), instituição `e2e`:
+**C44** - [x] De ponta a ponta, na imagem própria (porta 8089), instituição `e2e`:
 1. o Login sem cookie pede `/assets/public-sans-latin-wght-normal-*.woff2`, que responde `200` com `Content-Type`
    contendo `woff2` (o `UseStaticFiles` da API serve o `wwwroot`), e nenhum URL pedido contém `inter-`;
 2. um aluno só `ALUNO` abre uma solicitação por `POST /api/atendimento-direto`, abre o Assistente sem conversa e vê
@@ -614,11 +614,11 @@ O spec loga 2 vezes, uma por pessoa (AC 1, AC 10, AC 12)
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/identidade-real.spec.ts -g "aluno vê a solicitação em aberto e as fontes do app"`
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/identidade-real.spec.ts -g "Indicadores consulta o período anterior na API real"`
 
-**C45** - A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8089. Nenhum spec real fora de
+**C45** - [x] A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8089. Nenhum spec real fora de
 `identidade-real.spec.ts` é editado (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test`
 
-**C46** - Os testes que provam os 6 invariantes nomeados no AC 22 passam sem edição, porque nenhum está na lista
+**C46** - [x] Os testes que provam os 6 invariantes nomeados no AC 22 passam sem edição, porque nenhum está na lista
 fechada (AC 22):
 - alvos de 44 px (`revisao-ux` C1 e C2);
 - campos de 16 px (C3);
@@ -733,3 +733,11 @@ Estimativa:
 - **Settled mid-build:** (1) `Entrada` do login sempre mostra o título, a frase e os 3 itens de base quando a instituição ainda não carregou (como o painel antigo fazia), e o `h1` com o nome só aparece com a instituição carregada; por isso `acesso/textos.test.tsx` não precisou de edição (os literais já cobriam as 3 telas). (2) "Entre com seu CPF e sua senha." ficou em 14 px (`text-sm`), cor secundária e 4 px abaixo do nome, os valores que `frase do Login à esquerda` e `cabeçalho do Login` já afirmavam. (3) O título da tela de Primeiro acesso e Criar senha é um `h2` de 16 px em sans (abaixo de 20 px, C4); o `h1` das 3 telas é o nome da instituição em serifa de 28 px. (4) A raiz `/` reusa o mesmo `h1` de 28 px; por isso a exceção de `no máximo 4 tamanhos de texto por tela` aceita 28 px no `h1` das 3 telas de acesso e da raiz, e não só no Login (o plano não dá tamanho ao "One"). (5) Os botões "Tema" e de avisos têm `data-slot` `popover-trigger` e não `button` (o `PopoverTrigger asChild` troca o atributo): o C6 mede a pílula deles pelo `aria-label`, e a contagem de `[data-slot=button]` por tela do C6 não vale para Minhas solicitações (nenhum botão desse tipo a 390 nem a 1440), então o teste afirma pelo menos 1 botão no total da varredura; o lote 2 ou o Verifier decide se isso basta. (6) A `section` "Prévia" da Aparência não tem raio: o C5 mede o primeiro filho dela, o painel de 12 px. (7) Efeitos de fonte em testes fora da lista fechada, corrigidos no código e não na asserção: `ux.spec.ts` `balão com até 68 caracteres de largura` mede a largura de 68 zeros com kerning e o `ch` da Public Sans dá 0,1 px a mais por caractere, então `Balao.tsx` passou de `max-w-[68ch]` a `max-w-[67ch]`; `instituicoes.spec.ts` `cartão com nome e selo na 1ª linha` mede o `y` do `Range` do nome (a Public Sans muda a altura do conteúdo em 1 px), então o selo da linha em cartão ganhou `margin-top: 1px` em `index.css`. Nas duas, a asserção ficou como estava. (8) Raios: o cartão de linha em `[data-cartoes]` passou de `var(--radius-lg)` a `var(--radius-md)` (12 px); `Tabela`, `Conta`, `Matriculas` e os painéis passam de `rounded-lg` a `rounded-md`, os botões de `rounded-md` a `rounded-sm`, campos a `rounded-xs`, itens de menu e da barra lateral a `rounded-xs`, menu e popover a `rounded-lg`; o `Sheet` ganhou o raio de 16 px nos cantos do lado de abertura. Tirei `rounded-full` de "Falar com atendente", dos botões de link da resposta, de "Anexar arquivo" e de "Remover" do anexo (P4); `rounded-full` ficou em "Enviar", "Tema" e avisos, e as iniciais do usuário passaram a `rounded-full` (avatar). As perguntas da prévia da Aparência saíram de pílula para `rounded-xs` (o lote 2 as troca por linhas, AC 21). (9) `e2e/simulada.ts` ganhou `instalar`, `referencia`, `abrirTela` e `varrer`, movidos de `ux.spec.ts` (que agora os importa) para o `identidade.spec.ts` poder usá-los. (10) O C9 varre `#root` e ignora elementos sem altura (a região vazia de avisos do Sonner).
 - **Abandoned:** nada. O lote 1 não toca o C46 nem os checks de S3, S4, S5 e S0, que são do lote 2.
 - **Edições na lista fechada (lote 1), com o AC que as força:** item 1: `estrutura.test.ts` (`identidade.test.tsx` em `Raiz`). Item 2, `interface.test.ts`: a linha de `--font-sans` passa a `'Public Sans Variable', …` (AC 1); a linha `--radius` sai da tabela `Tokens` (AC 3); `contraste do painel de entrada` perde o literal `border-l bg-muted p-10` e mantém o cálculo (AC 5); a regex do `h1` de `títulos de página` passa a `font-heading text-[28px]` (AC 2, AC 5). Item 3: `opsz da Inter sem fonte nova` sai de `ux.test.tsx` (AC 1; C1). Item 4, `ux.spec.ts`: `títulos com opsz 32 da Inter` sai (AC 1, AC 2; C2 e C4); `no máximo 4 tamanhos de texto por tela` aceita 28 px no `h1` das telas de acesso e da raiz e 40 px só em Indicadores, e separa esse tamanho do único tamanho de título (AC 2); `sem emoji nem gradiente` perde a exceção da faixa sobre a imagem (AC 6). Item 5, `arranjo.spec.ts`: `fonte Inter do próprio app` sai (AC 1; C2); `cartões sem sombra` passa ao cartão "Ações" do detalhe a 1280 px com `box-shadow` `none`, e a parte de Indicadores sai (AC 3, AC 14 a AC 16); em `valores de tipo e bordas` só o canto da caixa da tabela da Fila passa de `8px` a `12px` (AC 3); `arranjo telas de acesso` e `telas de acesso centralizadas` (as 3 telas de acesso) passam à coluna única de até 400 px (AC 5); no bloco `entrada institucional`: saem `entrada em duas colunas`, `entrada numa coluna abaixo de 1024 px`, `fundo e borda do painel`, `conteúdo do painel` e `posição do conteúdo do painel` (só tinham o painel, AC 5; substituídos por C9, C10, C11, C13); `recuo da coluna de entrada` fica como estava; `linha da marca na entrada` passa a iniciais de 48 px à esquerda da coluna, sem o topo de 128 px (AC 5, AC 7); `bloco do formulário por largura` passa às larguras da coluna de 400 px e perde o centro vertical, que o plano não fixa (AC 5); `cabeçalho do Login` passa a `h1` de 28 px e a frase logo abaixo do nome (P1, AC 5); `cabeçalho de Primeiro acesso e Criar senha` e `alerta de sucesso de Criar senha` passam a medir o título da tela e o alerta 32 px abaixo dele (AC 5, P2); `formulário do Login: espaços, erro e teclado` e `frase do Login à esquerda` só mudam o localizador do bloco para a coluna. Item 7, `aparencia.spec.ts`: `logo até 40 px no login` passa a 48 px; `imagem do login no painel e na faixa` virou `imagem do login na coluna direita e na faixa` (faixa de 160 px, textos fora da foto; AC 6, AC 7); `ilustração no login sem imagem` e `textos do login na base sobre a faixa` saem (C9 e C13). Item 8: `aparencia.test.tsx` (`logo no login e na barra` passa a `h-12`; `raiz com a ilustração Boas-vindas` sai, C16) e `acesso/acesso.test.tsx` (`painel de entrada sem foco e sem ícones`: na coluna das 3 telas, sem `svg[data-ilustracao]` e sem focável fora do formulário além do link da tela; AC 5).
+
+### Lote 2 (S3, S4, S5 e S0)
+
+- **Boundary:** lote 2 em `f3346d0` (o texto de apoio do Login), `ec6e51e` (código e testes Vitest), `03bfa53` (testes de arranjo e o teste que dependia da data), o commit do `identidade-real.spec.ts` e o commit deste handoff, sobre o `f95e866`. Fechados: C3, C4, C6, C10 e C17 a C46; com o lote 1, os 46 checks estão `[x]`. Resultado no `HEAD`: Vitest 517 verdes em 54 arquivos, `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99 (maior nota 9,8, `Sidebar`; `Indicadores` saiu de 13 para menos de 9 ao ganhar o `useVariacao`), `dryer` sem candidato (nenhum arquivo novo na raiz de `web/src`; `BlocoVazio` mora em `Tabela.tsx`, que já é importado por 2 fatias), `git diff --quiet 6d83112 HEAD -- api api.Tests` sai 0 (C43), nenhum `dotnet test`. Layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`, `plataforma`, `identidade`) 186 testes contra `vite preview` na 5199: 185 verdes e 1 vermelho, `plataforma.spec.ts` `manifesto e service worker` (pede `GET /api/auth/me` pelo proxy da 5226, onde não há API; falha igual em `<base>` e passa contra a imagem real). E2E real (C44, C45): imagem do `HEAD` (`git archive HEAD | docker build`) na 8089, instituição `e2e`, banco `one_identidade`, bucket `one-identidade`, `E2E_INSTITUICAO=e2e E2E_ADMIN_EMAIL=admin@e2e.one E2E_CONTAINER=one-identidade`: a suíte inteira, 194 testes (os 2 de `identidade-real.spec.ts`: Login com a Public Sans `200` `woff2`, aluno só `ALUNO` com o link da solicitação em `Aberto` e o administrador com exatamente 2 `GET /api/indicadores` `200` no período e no anterior), passou na segunda rodada. A primeira teve 1 falha, o `beforeAll` do `identidade-real.spec.ts` estourando os 30 s por esperar o limitador depois dos specs reais anteriores; a correção foi `test.setTimeout(240_000)` dentro do `beforeAll`, e nenhum spec real fora desse foi editado. Contêiner, imagem, banco, bucket e worktree de capturas removidos; o `api` da 8080 não foi tocado. Capturas antes (de `92f12a2`, num worktree dentro do repositório, removido) e depois, claro e escuro, em `.playwright-mcp/identidade/lote2/` (40 arquivos: Assistente vazio a 390 e 1440 com e sem solicitação em aberto, Indicadores a 390 e 1440, detalhe a 1440, Fila vazia a 390, Matrículas a 390 e Login a 1440).
+- **Settled mid-build:** (1) Primeiro cabeçalho "do `main`" (C18): o `main` do app traz a barra do topo (o `h1` "Assistente") dentro dele, então o teste mede o primeiro cabeçalho do contêiner `@container/main`, o conteúdo da tela. Pelo mesmo motivo, `celular.spec.ts` `Indicadores sem texto cortado` varre `[class*="container/main"] *` e não o `main *` literal (o `h1` do cabeçalho tem `truncate`, que fixa `text-overflow: ellipsis` sem cortar nada, e o `sr-only` tem `scrollWidth` maior); o teste afirma ter varrido pelo menos 1 elemento. (2) O texto de apoio do Login (C10, alteração do orquestrador) é o primeiro filho do `form`, logo antes do campo CPF, com `-mb-2` para ficar a 16 px dele; o teste o acha como o elemento que vem antes do campo que contém o rótulo "CPF". (3) A foto do assistente nas boas-vindas tem `alt=""` (o texto "{nome}, assistente virtual" ao lado já a nomeia). (4) A linha de pergunta é um `button` simples (não o `Button` do app), porque o `Button` tem 6 px e C22 pede 4 px. (5) O principal e os 3 destaques guardam rótulo e valor num `div` próprio e o rodapé fora dele, como o cartão antigo, para os testes de cartão só trocarem o localizador. (6) A prévia da Aparência recebeu `nomeCurto` (o título das boas-vindas usa `nomeCurto` ou o nome) e mostra o nome da instituição e o título em serifa de 20 px (`p`, não `h2`; C4 as aceita dentro de `section[aria-label="Prévia"]`). (7) A `Planilha` tem texto de 14 px: o 13 px que o desenho tinha criava um 5º tamanho em Matrículas e quebrava `no máximo 4 tamanhos de texto por tela`. (8) O detalhe do chamado: a coluna e a grade passam a 32 px (`gap-8`), o resumo e o formulário de resposta usam `bg-muted`, e o título (`h2` de 24 px) ganhou `font-heading`. (9) O C4 passa a varrer a varredura inteira mais o Assistente sem conversa, e aceita serifa em `h1`/`h2`, no número principal de Indicadores e nos `p` da prévia. (10) O corpo do `GET /api/indicadores` simulado devolve o mesmo principal nas duas consultas; os testes de C27 a C30 sobrescrevem a rota (atual 0,712, anterior 0,670) com o relógio fixo em 5/11/2026. (11) A solicitação em aberto usa a mesma chave de consulta de Minhas solicitações (`['/api/chamados?escopo=meus']`), então a lista que o aluno já abriu vale para o Assistente. (12) O teste `detalhe da Fila em texto corrido no celular` (`ux.spec.ts`) era uma bomba-relógio: esperava "aberto há 2 dias" com `criadoEm` fixo em 02/11 e o relógio real, e falhava desde 04/11. As datas do chamado agora saem do relógio do próprio teste (`Date.now()` menos 2 e 1 dia), e a asserção ficou como estava.
+- **Abandoned:** nada. O lote não precisou de nenhum check alterado nem de nenhuma porta nova.
+- **Edições na lista fechada (lote 2), com o AC que as força:** item 4, `ux.spec.ts`: `destaques de Indicadores em 2 colunas no celular` sai (AC 14; C28); `gráficos com a mesma cor calma` mede o contraste contra o fundo opaco mais próximo da barra, `window.__ux.pilha(e)`, em vez de `closest('[data-slot=card]')` (que já devolvia `null` e pintava branco) (AC 16). Item 5, `arranjo.spec.ts`: `detalhe em duas colunas` (o localizador do Histórico passa a `section`, AC 17), `Detalhe: cartão da equipe antes da conversa e ações que quebram em linhas` (o bloco do resumo é o pai do título "Resumo gerado por IA", AC 17), `arranjo Indicadores` (colunas da faixa de 3, da lista de 2 e dos rankings pelo `main`; número de 40 px; valor de 24 px; lista de 16 px; a medida da tabela depois do clique em "Ver tabela", que rola a página; AC 12 a AC 16), `valores de tipo e bordas` (rodapés ficam; o valor do destaque e o rótulo e o valor da linha da lista no lugar de `card-title` e do cartão compacto; AC 14, AC 15), `lista vazia centralizada` (`svg.lucide` no lugar de `svg[data-ilustracao]`, AC 18), e `cabeçalho do Login` (a frase fica depois do nome e a 16 px acima do campo CPF, na ordem ajustada em 05/11; AC 5, P1). Item 6, `celular.spec.ts`: `Indicadores sem texto cortado` (escopo e contagem, ver Settled 1; AC 14 a AC 16). Item 7, `aparencia.spec.ts`: `sugestões centralizadas em 1 e 2 colunas` sai (C18, C22). Item 8: `aparencia.test.tsx` (`ícone na aba, na barra recolhida e no topo` e `item Contato no menu só com contato` esperam "Atendimento ao estudante · Univag"; `Indicadores sem dados com ilustração` sai, C35; AC 8, AC 18); `assistente/boasvindas.test.tsx` (`boas-vindas com nome, foto e perguntas` e `boas-vindas padrão sem aparência` passam ao título, à frase e ao "assistente virtual"; `perguntas padrão` só troca o texto que espera; `tocar na sugestão envia a pergunta` fica; AC 8, AC 9, AC 11); `assistente/conversa.test.tsx` (a frase de base no lugar do exemplo; AC 8); `assistente/textos.test.tsx` (a lista; AC 8, AC 9); `administracao/aparencia.test.tsx` (`prévia muda antes de salvar`; AC 21); `indicadores/indicadores.test.tsx` (`cartões formatam taxa, horas e número…`: os localizadores do ranking passam a `section`, e a contagem de `GET /api/indicadores` passa de 1 a 2; `destaques de Indicadores` e `indicadores compactos na ordem`: 1 principal, 3 na faixa e as linhas da lista; `período pelos campos de data só consulta no Consultar`: as 4 URLs; AC 12, AC 14, AC 15); `indicadores/revisao.test.tsx` (`os 4 destaques`: 1 principal e 3 na faixa; AC 12, AC 14); `tabela.test.tsx` (`vazio ilustrado nas 6 listas` passa a `vazio com ícone nas 6 listas`, com o título, a frase e o botão; C35); `ilustracoes/ilustracoes.test.tsx` (`Planilha só com currentColor e tokens`; AC 19); `chamados/textos.test.tsx` (a lista ganha "Dados do aluno"; P7).
+- **Edições fora da lista fechada (lote 2), forçadas por um AC, para o Verifier conferir:** (a) `arranjo.spec.ts` `quebras medidas dos dois lados`: a parte de Indicadores media o cartão "Autoatendimento" (`[data-slot=card]`, `card-title` de 24 px); passa a medir o item da faixa e o valor de 24 px, com os mesmos limites de largura (AC 14, que tira os cartões). (b) `indicadores/indicadores.test.tsx` `ranking com gráfico acima da tabela`, `ranking vazio sem gráfico` e `rankings em tabela Categoria e Total`, e `indicadores/revisao.test.tsx` `Ver tabela de %s`: só o localizador do ranking, de `closest('[data-slot=card]')` a `closest('section')`; as asserções ficam (AC 16, que tira o cartão dos gráficos). (c) `ux.spec.ts` `detalhe da Fila em texto corrido no celular`: a correção da bomba-relógio descrita no Settled 12 (o teste já falhava em `<base>`).
