@@ -16,11 +16,11 @@ type ItemFila = ItemMeu & { categoria: string; responsavel: string | null; dias:
 
 // O selo de estado por grupo de cor (AC 3): em andamento, à espera do aluno e concluído.
 const CoresDoEstado: Record<string, string> = {
-  ABERTO: 'bg-primary-subtle text-primary',
-  EM_ATENDIMENTO: 'bg-primary-subtle text-primary',
+  ABERTO: 'bg-accent text-foreground',
+  EM_ATENDIMENTO: 'bg-accent text-foreground',
   AGUARDANDO_ALUNO: 'bg-warning-subtle text-foreground',
-  RESOLVIDO: 'bg-success/15 text-success',
-  FECHADO: 'bg-success/15 text-success',
+  RESOLVIDO: 'bg-success/15 text-foreground',
+  FECHADO: 'bg-success/15 text-foreground',
 }
 export const SeloDoChamado = ({ estado }: { estado: string }) => <Badge className={CoresDoEstado[estado]}>{Estados[estado]}</Badge>
 

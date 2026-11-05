@@ -17,9 +17,10 @@ export function SeloIndexacao({ valor }: { valor: Indexacao | null }) {
   )
 }
 
-const Estados = { RASCUNHO: 'bg-secondary text-secondary-foreground', ATIVO: 'bg-success text-primary-foreground', ARQUIVADO: 'bg-foreground text-background' }
+const Estados = { RASCUNHO: ['Rascunho', 'bg-secondary text-secondary-foreground'], ATIVO: ['Ativo', 'bg-success text-primary-foreground'], ARQUIVADO: ['Arquivado', 'bg-foreground text-background'] }
 export function SeloEstado({ estado }: { estado: keyof typeof Estados }) {
-  return <Badge className={Estados[estado]}>{estado}</Badge>
+  const [rotulo, cor] = Estados[estado]
+  return <Badge className={cor}>{rotulo}</Badge>
 }
 
 // Lê a lista da tela e as categorias ativas; quem grava manda reler.

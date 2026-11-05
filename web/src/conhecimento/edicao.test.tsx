@@ -14,7 +14,7 @@ const documento = (id: number, titulo: string, estado: string, paginas = 3) => (
   versao: { id: id * 10, numero: 1, nomeArquivo: `${titulo}.pdf`, paginas, criadaEm: '2026-11-02T12:00:00Z' },
 })
 const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
-const item = async (titulo: string) => (await screen.findByText(titulo)).closest('tr') as HTMLElement
+const item = async (titulo: string) => (await screen.findAllByText(titulo))[0].closest('tr') as HTMLElement
 const pdf = () => new File(['%PDF-1.4'], 'regulamento.pdf', { type: 'application/pdf' })
 
 function tela(caminho: string, lista: string, itens: unknown[], rotas: Record<string, Rota> = {}) {
@@ -27,7 +27,7 @@ describe('artigos', () => {
   it('ativar e arquivar aparecem conforme o estado, e a validade em dd/mm/aaaa', async () => {
     tela('/univag/artigos', 'artigos', [artigo(1, 'Ativo', 'ATIVO', '2026-11-01', '2026-12-31'), artigo(2, 'Rascunho', 'RASCUNHO'), artigo(3, 'Arquivado', 'ARQUIVADO', null, '2026-10-31')])
     const ativo = await item('Ativo')
-    expect(within(ativo).getByText('ATIVO').parentElement).toHaveClass('flex', 'gap-1')
+    expect(within(ativo).getByText('Ativo', { selector: '[data-slot=badge]' }).parentElement).toHaveClass('flex', 'gap-1')
     expect(ativo).toHaveTextContent('Estágio · versão 2 · válido de 01/11/2026 · válido até 31/12/2026')
     expect(await acoesDe('Ativo')).toEqual(['Editar', 'Arquivar!'])
     const rascunho = await item('Rascunho')
@@ -89,7 +89,7 @@ describe('documentos', () => {
   it('documento arquivado não oferece nova versão nem arquivar', async () => {
     tela('/univag/documentos', 'documentos', [documento(1, 'Edital antigo', 'ARQUIVADO')])
     const arquivado = await item('Edital antigo')
-    expect(within(arquivado).getByText('ARQUIVADO')).toHaveClass('bg-foreground')
+    expect(within(arquivado).getByText('Arquivado')).toHaveClass('bg-foreground')
     expect(arquivado).toHaveTextContent('Estágio · versão 1 · 3 páginas · Edital antigo.pdf')
     // o selo de indexação e o do estado ficam lado a lado, com um pequeno espaço
     expect(within(arquivado).getByText('Indexado').parentElement).toHaveClass('flex', 'gap-1')
