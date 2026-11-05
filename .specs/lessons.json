@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 80,
+  "next_id": 81,
   "lessons": [
     {
       "id": "L-001",
@@ -1440,6 +1440,24 @@
       ],
       "created": "2026-11-05T02:36:50Z",
       "last_seen": "2026-11-05T02:36:50Z"
+    },
+    {
+      "id": "L-080",
+      "key": "surviving_mutant::nenhum erro e lancado precisa afirmar o estado da consulta success nao so espiar console error o erro do react query fica silencioso",
+      "text": "'Nenhum erro é lançado' precisa afirmar o estado da consulta (success), não só espiar console.error; o erro do React Query fica silencioso.",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "ajustes-push-e-links"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/assistente/avisos.test.tsx C2 (web)"
+      ],
+      "created": "2026-11-05T03:29:19Z",
+      "last_seen": "2026-11-05T03:29:19Z"
     }
   ]
 }

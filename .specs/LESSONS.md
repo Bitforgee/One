@@ -486,6 +486,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/administracao/aparencia.test.tsx:74 (web)
 - last seen: 2026-11-05T02:36:50Z
 
+### L-080 - 'Nenhum erro é lançado' precisa afirmar o estado da consulta (success), não só espiar console.error; o erro do React Query fica silencioso.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: ajustes-push-e-links
+- evidence: web/src/assistente/avisos.test.tsx C2 (web)
+- last seen: 2026-11-05T03:29:19Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

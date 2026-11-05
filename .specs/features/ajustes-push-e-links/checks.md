@@ -28,7 +28,7 @@ desenha o texto do balão do assistente, se for preciso para o link no meio do t
 a conferência de links do servidor (`Conferencia.LinksConferem`). A única mudança de contrato é o status de
 `GET /api/push/chave` com o push desligado, de `404` para `204`, consumido só pelo `web/` deste repositório.
 
-7 checks · 0 one-way doors · 0 perguntas abertas
+9 checks · 0 one-way doors · 0 perguntas abertas
 
 **Como as provas rodam.** API: `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez.
 Web: `cd web && npx vitest run <arquivo> -t "<nome>"`. Navegador: `npm --prefix web run build`,
@@ -42,6 +42,9 @@ O nome em cada `Proof:` é o contrato (L-022). Classes e arquivos novos: `PushRo
 2. Os testes da web que simulam `GET /api/push/chave` com `404` para o push desligado (`assistente/avisos.test.tsx`,
    `acesso/navegacao.test.tsx` e os de `e2e/` que o façam) passam a simular `204`.
 3. `web/src/assistente/conversa.test.tsx`: a tabela `separarLinks(%j)` e o teste "link da resposta vira botão que abre
+4. `api.Tests/PushRotasTests.cs` `Sem_assunto_o_push_fica_desligado`: o `GET` passa de `404` para `204` (o 4º estado de "push desligado", `Assunto` vazio) (decisão delegada pelo usuário em 04/11, depois da rodada 1).
+5. `web/e2e/arranjo.spec.ts:230`: "O boleto fica em." passa a "O boleto fica em:" (regra do C4) (decisão delegada pelo usuário em 04/11, depois da rodada 1).
+6. `web/src/test/estrutura.test.ts`: a lista `Raiz` ganha `links.test.tsx` (decisão delegada pelo usuário em 04/11, depois da rodada 1).
    em nova aba" passam a esperar os dois-pontos e o link no meio do texto.
 
 ## Checks
@@ -52,7 +55,7 @@ O nome em cada `Proof:` é o contrato (L-022). Classes e arquivos novos: `PushRo
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_204_sem_par_completo"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_200_com_a_chave_configurada"`
 
-**C2** - [x] Na web, com `GET /api/push/chave` respondendo `204`: o botão de avisos não aparece na barra nem na gaveta, a linha "Avisos no celular" não aparece na Conta, e nenhum erro é lançado (Intent 1)
+**C2** - Na web, com `GET /api/push/chave` respondendo `204`: o botão de avisos não aparece na barra, a linha "Avisos no celular" não aparece na Conta, e a consulta `['push-chave']` termina em `success` com dado `null` (nunca em `error`) (decisão delegada pelo usuário em 04/11, depois da rodada 1) (Intent 1)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "push desligado com 204 esconde os avisos"`
 
 **C3** - [x] No Chromium, abrindo o Assistente, a Fila e a Conta com `GET /api/push/chave` respondendo `204`, o console não registra nenhuma mensagem de erro (`page.on('console')` com tipo `error` e `page.on('pageerror')`), e nenhuma requisição responde 4xx (Intent 1)
@@ -80,11 +83,21 @@ Proof: `cd web && npx vitest run src/links.test.tsx -t "chat e conversa da equip
 
 ### S0 - Invariantes
 
-**C7** - [x] A suíte da API, a suíte Vitest, `npm --prefix web run build` e a suíte de arranjo (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato (comandos do `revisao-ux` C60 e C61) (Intent)
+**C7** - A suíte da API, a suíte Vitest, `npm --prefix web run build` e a suíte de arranjo (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato (comandos do `revisao-ux` C60 e C61) (Intent)
 Proof: `dotnet test api.Tests`
 Proof: `cd web && npx vitest run`
 Proof: `npm --prefix web run build`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts`
+
+### S3 - Acréscimos depois da rodada 1 (P1)
+
+Decisão delegada pelo usuário em 04/11, depois da rodada 1 da verificação.
+
+**C8** - `separarLinks` não deixa pontuação nem pedaço solto, em 3 casos: "Ficou com dúvida? https://a.edu.br/ajuda" → texto "Ficou com dúvida?" (o "?" e o "!" ficam, sem dois-pontos); "O prazo termina em 10/11 (veja https://a.edu.br/cal)." → "O prazo termina em 10/11." (o parêntese que só envolvia o link sai inteiro); "Regulamento, p. 12 - https://a.edu.br/reg.pdf" → "Regulamento, p. 12:" (o separador solto sai); os 3 com o link como botão. Uma lista com um link por linha fica fora: limite conhecido, registrado no `## Handoff`
+Proof: `cd web && npx vitest run src/links.test.tsx -t "sem pontuação nem pedaço solto"`
+
+**C9** - O balão do assistente com texto hostil só gera nós de texto, `<wbr>` e `a` com `href` começando por `http://` ou `https://`, sem atributo `on*`, todos com `rel="noreferrer"`, para 6 entradas: `javascript:alert(1)`, `data:text/html,<script>`, `https://a.edu.br/"onmouseover="x`, `<img src=x onerror=alert(1)> https://a.edu.br`, `HTTPS://A.EDU.BR/X` e `https://javascript:x@a.edu.br`
+Proof: `cd web && npx vitest run src/links.test.tsx -t "texto hostil não gera HTML nem link perigoso"`
 
 ## Coverage
 
