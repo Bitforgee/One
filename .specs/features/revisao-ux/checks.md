@@ -190,8 +190,10 @@ diferente da cor de um elemento de referência pintado com `var(--success)`:
 - o detalhe como aluno em `RESOLVIDO` ("Confirmar resolução").
 
 Os 4 botões citados têm `data-variant` `default` ou `outline`, cada um no seu caso. No código de `web/src` (sem os
-testes), a palavra `success` só aparece em `index.css`, em `chamados/Chamados.tsx` (selo do chamado) e em
-`conhecimento/comum.tsx` (selo de situação) (AC 7, door 3)
+testes), o token de cor `success` (`--success`, `bg-success`, `text-success`, `border-success` e variações com
+opacidade) só aparece em `index.css`, em `chamados/Chamados.tsx` (selo do chamado) e em `conhecimento/comum.tsx` (selo
+de situação); `toast.success` da biblioteca de avisos não é cor e fica de fora (AC 7, door 3; precisão por decisão
+delegada pelo usuário em 04/11, depois do lote 1)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "nenhum botão verde"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "verde só nos selos"`
@@ -275,7 +277,7 @@ Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "Conta lista a
 
 **C18** - [x] Na Conta, cada linha age assim (5 casos):
 - "Tema" abre a escolha com "Claro", "Escuro", "Preto" e "Sistema", e escolher "Escuro" grava `one-tema` `dark`;
-- "Avisos no celular" chama a mesma inscrição que o botão de avisos (`POST /api/push/inscricoes`);
+- "Avisos no celular" chama a mesma inscrição que o botão de avisos (`POST /api/push/subscricao`, a rota real; texto corrigido por decisão delegada em 04/11);
 - "Contato do atendimento" abre um `Dialog` com o mesmo `Contato` de C45 de `aparencia-instituicao`;
 - "Trocar senha" leva a `/univag/trocar-senha`;
 - "Sair" faz `POST /api/auth/logout` e leva a `/univag` (AC 13)
