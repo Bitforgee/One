@@ -136,7 +136,7 @@ test.describe('S2 celular', () => {
       await expect(folha).toBeVisible()
       const f = await caixa(folha)
       expect(f.y + f.height, 'vem de baixo').toBeCloseTo(800, 0)
-      expect((await folha.getByRole('button').allInnerTexts()).filter((t) => t !== 'Close' && t !== ''), `${largura} px`).toEqual(nomesNoCartao)
+      expect((await folha.getByRole('button').allInnerTexts()).filter((t) => t !== 'Fechar' && t !== ''), `${largura} px`).toEqual(nomesNoCartao)
     }
   })
 
