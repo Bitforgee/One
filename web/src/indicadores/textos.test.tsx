@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me, type Rota } from '../test/util'
@@ -11,7 +10,6 @@ const Indicadores = [
   'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura',
   '12,3%', '1,5 h', '—',
   'Categorias por conversas', 'Categorias por chamados', 'Categoria', 'Total', 'Boleto3',
-  'Ver tabela',
   // os 4 rodapés dos destaques (*(novo)*)
   'Resolvidas sem reabertura, sobre as conversas com desfecho.', 'Chamados não fechados neste momento.', 'Resolvidas pelo assistente, sobre as conversas com desfecho.', 'Da abertura à primeira resposta pública.',
 ]
@@ -52,9 +50,6 @@ describe('textos', () => {
     await screen.findByText('Indicador principal')
     t.conferir(tela(), ['0'])
 
-    // as tabelas dos rankings abertas
-    for (const botao of screen.getAllByRole('button', { name: 'Ver tabela' })) await userEvent.click(botao)
-    t.conferir(tela(), ['0'])
     montada.unmount()
 
     // erro de leitura (5xx): o bloco com Tentar de novo

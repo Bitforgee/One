@@ -1,7 +1,7 @@
-import { ChartColumn, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChartColumn } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
-import { lazy, Suspense, useId, useState } from 'react'
+import { useState } from 'react'
 import { api } from '../api'
 import { ErroDe } from '../ErroDe'
 import { dia } from '../Periodo'
@@ -11,9 +11,6 @@ import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
 import { BlocoVazio } from '../Tabela'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
-
-// O Recharts vai num chunk separado do de entrada (AC 33).
-const Grafico = lazy(() => import('./Grafico'))
 
 type Linha = { categoria: string; total: number }
 type Ranking = Linha[] | null
@@ -62,9 +59,10 @@ const Colunas: ColumnDef<Linha>[] = [
   { accessorKey: 'total', header: 'Total' },
 ]
 
-// Ranking em tabela de 2 colunas (door 16); vazio, uma linha só com o traço.
+// O ranking em tabela de 2 colunas (door 16): a categoria inteira com a barra embaixo, proporcional ao maior total, e o total à direita; vazio, uma linha só com o traço.
 function TabelaRanking({ linhas }: { linhas: Linha[] }) {
   const tabela = useReactTable({ data: linhas, columns: Colunas, getCoreRowModel: getCoreRowModel() })
+  const maior = Math.max(...linhas.map((l) => l.total))
   return (
     <Table>
       <TableHeader>
@@ -87,8 +85,11 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
         {tabela.getRowModel().rows.map((linha) => (
           <TableRow key={linha.id}>
             {linha.getVisibleCells().map((celula) => (
-              <TableCell key={celula.id} className="whitespace-normal break-words last:text-end">
+              <TableCell key={celula.id} className="whitespace-normal [overflow-wrap:anywhere] first:w-full last:text-end last:tabular-nums">
                 {flexRender(celula.column.columnDef.cell, celula.getContext())}
+                {celula.column.id === 'categoria' && (
+                  <div data-barra aria-hidden="true" className="mt-1 h-1.5 rounded-xs bg-chart-1" style={{ width: maior > 0 ? `${(linha.original.total / maior) * 100}%` : '0%' }} />
+                )}
               </TableCell>
             ))}
           </TableRow>
@@ -98,26 +99,11 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
   )
 }
 
-function Ranking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[]; cor: string }) {
-  const [aberta, setAberta] = useState(false)
-  const id = useId()
+export function Ranking({ titulo, linhas }: { titulo: string; linhas: Linha[] }) {
   return (
     <section className="flex min-w-0 flex-col gap-2">
       <h2 className="m-0 text-base font-semibold">{titulo}</h2>
-      {linhas.length > 0 && (
-        <Suspense fallback={null}>
-          <Grafico linhas={linhas} cor={cor} />
-        </Suspense>
-      )}
-      <Button variant="ghost" size="sm" className="self-start" aria-expanded={aberta} aria-controls={id} onClick={() => setAberta(!aberta)}>
-        {aberta ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-        Ver tabela
-      </Button>
-      {aberta && (
-        <div id={id}>
-          <TabelaRanking linhas={linhas} />
-        </div>
-      )}
+      <TabelaRanking linhas={linhas} />
     </section>
   )
 }
@@ -160,8 +146,8 @@ function Principal({ valor, variacaoDe }: { valor: string; variacaoDe?: string }
 // Os 13 indicadores: o principal, a faixa de 3, as outras 9 em lista e os rankings que a API manda; as colunas seguem a largura do main (door 5).
 function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string }) {
   const rankings = [
-    ['Categorias por conversas', dados.principaisCategorias.porConversas, 'var(--chart-1)'],
-    ['Categorias por chamados', dados.principaisCategorias.porChamados, 'var(--chart-2)'],
+    ['Categorias por conversas', dados.principaisCategorias.porConversas],
+    ['Categorias por chamados', dados.principaisCategorias.porChamados],
   ] as const
   const todos = cartoes(dados)
   const valores = new Map(todos)
@@ -191,8 +177,8 @@ function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string
       <div className="grid grid-cols-1 gap-8 @4xl/main:grid-cols-2">
         {rankings
           .filter(([, r]) => r !== null)
-          .map(([titulo, r, cor]) => (
-            <Ranking key={titulo} titulo={titulo} linhas={r!} cor={cor} />
+          .map(([titulo, r]) => (
+            <Ranking key={titulo} titulo={titulo} linhas={r!} />
           ))}
       </div>
     </div>

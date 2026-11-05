@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
 
@@ -46,14 +45,10 @@ describe('um controle de período, destaques e Ver tabela', () => {
     }
   })
 
-  it.each(['Categorias por conversas', 'Categorias por chamados'])('um controle de período, destaques e Ver tabela: Ver tabela de %s', async (titulo) => {
+  it.each(['Categorias por conversas', 'Categorias por chamados'])('um controle de período, destaques e Ver tabela: a tabela de %s já vem à vista', async (titulo) => {
     indicadores()
     const cartao = (await screen.findByText(titulo)).closest('section') as HTMLElement
-    const botao = within(cartao).getByRole('button', { name: 'Ver tabela' })
-    expect(botao).toHaveAttribute('aria-expanded', 'false')
-    expect(within(cartao).queryByRole('table')).not.toBeInTheDocument()
-    await userEvent.click(botao)
-    expect(botao).toHaveAttribute('aria-expanded', 'true')
+    expect(within(cartao).queryByRole('button', { name: 'Ver tabela' })).not.toBeInTheDocument()
     expect(within(cartao).getByRole('table')).toBeInTheDocument()
   })
 })

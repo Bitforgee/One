@@ -2,7 +2,6 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
-import { linhasDoRotulo } from './Grafico'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 
@@ -85,7 +84,6 @@ describe('indicadores', () => {
     expect(await cartao('Roteamento correto')).toBe('Roteamento correto50%')
     expect(await cartao('Reabertura')).toBe('Reabertura—')
     const conversas = screen.getByText('Categorias por conversas').closest('section') as HTMLElement
-    for (const botao of screen.getAllByRole('button', { name: 'Ver tabela' })) await userEvent.click(botao)
     expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])
     const porChamados = screen.getByText('Categorias por chamados').closest('section') as HTMLElement
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
@@ -171,35 +169,30 @@ describe('indicadores', () => {
       return chamadas
     }
     const cartao = async (titulo: string) => (await screen.findByText(titulo)).closest('section') as HTMLElement
-    const grafico = (c: HTMLElement) => c.querySelector('.recharts-responsive-container')
-    const verTabela = (c: HTMLElement) => userEvent.click(within(c).getByRole('button', { name: 'Ver tabela' }))
+    const barras = (c: HTMLElement) => c.querySelectorAll('[data-barra]')
 
-    // C46 (AC 34)
-    it('ranking com gráfico acima da tabela', async () => {
+    // C46 (AC 34), estrutura-visual door 4: a tabela já vem aberta, com uma barra por linha e sem gráfico
+    it('ranking com barras na própria tabela', async () => {
       indicadores()
       const conversas = await cartao('Categorias por conversas')
-      await waitFor(() => expect(grafico(conversas)).not.toBeNull())
-      expect(grafico(conversas)!.closest('[aria-hidden="true"]')).not.toBeNull()
-      await verTabela(conversas)
-      const tabela = within(conversas).getByRole('table')
-      expect(grafico(conversas)!.compareDocumentPosition(tabela) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(within(conversas).getByRole('table')).toBeInTheDocument()
+      expect(barras(conversas)).toHaveLength(2)
+      expect(conversas.querySelector('.recharts-responsive-container')).toBeNull()
     })
 
-    // C47 (AC 35): com o gráfico do outro ranking já carregado, o vazio continua sem gráfico
-    it('ranking vazio sem gráfico', async () => {
+    // C47 (AC 35): o ranking vazio mostra só o traço, sem barra
+    it('ranking vazio sem barras', async () => {
       indicadores()
-      await waitFor(async () => expect(grafico(await cartao('Categorias por conversas'))).not.toBeNull())
+      await cartao('Categorias por conversas')
       const chamados = await cartao('Categorias por chamados')
-      await verTabela(chamados)
       expect(within(chamados).getByText('—')).toBeInTheDocument()
-      expect(grafico(chamados)).toBeNull()
+      expect(barras(chamados)).toHaveLength(0)
     })
 
     // C51 (AC 54, door 16)
     it('rankings em tabela Categoria e Total', async () => {
       indicadores()
       for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
-        await verTabela(await cartao(titulo))
         const tabela = within(await cartao(titulo)).getByRole('table')
         expect(within(tabela).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Categoria', 'Total'])
       }
@@ -230,12 +223,5 @@ describe('indicadores', () => {
         ]),
       )
     })
-  })
-
-  // aparencia-instituicao C5 (AC 5): até 2 linhas, sem reticências
-  it('rótulo do gráfico', () => {
-    expect(linhasDoRotulo('a'.repeat(24))).toEqual(['a'.repeat(24)])
-    expect(linhasDoRotulo('Financeiro > Boletos e mensalidades')).toEqual(['Financeiro > Boletos', 'e mensalidades'])
-    expect(linhasDoRotulo('Acadêmico > Notas e frequência dos alunos')).toHaveLength(2)
   })
 })
