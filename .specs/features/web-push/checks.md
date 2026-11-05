@@ -134,6 +134,8 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Le
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Envia_ao_endpoint_com_as_chaves_e_marca_enviado"`
 
 **C27** - [x] Para o chamado `ONE-12` da instituição de slug `univag`, o payload enviado é exatamente a string `{"titulo":"One","corpo":"Seu chamado ONE-12 foi atualizado.","url":"/univag/chamados/ONE-12"}`, com 3 chaves, e não contém nenhum de 5 dados do cenário: nome do aluno, e-mail, CPF, texto de uma mensagem e assunto do chamado (AC 15, door 4)
+
+> Nota (`push-com-marca`, 04/11/2026): a porta 4 ganhou a chave `"icone"` e o payload passou a levar o nome da instituição e o texto pelo estado do chamado; o JSON acima é o da época. Valem agora as provas de `push-com-marca` (`Payload_exato_sem_dado_pessoal` atualizado), e o texto continua sem dado pessoal.
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Payload_exato_sem_dado_pessoal"`
 
 **C28** - [x] Quando o enviador falha com status `404` ou `410` a `SubscricaoPush` é apagada com todas as suas `PushSaida` (as de outros chamados também) e um segundo ciclo não chama o enviador; 2 casos (AC 16)

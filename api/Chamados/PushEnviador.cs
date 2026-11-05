@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Lib.Net.Http.WebPush;
 using Lib.Net.Http.WebPush.Authentication;
+using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
@@ -25,9 +26,18 @@ public sealed class EnviadorPush(IHttpClientFactory http, IConfiguration cfg) : 
     }
 }
 
-// door 4: o JSON que o service worker lê; sem nome, e-mail, CPF, texto nem assunto do chamado
-public sealed record PayloadPush(string Titulo, string Corpo, string Url)
+// door 4: o JSON que o service worker lê; sem nome, e-mail, CPF, texto nem assunto do chamado (push-com-marca: título e ícone da instituição, texto pelo estado)
+public sealed record PayloadPush(string Titulo, string Corpo, string Url, string Icone)
 {
-    public static string De(string slug, string numero) =>
-        JsonSerializer.Serialize(new PayloadPush("One", $"Seu chamado {numero} foi atualizado.", $"/{slug}/chamados/{numero}"), JsonSerializerOptions.Web);
+    // acentos legíveis em vez de escapes unicode; o JSON é o mesmo
+    static readonly JsonSerializerOptions Json = new(JsonSerializerOptions.Web) { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    public const string IconePadrao = "/icons/icon-192.png";
+
+    public static string De(string slug, string numero, string titulo, string estado, int? versaoIcone) =>
+        JsonSerializer.Serialize(new PayloadPush(titulo, $"Sua solicitação {numero} " + estado switch
+        {
+            EstadosChamado.Resolvido => "foi resolvida.",
+            EstadosChamado.AguardandoAluno => "aguarda sua resposta.",
+            _ => "tem uma resposta nova.",
+        }, $"/{slug}/chamados/{numero}", versaoIcone is { } v ? $"/api/instituicoes/{slug}/imagens/icone?v={v}" : IconePadrao), Json);
 }

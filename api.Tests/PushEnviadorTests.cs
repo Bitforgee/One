@@ -53,7 +53,7 @@ public class PushEnviadorTests : IClassFixture<OneFactoryEnviadorReal>
         var (envio, rede) = Montar(HttpStatusCode.Created);
         var (p256dh, auth) = Navegador();
 
-        await envio.Enviar("https://push.teste/abc", p256dh, auth, PayloadPush.De("univag", "ONE-1"), CancellationToken.None);
+        await envio.Enviar("https://push.teste/abc", p256dh, auth, PayloadPush.De("univag", "ONE-1", "Univag", "ABERTO", null), CancellationToken.None);
 
         var pedido = Assert.Single(rede.Pedidos);
         Assert.Equal((HttpMethod.Post, new Uri("https://push.teste/abc"), "aes128gcm"), (pedido.Metodo, pedido.Uri, pedido.Codificacao));

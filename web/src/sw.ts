@@ -4,7 +4,7 @@ import { NavigationRoute, registerRoute } from 'workbox-routing'
 
 // O worker usa só estes pedaços da API do navegador; a lib "webworker" colide com "DOM" no tsconfig do app.
 type Janela = { focus(): Promise<unknown>; navigate(url: string): Promise<unknown> }
-type Registro = { showNotification(titulo: string, opcoes: { body: string; tag?: string; data: { url?: string } }): Promise<void> }
+type Registro = { showNotification(titulo: string, opcoes: { body: string; icon: string; tag?: string; data: { url?: string } }): Promise<void> }
 type Evento = { waitUntil(p: Promise<unknown>): void }
 type EventoPush = Evento & { data: { text(): string } | null }
 type EventoToque = Evento & { notification: { close(): void; data?: { url?: string } } }
@@ -18,13 +18,17 @@ declare global {
 }
 
 export const Negados = [/^\/api\//]
-const Padrao = { titulo: 'One', corpo: 'Sua solicitação foi atualizada.' }
+const IconePadrao = '/icons/icon-192.png'
+const Padrao = { titulo: 'One', corpo: 'Sua solicitação foi atualizada.', icone: IconePadrao }
 
-// door 4: {"titulo","corpo","url"}; qualquer outra coisa vira o texto padrão, sem tag nem url
+// só caminho do próprio app: o aviso não carrega imagem de fora
+const iconeDoApp = (i: unknown) => (typeof i === 'string' && i.startsWith('/') && !i.startsWith('//') ? i : IconePadrao)
+
+// door 4: {"titulo","corpo","url","icone"}; qualquer outra coisa vira o texto padrão, sem tag nem url
 function lerCarga(texto: string | undefined) {
   try {
-    const { titulo, corpo, url } = JSON.parse(texto ?? '')
-    if (typeof titulo === 'string' && typeof corpo === 'string') return { titulo, corpo, url: typeof url === 'string' ? url : undefined }
+    const { titulo, corpo, url, icone } = JSON.parse(texto ?? '')
+    if (typeof titulo === 'string' && typeof corpo === 'string') return { titulo, corpo, url: typeof url === 'string' ? url : undefined, icone: iconeDoApp(icone) }
   } catch {
     /* sem JSON legível */
   }
@@ -33,8 +37,8 @@ function lerCarga(texto: string | undefined) {
 
 // tag = último trecho da url (o número do chamado): um segundo aviso do mesmo chamado substitui o primeiro
 export function aoReceberPush(evento: EventoPush, registro: Registro) {
-  const { titulo, corpo, url } = lerCarga(evento.data?.text())
-  evento.waitUntil(registro.showNotification(titulo, { body: corpo, tag: url?.split('/').pop(), data: { url } }))
+  const { titulo, corpo, url, icone } = lerCarga(evento.data?.text())
+  evento.waitUntil(registro.showNotification(titulo, { body: corpo, icon: icone, tag: url?.split('/').pop(), data: { url } }))
 }
 
 export function aoTocar(evento: EventoToque, clientes: Clientes) {

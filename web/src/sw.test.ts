@@ -14,7 +14,7 @@ describe('service worker', () => {
   it('push mostra a notificação com a tag do chamado', () => {
     const corpo = (n: string) => JSON.stringify({ titulo: 'One', corpo: `Seu chamado ${n} foi atualizado.`, url: `/univag/chamados/${n}` })
     const a = push(corpo('ONE-12'))
-    expect(a.mostrar).toHaveBeenCalledWith('One', { body: 'Seu chamado ONE-12 foi atualizado.', tag: 'ONE-12', data: { url } })
+    expect(a.mostrar).toHaveBeenCalledWith('One', { body: 'Seu chamado ONE-12 foi atualizado.', icon: '/icons/icon-192.png', tag: 'ONE-12', data: { url } })
     expect(a.espera).toHaveBeenCalledTimes(1)
     const tag = (m: ReturnType<typeof push>) => (m.mostrar.mock.calls[0] as unknown as [string, { tag: string }])[1].tag
     expect(tag(push(corpo('ONE-12')))).toBe(tag(a))
@@ -27,7 +27,30 @@ describe('service worker', () => {
     ['array', '[]'],
     ['objeto vazio', '{}'],
   ])('push sem JSON legível mostra o texto padrão (%s)', (_, dados) => {
-    expect(push(dados).mostrar).toHaveBeenCalledWith('One', { body: 'Sua solicitação foi atualizada.', tag: undefined, data: { url: undefined } })
+    expect(push(dados).mostrar).toHaveBeenCalledWith('One', { body: 'Sua solicitação foi atualizada.', icon: '/icons/icon-192.png', tag: undefined, data: { url: undefined } })
+  })
+
+  it('aviso com o ícone da instituição', () => {
+    const icone = '/api/instituicoes/univag/imagens/icone?v=2'
+    const corpo = 'Sua solicitação ONE-1 tem uma resposta nova.'
+    const { mostrar } = push(JSON.stringify({ titulo: 'Univag', corpo, url: '/univag/chamados/ONE-1', icone }))
+    expect(mostrar).toHaveBeenCalledWith('Univag', { body: corpo, icon: icone, tag: 'ONE-1', data: { url: '/univag/chamados/ONE-1' } })
+  })
+
+  it.each([
+    ['URL de fora', 'https://outro.site/x.png'],
+    ['esquema javascript', 'javascript:x'],
+    ['sem barra inicial', 'icons/x.png'],
+    ['barra dupla', '//outro.site/x.png'],
+    ['número', 42],
+    ['ausente', undefined],
+  ])('ícone só do próprio app (%s)', (_, icone) => {
+    const { mostrar } = push(JSON.stringify({ titulo: 'Univag', corpo: 'c', url: '/univag/chamados/ONE-1', icone }))
+    expect((mostrar.mock.calls[0] as unknown as [string, { icon: string }])[1].icon).toBe('/icons/icon-192.png')
+  })
+
+  it('ícone só do próprio app: carga ilegível usa o texto e o ícone padrão', () => {
+    expect(push('olá').mostrar).toHaveBeenCalledWith('One', { body: 'Sua solicitação foi atualizada.', icon: '/icons/icon-192.png', tag: undefined, data: { url: undefined } })
   })
 
   it('texto reserva fala em solicitação', () => {

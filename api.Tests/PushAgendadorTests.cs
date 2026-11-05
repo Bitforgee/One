@@ -40,8 +40,9 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
 
     async Task<PushSaida> Linha(long id) => Assert.Single(await f.Pushes(q => q.Where(p => p.Id == id)));
 
-    static string Payload(string slug, string numero) =>
-        $$"""{"titulo":"One","corpo":"Seu chamado {{numero}} foi atualizado.","url":"/{{slug}}/chamados/{{numero}}"}""";
+    // chamado ABERTO, instituição sem nome curto nem ícone (push-com-marca)
+    static string Payload(Instituicao i, string numero) =>
+        $$"""{"titulo":"{{i.Nome}}","corpo":"Sua solicitação {{numero}} tem uma resposta nova.","url":"/{{i.Slug}}/chamados/{{numero}}","icone":"/icons/icon-192.png"}""";
 
     List<EnvioPush> Chamadas(string endpoint) => [.. f.Push.Envios.Where(e => e.Endpoint == endpoint)];
 
@@ -67,7 +68,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         await Agendador.Executar();
 
         var chamada = Assert.Single(Chamadas(c.S.Endpoint));
-        Assert.Equal((c.S.Endpoint, c.S.P256dh, c.S.Auth, Payload(c.B.Instituicao.Slug, c.Numero)), (chamada.Endpoint, chamada.P256dh, chamada.Auth, chamada.Payload));
+        Assert.Equal((c.S.Endpoint, c.S.P256dh, c.S.Auth, Payload(c.B.Instituicao, c.Numero)), (chamada.Endpoint, chamada.P256dh, chamada.Auth, chamada.Payload));
         Assert.Equal(Agora, (await Linha(id)).EnviadoEm);
 
         f.Relogio.Advance(TimeSpan.FromMinutes(1));
@@ -86,11 +87,89 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         await Agendador.Executar();
 
         var payload = Assert.Single(Chamadas(c.S.Endpoint)).Payload;
-        Assert.Equal("""{"titulo":"One","corpo":"Seu chamado ONE-12 foi atualizado.","url":"/univag/chamados/ONE-12"}""", payload);
-        Assert.Equal(["titulo", "corpo", "url"], System.Text.Json.JsonDocument.Parse(payload).RootElement.EnumerateObject().Select(p => p.Name));
+        Assert.Equal("""{"titulo":"Univag","corpo":"Sua solicitação ONE-12 tem uma resposta nova.","url":"/univag/chamados/ONE-12","icone":"/icons/icon-192.png"}""", payload);
+        Assert.Equal(["titulo", "corpo", "url", "icone"], System.Text.Json.JsonDocument.Parse(payload).RootElement.EnumerateObject().Select(p => p.Name));
         var titulo = await f.Db(univag.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).Select(x => x.Titulo).SingleAsync());
         foreach (var dado in new[] { c.B.Aluno.Usuario.Nome, c.B.Aluno.Usuario.Email, c.B.Aluno.Usuario.Cpf, "Texto privado da mensagem", titulo })
             Assert.DoesNotContain(dado, payload);
+        var raiz = System.Text.Json.JsonDocument.Parse(payload).RootElement; // a url leva /chamados/; o que o aluno lê é o título e o corpo
+        Assert.NotEqual("One", raiz.GetProperty("titulo").GetString());
+        Assert.DoesNotContain("chamado", raiz.GetProperty("titulo").GetString() + raiz.GetProperty("corpo").GetString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Payload_com_marca_da_instituicao()
+    {
+        var i = await f.Instituicao(slug: "univag-marca", nome: "Centro Universitário Vale");
+        await f.Db(i.Id, async db =>
+        {
+            await db.Instituicoes.Where(x => x.Id == i.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.NomeCurto, "Univag"));
+            db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 2 });
+            await db.SaveChangesAsync();
+        });
+        var c = await NovaCena(i);
+        await f.Db(i.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).ExecuteUpdateAsync(s => s.SetProperty(x => x.Numero, "ONE-1").SetProperty(x => x.Estado, "EM_ATENDIMENTO")));
+        await Fila(c);
+
+        await Agendador.Executar();
+
+        Assert.Equal("""{"titulo":"Univag","corpo":"Sua solicitação ONE-1 tem uma resposta nova.","url":"/univag-marca/chamados/ONE-1","icone":"/api/instituicoes/univag-marca/imagens/icone?v=2"}""",
+            Assert.Single(Chamadas(c.S.Endpoint)).Payload);
+    }
+
+    [Theory]
+    [InlineData("ABERTO", "tem uma resposta nova.")]
+    [InlineData("EM_ATENDIMENTO", "tem uma resposta nova.")]
+    [InlineData("AGUARDANDO_ALUNO", "aguarda sua resposta.")]
+    [InlineData("RESOLVIDO", "foi resolvida.")]
+    [InlineData("FECHADO", "tem uma resposta nova.")]
+    public async Task Corpo_pelo_estado_do_chamado(string estado, string fim)
+    {
+        var c = await NovaCena();
+        await f.Db(c.B.Instituicao.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).ExecuteUpdateAsync(s => s.SetProperty(x => x.Estado, estado)));
+        await Fila(c);
+
+        await Agendador.Executar();
+
+        var corpo = System.Text.Json.JsonDocument.Parse(Assert.Single(Chamadas(c.S.Endpoint)).Payload).RootElement.GetProperty("corpo").GetString();
+        Assert.Equal($"Sua solicitação {c.Numero} {fim}", corpo);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Payload_padrao_sem_aparencia(bool iconeRemovido)
+    {
+        var i = await f.Instituicao(nome: "Centro Universitário Vale");
+        if (iconeRemovido)
+            await f.Db(i.Id, async db =>
+            {
+                db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 3, RemovidaEm = Agora });
+                await db.SaveChangesAsync();
+            });
+        var c = await NovaCena(i);
+        await Fila(c);
+
+        await Agendador.Executar();
+
+        Assert.Equal(Payload(i, c.Numero), Assert.Single(Chamadas(c.S.Endpoint)).Payload);
+    }
+
+    [Fact]
+    public async Task Icone_do_payload_e_o_da_rota_publica()
+    {
+        var i = await f.Instituicao(nome: "Univag");
+        var admin = await f.Entrar(i, await f.Usuario(i, [Papeis.Administrador]));
+        Assert.True((await ImagemTeste.Enviar(admin, "icone", ImagemTeste.Png(512, 512))).IsSuccessStatusCode);
+        var c = await NovaCena(i);
+        await Fila(c);
+
+        await Agendador.Executar();
+
+        var icone = System.Text.Json.JsonDocument.Parse(Assert.Single(Chamadas(c.S.Endpoint)).Payload).RootElement.GetProperty("icone").GetString()!;
+        var versao = (await (await f.Cliente().GetAsync($"/api/instituicoes/{i.Slug}")).Json()).GetProperty("imagens").GetProperty("icone").GetInt32();
+        Assert.Equal($"/api/instituicoes/{i.Slug}/imagens/icone?v={versao}", icone);
+        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().GetAsync(icone)).StatusCode);
     }
 
     [Theory]
@@ -215,8 +294,8 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
 
         await Agendador.Executar();
 
-        Assert.Equal(Payload(c1.B.Instituicao.Slug, c1.Numero), Assert.Single(Chamadas(c1.S.Endpoint)).Payload);
-        Assert.Equal(Payload(c2.B.Instituicao.Slug, c2.Numero), Assert.Single(Chamadas(c2.S.Endpoint)).Payload);
+        Assert.Equal(Payload(c1.B.Instituicao, c1.Numero), Assert.Single(Chamadas(c1.S.Endpoint)).Payload);
+        Assert.Equal(Payload(c2.B.Instituicao, c2.Numero), Assert.Single(Chamadas(c2.S.Endpoint)).Payload);
     }
 
     [Fact]

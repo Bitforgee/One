@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Chamados;
+using One.Api.Instituicoes;
 using Pgvector;
 using Lib.Net.Http.WebPush;
 using One.Api.Dados;
@@ -207,18 +208,22 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await db.SaveChangesAsync();
     }
 
+    record DoChamado(string Numero, string Estado);
+    record DaInstituicao(string Slug, string Titulo);
+
     async Task EnviarPush(OneDb db, IEnviadorPush envio, long id, DateTime agora, CancellationToken parar)
     {
         var p = await db.PushesSaida.SingleOrDefaultAsync(x => x.Id == id && x.EnviadoEm == null && x.Tentativas < MaxTentativas);
         var s = p is null ? null : await db.SubscricoesPush.SingleOrDefaultAsync(x => x.Id == p.SubscricaoId);
         if (p is null || s is null) return;
-        var numero = await db.Chamados.Where(c => c.Id == p.ChamadoId).Select(c => c.Numero).SingleAsync();
-        var slug = await db.Instituicoes.Where(i => i.Id == p.InstituicaoId).Select(i => i.Slug).SingleAsync();
+        var chamado = await db.Chamados.Where(c => c.Id == p.ChamadoId).Select(c => new DoChamado(c.Numero, c.Estado)).SingleAsync();
+        var inst = await db.Instituicoes.Where(i => i.Id == p.InstituicaoId).Select(i => new DaInstituicao(i.Slug, i.NomeCurto ?? i.Nome)).SingleAsync();
+        var icone = await db.ImagensInstituicao.Where(x => x.Tipo == TiposDeImagem.Icone && x.RemovidaEm == null).Select(x => (int?)x.Versao).FirstOrDefaultAsync();
         using var prazo = new CancellationTokenSource(LimiteDoPush, relogio);
         using var junto = CancellationTokenSource.CreateLinkedTokenSource(parar, prazo.Token);
         try
         {
-            await envio.Enviar(s.Endpoint, s.P256dh, s.Auth, PayloadPush.De(slug, numero), junto.Token);
+            await envio.Enviar(s.Endpoint, s.P256dh, s.Auth, PayloadPush.De(inst.Slug, chamado.Numero, inst.Titulo, chamado.Estado, icone), junto.Token);
             p.Concluir(agora);
         }
         catch (PushServiceClientException e) when (e.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone)
