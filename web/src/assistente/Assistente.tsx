@@ -195,7 +195,7 @@ function Transferido({ transferido, fuso, contato }: { transferido: Transferenci
   const { chamado } = useChamado(transferido.numero)
   return (
     <>
-      <section className="my-2 flex flex-col gap-2 rounded-lg border p-4">
+      <section className="my-2 flex flex-col gap-2 rounded-md border p-4">
         <h2 className="m-0 text-base font-semibold">{`Sua solicitação ${transferido.numero} foi para ${transferido.setor}`}</h2>
         <p className="m-0 text-sm">A resposta chega em Solicitações e no seu e-mail.</p>
         {temContato(contato) && (
@@ -244,13 +244,13 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   const vazio = pendente || !texto.trim()
   // type="button": dentro do form, o padrão "submit" enviaria a mensagem
   const atendente = (
-    <Button type="button" size="sm" className="self-start rounded-full" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
+    <Button type="button" size="sm" className="self-start" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
       <Hand aria-hidden="true" />
       Falar com atendente
     </Button>
   )
   const encerrar = emConversa && (
-    <Button type="button" size="sm" className="rounded-full" variant="outline" onClick={() => confirmar('encerrar')}>
+    <Button type="button" size="sm" variant="outline" onClick={() => confirmar('encerrar')}>
       Encerrar
     </Button>
   )

@@ -54,7 +54,7 @@ export function Links({ links }: { links: string[] }) {
   return (
     <div className="flex flex-wrap gap-2 pt-1">
       {links.map((link) => (
-        <Button key={link} asChild variant="outline" size="sm" className="max-w-full rounded-full bg-background">
+        <Button key={link} asChild variant="outline" size="sm" className="max-w-full bg-background">
           <a href={link} target="_blank" rel="noreferrer">
             <ExternalLink aria-hidden="true" />
             <span className="truncate">{rotulo(link)}</span>

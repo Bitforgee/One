@@ -75,7 +75,7 @@ function Tema() {
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Tema">
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Tema">
           <Atual aria-hidden="true" />
         </Button>
       </PopoverTrigger>
@@ -151,7 +151,7 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold">
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
                 {iniciais(me.nome)}
               </span>
               {dados}
@@ -294,7 +294,7 @@ function PularParaOConteudo() {
         e.preventDefault()
         document.getElementById('conteudo')?.focus()
       }}
-      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-sm focus:bg-background focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
     >
       Pular para o conteúdo
     </a>

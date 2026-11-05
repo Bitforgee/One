@@ -39,7 +39,7 @@ export function Conta() {
         <p className="m-0 text-base font-medium">{me.nome}</p>
         <p className="m-0 text-sm text-muted-foreground">{me.cpfMascarado}</p>
       </div>
-      <ul className="m-0 flex list-none flex-col divide-y rounded-lg border p-0">
+      <ul className="m-0 flex list-none flex-col divide-y rounded-md border p-0">
         <li>
           <Popover open={temaAberto} onOpenChange={setTemaAberto}>
             <PopoverTrigger asChild>

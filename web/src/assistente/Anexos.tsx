@@ -35,7 +35,7 @@ export function BotaoAnexar({ anexos }: { anexos: Anexos }) {
         type="button"
         size="icon-sm"
         variant="ghost"
-        className="shrink-0 rounded-full"
+        className="shrink-0"
         aria-label="Anexar arquivo"
         disabled={anexos.enviados + anexos.escolhidos.length >= LimiteDeAnexos}
         onFocus={() => anexos.setFoco(true)}
@@ -69,7 +69,7 @@ export function Selos({ anexos }: { anexos: Anexos }) {
           <li key={i}>
             <Badge variant="secondary" className="max-w-full gap-0.5 pe-0.5">
               <span className="truncate">{a.name}</span>
-              <Button type="button" size="icon-xs" variant="ghost" className="size-4 rounded-full" aria-label={`Remover ${a.name}`} onClick={() => anexos.remover(i)}>
+              <Button type="button" size="icon-xs" variant="ghost" className="size-4" aria-label={`Remover ${a.name}`} onClick={() => anexos.remover(i)}>
                 <X aria-hidden="true" />
               </Button>
             </Badge>

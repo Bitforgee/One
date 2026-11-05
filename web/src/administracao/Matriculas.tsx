@@ -28,7 +28,7 @@ function baixarModelo() {
 function ErrosDaImportacao({ erros }: { erros: Erro[] }) {
   if (erros.length === 0) return null
   return (
-    <ul className="m-0 flex list-none flex-col divide-y rounded-lg border p-0 text-sm">
+    <ul className="m-0 flex list-none flex-col divide-y rounded-md border p-0 text-sm">
       {erros.map((e, i) => (
         <li key={i} className="flex gap-3 p-3">
           <span className="shrink-0 font-medium">Linha {e.linha}</span>

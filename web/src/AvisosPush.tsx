@@ -35,7 +35,7 @@ export function AvisosPush() {
   const rotulo = inscrito ? 'Desativar avisos' : 'Ativar avisos neste aparelho'
   const Icone = inscrito ? BellOff : Bell
   return (
-    <Button variant="ghost" size="icon" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
+    <Button variant="ghost" size="icon" className="rounded-full" aria-label={rotulo} title={rotulo} disabled={ocupado} onClick={aoClicar}>
       <Icone aria-hidden="true" />
     </Button>
   )

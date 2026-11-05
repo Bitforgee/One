@@ -4,7 +4,6 @@
 /* Tokens de ## Visual (redesign-institucional/plan.md): neutros, um azul de destaque; .black sobrepõe o .dark (door 2).
    revisao-ux door 2: background, muted, accent, border e input levam um traço da matiz de --marca (ou do azul de base) */
 :root {
-  --radius: 0.5rem;
   --background: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 2%, oklch(1 0 none));
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -44,7 +43,6 @@
 }
 
 .dark {
-  --radius: 0.5rem;
   --background: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 3%, oklch(0.17 0 none));
   --foreground: oklch(0.95 0 0);
   --card: oklch(0.205 0 0);
@@ -108,11 +106,12 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Source Serif 4 Variable', ui-serif, Georgia, serif;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -153,18 +152,13 @@
   body {
     @apply bg-background text-foreground;
   }
-  /* títulos no tamanho óptico de exibição da Inter variável (revisao-ux door 2) */
-  h1,
-  h2 {
-    font-variation-settings: 'opsz' 32;
-  }
 }
 
 /* Tabela abaixo de 768 px: cada linha é um cartão (sem <table>; ver ui/table.tsx). O primeiro filho e os marcados com
    data-celula ficam na 1ª linha do cartão; os demais ocupam a linha toda. */
-[data-cartoes] [data-slot='table-row'] { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; row-gap: 0.25rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+[data-cartoes] [data-slot='table-row'] { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; row-gap: 0.25rem; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-md); }
 [data-cartoes] [data-slot='table-cell'] { grid-column: 1 / -1; padding: 0; white-space: normal; }
 [data-cartoes] [data-slot='table-cell']:first-child { grid-column: 1; grid-row: 1; }
 [data-cartoes] [data-celula] { display: flex; justify-content: flex-end; grid-row: 1; align-self: start; margin-inline-start: 0.5rem; }
-[data-cartoes] [data-celula='selo'] { grid-column: 2; }
+[data-cartoes] [data-celula='selo'] { grid-column: 2; margin-top: 1px; }
 [data-cartoes] [data-celula='acoes'] { grid-column: 3; }

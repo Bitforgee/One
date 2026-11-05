@@ -248,7 +248,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
         }}
       >
         {Secoes.map((s) => (
-          <section key={s.titulo} aria-labelledby={`sec-${s.titulo}`} className="flex flex-col gap-4 rounded-lg border p-4">
+          <section key={s.titulo} aria-labelledby={`sec-${s.titulo}`} className="flex flex-col gap-4 rounded-md border p-4">
             <h2 id={`sec-${s.titulo}`} className="m-0 text-base font-semibold">
               {s.titulo}
             </h2>

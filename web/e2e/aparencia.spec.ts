@@ -74,60 +74,45 @@ test.describe('S4 marca da instituição', () => {
     }
   })
 
-  test('logo até 40 px no login', async ({ page }) => {
+  test('logo até 48 px no login', async ({ page }) => {
     await simularApi(page, undefined, false, aparencia({ logo: 3 }))
     for (const largura of [1440, 390]) {
       await page.setViewportSize({ width: largura, height: 900 })
       await page.goto('/univag')
       const logo = imagem(page, 'logo').first()
       await logo.waitFor()
-      expect((await caixa(logo)).height, `${largura} px`).toBeLessThanOrEqual(41)
+      expect((await caixa(logo)).height, `${largura} px`).toBeLessThanOrEqual(49)
       await expect(logo).toHaveAttribute('alt', 'Centro Universitário de Várzea Grande')
     }
   })
 
-  test('imagem do login no painel e na faixa', async ({ page }) => {
+  test('imagem do login na coluna direita e na faixa', async ({ page }) => {
     await simularApi(page, undefined, false, aparencia({ logo: 3, login: 1 }))
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/univag')
     const foto = imagem(page, 'login')
     await foto.waitFor()
-    const painel = foto.locator('xpath=..')
-    const [fb, pb] = [await caixa(foto), await caixa(painel)]
-    for (const lado of ['x', 'y', 'width', 'height'] as const) perto(fb[lado], pb[lado], `painel ${lado}`)
+    await expect(foto).toHaveCount(1)
+    const fb = await caixa(foto)
+    perto(fb.x, 720, 'coluna direita x')
+    perto(fb.width, 720, 'coluna direita largura')
     expect(await foto.evaluate((e) => getComputedStyle(e).objectFit)).toBe('cover')
     await expect(foto).toHaveAttribute('alt', '')
+    // os textos ficam na coluna do formulário, nunca sobre a foto
     for (const texto of ['Fale com a Univag', 'Aqui você resolve tudo sobre a sua vida acadêmica.', 'Boletos', 'Matrícula', 'Documentos']) {
-      const alvo = painel.getByText(texto, { exact: true })
+      const alvo = page.getByText(texto, { exact: true })
       await expect(alvo).toBeVisible()
       const t = await caixa(alvo)
-      expect(t.y).toBeGreaterThanOrEqual(pb.y - 1)
-      expect(t.y + t.height).toBeLessThanOrEqual(pb.y + pb.height + 1)
+      expect(t.x + t.width, texto).toBeLessThanOrEqual(fb.x + 1)
     }
 
     await page.setViewportSize({ width: 390, height: 844 })
-    const faixa = imagem(page, 'login').locator('xpath=..')
-    perto((await caixa(faixa)).height, 128, 'faixa de 128 px')
-    const [fx, titulo, logo] = [await caixa(faixa), await caixa(page.locator('h1')), await caixa(faixa.locator('img[src*="/imagens/logo"]'))]
+    const faixa = imagem(page, 'login')
+    await expect(faixa).toHaveCount(1)
+    const [fx, titulo, logo] = [await caixa(faixa), await caixa(page.locator('h1')), await caixa(imagem(page, 'logo').first())]
+    perto(fx.height, 160, 'faixa de 160 px')
     expect(fx.y + fx.height, 'faixa acima do h1').toBeLessThanOrEqual(titulo.y + 1)
-    expect(logo.x).toBeGreaterThanOrEqual(fx.x - 1)
-    expect(logo.y).toBeGreaterThanOrEqual(fx.y - 1)
-    expect(logo.x + logo.width).toBeLessThanOrEqual(fx.x + fx.width + 1)
-    expect(logo.y + logo.height).toBeLessThanOrEqual(fx.y + fx.height + 1)
-  })
-})
-
-test.describe('S6 ilustrações', () => {
-  test('ilustração no login sem imagem', async ({ page }) => {
-    await simularApi(page, undefined, false, semAparencia)
-    for (const [largura, pai] of [[1440, 'lg:flex'], [390, 'lg:hidden']] as const) {
-      await page.setViewportSize({ width: largura, height: 900 })
-      await page.goto('/univag')
-      const desenho = page.locator('svg[data-ilustracao="boas-vindas"]:visible')
-      await desenho.first().waitFor()
-      expect(await desenho.count(), `${largura} px`).toBe(1)
-      await expect(desenho.locator(`xpath=ancestor::div[contains(@class, "${pai}")]`).first()).toBeVisible()
-    }
+    expect(fx.y + fx.height, 'faixa acima do logo').toBeLessThanOrEqual(logo.y + 1)
   })
 })
 
@@ -162,21 +147,6 @@ test.describe('S9 arranjos das telas', () => {
           perto(c.x + c.width / 2, area.x + area.width / 2, `${largura} px, ${dados.imagens.assistente ? 'com' : 'sem'} foto: centro de ${nome}`)
       }
     }
-  })
-
-  test('textos do login na base sobre a faixa', async ({ page }) => {
-    await simularApi(page, undefined, false, aparencia({ logo: 3, login: 1 }))
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/univag')
-    const foto = imagem(page, 'login')
-    await foto.waitFor()
-    const painel = foto.locator('xpath=..')
-    const [p, bloco] = [await caixa(painel), await caixa(painel.getByRole('heading', { name: 'Fale com a Univag' }).locator('xpath=..'))]
-    expect(p.y + p.height - (bloco.y + bloco.height), 'base do bloco a até 48 px da base do painel').toBeLessThanOrEqual(48)
-    const faixas = await painel.locator('*').evaluateAll((els) =>
-      els.filter((e) => getComputedStyle(e).backgroundImage.includes('linear-gradient')).map((e) => e.getBoundingClientRect().toJSON()),
-    )
-    expect(faixas.some((f) => f.left <= bloco.x + 1 && f.top <= bloco.y + 1 && f.right >= bloco.x + bloco.width - 1 && f.bottom >= bloco.y + bloco.height - 1), 'faixa com gradiente cobre o bloco').toBe(true)
   })
 
   test('foto do assistente à esquerda do balão', async ({ page }) => {

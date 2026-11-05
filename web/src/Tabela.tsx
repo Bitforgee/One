@@ -56,7 +56,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
       </div>
     )
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-md border">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-muted">
           <TableRow className="hover:bg-transparent">

@@ -147,7 +147,7 @@ function Painel({ dados }: { dados: Indicadores }) {
   return (
     <>
       {/* um quadro só, com linhas de 1 px entre as células (gap-px sobre bg-border), em vez de cartões soltos */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border @5xl/main:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border @5xl/main:grid-cols-4">
         {Destaques.map(([rotulo, rodape]) => (
           <Card key={rotulo} className="gap-3 rounded-none border-0 p-4 @xl/main:p-5">
             <div className="flex flex-col gap-1">
@@ -158,7 +158,7 @@ function Painel({ dados }: { dados: Indicadores }) {
           </Card>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border @3xl/main:grid-cols-3">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border @3xl/main:grid-cols-3">
         {compactos.map(([rotulo, valor], i) => (
           // o último de uma lista ímpar ocupa a linha toda em 2 colunas, para não sobrar célula vazia
           <Card key={rotulo} className={`gap-1 rounded-none border-0 px-5 py-4 ${i === compactos.length - 1 && compactos.length % 2 ? 'col-span-2 @3xl/main:col-span-1' : ''}`}>

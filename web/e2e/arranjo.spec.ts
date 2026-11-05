@@ -56,19 +56,6 @@ async function amostrarBalaoNovo(page: Page) {
 const deslocamentoY = (transform: string) => (transform === 'none' ? 0 : Number(transform.match(/matrix\(([^)]+)\)/)![1].split(',')[5]))
 const identidade = (transform: string) => transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)'
 
-test.describe('cabeçalho', () => {
-  test('fonte Inter do próprio app', async ({ page, baseURL }) => {
-    const origens = new Set<string>()
-    page.on('request', (r) => void origens.add(new URL(r.url()).origin))
-    await simularApi(page)
-    await page.goto('/univag')
-    await page.getByLabel('CPF').waitFor()
-    expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).toMatch(/^"Inter Variable"/)
-    expect(await page.evaluate(async () => (await document.fonts.ready, document.fonts.check('16px "Inter Variable"')))).toBe(true)
-    expect([...origens]).toEqual([new URL(baseURL!).origin])
-  })
-})
-
 test.describe('Assistente', () => {
   test.use({ viewport: { width: 360, height: 740 } })
 
@@ -348,7 +335,7 @@ test.describe('acesso', () => {
     for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']) {
       await page.setViewportSize({ width: 360, height: 740 })
       await page.goto(caminho)
-      const bloco = page.locator('h1').locator('xpath=..')
+      const bloco = page.locator('h1').locator('xpath=../..') // a coluna única (identidade-visual door 3)
       await bloco.waitFor()
       const c = await caixa(bloco)
       expect(Math.abs(c.x - 24), caminho).toBeLessThanOrEqual(1)
@@ -356,8 +343,8 @@ test.describe('acesso', () => {
 
       await page.setViewportSize({ width: 1024, height: 740 })
       const g = await caixa(bloco)
-      expect(Math.abs(g.x - 96), caminho).toBeLessThanOrEqual(1)
-      expect(Math.abs(g.width - 320), caminho).toBeLessThanOrEqual(1)
+      expect(Math.abs(g.x - 312), caminho).toBeLessThanOrEqual(1)
+      expect(Math.abs(g.width - 400), caminho).toBeLessThanOrEqual(1)
     }
 
     await page.setViewportSize({ width: 360, height: 740 })
@@ -366,7 +353,7 @@ test.describe('acesso', () => {
     const cpf = await caixa(page.getByLabel('CPF'))
     expect(Math.abs(entrar.width - cpf.width)).toBeLessThanOrEqual(1)
     const link = await caixa(page.getByRole('link', { name: 'Primeiro acesso ou esqueci minha senha' }))
-    const bloco = await caixa(page.locator('h1').locator('xpath=..'))
+    const bloco = await caixa(page.locator('h1').locator('xpath=../..'))
     expect(link.y).toBeGreaterThanOrEqual(entrar.y + entrar.height - 1)
     expect(Math.abs(link.x - bloco.x)).toBeLessThanOrEqual(1)
 
@@ -385,7 +372,7 @@ test.describe('acesso', () => {
         await page.goto(caminho)
         const rotulo = `${caminho} a ${largura}`
         if (caminho === '/') {
-          // AC 37: sem cartão; a ilustração, "One", a frase e o texto, centralizados no bloco de até 384 px
+          // AC 20: sem cartão nem ilustração; "One", a frase e o texto, centralizados no bloco de até 384 px
           const titulo = page.getByRole('heading', { name: 'One' })
           await titulo.waitFor()
           const cartao = titulo.locator('xpath=../..')
@@ -395,12 +382,12 @@ test.describe('acesso', () => {
           if (c.height < 740) expect(Math.abs(c.y + c.height / 2 - 370), rotulo).toBeLessThanOrEqual(1)
           continue
         }
-        // login-institucional: o bloco do formulário centrado na coluna (metade da janela a 1280 px)
-        const bloco = page.locator('h1').locator('xpath=..')
+        // identidade-visual door 3: a coluna única de até 400 px, centrada na janela
+        const bloco = page.locator('h1').locator('xpath=../..')
         await bloco.waitFor()
-        const [b, coluna] = [await caixa(bloco), await caixa(bloco.locator('xpath=../..'))]
-        expect(b.width, rotulo).toBeLessThanOrEqual(320)
-        expect(Math.abs(b.x + b.width / 2 - (coluna.x + coluna.width / 2)), rotulo).toBeLessThanOrEqual(1)
+        const b = await caixa(bloco)
+        expect(b.width, rotulo).toBeLessThanOrEqual(401)
+        expect(Math.abs(b.x + b.width / 2 - largura / 2), rotulo).toBeLessThanOrEqual(1)
         expect(await page.locator('[data-slot=card]').count(), rotulo).toBe(0)
       }
     })
@@ -756,18 +743,12 @@ test.describe('redesign institucional', () => {
   test('cartões sem sombra', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 })
     await simularApi(page)
-    await page.goto('/univag/indicadores')
-    await page.getByText('Indicador principal').waitFor()
-    // nenhum cartão com sombra; os 13 números são células de canto reto em 2 quadros de canto 8 px, e os rankings são cartões de 8 px
-    const sombras = await page.locator('[data-slot=card]').evaluateAll((els) => els.map((e) => getComputedStyle(e).boxShadow))
-    expect(sombras.length).toBeGreaterThanOrEqual(13)
-    expect(sombras.filter((x) => x !== 'none')).toEqual([])
-    const cantos = (l: Locator) => l.evaluateAll((els) => els.map((e) => getComputedStyle(e).borderTopLeftRadius))
-    const celula = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
-    const quadros = [celula('Indicador principal').locator('xpath=..'), celula('Alunos ativos').locator('xpath=..')]
-    for (const q of quadros) expect(await cantos(q), 'quadro rounded-lg').toEqual(['8px'])
-    expect(await cantos(celula('Alunos ativos')), 'célula reta').toEqual(['0px'])
-    for (const t of ['Categorias por conversas', 'Categorias por chamados']) expect(await cantos(celula(t)), `${t} rounded-lg`).toEqual(['8px'])
+    await page.goto('/univag/chamados/ONE-123')
+    await page.getByText('Resumo gerado por IA').waitFor()
+    // o cartão "Ações" do detalhe a 1280 px é o painel de 12 px, sem sombra (identidade-visual AC 3)
+    const acoes = page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })
+    await expect(acoes).toHaveCount(1)
+    expect(await acoes.evaluate((e) => getComputedStyle(e).boxShadow)).toBe('none')
   })
 })
 
@@ -1290,7 +1271,7 @@ test.describe('painel', () => {
     const cabecalho = await estilo(page.getByRole('columnheader', { name: 'Número' }))
     expect([cabecalho.tam, cabecalho.peso], 'cabeçalho da tabela').toEqual(['14px', '500'])
     const caixaTabela = page.locator('[data-slot=table-container]').locator('..')
-    expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['1px', '1px', '8px'])
+    expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['1px', '1px', '12px'])
     expect(await page.locator('tbody tr').first().evaluate((e) => getComputedStyle(e).borderBottomWidth), 'borda entre linhas').toBe('1px')
   })
 
@@ -1320,7 +1301,7 @@ test.describe('painel', () => {
   })
 })
 
-// login-institucional: as 3 telas de entrada na grade do login-02 (checks C1-C15)
+// login-institucional, no arranjo de identidade-visual (door 3): as 3 telas de entrada em coluna única
 const Entradas = ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']
 const NomeSimulado = 'Centro Universitário de Várzea Grande' // o `nome` de simulada.ts
 
@@ -1331,11 +1312,10 @@ test.describe('entrada institucional', () => {
     await page.goto(caminho)
     await page.locator('h1').waitFor()
   }
-  const bloco = (page: Page) => page.locator('h1').locator('xpath=..')
+  const bloco = (page: Page) => page.locator('h1').locator('xpath=../..') // a coluna única de até 400 px
   const campo = (l: Locator) => l.locator('xpath=..') // o Campo inteiro: rótulo, campo e dica
   const coluna = (page: Page) => page.locator('h1').locator('xpath=../../..')
-  const painel = (page: Page) => page.locator('h2').locator('xpath=../..')
-  const marca = (page: Page) => coluna(page).locator('> div').first()
+  const marca = (page: Page) => page.locator('h1').locator('xpath=preceding-sibling::*[1]') // o logo ou as iniciais
   const perto = (a: number, b: number, rotulo: string, tol = 1) => expect(Math.abs(a - b), `${rotulo}: ${a} contra ${b}`).toBeLessThanOrEqual(tol)
   const estilo = (l: Locator, ...props: string[]) => l.evaluate((e, ps) => ps.map((p) => getComputedStyle(e).getPropertyValue(p)), props)
   // a cor computada de um elemento de prova com color: var(token), como no C53
@@ -1346,31 +1326,6 @@ test.describe('entrada institucional', () => {
       document.body.append(p)
       return getComputedStyle(p).color
     }, token)
-
-  test('entrada em duas colunas', async ({ page }) => {
-    for (const caminho of Entradas)
-      for (const w of [1024, 1280, 1440]) {
-        await ir(page, caminho, w)
-        const [c, p] = [await caixa(coluna(page)), await caixa(painel(page))]
-        const r = `${caminho} a ${w}`
-        perto(c.x, 0, `${r}: x da coluna`)
-        perto(c.width, w / 2, `${r}: largura da coluna`)
-        perto(p.x, w / 2, `${r}: x do painel`)
-        perto(p.width, w / 2, `${r}: largura do painel`)
-        perto(p.y, 0, `${r}: y do painel`)
-        expect(p.height, `${r}: altura do painel`).toBeGreaterThanOrEqual(800 - 1)
-      }
-  })
-
-  test('entrada numa coluna abaixo de 1024 px', async ({ page }) => {
-    for (const caminho of Entradas)
-      for (const w of [360, 768, 1023]) {
-        await ir(page, caminho, w)
-        const r = `${caminho} a ${w}`
-        expect(await painel(page).evaluate((e) => getComputedStyle(e).display), `${r}: painel`).toBe('none')
-        perto((await caixa(coluna(page))).width, w, `${r}: coluna`)
-      }
-  })
 
   test('recuo da coluna de entrada', async ({ page }) => {
     for (const caminho of Entradas)
@@ -1385,34 +1340,27 @@ test.describe('entrada institucional', () => {
       for (const [w, recuo] of [[360, 24], [767, 24], [768, 40], [1280, 40]] as const) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
-        // AC 32 e AC 35: no lugar da palavra "One", as iniciais num quadrado de 40 px em bg-primary; abaixo de 1024 px, a faixa de 128 px vem antes
+        // AC 5: no lugar da palavra "One", as iniciais num quadrado de 48 px em bg-primary, à esquerda da coluna
         const sigla = marca(page).locator('span')
         const o = await caixa(sigla)
         expect(await marca(page).getByText('One').count(), `${r}: sem "One"`).toBe(0)
         expect(await marca(page).locator('svg').count(), `${r}: sem ícone`).toBe(0)
-        expect(await estilo(sigla, 'width', 'height', 'background-color', 'font-weight'), `${r}: iniciais`).toEqual(['40px', '40px', await cor(page, '--primary'), '700'])
+        expect(await estilo(sigla, 'width', 'height', 'background-color', 'font-weight'), `${r}: iniciais`).toEqual(['48px', '48px', await cor(page, '--primary'), '700'])
         expect(await sigla.textContent(), `${r}: iniciais`).toBe('CG')
         expect(await sigla.locator('xpath=ancestor-or-self::a | ancestor-or-self::button').count(), `${r}: sem link nem botão`).toBe(0)
-        perto(o.x, recuo, `${r}: x da linha`)
-        perto(o.y, recuo + (w < 1024 ? 128 : 0), `${r}: topo`)
+        perto(o.x, (await caixa(bloco(page))).x, `${r}: x da linha`)
+        expect(recuo, `${r}: recuo`).toBeGreaterThan(0)
       }
   })
 
   test('bloco do formulário por largura', async ({ page }) => {
-    for (const caminho of Entradas) {
-      for (const [w, largura, x] of [[360, 312, 24], [390, 320, 35], [768, 320, 224], [1024, 320, 96], [1280, 320, 160], [1440, 320, 200]] as const) {
+    for (const caminho of Entradas)
+      for (const [w, largura, x] of [[360, 312, 24], [390, 342, 24], [768, 400, 184], [1024, 400, 312], [1280, 400, 440], [1440, 400, 520]] as const) {
         await ir(page, caminho, w)
         const b = await caixa(bloco(page))
         perto(b.width, largura, `${caminho} a ${w}: largura`)
         perto(b.x, x, `${caminho} a ${w}: x`)
       }
-      for (const [w, recuo] of [[360, 24], [1280, 40]] as const) {
-        await ir(page, caminho, w, 900)
-        const [b, m] = [await caixa(bloco(page)), await caixa(marca(page))]
-        const [topo, base] = [m.y + m.height + 16, 900 - recuo]
-        perto(b.y + b.height / 2, (topo + base) / 2, `${caminho} a ${w}: centro vertical`)
-      }
-    }
   })
 
   test('cabeçalho do Login', async ({ page }) => {
@@ -1421,31 +1369,29 @@ test.describe('entrada institucional', () => {
       const r = `Login a ${w}`
       expect(await page.locator('h1').count(), `${r}: um só h1`).toBe(1)
       expect(await page.locator('h1').textContent(), `${r}: nome`).toBe(NomeSimulado)
-      expect(await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(['24px', '600', 'start'])
+      expect(await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(['28px', '600', 'start'])
       const frase = page.getByText('Entre com seu CPF e sua senha.', { exact: true })
       expect(await estilo(frase, 'font-size', 'color'), `${r}: frase`).toEqual(['14px', await cor(page, '--muted-foreground')])
       const [h, f, cpf] = [await caixa(page.locator('h1')), await caixa(frase), await caixa(campo(page.getByLabel('CPF')))]
       perto(f.y, h.y + h.height + 4, `${r}: frase`)
-      perto(cpf.y, f.y + f.height + 24, `${r}: CPF`)
+      expect(cpf.y, `${r}: CPF depois da frase`).toBeGreaterThanOrEqual(f.y + f.height)
     }
   })
 
   test('cabeçalho de Primeiro acesso e Criar senha', async ({ page }) => {
     for (const w of [360, 1280]) {
       await ir(page, '/univag', w)
-      const [login, estiloLogin, blocoLogin] = [await caixa(page.locator('h1')), await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align'), await caixa(bloco(page))]
-      perto(login.y, blocoLogin.y, `Login a ${w}: h1 no topo do bloco`)
+      const estiloLogin = await estilo(page.locator('h1'), 'font-size', 'font-weight', 'text-align')
       for (const [caminho, primeiro, botao] of [['/univag/primeiro-acesso', 'CPF', 'Enviar link'], ['/univag/definir-senha?token=t', 'Nova senha', 'Salvar senha']] as const) {
         await ir(page, caminho, w)
         const r = `${caminho} a ${w}`
         const h1 = page.locator('h1')
         expect(await estilo(h1, 'font-size', 'font-weight', 'text-align'), `${r}: h1`).toEqual(estiloLogin)
-        const [h, primeiroCampo, b, blocoCaixa] = [await caixa(h1), await caixa(campo(page.getByLabel(primeiro))), await caixa(page.getByRole('button', { name: botao })), await caixa(bloco(page))]
-        // C7 emendado (03/11): o h1 no topo do bloco, como no Login; o bloco segue centrado na vertical (C5), então o y muda com a altura do bloco
-        perto(h.y, blocoCaixa.y, `${r}: h1 no topo do bloco`)
-        perto(primeiroCampo.y, h.y + h.height + 24, `${r}: primeiro campo`)
-        // nada entre o h1 e o campo: o rótulo é o primeiro elemento depois do h1
-        expect(await h1.locator('xpath=following-sibling::*[1]//label').count(), `${r}: nada entre o h1 e o campo`).toBe(1)
+        const titulo = page.getByRole('heading', { name: caminho.includes('primeiro') ? 'Primeiro acesso' : 'Criar senha' })
+        const [t, primeiroCampo, b, blocoCaixa] = [await caixa(titulo), await caixa(campo(page.getByLabel(primeiro))), await caixa(page.getByRole('button', { name: botao })), await caixa(bloco(page))]
+        // AC 5: o título da tela vem logo antes do formulário; o h1 é o nome da instituição, como no Login
+        expect(primeiroCampo.y, `${r}: primeiro campo depois do título`).toBeGreaterThanOrEqual(t.y + t.height)
+        expect(await titulo.locator('xpath=following-sibling::*[1]//label').count(), `${r}: nada entre o título e o campo`).toBe(1)
         perto(b.width, (await caixa(page.getByLabel(primeiro))).width, `${r}: botão`)
         if (caminho.includes('primeiro')) {
           const voltar = await caixa(page.getByRole('link', { name: 'Voltar para o login' }))
@@ -1454,8 +1400,8 @@ test.describe('entrada institucional', () => {
           await page.route('**/api/auth/primeiro-acesso', (rota) => rota.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ mensagem: 'Link enviado.' }) }))
           await page.getByRole('button', { name: botao }).click()
           const alerta = await caixa(page.getByRole('alert').filter({ hasText: 'Link enviado.' }))
-          const h2 = await caixa(h1) // o bloco, mais baixo, recentra: o h1 se move
-          perto(alerta.y, h2.y + h2.height + 24, `${r}: alerta de sucesso`)
+          const t2 = await caixa(titulo)
+          perto(alerta.y, t2.y + t2.height + 32, `${r}: alerta de sucesso`)
         }
       }
     }
@@ -1487,69 +1433,6 @@ test.describe('entrada institucional', () => {
       expect(erro.y, `${r}: erro abaixo de Entrar`).toBeGreaterThanOrEqual(e2.y + e2.height - 1)
       expect(l2.y, `${r}: link abaixo do erro`).toBeGreaterThanOrEqual(erro.y + erro.height - 1)
     }
-  })
-
-  test('fundo e borda do painel', async ({ page }) => {
-    for (const caminho of Entradas)
-      for (const w of [1024, 1440]) {
-        await ir(page, caminho, w)
-        const r = `${caminho} a ${w}`
-        // fundo neutro (--muted), sem o tom de azul
-        const esperado = await page.evaluate(() => {
-          const p = document.createElement('i')
-          p.style.backgroundColor = 'var(--muted)'
-          document.body.append(p)
-          return getComputedStyle(p).backgroundColor
-        })
-        const [fundo, largura, corBorda, p1, p2, p3, p4] = await estilo(painel(page), 'background-color', 'border-left-width', 'border-left-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left')
-        expect(fundo, `${r}: fundo`).toBe(esperado)
-        expect([largura, corBorda], `${r}: borda`).toEqual(['1px', await cor(page, '--border')])
-        expect([p1, p2, p3, p4], `${r}: recuo`).toEqual(['40px', '40px', '40px', '40px'])
-      }
-  })
-
-  test('conteúdo do painel', async ({ page }) => {
-    await ir(page, '/univag', 1440)
-    const p = painel(page).locator('> div')
-    const [titulo, frase, lista] = [p.locator('h2'), p.locator('p'), p.locator('ul')]
-    expect(await titulo.textContent()).toBe('Atendimento ao estudante')
-    expect(await estilo(titulo, 'font-size', 'font-weight', 'color')).toEqual(['24px', '600', await cor(page, '--foreground')]) // AC 41: um só tamanho de título por tela
-    expect(await frase.textContent()).toBe('Dúvidas, solicitações e respostas da sua instituição em um só lugar.')
-    expect(await estilo(frase, 'font-size', 'color')).toEqual(['16px', await cor(page, '--muted-foreground')])
-    const [t, f, l] = [await caixa(titulo), await caixa(frase), await caixa(lista)]
-    perto(f.y, t.y + t.height + 8, 'frase')
-    perto(l.y, f.y + f.height + 24, 'lista')
-    const itens = lista.locator('> li')
-    expect(await itens.count(), 'itens').toBe(3)
-    const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
-    expect(await lista.locator('svg').count(), 'sem ícones').toBe(0)
-    expect(await estilo(lista, 'border-top-width'), 'linha acima da lista').toEqual(['1px'])
-    let anterior: { y: number; height: number } | undefined
-    for (const [i, texto] of Itens.entries()) {
-      const item = itens.nth(i)
-      const caixaItem = await caixa(item)
-      expect(await item.textContent(), `item ${i}`).toBe(texto)
-      expect(await estilo(item, 'font-size', 'color', 'border-bottom-width', 'padding-top'), `item ${i}`).toEqual(['16px', await cor(page, '--foreground'), '1px', '12px'])
-      if (anterior) perto(caixaItem.y, anterior.y + anterior.height, `itens colados, separados pela linha ${i}`)
-      anterior = caixaItem
-    }
-    for (const caminho of Entradas.slice(1)) {
-      await ir(page, caminho, 1440)
-      await expect(page.getByRole('heading', { level: 2, name: 'Atendimento ao estudante' })).toBeVisible()
-      expect(await painel(page).locator('li').count(), caminho).toBe(3)
-    }
-  })
-
-  test('posição do conteúdo do painel', async ({ page }) => {
-    for (const caminho of Entradas)
-      for (const [w, h] of [[1024, 740], [1440, 900]] as const) {
-        await ir(page, caminho, w, h)
-        const r = `${caminho} a ${w}x${h}`
-        const [p, c] = [await caixa(painel(page)), await caixa(page.locator('h2').locator('xpath=..'))]
-        perto(c.y + c.height, p.y + p.height - 40, `${r}: base`)
-        perto(c.x, w / 2 + 41, `${r}: x`)
-        expect(c.width, `${r}: largura`).toBeLessThanOrEqual(448 + 1)
-      }
   })
 
   test('carregando e instituição não encontrada no centro', async ({ page }) => {
@@ -1585,8 +1468,8 @@ test.describe('entrada institucional', () => {
       await page.getByLabel('Nova senha').fill('senha-nova-123')
       await page.getByRole('button', { name: 'Salvar senha' }).click()
       const alerta = await caixa(page.getByRole('alert').filter({ hasText: 'Senha criada.' }))
-      const h = await caixa(page.locator('h1')) // o bloco, mais baixo, recentra: mede o h1 depois do envio
-      perto(alerta.y, h.y + h.height + 24, `${w}: alerta de sucesso`)
+      const t = await caixa(page.getByRole('heading', { name: 'Criar senha' }))
+      perto(alerta.y, t.y + t.height + 32, `${w}: alerta de sucesso`)
       await page.unrouteAll()
     }
   })

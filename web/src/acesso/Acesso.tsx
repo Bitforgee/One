@@ -7,7 +7,6 @@ import { z } from 'zod'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { Sigla, urlDaImagem, useInstituicao, type InstituicaoPublica } from '../aparencia'
-import { BoasVindas } from '../ilustracoes'
 import { telaInicial, useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
 import { Input } from '../ui/input'
@@ -17,7 +16,7 @@ import { Spinner } from '../ui/spinner'
 // Só o que a tela já exigia (campo preenchido); o resto, quem decide é a API (AC 39, AC 40).
 const obrigatorio = z.string().min(1)
 
-// Área de acesso do bloco de login do shadcn: cartão de até 384 px no centro da janela.
+// Área de acesso: uma coluna de até 384 px no centro da janela (estados de carga e erro).
 export function Centro({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -30,14 +29,14 @@ const TituloBase = 'Atendimento ao estudante'
 const Frase = 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.'
 const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 
-const H1 = ({ children }: { children: ReactNode }) => <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
+// O nome da instituição (ou "One" na raiz) em serifa de 28 px.
+const H1 = ({ children }: { children: ReactNode }) => <h1 className="font-heading text-[28px] leading-tight font-semibold tracking-tight">{children}</h1>
 
-// A raiz sem instituição: a ilustração, "One", a frase e o que fazer (AC 37).
+// A raiz sem instituição: "One", a frase e o que fazer (AC 20).
 export function Raiz() {
   return (
     <Centro>
       <div className="flex flex-col items-center gap-3 text-center">
-        <BoasVindas className="h-40 w-52 text-muted-foreground" />
         <H1>One</H1>
         <p className="m-0 text-muted-foreground">{Frase}</p>
         <p className="m-0 text-muted-foreground">Abra o endereço da sua instituição, por exemplo /univag.</p>
@@ -46,89 +45,74 @@ export function Raiz() {
   )
 }
 
-// O logo (até 40 px de altura) ou, sem ele, as iniciais da instituição num quadrado bg-primary (AC 32).
-function Identidade({ slug, d, className = '' }: { slug?: string; d?: InstituicaoPublica; className?: string }) {
+// O logo (até 48 px de altura) ou, sem ele, as iniciais da instituição num quadrado bg-primary (AC 7).
+function Identidade({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   const logo = slug && d?.imagens.logo
   return (
-    <div className={`flex h-10 items-center ${className}`}>
-      {logo ? <img src={urlDaImagem(slug, 'logo', logo)} alt={d.nome} className="h-10 w-auto max-w-full object-contain" /> : d && <Sigla nome={d.nome} icone={null} className="size-10" />}
+    <div className="mb-3 flex h-12 items-center">
+      {logo ? <img src={urlDaImagem(slug, 'logo', logo)} alt={d.nome} className="h-12 w-auto max-w-full object-contain" /> : d && <Sigla nome={d.nome} icone={null} className="size-12" />}
     </div>
   )
 }
 
-// Abaixo de 1024 px: uma faixa de 128 px com a imagem do login (ou a ilustração) e o logo.
-function Faixa({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
-  const imagem = slug && d?.imagens.login
+// O nome da instituição em serifa, com o texto de apoio logo abaixo (só no Login).
+function Nome({ slug, d, apoio }: { slug?: string; d?: InstituicaoPublica; apoio?: string }) {
   return (
-    <div className="relative h-32 overflow-hidden bg-primary-subtle lg:hidden">
-      {imagem ? <img src={urlDaImagem(slug, 'login', imagem)} alt="" className="absolute inset-0 size-full object-cover" /> : <BoasVindas className="mx-auto h-full text-muted-foreground" />}
-      {slug && d?.imagens.logo && (
-        <div className="absolute start-4 bottom-3 rounded-md bg-background/90 p-1">
-          <Identidade slug={slug} d={d} />
-        </div>
-      )}
+    <div className="flex flex-col gap-1">
+      <Identidade slug={slug} d={d} />
+      {d && <H1>{d.nome}</H1>}
+      {apoio && <p className="m-0 text-sm text-muted-foreground">{apoio}</p>}
     </div>
   )
 }
 
-// Os textos do painel: os da instituição ou, campo a campo, os de base (AC 36).
-const Sobre = { raiz: 'text-white', frase: 'text-white/85', linha: 'border-white/30' }
-const Sobrio = { raiz: '', frase: 'text-muted-foreground', linha: '' }
-
-function Textos({ d, escuro }: { d?: InstituicaoPublica; escuro: boolean }) {
-  const itens = d?.login.itens.length ? d.login.itens : Itens
-  const cor = escuro ? Sobre : Sobrio
+// O título e a frase do login da Aparência, ou os de base, em texto secundário (AC 7).
+function Textos({ d }: { d?: InstituicaoPublica }) {
   return (
-    <div className={`relative mt-auto max-w-md ${cor.raiz}`}>
-      <h2 className="text-2xl font-semibold tracking-tight">{d?.login.titulo ?? TituloBase}</h2>
-      <p className={`mt-2 ${cor.frase}`}>{d?.login.frase ?? Frase}</p>
-      <ul className={`mt-6 border-t ${cor.linha}`}>
-        {itens.map((texto) => (
-          <li key={texto} className={`border-b py-3 ${cor.linha}`}>
-            {texto}
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col gap-1 text-muted-foreground">
+      <h2 className="text-base font-medium">{d?.login.titulo ?? TituloBase}</h2>
+      <p className="m-0">{d?.login.frase ?? Frase}</p>
     </div>
   )
 }
 
-// A partir de 1024 px, o painel direito: a imagem do login inteira com os textos sobre uma faixa escura, ou a ilustração sobre bg-primary-subtle.
-function Painel({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
-  const imagem = slug && d?.imagens.login
+// Os itens do login, abaixo do formulário, com marcador discreto.
+function ListaDeItens({ d }: { d?: InstituicaoPublica }) {
   return (
-    <div className="relative hidden flex-col border-l bg-muted p-10 lg:flex">
-      {imagem ? (
-        <img src={urlDaImagem(slug, 'login', imagem)} alt="" className="absolute inset-0 size-full object-cover" />
-      ) : (
-        <div className="rounded-xl bg-primary-subtle p-6">
-          <BoasVindas className="mx-auto h-48 w-full text-muted-foreground" />
-        </div>
-      )}
-      {imagem && <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3/4 bg-linear-to-t from-black/85 via-black/65 to-transparent" />}
-      <Textos d={d} escuro={!!imagem} />
-    </div>
+    <ul className="m-0 flex list-disc flex-col gap-1 ps-5 text-sm text-muted-foreground">
+      {(d?.login.itens.length ? d.login.itens : Itens).map((texto) => (
+        <li key={texto}>{texto}</li>
+      ))}
+    </ul>
   )
 }
 
-// Duas colunas a partir de 1024 px: o formulário à esquerda, alinhado à esquerda, e à direita o painel da instituição.
-function Entrada({ titulo, descricao, children }: { titulo: ReactNode; descricao?: string; children: ReactNode }) {
+// A foto do login, decorativa e sem nada sobre ela: a faixa do topo (abaixo de 1024 px) ou a coluna direita inteira.
+function Foto({ foto, className, lateral }: { foto: string | null; className: string; lateral?: boolean }) {
+  if (!foto) return null
+  const img = <img src={foto} alt="" className={className} />
+  return lateral ? <div className="relative hidden lg:block">{img}</div> : img
+}
+
+// A coluna do acesso (AC 5): logo, nome em serifa, apoio, título e frase do login, tela, formulário e itens.
+// Com a foto do login: a faixa de 160 px no topo abaixo de 1024 px, e a coluna direita inteira a partir dela (AC 6).
+function Entrada({ apoio, tela, children }: { apoio?: string; tela?: string; children: ReactNode }) {
   const { slug } = useParams()
-  const { data } = useInstituicao(slug)
+  const { data: d } = useInstituicao(slug)
+  const foto = slug && d?.imagens.login ? urlDaImagem(slug, 'login', d.imagens.login) : null
   return (
-    <div className="grid min-h-svh max-lg:grid-rows-[auto_1fr] lg:grid-cols-2">
-      <Faixa slug={slug} d={data} />
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <Identidade slug={slug} d={data} className={data?.imagens.logo ? 'max-lg:hidden' : ''} />
-        <div className="flex flex-1 items-center justify-center">
-          <div className="flex w-full max-w-xs flex-col gap-6">
-            <H1>{titulo}</H1>
-            {descricao && <p className="-mt-5 text-sm text-muted-foreground">{descricao}</p>}
-            {children}
-          </div>
+    <div className={foto ? 'grid min-h-svh max-lg:grid-rows-[auto_1fr] lg:grid-cols-2' : 'flex min-h-svh'}>
+      <Foto foto={foto} className="h-40 w-full object-cover lg:hidden" />
+      <div className="flex w-full flex-col items-center justify-center p-6 md:p-10">
+        <div className="flex w-full max-w-[400px] flex-col gap-8">
+          <Nome slug={slug} d={d} apoio={apoio} />
+          <Textos d={d} />
+          {tela && <h2 className="text-base font-semibold">{tela}</h2>}
+          <div className="flex flex-col gap-6">{children}</div>
+          <ListaDeItens d={d} />
         </div>
       </div>
-      <Painel slug={slug} d={data} />
+      <Foto foto={foto} className="absolute inset-0 size-full object-cover" lateral />
     </div>
   )
 }
@@ -173,7 +157,7 @@ const schemaLogin = z.object({ cpf: obrigatorio, senha: obrigatorio })
 export function Login() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { data: instituicao, isError, isPending } = useInstituicao(slug)
+  const { isError, isPending } = useInstituicao(slug)
 
   if (isError)
     return (
@@ -189,7 +173,7 @@ export function Login() {
     )
 
   return (
-    <Entrada titulo={instituicao.nome} descricao="Entre com seu CPF e sua senha.">
+    <Entrada apoio="Entre com seu CPF e sua senha.">
       <Formulario
         schema={schemaLogin}
         botao="Entrar"
@@ -217,7 +201,7 @@ export function PrimeiroAcesso() {
   const { slug } = useParams()
   const [mensagem, setMensagem] = useState<string>()
   return (
-    <Entrada titulo="Primeiro acesso">
+    <Entrada tela="Primeiro acesso">
       {mensagem ? (
         <Alert>{mensagem}</Alert>
       ) : (
@@ -242,7 +226,7 @@ export function DefinirSenha() {
   const [busca] = useSearchParams()
   const [pronto, setPronto] = useState(false)
   return (
-    <Entrada titulo="Criar senha">
+    <Entrada tela="Criar senha">
       {pronto ? (
         <Alert>
           Senha criada. <Link to={`/${slug}`}>Entre com o CPF e a nova senha.</Link>

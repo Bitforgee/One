@@ -1,45 +1,10 @@
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
-import { chamadoSimulado, semAparencia, comAparencia, simularApi, Telas } from './simulada'
+import { abrirTela, chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, Telas, varrer } from './simulada'
 
 // revisao-ux, lote 1 (S1, S2 e os tokens de S6): arranjo e cor medidos no Chromium com a API simulada.
 // Medidas por boundingBox() e getComputedStyle, em px CSS, tolerância de 1 px. A cor computada é pintada num canvas 1x1 e lida em sRGB de 8 bits;
 // uma cor com alfa é composta sobre o fundo opaco mais próximo. Contraste: fórmula do WCAG 2.
 test.use({ serviceWorkers: 'block' })
-
-declare global {
-  interface Window {
-    __ux: { pintar: (pilha: string[]) => number[]; pilha: (el: Element) => string[] }
-  }
-}
-
-// As duas funções do navegador: pintar uma pilha de cores (a primeira é o fundo) e achar a pilha de fundo de um elemento até o fundo opaco mais próximo.
-async function instalar(page: Page) {
-  await page.addInitScript(() => {
-    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
-    const pintar = (pilha: string[]) => {
-      ctx.clearRect(0, 0, 300, 150)
-      for (const cor of pilha) {
-        ctx.fillStyle = cor
-        ctx.fillRect(0, 0, 300, 150)
-      }
-      return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
-    }
-    window.__ux = {
-      pintar,
-      pilha(el) {
-        const camadas: string[] = []
-        for (let n: Element | null = el; n; n = n.parentElement) {
-          const cor = getComputedStyle(n).backgroundColor
-          const [sobrePreto, sobreBranco] = [pintar(['#000', cor]), pintar(['#fff', cor])]
-          if (sobrePreto.join() === '0,0,0' && sobreBranco.join() === '255,255,255') continue // transparente
-          camadas.unshift(cor)
-          if (sobrePreto.join() === sobreBranco.join()) return camadas // opaca: acaba aqui
-        }
-        return ['#fff', ...camadas]
-      },
-    }
-  })
-}
 
 const luminancia = ([r, g, b]: number[]) => {
   const c = [r, g, b].map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
@@ -53,24 +18,7 @@ const pixel = (page: Page, pilha: string[]) => page.evaluate((p) => window.__ux.
 // A cor de uma propriedade do elemento, composta sobre o fundo opaco mais próximo dele
 const corSobreFundo = (alvo: Locator, propriedade: 'color' | 'backgroundColor' | 'borderTopColor') =>
   alvo.evaluate((el, p) => window.__ux.pintar([...window.__ux.pilha(el.parentElement ?? el), getComputedStyle(el)[p as 'color']]), propriedade)
-// A cor de um elemento de referência pintado com var(--token), em sRGB de 8 bits
-async function referencia(page: Page, token: string) {
-  return page.evaluate((t) => {
-    const ref = document.createElement('div')
-    ref.style.color = `var(${t})`
-    document.body.append(ref)
-    const cor = getComputedStyle(ref).color
-    ref.remove()
-    return window.__ux.pintar(['#fff', cor])
-  }, token)
-}
-
 const caixa = async (l: Locator) => (await l.boundingBox())!
-async function abrirTela(page: Page, nome: string) {
-  const [, caminho, esperar] = Telas.find(([n]) => n === nome)!
-  await page.goto(caminho)
-  await esperar(page)
-}
 const json = (corpo: unknown, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(corpo) })
 const responder = (page: Page, rota: RegExp, corpo: unknown, status = 200) => page.route(rota, (r) => r.fulfill(json(corpo, status)))
 
@@ -642,20 +590,6 @@ test.describe('S6 tokens', () => {
           medidas++
         }
     expect(medidas).toBe(27)
-  })
-
-  // C54 (AC 40, door 2)
-  test('títulos com opsz 32 da Inter', async ({ page }) => {
-    await simularApi(page)
-    await page.goto('/univag')
-    const h1 = page.getByRole('heading', { level: 1 })
-    await expect(h1).toHaveCount(1)
-    expect(await h1.evaluate((e) => getComputedStyle(e).fontVariationSettings)).toBe('"opsz" 32')
-    expect(await page.evaluate(() => getComputedStyle(document.body).fontVariationSettings)).toBe('normal')
-    await page.goto('/univag/assistente')
-    const h2 = page.getByRole('heading', { name: 'Olá! Eu sou Assistente.' })
-    await expect(h2).toHaveCount(1)
-    expect(await h2.evaluate((e) => getComputedStyle(e).fontVariationSettings)).toBe('"opsz" 32')
   })
 })
 
@@ -1345,21 +1279,6 @@ test.describe('S5 diálogos e administração', () => {
 
 // ---------- S6: varreduras de todas as telas ----------
 
-// As telas de C55 a C57: `Telas`, Conta e Instituições (P16)
-async function varrer(page: Page, aoAbrir: (nome: string) => Promise<void>, aparencia: object = semAparencia) {
-  const telas: [string, () => Promise<void>][] = [
-    ...Telas.map(([nome]) => [nome, () => abrirTela(page, nome)] as [string, () => Promise<void>]),
-    ['Conta', async () => { await page.goto('/univag/conta'); await page.getByText('***.456.789-**').waitFor() }],
-    ['Instituições', async () => { await page.goto('/univag/instituicoes'); await page.getByText('Faculdade Antiga').waitFor() }],
-  ]
-  for (const [nome, abrirDaTela] of telas) {
-    await page.unroute('**/api/**')
-    await simularApi(page, nome === 'Instituições' ? ['ADMINISTRADOR', 'OPERADOR'] : nome === 'Conta' ? ['ALUNO'] : undefined, false, aparencia)
-    await abrirDaTela()
-    await aoAbrir(nome)
-  }
-}
-
 test.describe('S6 varreduras', () => {
   test.setTimeout(300_000)
 
@@ -1384,8 +1303,11 @@ test.describe('S6 varreduras', () => {
           return achados
         })
         const fora = Object.entries(tamanhos).filter(([px]) => !['12px', '14px', '16px'].includes(px))
-        expect(fora.length, `${nome} a ${largura}: no máximo 1 tamanho de título (${JSON.stringify(tamanhos)})`).toBeLessThanOrEqual(1)
-        for (const [px, exemplo] of fora) expect(['20px', '24px'], `${nome} a ${largura}: ${px} em ${exemplo}`).toContain(px)
+        // identidade-visual AC 2: além do único tamanho de título, 28 px só no h1 das telas de acesso (o nome da instituição) e da raiz ("One", o mesmo h1) e 40 px só no número principal de Indicadores
+        const excecao = ([px, exemplo]: [string, string]) => (px === '28px' && ['Login', 'Raiz', 'Primeiro acesso', 'Criar senha'].includes(nome) && exemplo.startsWith('h1:')) || (px === '40px' && nome === 'Indicadores')
+        const titulos = fora.filter((f) => !excecao(f))
+        expect(titulos.length, `${nome} a ${largura}: no máximo 1 tamanho de título (${JSON.stringify(tamanhos)})`).toBeLessThanOrEqual(1)
+        for (const [px, exemplo] of titulos) expect(['20px', '24px'], `${nome} a ${largura}: ${px} em ${exemplo}`).toContain(px)
         telas++
       })
     }
@@ -1401,9 +1323,8 @@ test.describe('S6 varreduras', () => {
       async (nome) => {
         const achados = await page.evaluate(() => ({
           emoji: [...document.querySelectorAll('h1, h2, h3')].filter((h) => /\p{Extended_Pictographic}/u.test(h.textContent ?? '')).map((h) => h.textContent),
-          // a faixa sobre a imagem do login (nas telas de acesso, que dividem o painel) é a única exceção (P10)
           gradiente: [...document.querySelectorAll('body *')]
-            .filter((e) => getComputedStyle(e).backgroundImage.includes('gradient') && e.previousElementSibling?.tagName !== 'IMG')
+            .filter((e) => getComputedStyle(e).backgroundImage.includes('gradient'))
             .map((e) => `${e.tagName}.${e.className}`.slice(0, 80)),
         }))
         expect(achados.emoji, `${nome}: emoji em título`).toEqual([])

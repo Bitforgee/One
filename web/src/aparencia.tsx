@@ -109,9 +109,9 @@ export function iniciais(nome: string) {
 
 // O ícone da instituição, ou as iniciais num quadrado bg-primary (AC 33).
 export function Sigla({ slug, nome, icone, className = 'size-8' }: { slug?: string; nome: string; icone: number | null; className?: string }) {
-  if (slug && icone) return <img src={urlDaImagem(slug, 'icone', icone)} alt="" className={`${className} shrink-0 rounded-md object-cover`} />
+  if (slug && icone) return <img src={urlDaImagem(slug, 'icone', icone)} alt="" className={`${className} shrink-0 rounded-sm object-cover`} />
   return (
-    <span aria-hidden="true" className={`${className} flex shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground`}>
+    <span aria-hidden="true" className={`${className} flex shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-bold text-primary-foreground`}>
       {iniciais(nome)}
     </span>
   )

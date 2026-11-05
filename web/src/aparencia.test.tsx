@@ -92,7 +92,7 @@ describe('marca da instituição', () => {
     const logos = await screen.findAllByRole('img', { name: 'Univag' })
     expect(logos.length).toBeGreaterThan(0)
     for (const logo of logos) expect(logo).toHaveAttribute('src', '/api/instituicoes/univag/imagens/logo?v=3')
-    expect(logos[0]).toHaveClass('h-10') // 40 px
+    expect(logos[0]).toHaveClass('h-12') // 48 px
     montada.unmount()
 
     comSessao(comMarca)
@@ -197,16 +197,6 @@ describe('marca da instituição', () => {
     expect(imagens).toHaveLength(2) // a faixa e o painel
     for (const imagem of imagens) expect(imagem).toHaveAttribute('alt', '')
     expect(document.querySelector('svg[data-ilustracao="boas-vindas"]')).toBeNull()
-  })
-
-  // C40 (AC 37)
-  it('raiz com a ilustração Boas-vindas', () => {
-    api({})
-    abrir('/')
-    const ilustracao = document.querySelector('svg[data-ilustracao="boas-vindas"]')!
-    const titulo = screen.getByRole('heading', { name: 'One' })
-    expect(ilustracao).not.toBeNull()
-    expect(ilustracao.compareDocumentPosition(titulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   // C46 (AC 43)

@@ -79,7 +79,6 @@ const Tokens: [string, string, string, string][] = [
   ['--input', tingido(6, '0.66 0 none'), tingido(5, '0.58 0 none'), tingido(5, '0.58 0 none')],
   ['--chart-1', tingido(45, '0.6 0 none'), tingido(45, '0.8 0 none'), '='],
   ['--chart-2', tingido(45, '0.6 0 none'), tingido(45, '0.8 0 none'), '='],
-  ['--radius', '0.5rem', '0.5rem', '='],
 ]
 // os 3 temas como o navegador os resolve: o Preto é o .dark com o .black por cima
 const temas = () => ({ ':root': bloco(':root'), '.dark': bloco('.dark'), '.dark.black': { ...bloco('.dark'), ...bloco('.black') } })
@@ -163,7 +162,6 @@ describe('interface nova', () => {
 
   // login-institucional C14: texto sobre o fundo do painel, que agora é o --muted neutro
   it('contraste do painel de entrada', () => {
-    expect(texto('acesso/Acesso.tsx')).toContain('border-l bg-muted p-10')
     for (const [seletor, t] of Object.entries(temas()))
       for (const frente of ['--foreground', '--muted-foreground']) expect(contraste(t[frente], t['--muted']), `${seletor} ${frente}`).toBeGreaterThanOrEqual(4.5)
   })
@@ -177,7 +175,7 @@ describe('interface nova', () => {
       expect(preto[token], `.black ${token}`).toBe(valorPreto === '=' ? undefined : valorPreto)
       expect(Object.values(tema), `@theme inline ${token}`).toContain(`var(${token})`)
     }
-    expect(tema['--font-sans']).toBe("'Inter Variable', ui-sans-serif, system-ui, sans-serif")
+    expect(tema['--font-sans']).toBe("'Public Sans Variable', ui-sans-serif, system-ui, sans-serif")
     const CorLiteral = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])|\b(?:oklch|rgb|hsl)\(/
     expect(arquivos.filter((a) => CorLiteral.test(texto(a)))).toEqual([])
   })
@@ -187,7 +185,7 @@ describe('interface nova', () => {
     const titulos = arquivos.filter((a) => !a.includes('.test.')).flatMap((a) => [...texto(a).matchAll(/<h1[^>]*>/g)].map((m) => [a, m[0]]))
     expect(titulos.map(([arquivo]) => arquivo).sort()).toEqual(['Autenticado.tsx', 'acesso/Acesso.tsx'])
     for (const [arquivo, h1] of titulos)
-      expect(h1, arquivo).toMatch(arquivo === 'Autenticado.tsx' ? /className="(?:[^"]* )?text-base font-medium[ "]/ : /className="(?:[^"]* )?text-2xl font-semibold tracking-tight[ "]/)
+      expect(h1, arquivo).toMatch(arquivo === 'Autenticado.tsx' ? /className="(?:[^"]* )?text-base font-medium[ "]/ : /className="(?:[^"]* )?font-heading text-\[28px\][ "]/)
   })
 
   // layout-painel C35 (AC 35): os tokens de ## Visual não mudaram nos 3 temas

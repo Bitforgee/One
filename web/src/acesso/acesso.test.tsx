@@ -34,15 +34,21 @@ describe('acesso', () => {
     expect(screen.getByLabelText('CPF')).toBeInTheDocument()
   })
 
-  // login-institucional C13: o jsdom não aplica lg:, o painel existe no DOM em qualquer largura
+  // identidade-visual AC 5: o painel saiu; a coluna não tem ilustração nem elemento focável fora do formulário, salvo o link da tela
   it('painel de entrada sem foco e sem ícones', async () => {
     api({ ...instituicao, 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'x' }] })
-    for (const caminho of ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']) {
+    for (const [caminho, links] of [
+      ['/univag', ['Primeiro acesso ou esqueci minha senha']],
+      ['/univag/primeiro-acesso', ['Voltar para o login']],
+      ['/univag/definir-senha?token=t', []],
+    ] as const) {
       const { unmount } = abrir(caminho)
-      const painel = (await screen.findByRole('heading', { name: 'Atendimento ao estudante', hidden: true })).parentElement!.parentElement!
-      // AC 47: sem imagem de login, o painel traz a ilustração Boas-vindas e mais nenhum ícone
-      expect([...painel.querySelectorAll('svg')].map((v) => v.getAttribute('data-ilustracao')), caminho).toEqual(['boas-vindas'])
-      expect(painel.querySelectorAll('a, button, input, select, textarea, [tabindex]'), caminho).toHaveLength(0)
+      const titulo = await screen.findByRole('heading', { name: 'Atendimento ao estudante' })
+      const coluna = (await screen.findByRole('heading', { level: 1 })).parentElement!.parentElement!
+      expect(coluna.contains(titulo), caminho).toBe(true)
+      expect(coluna.querySelectorAll('svg[data-ilustracao]'), caminho).toHaveLength(0)
+      const fora = [...coluna.querySelectorAll('a, button, input, select, textarea, [tabindex]')].filter((e) => !e.closest('form'))
+      expect(fora.map((e) => e.textContent), caminho).toEqual(links)
       unmount()
     }
   })

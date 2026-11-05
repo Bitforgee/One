@@ -8,7 +8,7 @@ export function CampoArquivo({ id, rotulo, accept, multiple, arquivos, setArquiv
 }) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop: (aceitos) => setArquivos(aceitos), noClick: true, multiple })
   return (
-    <div {...getRootProps({ className: `flex flex-col gap-2 rounded-md border border-dashed px-3 py-2 ${isDragActive ? 'bg-accent' : ''}` })}>
+    <div {...getRootProps({ className: `flex flex-col gap-2 rounded-sm border border-dashed px-3 py-2 ${isDragActive ? 'bg-accent' : ''}` })}>
       <Label htmlFor={id} className="cursor-pointer">
         <Paperclip aria-hidden="true" className="size-4" />
         {rotulo}

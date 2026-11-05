@@ -16,7 +16,7 @@ export function CampoImagem({ rotulo, dica, miniatura, escolher, remover, erro }
     <div className="flex flex-col gap-2">
       <p className="m-0 text-sm font-medium">{rotulo}</p>
       <div className="flex items-center gap-3">
-        <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+        <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border bg-muted">
           {miniatura && <img src={miniatura} alt={`Miniatura: ${rotulo}`} className="size-full object-contain" />}
         </div>
         <div className="flex flex-wrap gap-2">

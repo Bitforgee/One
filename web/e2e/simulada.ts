@@ -144,3 +144,73 @@ export const Telas: [string, string, (p: Page) => Promise<void>][] = [
   ['Trocar senha', '/univag/trocar-senha', async (p) => void (await p.getByLabel('Senha atual').waitFor())],
   ['Documentos', '/univag/documentos', async (p) => void (await p.getByText('Regulamento do estágio supervisionado obrigatório dos cursos de graduação').waitFor())],
 ]
+
+// ---------- cor pintada (revisao-ux, movida de ux.spec.ts para identidade.spec.ts usar) ----------
+declare global {
+  interface Window {
+    __ux: { pintar: (pilha: string[]) => number[]; pilha: (el: Element) => string[] }
+  }
+}
+
+// As duas funções do navegador: pintar uma pilha de cores (a primeira é o fundo) e achar a pilha de fundo de um elemento até o fundo opaco mais próximo.
+export async function instalar(page: Page) {
+  await page.addInitScript(() => {
+    const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
+    const pintar = (pilha: string[]) => {
+      ctx.clearRect(0, 0, 300, 150)
+      for (const cor of pilha) {
+        ctx.fillStyle = cor
+        ctx.fillRect(0, 0, 300, 150)
+      }
+      return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
+    }
+    window.__ux = {
+      pintar,
+      pilha(el) {
+        const camadas: string[] = []
+        for (let n: Element | null = el; n; n = n.parentElement) {
+          const cor = getComputedStyle(n).backgroundColor
+          const [sobrePreto, sobreBranco] = [pintar(['#000', cor]), pintar(['#fff', cor])]
+          if (sobrePreto.join() === '0,0,0' && sobreBranco.join() === '255,255,255') continue // transparente
+          camadas.unshift(cor)
+          if (sobrePreto.join() === sobreBranco.join()) return camadas // opaca: acaba aqui
+        }
+        return ['#fff', ...camadas]
+      },
+    }
+  })
+}
+
+// A cor de um elemento de referência pintado com var(--token), em sRGB de 8 bits
+export async function referencia(page: Page, token: string) {
+  return page.evaluate((t) => {
+    const ref = document.createElement('div')
+    ref.style.color = `var(${t})`
+    document.body.append(ref)
+    const cor = getComputedStyle(ref).color
+    ref.remove()
+    return window.__ux.pintar(['#fff', cor])
+  }, token)
+}
+
+// ---------- varredura das telas (ux.spec.ts e identidade.spec.ts) ----------
+export async function abrirTela(page: Page, nome: string) {
+  const [, caminho, esperar] = Telas.find(([n]) => n === nome)!
+  await page.goto(caminho)
+  await esperar(page)
+}
+
+// As telas de C55 a C57: `Telas`, Conta e Instituições (P16)
+export async function varrer(page: Page, aoAbrir: (nome: string) => Promise<void>, aparencia: object = semAparencia) {
+  const telas: [string, () => Promise<void>][] = [
+    ...Telas.map(([nome]) => [nome, () => abrirTela(page, nome)] as [string, () => Promise<void>]),
+    ['Conta', async () => { await page.goto('/univag/conta'); await page.getByText('***.456.789-**').waitFor() }],
+    ['Instituições', async () => { await page.goto('/univag/instituicoes'); await page.getByText('Faculdade Antiga').waitFor() }],
+  ]
+  for (const [nome, abrirDaTela] of telas) {
+    await page.unroute('**/api/**')
+    await simularApi(page, nome === 'Instituições' ? ['ADMINISTRADOR', 'OPERADOR'] : nome === 'Conta' ? ['ALUNO'] : undefined, false, aparencia)
+    await abrirDaTela()
+    await aoAbrir(nome)
+  }
+}

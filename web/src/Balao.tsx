@@ -56,7 +56,7 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, comLinks, c
         {autor}
         {nota && <Badge variant="outline">Nota interna</Badge>}
       </div>
-      <MessageContent className="w-full max-w-[68ch] text-base leading-relaxed break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
+      <MessageContent className="w-full max-w-[67ch] text-base leading-relaxed break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
         {comLinks ? <TextoComLinks texto={texto} /> : <Quebravel texto={texto} />}
       </MessageContent>
       {children}

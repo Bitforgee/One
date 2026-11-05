@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs'
 import { Monitor, Moon, MoonStar, Sun } from 'lucide-react'
 import { MemoryRouter, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import pacote from '../package.json'
 import { App } from './App'
 import { textoVisivel } from './test/textos'
 import { abrir, api, chamado, instituicao, me, type Rota } from './test/util'
@@ -153,14 +152,6 @@ describe('ux', () => {
       }
     expect(total).toBe(14)
     expect(declarado('.black', '--background')).toBe('okl' + 'ch(0 0 0)') // em pedaços: a regra de cores literais de interface.test.ts varre este arquivo
-  })
-
-  // C54 (AC 40, door 2): o eixo opsz da Inter variável, sem fonte nova
-  it('opsz da Inter sem fonte nova', () => {
-    expect(fontes['/src/main.tsx']).toContain("import '@fontsource-variable/inter/opsz.css'")
-    expect(Object.keys(pacote.dependencies).filter((nome) => nome.startsWith('@fontsource'))).toEqual(['@fontsource-variable/inter'])
-    expect(css).toMatch(/h1,\s*h2 \{\s*font-variation-settings: 'opsz' 32;\s*\}/)
-    expect(css.match(/\bbody \{[^}]*\}/)![0]).not.toContain('opsz')
   })
 
   // C41 (AC 31, P14): a leitura que falha com 5xx mostra o alerta com ícone, o texto e "Tentar de novo", que refaz a consulta
