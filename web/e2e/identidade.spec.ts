@@ -1155,7 +1155,7 @@ const abrirFormComProntas = (page: Page, largura: number, marca: string | undefi
       await p.route('**/api/respostas-prontas*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]) }))
     },
   })
-const corDestrutiva = (page: Page) => page.evaluate(() => { const t = document.createElement('i'); t.style.borderTop = '1px solid var(--destructive)'; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c })
+const corDoToken = (page: Page, token: string) => page.evaluate((v) => { const t = document.createElement('i'); t.style.borderTop = `1px solid var(${v})`; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c }, token)
 
 // C54
 test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }) => {
@@ -1184,7 +1184,7 @@ test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }
         expect(comumFoco, `${rotulo}: foco difere do repouso`).not.toBe(repouso)
         await campo.blur()
         for (const e of [campo, comum]) await e.evaluate((x) => x.setAttribute('aria-invalid', 'true'))
-        const destrutivo = await corDestrutiva(page)
+        const destrutivo = await corDoToken(page, '--destructive')
         expect(await cor(comum), `${rotulo}: campo comum em erro`).toBe(destrutivo)
         expect(await cor(campo), `${rotulo}: Responder em erro`).toBe(destrutivo)
         await expect(form).toHaveCount(1)
@@ -1217,7 +1217,7 @@ test('select da resposta com foco e erro, e Responder com Nota interna', async (
         expect(comumFoco, `${rotulo}: foco difere do repouso`).not.toBe(repouso)
         await select.blur()
         await select.evaluate((x) => x.setAttribute('aria-invalid', 'true'))
-        expect(await cor(select), `${rotulo}: select em erro`).toBe(await corDestrutiva(page))
+        expect(await cor(select), `${rotulo}: select em erro`).toBe(await corDoToken(page, '--destructive'))
         await page.getByLabel('Nota interna').click()
         await expect(select).toHaveCount(0)
         const [borda, fundo] = (await page.locator('#resposta').evaluate((e) => { const f = e.closest('form')!; return [window.__ux.pintar([...window.__ux.pilha(f), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(f))] })) as number[][]
@@ -1227,8 +1227,8 @@ test('select da resposta com foco e erro, e Responder com Nota interna', async (
   expect(medidas).toBe(12)
 })
 
-// C57: mede no navegador, para valer qualquer que seja a escrita da regra
-test('borda do form igual à de fora no escuro e no preto', async ({ page }) => {
+// C57: mede no navegador contra o token no body, para valer qualquer que seja a escrita da regra
+test('borda do form igual ao token no escuro e no preto', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
   const cor = (l: Locator) => l.evaluate((e) => getComputedStyle(e).borderTopColor)
@@ -1239,15 +1239,11 @@ test('borda do form igual à de fora no escuro e no preto', async ({ page }) => 
         const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
         await emTema(page, tema)
         await abrirFormComProntas(page, largura, marca)
+        const token = await corDoToken(page, '--input')
         for (const seletor of ['#resposta', 'select[aria-label="Resposta pronta"]']) {
-          const dentro = page.locator(seletor)
-          // o mesmo elemento, com as mesmas classes, fora do form
-          await dentro.evaluate((e) => { const c = document.createElement(e.tagName); c.id = 'fora'; c.className = e.className; document.querySelector('main')!.append(c) })
-          const fora = page.locator('#fora')
-          const [d, f] = [await cor(dentro), await cor(fora)]
-          if (tema === 'light') expect(d, `${rotulo} ${seletor}: no claro o form escurece`).not.toBe(f)
-          else expect(d, `${rotulo} ${seletor}: igual à de fora`).toBe(f)
-          await fora.evaluate((e) => e.remove())
+          const d = await cor(page.locator(seletor))
+          if (tema === 'light') expect(d, `${rotulo} ${seletor}: no claro o form escurece`).not.toBe(token)
+          else expect(d, `${rotulo} ${seletor}: igual ao token`).toBe(token)
           medidas++
         }
       }

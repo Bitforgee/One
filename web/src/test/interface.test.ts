@@ -190,7 +190,7 @@ describe('interface nova', () => {
 
   // identidade-visual C55: fora dos temas, só o form da resposta redefine --input, e só o cinza do token claro
   it('regra da borda do form da resposta', () => {
-    expect(css.match(/form-resposta/g)).toHaveLength(1) // um seletor quebrado em 2 linhas escaparia da regex abaixo
+    expect(css.match(/form-resposta/g)).toHaveLength(1)
     const regras = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]*form-resposta[^{}]*)\{([^}]*)\}/g)]
     expect(regras.map((r) => r[1].trim())).toEqual(['.form-resposta:not(.dark *)'])
     const token = Tokens.find((l) => l[0] === '--input')![1]
