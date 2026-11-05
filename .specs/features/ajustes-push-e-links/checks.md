@@ -48,14 +48,14 @@ O nome em cada `Proof:` é o contrato (L-022). Classes e arquivos novos: `PushRo
 
 ### S1 - Push desligado sem erro no console (P1)
 
-**C1** - Sem o par completo de chaves VAPID, `GET /api/push/chave` com o cookie de um aluno responde `204` sem corpo em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada). `POST /api/push/subscricao` continua `404` nos mesmos 3 estados, e com as duas chaves `GET` continua `200` com `chavePublica` (Intent 1)
+**C1** - [x] Sem o par completo de chaves VAPID, `GET /api/push/chave` com o cookie de um aluno responde `204` sem corpo em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada). `POST /api/push/subscricao` continua `404` nos mesmos 3 estados, e com as duas chaves `GET` continua `200` com `chavePublica` (Intent 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_204_sem_par_completo"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_200_com_a_chave_configurada"`
 
-**C2** - Na web, com `GET /api/push/chave` respondendo `204`: o botão de avisos não aparece na barra nem na gaveta, a linha "Avisos no celular" não aparece na Conta, e nenhum erro é lançado (Intent 1)
+**C2** - [x] Na web, com `GET /api/push/chave` respondendo `204`: o botão de avisos não aparece na barra nem na gaveta, a linha "Avisos no celular" não aparece na Conta, e nenhum erro é lançado (Intent 1)
 Proof: `cd web && npx vitest run src/assistente/avisos.test.tsx -t "push desligado com 204 esconde os avisos"`
 
-**C3** - No Chromium, abrindo o Assistente, a Fila e a Conta com `GET /api/push/chave` respondendo `204`, o console não registra nenhuma mensagem de erro (`page.on('console')` com tipo `error` e `page.on('pageerror')`), e nenhuma requisição responde 4xx (Intent 1)
+**C3** - [x] No Chromium, abrindo o Assistente, a Fila e a Conta com `GET /api/push/chave` respondendo `204`, o console não registra nenhuma mensagem de erro (`page.on('console')` com tipo `error` e `page.on('pageerror')`), e nenhuma requisição responde 4xx (Intent 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/push.spec.ts -g "push desligado não deixa erro no console"`
 
 ### S2 - Links da resposta sem frase solta (P1)

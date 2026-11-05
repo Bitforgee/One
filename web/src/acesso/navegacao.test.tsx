@@ -19,7 +19,7 @@ function comPush(chave = 200) {
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null, subscribe: async () => inscricao } }) } })
   vi.stubGlobal('PushManager', class {})
   vi.stubGlobal('Notification', { requestPermission: async () => 'granted' })
-  return { 'GET /api/push/chave': () => (chave === 200 ? [200, { chavePublica: Chave }] : [chave, { status: chave, detail: 'x' }]) } as Record<string, Rota>
+  return { 'GET /api/push/chave': () => (chave === 200 ? [200, { chavePublica: Chave }] : [chave, chave === 204 ? undefined : { status: chave, detail: 'x' }]) } as Record<string, Rota>
 }
 
 afterEach(() => {
@@ -55,7 +55,7 @@ describe('Conta', () => {
   // C17 (AC 13, P3)
   it.each([
     ['com push e contato', { push: 200, contato: Contato }, ['Tema', 'Avisos no celular', 'Contato do atendimento', 'Trocar senha', 'Sair']],
-    ['sem push', { push: 404, contato: Contato }, ['Tema', 'Contato do atendimento', 'Trocar senha', 'Sair']],
+    ['sem push', { push: 204, contato: Contato }, ['Tema', 'Contato do atendimento', 'Trocar senha', 'Sair']],
     ['sem contato', { push: 200, contato: { horario: null, telefone: null, email: null } }, ['Tema', 'Avisos no celular', 'Trocar senha', 'Sair']],
   ])('Conta lista as linhas na ordem e só com push e contato (%s)', async (_, { push, contato }, esperadas) => {
     celular()

@@ -6,9 +6,9 @@ import { api } from './api'
 import { alternar, subscricaoLocal, suportado } from './push'
 import { Button } from './ui/button'
 
-// Os avisos deste aparelho: só existem com suporte do navegador e a chave do servidor (404 = push desligado).
+// Os avisos deste aparelho: só existem com suporte do navegador e a chave do servidor (204 sem corpo = push desligado, `api` devolve undefined, que o react-query recusa, por isso o ?? null).
 export function useAvisos() {
-  const chave = useQuery({ queryKey: ['push-chave'], queryFn: () => api<{ chavePublica: string }>('/api/push/chave'), enabled: suportado(), retry: false })
+  const chave = useQuery({ queryKey: ['push-chave'], queryFn: async () => (await api<{ chavePublica: string }>('/api/push/chave')) ?? null, enabled: suportado(), retry: false })
   const local = useQuery({ queryKey: ['push-local'], queryFn: subscricaoLocal, enabled: !!chave.data })
   const [ocupado, setOcupado] = useState(false)
   const inscrito = !!local.data

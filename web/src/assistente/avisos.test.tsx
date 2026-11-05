@@ -1,7 +1,7 @@
 import { screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { abrir, api, me, type Rota } from '../test/util'
+import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 const Ativar = 'Ativar avisos neste aparelho'
 const Endpoint = 'https://push.teste/abc'
@@ -25,7 +25,7 @@ function ambiente({ sw = true, push = true, notif = true, chave = 200, permissao
   if (notif) vi.stubGlobal('Notification', { requestPermission })
   const chamadas = api({
     'GET /api/auth/me': () => [200, me({ papeis })],
-    'GET /api/push/chave': () => (chave === 200 ? [200, { chavePublica: Chave }] : [chave, { title: 'Não encontrado', status: chave, detail: 'x' }]),
+    'GET /api/push/chave': () => (chave === 200 ? [200, { chavePublica: Chave }] : [chave, chave === 204 ? undefined : { title: 'Não encontrado', status: chave, detail: 'x' }]),
     'POST /api/push/subscricao': () => [204, undefined],
     [`DELETE /api/push/subscricao?endpoint=${encodeURIComponent(Endpoint)}`]: () => [204, undefined],
     ...rotas,
@@ -45,13 +45,31 @@ describe('avisos', () => {
     ['sem serviceWorker', { sw: false }],
     ['sem PushManager', { push: false }],
     ['sem Notification', { notif: false }],
-    ['chave 404', { chave: 404 }],
+    ['chave 204', { chave: 204 }],
   ])('botão de avisos oculto sem suporte ou sem chave (%s)', async (_, opcoes) => {
     ambiente(opcoes)
     abrir('/univag/assistente')
     await screen.findByLabelText('Mensagem')
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByRole('button', { name: /avisos/i })).not.toBeInTheDocument()
+  })
+
+  it('push desligado com 204 esconde os avisos', async () => {
+    const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+    const { chamadas } = ambiente({ chave: 204, rotas: { 'GET /api/instituicoes/univag': () => [200, instituicao()], 'GET /api/chamados?escopo=meus': () => [200, []] } })
+    const { unmount } = abrir('/univag/assistente')
+    await screen.findByLabelText('Mensagem')
+    await waitFor(() => expect(chamadas.some((c) => c.url === '/api/push/chave')).toBe(true))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.queryByRole('button', { name: /avisos/i })).not.toBeInTheDocument()
+    unmount()
+    abrir('/univag/conta')
+    expect(await screen.findByText('Ana')).toBeInTheDocument()
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.queryByText('Avisos no celular')).not.toBeInTheDocument()
+    expect(erro).not.toHaveBeenCalled()
+    erro.mockRestore()
   })
 
   it('botão de avisos aparece com suporte e chave', async () => {

@@ -4,10 +4,10 @@ import { simularApi } from './simulada'
 const Ativar = 'Ativar avisos neste aparelho'
 
 // A chave da API é simulada: o push real não chega ao Playwright.
-async function comChave(page: Page, status: number) {
-  await simularApi(page, ['ALUNO'])
+async function comChave(page: Page, status: number, papeis = ['ALUNO']) {
+  await simularApi(page, papeis)
   await page.route('**/api/push/chave', (rota) =>
-    rota.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status === 200 ? { chavePublica: 'BAEC' } : { title: 'Não encontrado', status, detail: 'x' }) }),
+    rota.fulfill({ status, contentType: 'application/json', body: status === 204 ? undefined : JSON.stringify({ chavePublica: 'BAEC' }) }),
   )
 }
 
@@ -40,11 +40,31 @@ test('botão de avisos aparece com a chave e não pede permissão ao carregar', 
 })
 
 test('sem a chave o botão de avisos não existe', async ({ page }) => {
-  await comChave(page, 404)
+  await comChave(page, 204)
   await page.goto('/univag/assistente')
   await expect(page.getByTestId('instituicao')).toBeVisible()
   await page.evaluate(() => navigator.serviceWorker.ready)
   await expect(page.getByRole('button', { name: /avisos/i })).toHaveCount(0)
+})
+
+test('push desligado não deixa erro no console', async ({ page }) => {
+  await comChave(page, 204, ['ALUNO', 'ATENDENTE'])
+  // o tempo real (SignalR) não faz parte do push: a negociação responde 200 sem transporte
+  await page.route('**/api/tempo-real/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ negotiateVersion: 1, connectionId: 'x', connectionToken: 'x', availableTransports: [] }) }))
+  const erros: string[] = []
+  const falhas: string[] = []
+  page.on('console', (m) => m.type() === 'error' && erros.push(m.text()))
+  page.on('pageerror', (e) => erros.push(e.message))
+  page.on('response', (r) => r.status() >= 400 && r.status() < 500 && falhas.push(`${r.status()} ${r.url()}`))
+  for (const [caminho, marca] of [['assistente', 'Mensagem'], ['fila', 'ONE-123'], ['conta', 'Ana']] as const) {
+    const pedido = page.waitForResponse('**/api/push/chave')
+    await page.goto(`/univag/${caminho}`)
+    expect((await pedido).status()).toBe(204)
+    await (caminho === 'assistente' ? page.getByLabel(marca) : page.getByText(marca).first()).waitFor()
+    await expect(page.getByRole('button', { name: /avisos/i })).toHaveCount(0)
+  }
+  expect(falhas).toEqual([])
+  expect(erros).toEqual([])
 })
 
 test('barra com o botão de avisos sem sobreposição', async ({ page }) => {

@@ -35,14 +35,16 @@ public class PushRotasTests(OneFactory f) : IClassFixture<OneFactory>
     }
 
     [Fact]
-    public async Task Sem_par_completo_404_nas_duas_rotas()
+    public async Task Chave_204_sem_par_completo()
     {
         var a = await f.AlunoLogado();
         foreach (var (publica, privada) in new[] { ("", ""), (OneFactory.Vapid.PublicKey, ""), ("", OneFactory.Vapid.PrivateKey) })
         {
             await using var fx = f.WithWebHostBuilder(b => { b.UseSetting("Push:ChavePublica", publica); b.UseSetting("Push:ChavePrivada", privada); });
             var c = await fx.EntrarEm(a);
-            Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/api/push/chave")).StatusCode);
+            var r = await c.GetAsync("/api/push/chave");
+            Assert.Equal(HttpStatusCode.NoContent, r.StatusCode);
+            Assert.Equal("", await r.Content.ReadAsStringAsync());
             Assert.Equal(HttpStatusCode.NotFound, (await c.PostAsJsonAsync("/api/push/subscricao", Corpo(PushSemente.Endpoint()))).StatusCode);
         }
         Assert.Empty(await f.Subscricoes(q => q.Where(s => s.UsuarioId == a.Usuario.Id)));
@@ -54,7 +56,7 @@ public class PushRotasTests(OneFactory f) : IClassFixture<OneFactory>
         var a = await f.AlunoLogado();
         await using var fx = f.WithWebHostBuilder(b => b.UseSetting("Push:Assunto", ""));
         var c = await fx.EntrarEm(a);
-        Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/api/push/chave")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await c.GetAsync("/api/push/chave")).StatusCode);
     }
 
     [Fact]
