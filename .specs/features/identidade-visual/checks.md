@@ -148,14 +148,14 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 
 ### S1 - Fontes e raios (P1) · ~20 files · ~105 KB · ~26k
 
-**C1** - Em `web/package.json`, os pacotes de `dependencies` que começam por `@fontsource` são exatamente
+**C1** - [x] Em `web/package.json`, os pacotes de `dependencies` que começam por `@fontsource` são exatamente
 `@fontsource-variable/public-sans` e `@fontsource-variable/source-serif-4`. `main.tsx` importa os dois pelo
 `index.css` de cada pacote (o arquivo `wght`, sem `opsz.css`), e nenhuma linha de `main.tsx` nem de `index.css`
 contém `inter` (sem caixa). No `@theme` de `index.css`, `--font-sans` começa por `'Public Sans Variable'` e
 `--font-heading` começa por `'Source Serif 4 Variable'` (AC 1, AC 2, door 1)
 Proof: `cd web && npx vitest run src/identidade.test.tsx -t "fontes Public Sans e Source Serif 4 sem Inter"`
 
-**C2** - No Login (`/univag`), depois de `document.fonts.ready`:
+**C2** - [x] No Login (`/univag`), depois de `document.fonts.ready`:
 - `getComputedStyle(document.body).fontFamily` começa por `"Public Sans Variable"`;
 - `document.fonts` tem uma `FontFace` `Public Sans Variable` e uma `Source Serif 4 Variable`, ambas `loaded`, e
   nenhuma face com `Inter` no nome;
@@ -195,7 +195,7 @@ chamado (o `h2` do título, 24 px) e na raiz (AC 2, door 1)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "serifa só em títulos de 20 px ou mais"`
 
-**C5** - O `border-radius` computado (os 4 cantos, salvo onde dito) é, table-driven sobre 23 medidas:
+**C5** - [x] O `border-radius` computado (os 4 cantos, salvo onde dito) é, table-driven sobre 23 medidas:
 
 | Papel | Valor | Elementos medidos |
 | --- | --- | --- |
@@ -224,12 +224,12 @@ tela (AC 3, door 2)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "pílula só em avatar, botão de ícone, selo e passo"`
 
-**C7** - O `@theme` de `index.css` declara `--radius-xs` 4 px, `--radius-sm` 6 px, `--radius-md` 12 px e
+**C7** - [x] O `@theme` de `index.css` declara `--radius-xs` 4 px, `--radius-sm` 6 px, `--radius-md` 12 px e
 `--radius-lg` 16 px (em `px`, ou em `rem` de valor igual: 0.25, 0.375, 0.75 e 1), e nem `:root`, nem `.dark`, nem
 `.black` declaram `--radius` (AC 3, door 2)
 Proof: `cd web && npx vitest run src/identidade.test.tsx -t "escala de raios por papel em index.css"`
 
-**C8** - Com o service worker ativo no Login (como em `plataforma.spec.ts` `manifesto e service worker`), os URLs de
+**C8** - [x] Com o service worker ativo no Login (como em `plataforma.spec.ts` `manifesto e service worker`), os URLs de
 `caches` têm exatamente 1 que casa `/assets/public-sans-latin-wght-normal-[^/]+\.woff2` e 1 que casa
 `/assets/source-serif-4-latin-wght-normal-[^/]+\.woff2`, e nenhum contém `/inter-`. Os corpos desses 2 arquivos,
 lidos por `request.get`, somam ≤ 92 160 bytes (90 × 1024). Na mesma prova, a pasta `api/wwwroot/assets` do build
@@ -238,7 +238,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 ### S2 - Login com a cara da instituição (P1) · ~7 files · ~87 KB · ~22k
 
-**C9** - Sem imagem de login, nas 3 telas de acesso (`/univag`, `/univag/primeiro-acesso`,
+**C9** - [x] Sem imagem de login, nas 3 telas de acesso (`/univag`, `/univag/primeiro-acesso`,
 `/univag/definir-senha?token=t`), a 390, 1023, 1024 e 1440 px, com `semAparencia` e com `comAparencia` de
 `imagens.login` `null` (24 casos, table-driven):
 - a coluna (o menor elemento que contém o nome da instituição e o formulário) mede largura ≤ 401 px, e o centro
@@ -251,7 +251,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login sem foto em coluna única de até 400 px"`
 
-**C10** - No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
+**C10** - [x] No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
 − 1 px, nesta ordem:
 1. o logo (`img[src*="/imagens/logo"]`, altura ≤ 49 px) ou as iniciais;
 2. o nome "Centro Universitário de Várzea Grande";
@@ -267,7 +267,7 @@ com `imagens.login` `null` (o logo, "Fale com a Univag", "Aqui você resolve tud
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login sem foto: logo, nome, textos, formulário e itens nessa ordem"`
 
-**C11** - No Login sem imagem de login, a 390 e a 1440 px, sem cor e com `#8a1538`:
+**C11** - [x] No Login sem imagem de login, a 390 e a 1440 px, sem cor e com `#8a1538`:
 - o nome da instituição tem `fontFamily` começando por `"Source Serif 4 Variable"` e `font-size` 28 px;
 - o título e a frase do login têm `color` igual à de `var(--muted-foreground)`;
 - cada um dos 3 `li` dos itens tem `list-style-type` diferente de `none` e `::marker` com a cor de
@@ -277,7 +277,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login sem foto: nome em serifa de 28 px, textos secundários e fundo tingido"`
 
-**C12** - Em Primeiro acesso e em Criar senha, sem imagem de login, com `semAparencia`, a 390 e a 1440 px, de cima
+**C12** - [x] Em Primeiro acesso e em Criar senha, sem imagem de login, com `semAparencia`, a 390 e a 1440 px, de cima
 para baixo, cada `top` ≥ o `bottom` do anterior − 1 px (P2):
 1. as iniciais;
 2. o nome da instituição, em `"Source Serif 4 Variable"` de 28 px;
@@ -291,7 +291,7 @@ senha)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "Primeiro acesso e Criar senha na mesma coluna"`
 
-**C13** - Com `comAparencia` (`imagens.login` 1, `logo` 3), nas 3 telas de acesso, a 1024 e a 1440 px de largura e
+**C13** - [x] Com `comAparencia` (`imagens.login` 1, `logo` 3), nas 3 telas de acesso, a 1024 e a 1440 px de largura e
 900 de altura:
 - a `img[src*="/imagens/login"]` visível é 1 só, com `x` = largura/2, `y` = 0, largura = largura/2 (1 px) e
   `bottom` ≥ 899 e igual ao `bottom` da coluna da esquerda ou da janela, o que for maior (1 px);
@@ -303,7 +303,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login com foto: a foto na coluna direita inteira, sem texto nem gradiente"`
 
-**C14** - Com `comAparencia`, nas 3 telas de acesso, a 390 e a 1023 px:
+**C14** - [x] Com `comAparencia`, nas 3 telas de acesso, a 390 e a 1023 px:
 - a `img[src*="/imagens/login"]` visível é 1 só, com `x` 0, `y` 0, largura igual a `clientWidth` e altura 160 px
   (1 px);
 - o `bottom` dela é ≤ o `top` do logo + 1 px, e o logo fica acima de "CPF" (ou do primeiro campo da tela);
@@ -312,7 +312,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login com foto abaixo de 1024: faixa de 160 px acima do formulário"`
 
-**C15** - No Login, 4 casos (com e sem `imagens.login` × com e sem aparência):
+**C15** - [x] No Login, 4 casos (com e sem `imagens.login` × com e sem aparência):
 - com `comAparencia`, com ou sem foto: "Fale com a Univag", "Aqui você resolve tudo sobre a sua vida acadêmica.",
   "Boletos", "Matrícula" e "Documentos" aparecem, e há uma `img` com `src`
   `/api/instituicoes/univag/imagens/logo?v=3` e `alt` igual ao nome;
@@ -323,7 +323,7 @@ Nos 4 casos, "Entre com seu CPF e sua senha." tem 1 ocorrência (P1) (AC 5, AC 7
 
 Proof: `cd web && npx vitest run src/acesso/identidade.test.tsx -t "textos e logo do login com e sem foto"`
 
-**C16** - A raiz `/` mostra o `heading` "One", "Dúvidas, solicitações e respostas da sua instituição em um só lugar."
+**C16** - [x] A raiz `/` mostra o `heading` "One", "Dúvidas, solicitações e respostas da sua instituição em um só lugar."
 e "Abra o endereço da sua instituição, por exemplo /univag.", e nenhum `svg`. No Chromium, a 360 e a 1280 px, "One"
 tem `fontFamily` começando por `"Source Serif 4 Variable"`, e o centro horizontal do texto de cada uma das 3 linhas
 fica a no máximo 1 px do centro da janela (AC 20; Screens: Raiz)
@@ -728,3 +728,8 @@ Estimativa:
   varreduras do `revisao-ux`.
 - Cada lote roda C40 a C42 antes de passar adiante. C43 a C46 fecham no lote 2.
 - Mecanismo: handoff em 2 lotes sequenciais, com o corte depois de S2 - escolha do usuário em 05/11
+
+- **Boundary:** lote 1 (S1 e S2) em `HEAD`, a partir de `<base>` = `6d83112`. Fechados: C1, C2, C5, C7, C8 e C9 a C16. **Abertos até o lote 2:** C3, C4 e C6 (as varreduras). Os testes existem com o nome do check e passam, mas cobrem só o que o lote 1 mudou: C3 varre as 15 telas de `Telas` (mais Conta e Instituições, o menu "Ações de …" de Artigos e o menu do usuário) e já passa inteira; C4 varre Login, Primeiro acesso, Criar senha e a raiz, e o lote 2 acrescenta o Assistente sem conversa, Indicadores e o detalhe do chamado (o `h2` de 24 px do detalhe ainda não é serifa); C6 varre as telas inteiras e passa, e o lote 2 a reroda depois de Assistente, Indicadores e detalhe mudarem. Gates no `HEAD`: Vitest 506 verdes (51 arquivos), build ok, `crapper` sai 0 no limite 9.99 (maior: `Sidebar` 9,8; `Entrada` caiu de 16 para menos de 9 ao ser dividida em `Nome`, `Textos`, `ListaDeItens` e `Foto`), `dryer` sem candidato, layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`, `plataforma`, `identidade`) 172 verdes e 2 vermelhos contra `vite preview` na 5199. Os 2 vermelhos já falham em `<base>` (conferido num worktree de `6d83112`, removido): `plataforma.spec.ts` `manifesto e service worker` pede `GET /api/auth/me` pelo `vite preview` e recebe 502 porque o proxy aponta para a porta 5226, onde não há API (o C8 não usa essa chamada e passa); `ux.spec.ts` `detalhe da Fila em texto corrido no celular` espera "aberto há 2 dias" e hoje (05/11) são 3 dias (o chamado simulado é de 02/11 e o teste não fixa o relógio). C43 vale (nenhum arquivo de `api/` muda). C40 a C42 ficam para o lote 2, que os fecha de ponta a ponta; o e2e real (C44, C45) também. Capturas antes e depois em `.playwright-mcp/identidade/lote1/`.
+- **Settled mid-build:** (1) `Entrada` do login sempre mostra o título, a frase e os 3 itens de base quando a instituição ainda não carregou (como o painel antigo fazia), e o `h1` com o nome só aparece com a instituição carregada; por isso `acesso/textos.test.tsx` não precisou de edição (os literais já cobriam as 3 telas). (2) "Entre com seu CPF e sua senha." ficou em 14 px (`text-sm`), cor secundária e 4 px abaixo do nome, os valores que `frase do Login à esquerda` e `cabeçalho do Login` já afirmavam. (3) O título da tela de Primeiro acesso e Criar senha é um `h2` de 16 px em sans (abaixo de 20 px, C4); o `h1` das 3 telas é o nome da instituição em serifa de 28 px. (4) A raiz `/` reusa o mesmo `h1` de 28 px; por isso a exceção de `no máximo 4 tamanhos de texto por tela` aceita 28 px no `h1` das 3 telas de acesso e da raiz, e não só no Login (o plano não dá tamanho ao "One"). (5) Os botões "Tema" e de avisos têm `data-slot` `popover-trigger` e não `button` (o `PopoverTrigger asChild` troca o atributo): o C6 mede a pílula deles pelo `aria-label`, e a contagem de `[data-slot=button]` por tela do C6 não vale para Minhas solicitações (nenhum botão desse tipo a 390 nem a 1440), então o teste afirma pelo menos 1 botão no total da varredura; o lote 2 ou o Verifier decide se isso basta. (6) A `section` "Prévia" da Aparência não tem raio: o C5 mede o primeiro filho dela, o painel de 12 px. (7) Efeitos de fonte em testes fora da lista fechada, corrigidos no código e não na asserção: `ux.spec.ts` `balão com até 68 caracteres de largura` mede a largura de 68 zeros com kerning e o `ch` da Public Sans dá 0,1 px a mais por caractere, então `Balao.tsx` passou de `max-w-[68ch]` a `max-w-[67ch]`; `instituicoes.spec.ts` `cartão com nome e selo na 1ª linha` mede o `y` do `Range` do nome (a Public Sans muda a altura do conteúdo em 1 px), então o selo da linha em cartão ganhou `margin-top: 1px` em `index.css`. Nas duas, a asserção ficou como estava. (8) Raios: o cartão de linha em `[data-cartoes]` passou de `var(--radius-lg)` a `var(--radius-md)` (12 px); `Tabela`, `Conta`, `Matriculas` e os painéis passam de `rounded-lg` a `rounded-md`, os botões de `rounded-md` a `rounded-sm`, campos a `rounded-xs`, itens de menu e da barra lateral a `rounded-xs`, menu e popover a `rounded-lg`; o `Sheet` ganhou o raio de 16 px nos cantos do lado de abertura. Tirei `rounded-full` de "Falar com atendente", dos botões de link da resposta, de "Anexar arquivo" e de "Remover" do anexo (P4); `rounded-full` ficou em "Enviar", "Tema" e avisos, e as iniciais do usuário passaram a `rounded-full` (avatar). As perguntas da prévia da Aparência saíram de pílula para `rounded-xs` (o lote 2 as troca por linhas, AC 21). (9) `e2e/simulada.ts` ganhou `instalar`, `referencia`, `abrirTela` e `varrer`, movidos de `ux.spec.ts` (que agora os importa) para o `identidade.spec.ts` poder usá-los. (10) O C9 varre `#root` e ignora elementos sem altura (a região vazia de avisos do Sonner).
+- **Abandoned:** nada. O lote 1 não toca o C46 nem os checks de S3, S4, S5 e S0, que são do lote 2.
+- **Edições na lista fechada (lote 1), com o AC que as força:** item 1: `estrutura.test.ts` (`identidade.test.tsx` em `Raiz`). Item 2, `interface.test.ts`: a linha de `--font-sans` passa a `'Public Sans Variable', …` (AC 1); a linha `--radius` sai da tabela `Tokens` (AC 3); `contraste do painel de entrada` perde o literal `border-l bg-muted p-10` e mantém o cálculo (AC 5); a regex do `h1` de `títulos de página` passa a `font-heading text-[28px]` (AC 2, AC 5). Item 3: `opsz da Inter sem fonte nova` sai de `ux.test.tsx` (AC 1; C1). Item 4, `ux.spec.ts`: `títulos com opsz 32 da Inter` sai (AC 1, AC 2; C2 e C4); `no máximo 4 tamanhos de texto por tela` aceita 28 px no `h1` das telas de acesso e da raiz e 40 px só em Indicadores, e separa esse tamanho do único tamanho de título (AC 2); `sem emoji nem gradiente` perde a exceção da faixa sobre a imagem (AC 6). Item 5, `arranjo.spec.ts`: `fonte Inter do próprio app` sai (AC 1; C2); `cartões sem sombra` passa ao cartão "Ações" do detalhe a 1280 px com `box-shadow` `none`, e a parte de Indicadores sai (AC 3, AC 14 a AC 16); em `valores de tipo e bordas` só o canto da caixa da tabela da Fila passa de `8px` a `12px` (AC 3); `arranjo telas de acesso` e `telas de acesso centralizadas` (as 3 telas de acesso) passam à coluna única de até 400 px (AC 5); no bloco `entrada institucional`: saem `entrada em duas colunas`, `entrada numa coluna abaixo de 1024 px`, `fundo e borda do painel`, `conteúdo do painel` e `posição do conteúdo do painel` (só tinham o painel, AC 5; substituídos por C9, C10, C11, C13); `recuo da coluna de entrada` fica como estava; `linha da marca na entrada` passa a iniciais de 48 px à esquerda da coluna, sem o topo de 128 px (AC 5, AC 7); `bloco do formulário por largura` passa às larguras da coluna de 400 px e perde o centro vertical, que o plano não fixa (AC 5); `cabeçalho do Login` passa a `h1` de 28 px e a frase logo abaixo do nome (P1, AC 5); `cabeçalho de Primeiro acesso e Criar senha` e `alerta de sucesso de Criar senha` passam a medir o título da tela e o alerta 32 px abaixo dele (AC 5, P2); `formulário do Login: espaços, erro e teclado` e `frase do Login à esquerda` só mudam o localizador do bloco para a coluna. Item 7, `aparencia.spec.ts`: `logo até 40 px no login` passa a 48 px; `imagem do login no painel e na faixa` virou `imagem do login na coluna direita e na faixa` (faixa de 160 px, textos fora da foto; AC 6, AC 7); `ilustração no login sem imagem` e `textos do login na base sobre a faixa` saem (C9 e C13). Item 8: `aparencia.test.tsx` (`logo no login e na barra` passa a `h-12`; `raiz com a ilustração Boas-vindas` sai, C16) e `acesso/acesso.test.tsx` (`painel de entrada sem foco e sem ícones`: na coluna das 3 telas, sem `svg[data-ilustracao]` e sem focável fora do formulário além do link da tela; AC 5).
