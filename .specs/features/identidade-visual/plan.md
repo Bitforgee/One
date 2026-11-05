@@ -68,7 +68,7 @@ None - nothing consumed outside; nenhuma rota muda
 | --- | --- | --- |
 | 1. Fontes | `@fontsource-variable/public-sans` (`'Public Sans Variable'`) em todo texto e controle, e `@fontsource-variable/source-serif-4` (`'Source Serif 4 Variable'`, arquivo `wght`) só em `h1`/`h2` de conteúdo com 20 px ou mais, no número principal de Indicadores, no nome da instituição no login e no título das boas-vindas; botão, campo, tabela, etiqueta, menu e a barra do topo ficam em sans | Inter com o eixo `opsz`: é a mesma família, e a pesquisa a cita como sinal de modelo pronto. Só Public Sans: muda menos o visual. IBM Plex Sans: carrega a identidade da IBM (decisão do usuário em 05/11 com a prévia) |
 | 2. Escala de raios | `--radius-xs` 4 px (campo e linha de lista: a linha de pergunta do Assistente, o item de menu e o item da barra lateral; as linhas de Fila e Minhas solicitações ficam com 0, como na `revisao-ux` C29), `--radius-sm` 6 px (botão, inclusive "Falar com atendente" e os botões de link da resposta), `--radius-md` 12 px (painel e cartão que sobrar), `--radius-lg` 16 px (`Dialog`, `Sheet`, menu); `rounded-full` só em avatar e foto, nos botões só de ícone circulares ("Enviar", avisos e "Tema"), nos selos de estado e nos números dos passos de Matrículas (decisão do orquestrador em 05/11, com o plano aprovado pelo usuário) | um raio único de 0,625 rem em tudo: é o padrão do shadcn que a pesquisa aponta (Material 3 usa 4/8/12/16/28) |
-| 3. Login | sem `imagens.login`: coluna única centrada (até 400 px) sobre o fundo, com o logo (ou as iniciais), o nome em serifa, "Entre com seu CPF e sua senha." logo abaixo do nome (no Login), o título e a frase do login, o formulário e, abaixo, os itens do login como lista discreta; com `imagens.login`: a foto ocupa o painel ao lado do formulário a partir de 1024 px e a faixa do topo abaixo disso, sem gradiente decorativo nem formas | manter o split 50/50 com ilustração quando não há foto: é o bloco `login-02` cru e imagem decorativa (GOV.UK) |
+| 3. Login | sem `imagens.login`: coluna única centrada (até 400 px) sobre o fundo, com o logo (ou as iniciais), o nome em serifa, "Entre com seu CPF e sua senha." logo acima do rótulo CPF (no Login; ordem ajustada em 05/11), o título e a frase do login, o formulário e, abaixo, os itens do login como lista discreta; com `imagens.login`: a foto ocupa o painel ao lado do formulário a partir de 1024 px e a faixa do topo abaixo disso, sem gradiente decorativo nem formas | manter o split 50/50 com ilustração quando não há foto: é o bloco `login-02` cru e imagem decorativa (GOV.UK) |
 | 4. Estados vazios | ícone lucide de 28 px em `text-muted-foreground`, uma frase e o botão de ação; `web/src/ilustracoes/` sai, com exceção de uma ilustração `Planilha` só no guia de Matrículas (mostra o cabeçalho do CSV) | manter as 6 ilustrações (decisão do usuário em 05/11: trocar por ícones) |
 
 - Nada mais é difícil de reverter: textos, espaçamentos e o arranjo de Indicadores são constantes do `web/`
@@ -104,7 +104,8 @@ None - nothing consumed outside; nenhuma rota muda
   - as perguntas sugeridas em uma lista de linhas de 48 px, com divisória, ícone `MessageCircleQuestion` à esquerda e
     `ChevronRight` à direita. Não são mais pílulas.
 - **Indicadores:**
-  - no topo, o "Indicador principal": o rótulo, o número em serifa (40 px, `tabular-nums`) e, ao lado, a variação
+  - no topo, o "Indicador principal": o rótulo, o número em serifa (40 px, `tabular-nums`) e, ao lado quando couber (abaixo do número em
+    celular estreito; emenda aprovada em 05/11), a variação
     contra o período anterior de mesmo tamanho ("▲ 4,2 pts" ou "▼ 1,0 pt", com a palavra "vs. período anterior");
   - abaixo, os outros 3 destaques numa faixa de 3 colunas (1 coluna quando a área de conteúdo, o contêiner `main`,
     mede menos de 768 px), separados por divisória vertical, sem caixa;
@@ -135,7 +136,7 @@ None - nothing consumed outside; nenhuma rota muda
 
 ### S2: Login com a cara da instituição (P1)
 
-5. WHERE a instituição não tem imagem de login, as telas de acesso SHALL mostrar uma coluna única centrada de até 400 px, sem painel lateral, sem ilustração e sem gradiente, com o logo (ou as iniciais), o nome em serifa, no Login o texto "Entre com seu CPF e sua senha." logo abaixo do nome, o título e a frase do login, em Primeiro acesso e Criar senha o título da tela antes do primeiro campo, o formulário e os itens do login abaixo dele
+5. WHERE a instituição não tem imagem de login, as telas de acesso SHALL mostrar uma coluna única centrada de até 400 px, sem painel lateral, sem ilustração e sem gradiente, com o logo (ou as iniciais), o nome em serifa, no Login o texto "Entre com seu CPF e sua senha." logo acima do rótulo CPF, o título e a frase do login, em Primeiro acesso e Criar senha o título da tela antes do primeiro campo, o formulário e os itens do login abaixo dele
 6. WHERE a instituição tem imagem de login, a partir de 1024 px a foto SHALL ocupar a coluna direita inteira sem gradiente nem texto sobre ela, e abaixo de 1024 px SHALL ser uma faixa de 160 px acima do formulário
 7. The system SHALL manter os textos do login da Aparência (título, frase, itens) e o logo nas duas formas do login
 

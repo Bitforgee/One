@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 83,
+  "next_id": 90,
   "lessons": [
     {
       "id": "L-001",
@@ -1494,6 +1494,132 @@
       ],
       "created": "2026-11-05T04:02:12Z",
       "last_seen": "2026-11-05T04:02:12Z"
+    },
+    {
+      "id": "L-083",
+      "key": "surviving_mutant::when a value depends on two queries test the state where one response is still pending not only the final states",
+      "text": "When a value depends on two queries, test the state where one response is still pending, not only the final states",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F4d, Indicadores.tsx:219 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-084",
+      "key": "surviving_mutant::a guard on a flag needs a case where the flag is set and every other field would pass",
+      "text": "A guard on a flag needs a case where the flag is set and every other field would pass",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F4e, Indicadores.tsx:218 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-085",
+      "key": "surviving_mutant::assert the order of every item a screen enumerates not only the pairs a check happens to name",
+      "text": "Assert the order of every item a screen enumerates, not only the pairs a check happens to name",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md L13, Assistente.tsx BoasVindas (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-086",
+      "key": "spec_deviation::re measure field border contrast on every new tinted surface a token pair proven on one background does not hold on another",
+      "text": "Re-measure field border contrast on every new tinted surface; a token pair proven on one background does not hold on another",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 2, ChamadoDetalhe.tsx:113 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-087",
+      "key": "spec_deviation::a plain control that replaces a button must keep a focus indicator of 3 1 and have a check for it",
+      "text": "A plain control that replaces a Button must keep a focus indicator of 3:1 and have a check for it",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 1, Assistente.tsx:194 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-088",
+      "key": "spec_precision_gap::measure a side by side arrangement with the longest text at the narrowest supported width",
+      "text": "Measure a side-by-side arrangement with the longest text at the narrowest supported width",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 5, C27 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
+    },
+    {
+      "id": "L-089",
+      "key": "spec_precision_gap::a precache size limit must state the total of what the glob precaches not only the files the app requests",
+      "text": "A precache size limit must state the total of what the glob precaches, not only the files the app requests",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 8, C8, vite.config.ts:33 (web)"
+      ],
+      "created": "2026-11-05T06:33:45Z",
+      "last_seen": "2026-11-05T06:33:45Z"
     }
   ]
 }

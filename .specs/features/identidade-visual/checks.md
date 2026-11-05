@@ -120,6 +120,15 @@ teste que "sai" é apagado no mesmo commit que cria o check que o substitui:
    - `ilustracoes/ilustracoes.test.tsx`: `6 ilustrações só com currentColor e tokens` passa a
      `Planilha só com currentColor e tokens`, com 1 ilustração (AC 19);
    - `chamados/textos.test.tsx`, `textos detalhe do chamado`: a lista ganha "Dados do aluno" (P7) (AC 17).
+9. Edições aprovadas pelo usuário em 05/11, depois da rodada 1 do Verifier (P15): `arranjo.spec.ts`
+   `quebras medidas dos dois lados` (o item da faixa no lugar do cartão, mesmos limites);
+   `indicadores/indicadores.test.tsx` `ranking com gráfico acima da tabela`, `ranking vazio sem gráfico`,
+   `rankings em tabela Categoria e Total` e `indicadores/revisao.test.tsx` `Ver tabela de %s` (só o localizador, de
+   cartão a `section`); `indicadores/indicadores.test.tsx` `cartões formatam…` (leituras de `GET /api/indicadores`
+   de 1 a 2); `ux.spec.ts` `detalhe da Fila em texto corrido no celular` (datas a partir do relógio do teste);
+   `celular.spec.ts` `Indicadores sem texto cortado` (escopo `[class*="container/main"] *`); `ux.spec.ts`
+   `no máximo 4 tamanhos de texto por tela` (28 px no `h1` de Primeiro acesso, Criar senha e raiz; 40 px em
+   Indicadores); `arranjo.spec.ts` `bloco do formulário por largura` (sai o centro vertical, que o plano não fixa).
 
 ## Decisões
 
@@ -129,7 +138,7 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 
 | # | Ponto | Decisão |
 | --- | --- | --- |
-| P1 | Screens enumerava a coluna do Login sem "Entre com seu CPF e sua senha." | a frase fica, como texto de apoio logo abaixo do nome da instituição, só no Login (C10, C15) |
+| P1 | Screens enumerava a coluna do Login sem "Entre com seu CPF e sua senha." | a frase fica, como texto de apoio logo acima do rótulo CPF (ordem ajustada em 05/11), só no Login (C10, C15) |
 | P2 | AC 5 vale para "as telas de acesso", mas Screens só descrevia o Login | Primeiro acesso e Criar senha usam a mesma coluna, sem o texto de apoio; o título da tela fica entre a frase do login e o primeiro campo (C12) |
 | P3 | Door 2 dava 4 px à "linha de lista", mas `revisao-ux` C29 exige `border-radius` 0 nas linhas de Fila e Minhas solicitações | 4 px só na linha de pergunta do Assistente, no item de menu (`[role=menuitem]`) e no item da barra lateral; Fila e Minhas solicitações ficam com 0 (C5, C22) |
 | P4 | Door 2: `rounded-full` "só em avatar, sino e barra de abas" | `rounded-full` só em avatar e foto, nos botões só de ícone circulares ("Enviar", avisos e "Tema"), nos selos de estado e nos números dos passos de Matrículas; todo outro botão, inclusive "Falar com atendente" e os botões de link da resposta, tem 6 px (C5, C6) |
@@ -142,6 +151,7 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 | P11 | `revisao-ux` AC 41 (um só tamanho de título, 20 ou 24 px) contra o nome de 28 px e o número de 40 px; `revisao-ux` C57 (nenhuma borda na cor de ação) contra a borda à esquerda da solicitação em aberto | a varredura de tamanhos ganha as 2 exceções nomeadas (lista fechada, item 4); a borda da solicitação é exceção à C57 (o teste dela mede só `border-top` e não abre o Assistente sem conversa, então não muda) |
 | P12 | "marcador discreto" nos itens do login | `list-style-type` diferente de `none` e `::marker` com a cor de `var(--muted-foreground)` (C11) |
 | P13 | AC 14 e AC 15 davam a quebra em 768 px de janela; a `layout-painel` door 5 liga as grades de Indicadores à largura do `main` | as colunas seguem o contêiner `main` (`@container/main`): 3 e 2 colunas com o `main` de 768 px ou mais, 1 abaixo. Com a barra aberta, o `main` mede a janela − 304 px (976 a 1280 e 1136 a 1440, como em `arranjo Indicadores`), então as janelas de 1072 e 1071 px dão 768 e 767 px de `main` (C28, C29) |
+| P15 | Rodada 1 do Verifier, aprovado pelo usuário em 05/11 | a lista fechada ganha o item 9; a variação fica ao lado quando couber e abaixo do número em celular estreito; entram C47 a C53 (foco, borda do Responder, carregamento e `semDados` da variação, ordem do nome do assistente, variação a 360, data vazia e precache) |
 | P14 | AC 10 não dizia o que acontece se `GET /api/chamados?escopo=meus` falhar | sem a linha e sem alerta; título, frase e perguntas ficam (C20) |
 
 ## Checks
@@ -639,6 +649,40 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "neutros mudam com a cor da instituição"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca nos três temas"`
 
+**C47** - [ ] Levando o foco por teclado (`Tab`) a uma linha de pergunta do Assistente, a 390 e a 1440 px, nos 3 temas e
+com as 2 marcas, o indicador de foco da linha tem contraste ≥ 3:1 contra o fundo vizinho e `outline` ou `box-shadow`
+visível (espessura ≥ 2 px); a mesma linha sem foco não tem esse indicador (controle) (`revisao-ux` pesquisa §15; AC 22)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "foco das perguntas com 3:1 nos três temas"`
+
+**C48** - [ ] A borda do `Textarea` "Responder" do detalhe do chamado tem contraste ≥ 3:1 contra o fundo em que está,
+medido pela pilha de fundos opacos, a 390 e a 1280 px, nos 3 temas e com as 2 marcas, para aluno e para atendente (AC 22)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do campo Responder com 3:1"`
+
+**C49** - [ ] Depois de "Consultar", com a resposta do período novo atrasada, a tela não mostra "▲", "▼", "= sem variação"
+nem "vs. período anterior" até as 2 respostas do período novo chegarem, e nesse caso (atual 0,5; anterior 0,4) mostra
+"▲ 10,0 pts"; em outro caso, com a resposta do período anterior atrasada, também não mostra variação até ela chegar
+(AC 12, AC 13)
+Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "sem variação enquanto uma resposta está atrasada"`
+
+**C50** - [ ] Com o anterior em `semDados` `true` e `indicadorPrincipal` 0,670 (número presente) e o atual em 0,712, a tela
+não mostra variação nem `role="alert"`; com `semDados` `false` e os mesmos números, mostra "▲ 4,2 pts" (controle) (AC 13)
+Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "semDados com número no anterior esconde a variação"`
+
+**C51** - [ ] No Assistente sem conversa e com solicitação em aberto, a 390 e a 1440 px, a linha "{nome}, assistente
+virtual" fica abaixo da frase de boas-vindas e acima da linha da solicitação, que fica acima da primeira pergunta
+(comparando `top` e `bottom`, tolerância de 1 px) (AC 9, AC 10; `## Screens`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "nome do assistente entre a frase e a solicitação"`
+
+**C52** - [ ] A 360 px, com "▲ 4,2 pts" e com "= sem variação", a variação fica abaixo do número (`top` ≥ `bottom` do
+número − 1 px), alinhada à esquerda com ele (± 1 px) e sem estouro horizontal (P15; `## Screens`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "variação abaixo do número a 360"`
+
+**C53** - [ ] `periodoAnterior('', '2026-11-05')` e `periodoAnterior('2026-11-01', '')` devolvem `null`, e limpar "De" não
+gera pedido com `NaN` na URL. No service worker ativo, nenhum URL de `caches` contém `cyrillic`, `greek`, `vietnamese` ou
+`latin-ext`, e os 2 arquivos latinos do C8 continuam lá (P15; AC 4)
+Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "data vazia não consulta o período anterior"`
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "precache sem subconjuntos de outros alfabetos"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -650,7 +694,7 @@ Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca
 | `rounded-full` permitido (4) | avatar e foto C6 · botão só de ícone circular ("Enviar", avisos, "Tema") C5, C6 · selo de estado C5, C6 · número de passo de Matrículas C5, C6 | - |
 | degraus da escala em `index.css` (4) | `--radius-xs` C7 · `--radius-sm` C7 · `--radius-md` C7 · `--radius-lg` C7 | - |
 | telas de acesso (3) | Login C9, C10, C11, C13, C14, C15 · Primeiro acesso C9, C12, C13, C14 · Criar senha C9, C12, C13, C14 | - |
-| texto de apoio do Login (2) | presente no Login, logo abaixo do nome C10, C15 · ausente em Primeiro acesso e Criar senha C12 | - |
+| texto de apoio do Login (2) | presente no Login, logo acima do rótulo CPF C10, C15 · ausente em Primeiro acesso e Criar senha C12 | - |
 | variantes do login (8) | sem foto a partir de 1024 C9, C10, C11 · sem foto abaixo de 1024 C9, C10, C11 · com foto a partir de 1024 C13, C15 · com foto abaixo de 1024 C14, C15 · com logo C10, C15 · sem logo, com as iniciais C10, C12, C15 · textos da Aparência C10, C15 · textos de base C10, C12, C15 | - |
 | larguras dos dois lados de 1024 (4) | 390 C9, C14 · 1023 C9, C14 · 1024 C9, C13 · 1440 C9, C13 | - |
 | estados do Assistente sem conversa (15) | com `nomeCurto` C17 · sem `nomeCurto` C17 · com `boasVindas` C17 · sem `boasVindas` C17 · com foto C19 · sem foto C19 · sem nome do assistente C19 · `ABERTO` C20 · `EM_ATENDIMENTO` C20, C21 · `AGUARDANDO_ALUNO` C20 · só `RESOLVIDO` C20 · só `FECHADO` C20 · sem solicitação C20 · várias, a mais recente C20 · leitura com `500` C20 | - |
@@ -665,9 +709,10 @@ Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca
 | títulos de seção (3) | "Dados do aluno" C33 · "Histórico" C33 · `h2` das seções da Aparência C32 | - |
 | blocos que pedem ação com fundo tingido (2) | resumo gerado por IA C34 · formulário de resposta C34 | - |
 | one-way doors do `Landing` (4) | 1 C1, C2, C3, C4, C8 · 2 C5, C6, C7 · 3 C9, C10, C11, C12, C13, C14 · 4 C31, C35, C36, C37 | - |
+| achados da rodada 1 do Verifier (8) | foco das perguntas C47 · borda do Responder C48 · variação com resposta atrasada C49 · `semDados` com número C50 · ordem do nome do assistente C51 · variação em celular estreito C52 · data vazia C53 · precache só latino C53 | - |
 | invariantes do AC 22 (6) | alvos de 44 px C46 · campos de 16 px C46 · contrastes C46 · barra de abas C46 · cor de ação C46 · tokens tingidos C46 | - |
 | suítes do S0 (5) | Vitest e build C40 · `crapper` e `dryer` C41 · arranjo C42 · `api/` igual C43 · e2e real C44, C45 | - |
-| frases e itens de arranjo de `## Screens` (41) | coluna centrada de até 400 px C9 · logo até 48 px ou iniciais C10 · nome em serifa de 28 px C11 · texto de apoio logo abaixo do nome C10 · Primeiro acesso e Criar senha com o título da tela antes do primeiro campo C12 · título e frase em texto secundário C10, C11 · formulário C10 · itens em lista com marcador abaixo do formulário C10, C11 · sem painel nem ilustração C9 · fundo `--background` tingido C11 · com foto, formulário na coluna da esquerda C13 · foto na coluna direita inteira C13 · sem gradiente e sem texto sobre a foto C13, C14 · faixa de 160 px abaixo de 1024 C14 · título em serifa de 24 px à esquerda C18 · "Atendimento ao estudante · …" C17 · frase abaixo do título C17, C18 · foto de 32 px ao lado do nome C19 · sem "Olá! Eu sou" C17 · linha da solicitação com borda na cor de ação C21 · solicitação com estado, próximo passo e link C20 · solicitação antes das perguntas C20, C21 · perguntas em linhas de 48 px com divisória C22 · `MessageCircleQuestion` à esquerda e `ChevronRight` à direita C22 · perguntas sem pílula C22 · principal com rótulo e número de 40 px `tabular-nums` C27 · variação ao lado com "vs. período anterior" C24, C27 · 3 destaques em 3 colunas, 1 no celular C28 · divisória vertical e sem caixa C28 · 9 métricas em 2 colunas, 1 no celular C29 · rótulo à esquerda e valor tabular à direita C29 · divisória entre linhas e sem caixa C29 · gráficos sem cartão, com título C30 · blocos estáticos sem borda nem fundo C32, C33, C34 · separados por 32 px C32, C33, C34 · título de seção C32, C33 · só o que pede ação com fundo tingido C34 · vazio com ícone de 28 px, título, frase e botão C35, C36 · vazio centrado na largura da lista C36 · Planilha no passo 2 numa linha C37, C38 · raiz com "One" em serifa, frase e texto, sem ilustração C16 | - |
+| frases e itens de arranjo de `## Screens` (41) | coluna centrada de até 400 px C9 · logo até 48 px ou iniciais C10 · nome em serifa de 28 px C11 · texto de apoio logo acima do rótulo CPF C10 · Primeiro acesso e Criar senha com o título da tela antes do primeiro campo C12 · título e frase em texto secundário C10, C11 · formulário C10 · itens em lista com marcador abaixo do formulário C10, C11 · sem painel nem ilustração C9 · fundo `--background` tingido C11 · com foto, formulário na coluna da esquerda C13 · foto na coluna direita inteira C13 · sem gradiente e sem texto sobre a foto C13, C14 · faixa de 160 px abaixo de 1024 C14 · título em serifa de 24 px à esquerda C18 · "Atendimento ao estudante · …" C17 · frase abaixo do título C17, C18 · foto de 32 px ao lado do nome C19 · sem "Olá! Eu sou" C17 · linha da solicitação com borda na cor de ação C21 · solicitação com estado, próximo passo e link C20 · solicitação antes das perguntas C20, C21 · perguntas em linhas de 48 px com divisória C22 · `MessageCircleQuestion` à esquerda e `ChevronRight` à direita C22 · perguntas sem pílula C22 · principal com rótulo e número de 40 px `tabular-nums` C27 · variação ao lado com "vs. período anterior" C24, C27 · 3 destaques em 3 colunas, 1 no celular C28 · divisória vertical e sem caixa C28 · 9 métricas em 2 colunas, 1 no celular C29 · rótulo à esquerda e valor tabular à direita C29 · divisória entre linhas e sem caixa C29 · gráficos sem cartão, com título C30 · blocos estáticos sem borda nem fundo C32, C33, C34 · separados por 32 px C32, C33, C34 · título de seção C32, C33 · só o que pede ação com fundo tingido C34 · vazio com ícone de 28 px, título, frase e botão C35, C36 · vazio centrado na largura da lista C36 · Planilha no passo 2 numa linha C37, C38 · raiz com "One" em serifa, frase e texto, sem ilustração C16 | - |
 
 - `## Screens` foi lido frase a frase e item a item: 41 afirmações de arranjo, cada uma com o seu token (L-049,
   L-070), depois das decisões de 05/11
@@ -686,7 +731,7 @@ Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca
 - failure modes: C25 (a consulta do período anterior falha: o número aparece sem variação e sem alerta), C20 (a leitura das solicitações falha: sem a linha e sem alerta, P14)
 - idempotency: n/a - nada grava; as duas consultas de Indicadores são leituras, e C23 afirma exatamente 2 por consulta
 - authorization: existing - a guarda de papel do web (`revisao-ux` C10) e o `403` da API fora do papel; `GET /api/chamados?escopo=meus` devolve só as do aluno da sessão; C43 prova que a API não muda
-- concurrency: n/a - nada grava; as duas leituras de Indicadores são independentes, e a variação só aparece com as duas respostas (C25 cobre a falta de uma)
+- concurrency: n/a - nada grava; as duas leituras de Indicadores são independentes, e a variação só aparece com as duas respostas (C25 cobre a falta de uma; C49 cobre uma resposta ainda atrasada)
 - data lifecycle: n/a - nada gravado muda (`## Relations`: None); os textos e as imagens da Aparência só mudam de lugar na tela (C15, C39)
 - dependency failure: C25 (API fora no período anterior), C20 (API fora nas solicitações), C2 (as fontes vêm da origem do app, sem CDN)
 - state transitions: C20 (a linha aparece em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO` e some em `RESOLVIDO` e `FECHADO`)
@@ -741,3 +786,7 @@ Estimativa:
 - **Abandoned:** nada. O lote não precisou de nenhum check alterado nem de nenhuma porta nova.
 - **Edições na lista fechada (lote 2), com o AC que as força:** item 4, `ux.spec.ts`: `destaques de Indicadores em 2 colunas no celular` sai (AC 14; C28); `gráficos com a mesma cor calma` mede o contraste contra o fundo opaco mais próximo da barra, `window.__ux.pilha(e)`, em vez de `closest('[data-slot=card]')` (que já devolvia `null` e pintava branco) (AC 16). Item 5, `arranjo.spec.ts`: `detalhe em duas colunas` (o localizador do Histórico passa a `section`, AC 17), `Detalhe: cartão da equipe antes da conversa e ações que quebram em linhas` (o bloco do resumo é o pai do título "Resumo gerado por IA", AC 17), `arranjo Indicadores` (colunas da faixa de 3, da lista de 2 e dos rankings pelo `main`; número de 40 px; valor de 24 px; lista de 16 px; a medida da tabela depois do clique em "Ver tabela", que rola a página; AC 12 a AC 16), `valores de tipo e bordas` (rodapés ficam; o valor do destaque e o rótulo e o valor da linha da lista no lugar de `card-title` e do cartão compacto; AC 14, AC 15), `lista vazia centralizada` (`svg.lucide` no lugar de `svg[data-ilustracao]`, AC 18), e `cabeçalho do Login` (a frase fica depois do nome e a 16 px acima do campo CPF, na ordem ajustada em 05/11; AC 5, P1). Item 6, `celular.spec.ts`: `Indicadores sem texto cortado` (escopo e contagem, ver Settled 1; AC 14 a AC 16). Item 7, `aparencia.spec.ts`: `sugestões centralizadas em 1 e 2 colunas` sai (C18, C22). Item 8: `aparencia.test.tsx` (`ícone na aba, na barra recolhida e no topo` e `item Contato no menu só com contato` esperam "Atendimento ao estudante · Univag"; `Indicadores sem dados com ilustração` sai, C35; AC 8, AC 18); `assistente/boasvindas.test.tsx` (`boas-vindas com nome, foto e perguntas` e `boas-vindas padrão sem aparência` passam ao título, à frase e ao "assistente virtual"; `perguntas padrão` só troca o texto que espera; `tocar na sugestão envia a pergunta` fica; AC 8, AC 9, AC 11); `assistente/conversa.test.tsx` (a frase de base no lugar do exemplo; AC 8); `assistente/textos.test.tsx` (a lista; AC 8, AC 9); `administracao/aparencia.test.tsx` (`prévia muda antes de salvar`; AC 21); `indicadores/indicadores.test.tsx` (`cartões formatam taxa, horas e número…`: os localizadores do ranking passam a `section`, e a contagem de `GET /api/indicadores` passa de 1 a 2; `destaques de Indicadores` e `indicadores compactos na ordem`: 1 principal, 3 na faixa e as linhas da lista; `período pelos campos de data só consulta no Consultar`: as 4 URLs; AC 12, AC 14, AC 15); `indicadores/revisao.test.tsx` (`os 4 destaques`: 1 principal e 3 na faixa; AC 12, AC 14); `tabela.test.tsx` (`vazio ilustrado nas 6 listas` passa a `vazio com ícone nas 6 listas`, com o título, a frase e o botão; C35); `ilustracoes/ilustracoes.test.tsx` (`Planilha só com currentColor e tokens`; AC 19); `chamados/textos.test.tsx` (a lista ganha "Dados do aluno"; P7).
 - **Edições fora da lista fechada (lote 2), forçadas por um AC, para o Verifier conferir:** (a) `arranjo.spec.ts` `quebras medidas dos dois lados`: a parte de Indicadores media o cartão "Autoatendimento" (`[data-slot=card]`, `card-title` de 24 px); passa a medir o item da faixa e o valor de 24 px, com os mesmos limites de largura (AC 14, que tira os cartões). (b) `indicadores/indicadores.test.tsx` `ranking com gráfico acima da tabela`, `ranking vazio sem gráfico` e `rankings em tabela Categoria e Total`, e `indicadores/revisao.test.tsx` `Ver tabela de %s`: só o localizador do ranking, de `closest('[data-slot=card]')` a `closest('section')`; as asserções ficam (AC 16, que tira o cartão dos gráficos). (c) `ux.spec.ts` `detalhe da Fila em texto corrido no celular`: a correção da bomba-relógio descrita no Settled 12 (o teste já falhava em `<base>`).
+
+### Correções da rodada 1 (C47 a C53)
+
+- Mecanismo: um construtor, depois do FAIL da rodada 1 do Verifier; emendas P15 aprovadas pelo usuário em 05/11.

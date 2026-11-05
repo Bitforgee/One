@@ -504,6 +504,48 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: api.Tests/PushEnviadorTests.cs:63 (api.Tests)
 - last seen: 2026-11-05T04:02:12Z
 
+### L-083 - When a value depends on two queries, test the state where one response is still pending, not only the final states
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md F4d, Indicadores.tsx:219 (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-084 - A guard on a flag needs a case where the flag is set and every other field would pass
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md F4e, Indicadores.tsx:218 (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-085 - Assert the order of every item a screen enumerates, not only the pairs a check happens to name
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md L13, Assistente.tsx BoasVindas (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-086 - Re-measure field border contrast on every new tinted surface; a token pair proven on one background does not hold on another
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 2, ChamadoDetalhe.tsx:113 (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-087 - A plain control that replaces a Button must keep a focus indicator of 3:1 and have a check for it
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 1, Assistente.tsx:194 (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-088 - Measure a side-by-side arrangement with the longest text at the narrowest supported width
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 5, C27 (web)
+- last seen: 2026-11-05T06:33:45Z
+
+### L-089 - A precache size limit must state the total of what the glob precaches, not only the files the app requests
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md finding 8, C8, vite.config.ts:33 (web)
+- last seen: 2026-11-05T06:33:45Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
