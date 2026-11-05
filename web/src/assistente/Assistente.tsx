@@ -110,7 +110,7 @@ function Conversa({ mensagens, fuso, digitando, foto, depois }: { mensagens: Men
           // no assistente os links viram botões abaixo do texto; a mensagem do aluno fica como ele escreveu
           const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
           return (
-            <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.em} fuso={fuso} foto={m.autor === 'ASSISTENTE' ? foto : undefined}>
+            <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.em} fuso={fuso} foto={m.autor === 'ASSISTENTE' ? foto : undefined}>
               {m.anexos?.map((a) => <LinkDeAnexo key={a.id} href={`/api/conversas/anexos/${a.id}`} nome={a.nome} tamanho={a.tamanho} />)}
               {links.length > 0 && <Links links={links} />}
               {m.tipo === 'resposta' && <div className="text-xs text-muted-foreground">{AvisoResposta}</div>}

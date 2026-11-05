@@ -257,14 +257,14 @@ describe('conversa com o assistente', () => {
     for (const no of conteudo.childNodes) expect(no.nodeType === Node.TEXT_NODE || no.nodeName === 'WBR', no.nodeName).toBe(true)
   })
 
-  // os links da resposta saem do texto e viram botões; a pontuação final fica
+  // só os links do fim viram botões e a frase termina em dois-pontos; o do meio fica no texto
   it.each([
-    ['Gere a segunda via no portal: https://portal.edu.br/boletos.', 'Gere a segunda via no portal.', ['https://portal.edu.br/boletos']],
-    ['Veja (https://a.edu.br/x) e https://b.edu.br, ou https://a.edu.br/x!', 'Veja e, ou!', ['https://a.edu.br/x', 'https://b.edu.br']],
+    ['Gere a segunda via no portal: https://portal.edu.br/boletos.', 'Gere a segunda via no portal:', ['https://portal.edu.br/boletos']],
+    ['Veja (https://a.edu.br/x) e https://b.edu.br, ou https://a.edu.br/x!', 'Veja (https://a.edu.br/x) e https://b.edu.br, ou:', ['https://a.edu.br/x']],
     ['Sem link aqui.', 'Sem link aqui.', []],
-    ['Fica em Financeiro > Boletos: https://a.edu.br/b', 'Fica em Financeiro > Boletos.', ['https://a.edu.br/b']],
+    ['Fica em Financeiro > Boletos: https://a.edu.br/b', 'Fica em Financeiro > Boletos:', ['https://a.edu.br/b']],
     ['Termina sem ponto', 'Termina sem ponto', []],
-    ['Linha 1\nVeja: https://a.edu.br\nLinha 3', 'Linha 1\nVeja\nLinha 3', ['https://a.edu.br']],
+    ['Linha 1\nVeja: https://a.edu.br\nLinha 3', 'Linha 1\nVeja: https://a.edu.br\nLinha 3', []],
   ])('separarLinks(%j)', (texto, limpo, links) => {
     expect(separarLinks(texto)).toEqual({ texto: limpo, links })
   })
@@ -278,7 +278,7 @@ describe('conversa com o assistente', () => {
     expect(botao).toHaveAttribute('target', '_blank')
     expect(botao).toHaveAttribute('rel', 'noreferrer')
     expect(botao.closest('.is-assistant')).toHaveTextContent('Gere a segunda via no portal')
-    expect(botao.closest('.is-assistant')!.querySelector('.whitespace-pre-wrap')!.textContent).toBe('Gere a segunda via no portal.')
+    expect(botao.closest('.is-assistant')!.querySelector('.whitespace-pre-wrap')!.textContent).toBe('Gere a segunda via no portal:')
     expect(screen.getByText(`e esse link ${Link}`)).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /portal\.edu\.br/ })).toHaveLength(1)
   })

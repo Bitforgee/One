@@ -1,13 +1,14 @@
 import { motion } from 'motion/react'
 import { Fragment, type ReactNode } from 'react'
 import { formatarData } from './datas'
+import { PorUrl, rotulo, semPontuacao } from './LinksDaResposta'
 import { Badge } from './ui/badge'
 import { Message, MessageContent } from './ui/message'
 
 const MensagemAnimada = motion.create(Message)
 
 type Foto = { src: string; alt: string }
-type BalaoProps = { doAluno: boolean; autor?: string; nota?: boolean; texto: string; em: string; fuso: string; foto?: Foto; children?: ReactNode }
+type BalaoProps = { doAluno: boolean; autor?: string; nota?: boolean; texto: string; em: string; fuso: string; foto?: Foto; comLinks?: boolean; children?: ReactNode }
 
 // Balão da conversa (Assistente e detalhe do chamado): aluno à direita em bg-primary-subtle; assistente e atendente à
 // esquerda em bg-muted; nota interna em bg-warning-subtle com o selo. O texto vai como texto puro (AD-012); o que vem
@@ -24,7 +25,24 @@ export function Quebravel({ texto }: { texto: string }) {
   ))
 }
 
-export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, children }: BalaoProps) {
+// Resposta do assistente: o link que sobrou no meio do texto vira âncora curta (mesmo rótulo do botão). Só nós de texto,
+// <wbr> e <a> montados aqui, nunca HTML vindo da mensagem.
+function TextoComLinks({ texto }: { texto: string }) {
+  return texto.split(PorUrl).map((parte, i) => {
+    if (i % 2 === 0) return <Quebravel key={i} texto={parte} />
+    const link = semPontuacao(parte)
+    return (
+      <Fragment key={i}>
+        <a href={link} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          {rotulo(link)}
+        </a>
+        {parte.slice(link.length)}
+      </Fragment>
+    )
+  })
+}
+
+export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, comLinks, children }: BalaoProps) {
   const cor = doAluno ? 'ms-auto rounded-br-sm bg-primary-subtle' : nota ? 'me-auto rounded-bl-sm bg-warning-subtle' : 'me-auto rounded-bl-sm bg-muted'
   const balao = (
     <MensagemAnimada
@@ -39,7 +57,7 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, children }:
         {nota && <Badge variant="outline">Nota interna</Badge>}
       </div>
       <MessageContent className="w-full max-w-[68ch] text-base leading-relaxed break-words whitespace-pre-wrap group-[.is-user]:ml-0 group-[.is-user]:rounded-none group-[.is-user]:bg-transparent group-[.is-user]:p-0">
-        <Quebravel texto={texto} />
+        {comLinks ? <TextoComLinks texto={texto} /> : <Quebravel texto={texto} />}
       </MessageContent>
       {children}
       <div className="text-end text-xs text-muted-foreground">{formatarData(em, fuso)}</div>

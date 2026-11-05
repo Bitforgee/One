@@ -69,7 +69,7 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
         // como no chat do aluno: os links do assistente viram botões abaixo do texto (AC 46)
         const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
         return (
-          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} em={m.criadaEm} fuso={fuso}>
+          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.criadaEm} fuso={fuso}>
             {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
             {links.length > 0 && <Links links={links} />}
             {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}

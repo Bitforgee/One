@@ -2,22 +2,35 @@ import { ExternalLink } from 'lucide-react'
 import { Button } from './ui/button'
 
 // Mesma regra de URL do backend (Conferencia.Url), que já recusa a resposta com link fora das fontes citadas.
-// O link sai do texto com os dois-pontos e o espaço antes dele; a pontuação final fica ("via: https://x." -> "via.").
+export const PorUrl = /(https?:\/\/[^\s<>()"']+)/i
+// URL que fecha o texto (só pontuação, espaço ou ")" depois dela)
+const UrlFinal = /(https?:\/\/[^\s<>()"']+?)[\s.,;:!?)]*$/i
+export const semPontuacao = (url: string) => url.replace(/[.,;:!?]+$/, '')
+
+// Os links que fecham a resposta (só espaço, pontuação ou "e" entre eles) saem do texto e viram botões; a frase que
+// os apresenta termina em ":". Link no meio do texto fica onde está (Balao o desenha como link curto).
 export function separarLinks(texto: string) {
   const links: string[] = []
-  const limpo = texto.replace(/\s*:?\s*(https?:\/\/[^\s<>()"']+)/gi, (_, url: string) => {
-    const link = url.replace(/[.,;:!?]+$/, '')
-    if (!links.includes(link)) links.push(link)
-    return url.slice(link.length)
-  })
-  const final = limpo.replace(/\s*\(\s*\)/g, '').replace(/[ \t]+([.,;!?])/g, '$1').trim()
-  // o link fechava a resposta sem pontuação: a frase que sobra ganha o ponto final
-  const semPonto = /https?:\/\/[^\s<>()"']+$/i.test(texto.trim()) && /[\p{L}\p{N}]$/u.test(final)
-  return { texto: semPonto ? `${final}.` : final, links }
+  let resto = texto.trimEnd()
+  for (let m = resto.match(UrlFinal); m; m = resto.match(UrlFinal)) {
+    const url = semPontuacao(m[1])
+    if (!links.includes(url)) links.unshift(url)
+    const antes = resto.slice(0, m.index)
+    // "https://a e https://b": o "e" que junta dois links finais sai junto; antes de texto comum ele fica
+    const semJuncao = antes.replace(/(?:\s+e)?[\s,;(]*$/, '')
+    if (!UrlFinal.test(semJuncao)) {
+      resto = antes.replace(/[\s(]+$/, '')
+      break
+    }
+    resto = semJuncao
+  }
+  if (!links.length) return { texto, links }
+  const frase = /:$/.test(resto) ? resto : resto.replace(/[.,;!?]+$/, '')
+  return { texto: /[\p{L}\p{N}]$/u.test(frase) ? `${frase}:` : frase, links }
 }
 
 // Domínio e caminho, sem o www.: "portal.univag.edu.br/financeiro/boletos"
-const rotulo = (link: string) => {
+export const rotulo = (link: string) => {
   if (!URL.canParse(link)) return link
   const u = new URL(link)
   return u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? u.pathname.replace(/\/$/, '') : '')

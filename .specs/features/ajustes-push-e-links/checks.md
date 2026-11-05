@@ -60,7 +60,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/push.spe
 
 ### S2 - Links da resposta sem frase solta (P1)
 
-**C4** - `separarLinks` devolve, em 6 casos (table-driven):
+**C4** - [x] `separarLinks` devolve, em 6 casos (table-driven):
 - "Você também pode acessar diretamente: https://portal.univag.edu.br/financeiro/boletos" → texto "Você também pode acessar diretamente:", botões `["https://portal.univag.edu.br/financeiro/boletos"]`;
 - "Gere a segunda via no portal: https://portal.edu.br/boletos." → "Gere a segunda via no portal:", botões `["https://portal.edu.br/boletos"]`;
 - "Fica em Financeiro > Boletos: https://a.edu.br/b" → "Fica em Financeiro > Boletos:", botões `["https://a.edu.br/b"]`;
@@ -72,15 +72,15 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/push.spe
 
 Proof: `cd web && npx vitest run src/links.test.tsx -t "links finais viram botões e a frase termina em dois-pontos"`
 
-**C5** - Um link no meio do texto fica na frase. A resposta "Veja https://a.edu.br/boletos para emitir a segunda via. Depois, confira o valor." mostra o texto inteiro com "a.edu.br/boletos" no lugar da URL, como `a[href="https://a.edu.br/boletos"]` com `target="_blank"` e `rel="noreferrer"`, sem `https://` visível, e nenhum botão de link abaixo do texto. Uma resposta com um link no meio e outro no fim mostra o do meio na frase e o do fim como botão (Intent 2)
+**C5** - [x] Um link no meio do texto fica na frase. A resposta "Veja https://a.edu.br/boletos para emitir a segunda via. Depois, confira o valor." mostra o texto inteiro com "a.edu.br/boletos" no lugar da URL, como `a[href="https://a.edu.br/boletos"]` com `target="_blank"` e `rel="noreferrer"`, sem `https://` visível, e nenhum botão de link abaixo do texto. Uma resposta com um link no meio e outro no fim mostra o do meio na frase e o do fim como botão (Intent 2)
 Proof: `cd web && npx vitest run src/links.test.tsx -t "link no meio do texto fica na frase como link curto"`
 
-**C6** - O chat do aluno e a conversa vista pela equipe no detalhe do chamado mostram os links da mesma forma: com a resposta "Você também pode acessar diretamente: https://portal.univag.edu.br/financeiro/boletos", os dois balões terminam em "acessar diretamente:" e têm 1 botão `a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos` (Intent 2; `revisao-ux` C68)
+**C6** - [x] O chat do aluno e a conversa vista pela equipe no detalhe do chamado mostram os links da mesma forma: com a resposta "Você também pode acessar diretamente: https://portal.univag.edu.br/financeiro/boletos", os dois balões terminam em "acessar diretamente:" e têm 1 botão `a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos` (Intent 2; `revisao-ux` C68)
 Proof: `cd web && npx vitest run src/links.test.tsx -t "chat e conversa da equipe mostram os links igual"`
 
 ### S0 - Invariantes
 
-**C7** - A suíte da API, a suíte Vitest, `npm --prefix web run build` e a suíte de arranjo (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato (comandos do `revisao-ux` C60 e C61) (Intent)
+**C7** - [x] A suíte da API, a suíte Vitest, `npm --prefix web run build` e a suíte de arranjo (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `crapper` sai 0 no limite 9.99 e `dryer` não acha candidato (comandos do `revisao-ux` C60 e C61) (Intent)
 Proof: `dotnet test api.Tests`
 Proof: `cd web && npx vitest run`
 Proof: `npm --prefix web run build`
@@ -117,3 +117,6 @@ Tamanho: `VerChavePush.cs`, `AvisosPush.tsx`, `LinksDaResposta.tsx`, `Balao.tsx`
 construtor só, sem pergunta.
 
 - Mecanismo: um construtor
+- **Boundary:** C1 a C7 fechados em `f438531` (push) e no commit dos links. No `HEAD`: `dotnet test api.Tests` 568 verdes, Vitest 490 verdes, build ok, `crapper` sai 0 no limite 9.99 (`separarLinks` 7, `useAvisos` 7), `dryer` sem candidato (lista do C60 mais `src/LinksDaResposta.tsx`), layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) 153 verdes contra `vite preview` na 5199. `Balao` ganhou `comLinks` (só o assistente), que desenha o link do meio como `<a>` curto; `AvisosPush` devolve `null` no 204 porque o react-query recusa `undefined`.
+- **Settled mid-build:** edições em asserções existentes, além das da lista fechada, todas consequência direta da mesma mudança e sem enfraquecer nada: (a) `PushRotasTests.Sem_assunto_o_push_fica_desligado`: `GET /api/push/chave` de 404 para 204 (C1; o push desligado por falta de assunto responde igual); `Sem_par_completo_404_nas_duas_rotas` virou `Chave_204_sem_par_completo` (nome do C1) e confere o corpo vazio; (b) `avisos.test.tsx` caso "chave 404" virou "chave 204" e `navegacao.test.tsx` "sem push" passou a 204 (lista fechada, item 2); `push.spec.ts` "sem a chave o botão de avisos não existe" passou a 204 (item 2); (c) `conversa.test.tsx`: tabela `separarLinks(%j)` e o teste do botão esperam os dois-pontos e o link no meio no texto (item 3); (d) `e2e/arranjo.spec.ts` linha 230: "O boleto fica em." virou "O boleto fica em:" (C4); (e) `test/estrutura.test.ts`: `links.test.tsx` entrou na lista `Raiz` (o arquivo de teste na raiz é o nome que o C4 a C6 fixa; o teste de estrutura só aceita testes na raiz se listados). O teste novo de C3 responde 200 sem transporte à negociação do SignalR (`/api/tempo-real`), que a API simulada devolvia 404 e que não tem a ver com o push.
+- **Abandoned:** nada.

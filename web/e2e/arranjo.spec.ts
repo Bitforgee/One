@@ -227,7 +227,7 @@ test.describe('Detalhe do chamado', () => {
     // a fonte fica dentro do balão do assistente, abaixo do texto
     const balao = page.locator('.is-assistant').filter({ hasText: 'Como emitir a segunda via do boleto do semestre' })
     const b = await caixa(balao)
-    const texto = await caixa(balao.getByText('O boleto fica em.', { exact: true })) // o link virou botão (AC 46)
+    const texto = await caixa(balao.getByText('O boleto fica em:', { exact: true })) // o link virou botão (AC 46)
     const fonte = await caixa(balao.locator('div.border-t'))
     expect(fonte.y).toBeGreaterThanOrEqual(texto.y + texto.height - 1)
     expect(fonte.x).toBeGreaterThanOrEqual(b.x - 1)
