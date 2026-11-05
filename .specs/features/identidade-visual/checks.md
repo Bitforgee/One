@@ -219,7 +219,7 @@ e `border-radius` ≥ metade do menor lado − 1 px (pílula ou círculo) é um 
 - o número de um passo de Matrículas.
 
 Todo `[data-slot=button]` visível fora de "Enviar", avisos e "Tema" mede 6 px nos 4 cantos. O teste afirma ter
-achado pelo menos 1 pílula (a foto do assistente nos balões do Assistente) e pelo menos 1 `[data-slot=button]` por
+achado pelo menos 1 pílula (a foto do assistente nos balões do Assistente) e pelo menos 1 `[data-slot=button]` no conjunto das telas da varredura (Minhas solicitações não tem nenhum: os gatilhos de "Tema" e de avisos são `popover-trigger`; decisão do orquestrador em 05/11, depois do lote 1)
 tela (AC 3, door 2)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "pílula só em avatar, botão de ícone, selo e passo"`
@@ -251,13 +251,13 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "login sem foto em coluna única de até 400 px"`
 
-**C10** - [x] No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
+**C10** - No Login sem imagem de login, a 390 e a 1440 px, de cima para baixo, cada `top` ≥ o `bottom` do anterior
 − 1 px, nesta ordem:
 1. o logo (`img[src*="/imagens/logo"]`, altura ≤ 49 px) ou as iniciais;
 2. o nome "Centro Universitário de Várzea Grande";
-3. "Entre com seu CPF e sua senha." (P1), o elemento seguinte ao nome no DOM;
-4. o título do login;
-5. a frase do login;
+3. o título do login;
+4. a frase do login;
+5. "Entre com seu CPF e sua senha." (P1), o elemento imediatamente antes do rótulo "CPF" no DOM (ordem ajustada pelo orquestrador em 05/11, depois do lote 1: a instrução fica junto do formulário);
 6. "CPF", "Senha", "Entrar" e o link "Primeiro acesso ou esqueci minha senha";
 7. a lista dos itens, com 3 `li`.
 

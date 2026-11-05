@@ -78,8 +78,8 @@ None - nothing consumed outside; nenhuma rota muda
 - **Login sem foto (≥ 1024 px e < 1024 px):** uma coluna centrada de até 400 px:
   1. o logo (até 48 px) ou as iniciais;
   2. o nome da instituição em serifa (28 px);
-  3. logo abaixo do nome, o texto de apoio "Entre com seu CPF e sua senha.";
-  4. o título e a frase do login da Aparência (ou os de hoje), em texto secundário;
+  3. o título e a frase do login da Aparência (ou os de hoje), em texto secundário;
+  4. o texto de apoio "Entre com seu CPF e sua senha.", logo acima do campo CPF (ordem ajustada pelo orquestrador em 05/11, depois do lote 1: a instrução fica junto do formulário);
   5. o formulário (CPF, Senha, Entrar e "Primeiro acesso ou esqueci minha senha");
   6. os itens do login como lista de até 3 linhas com marcador discreto (o `::marker` na cor de
      `--muted-foreground`), abaixo do formulário.
