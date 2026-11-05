@@ -492,6 +492,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/assistente/avisos.test.tsx C2 (web)
 - last seen: 2026-11-05T03:29:19Z
 
+### L-081 - Valide URL por lista de formatos permitidos, não por prefixo: '/\host' e '/<tab>/host' começam com '/' e o navegador resolve para outro site.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: push-com-marca
+- evidence: web/src/sw.ts:25 (web)
+- last seen: 2026-11-05T04:02:12Z
+
+### L-082 - Mudar o dado de um teste pode esvaziar uma asserção negativa (procurar 'One' que sumiu); confira cada asserção de ausência depois de trocar o dado.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `api.Tests` · harmful: 0
+- features: push-com-marca
+- evidence: api.Tests/PushEnviadorTests.cs:63 (api.Tests)
+- last seen: 2026-11-05T04:02:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

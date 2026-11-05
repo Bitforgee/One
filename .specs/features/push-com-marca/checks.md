@@ -50,6 +50,8 @@ ficam em `api.Tests/PushAgendadorTests.cs` e `web/src/sw.test.ts`.
    excluídos.
 2. Os testes de `web/src/sw.test.ts` que comparam as opções do `showNotification` ganham o `icon`.
 3. `web-push/checks.md` C27 recebe uma nota de que a porta 4 ganhou `icone` aqui.
+4. `api.Tests/PushEnviadorTests.cs` `Real_envia_post_cifrado_com_vapid`: os argumentos novos de `PayloadPush.De` e a busca pelos bytes do payload inteiro no lugar de "One" (fortalece; C8).
+5. `api.Tests/PushAgendadorTests.cs` `Cada_item_usa_a_instituicao_da_linha` e o helper `Payload`: uma das duas instituições ganha ícone (fortalece; C7).
 
 ## Checks
 
@@ -72,15 +74,16 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Pa
 **C5** - [x] Com a carga `{"titulo":"Univag","corpo":"…","url":"/univag/chamados/ONE-1","icone":"/api/instituicoes/univag/imagens/icone?v=2"}`, o `showNotification` recebe o título "Univag" e as opções `body`, `tag` "ONE-1", `data.url` e `icon` "/api/instituicoes/univag/imagens/icone?v=2" (Intent)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "aviso com o ícone da instituição"`
 
-**C6** - [x] O `icon` só é aceito se for uma string que começa com "/" (caminho do próprio app); qualquer outra coisa (`https://outro.site/x.png`, `javascript:x`, número, ausente) faz o aviso usar `/icons/icon-192.png`. A carga sem JSON legível continua com o texto padrão "Sua solicitação foi atualizada." e com o mesmo ícone padrão (Intent; segurança: o aviso não carrega imagem de fora)
+**C6** - O `icon` só é aceito se casar com um dos dois formatos que o One gera: `^/api/instituicoes/[a-z0-9-]{3,30}/imagens/icone\?v=[0-9]+$` ou `^/icons/icon-[0-9]+\.png$`; qualquer outra coisa usa `/icons/icon-192.png`, em 9 entradas: `https://outro.site/x.png`, `//evil.com/x.png`, `/\evil.com/x.png`, `/	evil` com tab (`"/	/evil.com/x.png"`), com quebra de linha, `javascript:x`, `%2F%2Fevil.com`, número e ausente. A carga sem JSON legível continua com o texto padrão "Sua solicitação foi atualizada." e o ícone padrão (precisão por decisão do orquestrador em 05/11, depois da rodada 1; o usuário pediu a feature com tlc-spec-lean) (Intent; segurança)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "ícone só do próprio app"`
 
 ### S0 - Invariantes
 
-**C7** - [x] A rota pública do ícone (`GET /api/instituicoes/{slug}/imagens/icone?v={versao}`) responde `200` sem cookie, então o service worker consegue carregá-lo; a versão no payload é a mesma que `GET /api/instituicoes/{slug}` devolve em `imagens.icone` (Intent; AD-032)
+**C7** - A rota pública do ícone (`GET /api/instituicoes/{slug}/imagens/icone?v={versao}`) responde `200` sem cookie, então o service worker consegue carregá-lo; a versão no payload é a mesma que `GET /api/instituicoes/{slug}` devolve em `imagens.icone` (Intent; AD-032) Com duas instituições na mesma rodada do agendador, só uma com ícone, cada aviso leva o ícone da sua instituição (a que tem ícone) ou o padrão (a que não tem), em `Cada_item_usa_a_instituicao_da_linha` (precisão por decisão do orquestrador em 05/11, depois da rodada 1; o usuário pediu a feature com tlc-spec-lean)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Icone_do_payload_e_o_da_rota_publica"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushAgendadorTests.Cada_item_usa_a_instituicao_da_linha"`
 
-**C8** - [x] A suíte inteira da API e a suíte Vitest passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `dotnet build api` passa com a barreira CA1502, e `crapper` e `dryer` passam (comandos do `revisao-ux` C60 e C61) (Intent)
+**C8** - A suíte inteira da API e a suíte Vitest passam em `HEAD`. As únicas edições em asserções existentes são as da lista fechada. `dotnet build api` passa com a barreira CA1502, e `crapper` e `dryer` passam (comandos do `revisao-ux` C60 e C61) (Intent) Em `PushEnviadorTests.Real_envia_post_cifrado_com_vapid`, a prova de que o corpo vai cifrado procura no corpo enviado os bytes do payload inteiro em claro (e não só "One"), e falha se o envio for sem cifra (precisão por decisão do orquestrador em 05/11, depois da rodada 1; o usuário pediu a feature com tlc-spec-lean)
 Proof: `dotnet test api.Tests`
 Proof: `cd web && npx vitest run`
 Proof: `dotnet build api`
@@ -95,7 +98,7 @@ Proof: `docker compose exec -T postgres psql -U postgres -d one -t -c "select en
 | estados do chamado no envio (5) | `ABERTO` C2 · `EM_ATENDIMENTO` C1, C2 · `AGUARDANDO_ALUNO` C2 · `RESOLVIDO` C2 · `FECHADO` C2 | - |
 | origem do título (2) | `nomeCurto` C1 · `nome` C3 | - |
 | origem do ícone (3) | ícone enviado C1, C7 · sem ícone C3 · ícone removido C3 | - |
-| entradas de `icon` no service worker (5) | caminho do app C5 · URL de fora C6 · `javascript:` C6 · número C6 · ausente C6 | - |
+| entradas de `icon` no service worker (10) | caminho do app C5 · URL de fora C6 · `//` C6 · `/\` C6 · tab C6 · quebra de linha C6 · `javascript:` C6 · codificado C6 · número C6 · ausente C6 | - |
 | chaves do payload (4) | `titulo` C1 · `corpo` C1, C2 · `url` C1 · `icone` C1, C5 | - |
 
 ## Swept
