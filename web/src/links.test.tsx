@@ -43,6 +43,37 @@ describe('links da resposta', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1)
   })
 
+  it('sem pontuação nem pedaço solto', () => {
+    expect(separarLinks('Ficou com dúvida? https://a.edu.br/ajuda')).toEqual({ texto: 'Ficou com dúvida?', links: ['https://a.edu.br/ajuda'] })
+    expect(separarLinks('Pode confirmar! https://a.edu.br/ajuda').texto).toBe('Pode confirmar!')
+    expect(separarLinks('O prazo termina em 10/11 (veja https://a.edu.br/cal).')).toEqual({ texto: 'O prazo termina em 10/11.', links: ['https://a.edu.br/cal'] })
+    expect(separarLinks('Regulamento, p. 12 - https://a.edu.br/reg.pdf')).toEqual({ texto: 'Regulamento, p. 12:', links: ['https://a.edu.br/reg.pdf'] })
+  })
+
+  it('texto hostil não gera HTML nem link perigoso', () => {
+    const hostis = [
+      'javascript:alert(1)',
+      'data:text/html,<script>',
+      'https://a.edu.br/"onmouseover="x',
+      '<img src=x onerror=alert(1)> https://a.edu.br',
+      'HTTPS://A.EDU.BR/X',
+      'https://javascript:x@a.edu.br',
+    ]
+    for (const texto of hostis) {
+      const { container } = render(<Balao doAluno={false} texto={texto} comLinks em="2026-11-02T12:00:00Z" fuso="America/Cuiaba" />)
+      const corpo = container.querySelector('.whitespace-pre-wrap')!
+      for (const el of corpo.querySelectorAll('*')) {
+        expect(['A', 'WBR'], texto).toContain(el.tagName)
+        expect([...el.attributes].filter((a) => /^on/i.test(a.name)), texto).toEqual([])
+        if (el.tagName === 'A') {
+          expect(el.getAttribute('href'), texto).toMatch(/^https?:\/\//i)
+          expect(el.getAttribute('rel'), texto).toBe('noreferrer')
+        }
+      }
+      cleanup()
+    }
+  })
+
   it('chat e conversa da equipe mostram os links igual', async () => {
     const resposta = `${Frase} ${Boletos}`
     api({

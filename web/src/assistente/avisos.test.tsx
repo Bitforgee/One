@@ -1,6 +1,8 @@
-import { screen, within, waitFor } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { useAvisos } from '../AvisosPush'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 const Ativar = 'Ativar avisos neste aparelho'
@@ -64,10 +66,16 @@ describe('avisos', () => {
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByRole('button', { name: /avisos/i })).not.toBeInTheDocument()
     unmount()
-    abrir('/univag/conta')
+    const conta = abrir('/univag/conta')
     expect(await screen.findByText('Ana')).toBeInTheDocument()
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByText('Avisos no celular')).not.toBeInTheDocument()
+    conta.unmount()
+    // a consulta termina em success com dado null, nunca em error
+    const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    renderHook(() => useAvisos(), { wrapper: ({ children }) => <QueryClientProvider client={cliente}>{children}</QueryClientProvider> })
+    await waitFor(() => expect(cliente.getQueryState(['push-chave'])?.status).toBe('success'))
+    expect(cliente.getQueryData(['push-chave'])).toBeNull()
     expect(erro).not.toHaveBeenCalled()
     erro.mockRestore()
   })
