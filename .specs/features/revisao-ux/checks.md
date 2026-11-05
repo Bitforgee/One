@@ -407,7 +407,7 @@ Nenhum dos 5 mostra data (P1) (AC 22)
 
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "próximo passo por estado"`
 
-**C33** - Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades"), o responsável (o nome, ou "sem responsável") e a data relativa, e
+**C33** - [x] Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades"), o responsável (o nome, ou "sem responsável") e a data relativa, e
 nenhuma mostra o nome do aluno nem o setor (P2). A 390 px, a categoria quebra linha e não é cortada (`text-overflow` diferente de `ellipsis` e `scrollWidth` ≤ `clientWidth`) (decisão delegada pelo usuário em 04/11, depois da rodada 1). O texto "Mais antigos primeiro" vem antes da lista no DOM. A 390 px, o `bottom` desse texto é ≤ o `top` do primeiro item
 (AC 23; Screens: Fila)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "Fila com categoria, data e Mais antigos primeiro"`
@@ -553,7 +553,7 @@ A 390 px, o `bottom` do campo é ≤ o `top` do primeiro item (AC 34; Screens: U
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "CPF formatado e busca por nome, CPF ou e-mail"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "busca de Usuários acima da lista"`
 
-**C48** - Em Matrículas:
+**C48** - [x] Em Matrículas:
 - há uma `ol` com 3 itens, nesta ordem: "Baixe o modelo", "Preencha uma linha por aluno" e "Envie o arquivo";
 - cada passo mostra o número ("1", "2", "3") como texto visível ao lado do título (caixa com altura > 0 e cor com contraste ≥ 4,5:1), o título de cada passo é um cabeçalho (`h2` ou `h3`) e o nome acessível do item começa pelo número (decisão delegada pelo usuário em 04/11, depois da rodada 1);
 - o botão "Baixar modelo (CSV)" dispara um download `.csv` cuja primeira linha é exatamente
@@ -621,7 +621,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "sem Sparkles no código"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "sem emoji nem gradiente"`
 
-**C57** - A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
+**C57** - [x] A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
 foco em nada, cada elemento visível com a cor de ação cai num destes casos (P6):
 - `background-color` igual a `var(--primary)`: é `[data-slot=button][data-variant=default]`, um item ativo
   (`[aria-current=page]` ou `[data-active=true]`) ou a `Sigla`;
@@ -703,13 +703,13 @@ Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "links da resp
 
 Decisão delegada pelo usuário em 04/11, depois da rodada 1 da verificação.
 
-**C69** - O texto reserva do aviso no celular em `web/src/sw.ts`, usado quando o push chega sem texto, diz "Sua solicitação foi atualizada." e não contém "chamado" (o texto que vem da API fica de fora: esta feature não muda a API) (C58, linguagem do aluno)
+**C69** - [x] O texto reserva do aviso no celular em `web/src/sw.ts`, usado quando o push chega sem texto, diz "Sua solicitação foi atualizada." e não contém "chamado" (o texto que vem da API fica de fora: esta feature não muda a API) (C58, linguagem do aluno)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "texto reserva fala em solicitação"`
 
-**C70** - Um usuário só com o papel `OPERADOR` que abre `/univag/fila`, `/univag/assistente` ou `/univag/artigos` é levado a `/univag/instituicoes` (AC 9)
+**C70** - [x] Um usuário só com o papel `OPERADOR` que abre `/univag/fila`, `/univag/assistente` ou `/univag/artigos` é levado a `/univag/instituicoes` (AC 9)
 Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "operador sem outro papel vai para Instituições"`
 
-**C71** - Os testes de lista fechada não ficam mais fracos que em `<base>`: a prévia da Aparência no tema Claro é provada pela cor pintada do botão (`getComputedStyle(...).backgroundColor` igual ao de uma referência com `#8a1538`), e o texto de ajuda dos anexos, quando aparece, é provado com `toBeVisible()` (C59)
+**C71** - [x] Os testes de lista fechada não ficam mais fracos que em `<base>`: a prévia da Aparência no tema Claro é provada pela cor pintada do botão (`getComputedStyle(...).backgroundColor` igual ao de uma referência com `#8a1538`), e o texto de ajuda dos anexos, quando aparece, é provado com `toBeVisible()` (C59)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "prévia muda antes de salvar"`
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
@@ -887,3 +887,9 @@ ode_modules` (a remoção foi barrada pela proteção do Claude Code), e fica pa
     - `administracao/aparencia.test.tsx`, `prévia muda antes de salvar` (AC 38: a cor da prévia vem de `--marca-previa` no contêiner `.previa-marca`, não mais de um `backgroundColor` em linha) e `a prévia recolhe e mostra de novo` (AC 37: vira `a prévia abre pelo Ver prévia abaixo de 1024`).
     - `e2e/arranjo.spec.ts`: `arranjo administração` (AC 35: o botão "Importar" mede a largura do passo, 24 px a menos que o cartão), `quebras medidas dos dois lados` (AC 32 e AC 41: o cartão de 360 px tem 150 px ou mais, em 2 colunas, e o valor mede 24 px), `colunas largas somem no estreito` (AC 34: o CPF de Usuários é "123.456.789-09") e `entrada institucional › conteúdo do painel` (AC 41: o título do painel mede 24 px, não 30).
     - `src/ux.test.tsx`: nenhuma asserção existente mudou (só casos novos).
+
+### Rodada 1 (correções)
+
+- **Boundary:** correções da rodada 1 em 2 commits. C33, C48, C57, C69, C70 e C71 marcados `[x]`; C56 já tinha o nome da prova certo. C57: `--chart-1` deixou de ser `var(--primary)` e vale `oklch(0.52 0 0)` no claro e `oklch(0.72 0 0)` no escuro e no preto (neutro, acima de 3:1 contra o cartão), e a varredura espera uma barra com altura antes de medir. C48: cada passo é um `li` com `aria-labelledby` de um `h2` que traz o número visível e o título; o `ol` perde `list-decimal` e o recuo. C33: a linha compacta da Fila volta a mostrar o responsável (ou "sem responsável"), a categoria quebra linha. C69: `sw.ts` diz "Sua solicitação foi atualizada.". C70: 3 casos novos em `navegacao.test.tsx`; a guarda já levava o OPERADOR a Instituições, sem mudar código. C71: as duas asserções voltaram (a cor pintada resolve em texto a cascata de `index.css`, porque o jsdom não resolve `var()`). Vitest 473 verdes, build ok, `crapper` sai 0, `dryer` sem candidato, layout inteiro (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) verde contra `vite preview` na 5199, `api/` sem mudança. O e2e real não foi rerodado: nenhuma tela que ele exercita mudou além de `index.css` (cor do gráfico) e do texto reserva do SW.
+- **Settled mid-build:** (1) o passo de Matrículas empilha número e título acima do conteúdo, então o botão "Importar" volta à largura do cartão e `arranjo.spec` `arranjo administração` perde o "- 24" que o lote 3 tinha posto. (2) Edições fora de C69 a C71 que o código novo força: `interface.test.ts` (a linha de `--chart-1`, AC 43), `administracao/textos.test.tsx` (os algarismos 1, 2 e 3 dos passos entram como texto esperado, AC 35), `sw.test.ts` (o texto padrão do push, C69), `chamados/revisao.test.tsx` e `e2e/arranjo.spec.ts` `colunas largas somem no estreito` (o responsável volta, C33). (3) Na linha compacta da Fila, categoria e responsável dividem o resto da linha com `flex-1`, porque `shrink-0` no responsável estourava 360 px.
+- **Abandoned:** nada.
