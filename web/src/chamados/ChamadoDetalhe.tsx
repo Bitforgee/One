@@ -96,6 +96,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   const [envio, setEnvio] = useState<boolean>() // cada envio troca a chave do campo de arquivo, que volta vazio
   const prontas = useProntas(equipe ? c.setorId : undefined)
   if (!pode('responder') && !pode('nota')) return null
+  if (equipe && ['RESOLVIDO', 'FECHADO'].includes(c.estado)) return null
 
   function responder(e: FormEvent) {
     e.preventDefault()
@@ -121,10 +122,10 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   )
 }
 
-function BotoesDeAcao({ pode, executar, pendente, abrir }: Acoes & { abrir: (modal: 'encaminhar' | 'cancelar') => void }) {
+function BotoesDeAcao({ pode, executar, pendente, abrir, semAssumir }: Acoes & { abrir: (modal: 'encaminhar' | 'cancelar') => void; semAssumir: boolean }) {
   return (
     <div className="flex flex-wrap gap-2 empty:hidden">
-      {pode('assumir') && (
+      {pode('assumir') && !semAssumir && (
         <BotaoAcao pendente={pendente} onClick={() => executar('assumir', {})}>
           Assumir
         </BotaoAcao>
@@ -140,9 +141,9 @@ function BotoesDeAcao({ pode, executar, pendente, abrir }: Acoes & { abrir: (mod
         </BotaoAcao>
       )}
       {pode('cancelar') && (
-        <BotaoAcao pendente={false} variant="outline" className="text-destructive" onClick={() => abrir('cancelar')} disabled={pendente}>
+        <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => abrir('cancelar')} disabled={pendente}>
           Cancelar solicitação
-        </BotaoAcao>
+        </Button>
       )}
     </div>
   )
@@ -237,9 +238,54 @@ const ACOES = ['assumir', 'confirmar', 'encaminhar', 'cancelar', 'resolver', 're
 
 const AlertaDaAcao = ({ erro }: { erro: Error | null }) => erro && <Alert variant="destructive">{erro.message}</Alert>
 
-// O cartão de ações; abaixo de 1024 px (AC 8) vira uma barra fixa no rodapé com o botão "Ações", que abre as mesmas ações num Sheet.
-function CaixaDeAcoes({ folha, setFolha, erro, children }: { folha: boolean; setFolha: (aberta: boolean) => void; erro: ReactNode; children: ReactNode }) {
-  if (!useConsulta('(max-width: 1023px)'))
+// A ação principal do estado, na barra do celular da equipe (AC 24): "Assumir" em ABERTO; "Responder" em EM_ATENDIMENTO e AGUARDANDO_ALUNO.
+function principalDoEstado(c: Chamado, pode: Acoes['pode']) {
+  if (c.estado === 'ABERTO' && pode('assumir')) return 'Assumir'
+  if (['EM_ATENDIMENTO', 'AGUARDANDO_ALUNO'].includes(c.estado) && pode('responder')) return 'Responder'
+  return undefined
+}
+
+// A ação principal e a existência de outras ações para o "Mais"; só a equipe tem a barra.
+function acoesDaBarra(c: Chamado, pode: Acoes['pode'], equipe: boolean) {
+  const principal = equipe ? principalDoEstado(c, pode) : undefined
+  const temMais = equipe && ACOES.some((a) => pode(a) && !(a === 'assumir' && principal === 'Assumir'))
+  return { principal, temMais }
+}
+
+// A grade do detalhe: duas colunas só para a equipe, e o espaço da barra fixa no fim.
+const gradeDoDetalhe = (equipe: boolean, barra: boolean) =>
+  `mx-auto grid max-w-3xl gap-4 ${equipe ? '@5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]' : ''} ${barra ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`
+
+// "Responder" da barra rola até o campo e o foca; o foco não rola de novo.
+function irParaResposta() {
+  const campo = document.getElementById('resposta')
+  campo?.scrollIntoView({ block: 'center' })
+  campo?.focus({ preventScroll: true })
+}
+
+type Barra = { principal?: string; executar: Executar; pendente: boolean; abrirMais: () => void; temMais: boolean }
+
+function BarraDoChamado({ principal, executar, pendente, abrirMais, temMais }: Barra) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t bg-background p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      {principal && (
+        <BotaoAcao pendente={pendente && principal === 'Assumir'} className="flex-1" onClick={() => (principal === 'Assumir' ? executar('assumir', {}) : irParaResposta())}>
+          {principal}
+        </BotaoAcao>
+      )}
+      {temMais && (
+        <Button variant="outline" className={`h-11 ${principal ? '' : 'flex-1'}`} onClick={abrirMais}>
+          Mais
+        </Button>
+      )}
+    </div>
+  )
+}
+
+// O cartão de ações da equipe; abaixo de 1024 px (AC 8) vira a barra fixa com a ação principal e "Mais", que abre as outras num Sheet.
+function CaixaDeAcoes({ barra, folha, setFolha, erro, tem, children }: { barra?: Barra; folha: boolean; setFolha: (aberta: boolean) => void; erro: ReactNode; tem: boolean; children: ReactNode }) {
+  if (!tem) return null
+  if (!barra)
     return (
       <Card>
         <CardHeader>
@@ -250,13 +296,11 @@ function CaixaDeAcoes({ folha, setFolha, erro, children }: { folha: boolean; set
     )
   return (
     <>
-      <Button className="fixed inset-x-0 bottom-[var(--barra,0px)] z-30 h-11 rounded-none pb-[env(safe-area-inset-bottom)]" onClick={() => setFolha(true)}>
-        Ações
-      </Button>
+      <BarraDoChamado {...barra} />
       <Sheet open={folha} onOpenChange={setFolha}>
         <SheetContent side="bottom" aria-describedby={undefined} className="max-h-[85dvh]">
           <SheetHeader>
-            <SheetTitle>Ações</SheetTitle>
+            <SheetTitle>Mais ações</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-4 overflow-y-auto p-4 pt-0">
             {erro}
@@ -269,11 +313,64 @@ function CaixaDeAcoes({ folha, setFolha, erro, children }: { folha: boolean; set
 }
 
 type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
+type Modal = 'encaminhar' | 'cancelar'
+type Motivo = { motivo: string; setMotivo: (m: string) => void }
 
-function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
-  // Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
-  const [folha, setFolha] = useState(false)
-  const acao = useMutation({
+// Os formulários e botões das ações do chamado (o cartão a 1024 px, o Sheet "Mais" ou a página do aluno).
+function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo }: { c: Chamado; acoes: Acoes; abrir: (m: Modal) => void; semAssumir: boolean } & Motivo) {
+  const { pode, executar, pendente } = acoes
+  const [resolucao, setResolucao] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
+  const [original, setOriginal] = useState('')
+  return (
+    <>
+      <BotoesDeAcao {...acoes} abrir={abrir} semAssumir={semAssumir} />
+      <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
+        id="resolucao" rotulo="Resolução" botao="Resolver" pendente={pendente} valor={resolucao} setValor={setResolucao} />
+      <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
+        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
+        <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
+          <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
+        </NativeSelect>
+      </FormLinha>
+      <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
+        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
+        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
+      </FormLinha>
+      <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, () => setMotivo(''))}
+        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
+    </>
+  )
+}
+
+// Os diálogos de confirmação de encaminhar e cancelar.
+function Dialogos({ c, modal, fechar, executar, motivo, setMotivo }: { c: Chamado; modal?: Modal; fechar: () => void; executar: Executar } & Motivo) {
+  const [setorId, setSetorId] = useState('')
+  return (
+    <>
+      <Confirmacao aberto={modal === 'encaminhar'} fechar={fechar} titulo="Encaminhar para outro setor?" botao="Encaminhar" pronto={setorId !== '' && motivo.trim() !== ''}
+        confirmar={() => executar('encaminhar', { setorId: Number(setorId), motivo }, () => { setMotivo(''); setSetorId('') })}>
+        <p className="mb-0 text-sm">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="setor">Setor</Label>
+          <NativeSelect id="setor" value={setorId} onChange={(e) => setSetorId(e.target.value)}>
+            <Opcoes vazio="Escolha o setor" itens={c.setores} />
+          </NativeSelect>
+        </div>
+        <CampoMotivo id="motivo-encaminhar" rotulo="Motivo" valor={motivo} setValor={setMotivo} />
+      </Confirmacao>
+
+      <Confirmacao aberto={modal === 'cancelar'} fechar={fechar} titulo="Cancelar a solicitação?" botao="Cancelar solicitação" destrutivo pronto
+        confirmar={() => executar('cancelar', { motivo: motivo.trim() || undefined }, () => setMotivo(''))}>
+        <CampoMotivo id="justificativa" rotulo="Justificativa (opcional)" valor={motivo} setValor={setMotivo} />
+      </Confirmacao>
+    </>
+  )
+}
+
+// Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
+function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChamado: (c: Chamado) => void, setFolha: (aberta: boolean) => void) {
+  return useMutation({
     mutationFn: async ({ caminho, corpo }: Pedido) => {
       try {
         return await api<Chamado>(`/api/chamados/${c.numero}/${caminho}`, corpo)
@@ -288,77 +385,59 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
       depois?.()
     },
   })
-  const [resolucao, setResolucao] = useState('')
+}
+
+// Só o aluno, dono do chamado, tem as ações no fim da página.
+const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('confirmar') || pode('rejeitar') || pode('cancelar'))
+
+// A coluna da equipe: o erro da ação, o cartão (ou a barra e o Sheet) de ações e o histórico.
+function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      {!folha && erro}
+      <CaixaDeAcoes barra={barra} folha={folha} setFolha={setFolha} erro={erro} tem={tem}>
+        {painel}
+      </CaixaDeAcoes>
+      <Historico eventos={c.eventos} fuso={fuso} />
+    </div>
+  )
+}
+
+function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
+  const [folha, setFolha] = useState(false)
+  const acao = useMutacaoDoChamado(c, carregar, setChamado, setFolha)
   const [motivo, setMotivo] = useState('') // o mesmo motivo serve à rejeição, ao encaminhamento e ao cancelamento
-  const [categoriaId, setCategoriaId] = useState('')
-  const [original, setOriginal] = useState('')
-  const [setorId, setSetorId] = useState('')
-  const [modal, setModal] = useState<'encaminhar' | 'cancelar'>()
-  const fechar = () => setModal(undefined)
+  const [modal, setModal] = useState<Modal>()
+  const celular = useConsulta('(max-width: 1023px)')
   const equipe = c.eventos !== null
   const pode = (a: string) => c.acoes.includes(a)
   const executar: Executar = (caminho, corpo, depois) => acao.mutate({ caminho, corpo, depois })
   const pendente = acao.isPending
   const acoes = { pode, executar, pendente }
-  const limparMotivo = () => setMotivo('')
   const erro = <AlertaDaAcao erro={acao.error} />
-  const abrir = (m: 'encaminhar' | 'cancelar') => {
+  const abrir = (m: Modal) => {
     setFolha(false)
     setModal(m)
   }
-  const painel = (
-    <>
-      <BotoesDeAcao {...acoes} abrir={abrir} />
-      <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
-        id="resolucao" rotulo="Resolução" botao="Resolver" pendente={pendente} valor={resolucao} setValor={setResolucao} />
-      <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
-        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
-        <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
-          <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
-        </NativeSelect>
-      </FormLinha>
-      <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
-        id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
-        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
-      </FormLinha>
-      <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, limparMotivo)}
-        id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
-    </>
-  )
-
+  const { principal, temMais } = acoesDaBarra(c, pode, equipe)
+  const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
+  const painel = <PainelDeAcoes c={c} acoes={acoes} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} />
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 max-lg:pb-14 @5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]">
+    <div className={gradeDoDetalhe(equipe, !!barra)}>
       <div className="flex min-w-0 flex-col gap-4">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
         <Mensagens mensagens={c.mensagens} fuso={fuso} />
         <Responder c={c} equipe={equipe} {...acoes} />
-      </div>
-      <div className="flex min-w-0 flex-col gap-4">
-        {!folha && erro}
-        {ACOES.some(pode) && (
-          <CaixaDeAcoes folha={folha} setFolha={setFolha} erro={erro}>
+        {doAluno(pode, equipe) && (
+          <div className="flex flex-col gap-4">
+            {erro}
             {painel}
-          </CaixaDeAcoes>
+          </div>
         )}
-        <Historico eventos={c.eventos} fuso={fuso} />
       </div>
-      <Confirmacao aberto={modal === 'encaminhar'} fechar={fechar} titulo="Encaminhar para outro setor?" botao="Encaminhar" pronto={setorId !== '' && motivo.trim() !== ''}
-        confirmar={() => executar('encaminhar', { setorId: Number(setorId), motivo }, () => { setMotivo(''); setSetorId('') })}>
-        <p className="mb-0 text-sm">O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.</p>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="setor">Setor</Label>
-          <NativeSelect id="setor" value={setorId} onChange={(e) => setSetorId(e.target.value)}>
-            <Opcoes vazio="Escolha o setor" itens={c.setores} />
-          </NativeSelect>
-        </div>
-        <CampoMotivo id="motivo-encaminhar" rotulo="Motivo" valor={motivo} setValor={setMotivo} />
-      </Confirmacao>
-
-      <Confirmacao aberto={modal === 'cancelar'} fechar={fechar} titulo="Cancelar a solicitação?" botao="Cancelar solicitação" destrutivo pronto
-        confirmar={() => executar('cancelar', { motivo: motivo.trim() || undefined }, limparMotivo)}>
-        <CampoMotivo id="justificativa" rotulo="Justificativa (opcional)" valor={motivo} setValor={setMotivo} />
-      </Confirmacao>
+      {equipe && <ColunaDaEquipe c={c} fuso={fuso} erro={erro} folha={folha} setFolha={setFolha} barra={barra} tem={!!(principal || temMais)} painel={painel} />}
+      <Dialogos c={c} modal={modal} fechar={() => setModal(undefined)} executar={executar} motivo={motivo} setMotivo={setMotivo} />
     </div>
   )
 }

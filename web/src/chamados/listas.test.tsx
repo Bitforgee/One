@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import { onlineManager } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, cabecalhos, esperaLinhaVazia, me, type Rota } from '../test/util'
 
 const atendente = me({ papeis: ['ALUNO', 'ATENDENTE'] })
@@ -10,7 +10,13 @@ function lista(escopo: string, rota: Rota) {
 }
 
 describe('listas de chamados', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('Fila mostra cada chamado com categoria, responsável e dias', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-05T15:00:00Z'))
     lista('fila', () => [
       200,
       [
@@ -22,10 +28,10 @@ describe('listas de chamados', () => {
     const primeiro = (await screen.findByText('ONE-1')).closest('tr') as HTMLElement
     expect(within(primeiro).getByText('ONE-1')).toHaveAttribute('href', '/univag/chamados/ONE-1')
     expect(within(primeiro).getByText('Aberto')).toBeInTheDocument()
-    expect(primeiro).toHaveTextContent('Boleto · sem responsável · 1 dia')
+    expect(primeiro).toHaveTextContent('Boleto · sem responsável · aberto há 3 dias')
     const segundo = screen.getByText('ONE-2').closest('tr') as HTMLElement
     expect(within(segundo).getByText('Em atendimento')).toBeInTheDocument()
-    expect(segundo).toHaveTextContent('Matrícula · Carla · 3 dias')
+    expect(segundo).toHaveTextContent('Matrícula · Carla · aberto há 6 dias')
     expect(screen.queryByText('Nenhum chamado na fila dos seus setores.')).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
@@ -47,7 +53,7 @@ describe('listas de chamados', () => {
     expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
     const celulas = within(linha).getAllByRole('cell')
     expect(celulas[0]).toHaveTextContent(/^ONE-1$/)
-    expect(celulas[1]).toHaveTextContent(/^boleto.*1 dia$/) // o título e, no estreito, a linha de detalhe
+    expect(celulas[1]).toHaveTextContent(/^boleto.*aberto há \d+ dias$/) // o título e, no estreito, a linha de detalhe
     montada.unmount()
 
     lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])

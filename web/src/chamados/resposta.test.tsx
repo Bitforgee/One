@@ -28,7 +28,9 @@ describe('resposta no chamado', () => {
 
   it('a equipe responde ao chamado resolvido sem o aviso de reabrir', async () => {
     detalhe(chamado({ estado: 'RESOLVIDO', eventos: [], acoes: ['responder', 'nota'] }))
-    expect(await screen.findByLabelText('Responder')).toBeInTheDocument()
+    await screen.findByRole('heading', { name: 'preciso do boleto' })
+    expect(screen.queryByLabelText('Responder')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Enviar' })).not.toBeInTheDocument()
   })
 
   it('Enviar fica desabilitado com texto em branco', async () => {

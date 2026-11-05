@@ -18,12 +18,12 @@ export type Coluna = { titulo: string; largo?: boolean }
 export type Vazio = { Ilustracao: ComponentType<{ className?: string }>; titulo: string; frase: ReactNode; acao?: ReactNode }
 const SemItens: Vazio = { Ilustracao: CaixaVazia, titulo: 'Nada cadastrado', frase: 'Nenhum item cadastrado.' }
 
-// Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7).
-const useEstreito = () => useConsulta('(max-width: 767px)')
+// Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7), ou linhas com divisória quando `densa` (revisao-ux AC 21).
+export const useEstreito = () => useConsulta('(max-width: 767px)')
 
 // A caixa com borda das listas (padrão do data-table do template); lista vazia, uma linha só com o texto de vazio (AC 24).
 // Lista ainda não chegada: 3 esqueletos (AC 4); com `erro`, nada (a tela mostra o erro).
-export function Tabela({ colunas, itens, vazio = SemItens, erro, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: Vazio; erro?: unknown; children: ReactNode }) {
+export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: Vazio; erro?: unknown; densa?: boolean; children: ReactNode }) {
   const cartoes = useEstreito()
   if (!itens)
     return erro ? null : (
@@ -51,7 +51,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, children }: { c
   // sem <table>: a lista de cartões (linhas e células viram div em ui/table.tsx)
   if (cartoes)
     return (
-      <div role="list" data-cartoes="" className="flex flex-col gap-2 text-sm">
+      <div role="list" {...{ [densa ? 'data-linhas' : 'data-cartoes']: '' }} className={`flex flex-col text-sm ${densa ? '' : 'gap-2'}`}>
         <Cartoes value>{corpo}</Cartoes>
       </div>
     )

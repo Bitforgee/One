@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Chamado } from '../chamado'
 import { formatarData } from '../datas'
 import { estados } from '../test/textos'
@@ -137,7 +137,14 @@ describe('textos', () => {
   }, 30_000)
 
   // Linhas 7 e 8: lista de chamados nos estados carregando, vazia, com itens e erro
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   async function lista(caminho: string, escopo: string, literais: string[], itens: unknown[], valores: string[]) {
+    // o relógio fixo faz "criadoEm" de 2/11 valer "aberto há 3 dias"
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-05T15:00:00Z'))
     const t = estados(literais)
     const rota = (r: Rota) => api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE'] })], [`GET /api/chamados?escopo=${escopo}`]: r })
 
@@ -174,7 +181,7 @@ describe('textos', () => {
 
   it('textos Minhas solicitações', async () => {
     const itens = ['ABERTO', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO', 'RESOLVIDO', 'FECHADO'].map((e, i) => item(i + 1, e))
-    await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
+    await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente', 'aberto há 3 dias', 'A equipe vai responder', 'Responda para continuar', 'Resolvida', 'Encerrada', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
   })
 
   it('textos Fila', async () => {
@@ -182,6 +189,6 @@ describe('textos', () => {
       item(1, 'ABERTO', { categoria: 'Boleto', responsavel: null, dias: 1 }),
       item(2, 'EM_ATENDIMENTO', { categoria: 'Matrícula', responsavel: 'Carla', dias: 3 }),
     ]
-    await lista('/univag/fila', 'fila', ['Fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado', 'Boleto · sem responsável · 1 dia', 'Matrícula · Carla · 3 dias', 'sem responsável', '1 dia', 'Carla', '3 dias'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
+    await lista('/univag/fila', 'fila', ['Fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado', 'Mais antigos primeiro', 'Boleto · sem responsável · aberto há 3 dias', 'Matrícula · Carla · aberto há 3 dias', 'sem responsável', 'aberto há 3 dias', 'Carla'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
   })
 })
