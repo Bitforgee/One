@@ -55,13 +55,12 @@ function Identidade({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   )
 }
 
-// O nome da instituição em serifa, com o texto de apoio logo abaixo (só no Login).
-function Nome({ slug, d, apoio }: { slug?: string; d?: InstituicaoPublica; apoio?: string }) {
+// O logo e o nome da instituição em serifa.
+function Nome({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   return (
     <div className="flex flex-col gap-1">
       <Identidade slug={slug} d={d} />
       {d && <H1>{d.nome}</H1>}
-      {apoio && <p className="m-0 text-sm text-muted-foreground">{apoio}</p>}
     </div>
   )
 }
@@ -94,9 +93,9 @@ function Foto({ foto, className, lateral }: { foto: string | null; className: st
   return lateral ? <div className="relative hidden lg:block">{img}</div> : img
 }
 
-// A coluna do acesso (AC 5): logo, nome em serifa, apoio, título e frase do login, tela, formulário e itens.
+// A coluna do acesso (AC 5): logo, nome em serifa, título e frase do login, tela, formulário (no Login, com o apoio no começo) e itens.
 // Com a foto do login: a faixa de 160 px no topo abaixo de 1024 px, e a coluna direita inteira a partir dela (AC 6).
-function Entrada({ apoio, tela, children }: { apoio?: string; tela?: string; children: ReactNode }) {
+function Entrada({ tela, children }: { tela?: string; children: ReactNode }) {
   const { slug } = useParams()
   const { data: d } = useInstituicao(slug)
   const foto = slug && d?.imagens.login ? urlDaImagem(slug, 'login', d.imagens.login) : null
@@ -105,7 +104,7 @@ function Entrada({ apoio, tela, children }: { apoio?: string; tela?: string; chi
       <Foto foto={foto} className="h-40 w-full object-cover lg:hidden" />
       <div className="flex w-full flex-col items-center justify-center p-6 md:p-10">
         <div className="flex w-full max-w-[400px] flex-col gap-8">
-          <Nome slug={slug} d={d} apoio={apoio} />
+          <Nome slug={slug} d={d} />
           <Textos d={d} />
           {tela && <h2 className="text-base font-semibold">{tela}</h2>}
           <div className="flex flex-col gap-6">{children}</div>
@@ -173,7 +172,7 @@ export function Login() {
     )
 
   return (
-    <Entrada apoio="Entre com seu CPF e sua senha.">
+    <Entrada>
       <Formulario
         schema={schemaLogin}
         botao="Entrar"
@@ -185,6 +184,7 @@ export function Login() {
       >
         {(form) => (
           <>
+            <p className="m-0 -mb-2 text-sm text-muted-foreground">Entre com seu CPF e sua senha.</p>
             <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" autoComplete="username" />
             <Campo f={form} nome="senha" rotulo="Senha" type="password" autoComplete="current-password" />
           </>
