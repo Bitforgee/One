@@ -281,7 +281,9 @@ test('barra tingida pela marca', async ({ page }) => {
       expect(contraste(texto, fundo), `${tema} ${rotuloMarca(marca)}: texto da barra`).toBeGreaterThanOrEqual(4.5)
       medidas++
     }
-    for (const t of Tokens) expect(por['#8a1538'][t], `${tema}: ${t} difere entre as marcas`).not.toEqual(por['#0b6e4f'][t])
+    // no Preto a barra é #000 com as 3 marcas (AD-027); no claro e no escuro, as marcas se distinguem
+    if (tema === 'black') for (const m of Marcas) expect(por[rotuloMarca(m)]['--sidebar'], `preto ${rotuloMarca(m)}: barra #000`).toEqual([0, 0, 0])
+    else for (const t of Tokens) expect(por['#8a1538'][t], `${tema}: ${t} difere entre as marcas`).not.toEqual(por['#0b6e4f'][t])
   }
   expect(medidas).toBe(9)
 })
@@ -299,7 +301,7 @@ test('item ativo com barra de 3 px', async ({ page }) => {
       await expect(ativos, 'um só link ativo').toHaveCount(1)
       await expect(inativo).toHaveCount(1)
       const [primario, fundoBarra, texto] = [await referencia(page, '--sidebar-primary'), await referencia(page, '--sidebar'), await referencia(page, '--sidebar-foreground')]
-      // a barra: uma borda esquerda ou o ::before, a cor pintada sobre o fundo da barra
+      // a barra: uma borda esquerda no elemento ou no ::before (nunca um fundo: some em cores forçadas), a cor pintada sobre o fundo da barra
       const ler = (l: Locator) =>
         l.evaluate((e) => {
           const s = getComputedStyle(e)
@@ -307,7 +309,7 @@ test('item ativo com barra de 3 px', async ({ page }) => {
           const sobre = (cor: string) => window.__ux.pintar([...window.__ux.pilha(e.parentElement!), cor])
           const barras = [
             { largura: parseFloat(s.borderLeftWidth), cor: sobre(s.borderLeftColor), visivel: s.borderLeftStyle !== 'none' },
-            { largura: parseFloat(b.width), cor: sobre(b.backgroundColor), visivel: b.content !== 'none' && b.display !== 'none' && parseFloat(b.height) > 0 },
+            { largura: parseFloat(b.borderLeftWidth), cor: sobre(b.borderLeftColor), visivel: b.content !== 'none' && b.display !== 'none' && parseFloat(b.height) > 0 && b.borderLeftStyle === 'solid' },
           ].filter((x) => x.visivel && x.largura >= 1)
           return {
             barras,
@@ -686,6 +688,12 @@ test('categoria longa inteira nas 5 larguras', async ({ page }) => {
     })
     const celulas = page.locator('section:has(h2) tbody td:first-child')
     await expect(celulas, `${largura}: células de categoria`).toHaveCount(4)
+    const caixas = page.locator('section:has(h2) [data-slot=table-container]')
+    await expect(caixas, `${largura}: caixas das tabelas do ranking`).toHaveCount(2)
+    for (let i = 0; i < 2; i++) {
+      const c = await caixas.nth(i).evaluate((e) => ({ largura: e.scrollWidth, visivel: e.clientWidth }))
+      expect(c.largura, `${largura}: a caixa da tabela ${i} não rola`).toBeLessThanOrEqual(c.visivel)
+    }
     for (let i = 0; i < 4; i++) {
       const m = await celulas.nth(i).evaluate((e) => {
         const linha = e.closest('tr')!
@@ -699,4 +707,179 @@ test('categoria longa inteira nas 5 larguras', async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${largura}: sem estouro da página`).toBe(true)
   }
   expect(medidas).toBe(20)
+})
+
+// C31: o total de cada linha do ranking fica numa linha só, e a categoria de 60 caracteres continua inteira
+test('total do ranking em uma linha', async ({ page }) => {
+  test.setTimeout(240_000)
+  const longa = 'Acadêmico > Secretaria > Declarações e históricos escolares!'
+  expect(longa.length).toBe(60)
+  const ranking = [
+    { categoria: longa, total: 1234567 },
+    { categoria: 'Financeiro', total: 12345 },
+    { categoria: 'Biblioteca', total: 1000 },
+    { categoria: 'Matrícula', total: 999 },
+  ]
+  const dados = {
+    semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.65, taxaEscalonamento: 0.2, taxaAbandono: 0.14, taxaPerguntasSemArtigo: 0.12,
+    chamadosAbertos: 321, chamadosResolvidos: 1200, tempoPrimeiraRespostaHoras: 12.75, tempoResolucaoHoras: 123.25, roteamentoCorreto: 0.91, taxaReabertura: 0.05,
+    principaisCategorias: { porConversas: ranking, porChamados: ranking }, indicadorPrincipal: 0.7123,
+  }
+  let medidas = 0
+  for (const largura of [360, 390, 768, 1024, 1440]) {
+    await abrir(page, largura, '/univag/indicadores', esperaIndicadores, {
+      papeis: ['ADMINISTRADOR'],
+      rotas: (p) => p.route('**/api/indicadores**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dados) })),
+    })
+    const totais = page.locator('section:has(h2) tbody td:last-child')
+    await expect(totais, `${largura}: totais`).toHaveCount(8)
+    for (let i = 0; i < 8; i++) {
+      const m = await totais.nth(i).evaluate((e) => {
+        const r = document.createRange()
+        r.selectNodeContents(e)
+        return { texto: e.textContent, altura: r.getBoundingClientRect().height, linha: parseFloat(getComputedStyle(e).lineHeight) }
+      })
+      expect(m.altura, `${largura}: total ${m.texto} em 1 linha`).toBeLessThanOrEqual(m.linha + 1)
+      medidas++
+    }
+    const categorias = page.locator('section:has(h2) tbody td:first-child')
+    await expect(categorias).toHaveCount(8)
+    const inteira = await categorias.first().evaluate((e) => e.scrollWidth <= e.clientWidth && e.textContent!.includes('escolares!'))
+    expect(inteira, `${largura}: categoria inteira`).toBe(true)
+  }
+  expect(medidas).toBe(40)
+})
+
+// C32: em cores forçadas o `background` some; a barra do item ativo é uma borda e continua visível
+test('item ativo visível com cores forçadas', async ({ page }) => {
+  await instalar(page)
+  await page.emulateMedia({ forcedColors: 'active' })
+  await abrir(page, 1440, '/univag/fila', esperaFila)
+  await page.mouse.move(700, 600)
+  const [ativos, inativo] = [page.locator('[data-sidebar=content] a[aria-current=page]'), page.locator('[data-sidebar=content]').getByRole('link', { name: 'Indicadores' })]
+  await expect(ativos).toHaveCount(1)
+  await expect(inativo).toHaveCount(1)
+  expect(await page.evaluate(() => matchMedia('(forced-colors: active)').matches), 'cores forçadas ligadas').toBe(true)
+  const ler = (l: Locator) =>
+    l.evaluate((e) => {
+      const [s, b] = [getComputedStyle(e), getComputedStyle(e, '::before')]
+      const fundo = getComputedStyle(document.body).backgroundColor
+      return [
+        { largura: parseFloat(s.borderLeftWidth), estilo: s.borderLeftStyle, cor: s.borderLeftColor, fundo: s.backgroundColor },
+        { largura: parseFloat(b.borderLeftWidth), estilo: b.borderLeftStyle, cor: b.borderLeftColor, fundo },
+      ].filter((x) => x.estilo === 'solid' && x.largura >= 1)
+    })
+  const a = await ler(ativos)
+  expect(a, 'o ativo tem 1 borda de barra').toHaveLength(1)
+  expect(Math.abs(a[0].largura - 3)).toBeLessThanOrEqual(1)
+  expect(a[0].cor, 'cor da borda diferente do fundo pintado').not.toBe(a[0].fundo)
+  expect(await ler(inativo), 'controle: o inativo não tem a borda').toEqual([])
+})
+
+// C33: o foco inteiro nos cartões do celular, na primeira coluna da Fila e no Fechar do diálogo
+test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  let medidas = 0
+  for (const [rota, papeis] of [['/univag/fila', ['ATENDENTE']], ['/univag/solicitacoes', ['ALUNO']]] as const) {
+    await abrir(page, 390, rota, esperaFila, { papeis: [...papeis] })
+    const link = page.getByRole('main').getByRole('link', { name: 'ONE-123' })
+    await expect(link, `${rota}: 1 link no cartão`).toHaveCount(1)
+    await tabAte(page, link)
+    const r = await link.evaluate(foraDoCorte, undefined)
+    expect(r.cortes, `${rota}: o link tem ancestral que corta (line-clamp)`).toBeGreaterThanOrEqual(1)
+    expect(r.fora, `${rota}: contorno inteiro`).toEqual([])
+    await link.evaluate((e) => (e.style.outlineOffset = '40px'))
+    expect((await link.evaluate(foraDoCorte, undefined)).fora.length, `${rota}: controle: o contorno de fora é cortado`).toBeGreaterThan(0)
+    await link.evaluate((e) => (e.style.outlineOffset = ''))
+    medidas++
+  }
+  // 1280: o contorno do link da primeira coluna cerca o texto, sem cruzar as letras
+  await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  const primeira = page.getByRole('link', { name: 'ONE-123' })
+  await expect(primeira).toHaveCount(1)
+  await tabAte(page, primeira)
+  const caixas = (deslocamento?: string) =>
+    primeira.evaluate((e, d) => {
+      if (d) e.style.outlineOffset = d
+      const s = getComputedStyle(e)
+      const [r, g] = [e.getBoundingClientRect(), document.createRange()]
+      g.selectNodeContents(e)
+      const t = g.getBoundingClientRect()
+      const m = parseFloat(s.outlineOffset)
+      e.style.outlineOffset = ''
+      return { dentro: r.left - m <= t.left + 1 && r.top - m <= t.top + 1 && r.right + m >= t.right - 1 && r.bottom + m >= t.bottom - 1, m }
+    }, deslocamento)
+  expect((await caixas()).dentro, 'o contorno contém o texto').toBe(true)
+  expect((await caixas('-4px')).dentro, 'controle: um contorno que entra no texto é acusado').toBe(false)
+  expect((await primeira.evaluate(foraDoCorte, undefined)).fora, 'e continua inteiro no contêiner').toEqual([])
+  medidas++
+  // o Fechar do diálogo de Contato, aberto pelo teclado, nos 3 temas e sem cor
+  for (const tema of Temas) {
+    await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'], tema })
+    const contato = page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Contato' })
+    await expect(contato).toHaveCount(1)
+    await tabAte(page, contato)
+    await page.keyboard.press('Enter')
+    const fechar = page.getByRole('dialog').getByRole('button', { name: 'Fechar' })
+    await expect(fechar, `${tema}: 1 Fechar`).toHaveCount(1)
+    await tabAte(page, fechar).catch(() => {})
+    await expect(fechar).toBeFocused()
+    await expect.poll(() => fechar.evaluate((e) => getComputedStyle(e).opacity), `${tema}: opacidade 1`).toBe('1')
+    const f = (await lerFoco(page))!
+    expect(f.largura).toBeGreaterThanOrEqual(2)
+    expect(contraste(f.composta, f.fundo), `${tema}: contorno do Fechar`).toBeGreaterThanOrEqual(3)
+    medidas++
+  }
+  expect(medidas).toBe(6)
+})
+
+// C34
+test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) => {
+  await instalar(page)
+  await abrir(page, 1440, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  const rodape = page.locator('[data-sidebar=footer]')
+  const itens = [rodape.getByRole('button', { name: 'Contato' }), rodape.getByRole('button', { name: 'Tema' }), rodape.getByRole('button', { name: /Ana/ }), rodape.getByRole('button', { name: 'Alternar barra lateral' })]
+  const ys: number[] = []
+  for (const i of itens) {
+    await expect(i).toHaveCount(1)
+    ys.push((await i.boundingBox())!.y)
+  }
+  expect(ys, 'Contato, Tema, usuário, recolher: de cima para baixo').toEqual([...ys].sort((a, b) => a - b))
+  expect(new Set(ys).size, 'posições distintas').toBe(4)
+  // recolhida, com ponteiro grosso
+  const contexto = await browser.newContext({ hasTouch: true, viewport: { width: 1024, height: 768 }, serviceWorkers: 'block' })
+  const p = await contexto.newPage()
+  await instalar(p)
+  await p.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
+  await abrir(p, 1024, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  expect(await p.evaluate(() => matchMedia('(pointer: coarse)').matches), 'ponteiro grosso').toBe(true)
+  await expect(p.locator('[data-slot=sidebar][data-state=collapsed]')).toHaveCount(1)
+  const botao = p.locator('[data-sidebar=footer]').getByRole('button', { name: 'Alternar barra lateral' })
+  await expect(botao).toHaveCount(1)
+  const [b, barra] = [(await botao.boundingBox())!, (await p.locator('[data-sidebar=sidebar]').boundingBox())!]
+  expect(b.x, 'recolher: x ≥ 0').toBeGreaterThanOrEqual(0)
+  expect(b.x + b.width, 'recolher: dentro da barra').toBeLessThanOrEqual(barra.x + barra.width + 1)
+  await contexto.close()
+})
+
+// C35
+test('Enviar da altura do campo', async ({ page }) => {
+  let medidas = 0
+  for (const largura of [1440, 390]) {
+    await abrir(page, largura, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
+    const [campo, enviar] = [page.getByLabel('Mensagem'), page.getByRole('button', { name: 'Enviar', exact: true })]
+    await expect(campo).toHaveCount(1)
+    await expect(enviar).toHaveCount(1)
+    await campo.fill('oi')
+    const [c, e] = [(await campo.boundingBox())!, (await enviar.boundingBox())!]
+    expect(Math.abs(c.height - e.height), `${largura}: mesma altura`).toBeLessThanOrEqual(1)
+    expect(Math.abs(c.y - e.y), `${largura}: alinhados`).toBeLessThanOrEqual(1)
+    if (largura === 390) {
+      expect(c.height).toBeGreaterThanOrEqual(43)
+      expect(e.height).toBeGreaterThanOrEqual(43)
+    }
+    medidas++
+  }
+  expect(medidas).toBe(2)
 })

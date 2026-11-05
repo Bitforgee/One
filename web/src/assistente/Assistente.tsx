@@ -307,7 +307,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
               placeholder="Escreva sua dúvida"
               className="max-h-52 min-h-11 flex-1 resize-none py-2"
             />
-            <Button type="submit" className="shrink-0 max-md:h-11" disabled={vazio}>
+            <Button type="submit" className="h-11 shrink-0" disabled={vazio}>
               {pendente && <Spinner />}
               Enviar
             </Button>

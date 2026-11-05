@@ -231,7 +231,7 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
           <Tema />
           <MenuUsuario me={me} sair={sair} />
         </SidebarMenu>
-        <SidebarTrigger className="self-end max-md:hidden pointer-coarse:size-11" />
+        <SidebarTrigger className="self-end max-md:hidden pointer-coarse:size-11 group-data-[collapsible=icon]:self-center" />
       </SidebarFooter>
     </Sidebar>
   )

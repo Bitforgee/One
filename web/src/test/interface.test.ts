@@ -65,7 +65,7 @@ const Tokens: [string, string, string, string][] = [
   ['--foreground', '0.145 0 0', '0.95 0 0', '0.92 0 0'],
   ['--card', '1 0 0', '0.205 0 0', '0.15 0 0'],
   ['--popover', '1 0 0', '0.205 0 0', '0.15 0 0'],
-  ['--sidebar', tingido(4, '0.975 0 none'), tingido(3, '0.15 0 none'), tingido(8, '0.1 0 none')],
+  ['--sidebar', tingido(4, '0.975 0 none'), tingido(3, '0.15 0 none'), '0 0 0'],
   ['--sidebar-accent', tingido(5, '0.94 0 none'), tingido(6, '0.269 0 none'), tingido(6, '0.22 0 none')],
   ['--sidebar-border', tingido(6, '0.9 0 none'), tingido(5, '0.27 0 none'), tingido(5, '0.26 0 none')],
   ['--sidebar-ring', 'var(--ring)', 'var(--ring)', '='],

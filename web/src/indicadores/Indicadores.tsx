@@ -85,7 +85,7 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
         {tabela.getRowModel().rows.map((linha) => (
           <TableRow key={linha.id}>
             {linha.getVisibleCells().map((celula) => (
-              <TableCell key={celula.id} className="whitespace-normal [overflow-wrap:anywhere] first:w-full last:text-end last:tabular-nums">
+              <TableCell key={celula.id} className="first:w-full first:whitespace-normal first:[overflow-wrap:anywhere] last:text-end last:tabular-nums">
                 {flexRender(celula.column.columnDef.cell, celula.getContext())}
                 {celula.column.id === 'categoria' && (
                   <div data-barra aria-hidden="true" className="mt-1 h-1.5 rounded-xs bg-chart-1" style={{ width: maior > 0 ? `${(linha.original.total / maior) * 100}%` : '0%' }} />

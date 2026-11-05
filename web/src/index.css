@@ -84,7 +84,7 @@
   --card-foreground: oklch(0.92 0 0);
   --popover: oklch(0.15 0 0);
   --popover-foreground: oklch(0.92 0 0);
-  --sidebar: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 8%, oklch(0.1 0 none));
+  --sidebar: oklch(0 0 0);
   --sidebar-foreground: oklch(0.92 0 0);
   --sidebar-accent: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.22 0 none));
   --sidebar-border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.26 0 none));
@@ -172,4 +172,4 @@
    Onde o contêiner corta com overflow, o contorno vai para dentro do controle. */
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 [tabindex='-1']:focus-visible { outline: none; }
-[data-sidebar='content'] :focus-visible, [data-slot='table-container'] :focus-visible, [data-foco='dentro']:focus-visible { outline-offset: -2px; }
+[data-sidebar='content'] :focus-visible, [data-foco='dentro']:focus-visible { outline-offset: -2px; }

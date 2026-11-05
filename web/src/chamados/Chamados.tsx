@@ -48,11 +48,14 @@ const metaDa = (c: ItemMeu, aberto: string, fila?: boolean): Meta => (fila ? { a
 function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta: Meta }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <p className="m-0 line-clamp-2 [overflow-wrap:anywhere]" data-linha="assunto">
-        <Link to={caminho} className="font-medium text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
-          {c.numero}
-        </Link>{' '}
-        <span>{c.titulo}</span>
+      <p className="m-0 [overflow-wrap:anywhere]" data-linha="assunto">
+        {/* o corte das 2 linhas fica aqui dentro, com 4 px de folga, para o contorno de foco do link não ser cortado */}
+        <span className="-m-1 line-clamp-2 p-1">
+          <Link to={caminho} className="font-medium text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
+            {c.numero}
+          </Link>{' '}
+          <span>{c.titulo}</span>
+        </span>
       </p>
       <div className="flex items-start gap-2 text-xs text-muted-foreground" data-linha="meta">
         <SeloDoChamado estado={c.estado} />
