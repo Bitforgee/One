@@ -22,7 +22,7 @@ const IconePadrao = '/icons/icon-192.png'
 const Padrao = { titulo: 'One', corpo: 'Sua solicitação foi atualizada.', icone: IconePadrao }
 
 // só caminho do próprio app: o aviso não carrega imagem de fora
-const iconeDoApp = (i: unknown) => (typeof i === 'string' && i.startsWith('/') && !i.startsWith('//') ? i : IconePadrao)
+const iconeDoApp = (i: unknown) => (typeof i === 'string' && /^\/api\/instituicoes\/[a-z0-9-]{3,30}\/imagens\/icone\?v=[0-9]+$|^\/icons\/icon-[0-9]+\.png$/.test(i) ? i : IconePadrao)
 
 // door 4: {"titulo","corpo","url","icone"}; qualquer outra coisa vira o texto padrão, sem tag nem url
 function lerCarga(texto: string | undefined) {

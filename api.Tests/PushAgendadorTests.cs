@@ -41,8 +41,8 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<PushSaida> Linha(long id) => Assert.Single(await f.Pushes(q => q.Where(p => p.Id == id)));
 
     // chamado ABERTO, instituição sem nome curto nem ícone (push-com-marca)
-    static string Payload(Instituicao i, string numero) =>
-        $$"""{"titulo":"{{i.Nome}}","corpo":"Sua solicitação {{numero}} tem uma resposta nova.","url":"/{{i.Slug}}/chamados/{{numero}}","icone":"/icons/icon-192.png"}""";
+    static string Payload(Instituicao i, string numero, string icone = "/icons/icon-192.png") =>
+        $$"""{"titulo":"{{i.Nome}}","corpo":"Sua solicitação {{numero}} tem uma resposta nova.","url":"/{{i.Slug}}/chamados/{{numero}}","icone":"{{icone}}"}""";
 
     List<EnvioPush> Chamadas(string endpoint) => [.. f.Push.Envios.Where(e => e.Endpoint == endpoint)];
 
@@ -289,12 +289,18 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var (c1, c2) = (await NovaCena(), await NovaCena());
         Assert.NotEqual(c1.B.Instituicao.Slug, c2.B.Instituicao.Slug);
+        // só a instituição 1 tem ícone (C7): cada aviso leva o da sua linha ou o padrão
+        await f.Db(c1.B.Instituicao.Id, async db =>
+        {
+            db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 2 });
+            await db.SaveChangesAsync();
+        });
         await Fila(c1);
         await Fila(c2);
 
         await Agendador.Executar();
 
-        Assert.Equal(Payload(c1.B.Instituicao, c1.Numero), Assert.Single(Chamadas(c1.S.Endpoint)).Payload);
+        Assert.Equal(Payload(c1.B.Instituicao, c1.Numero, $"/api/instituicoes/{c1.B.Instituicao.Slug}/imagens/icone?v=2"), Assert.Single(Chamadas(c1.S.Endpoint)).Payload);
         Assert.Equal(Payload(c2.B.Instituicao, c2.Numero), Assert.Single(Chamadas(c2.S.Endpoint)).Payload);
     }
 

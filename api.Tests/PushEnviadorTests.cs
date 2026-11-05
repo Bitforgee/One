@@ -52,15 +52,16 @@ public class PushEnviadorTests : IClassFixture<OneFactoryEnviadorReal>
     {
         var (envio, rede) = Montar(HttpStatusCode.Created);
         var (p256dh, auth) = Navegador();
+        var payload = PayloadPush.De("univag", "ONE-1", "Univag", "ABERTO", null);
 
-        await envio.Enviar("https://push.teste/abc", p256dh, auth, PayloadPush.De("univag", "ONE-1", "Univag", "ABERTO", null), CancellationToken.None);
+        await envio.Enviar("https://push.teste/abc", p256dh, auth, payload, CancellationToken.None);
 
         var pedido = Assert.Single(rede.Pedidos);
         Assert.Equal((HttpMethod.Post, new Uri("https://push.teste/abc"), "aes128gcm"), (pedido.Metodo, pedido.Uri, pedido.Codificacao));
         Assert.StartsWith("vapid ", pedido.Autorizacao);
         Assert.Matches(@"\bt=[\w-]+\.[\w-]+\.[\w-]+", pedido.Autorizacao);
         Assert.Contains($"k={OneFactory.Vapid.PublicKey}", pedido.Autorizacao);
-        Assert.True(pedido.Corpo.AsSpan().IndexOf("One"u8) < 0, "o corpo deve ir cifrado");
+        Assert.True(pedido.Corpo.AsSpan().IndexOf(System.Text.Encoding.UTF8.GetBytes(payload)) < 0, "o corpo deve ir cifrado");
     }
 
     [Theory]

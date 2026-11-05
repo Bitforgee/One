@@ -41,7 +41,11 @@ describe('service worker', () => {
     ['URL de fora', 'https://outro.site/x.png'],
     ['esquema javascript', 'javascript:x'],
     ['sem barra inicial', 'icons/x.png'],
-    ['barra dupla', '//outro.site/x.png'],
+    ['barra dupla', '//evil.com/x.png'],
+    ['barra invertida', String.raw`/\evil.com/x.png`],
+    ['tab', '/\t/evil.com/x.png'],
+    ['quebra de linha', '/\n/evil.com/x.png'],
+    ['codificado', '%2F%2Fevil.com'],
     ['número', 42],
     ['ausente', undefined],
   ])('ícone só do próprio app (%s)', (_, icone) => {
