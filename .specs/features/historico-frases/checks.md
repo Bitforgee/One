@@ -5,47 +5,47 @@ Plan: `.specs/features/historico-frases/plan.md`
 
 11 checks em 1 slice · 0 one-way doors · 0 perguntas abertas (plano aprovado pelo usuário em 05/11: "pode construir")
 
-**Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. API: `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`. Um filtro que não seleciona teste sai com 0 (L-002): conferir a contagem no relatório. `<base>` é o commit que congela este arquivo, gravado em `## Handoff`. Mutação suspensa (AD-025).
+**Como as provas rodam.** Na raiz `D:\one-system`, salvo `cd web &&`. API: `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`. Um filtro que não seleciona teste sai com 0 (L-002): conferir a contagem no relatório. `358b2bf` é o commit que congela este arquivo, gravado em `## Handoff`. Mutação suspensa (AD-025).
 
 ## Checks
 
 ### S1 - frases com o autor certo · 6 arquivos · 89 KB · ~22k
 
-**C1** - [ ] Para a equipe, o evento cujo autor é o solicitante vem com `doAluno: true`; o do atendente e o sem autor (`CRIACAO`, ator `Sistema`) vêm com `doAluno: false` (AC 1)
+**C1** - [x] Para a equipe, o evento cujo autor é o solicitante vem com `doAluno: true`; o do atendente e o sem autor (`CRIACAO`, ator `Sistema`) vêm com `doAluno: false` (AC 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Evento_diz_se_veio_do_aluno"`
 
-**C2** - [ ] Um atendente com o mesmo nome do solicitante recebe `doAluno: false` nos próprios eventos, e o solicitante continua com `true` (AC 2)
+**C2** - [x] Um atendente com o mesmo nome do solicitante recebe `doAluno: false` nos próprios eventos, e o solicitante continua com `true` (AC 2)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Atendente_com_o_nome_do_aluno_nao_vira_aluno"`
 
-**C3** - [ ] `RESPOSTA` com `doAluno: true` sai `{ator} respondeu à equipe` (AC 3)
+**C3** - [x] `RESPOSTA` com `doAluno: true` sai `{ator} respondeu à equipe` (AC 3)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frases com o autor certo"`
 
-**C4** - [ ] `RESPOSTA` com `doAluno: false` sai `{ator} respondeu ao aluno` (AC 4)
+**C4** - [x] `RESPOSTA` com `doAluno: false` sai `{ator} respondeu ao aluno` (AC 4)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frases com o autor certo"`
 
-**C5** - [ ] `ATRIBUICAO` com `para` igual a `ator` e `de` nulo sai `{ator} assumiu a solicitação` (AC 5)
+**C5** - [x] `ATRIBUICAO` com `para` igual a `ator` e `de` nulo sai `{ator} assumiu a solicitação` (AC 5)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frases com o autor certo"`
 
-**C6** - [ ] `ATRIBUICAO` com `para` igual a `ator` e `de` preenchido sai `{ator} assumiu a solicitação no lugar de {de}` (AC 6)
+**C6** - [x] `ATRIBUICAO` com `para` igual a `ator` e `de` preenchido sai `{ator} assumiu a solicitação no lugar de {de}` (AC 6)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frases com o autor certo"`
 
-**C7** - [ ] `ATRIBUICAO` com `para` diferente de `ator` continua `{ator} atribuiu a {para}`, e sem `para` continua `{ator} tirou {de} da responsabilidade` (AC 7)
+**C7** - [x] `ATRIBUICAO` com `para` diferente de `ator` continua `{ator} atribuiu a {para}`, e sem `para` continua `{ator} tirou {de} da responsabilidade` (AC 7)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frases com o autor certo"`
 
-**C8** - [ ] Para o aluno, `GET /api/chamados/{numero}` devolve `eventos: null`, sem `doAluno` de evento; para um atendente de outro setor, devolve `404` (AC 8)
+**C8** - [x] Para o aluno, `GET /api/chamados/{numero}` devolve `eventos: null`, sem `doAluno` de evento; para um atendente de outro setor, devolve `404` (AC 8)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Aluno_nao_recebe_eventos"`
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~ChamadoFluxoTests.Detalhe_fora_do_setor_continua_404"`
 
-**C9** - [ ] O retrato da API só ganha `doAluno` nos eventos: ele passa, e tirar esse campo do arquivo o deixa igual ao de `<base>` (Impact)
+**C9** - [x] O retrato da API só ganha `doAluno` nos eventos: ele passa, e tirar esse campo do arquivo o deixa igual ao de `358b2bf` (Impact)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base"`
-Proof: `diff <(git show <base>:api.Tests/Retratos/sucessos.txt) <(sed -E 's/("ator":"[^"]*"),"doAluno":(true|false)/\1/g' api.Tests/Retratos/sucessos.txt)`
+Proof: `diff <(git show 358b2bf:api.Tests/Retratos/sucessos.txt) <(sed -E 's/("ator":"[^"]*"),"doAluno":(true|false)/\1/g' api.Tests/Retratos/sucessos.txt)`
 
-**C10** - [ ] As suítes continuam verdes: a API inteira, o Vitest inteiro e o build com tipos (`Evento.doAluno` obrigatório) (Impact)
+**C10** - [x] As suítes continuam verdes: a API inteira, o Vitest inteiro e o build com tipos (`Evento.doAluno` obrigatório) (Impact)
 Proof: `dotnet test api.Tests`
 Proof: `cd web && npx vitest run`
 Proof: `npm --prefix web run build`
 
-**C11** - [ ] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
+**C11** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts`
 
@@ -96,3 +96,6 @@ Cost: 4 testes novos de API e 1 tabela no Vitest. Sem esta tabela, as 2 frases n
 ## Handoff
 
 - S1 = 88.716 bytes / 4 = ~22k (`DetalheChamado.cs`, `chamado.ts`, `chamado.test.tsx`, `ChamadoFluxoTests.cs`, `sucessos.txt`, `simulada.ts`), abaixo do orçamento de 150k - um construtor
+- **Boundary:** C1-C11 closed at `e565c50`; base `358b2bf`. API 581 de 581, Vitest 525 de 525, build, `crapper` e `dryer` saem 0
+- **Settled mid-build:** a asserção de `eventos em ordem no fuso` em `chamado.test.tsx` saiu de "Carla atribuiu a Carla" para "Carla assumiu a solicitação" (AC 5); nada mais foi editado em asserção existente. Fixtures de `chamado`, `icones`, `resposta` e `textos` ganharam `doAluno: false`
+- **Abandoned:** nada
