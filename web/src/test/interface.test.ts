@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react'
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import componentes from '../../components.json'
@@ -65,7 +65,11 @@ const Tokens: [string, string, string, string][] = [
   ['--foreground', '0.145 0 0', '0.95 0 0', '0.92 0 0'],
   ['--card', '1 0 0', '0.205 0 0', '0.15 0 0'],
   ['--popover', '1 0 0', '0.205 0 0', '0.15 0 0'],
-  ['--sidebar', '0.985 0 0', '0.15 0 0', '0 0 0'],
+  ['--sidebar', tingido(4, '0.975 0 none'), tingido(3, '0.15 0 none'), tingido(8, '0.1 0 none')],
+  ['--sidebar-accent', tingido(5, '0.94 0 none'), tingido(6, '0.269 0 none'), tingido(6, '0.22 0 none')],
+  ['--sidebar-border', tingido(6, '0.9 0 none'), tingido(5, '0.27 0 none'), tingido(5, '0.26 0 none')],
+  ['--sidebar-ring', 'var(--ring)', 'var(--ring)', '='],
+  ['--ring', '0.5 0 0', '0.556 0 0', '='],
   ['--primary', '0.45 0.15 262', '0.72 0.12 262', '='],
   ['--primary-foreground', '0.985 0 0', '0.17 0 0', '='],
   ['--primary-subtle', '0.96 0.02 262', '0.27 0.05 262', '0.24 0.05 262'],
@@ -91,6 +95,26 @@ describe('interface nova', () => {
   it('versões exatas e pacotes proibidos', () => {
     expect(Object.entries(todas).filter(([, versao]) => !/^\d+\.\d+\.\d+$/.test(versao))).toEqual([])
     for (const proibido of ['ai', '@ai-sdk/react', 'streamdown', 'next-themes']) expect(todas, proibido).not.toHaveProperty([proibido])
+  })
+
+  // estrutura-visual C3 (door 1, AC 3): o foco é o contorno global; as classes de auréola saem de web/src
+  it('foco sem classes de auréola', () => {
+    // os nomes vão em pedaços para este arquivo não se acusar
+    const proibidas = ['ring-ring' + '/50', 'outline-ring' + '/50', 'focus-visible:ring-' + '[3px]']
+    const lidos = arquivos.filter((a) => a !== 'test/interface.test.ts')
+    expect(arquivos.filter((a) => a.startsWith('ui/') && !a.includes('.test.')).length).toBeGreaterThanOrEqual(8)
+    for (const p of proibidas) expect([p, lidos.filter((a) => texto(a).includes(p))]).toEqual([p, []])
+    expect(css).not.toContain('outline-ring' + '/50')
+  })
+
+  // estrutura-visual C24 (door 4): o Recharts e o Grafico saem
+  it('sem biblioteca de gráfico', () => {
+    const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'))
+    expect(todas).not.toHaveProperty(['recharts'])
+    expect(lock.packages[''].dependencies).not.toHaveProperty(['recharts'])
+    expect(arquivos).not.toContain('indicadores/Grafico.tsx')
+    const assets = '../api/wwwroot/assets'
+    expect(existsSync(assets) ? readdirSync(assets).filter((f) => f.startsWith('Grafico-')) : []).toEqual([])
   })
 
   // tempo-real-signalr C44 (door 2): a conexão do navegador é do @microsoft/signalr, em dependencies e com versão exata
@@ -246,7 +270,11 @@ describe('interface nova', () => {
         expect(document.documentElement, `escuro ${escuro}`).toHaveClass('light')
         expect(document.documentElement, `escuro ${escuro}`).not.toHaveClass('dark')
         expect(screen.queryByRole('button', { name: 'Tema' })).not.toBeInTheDocument()
-      } else expect(screen.getByRole('button', { name: 'Tema' })).toBeInTheDocument()
+      } else {
+        // o Tema mora no rodapé da barra; o aluno abaixo de 768 px (o stub escuro) tem a barra de abas e o Tema na aba Conta
+        if (!escuro) expect(screen.getByRole('button', { name: 'Tema' })).toBeInTheDocument()
+        else expect(screen.queryByRole('button', { name: 'Tema' })).not.toBeInTheDocument()
+      }
       unmount()
     }
   })

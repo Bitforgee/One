@@ -10,14 +10,14 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 4%, oklch(0.975 0 none));
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: var(--marca, oklch(0.45 0.15 262));
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.94 0 none));
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.9 0 none));
+  --sidebar-ring: var(--ring);
   --primary: var(--marca, oklch(0.45 0.15 262));
   --primary-foreground: oklch(0.985 0 0);
   --primary-subtle: var(--marca-sutil, oklch(0.96 0.02 262));
@@ -32,7 +32,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.93 0 none));
   --input: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.66 0 none));
-  --ring: var(--marca, oklch(0.708 0 0));
+  --ring: var(--marca, oklch(0.5 0 0));
   --chart-1: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 45%, oklch(0.6 0 none));
   --chart-2: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 45%, oklch(0.6 0 none));
   /* a cor da instituição (aparencia-instituicao door 8): sem --marca estas ficam inválidas e cada token cai no valor de base */
@@ -49,14 +49,14 @@
   --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.95 0 0);
-  --sidebar: oklch(0.15 0 0);
+  --sidebar: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 3%, oklch(0.15 0 none));
   --sidebar-foreground: oklch(0.95 0 0);
   --sidebar-primary: var(--marca-clara, oklch(0.72 0.12 262));
   --sidebar-primary-foreground: oklch(0.17 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.269 0 none));
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.27 0 none));
+  --sidebar-ring: var(--ring);
   --primary: var(--marca-clara, oklch(0.72 0.12 262));
   --primary-foreground: oklch(0.17 0 0);
   --primary-subtle: var(--marca-sutil-escuro, oklch(0.27 0.05 262));
@@ -84,10 +84,10 @@
   --card-foreground: oklch(0.92 0 0);
   --popover: oklch(0.15 0 0);
   --popover-foreground: oklch(0.92 0 0);
-  --sidebar: oklch(0 0 0);
+  --sidebar: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 8%, oklch(0.1 0 none));
   --sidebar-foreground: oklch(0.92 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-border: oklch(1 0 0 / 14%);
+  --sidebar-accent: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.22 0 none));
+  --sidebar-border: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 5%, oklch(0.26 0 none));
   --primary-subtle: var(--marca-sutil-preto, oklch(0.24 0.05 262));
   --muted: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 4%, oklch(0.19 0 none));
   --accent: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 6%, oklch(0.24 0 none));
@@ -152,7 +152,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -167,3 +167,9 @@
 [data-cartoes] [data-celula] { display: flex; justify-content: flex-end; grid-row: 1; align-self: start; margin-inline-start: 0.5rem; }
 [data-cartoes] [data-celula='selo'] { grid-column: 2; margin-top: 1px; }
 [data-cartoes] [data-celula='acoes'] { grid-column: 3; }
+
+/* Foco (estrutura-visual door 1): fora de @layer, para vencer outline-none e outline-hidden dos utilitários.
+   Onde o contêiner corta com overflow, o contorno vai para dentro do controle. */
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+[tabindex='-1']:focus-visible { outline: none; }
+[data-sidebar='content'] :focus-visible, [data-slot='table-container'] :focus-visible, [data-foco='dentro']:focus-visible { outline-offset: -2px; }

@@ -18,7 +18,7 @@ export function Resposta({ valor, aoMudar }: { valor: string; aoMudar: (texto: s
         role: 'textbox',
         'aria-multiline': 'true',
         'aria-labelledby': 'resposta-artigo-rotulo',
-        class: 'min-h-[6lh] max-h-[16lh] overflow-y-auto rounded-xs border border-input px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm',
+        class: 'min-h-[6lh] max-h-[16lh] overflow-y-auto rounded-xs border border-input px-3 py-2 text-base outline-none focus-visible:border-ring md:text-sm',
       },
     },
     onUpdate: ({ editor }) => ultimo.current(editor.getText({ blockSeparator: '\n' })),
