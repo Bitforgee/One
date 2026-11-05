@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import pacote from '../package.json'
 import main from './main.tsx?raw'
@@ -29,5 +29,17 @@ describe('identidade visual', () => {
       const bloco = css.match(new RegExp(`^${seletor.replace('.', '\.')} \{([^}]*)\}`, 'm'))![1]
       expect(bloco, seletor).not.toMatch(/--radius\s*:/)
     }
+  })
+
+  // C31 (AC 19, door 4)
+  it('ilustrações só com Planilha em Matrículas', () => {
+    const fontes = (readdirSync('src', { recursive: true, encoding: 'utf8' }) as string[])
+      .map((a) => a.replaceAll('\\', '/'))
+      .filter((a) => /\.tsx?$/.test(a) && !/\.test\.tsx?$/.test(a))
+      .map((a) => [a, readFileSync(`src/${a}`, 'utf8')] as const)
+    const importam = fontes.flatMap(([arquivo, texto]) => [...texto.matchAll(/import \{([^}]+)\} from '(?:\.\.?\/)+ilustracoes'/g)].map(([, nomes]) => [arquivo, nomes.split(',').map((n) => n.trim())] as const))
+    expect(importam).toEqual([['administracao/Matriculas.tsx', ['Planilha']]])
+    const indice = fontes.find(([a]) => a === 'ilustracoes/index.tsx')![1]
+    expect([...indice.matchAll(/export (?:function|const) (\w+)/g)].map((m) => m[1])).toEqual(['Planilha'])
   })
 })

@@ -1,6 +1,5 @@
-import { EllipsisVertical } from 'lucide-react'
-import type { ComponentType, ReactNode } from 'react'
-import { CaixaVazia } from './ilustracoes'
+import { ClipboardList, EllipsisVertical, type LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useConsulta } from './ui/use-mobile'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -14,9 +13,20 @@ export const Principal = 'whitespace-normal [overflow-wrap:anywhere]'
 
 export type Coluna = { titulo: string; largo?: boolean }
 
-// O estado vazio de uma lista (AC 45): a ilustração, o título, a frase e, quando a lista tem, o botão de ação.
-export type Vazio = { Ilustracao: ComponentType<{ className?: string }>; titulo: string; frase: ReactNode; acao?: ReactNode }
-const SemItens: Vazio = { Ilustracao: CaixaVazia, titulo: 'Nada cadastrado', frase: 'Nenhum item cadastrado.' }
+// O estado vazio de uma lista (identidade-visual AC 18): o ícone de 28 px, o título, a frase e, quando a lista tem, o botão de ação.
+export type Vazio = { Icone: LucideIcon; titulo?: string; frase: ReactNode; acao?: ReactNode }
+const SemItens: Vazio = { Icone: ClipboardList, titulo: 'Nada cadastrado', frase: 'Nenhum item cadastrado.' }
+
+export function BlocoVazio({ Icone, titulo, frase, acao }: Vazio) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-4 text-center">
+      <Icone aria-hidden="true" className="size-7 text-muted-foreground" />
+      {titulo && <p className="m-0 font-medium">{titulo}</p>}
+      <p className="m-0 text-sm whitespace-normal text-muted-foreground">{frase}</p>
+      {acao}
+    </div>
+  )
+}
 
 // Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7), ou linhas com divisória quando `densa` (revisao-ux AC 21).
 export const useEstreito = () => useConsulta('(max-width: 767px)')
@@ -37,12 +47,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
     itens.length === 0 ? (
       <TableRow>
         <TableCell colSpan={colunas.length} className="text-center">
-          <div className="flex flex-col items-center gap-2 py-4">
-            <vazio.Ilustracao className="h-24 w-32 text-muted-foreground" />
-            <p className="m-0 font-medium">{vazio.titulo}</p>
-            <p className="m-0 text-sm whitespace-normal text-muted-foreground">{vazio.frase}</p>
-            {vazio.acao}
-          </div>
+          <BlocoVazio {...vazio} />
         </TableCell>
       </TableRow>
     ) : (

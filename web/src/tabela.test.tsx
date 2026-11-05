@@ -5,14 +5,14 @@ import { abrir, api, me } from './test/util'
 
 const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] }) // com ALUNO, a guarda de papel deixa abrir /solicitacoes
 const vazias = ['setores', 'categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []]] as const)
-// as 6 listas vazias de AC 45: [rota, caminho, ilustração, título, frase, botão]
-const Listas: [string, string, string, string, string, string?][] = [
-  ['GET /api/chamados?escopo=fila', '/univag/fila', 'caixa-vazia', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.'],
-  ['GET /api/chamados?escopo=meus', '/univag/solicitacoes', 'caixa-vazia', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente'],
-  ['GET /api/admin/artigos', '/univag/artigos', 'documento', 'Nenhum artigo', 'Os artigos são a base das respostas do assistente.', 'Novo artigo'],
-  ['GET /api/admin/documentos', '/univag/documentos', 'documento', 'Nenhum documento', 'PDFs como regulamentos e calendários também alimentam o assistente.', 'Novo documento'],
-  ['GET /api/admin/usuarios', '/univag/usuarios', 'pessoas', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.'],
-  ['GET /api/admin/setores', '/univag/cadastros', 'caixa-vazia', 'Nada cadastrado', 'Nenhum item cadastrado.'],
+// as 6 listas vazias de AC 45 (identidade-visual AC 18): [rota, caminho, título, frase, botão]
+const Listas: [string, string, string, string, string?][] = [
+  ['GET /api/chamados?escopo=fila', '/univag/fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.'],
+  ['GET /api/chamados?escopo=meus', '/univag/solicitacoes', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente'],
+  ['GET /api/admin/artigos', '/univag/artigos', 'Nenhum artigo', 'Os artigos são a base das respostas do assistente.', 'Novo artigo'],
+  ['GET /api/admin/documentos', '/univag/documentos', 'Nenhum documento', 'PDFs como regulamentos e calendários também alimentam o assistente.', 'Novo documento'],
+  ['GET /api/admin/usuarios', '/univag/usuarios', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.'],
+  ['GET /api/admin/setores', '/univag/cadastros', 'Nada cadastrado', 'Nenhum item cadastrado.'],
 ]
 
 const atendente = me({ papeis: ['ALUNO', 'ATENDENTE'] })
@@ -45,11 +45,12 @@ describe('Tabela', () => {
   })
 
   // aparencia-instituicao C48 (AC 45)
-  it.each(Listas)('vazio ilustrado nas 6 listas (%s)', async (rota, caminho, ilustracao, titulo, frase, botao) => {
+  it.each(Listas)('vazio com ícone nas 6 listas (%s)', async (rota, caminho, titulo, frase, botao) => {
     api({ 'GET /api/auth/me': () => [200, admin], ...Object.fromEntries(vazias), 'GET /api/admin/categorias': () => [200, []], 'GET /api/admin/usuarios': () => [200, []], [rota]: () => [200, []] })
     abrir(caminho)
     const celula = (await screen.findByText(frase)).closest('[data-slot=table-cell]') as HTMLElement
-    expect(celula.querySelector(`svg[data-ilustracao="${ilustracao}"]`)).not.toBeNull()
+    expect(celula.querySelectorAll('svg.lucide')).toHaveLength(1)
+    expect(document.querySelector('svg[data-ilustracao]')).toBeNull()
     expect(within(celula).getByText(titulo)).toBeInTheDocument()
     const botoes = within(celula).queryAllByRole('button').concat(within(celula).queryAllByRole('link'))
     expect(botoes.map((b) => b.textContent)).toEqual(botao ? [botao] : [])

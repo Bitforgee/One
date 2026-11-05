@@ -84,13 +84,13 @@ describe('indicadores', () => {
     expect(await cartao('Tempo de resolução')).toBe('Tempo de resolução—')
     expect(await cartao('Roteamento correto')).toBe('Roteamento correto50%')
     expect(await cartao('Reabertura')).toBe('Reabertura—')
-    const conversas = screen.getByText('Categorias por conversas').closest('[data-slot=card]') as HTMLElement
+    const conversas = screen.getByText('Categorias por conversas').closest('section') as HTMLElement
     for (const botao of screen.getAllByRole('button', { name: 'Ver tabela' })) await userEvent.click(botao)
     expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])
-    const porChamados = screen.getByText('Categorias por chamados').closest('[data-slot=card]') as HTMLElement
+    const porChamados = screen.getByText('Categorias por chamados').closest('section') as HTMLElement
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
     expect(screen.queryByText('Sem atendimentos neste período.')).not.toBeInTheDocument()
-    expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(1)
+    expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(2) // o período e o anterior (identidade-visual AC 12)
     // os rankings ficam um embaixo do outro no celular e lado a lado a partir de 896 px do main
     expect(conversas.parentElement).toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')
   })
@@ -101,32 +101,33 @@ describe('indicadores', () => {
     chamadosAbertos: 4, chamadosResolvidos: 2, tempoPrimeiraRespostaHoras: 1.5, tempoResolucaoHoras: 3, roteamentoCorreto: 0.5, taxaReabertura: 0.1,
     principaisCategorias: { porConversas: null, porChamados: null }, indicadorPrincipal: 0.123,
   }
-  const cartoesDe = (grade: Element) => Array.from(grade.children).map((c) => [...c.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent))
+  const folhas = (c: Element) => [...c.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent)
+  const cartoesDe = (grade: Element) => Array.from(grade.children).map(folhas)
 
   async function painel() {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 15, 10, 0))
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/indicadores?de=2026-11-01&ate=2026-11-15': () => [200, dadosCheios] })
     abrir('/univag/indicadores')
-    const principal = (await screen.findByText('Indicador principal')).closest('[data-slot=card]') as HTMLElement
-    return principal.parentElement as HTMLElement
+    return (await screen.findByText('Indicador principal')).closest('section') as HTMLElement
   }
 
   it('destaques de Indicadores', async () => {
-    const destaques = await painel()
+    const principal = await painel()
+    expect(folhas(principal)).toEqual(['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'])
+    const destaques = principal.nextElementSibling!
     expect(cartoesDe(destaques)).toEqual([
-      ['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'],
       ['Chamados abertos agora', '4', 'Chamados não fechados neste momento.'],
       ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
       ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública.'],
     ])
     // vêm antes de qualquer outro cartão
-    expect(destaques.previousElementSibling?.tagName).toBe('FORM')
+    expect(principal.parentElement!.previousElementSibling?.tagName).toBe('FORM')
   })
 
   it('indicadores compactos na ordem', async () => {
-    const compactos = (await painel()).nextElementSibling!
-    expect(cartoesDe(compactos)).toEqual([
+    const compactos = (await painel()).nextElementSibling!.nextElementSibling!
+    expect(Array.from(compactos.children).map((li) => [...li.children].map((c) => c.textContent))).toEqual([
       ['Alunos ativos', '12'],
       ['Conversas', '5'],
       ['Escalonamento', '20%'],
@@ -169,7 +170,7 @@ describe('indicadores', () => {
       abrir('/univag/indicadores')
       return chamadas
     }
-    const cartao = async (titulo: string) => (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
+    const cartao = async (titulo: string) => (await screen.findByText(titulo)).closest('section') as HTMLElement
     const grafico = (c: HTMLElement) => c.querySelector('.recharts-responsive-container')
     const verTabela = (c: HTMLElement) => userEvent.click(within(c).getByRole('button', { name: 'Ver tabela' }))
 
@@ -218,9 +219,16 @@ describe('indicadores', () => {
         await userEvent.type(screen.getByLabelText(rotulo), valor)
       }
       const consultas = () => chamadas.filter((c) => c.url.startsWith('/api/indicadores')).map((c) => c.url)
-      expect(consultas()).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-10'])
+      expect(consultas()).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-10', '/api/indicadores?de=2026-10-22&ate=2026-10-31'])
       await userEvent.click(screen.getByRole('button', { name: 'Consultar' }))
-      await waitFor(() => expect(consultas()).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-10', '/api/indicadores?de=2026-11-03&ate=2026-11-17']))
+      await waitFor(() =>
+        expect(consultas()).toEqual([
+          '/api/indicadores?de=2026-11-01&ate=2026-11-10',
+          '/api/indicadores?de=2026-10-22&ate=2026-10-31',
+          '/api/indicadores?de=2026-11-03&ate=2026-11-17',
+          '/api/indicadores?de=2026-10-19&ate=2026-11-02',
+        ]),
+      )
     })
   })
 

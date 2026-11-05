@@ -167,6 +167,7 @@ type Dados = ReturnType<typeof normalizar>
 // O que a prévia mostra: os valores do formulário, e as imagens escolhidas ou já salvas.
 const daPrevia = (nome: string, v: Valores, miniatura: (t: Tipo) => string | undefined) => ({
   nome,
+  nomeCurto: v.nomeCurto,
   cor: CorValida.test(v.cor) ? v.cor : '',
   loginTitulo: v['login.titulo'],
   loginFrase: v['login.frase'],
@@ -241,14 +242,14 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:items-start">
       <form
         noValidate
-        className="flex min-w-0 flex-col gap-6"
+        className="flex min-w-0 flex-col gap-8"
         onSubmit={(e) => {
           e.preventDefault()
           salvar.mutate()
         }}
       >
         {Secoes.map((s) => (
-          <section key={s.titulo} aria-labelledby={`sec-${s.titulo}`} className="flex flex-col gap-4 rounded-md border p-4">
+          <section key={s.titulo} aria-labelledby={`sec-${s.titulo}`} className="flex flex-col gap-4">
             <h2 id={`sec-${s.titulo}`} className="m-0 text-base font-semibold">
               {s.titulo}
             </h2>

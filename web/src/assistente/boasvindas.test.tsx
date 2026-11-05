@@ -5,7 +5,7 @@ import { abrir, api, chamado, instituicao, me, type Rota } from '../test/util'
 
 // aparencia-instituicao S5 (AC 38 a AC 42): o assistente com a identidade e o contato da instituição.
 const Perguntas = ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?']
-const Exemplo = 'Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”'
+const Frase = 'Respostas com base nas normas da instituição.'
 const Boleto = 'Como emito o boleto do semestre?'
 const Atestado = 'Posso abonar falta com atestado?'
 
@@ -22,10 +22,9 @@ describe('assistente com identidade', () => {
   it('boas-vindas com nome, foto e perguntas', async () => {
     rotas(completa)
     abrir('/univag/assistente')
-    const foto = await screen.findByRole('img', { name: 'Vagner' })
-    expect(foto).toHaveAttribute('src', '/api/instituicoes/univag/imagens/assistente?v=4')
-    expect(foto).toHaveClass('size-16', 'rounded-full') // 64 px, redonda
-    expect(screen.getByText('Olá! Eu sou Vagner.')).toBeInTheDocument()
+    expect(await screen.findByText('Vagner, assistente virtual')).toBeInTheDocument()
+    expect(document.querySelector('img[src="/api/instituicoes/univag/imagens/assistente?v=4"]')).not.toBeNull()
+    expect(screen.queryByText('Olá! Eu sou Vagner.')).not.toBeInTheDocument()
     expect(screen.getByText('Oi! Posso ajudar com boletos e matrícula.')).toBeInTheDocument()
     const sugestoes = screen.getAllByRole('button').map((b) => b.textContent!).filter((t) => Perguntas.includes(t))
     expect(sugestoes).toEqual(Perguntas)
@@ -36,9 +35,10 @@ describe('assistente com identidade', () => {
   it('boas-vindas padrão sem aparência', async () => {
     rotas(instituicao())
     abrir('/univag/assistente')
-    expect(await screen.findByText('Olá! Eu sou Assistente.')).toBeInTheDocument()
-    expect(document.querySelector('svg[data-ilustracao="conversa"]')).toBeInTheDocument()
-    expect(screen.getByText(Exemplo)).toBeInTheDocument()
+    expect(await screen.findByText('Atendimento ao estudante · Univag')).toBeInTheDocument()
+    expect(document.querySelector('svg[data-ilustracao]')).toBeNull()
+    expect(screen.getByText(Frase)).toBeInTheDocument()
+    expect(screen.getByText('Assistente virtual')).toBeInTheDocument()
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
@@ -46,7 +46,7 @@ describe('assistente com identidade', () => {
   it('perguntas padrão', async () => {
     rotas(instituicao())
     abrir('/univag/assistente')
-    await screen.findByText('Olá! Eu sou Assistente.')
+    await screen.findByText('Atendimento ao estudante · Univag')
     const botoes = screen.getAllByRole('button').map((b) => b.textContent)
     expect(botoes.filter((t) => t === Boleto || t === Atestado)).toEqual([Boleto, Atestado])
   })

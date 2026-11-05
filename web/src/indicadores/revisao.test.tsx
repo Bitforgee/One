@@ -34,8 +34,8 @@ describe('um controle de período, destaques e Ver tabela', () => {
 
   it('um controle de período, destaques e Ver tabela: os 4 destaques', async () => {
     indicadores()
-    const principal = (await screen.findByText('Indicador principal')).closest('[data-slot=card]') as HTMLElement
-    const destaques = [...principal.parentElement!.children]
+    const principal = (await screen.findByText('Indicador principal')).closest('section') as HTMLElement
+    const destaques = [principal, ...principal.nextElementSibling!.children] // 1 principal e 3 na faixa
     expect(destaques).toHaveLength(4)
     for (const cartao of destaques) {
       const [rotulo, numero, frase] = [...cartao.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent!)
@@ -48,7 +48,7 @@ describe('um controle de período, destaques e Ver tabela', () => {
 
   it.each(['Categorias por conversas', 'Categorias por chamados'])('um controle de período, destaques e Ver tabela: Ver tabela de %s', async (titulo) => {
     indicadores()
-    const cartao = (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
+    const cartao = (await screen.findByText(titulo)).closest('section') as HTMLElement
     const botao = within(cartao).getByRole('button', { name: 'Ver tabela' })
     expect(botao).toHaveAttribute('aria-expanded', 'false')
     expect(within(cartao).queryByRole('table')).not.toBeInTheDocument()

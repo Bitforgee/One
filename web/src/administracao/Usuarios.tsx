@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Users } from 'lucide-react'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
 import { api, gravar } from '../api'
@@ -8,7 +8,6 @@ import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
-import { Pessoas } from '../ilustracoes'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -145,7 +144,7 @@ export function Usuarios() {
         colunas={Colunas}
         itens={usuarios}
         erro={erro}
-        vazio={busca.trim() ? { Ilustracao: Pessoas, titulo: 'Nenhum resultado', frase: 'Nenhum usuário combina com a busca.' } : { Ilustracao: Pessoas, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
+        vazio={busca.trim() ? { Icone: Users, titulo: 'Nenhum resultado', frase: 'Nenhum usuário combina com a busca.' } : { Icone: Users, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
       >
         {usuarios?.map((u) => (
           <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />

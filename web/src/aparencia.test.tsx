@@ -128,7 +128,7 @@ describe('marca da instituição', () => {
 
     comSessao(instituicao())
     montada = abrir('/univag/assistente')
-    await screen.findByText('Olá! Eu sou Assistente.')
+    await screen.findByText('Atendimento ao estudante · Univag')
     await waitFor(() => expect(noHead('link[rel="icon"]', 'href')).toBe(baseDe('link[rel="icon"]', 'href')))
     expect(noHead('link[rel="apple-touch-icon"]', 'href')).toBe('/icons/icon-192.png')
     expect(noHead('link[rel="icon"]', 'href')).toBe('/icons/icon-192.png')
@@ -231,22 +231,7 @@ describe('marca da instituição', () => {
 
     comSessao(instituicao())
     abrir('/univag/assistente')
-    await screen.findByText('Olá! Eu sou Assistente.')
+    await screen.findByText('Atendimento ao estudante · Univag')
     expect(screen.queryByRole('button', { name: 'Contato' })).not.toBeInTheDocument()
-  })
-
-  // C49 (AC 46)
-  it('Indicadores sem dados com ilustração', async () => {
-    const vazio = {
-      semDados: true, alunosAtivos: 0, conversas: 0, taxaAutoatendimento: null, taxaEscalonamento: null, taxaAbandono: null, taxaPerguntasSemArtigo: null,
-      chamadosAbertos: 0, chamadosResolvidos: 0, tempoPrimeiraRespostaHoras: null, tempoResolucaoHoras: null, roteamentoCorreto: null, taxaReabertura: null,
-      principaisCategorias: { porConversas: [], porChamados: [] }, indicadorPrincipal: null,
-    }
-    api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ADMINISTRADOR'] })], 'GET /api/indicadores?de=2026-11-01&ate=2026-11-04': () => [200, vazio] })
-    vi.useFakeTimers({ toFake: ['Date'] })
-    vi.setSystemTime(new Date(2026, 10, 4, 10, 0))
-    abrir('/univag/indicadores')
-    expect(await screen.findByText('Sem atendimentos neste período.')).toBeInTheDocument()
-    expect(document.querySelector('svg[data-ilustracao="grafico"]')).not.toBeNull()
   })
 })

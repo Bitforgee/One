@@ -8,6 +8,7 @@ import { Confirmar } from '../Confirmar'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
+import { Planilha } from '../ilustracoes'
 
 type Erro = { linha: number; motivo: string }
 
@@ -84,6 +85,7 @@ export function Matriculas() {
               Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho <code className="break-all font-mono">{CabecalhoDoCsv}</code>. Alunos são atualizados pelo CPF e matrículas
               pelo número. Se alguma linha tiver erro, nada é importado.
             </p>
+            <Planilha className="w-full max-w-lg text-muted-foreground" />
           </Passo>
           <Passo n={3} titulo="Envie o arquivo">
             <CampoArquivo id="csv" rotulo="Arquivo CSV" accept=".csv,text/csv" multiple={false} arquivos={arquivo ? [arquivo] : []} setArquivos={([a]) => setArquivo(a)} />

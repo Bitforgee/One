@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { BookText, Plus } from 'lucide-react'
 import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao } from '../acao'
 import { api, gravar } from '../api'
@@ -8,7 +8,6 @@ import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Periodo } from '../Periodo'
-import { Documento } from '../ilustracoes'
 import { Button } from '../ui/button'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -150,7 +149,7 @@ export function Artigos() {
         colunas={Colunas}
         itens={artigos}
         erro={erro}
-        vazio={{ Ilustracao: Documento, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
+        vazio={{ Icone: BookText, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
       >
         {artigos?.map((a) => (
           <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />

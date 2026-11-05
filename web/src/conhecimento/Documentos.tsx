@@ -1,4 +1,4 @@
-import { Upload } from 'lucide-react'
+import { FileText, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useGravacao } from '../acao'
 import { api } from '../api'
@@ -8,7 +8,6 @@ import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
-import { Documento } from '../ilustracoes'
 import { Button } from '../ui/button'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
@@ -134,7 +133,7 @@ export function Documentos() {
         itens={documentos}
         erro={erro}
         vazio={{
-          Ilustracao: Documento,
+          Icone: FileText,
           titulo: 'Nenhum documento',
           frase: 'PDFs como regulamentos e calendários também alimentam o assistente.',
           acao: <Button onClick={() => setEnvio({ titulo: '', categoriaId: '' })}>Novo documento</Button>,

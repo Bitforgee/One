@@ -87,7 +87,8 @@ describe('tela Aparência', () => {
     expect(previa.getByText('Fale com a Univag')).toBeInTheDocument()
 
     await digitar('Nome do assistente', 'Vagner')
-    expect(previa.getByText('Olá! Eu sou Vagner.')).toBeInTheDocument()
+    expect(previa.getByText('Atendimento ao estudante · Univag')).toBeInTheDocument()
+    expect(previa.getByText('Vagner, assistente virtual')).toBeInTheDocument()
   })
 
   // C25 (AC 25)

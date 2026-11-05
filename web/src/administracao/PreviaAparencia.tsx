@@ -1,11 +1,12 @@
+import { ChevronRight, MessageCircleQuestion } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { Sigla } from '../aparencia'
-import { BoasVindas, Conversa } from '../ilustracoes'
 import { Button } from '../ui/button'
 
 export type ImagensDaPrevia = { logo?: string; login?: string; assistente?: string }
 export type DadosDaPrevia = {
   nome: string
+  nomeCurto: string
   cor: string
   loginTitulo: string
   loginFrase: string
@@ -20,18 +21,15 @@ const Base = { titulo: 'Atendimento ao estudante', frase: 'Dúvidas, solicitaç�
 
 function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
   return (
-    <div className="flex flex-col gap-3 rounded-sm border p-3">
+    <div className="flex flex-col gap-2">
+      {d.imagens.login && <img src={d.imagens.login} alt="" className="h-16 w-full rounded-xs object-cover" />}
       {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Sigla nome={d.nome} icone={null} />}
-      <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-sm bg-primary-subtle">
-        {d.imagens.login ? <img src={d.imagens.login} alt="" className="absolute inset-0 size-full object-cover" /> : <BoasVindas className="h-full text-muted-foreground" />}
-      </div>
+      <p className="m-0 font-heading text-xl font-semibold">{d.nome}</p>
       <p className="m-0 text-base font-semibold">{d.loginTitulo || Base.titulo}</p>
       <p className="m-0 text-muted-foreground">{d.loginFrase || Base.frase}</p>
-      <ul className="m-0 list-none p-0">
+      <ul className="m-0 list-disc ps-5 text-muted-foreground marker:text-muted-foreground">
         {d.loginItens.map((i) => (
-          <li key={i} className="border-t py-1">
-            {i}
-          </li>
+          <li key={i}>{i}</li>
         ))}
       </ul>
       <Button type="button" tabIndex={-1}>
@@ -43,17 +41,22 @@ function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
 
 function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-sm border p-3 text-center">
-      {d.imagens.assistente ? <img src={d.imagens.assistente} alt="" className="size-12 rounded-full object-cover" /> : <Conversa className="h-16 w-24 text-muted-foreground" />}
-      <p className="m-0 font-semibold">{`Olá! Eu sou ${d.assistenteNome || 'Assistente'}.`}</p>
-      <p className="m-0 text-muted-foreground empty:hidden">{d.boasVindas}</p>
-      <div className="flex flex-wrap justify-center gap-1">
-        {d.perguntas.map((p) => (
-          <span key={p} className="rounded-xs border px-3 py-1 text-xs">
-            {p}
-          </span>
-        ))}
+    <div className="flex flex-col items-start gap-2 border-t pt-4">
+      <p className="m-0 font-heading text-xl font-semibold">{`Atendimento ao estudante · ${d.nomeCurto.trim() || d.nome}`}</p>
+      <p className="m-0 text-muted-foreground">{d.boasVindas || 'Respostas com base nas normas da instituição.'}</p>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {d.imagens.assistente && <img src={d.imagens.assistente} alt="" className="size-8 rounded-full object-cover" />}
+        <span>{d.assistenteNome ? `${d.assistenteNome}, assistente virtual` : 'Assistente virtual'}</span>
       </div>
+      <ul className="m-0 w-full list-none p-0">
+        {d.perguntas.map((p) => (
+          <li key={p} className="flex min-h-10 items-center gap-2 rounded-xs border-b px-1 py-1">
+            <MessageCircleQuestion aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            <span className="flex-1">{p}</span>
+            <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

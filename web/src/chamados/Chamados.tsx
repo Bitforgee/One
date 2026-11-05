@@ -6,7 +6,7 @@ import { ErroDe } from '../ErroDe'
 import { Badge } from '../ui/badge'
 import { Spinner } from '../ui/spinner'
 import { TableCell, TableRow } from '../ui/table'
-import { CaixaVazia } from '../ilustracoes'
+import { Inbox, MessageSquare } from 'lucide-react'
 import { Button } from '../ui/button'
 import { abertoHa } from '../datas'
 import { useSessao } from '../sessao'
@@ -31,7 +31,7 @@ export function Carregando() {
 }
 
 // O próximo passo de cada estado, na linha do aluno (revisao-ux AC 22).
-const ProximoPasso: Record<string, string> = {
+export const ProximoPasso: Record<string, string> = {
   ABERTO: 'A equipe vai responder',
   EM_ATENDIMENTO: 'A equipe vai responder',
   AGUARDANDO_ALUNO: 'Responda para continuar',
@@ -139,7 +139,7 @@ export function Fila() {
   return (
     <ListaDeChamados<ItemFila>
       url={UrlDaFila}
-      vazio={{ Ilustracao: CaixaVazia, titulo: 'Fila em dia', frase: 'Nenhum chamado na fila dos seus setores.' }}
+      vazio={{ Icone: Inbox, titulo: 'Fila em dia', frase: 'Nenhum chamado na fila dos seus setores.' }}
       largas={[
         { titulo: 'Categoria', valor: (c) => c.categoria },
         { titulo: 'Responsável', valor: (c) => responsavel(c.responsavel) },
@@ -156,7 +156,7 @@ export function Solicitacoes() {
     <ListaDeChamados
       url="/api/chamados?escopo=meus"
       vazio={{
-        Ilustracao: CaixaVazia,
+        Icone: MessageSquare,
         titulo: 'Nenhuma solicitação',
         frase: 'Você ainda não tem solicitações.',
         acao: (

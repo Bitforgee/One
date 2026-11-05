@@ -18,6 +18,7 @@ const Detalhe = [
   'preciso do boleto',
   'Financeiro · Boleto · Carla',
   'Ana · matrícula 2000567890 · ADS · 3º semestre',
+  'Dados do aluno',
   'Resumo gerado por IA',
   'Ações',
   'Conversa com o assistente',

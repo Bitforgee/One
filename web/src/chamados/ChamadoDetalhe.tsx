@@ -110,7 +110,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   }
 
   return (
-    <form onSubmit={responder} className="flex flex-col gap-2">
+    <form onSubmit={responder} className="flex flex-col gap-2 rounded-md bg-muted p-4">
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
       <Textarea id="resposta" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
@@ -255,7 +255,7 @@ function acoesDaBarra(c: Chamado, pode: Acoes['pode'], equipe: boolean) {
 
 // A grade do detalhe: duas colunas só para a equipe, e o espaço da barra fixa no fim.
 const gradeDoDetalhe = (equipe: boolean, barra: boolean) =>
-  `mx-auto grid max-w-3xl gap-4 ${equipe ? '@5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]' : ''} ${barra ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`
+  `mx-auto grid max-w-3xl gap-8 ${equipe ? '@5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]' : ''} ${barra ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`
 
 // "Responder" da barra rola até o campo e o foca; o foco não rola de novo.
 function irParaResposta() {
@@ -400,7 +400,7 @@ const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('conf
 // A coluna da equipe: o erro da ação, o cartão (ou a barra e o Sheet) de ações e o histórico.
 function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-8">
       {!folha && erro}
       <CaixaDeAcoes barra={barra} folha={folha} setFolha={setFolha} erro={erro} tem={tem}>
         {painel}
@@ -434,7 +434,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
   return (
     <div className={gradeDoDetalhe(equipe, !!barra)}>
-      <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-8">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
         <Mensagens mensagens={c.mensagens} fuso={fuso} />

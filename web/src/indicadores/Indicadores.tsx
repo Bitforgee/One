@@ -1,16 +1,15 @@
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChartColumn, ChevronDown, ChevronUp } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { lazy, Suspense, useId, useState } from 'react'
 import { api } from '../api'
-import { Grafico as GraficoVazio } from '../ilustracoes'
 import { ErroDe } from '../ErroDe'
 import { dia } from '../Periodo'
 import { Button } from '../ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
+import { BlocoVazio } from '../Tabela'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
 // O Recharts vai num chunk separado do de entrada (AC 33).
@@ -99,83 +98,125 @@ function TabelaRanking({ linhas }: { linhas: Linha[] }) {
   )
 }
 
-function CartaoRanking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[]; cor: string }) {
+function Ranking({ titulo, linhas, cor }: { titulo: string; linhas: Linha[]; cor: string }) {
   const [aberta, setAberta] = useState(false)
   const id = useId()
   return (
-    <Card className="min-w-0 gap-2">
-      <CardHeader>
-        <CardTitle>{titulo}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        {linhas.length > 0 && (
-          <Suspense fallback={null}>
-            <Grafico linhas={linhas} cor={cor} />
-          </Suspense>
-        )}
-        <Button variant="ghost" size="sm" className="self-start" aria-expanded={aberta} aria-controls={id} onClick={() => setAberta(!aberta)}>
-          {aberta ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-          Ver tabela
-        </Button>
-        {aberta && (
-          <div id={id}>
-            <TabelaRanking linhas={linhas} />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <section className="flex min-w-0 flex-col gap-2">
+      <h2 className="m-0 text-base font-semibold">{titulo}</h2>
+      {linhas.length > 0 && (
+        <Suspense fallback={null}>
+          <Grafico linhas={linhas} cor={cor} />
+        </Suspense>
+      )}
+      <Button variant="ghost" size="sm" className="self-start" aria-expanded={aberta} aria-controls={id} onClick={() => setAberta(!aberta)}>
+        {aberta ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+        Ver tabela
+      </Button>
+      {aberta && (
+        <div id={id}>
+          <TabelaRanking linhas={linhas} />
+        </div>
+      )}
+    </section>
   )
 }
 
-// Os 4 de destaque (layout-painel AC 16), com o rodapé que diz o que o número mede; os outros 9 ficam compactos.
-const Destaques: [string, string][] = [
-  ['Indicador principal', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'],
-  ['Chamados abertos agora', 'Chamados não fechados neste momento.'],
-  ['Autoatendimento', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
-  ['Tempo até a 1ª resposta', 'Da abertura à primeira resposta pública.'],
-]
+// O principal ocupa a maior área; os outros 3 destaques ficam numa faixa; os rodapés dizem o que o número mede.
+const Rodapes: Record<string, string> = {
+  'Indicador principal': 'Resolvidas sem reabertura, sobre as conversas com desfecho.',
+  'Chamados abertos agora': 'Chamados não fechados neste momento.',
+  'Autoatendimento': 'Resolvidas pelo assistente, sobre as conversas com desfecho.',
+  'Tempo até a 1ª resposta': 'Da abertura à primeira resposta pública.',
+}
+const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta']
 
-// Os 13 cartões (4 de destaque e 9 compactos) e os rankings que a API manda; as grades seguem a largura do main (door 5).
-function Painel({ dados }: { dados: Indicadores }) {
+// A variação em pontos percentuais contra o período anterior (P5): 1 casa, "pt" abaixo de 2,0 e "pts" de 2,0 em diante.
+export function variacao(atual: number, anterior: number) {
+  const pontos = Math.round((atual - anterior) * 1000) / 10
+  if (pontos === 0) return '= sem variação'
+  return `${pontos > 0 ? '▲' : '▼'} ${Math.abs(pontos).toFixed(1).replace('.', ',')} ${Math.abs(pontos) < 2 ? 'pt' : 'pts'}`
+}
+
+function Principal({ valor, variacaoDe }: { valor: string; variacaoDe?: string }) {
+  return (
+    <section className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1">
+        <div className="text-sm text-muted-foreground">Indicador principal</div>
+        <div className="flex flex-wrap items-baseline gap-x-4">
+          <div className="font-heading text-[40px] leading-tight font-semibold tabular-nums">{valor}</div>
+          {variacaoDe && (
+            <span className="text-base font-medium tabular-nums">
+              {variacaoDe} <span className="font-normal text-muted-foreground">vs. período anterior</span>
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="text-sm text-muted-foreground">{Rodapes['Indicador principal']}</div>
+    </section>
+  )
+}
+
+// Os 13 indicadores: o principal, a faixa de 3, as outras 9 em lista e os rankings que a API manda; as colunas seguem a largura do main (door 5).
+function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string }) {
   const rankings = [
     ['Categorias por conversas', dados.principaisCategorias.porConversas, 'var(--chart-1)'],
     ['Categorias por chamados', dados.principaisCategorias.porChamados, 'var(--chart-2)'],
   ] as const
   const todos = cartoes(dados)
   const valores = new Map(todos)
-  const compactos = todos.filter(([rotulo]) => !Destaques.some(([d]) => d === rotulo))
+  const resto = todos.filter(([rotulo]) => rotulo !== 'Indicador principal' && !Faixa.includes(rotulo))
   return (
-    <>
-      {/* um quadro só, com linhas de 1 px entre as células (gap-px sobre bg-border), em vez de cartões soltos */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border @5xl/main:grid-cols-4">
-        {Destaques.map(([rotulo, rodape]) => (
-          <Card key={rotulo} className="gap-3 rounded-none border-0 p-4 @xl/main:p-5">
+    <div className="flex flex-col gap-8">
+      <Principal valor={valores.get('Indicador principal')!} variacaoDe={variacaoDe} />
+      <div className="grid grid-cols-1 divide-y @3xl/main:grid-cols-3 @3xl/main:divide-x @3xl/main:divide-y-0">
+        {Faixa.map((rotulo) => (
+          <div key={rotulo} className="flex flex-col gap-1 py-3 @3xl/main:px-6 @3xl/main:py-0 @3xl/main:first:ps-0">
             <div className="flex flex-col gap-1">
-              <CardDescription>{rotulo}</CardDescription>
-              <CardTitle className="text-2xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</CardTitle>
+              <div className="text-sm text-muted-foreground">{rotulo}</div>
+              <div className="text-2xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</div>
             </div>
-            <div className="text-sm text-muted-foreground">{rodape}</div>
-          </Card>
+            <div className="text-sm text-muted-foreground">{Rodapes[rotulo]}</div>
+          </div>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border @3xl/main:grid-cols-3">
-        {compactos.map(([rotulo, valor], i) => (
-          // o último de uma lista ímpar ocupa a linha toda em 2 colunas, para não sobrar célula vazia
-          <Card key={rotulo} className={`gap-1 rounded-none border-0 px-5 py-4 ${i === compactos.length - 1 && compactos.length % 2 ? 'col-span-2 @3xl/main:col-span-1' : ''}`}>
-            <div className="text-sm text-muted-foreground">{rotulo}</div>
-            <div className="text-base font-semibold tabular-nums">{valor}</div>
-          </Card>
+      <ul className="m-0 grid list-none grid-cols-1 p-0 @3xl/main:grid-cols-2 @3xl/main:gap-x-10">
+        {resto.map(([rotulo, valor]) => (
+          <li key={rotulo} className="flex items-baseline justify-between gap-4 border-b py-3">
+            <span className="text-sm text-muted-foreground">{rotulo}</span>
+            <span className="font-semibold tabular-nums">{valor}</span>
+          </li>
         ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-2">
+      </ul>
+      <div className="grid grid-cols-1 gap-8 @4xl/main:grid-cols-2">
         {rankings
           .filter(([, r]) => r !== null)
           .map(([titulo, r, cor]) => (
-            <CartaoRanking key={titulo} titulo={titulo} linhas={r!} cor={cor} />
+            <Ranking key={titulo} titulo={titulo} linhas={r!} cor={cor} />
           ))}
       </div>
-    </>
+    </div>
   )
+}
+
+// O período anterior de mesmo número de dias, terminando na véspera de `de` (identidade-visual AC 12).
+export function periodoAnterior(de: string, ate: string) {
+  const [d, a] = [de, ate].map((v) => v.split('-').map(Number))
+  const dias = Math.round((Date.UTC(a[0], a[1] - 1, a[2]) - Date.UTC(d[0], d[1] - 1, d[2])) / 86_400_000) + 1
+  const antes = (k: number) => dia(new Date(d[0], d[1] - 1, d[2] - k))
+  return dias < 1 ? null : { de: antes(dias), ate: antes(1) }
+}
+
+// A variação do principal contra o período anterior; a falha da consulta, a falta de dados e o número ainda provisório só a tiram (AC 13).
+function useVariacao(consulta: { de: string; ate: string }, atual: Indicadores | undefined, provisorio: boolean) {
+  const antes = periodoAnterior(consulta.de, consulta.ate)
+  const { data: anterior } = useQuery({
+    queryKey: ['indicadores-anterior', consulta],
+    queryFn: () => api<Indicadores>(`/api/indicadores?de=${antes!.de}&ate=${antes!.ate}`),
+    enabled: !!antes,
+  })
+  const [a, b] = [atual?.indicadorPrincipal, anterior?.semDados ? null : anterior?.indicadorPrincipal]
+  return !provisorio && a != null && b != null ? variacao(a, b) : undefined
 }
 
 // S11: os 14 indicadores do Quadro 12, por período, no fuso da instituição.
@@ -185,14 +226,15 @@ export function Indicadores() {
   const [ate, setAte] = useState(dia(hoje))
   // cada "Consultar" é uma consulta nova, mesmo com o período igual; os cartões anteriores ficam até a resposta
   const [consulta, setConsulta] = useState({ de, ate, vez: 0 })
-  const { data: dados, error, isFetching, refetch } = useQuery({
+  const { data: dados, error, isFetching, isPlaceholderData, refetch } = useQuery({
     queryKey: ['indicadores', consulta],
     queryFn: () => api<Indicadores>(`/api/indicadores?de=${consulta.de}&ate=${consulta.ate}`),
     placeholderData: keepPreviousData,
   })
+  const variacaoDe = useVariacao(consulta, dados, isPlaceholderData)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <form
         className="grid grid-cols-2 gap-2 @3xl/main:flex @3xl/main:items-end"
         onSubmit={(e) => {
@@ -215,12 +257,9 @@ export function Indicadores() {
       </form>
       <ErroDe erro={error} oque="os indicadores" tentar={() => void refetch()} />
       {dados?.semDados && (
-        <div className="flex flex-col items-center gap-2 py-8 text-center">
-          <GraficoVazio className="h-24 w-32 text-muted-foreground" />
-          <p className="m-0 text-muted-foreground">Sem atendimentos neste período.</p>
-        </div>
+        <BlocoVazio Icone={ChartColumn} frase="Sem atendimentos neste período." />
       )}
-      {dados && !dados.semDados && <Painel dados={dados} />}
+      {dados && !dados.semDados && <Painel dados={dados} variacaoDe={variacaoDe} />}
     </div>
   )
 }

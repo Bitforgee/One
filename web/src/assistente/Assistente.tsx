@@ -1,11 +1,11 @@
-import { useMutation } from '@tanstack/react-query'
-import { ArrowUp, Hand, ShieldAlert } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { ArrowUp, ChevronRight, Hand, MessageCircleQuestion, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
 import { Contato, temContato, urlDaImagem, useAparencia, type InstituicaoPublica } from '../aparencia'
-import { useChamado, type Anexo } from '../chamado'
-import { Conversa as ConversaIlustracao } from '../ilustracoes'
+import { Estados, useChamado, type Anexo } from '../chamado'
+import { ProximoPasso } from '../chamados/Chamados'
 import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Balao } from '../Balao'
 import { Links, separarLinks } from '../LinksDaResposta'
@@ -167,24 +167,54 @@ function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void
 const fotoDoAssistente = (slug: string | undefined, ap: InstituicaoPublica) =>
   slug && ap.imagens.assistente ? { src: urlDaImagem(slug, 'assistente', ap.imagens.assistente), alt: ap.assistente.nome ?? 'Assistente' } : undefined
 
-const Exemplo = 'Pergunte, por exemplo: “Como emito o boleto do semestre?” ou “Posso abonar falta com atestado?”'
+const FraseBase = 'Respostas com base nas normas da instituição.'
 const PerguntasPadrao = ['Como emito o boleto do semestre?', 'Posso abonar falta com atestado?']
+const EmAberto = ['ABERTO', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO']
 
-// Sem conversa: quem é o assistente, o que ele diz de início e as perguntas para começar (AC 38 a AC 40).
+// A solicitação do aluno ainda em andamento (a mais recente), antes das perguntas; se a leitura falha, não há linha nem alerta (identidade-visual AC 10).
+function SolicitacaoEmAberto() {
+  const { slug } = useParams()
+  const { data } = useQuery({ queryKey: ['/api/chamados?escopo=meus'], queryFn: () => api<{ numero: string; estado: string; criadoEm: string }[]>('/api/chamados?escopo=meus') })
+  const c = data?.filter((x) => EmAberto.includes(x.estado)).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0]
+  if (!c) return null
+  return (
+    <Link to={`/${slug}/chamados/${c.numero}`} className="flex flex-col gap-0.5 border-l-2 border-primary py-1 ps-3 text-foreground no-underline hover:bg-accent">
+      <span className="font-medium">{`Sua solicitação ${c.numero} · ${Estados[c.estado]}`}</span>
+      <span className="text-sm text-muted-foreground">{ProximoPasso[c.estado]}</span>
+    </Link>
+  )
+}
+
+// As perguntas sugeridas: linhas de 48 px com divisória, o ícone à esquerda e a seta à direita.
+function Perguntas({ perguntas, perguntar, pendente }: { perguntas: string[]; perguntar: (p: string) => void; pendente: boolean }) {
+  return (
+    <ul className="m-0 flex w-full list-none flex-col p-0">
+      {perguntas.map((p) => (
+        <li key={p}>
+          <button type="button" disabled={pendente} onClick={() => perguntar(p)} className="flex min-h-12 w-full items-center gap-3 rounded-xs border-b px-2 py-2 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:opacity-50">
+            <MessageCircleQuestion aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            <span className="flex-1">{p}</span>
+            <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Sem conversa: o título da instituição, a frase, quem é o assistente, a solicitação em aberto e as perguntas para começar.
 function BoasVindas({ ap, foto, perguntar, pendente }: { ap: InstituicaoPublica; foto?: { src: string; alt: string }; perguntar: (p: string) => void; pendente: boolean }) {
   const perguntas = ap.assistente.perguntas.length ? ap.assistente.perguntas : PerguntasPadrao
   return (
-    <section className="my-6 flex flex-col items-center gap-3 text-center">
-      {foto ? <img src={foto.src} alt={foto.alt} className="size-16 rounded-full object-cover" /> : <ConversaIlustracao className="h-24 w-32 text-muted-foreground" />}
-      <h2 className="m-0 text-xl font-semibold">{`Olá! Eu sou ${ap.assistente.nome ?? 'Assistente'}.`}</h2>
-      <p className="m-0 text-muted-foreground">{ap.assistente.boasVindas ?? Exemplo}</p>
-      <div className="grid w-full max-w-xl grid-cols-1 gap-2 md:grid-cols-2">
-        {perguntas.map((p) => (
-          <Button key={p} variant="outline" className="h-auto min-h-11 justify-start rounded-full px-4 py-2 text-start whitespace-normal" disabled={pendente} onClick={() => perguntar(p)}>
-            {p}
-          </Button>
-        ))}
+    <section className="my-6 flex flex-col items-start gap-3">
+      <h2 className="m-0 font-heading text-2xl font-semibold tracking-tight">{`Atendimento ao estudante · ${ap.nomeCurto ?? ap.nome}`}</h2>
+      <p className="m-0 text-muted-foreground">{ap.assistente.boasVindas ?? FraseBase}</p>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {foto && <img src={foto.src} alt="" className="size-8 shrink-0 rounded-full object-cover" />}
+        <span>{ap.assistente.nome ? `${ap.assistente.nome}, assistente virtual` : 'Assistente virtual'}</span>
       </div>
+      <SolicitacaoEmAberto />
+      <Perguntas perguntas={perguntas} perguntar={perguntar} pendente={pendente} />
     </section>
   )
 }

@@ -6,7 +6,7 @@ import { Balao } from '../Balao'
 import { separarLinks } from './Assistente'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
-const Exemplo = /Pergunte, por exemplo/
+const Exemplo = 'Respostas com base nas normas da instituição.'
 
 function responde(tipo: string, texto: string): Rota {
   return () => [201, { conversaId: 7, resposta: { tipo, texto } }]
