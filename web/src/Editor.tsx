@@ -37,7 +37,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
       <Sheet open={aberto} onOpenChange={aoMudar}>
         <SheetContent side="bottom" showCloseButton={false} aria-describedby={undefined} className="inset-y-0 h-dvh gap-0 rounded-none data-[state=open]:duration-200 data-[state=closed]:duration-150">
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={enviar}>
-            <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b py-1 ps-4 pe-1">
+            <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b py-1 pl-4 pr-1">
               <SheetTitle className="text-base">{titulo}</SheetTitle>
               <SheetClose className="flex size-11 shrink-0 items-center justify-center rounded-md focus:ring-2 focus:ring-ring focus:outline-hidden">
                 <XIcon className="size-4" aria-hidden="true" />
