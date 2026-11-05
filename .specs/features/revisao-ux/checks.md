@@ -449,7 +449,7 @@ Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "sem formulár
 
 ### S5 - Formulários, erros e administração (P1) · ~33 files · ~248 KB · ~62k (lote 3)
 
-**C39** - A 360×740, 6 diálogos de formulário ocupam a tela inteira. Cada um é aberto pelo seu botão:
+**C39** - [x] A 360×740, 6 diálogos de formulário ocupam a tela inteira. Cada um é aberto pelo seu botão:
 - Artigos "Novo";
 - Documentos "Enviar PDF";
 - Usuários "Novo";
@@ -468,7 +468,7 @@ A 768 px, "Novo usuário" tem largura < 768 (AC 29; Screens: Diálogos de formul
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "diálogos de formulário em tela inteira abaixo de 768"`
 
-**C40** - Um `400` com erro de campo mostra o texto logo depois do campo, em 5 formulários (5 casos):
+**C40** - [x] Um `400` com erro de campo mostra o texto logo depois do campo, em 5 formulários (5 casos):
 - Novo artigo, `errors.titulo`;
 - Enviar PDF, `errors.titulo`;
 - Novo usuário, `errors.cpf` "CPF inválido.";
@@ -486,7 +486,7 @@ Screens: Diálogos de formulário)
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "erro de campo da API abaixo do campo"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "erro do CPF abaixo do campo a 360"`
 
-**C41** - Uma leitura que responde `500` mostra um `role="alert"` com 3 partes: um `svg`, o texto
+**C41** - [x] Uma leitura que responde `500` mostra um `role="alert"` com 3 partes: um `svg`, o texto
 "Não foi possível carregar {o quê}. Verifique sua conexão." e o botão "Tentar de novo". O botão faz um segundo
 `GET` à mesma URL; com `200`, o alerta some e o conteúdo aparece. São 11 superfícies (table-driven), com o
 {o quê} de cada uma:
@@ -509,7 +509,7 @@ Um `404` no detalhe mostra o `detail` da API (P14) (AC 31; Screens: Erros de car
 
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "erro de carregamento com Tentar de novo em 11 telas"`
 
-**C42** - Em Indicadores:
+**C42** - [x] Em Indicadores:
 - o período tem 1 controle: os campos "De" e "Até" de `type="date"`, sem botão
   "Escolher período no calendário"; o único outro botão do formulário é "Consultar";
 - cada um dos 4 destaques tem o número, um rótulo de até 24 caracteres e uma frase de até 70 caracteres terminada
@@ -519,25 +519,25 @@ Proof: `cd web && npx vitest run src/ux.test.tsx -t "erro de carregamento com Te
 
 Proof: `cd web && npx vitest run src/indicadores/revisao.test.tsx -t "um controle de período, destaques e Ver tabela"`
 
-**C43** - A 390 px, os 4 destaques de Indicadores ficam em 2 colunas: 2 valores distintos de `left` e 2 linhas,
+**C43** - [x] A 390 px, os 4 destaques de Indicadores ficam em 2 colunas: 2 valores distintos de `left` e 2 linhas,
 com o mesmo `top` (1 px) em cada par. A 1440 px, ficam em 4 colunas, como em `<base>` (AC 32; Screens: Indicadores)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "destaques de Indicadores em 2 colunas no celular"`
 
-**C44** - Em Artigos, cada linha tem exatamente 1 `[data-slot=badge]`, com o texto do estado em caixa de frase
+**C44** - [x] Em Artigos, cada linha tem exatamente 1 `[data-slot=badge]`, com o texto do estado em caixa de frase
 (3 casos): `ATIVO` → "Ativo", `RASCUNHO` → "Rascunho", `ARQUIVADO` → "Arquivado". A indexação é um `svg` com nome
 acessível e dica iguais ao valor (3 casos: "Indexado", "Indexando", "Falhou"), sem `[data-slot=badge]`. Documentos
 segue a mesma regra (P11) (AC 33)
 Proof: `cd web && npx vitest run src/conhecimento/revisao.test.tsx -t "um selo de situação e a indexação em ícone"`
 
-**C45** - A 1280 px, em Artigos, o ícone de indexação fica à direita do título: `left` do ícone ≥ `right` do
+**C45** - [x] A 1280 px, em Artigos, o ícone de indexação fica à direita do título: `left` do ícone ≥ `right` do
 texto do título e a no máximo 8 px dele, com os centros verticais a no máximo 2 px (Screens: Artigos)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Indexado em ícone ao lado do título"`
 
-**C46** - Com a lista de Artigos vazia, não há botão de nome exato "Novo", e o botão "Novo artigo" do vazio existe.
+**C46** - [x] Com a lista de Artigos vazia, não há botão de nome exato "Novo", e o botão "Novo artigo" do vazio existe.
 Com 1 artigo, "Novo" existe (2 casos) (Screens: Artigos)
 Proof: `cd web && npx vitest run src/conhecimento/revisao.test.tsx -t "Novo some com a lista vazia"`
 
-**C47** - Em Usuários:
+**C47** - [x] Em Usuários:
 - o CPF `12345678909` aparece como "123.456.789-09";
 - um campo com rótulo "Buscar por nome, CPF ou e-mail" filtra a lista, com 2 usuários, em 5 casos:
   - "carla" (nome, sem caixa) → 1 linha;
@@ -551,7 +551,7 @@ A 390 px, o `bottom` do campo é ≤ o `top` do primeiro item (AC 34; Screens: U
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "CPF formatado e busca por nome, CPF ou e-mail"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "busca de Usuários acima da lista"`
 
-**C48** - Em Matrículas:
+**C48** - [x] Em Matrículas:
 - há uma `ol` com 3 itens, nesta ordem: "Baixe o modelo", "Preencha uma linha por aluno" e "Envie o arquivo";
 - o botão "Baixar modelo (CSV)" dispara um download `.csv` cuja primeira linha é exatamente
   `cpf;nome;email;matricula;curso;semestre;situacao`, o cabeçalho de `Matriculas.tsx` em `<base>`;
@@ -561,12 +561,12 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "Matrículas em 3 passos com modelo e erros por linha"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Baixar modelo baixa o CSV com o cabeçalho"`
 
-**C49** - A 390 e a 1280 px, nas 5 listas de Cadastros (Setores, Categorias, Cursos, Regras, Respostas prontas;
+**C49** - [x] A 390 e a 1280 px, nas 5 listas de Cadastros (Setores, Categorias, Cursos, Regras, Respostas prontas;
 table-driven, cada uma com 1 item), a linha mede altura ≥ 48 px. Um clique a 4 px da borda direita da linha, no
 centro vertical, abre o diálogo de edição desse item (AC 36; Screens: Cadastros)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "linha inteira de Cadastros é o alvo de 48 px"`
 
-**C50** - A 390 e a 1023 px, na tela Aparência:
+**C50** - [x] A 390 e a 1023 px, na tela Aparência:
 - o campo "Cor principal" está visível, e nenhum elemento da prévia está visível antes do primeiro campo;
 - o botão "Ver prévia" abre um `role="dialog"` que contém a prévia (o botão "Entrar" da prévia).
 
@@ -574,7 +574,7 @@ A 1024 px, a prévia fica ao lado do formulário, e não há "Ver prévia" (AC 3
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Aparência com o formulário primeiro e Ver prévia"`
 
-**C51** - No tema Escuro, com a cor `#8a1538`, o botão "Entrar" da prévia tem `background-color` e `color` iguais
+**C51** - [x] No tema Escuro, com a cor `#8a1538`, o botão "Entrar" da prévia tem `background-color` e `color` iguais
 aos do botão `default` "Salvar" da própria tela Aparência. O contraste entre os dois é ≥ 4,5:1 (AC 38;
 Screens: Aparência)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "prévia escura com a mesma cor do app"`
@@ -603,12 +603,12 @@ Assistente." do Assistente. O corpo (`body`) não tem `opsz` declarado. `main.ts
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "títulos com opsz 32 da Inter"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "opsz da Inter sem fonte nova"`
 
-**C55** - A 390 e a 1440 px, em cada tela de `Telas`, em Conta e em Instituições (P16), o conjunto de `font-size`
+**C55** - [x] A 390 e a 1440 px, em cada tela de `Telas`, em Conta e em Instituições (P16), o conjunto de `font-size`
 computados dos elementos visíveis com texto próprio (inclusive o `text` dos `svg`) está contido em
 {12, 14, 16, T}, com um só T por tela, igual a 20 ou a 24 px (AC 41, door 2)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "no máximo 4 tamanhos de texto por tela"`
 
-**C56** - Sem `Sparkles`, emoji em título nem gradiente decorativo:
+**C56** - [x] Sem `Sparkles`, emoji em título nem gradiente decorativo:
 - nenhum arquivo de `web/src` fora dos testes contém `Sparkles`;
 - a 1440 px, em cada tela de `Telas`, em Conta e em Instituições, nenhum `h1`, `h2` ou `h3` tem caractere
   `\p{Extended_Pictographic}`;
@@ -618,7 +618,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "sem Sparkles no código"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "sem emoji em título nem gradiente"`
 
-**C57** - A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
+**C57** - [x] A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
 foco em nada, cada elemento visível com a cor de ação cai num destes casos (P6):
 - `background-color` igual a `var(--primary)`: é `[data-slot=button][data-variant=default]`, um item ativo
   (`[aria-current=page]` ou `[data-active=true]`) ou a `Sigla`;
@@ -630,28 +630,28 @@ Com o foco por `Tab` num campo, a borda dele passa a ter a cor de foco (AC 43, d
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "cor de ação só em botão principal, item ativo, link e foco"`
 
-**C58** - Como `ALUNO`, nenhum texto visível de Assistente (com conversa e transferido), Minhas solicitações,
+**C58** - [x] Como `ALUNO`, nenhum texto visível de Assistente (com conversa e transferido), Minhas solicitações,
 detalhe do chamado e Conta contém "chamado" (sem caixa). Como `ATENDENTE`, o vazio da Fila continua
 "Nenhum chamado na fila dos seus setores." (Impact: textos)
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "aluno lê Solicitação e a equipe lê Chamado"`
 
 ### S0 - Invariantes e barreiras (P1)
 
-**C59** - A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só
+**C59** - [x] A suíte Vitest inteira e `npm --prefix web run build` passam. As edições em asserções existentes são só
 as da lista fechada, cada uma listada no `## Handoff` com o seu AC (AC 1 a AC 43)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
-**C60** - O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais. Os
+**C60** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, e o `dryer` não acha candidato com nota 0.8 ou mais. Os
 arquivos novos da raiz de `web/src` entram na lista do `dryer` no mesmo commit que os cria (L-031) (AD-018)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx | grep -q "No duplicate candidates found"`
 
-**C61** - A suíte de arranjo passa inteira com a API simulada: `arranjo.spec.ts`, `celular.spec.ts`,
+**C61** - [x] A suíte de arranjo passa inteira com a API simulada: `arranjo.spec.ts`, `celular.spec.ts`,
 `aparencia.spec.ts`, `instituicoes.spec.ts`, `push.spec.ts` e `ux.spec.ts` (Screens)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/aparencia.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts`
 
-**C62** - Nenhum arquivo de `api/` nem de `api.Tests/` muda entre `<base>` e `HEAD`; P1 a P3 foram decididos sem
+**C62** - [x] Nenhum arquivo de `api/` nem de `api.Tests/` muda entre `<base>` e `HEAD`; P1 a P3 foram decididos sem
 mudança de API (Flow: sem mudança de API)
 Proof: `git diff --quiet <base> HEAD -- api api.Tests`
 
@@ -665,7 +665,7 @@ O spec loga 1 vez (AC 11, AC 13, door 1)
 
 Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test e2e/ux-real.spec.ts -g "aluno navega pelas abas e sai pela Conta"`
 
-**C64** - De ponta a ponta, na imagem própria, um atendente a 390×844 abre um chamado `ABERTO` do seu setor (criado
+**C64** - [x] De ponta a ponta, na imagem própria, um atendente a 390×844 abre um chamado `ABERTO` do seu setor (criado
 pelo aluno de C63 por `POST /api/atendimento-direto`) e o leva a `RESOLVIDO` com exatamente 6 cliques:
 1. a linha da Fila;
 2. "Assumir";
@@ -679,7 +679,7 @@ Há 2 preenchimentos (resposta e resolução) e 1 só abertura de `Sheet`. O sel
 
 Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test e2e/ux-real.spec.ts -g "atendente assume, responde e resolve no celular"`
 
-**C65** - A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8087. A única edição no e2e real
+**C65** - [x] A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8087. A única edição no e2e real
 fora de `ux-real.spec.ts` é o item 7 da lista fechada (Flow 1: a navegação muda)
 Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test`
 
@@ -687,13 +687,13 @@ Proof: `cd web && E2E_URL=http://localhost:8087 npx playwright test`
 
 Decisão delegada pelo usuário em 04/11, depois de olhar as capturas do lote 2.
 
-**C66** - Como equipe, a 390 px, digitar "Boleto reemitido" em "Resolução" na folha "Mais", fechar a folha pelo X e abrir de novo deixa o campo com "Boleto reemitido"; o mesmo vale para a categoria escolhida em "Reclassificar" e para o número em "Duplicado". Depois de enviar a resolução com sucesso, o campo volta vazio (AC 44)
+**C66** - [x] Como equipe, a 390 px, digitar "Boleto reemitido" em "Resolução" na folha "Mais", fechar a folha pelo X e abrir de novo deixa o campo com "Boleto reemitido"; o mesmo vale para a categoria escolhida em "Reclassificar" e para o número em "Duplicado". Depois de enviar a resolução com sucesso, o campo volta vazio (AC 44)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "folha de ações guarda o que foi digitado"`
 
-**C67** - A 1440 px, a Fila tem o cabeçalho de coluna "Aberto" (e não "Dias") e as células "hoje", "ontem" e "há 2 dias" para os 3 chamados simulados, cada célula com altura de uma linha (altura ≤ 1,5 × `line-height`); a 390 px as linhas continuam com "aberto hoje/ontem/há N dias" (AC 45)
+**C67** - [x] A 1440 px, a Fila tem o cabeçalho de coluna "Aberto" (e não "Dias") e as células "hoje", "ontem" e "há 2 dias" para os 3 chamados simulados, cada célula com altura de uma linha (altura ≤ 1,5 × `line-height`); a 390 px as linhas continuam com "aberto hoje/ontem/há N dias" (AC 45)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Fila com coluna Aberto em uma linha"`
 
-**C68** - No detalhe do chamado visto pela equipe, uma resposta do assistente com `https://portal.univag.edu.br/financeiro/boletos/segunda-via` no texto mostra esse link como botão (`a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos/segunda-via`) e o texto do balão não contém `https://` (AC 46)
+**C68** - [x] No detalhe do chamado visto pela equipe, uma resposta do assistente com `https://portal.univag.edu.br/financeiro/boletos/segunda-via` no texto mostra esse link como botão (`a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos/segunda-via`) e o texto do balão não contém `https://` (AC 46)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "links da resposta como botão na conversa da equipe"`
 
 ## Coverage
@@ -834,3 +834,39 @@ Estimativa:
   - `assistente/textos.test.tsx` (item 8; AC 16, AC 19, AC 20): a lista de literais troca "Abrir a solicitação N" e o texto antigo da ajuda por "A resposta chega em Solicitações e no seu e-mail.", "Ver solicitação", "PDF ou foto, até 10 MB" e "Reenviar", e um estado novo (arquivo escolhido) cobre a ajuda.
   - **Fora da lista:** `assistente/anexos.test.tsx`, `texto de ajuda dos anexos` (AC 19, C27: o texto antigo tem 0 ocorrências e a ajuda só vale com arquivo escolhido ou clipe focado; o teste passou a escolher um arquivo antes de procurar o texto novo). A lista fechada só nomeia `erro da API mantém texto e selos` nesse arquivo, que seguiu verde sem mudança.
 
+### Lote 3 (administração, varreduras e barreiras)
+
+- **Boundary:** lote 3 fechado em `b5c39aa` (código), `045a1a2` (testes), `03775a7` (ajuste do X da folha), `393a19e` (a folha que fechava com a resposta tardia de uma ação da barra), `48452be` (login do e2e real que espera o limitador) e no commit deste handoff, sobre o `7364ac1`. C39 a C51, C55 a C58 e C66 a C68 marcados `[x]`, e C59 a C65 também (C59 a C61 estavam abertos desde o lote 1). Resultado no `HEAD`: Vitest 469 verdes em 48 arquivos (416 no lote 2), `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99 (maior nota 9.8, `Sidebar`; `CamposDoArtigo` 9.5, `ErroDe` 9.0), `dryer` sem candidato (a lista ganhou `src/LinksDaResposta.tsx`, o único arquivo novo da raiz de `web/src` que não é teste), layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push` e `ux`) 148 verdes contra `vite preview` na 5199, `git diff --quiet 56cf9d3 HEAD -- api api.Tests` sai 0 (C62), nenhum `dotnet test`. C64 e C65 contra a imagem do `HEAD` na 8087 (instituição `e2e`, banco `one_revisao_ux`, bucket `one-revisao-ux`, MinIO, Mailpit e Postgres do compose; o `api` da 8080 não foi tocado): a suíte inteira, 171 testes, passou contra a imagem de `393a19e` (o código do `HEAD`; depois dele só mudou `ux-real.spec.ts`), com `E2E_INSTITUICAO=e2e E2E_ADMIN_EMAIL=admin@e2e.one E2E_CONTAINER=one-revisao-ux`. A primeira rodada inteira teve 3 falhas, todas `429` do limitador de autenticação por rodar logo depois de outra rodada (2 em `anexos.spec.ts` e o login pela tela de C63); a segunda, depois de 70 s de silêncio e com o `entrarPelaTela` que espera a janela e repete, passou inteira. C64 falhou antes de passar, e o motivo era um defeito do app que o e2e real achou (item "Settled" 17). Contêiner, imagem, banco, bucket e o worktree da imagem removidos; o worktree das capturas (`D:\one-wt-antes`) foi desregistrado do git, mas a pasta ficou, com uma junção vazia `web
+ode_modules` (a remoção foi barrada pela proteção do Claude Code), e fica para apagar à mão. Capturas antes e depois (API simulada, claro e escuro, 11 cenas) em `.playwright-mcp/revisao-ux/lote3/`; o "antes" é de `7364ac1`, num worktree temporário já removido.
+- **Settled mid-build:** nada com o usuário; decisões do construtor, para o orquestrador e o Verifier:
+  1. A folha "Mais" guardava o estado dos formulários e o perdia ao fechar (lote 2, item 8); C66 pede o contrário, então `resolução`, `categoria` e `duplicado` voltaram para `Detalhe` (`useCamposDaAcao`), e cada um zera no `depois` do envio que deu certo.
+  2. `ErroDe` ganhou `oque`, `tentar` e `campos`. Com `oque`, só a falha de conexão ou `5xx` vira o bloco "Não foi possível carregar {o quê}"; `404` e `403` seguem com o `detail`. `campos` lista as chaves que o formulário mostra ao lado do campo: se o `400` traz uma delas, o Alert geral se cala; o erro de uma chave sem campo (por exemplo `resposta` do artigo) continua no Alert do diálogo.
+  3. O {o quê} do detalhe depende do papel de quem olha, porque o erro de leitura não traz o chamado: quem tem `ATENDENTE` ou `ADMINISTRADOR` lê "o chamado"; os outros, "a solicitação".
+  4. `useLeituras` e `useChamado` passam a devolver o `Error` inteiro (não só `.message`), para o `ErroDe` ver o `status`.
+  5. O diálogo de formulário vira `Sheet` de baixo, com altura total e sem canto, quando `(max-width: 767px)` casa (`useConsulta`, como o resto do app); o X da folha é o `SheetClose` do cabeçalho (o do `SheetContent` fica desligado), com `Fechar` e 44 x 44 px. Acima disso nada muda no `Dialog`.
+  6. "Ver prévia" fica na linha de "Salvar", no fim do formulário (não no topo), para "Cor principal" ser o primeiro campo visível. Abaixo de 1024 px a prévia não existe na página, só na folha; a cor escura vem de `.previa-marca` em `index.css` (`--primary` = `color-mix(in oklch, var(--marca-previa) 55%, white)`, a mesma conta de `--marca-clara`), e o botão "Entrar" da prévia agora é o `Button` do app.
+  7. Para C55 só pode haver um tamanho de título por tela: o h2 do painel do Login passou de 30 para 24 px, os valores dos destaques de Indicadores de 30 para 24 px, os compactos de 20 para 16 px (semibold), `DialogTitle` de 18 para 16 px e o calendário de 12,8 para 12 px.
+  8. Para C57: a palavra "One" da Raiz deixou `text-primary`; "Nota interna" (`Balao`) é `outline` e "Ativa" (Instituições) usa `bg-accent`, porque `Badge` `default` é `bg-primary`. A amostra de cor da tela Aparência (`data-testid="amostra"`) tem o fundo igual a `--primary` por ser a cor que o administrador digitou, e o teste a trata como o dado do campo, não como cor de ação (o `aparencia.test.tsx` já afirma o `backgroundColor` dela).
+  9. A indexação é um `svg` com `role="img"`, `aria-label` e `<title>` iguais ao valor (dica nativa; sem hover no toque). A prova de C45 mede a última linha do título, que pode quebrar.
+  10. Cadastros: a linha (`tr` ou `div`) tem o `onClick`, `h-12` e `cursor-pointer`; o botão com o nome fica dentro dela, sem `onClick` próprio, para o teclado seguir valendo (o clique sobe).
+  11. `LinksDaResposta.tsx` (raiz de `web/src`: `separarLinks` e `Links`, antes em `Assistente.tsx`) é importado por `assistente/` e `chamados/`; `Assistente.tsx` reexporta `separarLinks`, e `conversa.test.tsx` segue importando de lá.
+  12. A coluna "Aberto" da Fila usa `celula` (o valor sem "aberto ") e `whitespace-nowrap`; a linha de detalhe do estreito e as linhas de 390 px seguem com "aberto hoje/ontem/há N dias".
+  13. A busca de Usuários casa nome e e-mail sem caixa nem acento, e o CPF com ou sem máscara; com busca e 0 resultados o vazio diz "Nenhum usuário combina com a busca.".
+  14. Indicadores perdeu o `Periodo` (calendário); `Periodo.tsx` fica para Artigos (validade) e Indicadores importa só `dia` dele, então a regra de "2 fatias" de `estrutura.test.ts` segue valendo.
+  15. C64 faz 6 chamadas de autenticação (administrador, primeiro acesso e login do aluno, primeiro acesso do atendente, login do atendente pela tela) mais as do C63 e as dos outros specs reais do mesmo IP. `ux-real.spec.ts` ganhou `folga()` (espera haver vaga na janela de 62 s antes de cada chamada) e `entrarPelaTela()` (o login pela tela, que espera a janela e repete se o limitador recusar); o teste de C64 tem 480 s. Sem isso o teste estourava os 240 s esperando o limitador e a suíte inteira tropeçava num `429` (L-066).
+  16. O Sheet "Mais" do C64 abre 1 vez (um `MutationObserver` conta os `role=dialog` que entram no DOM), e os 6 cliques são contados por quem clica.
+  17. Achado do C64 no app: a resposta tardia de uma ação da barra ("Assumir") fechava a folha "Mais" que o atendente abria logo depois do clique, porque o `onSuccess` da mutação sempre fechava a folha. Só as ações feitas dentro da folha a fecham agora (`dentroDaFolha`, em `fix(web): keep the action sheet open when a bar action answers late`); `chamados/revisao.test.tsx` ganhou `a resposta de uma ação da barra não fecha a folha aberta depois`, que falha sem a correção.
+- **Abandoned:** nada.
+- **Edições em asserções existentes** (lista fechada; AC que força cada uma):
+  - `e2e/arranjo.spec.ts` (item 3): `arranjo Indicadores` (AC 32: sem botão de calendário, o "Consultar" sob os campos, destaques em 2 colunas a 360 px, tabela aberta por "Ver tabela" antes de medir; AC 41: valor dos compactos em 16 px), `valores de tipo e bordas` (AC 32: as frases dos destaques terminam em ponto), `colunas pela largura do main` e `colunas largas somem no estreito` (AC 45: "Dias" passa a "Aberto"), `arranjo Detalhe do chamado` (AC 46: o balão lê "O boleto fica em." e o link vira botão), `arranjo Artigos e Documentos` (AC 29: a medida do diálogo ao trocar de folha para diálogo tolera o quadro sem caixa) e `diálogos a 360 px com margem de 16 px` (AC 29: o diálogo mede 360 px e começa em x = 0).
+  - `e2e/aparencia.spec.ts` (item 5): `arranjo Aparência` abaixo de 1024 px (AC 37): sem região "Prévia" na página, "Ver prévia" abre a folha com "Entrar".
+  - `tabela.test.tsx` (item 8 e a extensão do C67): `selo de estado com cor por grupo` acha o selo por `[data-slot=badge]`, porque "Aberto" agora também é o cabeçalho da coluna.
+  - `chamados/listas.test.tsx` (`colunas das listas de chamados`: "Dias" passa a "Aberto"; `lista com erro mostra o detail sem o Spinner`: o texto do bloco de leitura, AC 31), `chamados/textos.test.tsx` (`textos Fila`: o cabeçalho "Aberto" e o texto "há 3 dias"; o estado de erro das duas listas, AC 31), `conhecimento/edicao.test.tsx` (`ativar e arquivar aparecem...` e `documento arquivado não oferece...`: um só selo e a indexação em ícone com nome, AC 33; `erro ao carregar mostra o detail sem Spinner nem vazio`: o texto do bloco, AC 31), `indicadores/indicadores.test.tsx` (`rankings em tabela Categoria e Total` abre "Ver tabela"; `calendário em pt-BR` sai, porque o calendário saiu de Indicadores e o pt-BR segue provado em `conhecimento/textos.test.tsx`; `destaques de Indicadores`: as frases com ponto, AC 32), `indicadores/icones.test.tsx` (`o período traz CalendarDays` vira `o período não traz botão de calendário`, AC 32), `indicadores/textos.test.tsx` (`textos Indicadores`: "Ver tabela", as frases com ponto e o bloco de erro; sem o calendário), `administracao/admin.test.tsx` (`importação mostra as linhas com erro`, `tabela de erros com Linha e Motivo` e `colunas das tabelas de administração`: "Linha N" e o motivo numa lista, sem tabela, AC 35), `administracao/textos.test.tsx` (`textos Matrículas`: os 3 passos e o botão do modelo).
+  - **Fora da lista**, cada uma com o AC que a força (padrão dos lotes 1 e 2: o texto ou o arranjo novo, sem enfraquecer o que o teste afirma):
+    - `chamados/listas.test.tsx`, `sem rede a lista mostra o erro` (AC 31): o alerta de uma falha de rede passa a ser o bloco "Não foi possível carregar a fila. Verifique sua conexão." (a consulta segue sendo 1 só).
+    - `conhecimento/artigos.test.tsx` (`novo artigo envia perguntas e links como listas`), `conhecimento/edicao.test.tsx` (3 casos do editor Resposta e da validade) e `test/interface.test.ts` (`controles nativos`) (AC 33, C46): com a lista de Artigos vazia o botão é "Novo artigo" (o "Novo" do topo some), então o clique passa a esse nome.
+    - `conhecimento/icones.test.tsx`, `Novo traz Plus e a validade traz CalendarDays` (C46): a lista tem 1 artigo, para o "Novo" do topo existir; o ícone do "Novo" e o do calendário seguem afirmados.
+    - `indicadores/indicadores.test.tsx`, `cartões formatam...`, `ranking com gráfico acima da tabela`, `ranking vazio sem gráfico` (AC 32: abrem "Ver tabela" antes de ler a tabela) e `período pelo calendário só consulta no Consultar` (AC 32: vira `período pelos campos de data só consulta no Consultar`, com a mesma afirmação de que só o "Consultar" consulta).
+    - `administracao/aparencia.test.tsx`, `prévia muda antes de salvar` (AC 38: a cor da prévia vem de `--marca-previa` no contêiner `.previa-marca`, não mais de um `backgroundColor` em linha) e `a prévia recolhe e mostra de novo` (AC 37: vira `a prévia abre pelo Ver prévia abaixo de 1024`).
+    - `e2e/arranjo.spec.ts`: `arranjo administração` (AC 35: o botão "Importar" mede a largura do passo, 24 px a menos que o cartão), `quebras medidas dos dois lados` (AC 32 e AC 41: o cartão de 360 px tem 150 px ou mais, em 2 colunas, e o valor mede 24 px), `colunas largas somem no estreito` (AC 34: o CPF de Usuários é "123.456.789-09") e `entrada institucional › conteúdo do painel` (AC 41: o título do painel mede 24 px, não 30).
+    - `src/ux.test.tsx`: nenhuma asserção existente mudou (só casos novos).
