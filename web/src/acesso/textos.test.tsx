@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
-// Linha 0 de ## Screens (casca); "Tema" e "Alternar barra lateral" são só nomes acessíveis, conferidos por papel.
+// Linha 0 de ## Screens (casca); "Alternar barra lateral" é só nome acessível; "Tema" é a linha do rodapé da barra (estrutura-visual AC 8), conferidos por papel.
 const Papeis = ['Administrador', 'Atendente', 'Aluno'] // layout-painel: o papel no botão do usuário (novo)
-const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Sair', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
+const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Sair', 'Tema', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
 const Instituicao = 'Univag' // nome da instituição do fixture
 const Nome = me().nome // barra-lateral-grupos: o nome do usuário no rodapé da barra e na gaveta
 

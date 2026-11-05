@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, Building2, ChartColumn, ChevronsUpDown, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, Building2, ChartColumn, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
 import { api, type Me } from './api'
@@ -10,7 +10,6 @@ import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
-import { Separator } from './ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from './ui/sidebar'
 import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
@@ -67,22 +66,26 @@ export function OpcoesDeTema({ aoEscolher }: { aoEscolher: () => void }) {
   )
 }
 
-// O botão mostra o ícone do tema atual, o mesmo da opção no menu.
+// A linha "Tema" do rodapé da barra mostra o ícone do tema atual, o mesmo da opção no menu.
 function Tema() {
   const { theme } = useTheme()
+  const { isMobile } = useSidebar()
   const [aberto, setAberto] = useState(false)
   const Atual = Temas.find(([valor]) => valor === theme)![2]
   return (
-    <Popover open={aberto} onOpenChange={setAberto}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Tema">
-          <Atual aria-hidden="true" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-40 flex-col p-1">
-        <OpcoesDeTema aoEscolher={() => setAberto(false)} />
-      </PopoverContent>
-    </Popover>
+    <SidebarMenuItem>
+      <Popover open={aberto} onOpenChange={setAberto}>
+        <PopoverTrigger asChild>
+          <SidebarMenuButton tooltip="Tema">
+            <Atual aria-hidden="true" />
+            <span className="group-data-[collapsible=icon]:sr-only">Tema</span>
+          </SidebarMenuButton>
+        </PopoverTrigger>
+        <PopoverContent side={isMobile ? 'top' : 'right'} align="end" className="flex w-40 flex-col p-1">
+          <OpcoesDeTema aoEscolher={() => setAberto(false)} />
+        </PopoverContent>
+      </Popover>
+    </SidebarMenuItem>
   )
 }
 
@@ -136,9 +139,9 @@ function Grupo({ nome, itens, slug }: { nome: string; itens: Item[]; slug?: stri
   )
 }
 
-// Iniciais, nome e papel no botão; o menu leva o nome, o papel e "Sair" (AC 10).
+// Nome e papel em texto no botão (as iniciais só com a barra recolhida); o menu leva o nome, o papel e "Sair" (AC 10).
 function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, state } = useSidebar()
   const dados = (
     <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
       <span className="truncate font-medium">{me.nome}</span>
@@ -146,29 +149,31 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
     </div>
   )
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+            {state === 'collapsed' && !isMobile && (
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center text-xs font-semibold">
                 {iniciais(me.nome)}
               </span>
-              {dados}
-              <ChevronsUpDown aria-hidden="true" className="ms-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg" side={isMobile ? 'top' : 'right'} align="end" sideOffset={4}>
-            <DropdownMenuLabel className="flex gap-2 p-1.5 font-normal">{dados}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={sair}>
-              <LogOut aria-hidden="true" />
-              Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+            )}
+            <div className="grid min-w-0 flex-1 text-start text-sm leading-tight group-data-[collapsible=icon]:sr-only">
+              <span className="truncate font-medium">{me.nome}</span>
+              <span className="truncate text-xs text-muted-foreground">{papelDe(me.papeis)}</span>
+            </div>
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg" side={isMobile ? 'top' : 'right'} align="end" sideOffset={4}>
+          <DropdownMenuLabel className="flex gap-2 p-1.5 font-normal">{dados}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={sair}>
+            <LogOut aria-hidden="true" />
+            Sair
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
   )
 }
 
@@ -176,15 +181,13 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
 function ContatoDoMenu({ contato }: { contato: InstituicaoPublica['contato'] }) {
   const [aberto, setAberto] = useState(false)
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton tooltip="Contato" onClick={() => setAberto(true)}>
-          <Phone aria-hidden="true" />
-          <span className="group-data-[collapsible=icon]:sr-only">Contato</span>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+    <SidebarMenuItem>
+      <SidebarMenuButton tooltip="Contato" onClick={() => setAberto(true)}>
+        <Phone aria-hidden="true" />
+        <span className="group-data-[collapsible=icon]:sr-only">Contato</span>
+      </SidebarMenuButton>
       <DialogoDeContato contato={contato} aberto={aberto} aoMudar={setAberto} />
-    </SidebarMenu>
+    </SidebarMenuItem>
   )
 }
 
@@ -223,31 +226,33 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
           ))}
       </SidebarContent>
       <SidebarFooter>
-        {temContato(ap.contato) && <ContatoDoMenu contato={ap.contato} />}
-        <MenuUsuario me={me} sair={sair} />
+        <SidebarMenu>
+          {temContato(ap.contato) && <ContatoDoMenu contato={ap.contato} />}
+          <Tema />
+          <MenuUsuario me={me} sair={sair} />
+        </SidebarMenu>
+        <SidebarTrigger className="self-end max-md:hidden pointer-coarse:size-11" />
       </SidebarFooter>
     </Sidebar>
   )
 }
 
-// Cabeçalho do inset (door 3): botão, separador, o único h1 da tela; à direita, avisos (aluno) e tema.
-// Com a barra de abas (aluno no celular) o topo perde o botão do menu e fica com a sigla, o título, os avisos e o tema.
+// Cabeçalho do inset: o único h1 da tela e, para o aluno, os avisos. Abaixo de 768 px, quem não é aluno abre o menu por aqui.
+// Com a barra de abas (aluno no celular) o topo fica com a sigla, o título e os avisos.
 function Topo({ titulo, aluno, abas, slug, icone, nome }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string }) {
+  const { isMobile, toggleSidebar } = useSidebar()
   return (
-    <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background/90 backdrop-blur">
+    <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background">
       <div className={`flex w-full min-w-0 items-center px-4 lg:px-6 ${abas ? 'gap-2' : 'gap-1 lg:gap-2'}`}>
-        {!abas && (
-          <>
-            <SidebarTrigger className="-ms-1" />
-            <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-          </>
+        {!abas && isMobile && (
+          <Button variant="ghost" size="icon" className="-ms-1" onClick={toggleSidebar}>
+            <IconeMenu aria-hidden="true" />
+            <span className="sr-only">Alternar barra lateral</span>
+          </Button>
         )}
         <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />
         <h1 className="truncate text-base font-medium">{titulo}</h1>
-        <div className="ms-auto flex shrink-0 items-center gap-1">
-          {aluno && <AvisosPush />}
-          <Tema />
-        </div>
+        <div className="ms-auto flex shrink-0 items-center gap-1">{aluno && <AvisosPush />}</div>
       </div>
     </header>
   )

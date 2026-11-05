@@ -214,9 +214,9 @@ describe('acesso', () => {
 
   // layout-painel C8 (AC 8): no cabeçalho, da esquerda para a direita, o botão da barra, avisos (só aluno) e Tema
   it.each([
-    [['ALUNO'], ['Alternar barra lateral', 'Ativar avisos neste aparelho', 'Tema']],
-    [['ATENDENTE'], ['Alternar barra lateral', 'Tema']],
-    [['ADMINISTRADOR'], ['Alternar barra lateral', 'Tema']],
+    [['ALUNO'], ['Ativar avisos neste aparelho']], // estrutura-visual AC 8 e AC 13: sem Tema no topo, e o botão de menu só abaixo de 768 px
+    [['ATENDENTE'], []],
+    [['ADMINISTRADOR'], []],
   ])('botões do cabeçalho por papel (%j)', async (papeis, botoes) => {
     Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null } }) } })
     vi.stubGlobal('PushManager', class {})
@@ -224,7 +224,7 @@ describe('acesso', () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis })], 'GET /api/push/chave': () => [200, { chavePublica: 'BAEC' }] })
     abrir('/univag/trocar-senha')
     const cabecalho = (await screen.findByRole('heading', { level: 1, name: 'Trocar senha' })).closest('header') as HTMLElement
-    if (papeis.includes('ALUNO')) await within(cabecalho).findByRole('button', { name: botoes[1] })
+    if (papeis.includes('ALUNO')) await within(cabecalho).findByRole('button', { name: botoes[0] })
     else await new Promise((r) => setTimeout(r, 50))
     expect([...cabecalho.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(botoes)
     Reflect.deleteProperty(navigator, 'serviceWorker')
@@ -238,7 +238,7 @@ describe('acesso', () => {
       vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: escuro, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
       api({ 'GET /api/auth/me': () => [200, me()] })
       const { unmount } = abrir('/univag/trocar-senha')
-      await screen.findByRole('button', { name: 'Tema' })
+      await screen.findByRole('heading', { name: 'Trocar senha' }) // o Tema mora na barra, que abaixo de 768 px é a gaveta fechada
       expect(document.documentElement).toHaveClass(escuro ? 'dark' : 'light')
       expect(document.documentElement).not.toHaveClass(escuro ? 'light' : 'dark')
       unmount()
