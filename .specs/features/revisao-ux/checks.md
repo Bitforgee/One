@@ -126,7 +126,7 @@ os checks abaixo afirmam.
 
 ### S1 - Toque, campos e contraste (P1) · ~33 files · ~194 KB · ~48k (com S2 e os tokens de S6)
 
-**C1** - A 390 px, em cada tela de `Telas` (`e2e/simulada.ts`), em Conta e em Instituições, todo elemento visível
+**C1** - [x] A 390 px, em cada tela de `Telas` (`e2e/simulada.ts`), em Conta e em Instituições, todo elemento visível
 destes 6 tipos mede altura ≥ 44 px:
 - `Button` (`[data-slot=button]`, inclusive o "Remover {arquivo}" de um anexo escolhido no Assistente);
 - `Input` (`[data-slot=input]`, sem `checkbox`, `radio` e `file`);
@@ -139,19 +139,19 @@ O teste afirma ao menos 1 elemento de cada tipo antes de medir (AC 1)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "alvos de 44 px abaixo de 768 em todas as telas"`
 
-**C2** - Com ponteiro grosso (contexto `hasTouch: true` a 1024×768; o teste confere antes que
+**C2** - [x] Com ponteiro grosso (contexto `hasTouch: true` a 1024×768; o teste confere antes que
 `matchMedia('(pointer: coarse)').matches` é `true`), os 6 tipos de C1 medem ≥ 44 px nas mesmas telas. O item da
 barra lateral é medido com a barra aberta e com ela recolhida. Num contexto sem `hasTouch`, a 1024 px, o `Button`
 `default` "Consultar" de Indicadores mede 36 px (AC 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "alvos de 44 px com ponteiro grosso a 1024"`
 
-**C3** - O `font-size` computado é ≥ 16 px em todo `[data-slot=input]` visível (sem `checkbox`, `radio` e `file`),
+**C3** - [x] O `font-size` computado é ≥ 16 px em todo `[data-slot=input]` visível (sem `checkbox`, `radio` e `file`),
 em todo `textarea` e em todo `[data-slot=native-select]`. Vale nas duas condições de C1 e C2: a 390 px e a
 1024 px com `hasTouch: true`. Cada tipo é medido ao menos uma vez em cada condição: o CPF do Login, o compositor do
 Assistente e o seletor de Cadastros (AC 2)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "campos de 16 px abaixo de 768 e com ponteiro grosso"`
 
-**C4** - O botão de fechar tem nome acessível "Fechar" e caixa ≥ 44×44 px em 3 casos:
+**C4** - [x] O botão de fechar tem nome acessível "Fechar" e caixa ≥ 44×44 px em 3 casos:
 - o `Dialog` "Encerrar a conversa?" a 360 px;
 - o `Sheet` do "Mais" do detalhe do chamado a 390 px;
 - o `Sheet` de formulário "Novo usuário" a 360 px.
@@ -162,18 +162,18 @@ botão "Fechar" e nenhum "Close" (AC 3)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "X de 44 px com o nome Fechar"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "Dialog e Sheet fecham por um botão Fechar"`
 
-**C5** - A 1280 px, no diálogo "Novo artigo", 3 campos têm borda com contraste ≥ 3:1 contra o fundo do diálogo:
+**C5** - [x] A 1280 px, no diálogo "Novo artigo", 3 campos têm borda com contraste ≥ 3:1 contra o fundo do diálogo:
 `Input` (Título), `Textarea` (Perguntas relacionadas) e `NativeSelect` (Categoria). A cor da borda é composta sobre
 o fundo opaco mais próximo. Vale nos temas Claro, Escuro e Preto, sem cor de instituição e com `#8a1538`
 (table-driven, 18 medidas) (AC 4)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "borda dos campos com contraste de 3:1 nos três temas"`
 
-**C6** - A 390 px, com `GET /api/chamados?escopo=fila` atrasado 2 s, a lista mostra 3 `[data-slot=skeleton]`. O
+**C6** - [x] A 390 px, com `GET /api/chamados?escopo=fila` atrasado 2 s, a lista mostra 3 `[data-slot=skeleton]`. O
 `background-color` computado de cada um, sem a opacidade da animação, tem contraste ≥ 1,3:1 contra o fundo da
 página nos temas Claro, Escuro e Preto (AC 5)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "esqueleto com contraste de 1,3:1 nos três temas"`
 
-**C7** - A 1280 px, o texto de cada selo tem contraste ≥ 4,5:1 contra o fundo do selo, composto sobre o fundo da
+**C7** - [x] A 1280 px, o texto de cada selo tem contraste ≥ 4,5:1 contra o fundo do selo, composto sobre o fundo da
 página. Vale nos temas Claro, Escuro e Preto, sem cor e com `#8a1538`, para 9 selos (table-driven):
 - os 5 estados do chamado (`ABERTO`, `EM_ATENDIMENTO`, `AGUARDANDO_ALUNO`, `RESOLVIDO`, `FECHADO`), numa Fila
   simulada com 1 chamado por estado;
@@ -182,7 +182,7 @@ página. Vale nos temas Claro, Escuro e Preto, sem cor e com `#8a1538`, para 9 s
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "selos com contraste de 4,5:1 nos três temas"`
 
-**C8** - Nenhum botão tem fundo verde. Em 4 telas, no tema Claro, o `background-color` de todo `button` visível é
+**C8** - [x] Nenhum botão tem fundo verde. Em 4 telas, no tema Claro, o `background-color` de todo `button` visível é
 diferente da cor de um elemento de referência pintado com `var(--success)`:
 - o Assistente depois de uma resposta ("Sim");
 - o diálogo de transferência ("Confirmar");
@@ -196,12 +196,12 @@ testes), a palavra `success` só aparece em `index.css`, em `chamados/Chamados.t
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "nenhum botão verde"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "verde só nos selos"`
 
-**C9** - Em 3 telas, uma por papel (`ALUNO` em `/univag/assistente`, `ATENDENTE` em `/univag/fila`,
+**C9** - [x] Em 3 telas, uma por papel (`ALUNO` em `/univag/assistente`, `ATENDENTE` em `/univag/fila`,
 `ADMINISTRADOR` em `/univag/artigos`), o primeiro `Tab` a partir do `body` foca o link "Pular para o conteúdo".
 `Enter` nele deixa `document.activeElement` igual ao elemento `main` (AC 8)
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "pular para o conteúdo leva o foco ao main"`
 
-**C10** - Um usuário de um só papel que abre uma rota de outro papel vai para `/{slug}/{telaInicial(me)}`, a tela
+**C10** - [x] Um usuário de um só papel que abre uma rota de outro papel vai para `/{slug}/{telaInicial(me)}`, a tela
 de `sessao.ts`. As rotas e os papéis são os 11 caminhos do menu (`Menu` de `Autenticado.tsx`, com `instituicoes`) mais `conta`:
 - `ALUNO`: `assistente`, `solicitacoes`, `conta`;
 - `ATENDENTE`: `fila`, `indicadores`;
@@ -214,14 +214,14 @@ de papel no web: a API responde por elas (AC 9)
 
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "rota de outro papel volta à tela inicial"`
 
-**C11** - Com `one-tema` em `light`, `dark`, `black` e `system` (4 casos), o botão "Tema" mostra o ícone da opção
+**C11** - [x] Com `one-tema` em `light`, `dark`, `black` e `system` (4 casos), o botão "Tema" mostra o ícone da opção
 atual: `Sun`, `Moon`, `MoonStar` e `Monitor`, comparados pelo `svg` que o lucide desenha. Aberto, a opção atual tem
 `aria-pressed="true"` e as outras 3 têm `"false"` (AC 10)
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "botão de tema mostra e marca o tema atual"`
 
 ### S2 - Navegação do aluno no celular (P1) · ~13 files · ~101 KB · ~25k (no lote 1)
 
-**C12** - Com `matchMedia` casando `(max-width: 767px)` e `me.papeis` `['ALUNO']`, a casca tem um `nav` com
+**C12** - [x] Com `matchMedia` casando `(max-width: 767px)` e `me.papeis` `['ALUNO']`, a casca tem um `nav` com
 `aria-label` "Navegação" e exatamente 3 links, nesta ordem:
 - "Assistente" → `/univag/assistente`;
 - "Solicitações" → `/univag/solicitacoes`;
@@ -232,18 +232,18 @@ door 1)
 
 Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "barra de abas do aluno com 3 destinos e o ativo marcado"`
 
-**C13** - A 390×844, como aluno só `ALUNO`, o `nav` "Navegação" tem `position: fixed`, `bottom` = 844 e largura 390.
+**C13** - [x] A 390×844, como aluno só `ALUNO`, o `nav` "Navegação" tem `position: fixed`, `bottom` = 844 e largura 390.
 Os 3 links têm o mesmo `top`, largura 130 px cada e altura ≥ 44 px. Em cada link, o `bottom` do `svg` fica ≤ o `top`
 do rótulo, o centro horizontal do `svg` fica a no máximo 1 px do centro do rótulo, e o rótulo tem `font-size` 12 px
 (Screens: Casca do aluno; door 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "barra de abas: 3 colunas iguais e ícone sobre rótulo de 12 px"`
 
-**C14** - Nas 3 rotas da barra, a 390 px, o rótulo do link ativo tem `color` igual à de um elemento de referência
+**C14** - [x] Nas 3 rotas da barra, a 390 px, o rótulo do link ativo tem `color` igual à de um elemento de referência
 com `var(--primary)` e `font-weight` 600. Os 2 rótulos inativos têm `color` diferente dessa e peso menor que 600
 (Screens: Casca do aluno)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "aba ativa na cor de ação e peso 600"`
 
-**C15** - A 390×844, com a área segura de 34 px (CDP), o `padding-bottom` computado do `nav` é 34 px. Em 4 telas
+**C15** - [x] A 390×844, com a área segura de 34 px (CDP), o `padding-bottom` computado do `nav` é 34 px. Em 4 telas
 roladas até o fim, todo elemento focável visível do `main` (`a`, `button`, `input`, `textarea`, `select`,
 `[tabindex]`) tem `bottom` ≤ `top` do `nav`:
 - Assistente com 4 respostas longas;
@@ -253,12 +253,12 @@ roladas até o fim, todo elemento focável visível do `main` (`a`, `button`, `i
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "nada focável fica sob a barra de abas"`
 
-**C16** - A 390 px, como aluno só `ALUNO`, a casca não tem o botão "Alternar barra lateral" e não mostra
+**C16** - [x] A 390 px, como aluno só `ALUNO`, a casca não tem o botão "Alternar barra lateral" e não mostra
 `[data-sidebar=sidebar]`. O topo mostra as iniciais da instituição (sem ícone) com `right` ≤ `left` do `h1` e com
 os centros verticais a no máximo 2 px um do outro (AC 12; Screens: Casca do aluno)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "topo do aluno sem botão de menu"`
 
-**C17** - Em `/univag/conta`, como `ALUNO`, a tela mostra no topo o nome "Ana" e o CPF mascarado "***.456.789-**" (P3), sem e-mail, e depois
+**C17** - [x] Em `/univag/conta`, como `ALUNO`, a tela mostra no topo o nome "Ana" e o CPF mascarado "***.456.789-**" (P3), sem e-mail, e depois
 as linhas nesta ordem:
 - "Tema";
 - "Avisos no celular";
@@ -273,7 +273,7 @@ São 3 casos:
 
 Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "Conta lista as linhas na ordem e só com push e contato"`
 
-**C18** - Na Conta, cada linha age assim (5 casos):
+**C18** - [x] Na Conta, cada linha age assim (5 casos):
 - "Tema" abre a escolha com "Claro", "Escuro", "Preto" e "Sistema", e escolher "Escuro" grava `one-tema` `dark`;
 - "Avisos no celular" chama a mesma inscrição que o botão de avisos (`POST /api/push/inscricoes`);
 - "Contato do atendimento" abre um `Dialog` com o mesmo `Contato` de C45 de `aparencia-instituicao`;
@@ -282,7 +282,7 @@ Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "Conta lista a
 
 Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "linhas da Conta agem"`
 
-**C19** - A 390 px, na Conta:
+**C19** - [x] A 390 px, na Conta:
 - cada uma das linhas de C17 mede altura de 52 px (1 px) e é inteira o alvo: um clique a 4 px da borda direita
   dispara a ação dela;
 - o bloco de nome e CPF não contém `a` nem `button`;
@@ -292,7 +292,7 @@ Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "linhas da Con
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Conta com linhas de 52 px e Sair por último"`
 
-**C20** - Não há `nav` "Navegação", e o botão "Alternar barra lateral" está visível, em 4 casos:
+**C20** - [x] Não há `nav` "Navegação", e o botão "Alternar barra lateral" está visível, em 4 casos:
 - `ALUNO` a 768 px;
 - `ATENDENTE` a 390 px;
 - `ADMINISTRADOR` a 390 px;
@@ -577,7 +577,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 
 ### S6 - Identidade visual sem cara de modelo (P2) · ~7 files · ~38 KB · ~9k (tokens no lote 1, varreduras no lote 3)
 
-**C52** - Em `index.css`, os blocos `:root` e `.dark` declaram os 5 tokens `--background`, `--muted`, `--border`,
+**C52** - [x] Em `index.css`, os blocos `:root` e `.dark` declaram os 5 tokens `--background`, `--muted`, `--border`,
 `--input` e `--accent`, e o `.black` declara os 4 últimos, no formato
 `color-mix(in oklch, var(--marca, <azul de base>) N%, <neutro de base>)`, com N inteiro de 2 a 6 (table-driven,
 14 declarações). O `--background` do `.black` continua `oklch(0 0 0)` (P7). No Chromium, para cada uma das 14
@@ -587,12 +587,12 @@ sem edição (AC 39, door 2)
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca nos três temas"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "neutros mudam com a cor da instituição"`
 
-**C53** - Nos temas Claro, Escuro e Preto, sem cor, com `#8a1538` e com `#224fa7`, as cores computadas têm
+**C53** - [x] Nos temas Claro, Escuro e Preto, sem cor, com `#8a1538` e com `#224fa7`, as cores computadas têm
 contraste ≥ 4,5:1 em 3 pares (table-driven, 27 medidas): `--foreground` sobre `--background`,
 `--muted-foreground` sobre `--background` e `--muted-foreground` sobre `--muted` (AC 39)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "texto com 4,5:1 sobre os neutros tingidos"`
 
-**C54** - O `font-variation-settings` computado é `"opsz" 32` em 2 casos: o `h1` do Login e o `h2` "Olá! Eu sou
+**C54** - [x] O `font-variation-settings` computado é `"opsz" 32` em 2 casos: o `h1` do Login e o `h2` "Olá! Eu sou
 Assistente." do Assistente. O corpo (`body`) não tem `opsz` declarado. `main.tsx` importa
 `@fontsource-variable/inter/opsz.css`, e `dependencies` do `package.json` têm um só pacote de fonte,
 `@fontsource-variable/inter` (AC 40, door 2)
@@ -651,7 +651,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.
 mudança de API (Flow: sem mudança de API)
 Proof: `git diff --quiet <base> HEAD -- api api.Tests`
 
-**C63** - De ponta a ponta, na imagem própria (porta 8087), um aluno só `ALUNO` da instituição `e2e`, a 390×844:
+**C63** - [x] De ponta a ponta, na imagem própria (porta 8087), um aluno só `ALUNO` da instituição `e2e`, a 390×844:
 1. entra e cai em Assistente com o link "Assistente" em `aria-current="page"`;
 2. toca "Solicitações" e vê a lista, com o link marcado;
 3. toca "Conta" e vê as linhas de C17;
@@ -762,3 +762,30 @@ Estimativa:
      aqui, porque só medem certo depois que as telas mudaram.
 - Cada lote roda C59 a C61 antes de passar adiante. C63 fecha no lote 1, e C64 e C65 no lote 3.
 - Mecanismo: handoff em lotes sequenciais - decisão delegada pelo usuário em 04/11
+
+### Lote 1 (casca e base visual)
+
+- **Feature base:** `56cf9d3`.
+- **Boundary:** lote 1 fechado em `3ad84e4`, `5cbeca1`, `ee05032`, `8d68a79` e `2be0803`, mais o commit deste handoff. C1 a C20, C52 a C54 e C63 marcados `[x]`. C59 a C61 verdes no fim do lote e **sem marca** (a prova de C59 a C61 só fecha no lote 3): Vitest 399 verdes em 43 arquivos (340 da base mais 48 de `ux.test.tsx` e 11 de `acesso/navegacao.test.tsx`), `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99 (maior nota 9.8, `Sidebar`; `Autenticado` foi dividido em `desvio` e `Casca` para sair de 17), `dryer` sem candidato, layout (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push` e `ux`) 115 verdes contra `vite preview` na 5199. C63 verde contra a imagem de `2be0803` na 8087 (instituição `e2e`, banco `one_revisao_ux`, bucket `one-revisao-ux`); contêiner, imagem, banco, bucket e worktree removidos. `api/` não mudou. A suíte e2e real inteira (C65) fica para o lote 3.
+- **Settled mid-build:** nada com o usuário; decisões do construtor, para o orquestrador e o Verifier:
+  1. C8 pede que a palavra `success` só apareça em `index.css`, `Chamados.tsx` e `comum.tsx`, mas `toast.success(...)` (API do Sonner, em `acao.tsx` e `administracao/Aparencia.tsx`) e a chave `success` de `ui/sonner.tsx` a trazem. O teste `verde só nos selos` procura o **token de cor** (`bg-success`, `text-success`, `--success` etc.), que é o que AC 7 e a door 3 proíbem em botão. Se o texto literal for a exigência, é preciso trocar as chamadas do Sonner.
+  2. C18 cita `POST /api/push/inscricoes`, mas a rota real é `POST /api/push/subscricao`; o teste usa a real.
+  3. C4: o botão da barra do detalhe ainda se chama "Ações" (o "Mais" nasce em C34, lote 2) e "Novo usuário" ainda é `Dialog` (vira `Sheet` em C39, lote 3). O teste abre `/^(Mais|Ações)$/` e acha o `role="dialog"`; o lote 2 pode estreitar para "Mais".
+  4. O aluno com a barra de abas **mantém Avisos e Tema no topo** (a Conta repete as duas linhas): `acesso.test.tsx` `sem tema gravado segue o sistema` simula `matchMedia` casando toda consulta, e `push.spec.ts` mede o botão de avisos a 360 px; assim nenhuma dessas asserções mudou.
+  5. C7 pede os selos "Ativo", "Rascunho" e "Arquivado", então a caixa de frase de `SeloEstado` veio neste lote (as classes dos 3 selos não mudaram); o ícone de indexação e o resto de AC 33 seguem no lote 3. Os selos do chamado deixaram `text-primary`/`bg-primary-subtle`: Aberto e Em atendimento `bg-accent text-foreground`, Resolvido e Fechado `bg-success/15 text-foreground` (o verde com texto verde dava menos de 4,5:1).
+  6. O contrato `--barra` (altura da barra de abas mais a área segura, definida no `SidebarProvider` só quando a barra aparece) é lido pelo compositor fixo do Assistente (`bottom` e `min-h`) e pela barra "Ações" do detalhe (`bottom`), para C15; o lote 2 troca essa barra do aluno por "Cancelar solicitação" no fim da página.
+  7. `telaInicial` ganhou `OPERADOR` -> `instituicoes` (sem isso a guarda de AC 9 mandava o operador puro de volta para uma rota que não é dele, em laço); a guarda também não redireciona quando o destino é a própria rota.
+  8. Door 2: o neutro de base é escrito `oklch(L 0 none)`. Com `oklch(L 0 0)` o Chromium interpola a matiz 0 e o neutro tinge para rosa; com `none` ele leva a matiz da marca (ou do azul de base).
+  9. O `--input` virou a cor da borda de 3:1 (`oklch` 0,66 no Claro e 0,58 no Escuro e no Preto), então saíram os preenchimentos `dark:bg-input/30` de `Input`, `Textarea` e `NativeSelect` e o `dark:border-input dark:bg-input/30 dark:hover:bg-input/50` do `Button` `outline`.
+  10. `Button`/`Input`/`NativeSelect` usam `pointer-coarse:` do Tailwind (vem depois de `md:` no CSS gerado, conferido no build). O item da barra lateral recolhida só ganha `h-11` com ponteiro grosso (a largura fica em 32 px, dentro dos 3 rem da barra).
+  11. C19 roda com o service worker liberado (`serviceWorkers: 'allow'`): com ele bloqueado `navigator.serviceWorker.ready` nunca resolve e a linha "Avisos no celular" não aparece. C63 usa 'e2e' como slug padrão (o Proof não passa `E2E_INSTITUICAO`) e, no pior caso, 5 autenticações por minuto (limitador, L-066), com espera no 429.
+  12. `Landing`/`plan.md`: nenhuma linha nova. `Flow` ganhou `acesso/Conta.tsx` e `useSair` (`sessao.ts`).
+- **Abandoned:** nada.
+- **Edições em asserções existentes** (lista fechada; AC que força cada uma):
+  - `test/estrutura.test.ts`: `ux.test.tsx` na lista `Raiz` (item 1).
+  - `test/interface.test.ts` (item 2; AC 4, AC 5, AC 39): a tabela `Tokens` troca `--background`, `--muted`, `--border` e `--input` pelos `color-mix` e ganha a linha `--accent`; `linear()` lê o `color-mix` por `misturar()` (limite 4,5 igual). `bloco()` não precisou mudar: devolve o `color-mix` inteiro.
+  - `e2e/celular.spec.ts`, `Ações do chamado no rodapé abaixo de 1024` (item 4; AC 3): o filtro do nome do X passa de `Close` para `Fechar`.
+  - `tabela.test.tsx` (item 8; AC 6, AC 43): `selo de estado com cor por grupo` troca `bg-primary-subtle` por `bg-accent`. **Fora da lista:** o usuário `admin` (fixture) ganhou `ALUNO`, porque `vazio ilustrado nas 6 listas` abre `/solicitacoes` e a guarda de papel (AC 9) o mandava para a Fila; só o fixture mudou.
+  - `acesso/icones.test.tsx` (item 8; AC 10): `Tema traz Sun e a escolha Escuro traz Moon` afirma `Monitor` (Sistema, sem tema gravado) e, depois de escolher Escuro, `Moon` no botão.
+  - `conhecimento/documentos.test.tsx` (`tela Documentos lista...` e `artigos mostram a indexação`), `conhecimento/edicao.test.tsx` (`ativar e arquivar aparecem...` e `documento arquivado não oferece...`) e `conhecimento/textos.test.tsx` (as 2 listas de literais) (item 8; AC 33 via C7): `ATIVO`, `ARQUIVADO` e `RASCUNHO` passam a `Ativo`, `Arquivado` e `Rascunho`; os ajudantes `de()` e `item()` pegam o primeiro de vários textos iguais (o título de teste "Rascunho" divide o texto com o selo).
+

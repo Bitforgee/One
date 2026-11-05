@@ -37,7 +37,7 @@ componentes de `web/src/ui/` e o `Tabela.tsx`, o `Confirmar.tsx`, o `ErroDe.tsx`
 (`@fontsource-variable/inter/opsz.css`).
 
 1. `Autenticado.tsx` (exists): ganha a barra de abas do aluno no celular (door 1), o link "Pular para o conteúdo" e a
-   guarda de papel das rotas.
+   guarda de papel das rotas. A tela Conta mora em `acesso/Conta.tsx` (new) e o `sessao.ts` (exists) ganha `useSair`.
 2. Os componentes de `web/src/ui/` (exists) ganham os tamanhos de toque por ponteiro grosso, a fonte de 16 px nos campos
    e o X de 44 px.
 3. `Tabela.tsx` (exists), `Chamados.tsx` (exists) e `ChamadoDetalhe.tsx` (exists) mudam as listas e as ações do chamado.
