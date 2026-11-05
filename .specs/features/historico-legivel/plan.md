@@ -73,6 +73,8 @@ responsável saem como vieram.
 | outro tipo | `{ator} · {tipo}` (código cru, para nunca esconder um evento) |
 | estado fora do `Estados` | o código cru no lugar do nome |
 
+Emenda de 05/11 (`historico-frases`): as linhas `RESPOSTA` e `ATRIBUICAO` com `para` mudam quando o autor é o aluno ou quando `para` é o próprio ator. As frases valem como estão em `.specs/features/historico-frases/plan.md`.
+
 ## Criteria
 
 ### S1: Histórico em frases (P1)
