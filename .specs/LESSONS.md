@@ -612,6 +612,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/ui/sidebar.tsx:471 (web a11y)
 - last seen: 2026-11-05T14:44:33Z
 
+### L-101 - An arrangement stated in a test comment needs an assertion comparing the two boxes, because staying inside the same cell survives any order
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: estrutura-visual
+- evidence: verification.md F14; web/e2e/arranjo.spec.ts:290 (web)
+- last seen: 2026-11-05T16:04:55Z
+
+### L-102 - A fix applied to sibling components needs a proof per component, because a proof on one leaves the other free to regress
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: estrutura-visual
+- evidence: verification.md F10; web/src/ui/sheet.tsx:77 (web)
+- last seen: 2026-11-05T16:04:55Z
+
+### L-103 - Padding on a line-clamped element shows the next line inside the clip, so measure the clamp by eye with accented capitals
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: estrutura-visual
+- evidence: verification.md finding 1; web/src/chamados/Chamados.tsx:53 (web)
+- last seen: 2026-11-05T16:04:55Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

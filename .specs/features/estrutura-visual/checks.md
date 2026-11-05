@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/estrutura-visual/plan.md`
 
-35 checks em 6 slices (S1 a S5 e S0; C31 a C35 vêm da rodada 1 do Verifier) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
+39 checks em 6 slices (S1 a S5 e S0; C31 a C39 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
 
@@ -41,6 +41,7 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 | P3 | AC 12 e o clique em recolher | continua alternando aberta e recolhida, e o atalho do primitivo não muda (C13) |
 | P4 | O usuário sem setas continua abrindo "Sair" | continua: a linha é um botão com o mesmo menu (AD-028) (C10) |
 | P5 | Altura da caixa de envio não tinha número | com 1 linha de texto e sem anexo, o `form` mede ≤ 60 px (C15) |
+| P8 | Rodada 2 do Verifier: a folga do corte de 2 linhas mostrou o alto da 3ª; `## Screens` pedia "só ícones com dica" e faltava dica em recolher e no usuário | C36 a C39 só provam o que o plano aprovado já dizia; a dica entra sem nova decisão do usuário. A rodada 3 é a última antes de voltar ao usuário |
 | P7 | Rodada 1 do Verifier, 05/11 | **o usuário escolheu voltar a `--sidebar` `#000` no Preto** (AD-027 fica intacta): C7 passa a exigir a diferença entre marcas só no claro e no escuro e `#000` no Preto. C23 passa a medir o contêiner da tabela. Entram C31 a C35, do que a rodada achou |
 | P6 | Largura da barra quando o total é 0 | total 0 dá largura 0, e o maior total dá 100% (C20) |
 
@@ -174,6 +175,18 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 **C35** - [x] A 1440 px, com 1 linha de texto, "Enviar" e o campo da caixa de envio têm a mesma altura (± 1 px) e estão alinhados na vertical; a 390 px, os dois medem ≥ 44 px (P7; AC 14)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Enviar da altura do campo"`
 
+**C36** - [ ] A 360 e a 390 px, nos cartões da Fila e de Minhas solicitações, com um título em maiúsculas com `Ã`, `Á` e `Í` na 3ª linha, a caixa que corta o texto mede até 2 × `line-height` (± 1 px) e nenhum pixel da 3ª linha pinta abaixo da 2ª: o `Range` do texto visível termina dentro dela; o título continua em 2 linhas com o contorno de foco inteiro, como em C33 (P8; AC 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "corte de 2 linhas sem o alto da terceira"`
+
+**C37** - [ ] Com a coluna estreita, a 360 e a 390 px, a barra do ranking tem `top` ≥ o `bottom` do rótulo da categoria − 1 px, nas linhas com dados (P8; AC 19; `## Screens`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra do ranking embaixo do rótulo no estreito"`
+
+**C38** - [ ] Com a barra recolhida, a 1280 px, passar o ponteiro no botão de recolher e na linha do usuário mostra 1 dica com o nome da ação e com o nome do usuário, como nos links; com a barra aberta, a mesma dica não aparece (controle) (P8; `## Screens`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "dica em recolher e no usuário com a barra recolhida"`
+
+**C39** - [ ] O botão Fechar da gaveta (`Sheet`), com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P8; AC 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco inteiro no Fechar da gaveta"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -190,6 +203,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 | estados do ranking (3) | com dados C20, C21, C28 · vazio C22 · ausente C22 | - |
 | frases de `## Screens` (8) | barra aberta C8, C9, C10, C13 · barra recolhida C11 · topo C9, C12, C14 · caixa de envio C15, C17 · tabela C19 · ranking C20, C21, C23 · foco C1, C6 · anexos C5 | - |
 | achados da rodada 1 (7) | total em uma linha C31 · corte da categoria C23 · Preto em `#000` C7 · barra ativa em cores forçadas C32 · foco nos cartões C33 · ordem do rodapé C34 · Enviar e campo C35 | - |
+| achados da rodada 2 (4) | alto da 3ª linha C36 · barra embaixo do rótulo C37 · dicas na barra recolhida C38 · Fechar da gaveta C39 | - |
 | suítes do S0 (5) | Vitest e build C25 · `crapper`, `dryer` e `api/` C26 · arranjo C27 · fluxo real C28 · e2e inteira C29 | - |
 
 ## Swept
@@ -226,3 +240,7 @@ Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mec
 - **Settled mid-build:** (1) por decisão do usuário em 05/11 (P7), `--sidebar` do Preto volta a `oklch(0 0 0)`; o claro e o escuro seguem tingidos, e `--sidebar-foreground` sobre `#000` segue ≥ 4,5:1. A decisão (2) do build anterior deixa de valer. (2) A barra do item ativo é um `::before` de largura 0 com `border-left` de 3 px na cor de `--sidebar-primary`, no lugar do `background`; mantém os 3 px e o recorte `inset-y-1`, e C8 mede a borda do `::before`. (3) A tabela (`ui/table.tsx`) ganhou 4 px de folga à esquerda no contêiner (`-ms-1 ps-1`, o texto da primeira coluna continua alinhado), e o contorno de foco do contêiner deixou de entrar 2 px no controle: por isso o contorno do link da primeira coluna cerca as letras em vez de cruzá-las. O deslocamento negativo continua na barra lateral e na linha de pergunta. (4) O corte das 2 linhas dos cartões foi para um `span` interno com `-m-1 p-1`, que dá 4 px de folga ao contorno do link sem mudar a altura do `p[data-linha=assunto]`. (5) O recolher do rodapé, com a barra recolhida, centraliza (`self-center`), e fica em x = 2 com ponteiro grosso. (6) O botão Enviar tem `h-11` em todas as larguras, a altura do campo.
 - **Asserções existentes editadas:** `interface.test.ts` linha `--sidebar` de `Tokens`, coluna Preto de `tingido(8, '0.1 0 none')` para `0 0 0` (lista fechada, item 6; AC 6 e P7). `casca.spec.ts` (arquivo da própria feature): `barra tingida pela marca` (C7: no Preto exige `rgb(0,0,0)` com as 3 marcas, e a diferença entre marcas só no claro e no escuro), `item ativo com barra de 3 px` (C8: a barra do `::before` é lida pela borda, não pelo fundo; AC 7) e `categoria longa inteira nas 5 larguras` (C23: soma a medida do `table-container`; AC 21). Nenhuma outra asserção existente mudou, e nenhum limite baixou.
 - **Fora do escopo, registrado pelo Verifier e não feito:** o Esc que fecha a gaveta em 2 toques, as dicas que faltam no recolher e no usuário recolhidos, o arredondamento da barra do ranking, os itens do app fora dos checks e a mensagem sem internet.
+
+### Correções da rodada 2 (P8)
+
+- Mecanismo: um construtor, depois do FAIL da rodada 2 do Verifier.

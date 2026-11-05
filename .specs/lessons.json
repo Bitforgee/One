@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 101,
+  "next_id": 104,
   "lessons": [
     {
       "id": "L-001",
@@ -1818,6 +1818,60 @@
       ],
       "created": "2026-11-05T14:44:33Z",
       "last_seen": "2026-11-05T14:44:33Z"
+    },
+    {
+      "id": "L-101",
+      "key": "surviving_mutant::an arrangement stated in a test comment needs an assertion comparing the two boxes because staying inside the same cell survives any order",
+      "text": "An arrangement stated in a test comment needs an assertion comparing the two boxes, because staying inside the same cell survives any order",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F14; web/e2e/arranjo.spec.ts:290 (web)"
+      ],
+      "created": "2026-11-05T16:04:55Z",
+      "last_seen": "2026-11-05T16:04:55Z"
+    },
+    {
+      "id": "L-102",
+      "key": "surviving_mutant::a fix applied to sibling components needs a proof per component because a proof on one leaves the other free to regress",
+      "text": "A fix applied to sibling components needs a proof per component, because a proof on one leaves the other free to regress",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F10; web/src/ui/sheet.tsx:77 (web)"
+      ],
+      "created": "2026-11-05T16:04:55Z",
+      "last_seen": "2026-11-05T16:04:55Z"
+    },
+    {
+      "id": "L-103",
+      "key": "spec_deviation::padding on a line clamped element shows the next line inside the clip so measure the clamp by eye with accented capitals",
+      "text": "Padding on a line-clamped element shows the next line inside the clip, so measure the clamp by eye with accented capitals",
+      "signal": "spec_deviation",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 1; web/src/chamados/Chamados.tsx:53 (web)"
+      ],
+      "created": "2026-11-05T16:04:55Z",
+      "last_seen": "2026-11-05T16:04:55Z"
     }
   ]
 }
