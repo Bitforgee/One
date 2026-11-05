@@ -137,8 +137,8 @@ Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
 **C26** - [ ] O `crapper` sobre `web/src` sai 0 no limite 9.99, o `dryer` não acha candidato com nota 0.8 ou mais, e nenhum arquivo de `api/` nem de `api.Tests/` muda desde `<base>` (AC 22)
-Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage --threshold 9.99 src`
-Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/indicadores -s src/administracao -s src/ui --threshold 0.8`
+Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
+Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx src/LinksDaResposta.tsx src/Balao.tsx | grep -q "No duplicate candidates found"`
 Proof: `git diff --quiet <base> HEAD -- api api.Tests`
 
 **C27** - [ ] A suíte de arranjo passa inteira com a API simulada, salvo `plataforma.spec.ts` `manifesto e service worker`, que precisa de API e é julgado em C29 (AC 22)
@@ -148,7 +148,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/casca-real.spec.ts`
 
 **C29** - [ ] A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8089 (AC 22)
-Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test --grep-invert "@simulada"`
+Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test`
 
 **C30** - [ ] Os testes dos invariantes de AC 22 passam sem baixar limite: alvos de 44 px, campos de 16 px, barra de abas, cor de ação e neutros tingidos, mais os checks C47 a C57 de `identidade-visual` (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "alvos de 44 px abaixo de 768 em todas as telas"`
