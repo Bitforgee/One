@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/estrutura-visual/plan.md`
 
-39 checks em 6 slices (S1 a S5 e S0; C31 a C39 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
+41 checks em 6 slices (S1 a S5 e S0; C31 a C41 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
 
@@ -41,6 +41,7 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 | P3 | AC 12 e o clique em recolher | continua alternando aberta e recolhida, e o atalho do primitivo não muda (C13) |
 | P4 | O usuário sem setas continua abrindo "Sair" | continua: a linha é um botão com o mesmo menu (AD-028) (C10) |
 | P5 | Altura da caixa de envio não tinha número | com 1 linha de texto e sem anexo, o `form` mede ≤ 60 px (C15) |
+| P9 | Rodada 3 do Verifier: a dica na linha do usuário ficava presa depois do menu e fazia o Esc da gaveta pedir 2 toques; 3 mutantes sobreviveram (F9, F10, F11). O usuário escolheu em 05/11 "tirar a dica e conferência curta" | a linha do usuário fica sem dica (as iniciais não são ícone), e C38 muda; entram C40 e C41. Uma última conferência olha só isso. O que ela achar além disso vira risco aceito pelo usuário, sem nova rodada |
 | P8 | Rodada 2 do Verifier: a folga do corte de 2 linhas mostrou o alto da 3ª; `## Screens` pedia "só ícones com dica" e faltava dica em recolher e no usuário | C36 a C39 só provam o que o plano aprovado já dizia; a dica entra sem nova decisão do usuário. A rodada 3 é a última antes de voltar ao usuário |
 | P7 | Rodada 1 do Verifier, 05/11 | **o usuário escolheu voltar a `--sidebar` `#000` no Preto** (AD-027 fica intacta): C7 passa a exigir a diferença entre marcas só no claro e no escuro e `#000` no Preto. C23 passa a medir o contêiner da tabela. Entram C31 a C35, do que a rodada achou |
 | P6 | Largura da barra quando o total é 0 | total 0 dá largura 0, e o maior total dá 100% (C20) |
@@ -181,11 +182,17 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 **C37** - [x] Com a coluna estreita, a 360 e a 390 px, a barra do ranking tem `top` ≥ o `bottom` do rótulo da categoria − 1 px, nas linhas com dados (P8; AC 19; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra do ranking embaixo do rótulo no estreito"`
 
-**C38** - [x] Com a barra recolhida, a 1280 px, passar o ponteiro no botão de recolher e na linha do usuário mostra 1 dica com o nome da ação e com o nome do usuário, como nos links; com a barra aberta, a mesma dica não aparece (controle) (P8; `## Screens`)
-Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "dica em recolher e no usuário com a barra recolhida"`
+**C38** - [x] Com a barra recolhida, a 1280 px, passar o ponteiro em recolher e em Tema mostra 1 dica com o nome de cada um; com a barra aberta, não (controle). A linha do usuário não mostra dica em nenhum dos dois estados, e depois de abrir e fechar o menu dela não sobra dica na tela (P8, P9; `## Screens`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "dica nos ícones do rodapé com a barra recolhida, sem dica no usuário"`
 
 **C39** - [x] O botão Fechar da gaveta (`Sheet`), com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P8; AC 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco inteiro no Fechar da gaveta"`
+
+**C40** - [x] A 390 px, no cartão da Fila, o link se chama "ONE-123 Preciso…" (número e título) e um clique abre o chamado com exatamente 1 entrada a mais em `history`; voltar retorna à lista (P9; AC 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "link do cartão abre o chamado com 1 entrada no histórico"`
+
+**C41** - [x] A 390 px, na gaveta do atendente, com foco na linha do usuário, 1 `Escape` fecha a gaveta (P9; AC 13)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Esc fecha a gaveta em 1 toque a partir do usuário"`
 
 ## Coverage
 
@@ -204,6 +211,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 | frases de `## Screens` (8) | barra aberta C8, C9, C10, C13 · barra recolhida C11 · topo C9, C12, C14 · caixa de envio C15, C17 · tabela C19 · ranking C20, C21, C23 · foco C1, C6 · anexos C5 | - |
 | achados da rodada 1 (7) | total em uma linha C31 · corte da categoria C23 · Preto em `#000` C7 · barra ativa em cores forçadas C32 · foco nos cartões C33 · ordem do rodapé C34 · Enviar e campo C35 | - |
 | achados da rodada 2 (4) | alto da 3ª linha C36 · barra embaixo do rótulo C37 · dicas na barra recolhida C38 · Fechar da gaveta C39 | - |
+| achados da rodada 3 (3) | dica fora da linha do usuário C38 · link do cartão C40 · Esc da gaveta C41 | - |
 | suítes do S0 (5) | Vitest e build C25 · `crapper`, `dryer` e `api/` C26 · arranjo C27 · fluxo real C28 · e2e inteira C29 | - |
 
 ## Swept
@@ -248,3 +256,8 @@ Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mec
 - **Settled mid-build:** nada com o usuário. Decisões do construtor, para o Verifier julgar: (1) C36: o link do cartão virou o bloco de fora (`<Link className="block">`) e o corte das 2 linhas (`line-clamp-2`, sem `p-1` nem `-m-1`) é um `span` dentro dele; nada corta o contorno do link, e a caixa que corta mede 2 × `line-height` sem folga vertical. Efeito: o link agora cobre o número e o título (antes só o número), então o título também sublinha ao passar o ponteiro e é alvo de clique; o cartão já navegava pelo clique na linha, e o nome acessível do link passa a ser "ONE-123 título". (2) C33: a precondição "o link tem ancestral que corta" era do construtor, não do check, e deixou de valer. Virou "há 1 `line-clamp` dentro do link", e o controle passou a pôr `overflow: hidden` no pai do link com o contorno a 40 px, para a medida `foraDoCorte` acusar um corte; a alegação do check (contorno inteiro dentro de todo ancestral que corta) segue medida, agora por um cartão sem ancestral cortando. (3) C38: o recolher (`SidebarTrigger`, em `ui/sidebar.tsx`) ganhou `Tooltip` com o mesmo `hidden={state !== "collapsed" || isMobile}` do `SidebarMenuButton`, e a linha do usuário ganhou `tooltip={me.nome}`: a dica do recolher é "Alternar barra lateral" e a do usuário é o nome. Sem emenda de `## Screens`. (4) C36 mede o corte por geometria (altura da caixa, `padding` 0, linhas do `Range` que começam acima da base da caixa, contorno de foco inteiro) e não por pixel; Safari não foi testado.
 - **Asserções existentes editadas:** `casca.spec.ts` `foco inteiro nos cartões, na primeira coluna e no Fechar` (teste da própria feature): só a precondição do cartão, como em (2). Nenhuma outra asserção existente mudou, e nenhum limite baixou.
 - **Fora do escopo, registrado pelo Verifier e não feito:** o Esc que fecha a gaveta em 2 toques, a barra recolhida cortando `Aparência` em telas baixas, o alinhamento de `Total` no ranking, o arredondamento da barra e o centro vertical do clipe.
+
+### Correções da rodada 3 (P9)
+
+- Mecanismo: orquestrador; uma linha de produto (`tooltip={me.nome}` sai) e testes; escolha do usuário em 05/11.
+- **Edições em asserções existentes:** o teste de C38 muda de nome e de texto (P9); `Enviar da altura do campo` ganha `test.setTimeout(90_000)`, porque o Verifier achou que 2 páginas nos 30 s padrão são a causa provável da falha isolada, sem a reproduzir. Nenhum limite baixou.

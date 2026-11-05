@@ -152,7 +152,7 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton size="lg" tooltip={me.nome} className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
+          <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
             {state === 'collapsed' && !isMobile && (
               <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center text-xs font-semibold">
                 {iniciais(me.nome)}

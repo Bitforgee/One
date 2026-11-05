@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 104,
+  "next_id": 106,
   "lessons": [
     {
       "id": "L-001",
@@ -1872,6 +1872,42 @@
       ],
       "created": "2026-11-05T16:04:55Z",
       "last_seen": "2026-11-05T16:04:55Z"
+    },
+    {
+      "id": "L-104",
+      "key": "surviving_mutant::a link inside a clickable row needs a test that one click adds one history entry",
+      "text": "A link inside a clickable row needs a test that one click adds one history entry",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F9 web/src/chamados/Chamados.tsx:53 (web)"
+      ],
+      "created": "2026-11-05T17:18:26Z",
+      "last_seen": "2026-11-05T17:18:26Z"
+    },
+    {
+      "id": "L-105",
+      "key": "ac_gap::a tooltip on a menu trigger needs a check of the state after the menu closes because returned focus reopens it",
+      "text": "A tooltip on a menu trigger needs a check of the state after the menu closes, because returned focus reopens it",
+      "signal": "ac_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md finding 1 web/src/Autenticado.tsx:155 (web)"
+      ],
+      "created": "2026-11-05T17:18:26Z",
+      "last_seen": "2026-11-05T17:18:26Z"
     }
   ]
 }

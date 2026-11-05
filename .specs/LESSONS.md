@@ -630,6 +630,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md finding 1; web/src/chamados/Chamados.tsx:53 (web)
 - last seen: 2026-11-05T16:04:55Z
 
+### L-104 - A link inside a clickable row needs a test that one click adds one history entry
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: estrutura-visual
+- evidence: verification.md F9 web/src/chamados/Chamados.tsx:53 (web)
+- last seen: 2026-11-05T17:18:26Z
+
+### L-105 - A tooltip on a menu trigger needs a check of the state after the menu closes, because returned focus reopens it
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: estrutura-visual
+- evidence: verification.md finding 1 web/src/Autenticado.tsx:155 (web)
+- last seen: 2026-11-05T17:18:26Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

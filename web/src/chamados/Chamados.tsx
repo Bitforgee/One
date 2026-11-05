@@ -104,7 +104,7 @@ function LinhaDaTabela<T extends ItemMeu>({ c, caminho, aberto, largas, fila }: 
   )
 }
 
-// Fila e Minhas solicitações: linhas com divisória, sem cartão; a linha inteira abre o chamado e o número é o link (AC 23).
+// Fila e Minhas solicitações: linhas com divisória, sem cartão; a linha inteira abre o chamado, e o link é o número (no celular, número e título) (AC 23).
 // `largas` são as colunas "largo": cabeçalhos e células, nesta ordem, entre o título e o estado.
 function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas, fila }: { url: string; vazio: Vazio; largas?: Larga<T>[]; fila?: boolean }) {
   const { slug } = useParams()

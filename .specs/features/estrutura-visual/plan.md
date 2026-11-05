@@ -55,7 +55,7 @@ None - nothing consumed outside
 ## Screens
 
 - **Barra lateral, aberta (a partir de 768 px):** logo ou sigla, grupos com título, ícone e rótulo; item ativo como na door 3; no rodapé, em linhas: Contato (quando há), Tema, nome e papel em texto e o botão de recolher só com ícone. Sem círculo de iniciais e sem setas.
-- **Barra recolhida:** só ícones com dica, e as iniciais do usuário no rodapé, único lugar em que elas ficam.
+- **Barra recolhida:** só ícones, com dica nos ícones, e as iniciais do usuário no rodapé, único lugar em que elas ficam, sem dica (emenda aprovada em 05/11).
 - **Topo:** título da tela e, para o aluno, os avisos. Fundo opaco, sem separador, sem desfoque e sem Tema. No celular de quem não é aluno, o botão de menu fica no topo com o ícone `Menu`. A barra de abas do aluno não muda, e o Tema dele continua na Conta.
 - **Caixa de envio:** uma linha com `[clipe] [campo com borda] [Enviar]`. Sem caixa externa, sem sombra e sem seta. "Encerrar" fica junto de "Falar com atendente".
 - **Tabela:** sem contorno; cabeçalho sem fundo, em peso 600, com fio inferior mais escuro; a primeira coluna alinhada à margem do texto da página. Os cartões do celular não mudam.

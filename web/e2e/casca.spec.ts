@@ -872,6 +872,7 @@ test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) =>
 
 // C35
 test('Enviar da altura do campo', async ({ page }) => {
+  test.setTimeout(90_000) // 2 páginas, sob máquina carregada
   let medidas = 0
   for (const largura of [1440, 390]) {
     await abrir(page, largura, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
@@ -974,18 +975,16 @@ test('barra do ranking embaixo do rótulo no estreito', async ({ page }) => {
   expect(medidas).toBe(8)
 })
 
-// C38: dicas do recolher e do usuário, só com a barra recolhida
-test('dica em recolher e no usuário com a barra recolhida', async ({ page }) => {
+// C38: dicas nos ícones do rodapé, só com a barra recolhida; a linha do usuário não tem dica
+test('dica nos ícones do rodapé com a barra recolhida, sem dica no usuário', async ({ page }) => {
   await instalar(page)
   for (const estado of ['recolhida', 'aberta']) {
     await page.addInitScript((e) => localStorage.setItem('one-barra', e), estado)
     await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
     await expect(page.locator(`[data-slot=sidebar][data-state=${estado === 'aberta' ? 'expanded' : 'collapsed'}]`), `${estado}: estado da barra`).toHaveCount(1)
     const rodape = page.locator('[data-sidebar=footer]')
-    for (const [botao, nome] of [
-      [rodape.getByRole('button', { name: 'Alternar barra lateral' }), 'Alternar barra lateral'],
-      [rodape.getByRole('button', { name: /Ana/ }), 'Ana'],
-    ] as const) {
+    for (const nome of ['Alternar barra lateral', 'Tema']) {
+      const botao = rodape.getByRole('button', { name: nome })
       await expect(botao, `${estado}: ${nome}`).toHaveCount(1)
       await botao.hover()
       if (estado === 'recolhida') await expect(page.getByRole('tooltip'), `${nome}: 1 dica com o nome`).toHaveText(nome)
@@ -993,9 +992,51 @@ test('dica em recolher e no usuário com a barra recolhida', async ({ page }) =>
         await page.waitForTimeout(800)
         await expect(page.getByRole('tooltip'), `${nome}: controle, sem dica com a barra aberta`).toHaveCount(0)
       }
-      await page.mouse.move(700, 400)
+      await page.mouse.move(700, 400, { steps: 5 })
+      await page.mouse.move(800, 500, { steps: 5 })
+      await expect(page.getByRole('tooltip'), `${estado} ${nome}: a dica some ao sair`).toHaveCount(0)
     }
+    const usuario = rodape.getByRole('button', { name: /Ana/ })
+    await expect(usuario, `${estado}: usuário`).toHaveCount(1)
+    await usuario.hover()
+    await page.waitForTimeout(800)
+    await expect(page.getByRole('tooltip'), `${estado}: usuário sem dica`).toHaveCount(0)
+    await usuario.click()
+    await expect(page.getByRole('menuitem', { name: 'Sair' }), `${estado}: menu do usuário`).toHaveCount(1)
+    await page.keyboard.press('Escape')
+    await page.mouse.move(700, 400, { steps: 5 })
+    await page.mouse.move(800, 500, { steps: 5 })
+    await expect(page.getByRole('tooltip'), `${estado}: nada preso depois do menu`).toHaveCount(0)
   }
+})
+
+// C40: no celular, o link cobre número e título e abre o chamado com 1 entrada no histórico
+test('link do cartão abre o chamado com 1 entrada no histórico', async ({ page }) => {
+  await instalar(page)
+  await abrir(page, 390, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  const link = page.getByRole('main').getByRole('link', { name: /ONE-123/ })
+  await expect(link, '1 link no cartão').toHaveCount(1)
+  await expect(link, 'nome com número e título').toHaveAccessibleName(/^ONE-123 Preciso/)
+  const antes = await page.evaluate(() => history.length)
+  await link.click()
+  await page.waitForURL('**/univag/chamados/ONE-123')
+  expect(await page.evaluate(() => history.length), '1 entrada a mais').toBe(antes + 1)
+  await page.goBack()
+  await page.waitForURL('**/univag/fila')
+})
+
+// C41: na gaveta, com foco na linha do usuário, um Esc fecha
+test('Esc fecha a gaveta em 1 toque a partir do usuário', async ({ page }) => {
+  await instalar(page)
+  await abrir(page, 390, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  await page.locator('header button:has(svg.lucide-menu)').click()
+  const gaveta = page.getByRole('dialog')
+  await expect(gaveta, 'gaveta aberta').toHaveCount(1)
+  const usuario = gaveta.getByRole('button', { name: /Ana/ })
+  await expect(usuario, '1 linha do usuário').toHaveCount(1)
+  await usuario.focus()
+  await page.keyboard.press('Escape')
+  await expect(gaveta, '1 Esc fecha').toHaveCount(0)
 })
 
 // C39: o Fechar da gaveta, com foco, tem opacidade 1 e contorno de 3:1 nos 3 temas
