@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 106,
+  "next_id": 107,
   "lessons": [
     {
       "id": "L-001",
@@ -1908,6 +1908,24 @@
       ],
       "created": "2026-11-05T17:18:26Z",
       "last_seen": "2026-11-05T17:18:26Z"
+    },
+    {
+      "id": "L-106",
+      "key": "ac_gap::ao decidir comparando um nome gravado com um nome lido na hora de um caso a renomeacao nome e copia e so o id identifica a pessoa",
+      "text": "Ao decidir comparando um nome gravado com um nome lido na hora, dê um caso à renomeação; nome é cópia, e só o id identifica a pessoa.",
+      "signal": "ac_gap",
+      "scope": "specs/coverage",
+      "status": "candidate",
+      "features": [
+        "historico-frases"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md Coverage: ATRIBUICAO renomeada; web/src/chamado.ts:49 (specs/coverage)"
+      ],
+      "created": "2026-11-05T20:44:09Z",
+      "last_seen": "2026-11-05T20:44:09Z"
     }
   ]
 }

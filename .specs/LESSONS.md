@@ -642,6 +642,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md finding 1 web/src/Autenticado.tsx:155 (web)
 - last seen: 2026-11-05T17:18:26Z
 
+### L-106 - Ao decidir comparando um nome gravado com um nome lido na hora, dê um caso à renomeação; nome é cópia, e só o id identifica a pessoa.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/coverage` · harmful: 0
+- features: historico-frases
+- evidence: verification.md Coverage: ATRIBUICAO renomeada; web/src/chamado.ts:49 (specs/coverage)
+- last seen: 2026-11-05T20:44:09Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
