@@ -7,13 +7,16 @@ import { abrir, api, me } from '../test/util'
 const icone = (el: HTMLElement) => el.querySelector('svg')
 
 describe('ícones do tema', () => {
-  // C17 (## Visual): Sun no controle de tema e Moon na escolha "Escuro"
+  // C17 (## Visual): o controle de tema mostra o ícone do tema atual (revisao-ux AC 10) e a escolha Escuro traz Moon
   it('Tema traz Sun e a escolha Escuro traz Moon', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
     const tema = await screen.findByRole('button', { name: 'Tema' })
-    expect(icone(tema)).toHaveClass('lucide-sun')
+    expect(icone(tema)).toHaveClass('lucide-monitor') // sem tema gravado, Sistema
     await userEvent.click(tema)
-    expect(icone(await screen.findByRole('button', { name: 'Escuro' }))).toHaveClass('lucide-moon')
+    const escuro = await screen.findByRole('button', { name: 'Escuro' })
+    expect(icone(escuro)).toHaveClass('lucide-moon')
+    await userEvent.click(escuro)
+    expect(icone(screen.getByRole('button', { name: 'Tema' }))).toHaveClass('lucide-moon')
   })
 })

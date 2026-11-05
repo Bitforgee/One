@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useMatch } from 'react-router'
 import { api } from './api'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 
 export type Imagens = { logo: number | null; icone: number | null; login: number | null; assistente: number | null }
 export type Aparencia = {
@@ -134,5 +135,19 @@ export function Contato({ contato }: { contato: Aparencia['contato'] }) {
         </a>
       )}
     </div>
+  )
+}
+
+// O diálogo "Contato do atendimento" (AC 43): o item Contato do menu e a linha da Conta abrem o mesmo.
+export function DialogoDeContato({ contato, aberto, aoMudar }: { contato: Aparencia['contato']; aberto: boolean; aoMudar: (aberto: boolean) => void }) {
+  return (
+    <Dialog open={aberto} onOpenChange={aoMudar}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>Contato do atendimento</DialogTitle>
+        </DialogHeader>
+        <Contato contato={contato} />
+      </DialogContent>
+    </Dialog>
   )
 }

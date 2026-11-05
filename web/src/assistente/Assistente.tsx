@@ -184,7 +184,7 @@ function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void
   return (
     <div className="my-2 flex items-center gap-2">
       <span>Isso resolveu?</span>
-      <Button size="sm" className="bg-success" onClick={() => avaliar(true)} disabled={pendente}>
+      <Button size="sm" onClick={() => avaliar(true)} disabled={pendente}>
         Sim
       </Button>
       <Button size="sm" variant="outline" onClick={() => avaliar(false)} disabled={pendente}>
@@ -300,7 +300,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => enviarComEnter(e, vazio)}
           placeholder="Escreva sua dúvida"
-          className="max-h-52 min-h-10 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          className="max-h-52 min-h-11 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
       </div>
       <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>
@@ -455,7 +455,7 @@ export function Assistente() {
 
   return (
     // a tela tem pelo menos a altura da janela (menos o cabeçalho de 49 px e o recuo de cima do main), para o compositor ficar no fundo mesmo sem conversa
-    <div className="mx-auto -mb-4 flex min-h-[calc(100svh-49px-1rem)] w-full max-w-3xl flex-col md:-mb-6 md:min-h-[calc(100svh-49px-1.5rem)]">
+    <div className="mx-auto -mb-4 flex min-h-[calc(100svh-49px-1rem-var(--barra,0px))] w-full max-w-3xl flex-col md:-mb-6 md:min-h-[calc(100svh-49px-1.5rem)]">
       <p className="my-2 flex gap-2 text-xs text-muted-foreground">
         <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />
         {AvisoExterno}
@@ -468,7 +468,7 @@ export function Assistente() {
       ) : desfecho ? (
         <Encerrada desfecho={desfecho} />
       ) : (
-        <div className="sticky bottom-0 z-10 mt-auto bg-background pt-2 pb-1.5">
+        <div className="sticky bottom-[var(--barra,0px)] z-10 mt-auto bg-background pt-2 pb-1.5">
           <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} anexos={anexos} />
         </div>
       )}

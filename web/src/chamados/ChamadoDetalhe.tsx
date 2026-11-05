@@ -130,7 +130,7 @@ function BotoesDeAcao({ pode, executar, pendente, abrir }: Acoes & { abrir: (mod
         </BotaoAcao>
       )}
       {pode('confirmar') && (
-        <BotaoAcao pendente={pendente} className="bg-success" onClick={() => executar('confirmar', {})}>
+        <BotaoAcao pendente={pendente} onClick={() => executar('confirmar', {})}>
           Confirmar resolução
         </BotaoAcao>
       )}
@@ -250,7 +250,7 @@ function CaixaDeAcoes({ folha, setFolha, erro, children }: { folha: boolean; set
     )
   return (
     <>
-      <Button className="fixed inset-x-0 bottom-0 z-30 h-11 rounded-none pb-[env(safe-area-inset-bottom)]" onClick={() => setFolha(true)}>
+      <Button className="fixed inset-x-0 bottom-[var(--barra,0px)] z-30 h-11 rounded-none pb-[env(safe-area-inset-bottom)]" onClick={() => setFolha(true)}>
         Ações
       </Button>
       <Sheet open={folha} onOpenChange={setFolha}>
@@ -310,7 +310,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
     <>
       <BotoesDeAcao {...acoes} abrir={abrir} />
       <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
-        id="resolucao" rotulo="Resolução" botao="Resolver" className="bg-success" pendente={pendente} valor={resolucao} setValor={setResolucao} />
+        id="resolucao" rotulo="Resolução" botao="Resolver" pendente={pendente} valor={resolucao} setValor={setResolucao} />
       <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
         id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
         <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, me } from './test/util'
 
-const admin = me({ papeis: ['ATENDENTE', 'ADMINISTRADOR'] })
+const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] }) // com ALUNO, a guarda de papel deixa abrir /solicitacoes
 const vazias = ['setores', 'categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []]] as const)
 // as 6 listas vazias de AC 45: [rota, caminho, ilustração, título, frase, botão]
 const Listas: [string, string, string, string, string, string?][] = [
@@ -23,8 +23,8 @@ describe('Tabela', () => {
   // aparencia-instituicao C3 (AC 3)
   it('selo de estado com cor por grupo', async () => {
     const grupos: [string, string, string][] = [
-      ['ABERTO', 'Aberto', 'bg-primary-subtle'],
-      ['EM_ATENDIMENTO', 'Em atendimento', 'bg-primary-subtle'],
+      ['ABERTO', 'Aberto', 'bg-accent'],
+      ['EM_ATENDIMENTO', 'Em atendimento', 'bg-accent'],
       ['AGUARDANDO_ALUNO', 'Aguardando aluno', 'bg-warning-subtle'],
       ['RESOLVIDO', 'Resolvido', 'bg-success/15'],
       ['FECHADO', 'Fechado', 'bg-success/15'],

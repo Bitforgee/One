@@ -1,20 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, Building2, ChartColumn, ChevronsUpDown, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
-import { useId, useState } from 'react'
-import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
+import { BookText, Building2, ChartColumn, ChevronsUpDown, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
+import { useId, useState, type CSSProperties } from 'react'
+import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
 import { api, type Me } from './api'
-import { Contato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
+import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
 import { AvisosPush } from './AvisosPush'
-import type { Sessao } from './sessao'
+import { telaInicial, useSair, type Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
 import { Button } from './ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Separator } from './ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from './ui/sidebar'
 import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
+import { useConsulta } from './ui/use-mobile'
 
 // Links por grupo (barra-lateral-grupos AC 1), nesta ordem; o grupo sem link para o papel some.
 const Menu = [
@@ -43,32 +43,44 @@ const Temas: ['light' | 'dark' | 'black' | 'system', string, typeof Sun][] = [
   ['system', 'Sistema', Monitor],
 ]
 
-// Claro, Escuro, Preto ou o do sistema; o ThemeProvider grava a escolha em one-tema (door 10, door 1 do redesign).
+// As 4 escolhas de tema; a atual leva aria-pressed (revisao-ux AC 10). O ThemeProvider grava a escolha em one-tema.
+export function OpcoesDeTema({ aoEscolher }: { aoEscolher: () => void }) {
+  const { theme, setTheme } = useTheme()
+  return (
+    <>
+      {Temas.map(([valor, rotulo, Icone]) => (
+    <Button
+      key={valor}
+      variant="ghost"
+      className="justify-start"
+      aria-pressed={theme === valor}
+      onClick={() => {
+        setTheme(valor)
+        aoEscolher()
+      }}
+    >
+      <Icone aria-hidden="true" />
+      {rotulo}
+    </Button>
+      ))}
+    </>
+  )
+}
+
+// O botão mostra o ícone do tema atual, o mesmo da opção no menu.
 function Tema() {
-  const { setTheme } = useTheme()
+  const { theme } = useTheme()
   const [aberto, setAberto] = useState(false)
+  const Atual = Temas.find(([valor]) => valor === theme)![2]
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" aria-label="Tema">
-          <Sun aria-hidden="true" />
+          <Atual aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="flex w-40 flex-col p-1">
-        {Temas.map(([valor, rotulo, Icone]) => (
-          <Button
-            key={valor}
-            variant="ghost"
-            className="justify-start"
-            onClick={() => {
-              setTheme(valor)
-              setAberto(false)
-            }}
-          >
-            <Icone aria-hidden="true" />
-            {rotulo}
-          </Button>
-        ))}
+        <OpcoesDeTema aoEscolher={() => setAberto(false)} />
       </PopoverContent>
     </Popover>
   )
@@ -79,6 +91,7 @@ export function tituloDaRota(pathname: string, numero?: string) {
   const caminho = pathname.split('/')[2]
   if (numero) return numero
   if (caminho === 'trocar-senha') return 'Trocar senha'
+  if (caminho === 'conta') return 'Conta'
   return Menu.find((m) => m.caminho === caminho)?.rotulo ?? ''
 }
 
@@ -170,14 +183,7 @@ function ContatoDoMenu({ contato }: { contato: InstituicaoPublica['contato'] }) 
           <span className="group-data-[collapsible=icon]:sr-only">Contato</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      <Dialog open={aberto} onOpenChange={setAberto}>
-        <DialogContent aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Contato do atendimento</DialogTitle>
-          </DialogHeader>
-          <Contato contato={contato} />
-        </DialogContent>
-      </Dialog>
+      <DialogoDeContato contato={contato} aberto={aberto} aoMudar={setAberto} />
     </SidebarMenu>
   )
 }
@@ -225,12 +231,17 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
 }
 
 // Cabeçalho do inset (door 3): botão, separador, o único h1 da tela; à direita, avisos (aluno) e tema.
-function Topo({ titulo, aluno, slug, icone, nome }: { titulo: string; aluno: boolean; slug?: string; icone: number | null; nome: string }) {
+// Com a barra de abas (aluno no celular) o topo perde o botão do menu e fica com a sigla, o título, os avisos e o tema.
+function Topo({ titulo, aluno, abas, slug, icone, nome }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string }) {
   return (
     <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background/90 backdrop-blur">
-      <div className="flex w-full min-w-0 items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ms-1" />
-        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+      <div className={`flex w-full min-w-0 items-center px-4 lg:px-6 ${abas ? 'gap-2' : 'gap-1 lg:gap-2'}`}>
+        {!abas && (
+          <>
+            <SidebarTrigger className="-ms-1" />
+            <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
+          </>
+        )}
         <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />
         <h1 className="truncate text-base font-medium">{titulo}</h1>
         <div className="ms-auto flex shrink-0 items-center gap-1">
@@ -240,6 +251,61 @@ function Topo({ titulo, aluno, slug, icone, nome }: { titulo: string; aluno: boo
       </div>
     </header>
   )
+}
+
+const Abas = [
+  { caminho: 'assistente', rotulo: 'Assistente', Icone: MessageCircle },
+  { caminho: 'solicitacoes', rotulo: 'Solicitações', Icone: ListChecks },
+  { caminho: 'conta', rotulo: 'Conta', Icone: CircleUser },
+]
+// A altura da barra de abas mais a área segura: o que o conteúdo reserva no fim (door 1).
+const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))' // os links, a borda de cima e a área segura
+
+// Barra de abas do aluno no celular (door 1): 3 colunas iguais, ícone sobre o rótulo; o destino ativo usa a cor de ação.
+// O detalhe de um chamado conta como Solicitações.
+function BarraDeAbas({ slug }: { slug?: string }) {
+  const { pathname } = useLocation()
+  return (
+    <nav aria-label="Navegação" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t bg-background pb-[env(safe-area-inset-bottom)]">
+      {Abas.map(({ caminho, rotulo, Icone }) => {
+        const ativo = pathname.startsWith(`/${slug}/${caminho}`) || (caminho === 'solicitacoes' && pathname.startsWith(`/${slug}/chamados/`))
+        return (
+          <RouterLink
+            key={caminho}
+            to={`/${slug}/${caminho}`}
+            aria-current={ativo ? 'page' : undefined}
+            className={`flex h-14 flex-col items-center justify-center gap-0.5 text-xs ${ativo ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
+          >
+            <Icone aria-hidden="true" className="size-5" />
+            <span>{rotulo}</span>
+          </RouterLink>
+        )
+      })}
+    </nav>
+  )
+}
+
+// O primeiro foco da tela (AC 8): leva o foco ao main sem mudar o endereço.
+function PularParaOConteudo() {
+  return (
+    <a
+      href="#conteudo"
+      onClick={(e) => {
+        e.preventDefault()
+        document.getElementById('conteudo')?.focus()
+      }}
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-3 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
+    >
+      Pular para o conteúdo
+    </a>
+  )
+}
+
+// Rotas de cada papel (AC 9): o que não está aqui (chamados/:numero, trocar-senha) a API responde.
+const Rotas = [...Menu.map(({ caminho, papeis }) => [caminho, papeis] as const), ['conta', ['ALUNO']] as const]
+const rotaPermitida = (papeis: string[], caminho: string) => {
+  const rota = Rotas.find(([c]) => c === caminho)
+  return !rota || rota[1].some((p) => papeis.includes(p))
 }
 
 // Aberta ou recolhida, gravada em one-barra (door 2): ausente ou outro valor = aberta.
@@ -254,46 +320,60 @@ function useBarra() {
   }
 }
 
+// Para onde a sessão manda quem abriu esta rota: o login, a instituição certa, a troca de senha ou a tela do papel (AC 9); nada = fica.
+function desvio({ me, isError, slug, pathname }: { me?: Me; isError: boolean; slug?: string; pathname: string }) {
+  if (isError) return `/${slug}`
+  if (!me) return undefined
+  if (me.instituicao.slug !== slug) return `/${me.instituicao.slug}`
+  if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return `/${slug}/trocar-senha`
+  const inicial = telaInicial(me)
+  const caminho = pathname.split('/')[2]
+  return !rotaPermitida(me.papeis, caminho) && caminho !== inicial ? `/${slug}/${inicial}` : undefined
+}
+
 export function Autenticado() {
-  const { slug, numero } = useParams()
-  const navigate = useNavigate()
+  const { slug } = useParams()
   const { pathname } = useLocation()
   const cliente = useQueryClient()
-  const barra = useBarra()
   const { data: me, isError } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
   const { data: instituicao } = useInstituicao(slug)
   useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
 
-  if (isError) return <Navigate to={`/${slug}`} replace />
+  const destino = desvio({ me, isError, slug, pathname })
+  if (destino) return <Navigate to={destino} replace />
   if (!me)
     return (
       <div className="flex justify-center py-12">
         <Spinner className="size-8" />
       </div>
     )
-  if (me.instituicao.slug !== slug) return <Navigate to={`/${me.instituicao.slug}`} replace />
-  if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return <Navigate to={`/${slug}/trocar-senha`} replace />
+  return <Casca me={me} slug={slug} ap={instituicao ?? normalizar({ nome: me.instituicao.nome })} />
+}
 
-  const ap = instituicao ?? normalizar({ nome: me.instituicao.nome })
+// A casca: barra lateral (ou, para o aluno no celular, a barra de abas), cabeçalho e a área de conteúdo.
+function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
+  const { numero } = useParams()
+  const { pathname } = useLocation()
+  const cliente = useQueryClient()
+  const barra = useBarra()
+  const sair = useSair()
+  const celular = useConsulta('(max-width: 767px)')
   const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
-
-  async function sair() {
-    await api('/api/auth/logout', {}).catch(() => undefined)
-    navigate(`/${slug}`)
-    cliente.removeQueries({ queryKey: ['me'] }) // o próximo login lê o /me de novo, como antes
-  }
+  const abas = celular && me.papeis.length === 1 && me.papeis[0] === 'ALUNO' // door 1: só quem tem apenas o papel ALUNO
 
   // O main é o SidebarInset; o contêiner de largura (door 5) leva os recuos, para as consultas medirem só a área útil.
   return (
-    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar}>
-      <Barra me={me} itens={itens} slug={slug} sair={sair} ap={ap} />
-      <SidebarInset className="min-w-0">
-        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} />
-        <div className="@container/main flex-1 px-4 py-4 md:py-6 lg:px-6">
+    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={abas ? ({ '--barra': AlturaDaBarra } as CSSProperties) : undefined}>
+      <PularParaOConteudo />
+      {!abas && <Barra me={me} itens={itens} slug={slug} sair={sair} ap={ap} />}
+      <SidebarInset id="conteudo" tabIndex={-1} className="min-w-0 outline-none">
+        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} abas={abas} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} />
+        <div className={`@container/main flex-1 px-4 py-4 md:py-6 lg:px-6 ${abas ? 'pb-[calc(var(--barra)+1rem)]' : ''}`}>
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </div>
       </SidebarInset>
+      {abas && <BarraDeAbas slug={slug} />}
     </SidebarProvider>
   )
 }

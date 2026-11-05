@@ -3,6 +3,7 @@ import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
 import { Route, Routes } from 'react-router'
 import { DefinirSenha, Login, PrimeiroAcesso, Raiz, TrocarSenha } from './acesso/Acesso'
+import { Conta } from './acesso/Conta'
 import { AplicaAparencia } from './aparencia'
 import { Aparencia } from './administracao/Aparencia'
 import { Cadastros } from './administracao/Cadastros'
@@ -56,6 +57,7 @@ function Rotas() {
           <Route element={<Autenticado />}>
             <Route path="trocar-senha" element={<TrocarSenha />} />
             <Route path="assistente" element={<Assistente />} />
+            <Route path="conta" element={<Conta />} />
             <Route path="solicitacoes" element={<Solicitacoes />} />
             <Route path="chamados/:numero" element={<ChamadoDetalhe />} />
             <Route path="fila" element={<Fila />} />
