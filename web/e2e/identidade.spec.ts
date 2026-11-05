@@ -1071,3 +1071,126 @@ test('prévia com serifa e perguntas em linhas', async ({ page }) => {
   }
   expect(await previa.evaluate((e) => [e, ...e.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundImage.includes('gradient')).length), 'sem gradiente na prévia').toBe(0)
 })
+
+// ---------- rodada 1 do Verifier (C47 a C53) ----------
+
+const Temas = ['light', 'dark', 'black'] as const
+const Marcas = [null, '#8a1538'] as const
+const luminancia = ([r, g, b]: number[]) => {
+  const c = [r, g, b].map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+const contraste = (x: number[], y: number[]) => {
+  const [claro, escuro] = [luminancia(x), luminancia(y)].sort((p, q) => q - p)
+  return (claro + 0.05) / (escuro + 0.05)
+}
+const emTema = (page: Page, tema: string) => page.addInitScript((t) => localStorage.setItem('one-tema', t), tema)
+
+// C47
+test('foco das perguntas com 3:1 nos três temas', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  let medidas = 0
+  for (const tema of Temas)
+    for (const marca of Marcas)
+      for (const largura of [390, 1440]) {
+        await emTema(page, tema)
+        await em(page, largura, '/univag/assistente', esperaAssistente, { aparencia: { ...comAparencia, cor: marca } })
+        const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
+        const [linha, outra] = [page.getByRole('button', { name: Perguntas[0], exact: true }), page.getByRole('button', { name: Perguntas[1], exact: true })]
+        await expect(linha, `${rotulo}: linha`).toHaveCount(1)
+        const indicador = (l: Locator) =>
+          l.evaluate((e) => {
+            const s = getComputedStyle(e)
+            const lista: { cor: string; espessura: number }[] = []
+            if (s.outlineStyle !== 'none') lista.push({ cor: s.outlineColor, espessura: parseFloat(s.outlineWidth) })
+            for (const m of s.boxShadow.matchAll(/((?:rgba?|oklab|oklch|color)\([^)]*\)|#[0-9a-f]+)\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px/g))
+              lista.push({ cor: m[1], espessura: parseFloat(m[5]) + Math.abs(parseFloat(m[2])) + Math.abs(parseFloat(m[3])) })
+            const fundo = window.__ux.pintar(window.__ux.pilha(e.parentElement!))
+            return lista.map((i) => ({ ...i, composta: window.__ux.pintar([...window.__ux.pilha(e.parentElement!), i.cor]), fundo })).filter((i) => i.espessura > 0 && i.composta.join() !== i.fundo.join())
+          })
+        expect(await indicador(outra), `${rotulo}: controle sem foco`).toEqual([])
+        for (let i = 0; i < 60 && !(await linha.evaluate((e) => e === document.activeElement)); i++) await page.keyboard.press('Tab')
+        await expect(linha, `${rotulo}: foco`).toBeFocused()
+        const achados = await indicador(linha)
+        expect(achados.length, `${rotulo}: indicador de foco visível`).toBeGreaterThan(0)
+        const melhor = achados.sort((a, b) => contraste(b.composta, b.fundo) - contraste(a.composta, a.fundo))[0]
+        expect(melhor.espessura, `${rotulo}: espessura`).toBeGreaterThanOrEqual(2)
+        expect(contraste(melhor.composta, melhor.fundo), `${rotulo}: contraste do foco`).toBeGreaterThanOrEqual(3)
+        medidas++
+      }
+  expect(medidas).toBe(12)
+})
+
+// C48
+test('borda do campo Responder com 3:1', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  let medidas = 0
+  for (const tema of Temas)
+    for (const marca of Marcas)
+      for (const papeis of [['ALUNO'], ['ATENDENTE', 'ADMINISTRADOR']])
+        for (const largura of [390, 1280]) {
+          await emTema(page, tema)
+          await em(page, largura, '/univag/chamados/ONE-123', (p) => p.locator('#resposta').waitFor(), { aparencia: { ...comAparencia, cor: marca }, papeis })
+          const campo = page.locator('#resposta')
+          await expect(campo).toHaveCount(1)
+          const [borda, fundo] = (await campo.evaluate((e) => [window.__ux.pintar([...window.__ux.pilha(e.parentElement!), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(e.parentElement!))])) as number[][]
+          expect(contraste(borda, fundo), `${tema} ${marca ?? 'sem cor'} ${papeis[0]} a ${largura}: borda do Responder`).toBeGreaterThanOrEqual(3)
+          medidas++
+        }
+  expect(medidas).toBe(24)
+})
+
+// C51
+test('nome do assistente entre a frase e a solicitação', async ({ page }) => {
+  await instalar(page)
+  for (const largura of [390, 1440]) {
+    await em(page, largura, '/univag/assistente', (p) => p.getByRole('link', { name: /Sua solicitação ONE-123 · Em atendimento/ }).waitFor())
+    const [frase, nome, link, primeira] = [page.getByText(Boasvindas, { exact: true }), page.getByText('Vagner, assistente virtual', { exact: true }), page.getByRole('link', { name: /Sua solicitação ONE-123/ }), page.getByRole('button', { name: Perguntas[0], exact: true })]
+    for (const l of [frase, nome, link, primeira]) await expect(l).toHaveCount(1)
+    const [f, n, s, p] = [await caixa(frase), await caixa(nome), await caixa(link), await caixa(primeira)]
+    expect(n.y, `${largura}: nome abaixo da frase`).toBeGreaterThanOrEqual(f.y + f.height - 1)
+    expect(s.y, `${largura}: solicitação abaixo do nome`).toBeGreaterThanOrEqual(n.y + n.height - 1)
+    expect(p.y, `${largura}: pergunta abaixo da solicitação`).toBeGreaterThanOrEqual(s.y + s.height - 1)
+  }
+})
+
+// C52
+test('variação abaixo do número a 360', async ({ page }) => {
+  for (const [anterior, texto] of [[0.67, '▲ 4,2 pts'], [0.712, '= sem variação']] as const) {
+    await em(page, 360, '/univag/indicadores', esperaIndicadores, {
+      rotas: async (p) => {
+        await p.clock.setFixedTime(new Date('2026-11-05T13:00:00Z'))
+        await p.route('**/api/indicadores*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoIndicadores(new URL(r.request().url()).searchParams.get('de') === '2026-10-27' ? anterior : 0.712)) }))
+      },
+    })
+    const [numero, variacao] = [page.getByText('71,2%', { exact: true }), page.getByText(texto).filter({ hasText: 'vs. período anterior' })]
+    await expect(variacao, `${texto}: variação`).toHaveCount(1)
+    const [n, v] = [await caixa(numero), await caixa(variacao)]
+    expect(v.y, `${texto}: abaixo do número`).toBeGreaterThanOrEqual(n.y + n.height - 1)
+    perto(v.x, n.x, `${texto}: alinhada à esquerda`)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${texto}: sem estouro`).toBe(true)
+  }
+})
+
+// C53 (a parte do Chromium)
+test.describe('PWA sem outros alfabetos', () => {
+  test.use({ serviceWorkers: 'allow' })
+  test('precache sem subconjuntos de outros alfabetos', async ({ page }) => {
+    await simularApi(page)
+    await page.goto('/univag')
+    await page.waitForFunction(async () => !!(await navigator.serviceWorker.ready).active)
+    await page.reload()
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller)
+    const urls = await page.evaluate(async () => {
+      const lista: string[] = []
+      for (const nome of await caches.keys()) for (const r of await (await caches.open(nome)).keys()) lista.push(r.url)
+      return lista
+    })
+    expect(urls.length).toBeGreaterThan(0)
+    expect(urls.filter((u) => /cyrillic|greek|vietnamese|latin-ext/.test(u))).toEqual([])
+    expect(urls.filter((u) => /\/assets\/public-sans-latin-wght-normal-[^/]+\.woff2/.test(u))).toHaveLength(1)
+    expect(urls.filter((u) => /\/assets\/source-serif-4-latin-wght-normal-[^/]+\.woff2/.test(u))).toHaveLength(1)
+  })
+})
