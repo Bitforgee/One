@@ -480,6 +480,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/administracao/Matriculas.tsx:44 (web)
 - last seen: 2026-11-05T02:01:12Z
 
+### L-079 - Uma cláusula sobre a cor pintada precisa de prova no navegador; no jsdom o teste que injeta o próprio CSS só confere a si mesmo.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: revisao-ux
+- evidence: web/src/administracao/aparencia.test.tsx:74 (web)
+- last seen: 2026-11-05T02:36:50Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

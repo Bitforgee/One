@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 79,
+  "next_id": 80,
   "lessons": [
     {
       "id": "L-001",
@@ -1422,6 +1422,24 @@
       ],
       "created": "2026-11-05T02:01:12Z",
       "last_seen": "2026-11-05T02:01:12Z"
+    },
+    {
+      "id": "L-079",
+      "key": "surviving_mutant::uma clausula sobre a cor pintada precisa de prova no navegador no jsdom o teste que injeta o proprio css so confere a si mesmo",
+      "text": "Uma cláusula sobre a cor pintada precisa de prova no navegador; no jsdom o teste que injeta o próprio CSS só confere a si mesmo.",
+      "signal": "surviving_mutant",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "revisao-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/administracao/aparencia.test.tsx:74 (web)"
+      ],
+      "created": "2026-11-05T02:36:50Z",
+      "last_seen": "2026-11-05T02:36:50Z"
     }
   ]
 }

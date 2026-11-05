@@ -2,200 +2,202 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: 56cf9d3..0487fab
-**Round**: 1 - full
+**Diff range**: 0487fab..887e336 (base of the feature `56cf9d3`)
+**Round**: 2 - scoped
 **Verifier**: fresh sub-agent with no inherited context (author != verifier); it wrote none of this code, fixed nothing and committed nothing
 
-Every proof was run by the Verifier at `0487fab`:
-- Vitest: 469 passed in 48 files.
-- `npm --prefix web run build`: ok.
-- Layout Playwright against `vite preview :5199`: 148 passed.
-- The whole e2e suite against the Verifier's own image of `0487fab` on :8087 (database `one_revisao_verif`, bucket `one-revisao-ux-verif`, institution `e2e` created by the CLI): 171 passed, 0 failed.
-- crapper: exit 0. dryer: no candidates.
-- C62: exit 0.
+Scope: the diff `0487fab..887e336` (`b92466d`, `6ddc2cd`, `17df8a8`, `ba491bf`, `887e336`) and every verdict that was not PASS in round 1 (C48, C56, C57, C59 and findings 5, 6 and 7). Everything else is carried from `0487fab` and says so.
 
-The verdict is FAIL for 4 reasons. One check is false in the product even though its test is green (C57: the chart still uses the brand colour). One screen decision has no check, and the product does not deliver it (C48: the Matrículas steps are not numbered visibly). One proof command selects no test (C56). One invariant is not met as written (C59: edits outside the closed list).
+Every proof was re-run by the Verifier at `887e336`, one invocation per target:
+- `cd web && npx vitest run` (verbose): 473 passed in 48 files, exit 0. Every named proof of C69, C70 and C71 appears as run and passed (`texto reserva fala em solicitação`; `operador sem outro papel vai para Instituições` x3 for `/fila`, `/assistente`, `/artigos`; `prévia muda antes de salvar`; `texto de ajuda dos anexos`), and so do `Matrículas em 3 passos com modelo e erros por linha: os 3 passos numerados` and `Fila com categoria, data e Mais antigos primeiro`.
+- `npm --prefix web run build`: exit 0. It was run after the last test-only edit, so the builder's note about the order is closed.
+- `npm --prefix web run coverage`, then `crapper --use-existing-coverage -s src --threshold 9.99`: exit 0. `dryer` with the C60 list: "No duplicate candidates found".
+- Layout Playwright (`arranjo`, `celular`, `aparencia`, `instituicoes`, `push`, `ux`) against `npx vite preview --port 5199` of that build: 150 passed in 1.8 min. It includes `detalhe da Fila em texto corrido no celular` (`ux.spec.ts:1481`), `gráficos com a mesma cor calma` (`:1515`), `sem emoji nem gradiente` (`:1352`), the C57 sweep (`:1373`), `Mais antigos primeiro acima da Fila` (`:906`) and `colunas largas somem no estreito` (`arranjo.spec.ts:1078`).
+- `git diff --quiet 56cf9d3 HEAD -- api api.Tests`: exit 0. Nothing outside `web/` and `.specs/` changed in `0487fab..HEAD`.
+- Real e2e: **re-run, not carried**. The diff touches what the real specs exercise: the Fila row (C64 taps "a linha da Fila" at 390 px), the chart colour, `sw.ts` and Matrículas. The Verifier ran it on its own image of `887e336`, built from `git archive` with no worktree, on :8087 (database `one_revisao_verif2`, bucket `one-revisao-ux-verif2`, institution `e2e` created by the CLI, `E2E_CONTAINER=one-revisao-ux-verif2`). `npx playwright test` gave 173 passed, 0 failed in 6.0 min. `ux-real.spec.ts:81` (C63) and `:143` (C64) passed. No `429` happened.
+
+The verdict is FAIL for 3 reasons. Each of the 3 is narrower than in round 1, and all four round-1 product defects are fixed.
+1. **C71.** The new proof of the light preview's painted colour does not reach the painted colour. The test writes the CSS rule that paints the button itself. A real regression that breaks the light preview in the browser survives every proof (fault F7).
+2. **C48.** The amended claim requires the step number to have a box with height > 0 and a contrast of 4.5:1 or more. No proof measures either one. The product does meet it, by the Verifier's own measurement.
+3. **C59.** Two existing assertions were edited outside the closed list (`interface.test.ts` `--chart-1`/`--chart-2` rows; `sw.test.ts` "push sem JSON legível"). Both are forced by C73 and C69 and recorded in the Handoff, and neither weakens anything.
+
+The OPERADOR coverage is still partial: 8 of its 11 out-of-role routes have no case.
 
 ## Binding sources
 
+Step 1 was re-run only for the screens the fix touched: Matrículas, Fila at 390 px and Indicadores. The rest is carried from `0487fab`.
+
 | Source | Opened | Contradiction | Uncovered |
 | --- | --- | --- | --- |
-| `pesquisa.md` (binding) | yes, read in full, 116 lines | none. §3 suggests "Conversa"; door 1 chose "Assistente", which is a plan decision, not something a check made up | - |
-| `auditoria.md` (binding) | yes, read in full, 104 lines | none | - (findings 2, 5, 6, 19, 24, 25, 31, 35 and 44 are neither addressed nor listed in `Out of scope`. They are informational because the plan's scope is the user's decision) |
-| `plan.md` `## Screens`, Matrículas: "3 passos numerados" (AC 35) | yes, `plan.md:131-132,219` | none | the visible numbering. C48 only asserts an `ol` with 3 `li` (`administracao/revisao.test.tsx:126-128`). In the product, each `li` is `display:flex` (`Matriculas.tsx:44`), so no `::marker` is generated. Measured: `[{display:"flex",marker:"normal"} x3]`, and no number is drawn at 390 or 1440 px. The `ol` keeps a blank 24 px gutter (`ps-5` + `ps-1`) where the numbers should be. Screen readers get "list, 3 items" with list positions but no step number, and the step titles are `p`, not headings |
-| `plan.md` Landing door 3 / AC 43 / P6: "o gráfico ... não a usa" | yes, `plan.md:236`, `checks.md:113` | none | the chart colour. `index.css:37,77` still has `--chart-1: var(--primary)`, and `Indicadores.tsx:141` paints "Categorias por conversas" with it. Measured at 1440 px with `#8a1538`: `--primary` = `rgb(138, 21, 56)`, bar fills `["rgb(138, 21, 56)", "oklch(0.6 0.1 200)"]`. C57's sweep measures before Recharts draws the bars (its own Indicadores wait is `getByText('Indicador principal')`, `simulada.ts`; the Verifier's capture taken with the same wait shows empty chart axes), so the clause `ux.spec.ts:1393` is vacuous |
-| `plan.md` `## Screens`, all other screens | yes, enumerated per screen (below) | none | - |
-
-Per-screen enumeration of copy and arrangement against `## Screens`:
-- **Casca do aluno.** Bar at the base: C13. 3 equal columns, icon over a 12 px label: C13. Active tab in the action colour at weight 600: C14. Space reserved for the bar: C15. Top bar without a menu button: C16.
-  - The top bar also keeps the Tema button (and Avisos, when push is available), which the screen does not draw (Handoff lote 1, item 4). It is an extra element. The Screens sentence is not exclusive, so it is not a contradiction.
-  - C16 proves the initials case only. A configured institution icon in the top bar is not measured.
-- **Conta.** Each item of the list maps to C17 and C19. Order: C17. 52 px rows: C19. Sair in the destructive colour, last: C19.
-- **Assistente.** Composer of 44 px: C26. "Falar com atendente" on its own line: C26. Attachment help: C27. "Isso resolveu?" in the flow: C21, C22. 68ch: C25.
-- **Transferido.** Single block with a border: C24. Title, sentence, contact and button: C23. Invitation removed: C23.
-- **Minhas solicitações.** Dense rows: C29. 3 lines: C31. Next step: C32.
-- **Fila.** C29, C30, C31, C33 and C67. See finding 5: the 390 px row dropped the "Responsável".
-- **Detalhe.** C34 to C38.
-- **Diálogos de formulário.** C39, C40.
-- **Erros de carregamento.** C41, plus C28 in the assistant.
-- **Indicadores.** C42, C43.
-- **Artigos.** C44 to C46. The icon placement in Documentos is not measured (C45 covers Artigos only).
-- **Usuários.** C47.
-- **Matrículas.** Numbering: uncovered (see above).
-- **Cadastros.** C49.
-- **Aparência.** C50, C51.
+| `pesquisa.md` (binding) | carried from 0487fab | none | - |
+| `auditoria.md` (binding) | carried from 0487fab | none | - |
+| `plan.md` `## Screens`, Matrículas: "3 passos numerados" (AC 35) | yes, verified at 887e336: `Matriculas.tsx:42-55`, rendered at 390 px in 3 themes | none. Each step is an `li` labelled by an `h2` that carries a visible number in a 24 px circle | - (the visible number is now covered by C48. Its painting is not measured by a proof; see C48) |
+| `plan.md` Landing door 3 / AC 43 / P6: "o gráfico ... não a usa" | yes, verified at 887e336: `index.css:37-38,77-78` | none. `--chart-1` and `--chart-2` are `color-mix(in oklch, var(--marca, …) 45%, oklch(0.6 / 0.8 0 none))`, and the C57 sweep now waits for a drawn bar (`ux.spec.ts:1381`) | - |
+| `plan.md` `## Screens`, Fila (P2, C33 amended) | yes, verified at 887e336: `Chamados.tsx:45,57-60` | none. The 390 px row shows "aberto … · categoria · responsável" as one run of text | - |
+| `plan.md` `## Screens`, all other screens | carried from 0487fab | none | - |
 
 ## Checks
 
+Checks C33, C48, C56, C57, C59 to C65 and C69 to C73 were verified at 887e336. The others are carried from 0487fab: their proofs were re-run at 887e336 (in the counts above), and their citations were refreshed where the fix moved lines. In `ux.spec.ts`, lines from 915 move by +5 and lines from 1375 by +7. In `navegacao.test.tsx` every line moves by +2. In `chamados/revisao.test.tsx` lines from 81 move by +1, and in `administracao/revisao.test.tsx` lines from 132 move by +5.
+
 | Check | Claim | Proof run | Evidence | Result |
 | --- | --- | --- | --- | --- |
-| C1 | 6 types at 44 px or more at 390 px | PW `alvos de 44 px abaixo de 768 em todas as telas` passed | `e2e/ux.spec.ts:150-151` at least 1 of each type, then the minimum height | PASS |
-| C2 | 44 px with a coarse pointer at 1024; Consultar is 36 px without touch | PW `alvos de 44 px com ponteiro grosso a 1024` passed | `e2e/ux.spec.ts:177` `matchMedia('(pointer: coarse)')` `toBe(true)`; `:188` `toBe(false)` | PASS |
-| C3 | fields at 16 px in both conditions | PW `campos de 16 px abaixo de 768 e com ponteiro grosso` passed | `e2e/ux.spec.ts:207-208` `fontes.filter((f) => f.fonte < 16)` `toEqual([])` | PASS |
-| C4 | X named "Fechar", 44 x 44 | PW `X de 44 px com o nome Fechar` + VT `Dialog e Sheet fecham por um botão Fechar` passed | `e2e/ux.spec.ts:218-219` (no "Close"); `src/ux.test.tsx:44-45` | PASS |
-| C5 | field border at 3:1, 18 measurements | PW `borda dos campos com contraste de 3:1 nos três temas` passed | `e2e/ux.spec.ts:282` `contraste(composta, fundo)` `>= 3` | PASS |
-| C6 | skeleton at 1.3:1 | PW `esqueleto com contraste de 1,3:1 nos três temas` passed | `e2e/ux.spec.ts:302` count 3; `:306` `>= 1.3` | PASS |
-| C7 | badges at 4.5:1 | PW `selos com contraste de 4,5:1 nos três temas` passed | `e2e/ux.spec.ts:339,342` | PASS |
-| C8 | no green button; `success` only in 3 files | PW `nenhum botão verde` + VT `verde só nos selos` passed | `e2e/ux.spec.ts:355-356` `data-variant`; `src/ux.test.tsx:65` `toEqual(['chamados/Chamados.tsx','conhecimento/comum.tsx','index.css'])` | PASS |
-| C9 | skip link first, focus goes to `main` | VT `pular para o conteúdo leva o foco ao main` (3 cases) passed | `src/ux.test.tsx:78,82` | PASS |
-| C10 | 24 out-of-role redirects; own routes open | VT `rota de outro papel volta à tela inicial` (25) passed | `src/ux.test.tsx:101-102` `[9, 10, 5]` / 24; `:108` `/univag/${Inicial[papel]}` | PASS (OPERADOR: see Coverage) |
-| C11 | theme button shows and marks the current theme | VT `botão de tema mostra e marca o tema atual` (4) passed | `src/ux.test.tsx:131` `svg` innerHTML equal; `:134` `aria-pressed` | PASS |
-| C12 | 3 tabs, the active one has `aria-current` | VT `barra de abas do aluno com 3 destinos e o ativo marcado` (3) passed | `src/acesso/navegacao.test.tsx:41,46` | PASS |
-| C13 | fixed bar, 3 x 130 px, icon over a 12 px label | PW `barra de abas: 3 colunas iguais...` passed | `e2e/ux.spec.ts:400-403` position `fixed`, bottom 844, width 390 | PASS |
-| C14 | active tab in the action colour at weight 600 | PW `aba ativa na cor de ação e peso 600` passed | `e2e/ux.spec.ts:438` `toEqual(primaria)` | PASS |
-| C15 | safe area 34 px; nothing focusable under the bar | PW `nada focável fica sob a barra de abas` passed | `e2e/ux.spec.ts:473` `paddingBottom` `'34px'`; `:468` | PASS |
-| C16 | student top bar without a menu button | PW `topo do aluno sem botão de menu` passed | `e2e/ux.spec.ts:495-496` | PASS |
-| C17 | Conta rows in order, depending on push and contact | VT `Conta lista as linhas...` (3) passed | `src/acesso/navegacao.test.tsx:62-63` name and masked CPF; the order in the same `it.each` (line 54) | PASS |
-| C18 | each Conta row acts | VT `linhas da Conta agem` (5) passed | `src/acesso/navegacao.test.tsx:81` `one-tema` `dark`; `:89` `/api/push/subscricao`; `:99`; `:107`; `:118` logout | PASS |
-| C19 | 52 px rows, block without actions, Sair last | PW `Conta com linhas de 52 px e Sair por último` passed | `e2e/ux.spec.ts:540-541` 51 to 53 px; `:546` `a, button` count 0 | PASS |
-| C20 | no tab bar at 768 or for staff | PW `sem barra de abas a 768 px e para a equipe` passed | `e2e/ux.spec.ts:514-515` | PASS |
-| C21 | "Isso resolveu?" right after the last answer, outline | VT passed | `src/assistente/revisao.test.tsx:37` `nextElementSibling`; `:41-42` `data-variant` `outline` | PASS |
-| C22 | in the flow, within 24 px, not fixed | PW `Isso resolveu no fluxo sob a resposta` passed | `e2e/ux.spec.ts:696-697` | PASS |
-| C23 | transfer block; invitation at 0 | VT `transferência mostra para onde foi e tira o convite` passed | `src/assistente/revisao.test.tsx:64` `queryAllByText(Convite)` 0 | PASS |
-| C24 | single block with a border | PW `Transferido num bloco único com borda` passed | `e2e/ux.spec.ts:734-736` | PASS |
-| C25 | 68ch in the assistant and in the detail | PW `balão com até 68 caracteres de largura` passed | `e2e/ux.spec.ts:762,770` `largura <= limite + 1` | PASS |
-| C26 | 44 px composer; Falar on its own line, outline | PW + VT passed | `e2e/ux.spec.ts:782`; `src/assistente/revisao.test.tsx:79,83` | PASS |
-| C27 | attachment help in 4 cases | VT passed | `src/assistente/revisao.test.tsx:91,95,97,100` | PASS |
-| C28 | send error in place of the answer, with Reenviar | VT (3) + PW `erro de envio entre o balão e o compositor` passed | `src/assistente/revisao.test.tsx:129,145` same body; `e2e/ux.spec.ts:807-808` | PASS |
-| C29 | rows with a divider, no card | PW `listas em linhas com divisória...` passed | `e2e/ux.spec.ts:853` `['0px','0px','0px','none']`; `:855-856` divider | PASS |
-| C30 | relative date by calendar day in the time zone | VT `data relativa aberto hoje ontem e há N dias` passed | `src/chamados/revisao.test.tsx:41-42` | PASS |
-| C31 | row in 3 lines | PW `linha de solicitação em 3 linhas` passed | `e2e/ux.spec.ts:885,891-892,899-900` | PASS |
-| C32 | next step per state | VT `próximo passo por estado` (5) passed | `src/chamados/revisao.test.tsx:63` | PASS |
-| C33 | category and date; "Mais antigos primeiro" first | VT + PW passed | `src/chamados/revisao.test.tsx:79-80`; `e2e/ux.spec.ts:914` | PASS |
-| C34 | bar per state | PW `barra do detalhe com a ação principal do estado` passed | `e2e/ux.spec.ts:972` `toEqual(botoes)`; `:980` Sheet order; `:963` none at 1024 | PASS |
-| C35 | Responder scrolls and focuses | PW passed | `e2e/ux.spec.ts:991,994` | PASS |
-| C36 | student has no bar; Cancelar as a text button | PW + VT passed | `e2e/ux.spec.ts:1028,1036`; `src/chamados/revisao.test.tsx:98-99` | PASS |
-| C37 | Enviar above the bar | PW passed | `e2e/ux.spec.ts:1006` | PASS |
-| C38 | no form for staff in RESOLVIDO and FECHADO | VT passed | `src/chamados/revisao.test.tsx:116-117` | PASS |
-| C39 | full-screen dialogs, 6 cases | PW (7) passed | `e2e/ux.spec.ts:1093` `[0,0,360,740]`; `:1101,1105,1107` | PASS |
-| C40 | field error below the field | VT (6) + PW passed | `src/administracao/revisao.test.tsx:65-66`; `e2e/ux.spec.ts:1141` | PASS |
-| C41 | load error with Tentar de novo, 11 screens; 404 keeps the detail | VT (13) passed | `src/ux.test.tsx:199-200,216-217` | PASS |
-| C42 | one period control, highlights, Ver tabela | VT (4) passed | `src/indicadores/revisao.test.tsx:29-30,39,53-54` | PASS |
-| C43 | 2 columns at 390 | PW passed | `e2e/ux.spec.ts:1160-1164` | PASS |
-| C44 | one badge, indexing as an icon | VT (11) passed | `src/conhecimento/revisao.test.tsx:32,39,42,51,60` | PASS |
-| C45 | icon beside the title | PW passed | `e2e/ux.spec.ts:1187-1189` | PASS |
-| C46 | "Novo" hidden when the list is empty | VT (2) passed | `src/conhecimento/revisao.test.tsx:66-78` | PASS |
-| C47 | formatted CPF and search | VT (7) + PW passed | `src/administracao/revisao.test.tsx:94-95,110`; `e2e/ux.spec.ts:1200` | PASS |
-| C48 | 3 numbered steps, template download, errors per line | VT (3) + PW passed | `src/administracao/revisao.test.tsx:126` `tagName` `OL`, `:128` 3 items, `:163`; `e2e/ux.spec.ts:1213` header | FAIL - precision gap. The `ol` tag is asserted, but the numbering AC 35 asks for is not rendered (`Matriculas.tsx:44` `flex` removes `::marker`) |
-| C49 | whole row is the target, 48 px | PW passed | `e2e/ux.spec.ts:1245,1247` | PASS |
-| C50 | form first; Ver prévia | PW passed | `e2e/ux.spec.ts:1262-1263,1267-1268,1273` | PASS |
-| C51 | dark preview the same as the app | PW passed | `e2e/ux.spec.ts:1291-1293` | PASS |
-| C52 | tinted neutrals, Black stays `#000` | VT + PW passed | `src/ux.test.tsx:149-150`; `e2e/ux.spec.ts:617,620` (14) | PASS |
-| C53 | 27 contrasts at 4.5:1 | PW passed | `e2e/ux.spec.ts:641,644` | PASS |
-| C54 | opsz 32; no new font | PW + VT passed | `e2e/ux.spec.ts:653`; `src/ux.test.tsx:160-161` | PASS |
-| C55 | 4 text sizes per screen | PW passed | `e2e/ux.spec.ts:1338-1339` | PASS |
-| C56 | no Sparkles, emoji or gradient | VT `sem Sparkles no código` passed; PW `-g "sem emoji em título nem gradiente"` selects no test: "No tests found", exit 1 | `src/ux.test.tsx:227`. The test that exists is named `sem emoji nem gradiente` (`e2e/ux.spec.ts:1347`, passed, `:1360-1361`) | FAIL - the proof as written selects no test (L-022) |
-| C57 | action colour only in the primary button, active item, link and focus; never in the chart | PW (2) passed | `e2e/ux.spec.ts:1393` (chart), `:1398`, `:1414`. The chart clause never measures a bar | FAIL - the product contradicts it: the bar fill equals `--primary` (`index.css:37,77`, `Indicadores.tsx:141`) |
-| C58 | the student never reads "chamado" | VT (5) passed | `src/ux.test.tsx:231` `not.toMatch(/chamado/i)`; `:266` | PASS (residual: finding 7) |
-| C59 | Vitest and build pass; edits only from the closed list | `vitest run` 469 passed; build ok | the Handoff lists 13 edits "Fora da lista" plus the `tabela.test.tsx` fixture | FAIL - the second half of the claim is not met (see Edits outside the closed list) |
-| C60 | crapper 9.99; dryer below 0.8 | crapper exit 0 (top 9.8 `Sidebar`); dryer "No duplicate candidates found", also with `src/LinksDaResposta.tsx` added | `web/.metrics/crap.edn`, `dry.edn` | PASS |
-| C61 | layout suite | PW 6 files: 148 passed | `e2e/ux.spec.ts:1` and the others | PASS |
-| C62 | no `api/` change | `git diff --quiet 56cf9d3 HEAD -- api api.Tests` exit 0; `--name-only` outside `web/` and `.specs/`: none | - (diff) `checks.md:656` | PASS |
-| C63 | real e2e, student tabs and Sair | `ux-real.spec.ts:81` passed against the :8087 image (1.0 min) | `e2e/ux-real.spec.ts:111,118,124` `aria-current`; `:136` `toBe(401)` | PASS |
-| C64 | 6 clicks, 1 Sheet | `ux-real.spec.ts:143` passed (1.1 min) | `e2e/ux-real.spec.ts:212` the 6 clicks; `:214` `toBe(1)` | PASS |
-| C65 | whole e2e suite against :8087 | `npx playwright test`: 171 passed, 0 failed | `e2e/anexos.spec.ts:140` passed with the closed-list edit 7 | PASS |
-| C66 | the action sheet keeps what was typed | PW passed | `e2e/ux.spec.ts:1435,1437` | PASS |
-| C67 | "Aberto" column on one line | PW passed | `e2e/ux.spec.ts:1457-1458,1462,1465` | PASS |
-| C68 | links as buttons in the staff conversation | VT passed | `src/chamados/revisao.test.tsx:187-188` | PASS |
+| C1 | 6 types at 44 px or more at 390 px | PW passed at 887e336 | `e2e/ux.spec.ts:150-151` (carried from 0487fab) | PASS |
+| C2 | 44 px with a coarse pointer at 1024 | PW passed at 887e336 | `e2e/ux.spec.ts:177,188` (carried from 0487fab) | PASS |
+| C3 | fields at 16 px | PW passed at 887e336 | `e2e/ux.spec.ts:207-208` (carried from 0487fab) | PASS |
+| C4 | X named "Fechar", 44 x 44 | PW + VT passed at 887e336 | `e2e/ux.spec.ts:218-219`; `src/ux.test.tsx:44-45` (carried from 0487fab) | PASS |
+| C5 | field border at 3:1 | PW passed at 887e336 | `e2e/ux.spec.ts:282` (carried from 0487fab) | PASS |
+| C6 | skeleton at 1.3:1 | PW passed at 887e336 | `e2e/ux.spec.ts:302,306` (carried from 0487fab) | PASS |
+| C7 | badges at 4.5:1 | PW passed at 887e336 | `e2e/ux.spec.ts:339,342` (carried from 0487fab) | PASS |
+| C8 | no green button | PW + VT passed at 887e336 | `e2e/ux.spec.ts:355-356`; `src/ux.test.tsx:65` (carried from 0487fab) | PASS |
+| C9 | skip link | VT passed at 887e336 | `src/ux.test.tsx:78,82` (carried from 0487fab) | PASS |
+| C10 | 24 out-of-role redirects | VT (25) passed at 887e336 | `src/ux.test.tsx:101-102,108` (carried from 0487fab) | PASS |
+| C11 | theme button | VT passed at 887e336 | `src/ux.test.tsx:131,134` (carried from 0487fab) | PASS |
+| C12 | 3 tabs, active `aria-current` | VT passed at 887e336 | `src/acesso/navegacao.test.tsx:43,48` (refreshed, carried from 0487fab) | PASS |
+| C13 | fixed bar, 3 x 130 px | PW passed at 887e336 | `e2e/ux.spec.ts:400-403` (carried from 0487fab) | PASS |
+| C14 | active tab in the action colour, weight 600 | PW passed at 887e336 | `e2e/ux.spec.ts:438` (carried from 0487fab) | PASS |
+| C15 | safe area; nothing under the bar | PW passed at 887e336 | `e2e/ux.spec.ts:468,473` (carried from 0487fab) | PASS |
+| C16 | no menu button for the student | PW passed at 887e336 | `e2e/ux.spec.ts:495-496` (carried from 0487fab) | PASS |
+| C17 | Conta rows in order | VT passed at 887e336 | `src/acesso/navegacao.test.tsx:56,64-65` (refreshed, carried from 0487fab) | PASS |
+| C18 | each Conta row acts | VT passed at 887e336 | `src/acesso/navegacao.test.tsx:83,91,101,109,120` (refreshed, carried from 0487fab) | PASS |
+| C19 | 52 px rows, Sair last | PW passed at 887e336 | `e2e/ux.spec.ts:540-541,546` (carried from 0487fab) | PASS |
+| C20 | no tab bar at 768 or for staff | PW passed at 887e336 | `e2e/ux.spec.ts:514-515` (carried from 0487fab) | PASS |
+| C21 | "Isso resolveu?" after the answer | VT passed at 887e336 | `src/assistente/revisao.test.tsx:37,41-42` (carried from 0487fab) | PASS |
+| C22 | in the flow, within 24 px | PW passed at 887e336 | `e2e/ux.spec.ts:696-697` (carried from 0487fab) | PASS |
+| C23 | transfer block; invitation at 0 | VT passed at 887e336 | `src/assistente/revisao.test.tsx:64` (carried from 0487fab) | PASS |
+| C24 | single bordered block | PW passed at 887e336 | `e2e/ux.spec.ts:734-736` (carried from 0487fab) | PASS |
+| C25 | 68ch | PW passed at 887e336 | `e2e/ux.spec.ts:762,770` (carried from 0487fab) | PASS |
+| C26 | 44 px composer | PW + VT passed at 887e336 | `e2e/ux.spec.ts:782`; `src/assistente/revisao.test.tsx:79,83` (carried from 0487fab) | PASS |
+| C27 | attachment help, 4 cases | VT passed at 887e336 | `src/assistente/revisao.test.tsx:91,95,97,100` (carried from 0487fab) | PASS |
+| C28 | send error with Reenviar | VT + PW passed at 887e336 | `src/assistente/revisao.test.tsx:129,145`; `e2e/ux.spec.ts:807-808` (carried from 0487fab) | PASS |
+| C29 | rows with a divider | PW passed at 887e336 | `e2e/ux.spec.ts:853,855-856` (carried from 0487fab) | PASS |
+| C30 | relative date by calendar day | VT passed at 887e336 | `src/chamados/revisao.test.tsx:41-42`. `:42` is now `getByText(texto, { exact: false })`; see "exact: false" below | PASS |
+| C31 | row in 3 lines | PW passed at 887e336 | `e2e/ux.spec.ts:885,891-892,899-900` (carried from 0487fab) | PASS |
+| C32 | next step per state | VT passed at 887e336 | `src/chamados/revisao.test.tsx:63` (carried from 0487fab) | PASS |
+| C33 | category, responsável and date in the Fila, no student or sector; category wraps at 390 (no ellipsis, `scrollWidth <= clientWidth`); "Mais antigos primeiro" first | VT `Fila com categoria, data e Mais antigos primeiro` + PW `Mais antigos primeiro acima da Fila` passed at 887e336 | `src/chamados/revisao.test.tsx:79-81` (category, date, `'sem responsável'`), `:83` no student or sector; `e2e/ux.spec.ts:914`, `:918` `expect(m.corte).not.toBe('ellipsis')`, `:919` `expect(m.sobra).toBeLessThanOrEqual(0)`; `e2e/arranjo.spec.ts:1096` `toContainText('Carla Regina de Souza')` | PASS |
+| C34 | bar per state | PW passed at 887e336 | `e2e/ux.spec.ts:977,985,968` (refreshed, carried from 0487fab) | PASS |
+| C35 | Responder scrolls and focuses | PW passed at 887e336 | `e2e/ux.spec.ts:996,999` (refreshed, carried from 0487fab) | PASS |
+| C36 | no bar for the student | PW + VT passed at 887e336 | `e2e/ux.spec.ts:1033,1041`; `src/chamados/revisao.test.tsx:99-100` (refreshed, carried from 0487fab) | PASS |
+| C37 | Enviar above the bar | PW passed at 887e336 | `e2e/ux.spec.ts:1011` (refreshed, carried from 0487fab) | PASS |
+| C38 | no form in RESOLVIDO and FECHADO | VT passed at 887e336 | `src/chamados/revisao.test.tsx:117-118` (refreshed, carried from 0487fab) | PASS |
+| C39 | full-screen dialogs | PW passed at 887e336 | `e2e/ux.spec.ts:1098,1106,1110,1112` (refreshed, carried from 0487fab) | PASS |
+| C40 | field error below the field | VT + PW passed at 887e336 | `src/administracao/revisao.test.tsx:65-66`; `e2e/ux.spec.ts:1146` (refreshed, carried from 0487fab) | PASS |
+| C41 | load error with Tentar de novo | VT passed at 887e336 | `src/ux.test.tsx:199-200,216-217` (carried from 0487fab) | PASS |
+| C42 | one period control | VT passed at 887e336 | `src/indicadores/revisao.test.tsx:29-30,39,53-54` (carried from 0487fab) | PASS |
+| C43 | 2 columns at 390 | PW passed at 887e336 | `e2e/ux.spec.ts:1165-1169` (refreshed, carried from 0487fab) | PASS |
+| C44 | one badge, indexing as an icon | VT passed at 887e336 | `src/conhecimento/revisao.test.tsx:32,39,42,51,60` (carried from 0487fab) | PASS |
+| C45 | icon beside the title | PW passed at 887e336 | `e2e/ux.spec.ts:1192-1194` (refreshed, carried from 0487fab) | PASS |
+| C46 | "Novo" hidden on an empty list | VT passed at 887e336 | `src/conhecimento/revisao.test.tsx:66-78` (carried from 0487fab) | PASS |
+| C47 | formatted CPF and search | VT + PW passed at 887e336 | `src/administracao/revisao.test.tsx:94-95,110`; `e2e/ux.spec.ts:1205` (refreshed, carried from 0487fab) | PASS |
+| C48 | `ol` with 3 steps; each step shows its number as visible text **with a box height > 0 and a contrast of 4.5:1 or more**; the title is an `h2`/`h3`; the accessible name starts with the number; template download; errors per line | VT `Matrículas em 3 passos …` (3) + PW `Baixar modelo baixa o CSV com o cabeçalho` passed at 887e336 | `src/administracao/revisao.test.tsx:132` `toHaveTextContent(new RegExp(`^${n} ${titulo}`))`, `:133` `getByText(n)).toBeVisible()` (jsdom, no layout), `:134` `getByRole('heading', { name: `${n} ${titulo}` })`, `:135` `toHaveAccessibleName(new RegExp(`^${n} `))`, `:168`; `e2e/ux.spec.ts:1218`. Searched `ux.spec.ts`, `arranjo.spec.ts` and the VT files for a box or contrast measure of the step number (`rg "Matr\|passo"`): none | FAIL - level gap. The "caixa com altura > 0 e contraste ≥ 4,5:1" clause has no assertion. jsdom's `toBeVisible` does no layout and reads no colour. The product meets the clause: the Verifier measured h = 24 px in all three themes, with contrasts of 17.70 (light), 14.66 (dark) and 14.28 (black), at 390 px with `#8a1538` |
+| C49 | whole row is the target, 48 px | PW passed at 887e336 | `e2e/ux.spec.ts:1250,1252` (refreshed, carried from 0487fab) | PASS |
+| C50 | form first; Ver prévia | PW passed at 887e336 | `e2e/ux.spec.ts:1267-1268,1272-1273,1278` (refreshed, carried from 0487fab) | PASS |
+| C51 | dark preview the same as the app | PW passed at 887e336 | `e2e/ux.spec.ts:1296-1298` (refreshed, carried from 0487fab) | PASS |
+| C52 | tinted neutrals | VT + PW passed at 887e336 | `src/ux.test.tsx:149-150`; `e2e/ux.spec.ts:617,620` (carried from 0487fab) | PASS |
+| C53 | 27 contrasts at 4.5:1 | PW passed at 887e336 | `e2e/ux.spec.ts:641,644` (carried from 0487fab) | PASS |
+| C54 | opsz 32; no new font | PW + VT passed at 887e336 | `e2e/ux.spec.ts:653`; `src/ux.test.tsx:160-161` (carried from 0487fab) | PASS |
+| C55 | 4 text sizes per screen | PW passed at 887e336 | `e2e/ux.spec.ts:1343-1344,1348` (refreshed, carried from 0487fab) | PASS |
+| C56 | no Sparkles, emoji or gradient | VT `sem Sparkles no código` + PW `-g "sem emoji nem gradiente"` (the proof name now matches) passed at 887e336 | `src/ux.test.tsx:227`; `e2e/ux.spec.ts:1365` `expect(achados.emoji…).toEqual([])`, `:1366` `expect(achados.gradiente…).toEqual([])` | PASS |
+| C57 | action colour only in the primary button, active item, link and focus; never in the chart, measured after the bars are drawn | PW (2) passed at 887e336 | `e2e/ux.spec.ts:1381` `waitForFunction(… .recharts-bar-rectangle … height > 0)`; `:1400` `achados.push(`gráfico …`)` when `fill`/`stroke` equals `--primary`; `:1405` `expect(indevidos, …).toEqual([])`; focus `:1421`. Fault F1 killed it | PASS |
+| C58 | the student never reads "chamado" | VT passed at 887e336 | `src/ux.test.tsx:231,266` (carried from 0487fab); the SW fallback is now C69 | PASS |
+| C59 | Vitest and build pass; edits to existing assertions only from the closed list | `vitest run` 473 passed; build exit 0 at 887e336 | base-existing test files edited in `0487fab..HEAD`: `sw.test.ts`, `test/interface.test.ts`, `administracao/textos.test.tsx`, `administracao/aparencia.test.tsx`, `assistente/anexos.test.tsx`, `e2e/arranjo.spec.ts`. Outside the closed list (`checks.md:37-42,126-128`): `src/test/interface.test.ts:80-81` (the `--chart-1`/`--chart-2` rows of `Tokens`; item 2 names only `--background`, `--muted`, `--border`, `--input` and `--accent`) and `src/sw.test.ts:30` (the body of `push sem JSON legível mostra o texto padrão`) | FAIL - the claim as written is not met. Both edits are forced by C73 and C69, are recorded in the Handoff "Settled mid-build" (2) and in the C72/C73 boundary, and neither weakens anything. The fix is one more line in the closed-list extension |
+| C60 | crapper 9.99; dryer below 0.8 | crapper exit 0; dryer "No duplicate candidates found" at 887e336 | `web/.metrics/crap.edn`, `dry.edn` written at 887e336 (`checks.md:650-651`) | PASS |
+| C61 | layout suite | PW 6 files: 150 passed at 887e336 | `e2e/ux.spec.ts:1481,1515` among them | PASS |
+| C62 | no `api/` change | `git diff --quiet 56cf9d3 HEAD -- api api.Tests` exit 0 | `checks.md:659` | PASS |
+| C63 | real e2e, student tabs and Sair | `ux-real.spec.ts:81` passed on the :8087 image of 887e336 (1.0 min) | `e2e/ux-real.spec.ts:111,118,124,136` | PASS |
+| C64 | 6 clicks, 1 Sheet | `ux-real.spec.ts:143` passed on the :8087 image of 887e336 (1.1 min), through the new Fila row | `e2e/ux-real.spec.ts:212,214` | PASS |
+| C65 | whole e2e suite against :8087 | `npx playwright test`: 173 passed, 0 failed at 887e336 | `e2e/anexos.spec.ts:140` passed | PASS |
+| C66 | the action sheet keeps what was typed | PW passed at 887e336 | `e2e/ux.spec.ts:1442,1444` (refreshed, carried from 0487fab) | PASS |
+| C67 | "Aberto" column on one line | PW passed at 887e336 | `e2e/ux.spec.ts:1464-1465,1469,1472` (refreshed, carried from 0487fab) | PASS |
+| C68 | links as buttons in the staff conversation | VT passed at 887e336 | `src/chamados/revisao.test.tsx:188-189` (refreshed, carried from 0487fab) | PASS |
+| C69 | the SW fallback says "Sua solicitação foi atualizada." with no "chamado" | VT `texto reserva fala em solicitação` passed at 887e336 | `src/sw.test.ts:35` `expect(opcoes.body).toBe('Sua solicitação foi atualizada.')`, `:36` `.not.toMatch(/chamado/i)`; `src/sw.ts:21`. Fault F5 killed it | PASS |
+| C70 | OPERADOR-only at `/fila`, `/assistente`, `/artigos` goes to `/univag/instituicoes` | VT (3) passed at 887e336 | `src/acesso/navegacao.test.tsx:136` `toHaveTextContent('/univag/instituicoes')`, rendered through the real `App` and `MemoryRouter`. Fault F6 killed all 3 | PASS |
+| C71 | the light preview is proven by the button's **painted** colour (`getComputedStyle(...).backgroundColor` equal to a `#8a1538` reference); the attachment help by `toBeVisible()` | VT `prévia muda antes de salvar` + `texto de ajuda dos anexos` passed at 887e336 | `src/administracao/aparencia.test.tsx:71` regex over `index.css` text; `:74` the **test injects** `.previa-marca .bg-primary { background-color: ${marca} }`; `:75` `toHaveClass('bg-primary')`; `:78` `getComputedStyle(entrar).backgroundColor` equal to the reference. `src/assistente/anexos.test.tsx:156` `expect(ajuda).toBeVisible()` | FAIL - the preview half is not a proof of the painted colour. `:78` compares a colour the test wrote at `:74` with the input the test typed, so it is the `--marca-previa` value (`:67`) asserted a second time. Fault F7 (`@theme inline` -> `@theme`) makes the real browser paint the saved `#8a1538` instead of the typed `#224fa7` in the light preview. The test still passes, and so does every PW proof (C50, C51). The anexos half is PASS |
+| C72 | 390 px Fila detail is running text "aberto há 2 dias · categoria · responsável", no split word, no column under 120 px | PW `detalhe da Fila em texto corrido no celular` passed at 887e336 | `e2e/ux.spec.ts:1490-1491` anchored `getByText(/^aberto há 2 dias · Financeiro > Boletos e mensalidades · sem responsável$/)` `toHaveCount(1)`; `:1492` width `>= 120`; `:1508-1509` `overflowWrap`/`wordBreak`; `:1510` `expect(m.partidas…).toEqual([])`. Fault F4 killed it | PASS |
+| C73 | both charts the same calm colour, not `--primary`, 3:1 or more on the card, chroma > 0.02, 3 themes x with and without `#8a1538` | PW `gráficos com a mesma cor calma` passed at 887e336 | `e2e/ux.spec.ts:1528` `expect(a…).toEqual(b)`; `:1529` `.not.toEqual(await referencia(page, '--primary'))`; `:1531` `contraste(a, fundo)` `>= 3`; `:1536` `croma > 0.02`. Faults F1 and F2 killed it | PASS |
 
-### Edits outside the closed list (asked: does each one only follow the new arrangement, or weaken?)
+### Builder's notes, judged
 
-All edits outside the closed list are recorded in the Handoff. None of them removes a behaviour that is still in the product. In detail:
-- **Follow the new arrangement or text.** `sem rede a lista mostra o erro` (new copy, still 1 query). `artigos.test`, `edicao.test` (3), `interface.test` `controles nativos` ("Novo" becomes "Novo artigo" on an empty list). `conhecimento/icones.test` (1 article, so the "Novo" button exists; icons still asserted). `indicadores.test`: `cartões formatam`, `ranking com gráfico`, `ranking vazio` open "Ver tabela" first; the renamed period test keeps "consults only on Consultar". `arranjo.spec`: `arranjo administração` (-24 px for the step gutter), `quebras medidas` (150 px in 2 columns, 24 px value), the CPF mask, the login panel at 24 px. `tabela.test`: the `admin` fixture gains ALUNO.
-- **Minor weakenings.**
-  - `aparencia.test` `prévia muda antes de salvar` used to assert the button's `backgroundColor` and now asserts only the `--marca-previa` variable on `.previa-marca`. The light-theme chain from that variable to `--primary` to the button is proven by no browser test (C51 covers dark only).
-  - `assistente/anexos.test` (extension) dropped `toBeVisible()`. It has no substantive effect in jsdom.
-- **One edit locks in a loss of information.** `arranjo.spec` `colunas largas somem no estreito`, in the closed list: the Fila row at 360 px used to assert "category · responsável · days" and now asserts only the category. See finding 5.
-- **`calendário em pt-BR` removal: justified.** The calendar left Indicadores (AC 32: a single period control). pt-BR is still proven where a calendar remains, on the Artigos validity field, in an existing, unchanged test: `conhecimento/edicao.test.tsx:297-300`, with `novembro` and `dom` to `sáb`. The Handoff cites `conhecimento/textos.test.tsx:28`, which is also valid. Residual risk: Indicadores now uses native `type="date"` fields, whose picker and display format follow the browser locale, not ptBR, and no test proves pt-BR there.
+- **The Aparência C71 assertion in jsdom.** It is not a proof of the painted colour. jsdom resolves neither `var()` nor Tailwind. The test therefore writes `.previa-marca .bg-primary { background-color: <the inline --marca-previa> }` (`aparencia.test.tsx:74`) and then reads that colour back (`:78`). What it actually proves:
+  - the inline variable (already proven at `:67`);
+  - the class name `bg-primary`;
+  - that `index.css` contains the text of one rule.
+
+  It does not prove that the rule wins the cascade, or that `bg-primary` reads `--primary` where it is used. F7 shows that the second link can break while every proof stays green. **The proof should move to Playwright**: type a colour other than the saved one in the light theme, then compare the Entrar preview button's painted `backgroundColor` with the typed colour. That is C51's pattern with the light theme and a typed colour. The Verifier's probe does exactly this and passes at HEAD: `#224fa7` is painted `rgb(34, 79, 167)`.
+- **`revisao.test.tsx` `exact: false`.** Forced and in effect equivalent, though slightly weaker in isolation. Category, date and responsável now live in one joined `span` (`Chamados.tsx:59`), so an exact match on any of the three cannot match. Substring matching is also case-insensitive and would accept the text inside a larger node within the row. The whole string is pinned at the browser level by C72's anchored regex (`ux.spec.ts:1490`), and F4 was killed there and also by C33's `scrollWidth` assertion. `chamados/revisao.test.tsx` was created by this feature, so these edits are not edits to existing assertions.
+- **Build order.** Closed. The build was run at `887e336` after all edits, exit 0.
 
 ## Coverage
 
+Rows the fix touched were recomputed at 887e336. The others are carried from 0487fab.
+
 | Set (size) | Recomputed from | Member -> proof | Unproven |
 | --- | --- | --- | --- |
-| roles x guarded routes (4 roles, 12 routes) | `Autenticado.tsx:20-31,304` (`Menu` + `conta`), `sessao.ts:9-16` | ALUNO 9, ATENDENTE 10, ADMINISTRADOR 5: C10 (`ux.test.tsx:101`) | OPERADOR outside its role (11 routes). The claim maps OPERADOR to `instituicoes` and the Handoff (lote 1, item 7) added `telaInicial` for it, but no case opens a route as OPERADOR only |
-| `## Screens` arrangement items (design authority) | `plan.md:82-135`, enumerated above | 46 items: C13 to C51 as in `checks.md` Coverage | Matrículas "passos numerados" (no visible number; C48 asserts only `ol`) |
-| action-colour surfaces (AC 43, P6: button, active item, link, focus, Sigla; never chart or badge) | `plan.md:236`, `checks.md:113` | button, active item, link, Sigla, badges: C57 `ux.spec.ts:1390-1394`; focus: `:1414` | chart: the clause is vacuous (`:1393` runs before Recharts draws); the product paints `--chart-1: var(--primary)` |
-| detail bar per state (5) | `PermissoesChamado`, `ChamadoDetalhe.tsx:242-256` | ABERTO, EM_ATENDIMENTO, AGUARDANDO_ALUNO, RESOLVIDO, FECHADO: C34 | - |
-| load-error surfaces (11) | `ErroDe` users with `oque` | C41, table of 11 (`ux.test.tsx:184`) | - |
-| tinted tokens (14) | `index.css` `:root`, `.dark`, `.black` | C52 (`ux.spec.ts:620` 14) | - |
-| next step per state (5) | AC 22 | C32 | - |
-| relative date (4 cases x 2 lists) | AC 21, P9 | C30 | - |
-| form dialogs (6) | AC 29 | C39 (6 + 768); C40 covers 5. "Importar carga" has no field-error case, because it has no field the API names | - |
-| Cadastros lists (5) | `Cadastros.tsx` tabs | C49 (`ux.spec.ts:1251` 10 cases = 5 x 2 widths) | - |
-| screens for C55 to C57 (16 `Telas` + Conta + Instituições) | `simulada.ts:109-147` | C55 (`ux.spec.ts:1343` `2 * (Telas.length + 2)`), C56, C57 | - (open dialogs and toasts are outside the sweep) |
-| student texts without "chamado" (4 screens) | Impact: textos | C58 | - (on screen). Push notification text: finding 7 |
+| roles x out-of-role guarded routes (35 = 9 + 10 + 5 + 11) | `Autenticado.tsx:20-31,324-331`, `sessao.ts:9-16` (verified at 887e336) | ALUNO 9, ATENDENTE 10, ADMINISTRADOR 5: C10 (`ux.test.tsx:101`); OPERADOR `/fila`, `/assistente`, `/artigos`: C70 (`navegacao.test.tsx:136`) | gap: OPERADOR at the other 8 out-of-role routes (`solicitacoes`, `indicadores`, `documentos`, `usuarios`, `matriculas`, `cadastros`, `aparencia`, `conta`). The guard is generic (`desvio`), so the risk is low, but no case opens them as OPERADOR only, and `checks.md` Coverage still reads "papéis e rotas da guarda (24)" without the OPERADOR row |
+| `## Screens` arrangement items (design authority) | `plan.md:82-135` (Matrículas, Fila and Indicadores re-read at 887e336; the rest carried) | 46 items: C13 to C51. Matrículas numbering: C48 VT (digit text, heading, accessible name). Fila responsável: C33 | - (the painting of the step number is a C48 clause gap, recorded there) |
+| action-colour surfaces (button, active item, link, focus, Sigla; never chart or badge) | `plan.md:236`, `checks.md:113` (verified at 887e336) | button, active item, link, Sigla, badges: C57 `ux.spec.ts:1395-1399`; chart: C57 `:1381,1400` and C73 `:1529`; focus: `:1421` | - |
+| chart colour: themes (3) x brand (2) | C73 claim (verified at 887e336) | light, dark, black x none, `#8a1538`: C73 loop `ux.spec.ts:1518-1536` | - |
+| Fila 390 px row fields (category, responsável, date) | P2 + amended C33/C72 (verified at 887e336) | category C33, C72; responsável C33 (`sem responsável` VT, named holder `arranjo.spec.ts:1096`), C72; date C33, C72 | - |
+| student texts without "chamado" (4 screens + SW fallback) | Impact: textos; `sw.ts` (verified at 887e336) | screens C58; SW fallback C69 | - (the API's push text `PushEnviador.cs:32` is out of scope because there is no API change) |
+| base-existing test files edited (6) | `git diff 0487fab..HEAD` against `git cat-file -e 56cf9d3:<file>` (verified at 887e336) | `textos.test.tsx`, `aparencia.test.tsx`, `anexos.test.tsx`, `arranjo.spec.ts`: closed list and its 2 extensions | gap: `interface.test.ts` chart rows and `sw.test.ts:30` are outside the closed list (C59) |
+| detail bar per state (5) | carried from 0487fab | C34 | - |
+| load-error surfaces (11) | carried from 0487fab | C41 | - |
+| tinted tokens (14) | carried from 0487fab | C52 | - |
+| next step per state (5) | carried from 0487fab | C32 | - |
+| relative date (4 x 2) | carried from 0487fab | C30 | - |
+| form dialogs (6) | carried from 0487fab | C39, C40 | - |
+| Cadastros lists (5) | carried from 0487fab | C49 | - |
+| screens for C55 to C57 (16 + Conta + Instituições) | carried from 0487fab | C55, C56, C57 | - |
 
 ## Faults injected
 
-Isolated in `git worktree` scratch copies at `0487fab`. The real tree's `git status --porcelain` was recorded first and matched the baseline afterwards. The mutator is suspended (AD-025), so every fault was injected by hand, at least one per slice, with one build per layout fault.
+All faults were injected in a `git worktree` scratch copy at `887e336`, with a `node_modules` junction. The real tree's `git status --porcelain` was recorded first and matched the baseline afterwards. The mutator is suspended (AD-025), so every fault was applied by hand. For the PW faults, the scratch copy was built with `vite build` and served by `vite preview` on :5198. F2 and F4 shared one build because they hit disjoint proofs (chart colour against Fila text).
 
 | Mutation | Location | Killed |
 | --- | --- | --- |
-| S1: `NativeSelect` back to `text-sm` (14 px) on mobile and with a coarse pointer | `web/src/ui/native-select.tsx:19` | yes - C3 `ux.spec.ts:208` "390 px: campos abaixo de 16 px" |
-| S2: `aria-current` inverted on the tab bar | `web/src/Autenticado.tsx:276` | yes - C12, 3 of 3 cases failed |
-| S3: transfer invitation kept after `TRANSFERIDA` | `web/src/assistente/Assistente.tsx:138` | yes - C23 failed |
-| S4: `criadoEm` counted in UTC instead of the institution's time zone | `web/src/datas.ts` (`abertoHa`) | yes - C30 failed (midnight case) |
-| S5: Cadastros row from `h-12` to `h-10` | `web/src/administracao/Cadastros.tsx:71` | yes - C49 `ux.spec.ts:1245` "Setores a 390: altura da linha" |
-| S6: Indicadores compact value from `text-base` to `text-xl` (20 px next to the 24 px value) | `web/src/indicadores/Indicadores.tsx:166` | yes - C55 `ux.spec.ts:1338` "Indicadores a 390: no máximo 1 tamanho de título" |
-| S7: assistant links no longer split out of the staff conversation | `web/src/chamados/Conversa.tsx:70` | yes - C68 failed |
+| F1: `--chart-1` and `--chart-2` back to `var(--primary)` (light and dark) | `web/src/index.css:37-38,77-78` | yes - C57 `ux.spec.ts:1405` "Indicadores: cor de ação fora de …" and C73 `:1529` "light sem cor: não é --primary" |
+| F2: `--chart-2` different again (`oklch(0.60 0.10 200)` / `oklch(0.75 0.10 200)`) | `web/src/index.css:38,78` | yes - C73 `ux.spec.ts:1528` "light sem cor: mesma cor nos dois" |
+| F3: Matrículas back to `list-decimal` on a `flex` `li`, no visible digit (`Matriculas.tsx` of `0487fab`) | `web/src/administracao/Matriculas.tsx:42-55` | yes - C48 VT "os 3 passos numerados" failed |
+| F4: Fila 390 px detail as flex columns again (separate `span`s for date, category and responsável) | `web/src/chamados/Chamados.tsx:59` | yes - C72 `ux.spec.ts:1491` count 0, and C33 `:919` `sobra` 18 |
+| F5: SW fallback back to "Seu chamado foi atualizado." | `web/src/sw.ts:21` | yes - C69 and the 4 `push sem JSON legível` cases failed |
+| F6: `telaInicial` sends OPERADOR-only to `fila` | `web/src/sessao.ts:14` | yes - C70, 3 of 3 failed |
+| F7: `@theme inline` -> `@theme` (Tailwind resolves `--color-primary` at `:root`, so `.previa-marca`'s `--primary` no longer reaches `bg-primary`) | `web/src/index.css` (`@theme inline {`) | no - C71 `aparencia.test.tsx` passed (9/9). PW C50 and C51 also passed. The Verifier's probe shows the regression is real: light preview, typed `#224fa7`, painted `rgb(138, 21, 56)` (the saved colour) instead of `rgb(34, 79, 167)` at HEAD |
 
-7 injected, 7 killed. The checks that failed do not fail through a weak assertion that a mutant could pass. C57 and C48 fail because of what their assertions never reach: a chart that is not drawn yet, and a marker that is not rendered.
+7 injected, 6 killed, 1 survived. F7 was added to the six faults the caller listed because C71's assertion is a surface this fix created and the builder's note asked whether it proves the paint.
 
 ## Findings, ranked
 
-1. **(C57, major, composition and colour) The chart still uses the action colour.** The bar for "Categorias por conversas" is `rgb(138, 21, 56)` = `--primary` (`index.css:37,77`; `Indicadores.tsx:141`). AC 43 and P6 say the chart stops using it. The green test is vacuous because the sweep runs before Recharts draws.
-2. **(C48 / AC 35, major, composition) Matrículas has no visible step numbers.** `li` is `flex` (`Matriculas.tsx:44`), so the `list-decimal` markers never render, at any width and in both themes; a blank 24 px gutter remains. Screen readers get "list, 3 items" and positions only; the steps are `p`, not headings. The before/after captures (`lote3/matriculas-erros-390-*`) and the Verifier's own captures at 390 and 1440 px agree. C48 asserts only the `ol` tag.
-3. **(C56, process) The proof name does not exist.** `-g "sem emoji em título nem gradiente"` selects no test (exit 1). The test is `sem emoji nem gradiente` (`ux.spec.ts:1347`) and it passes.
-4. **(C59, low) Edits outside the closed list.** 13 edits plus a fixture change, all recorded in the Handoff. Each one follows the new arrangement. Two are minor weakenings: the light-theme preview colour is no longer proven by computed style, and `toBeVisible` was dropped.
-5. **(product regression, medium) Fila at 390 px lost the "Responsável".**
-   - Before: "Financeiro > ... · Carla · 0 dias". After: badge, date and the truncated category only (`lote2/antes|depois-fila-390-claro.png`).
-   - P2 removed only the student and the sector. On mobile, an attendant can no longer see who holds each ticket.
-   - The category is also cut with an ellipsis on long rows.
-6. **(Coverage) No proof for the OPERADOR-only redirect.** The guard code is generic (`Autenticado.tsx:304-308`).
-7. **(C58 residual, low) The student can still read "chamado" outside the screens.**
-   - Push notifications read "Seu chamado {numero} foi atualizado." (`api/Chamados/PushEnviador.cs:32`, which cannot change without an API change).
-   - The web fallback `web/src/sw.ts:21` says "Seu chamado foi atualizado." and is in scope, but no check covers it.
-   - The student's URL is `/:slug/chamados/ONE-n`.
-8. **(C55 side effects, low)**
-   - To keep one title size per screen, `DialogTitle` went from 18 to 16 px. Dialog titles now match body text and differ only by weight 600.
-   - Indicadores compact values went from 20 to 16 px, and the login panel h2 from 30 to 24 px.
-   - At 390 px the screen's single title size is the 24 px KPI number, while the page `h1` in the top bar is 16 px.
-   - The captures do not look worse. The hierarchy is flatter but readable.
-9. **(C57 exemption for the colour swatch: justified)**
-   - `data-testid="amostra"` is the colour the administrator typed, shown as data, so it is not an "action colour" use. The exemption is keyed narrowly to that test id.
-   - It is not written in the C57 claim, which is a precision gap in the check.
-   - The `Sigla` exemption in the test is broad: any `aria-hidden` element with 2 or fewer characters passes.
+1. **(C71, major, proof) The light preview colour is still not proven by its paint.**
+   - What the test does: it injects the rule that paints the button (`aparencia.test.tsx:74`), then compares the result with the typed input (`:78`).
+   - Why that falls short: F7, a realistic Tailwind regression, breaks the light preview in the browser and nothing fails.
+   - Fix: move the proof to Playwright. Light theme, type a colour other than the saved one, compare the painted `backgroundColor` of the preview's Entrar with the typed colour.
+2. **(C48, medium, level gap) The amended clause "caixa com altura > 0 e contraste ≥ 4,5:1" has no assertion.**
+   - What is proven: the VT proves the digit text, the heading and the accessible name. Its `toBeVisible` in jsdom is not a box or a colour.
+   - The product is right: the Verifier measured 24 px boxes with contrasts of 17.70, 14.66 and 14.28.
+   - Fix: a PW assertion would close it, and it is the same measurement the Verifier's probe made.
+3. **(C59, low, process) Two existing assertions were edited outside the closed list.**
+   - The edits: `interface.test.ts:80-81` (`--chart-1`/`--chart-2` rows) and `sw.test.ts:30` (the fallback body).
+   - Both are forced by C73 and C69 and both are recorded in the Handoff. Neither weakens anything.
+   - Fix: extend the closed list.
+4. **(Coverage, low) OPERADOR-only is proven at 3 of its 11 out-of-role routes.**
+   - The `checks.md` Coverage row "papéis e rotas da guarda (24)" was not updated for OPERADOR.
+5. **(Note) `exact: false` in `chamados/revisao.test.tsx` is forced by the single text run.** C72's anchored regex makes it equivalent in effect.
 
-The Verifier's own captures were taken with the simulated API, `#8a1538`, at 360, 390, 768, 1024 and 1440 px, light and dark: 11 screens plus 4 student views each, 150 files, in `C:\Users\ALFRED~1\AppData\Local\Temp\claude\32208d8f0bb63a9f\023d6896-6e71-49ab-bcad-30fe290f9094\scratchpad\shots\`.
-- **Better than before:** dense lists, the transfer block, labelled error rows in Matrículas, the Indicadores 2x2 layout, Conta and the tab bar, the dark contrast.
-- **Worse:** findings 2 and 5.
-- **Unchanged and still wrong:** finding 1.
+Round-1 findings now closed:
+- chart colour (C57, F1 killed);
+- Matrículas visible numbering (product fixed; C48 text proven, F3 killed);
+- C56 proof name;
+- Fila mobile responsável (C33, C72);
+- ellipsis on categories (C33 `:918-919`; F4 also killed there);
+- `sw.ts` fallback (C69);
+- OPERADOR guard test (C70; partial, finding 4);
+- `toBeVisible` in anexos (C71, `anexos.test.tsx:156`).
 
 ## Gate
 
-`cd web && npx vitest run`: 469 passed, 0 failed. Layout PW: 148 passed. Real e2e on :8087: 171 passed, 0 failed. `validate_verification.py revisao-ux` was run after writing this report.
+`cd web && npx vitest run`: 473 passed, 0 failed. Build exit 0. Layout PW: 150 passed. Real e2e on :8087 against the image of `887e336`: 173 passed, 0 failed. crapper exit 0; dryer no candidates; C62 exit 0. `validate_verification.py revisao-ux` was run after writing this report.
 
 Cleanup:
-- removed: container `one-revisao-ux-verif`, image `one-revisao-ux-verif:0487fab`, database `one_revisao_verif`, MinIO bucket `one-revisao-ux-verif`, both worktrees (junction removed first) and the preview servers on :5199 and :5198;
-- left alone: the compose `api` on :8080;
-- not removed: `D:\one-wt-antes`, left behind by the builder (Handoff, lote 3), which the Verifier did not touch.
+- removed: container `one-revisao-ux-verif2`, image `one-revisao-ux-verif2:887e336`, database `one_revisao_verif2`, MinIO bucket `one-revisao-ux-verif2`, the scratch worktree (junction removed first with `cmd /c rmdir`), the preview servers on :5199 and :5198;
+- left alone: the compose `api` on :8080, Postgres, MinIO and Mailpit;
+- the real tree's porcelain equals the baseline.

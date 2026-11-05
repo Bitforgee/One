@@ -126,6 +126,8 @@ os checks abaixo afirmam.
 Extensão da lista fechada por decisão delegada em 04/11, depois do lote 2: `assistente/anexos.test.tsx` "texto de ajuda dos anexos" (AC 19) e `chamados/textos.test.tsx` "textos Minhas solicitações" (AC 21, AC 22); e, para o C67, os testes de `arranjo.spec.ts` e `tabela.test.tsx` que leem o cabeçalho "Dias" (AC 45).
 
 Extensão da lista fechada por decisão delegada em 04/11, depois da rodada 1: as 13 edições e a mudança de dado de teste listadas como "fora da lista" no `## Handoff` dos lotes 1 a 3, cada uma presa ao AC que a força; as duas que enfraqueciam voltam a medir o que mediam (C71).
+
+Extensão da lista fechada por decisão delegada em 04/11, depois da rodada 2: `src/test/interface.test.ts` (linhas de `--chart-1` e `--chart-2`, forçadas pelo C73) e `src/sw.test.ts` (texto reserva, forçado pelo C69).
 ## Checks
 
 ### S1 - Toque, campos e contraste (P1) · ~33 files · ~194 KB · ~48k (com S2 e os tokens de S6)
@@ -553,7 +555,7 @@ A 390 px, o `bottom` do campo é ≤ o `top` do primeiro item (AC 34; Screens: U
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "CPF formatado e busca por nome, CPF ou e-mail"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "busca de Usuários acima da lista"`
 
-**C48** - [x] Em Matrículas:
+**C48** - Em Matrículas:
 - há uma `ol` com 3 itens, nesta ordem: "Baixe o modelo", "Preencha uma linha por aluno" e "Envie o arquivo";
 - cada passo mostra o número ("1", "2", "3") como texto visível ao lado do título (caixa com altura > 0 e cor com contraste ≥ 4,5:1), o título de cada passo é um cabeçalho (`h2` ou `h3`) e o nome acessível do item começa pelo número (decisão delegada pelo usuário em 04/11, depois da rodada 1);
 - o botão "Baixar modelo (CSV)" dispara um download `.csv` cuja primeira linha é exatamente
@@ -563,6 +565,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "Matrículas em 3 passos com modelo e erros por linha"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Baixar modelo baixa o CSV com o cabeçalho"`
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "números dos passos de Matrículas visíveis nos 3 temas"`
 
 **C49** - [x] A 390 e a 1280 px, nas 5 listas de Cadastros (Setores, Categorias, Cursos, Regras, Respostas prontas;
 table-driven, cada uma com 1 item), a linha mede altura ≥ 48 px. Um clique a 4 px da borda direita da linha, no
@@ -706,12 +709,13 @@ Decisão delegada pelo usuário em 04/11, depois da rodada 1 da verificação.
 **C69** - [x] O texto reserva do aviso no celular em `web/src/sw.ts`, usado quando o push chega sem texto, diz "Sua solicitação foi atualizada." e não contém "chamado" (o texto que vem da API fica de fora: esta feature não muda a API) (C58, linguagem do aluno)
 Proof: `cd web && npx vitest run src/sw.test.ts -t "texto reserva fala em solicitação"`
 
-**C70** - [x] Um usuário só com o papel `OPERADOR` que abre `/univag/fila`, `/univag/assistente` ou `/univag/artigos` é levado a `/univag/instituicoes` (AC 9)
+**C70** - Um usuário só com o papel `OPERADOR` que abre qualquer uma das 11 rotas fora do seu papel (`/univag/fila`, `/assistente`, `/solicitacoes`, `/indicadores`, `/artigos`, `/documentos`, `/usuarios`, `/matriculas`, `/cadastros`, `/aparencia`, `/conta`) é levado a `/univag/instituicoes`; table-driven sobre as 11 (AC 9 (decisão delegada pelo usuário em 04/11, depois da rodada 2))
 Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "operador sem outro papel vai para Instituições"`
 
-**C71** - [x] Os testes de lista fechada não ficam mais fracos que em `<base>`: a prévia da Aparência no tema Claro é provada pela cor pintada do botão (`getComputedStyle(...).backgroundColor` igual ao de uma referência com `#8a1538`), e o texto de ajuda dos anexos, quando aparece, é provado com `toBeVisible()` (C59)
+**C71** - Os testes de lista fechada não ficam mais fracos que em `<base>`: a prévia da Aparência no tema Claro é provada pela cor pintada do botão (`getComputedStyle(...).backgroundColor` igual ao de uma referência com `#8a1538`), e o texto de ajuda dos anexos, quando aparece, é provado com `toBeVisible()` (C59)
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "prévia muda antes de salvar"`
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "prévia clara pinta a cor digitada"` (no Chromium, tema Claro, com `#8a1538` salvo: digitar `#224fa7` faz o `background-color` pintado do botão "Entrar" da prévia ser igual ao de uma referência com `#224fa7` (decisão delegada pelo usuário em 04/11, depois da rodada 2))
 
 **C72** - [x] A 390 px, na Fila, a linha de detalhe de cada item é um texto corrido com "aberto há 2 dias", a categoria e o responsável separados por " · ", que quebra entre palavras: nenhuma palavra é partida (o texto visível de cada linha renderizada termina numa fronteira de palavra; `overflow-wrap` diferente de `anywhere` e `word-break` diferente de `break-all`) e nenhum pedaço do detalhe fica numa coluna mais estreita que 120 px (decisão delegada pelo usuário em 04/11, depois da correção da rodada 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "detalhe da Fila em texto corrido no celular"`
@@ -731,6 +735,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 | selos (9) | `ABERTO` C7 · `EM_ATENDIMENTO` C7 · `AGUARDANDO_ALUNO` C7 · `RESOLVIDO` C7 · `FECHADO` C7 · "Ativo" C7, C44 · "Rascunho" C7, C44 · "Arquivado" C7, C44 · "Desativado" C7 | - |
 | botões que deixam o verde (4) | "Resolver" C8 · "Sim" C8, C21 · "Confirmar resolução" C8 · "Confirmar" C8 | - |
 | papéis e rotas da guarda (24) | C10, table-driven sobre os 24 casos (9 de `ALUNO`, 10 de `ATENDENTE`, 5 de `ADMINISTRADOR`) | - |
+| rotas fora do papel do `OPERADOR` (11) | C70, table-driven sobre as 11 | - |
 | temas do botão Tema (4) | Claro C11 · Escuro C11 · Preto C11 · Sistema C11 | - |
 | pular para o conteúdo, por papel (3) | `ALUNO` C9 · `ATENDENTE` C9 · `ADMINISTRADOR` C9 | - |
 | abas do aluno (3) | "Assistente" C12, C13, C14, C63 · "Solicitações" C12, C13, C14, C63 · "Conta" C12, C13, C14, C63 | - |
