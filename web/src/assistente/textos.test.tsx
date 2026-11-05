@@ -5,7 +5,7 @@ import { formatarData } from '../datas'
 import { estados } from '../test/textos'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
-// Linha 6 de ## Screens (Assistente); "Mensagem", "Escreva sua dúvida", "Digitando" e "Enviar" (botão só com ícone) não são texto visível.
+// Linha 6 de ## Screens (Assistente); "Mensagem", "Escreva sua dúvida", "Digitando" não são texto visível; "Enviar" é escrito (estrutura-visual AC 14).
 const Assistente = [
   'Assistente',
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.',
@@ -23,6 +23,7 @@ const Assistente = [
   'Confirmar transferência',
   'Falar com atendente',
   'Encerrar',
+  'Enviar',
   'Falar com um atendente?',
   'Encerrar a conversa?',
   'Sua conversa será enviada a um atendente da instituição, que responde por aqui.',

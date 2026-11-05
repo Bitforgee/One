@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowUp, ChevronRight, Hand, MessageCircleQuestion, ShieldAlert } from 'lucide-react'
+import { ChevronRight, Hand, MessageCircleQuestion, ShieldAlert } from 'lucide-react'
 import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
@@ -191,7 +191,7 @@ function Perguntas({ perguntas, perguntar, pendente }: { perguntas: string[]; pe
     <ul className="m-0 flex w-full list-none flex-col p-0">
       {perguntas.map((p) => (
         <li key={p}>
-          <button type="button" disabled={pendente} onClick={() => perguntar(p)} className="flex min-h-12 w-full items-center gap-3 rounded-xs border-b px-2 py-2 text-start text-base hover:bg-accent outline-none focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground disabled:opacity-50">
+          <button type="button" disabled={pendente} onClick={() => perguntar(p)} data-foco="dentro" className="flex min-h-12 w-full items-center gap-3 rounded-xs border-b px-2 py-2 text-start text-base hover:bg-accent focus-visible:bg-accent disabled:opacity-50">
             <MessageCircleQuestion aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             <span className="flex-1">{p}</span>
             <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
@@ -268,13 +268,12 @@ type EntradaProps = {
   anexos: Anexos
 }
 
-// Compositor no estilo do ChatGPT: uma caixa arredondada com o campo que cresce com o texto e, embaixo, o enviar redondo à direita.
-// "Falar com atendente" fica numa linha própria acima da caixa.
+// "Falar com atendente" e "Encerrar" ficam na mesma linha, acima do campo; o campo cresce com o texto e o "Enviar" vem escrito.
 function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar, anexos }: EntradaProps) {
   const vazio = pendente || !texto.trim()
   // type="button": dentro do form, o padrão "submit" enviaria a mensagem
   const atendente = (
-    <Button type="button" size="sm" className="self-start" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
+    <Button type="button" size="sm" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
       <Hand aria-hidden="true" />
       Falar com atendente
     </Button>
@@ -284,42 +283,38 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
       Encerrar
     </Button>
   )
-  if (noLimite)
-    return (
+  return (
+    <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap gap-1.5">
         {atendente}
         {encerrar}
       </div>
-    )
-  return (
-    <div className="flex flex-col gap-1.5">
-      {atendente}
-      <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
-        <Selos anexos={anexos} />
-        <Label htmlFor="mensagem" className="sr-only">
-          Mensagem
-        </Label>
-        <div className="flex items-end gap-1.5">
-          <BotaoAnexar anexos={anexos} />
-          <Textarea
-            id="mensagem"
-            rows={1}
-            maxLength={1000}
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            onKeyDown={(e) => enviarComEnter(e, vazio)}
-            placeholder="Escreva sua dúvida"
-            className="max-h-52 min-h-11 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
-          />
-        </div>
-        {(anexos.foco || anexos.escolhidos.length > 0) && <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>}
-        <div className="flex items-end justify-between gap-1.5">
-          <div className="flex flex-wrap items-center gap-1.5">{encerrar}</div>
-          <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
-            {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
-          </Button>
-        </div>
-      </form>
+      {!noLimite && (
+        <form onSubmit={enviar} className="flex flex-col gap-1">
+          <Selos anexos={anexos} />
+          <Label htmlFor="mensagem" className="sr-only">
+            Mensagem
+          </Label>
+          <div className="flex items-end gap-1.5">
+            <BotaoAnexar anexos={anexos} />
+            <Textarea
+              id="mensagem"
+              rows={1}
+              maxLength={1000}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => enviarComEnter(e, vazio)}
+              placeholder="Escreva sua dúvida"
+              className="max-h-52 min-h-11 flex-1 resize-none py-2"
+            />
+            <Button type="submit" className="shrink-0 max-md:h-11" disabled={vazio}>
+              {pendente && <Spinner />}
+              Enviar
+            </Button>
+          </div>
+          {(anexos.foco || anexos.escolhidos.length > 0) && <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>}
+        </form>
+      )}
     </div>
   )
 }
