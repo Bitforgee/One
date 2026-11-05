@@ -200,7 +200,7 @@ describe('chamado', () => {
   })
 
   it('eventos em ordem no fuso', async () => {
-    const evento = (tipo: string, ator: string, criadoEm: string, de: string | null = null, para: string | null = null) => ({ tipo, ator, de, para, detalhe: null, criadoEm })
+    const evento = (tipo: string, ator: string, criadoEm: string, de: string | null = null, para: string | null = null) => ({ tipo, ator, doAluno: false, de, para, detalhe: null, criadoEm })
     api({
       'GET /api/auth/me': () => [200, equipe],
       'GET /api/chamados/ONE-1': () => [
@@ -220,15 +220,15 @@ describe('chamado', () => {
     // America/Cuiaba é UTC-4: 03:30Z ainda é dia 1º
     expect(lis.map((li) => li.textContent)).toEqual([
       '01/11/2026 23:30 · Sistema abriu a solicitação',
-      '02/11/2026 08:00 · Carla atribuiu a Carla',
+      '02/11/2026 08:00 · Carla assumiu a solicitação', // historico-frases AC 5
       '02/11/2026 08:00 · Carla mudou o estado de Aberto para Em atendimento',
     ])
     for (const li of lis) expect(within(li).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toHaveClass('text-muted-foreground')
   })
 
   // historico-legivel: monta o detalhe da equipe com estes eventos e devolve o texto de cada item do Histórico
-  async function historico(eventos: { tipo: string; ator?: string; de?: string | null; para?: string | null; detalhe?: string | null }[]) {
-    const completos = eventos.map((e) => ({ ator: 'Carla', de: null, para: null, detalhe: null, criadoEm: '2026-11-02T12:00:00Z', ...e }))
+  async function historico(eventos: { tipo: string; ator?: string; doAluno?: boolean; de?: string | null; para?: string | null; detalhe?: string | null }[]) {
+    const completos = eventos.map((e) => ({ ator: 'Carla', doAluno: false, de: null, para: null, detalhe: null, criadoEm: '2026-11-02T12:00:00Z', ...e }))
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe({ eventos: completos })] })
     abrir('/univag/chamados/ONE-1')
     return within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
@@ -252,6 +252,19 @@ describe('chamado', () => {
     const itens = await historico(Casos.map(([e]) => e))
     expect(itens).toEqual(Casos.map(([, f]) => f))
     for (const item of itens) expect(item, 'sem código cru').not.toMatch(/[A-Z]{2,}_[A-Z]+|\b(?:TRANSICAO|CRIACAO|ATRIBUICAO|ABERTO|FECHADO|RESOLVIDO)\b/)
+  })
+
+  // historico-frases C3 a C7 (AC 3 a AC 7)
+  it('frases com o autor certo', async () => {
+    const Casos: [{ tipo: string; ator: string; doAluno?: boolean; de?: string | null; para?: string | null }, string][] = [
+      [{ tipo: 'RESPOSTA', ator: 'Mariana', doAluno: true }, 'Mariana respondeu à equipe'],
+      [{ tipo: 'RESPOSTA', ator: 'Carla', doAluno: false }, 'Carla respondeu ao aluno'],
+      [{ tipo: 'ATRIBUICAO', ator: 'Carla', doAluno: false, de: null, para: 'Carla' }, 'Carla assumiu a solicitação'],
+      [{ tipo: 'ATRIBUICAO', ator: 'Carla', doAluno: false, de: 'Bruno', para: 'Carla' }, 'Carla assumiu a solicitação no lugar de Bruno'],
+      [{ tipo: 'ATRIBUICAO', ator: 'Carla', doAluno: false, de: null, para: 'Bruno' }, 'Carla atribuiu a Bruno'],
+      [{ tipo: 'ATRIBUICAO', ator: 'Sistema', doAluno: false, de: 'Bruno', para: null }, 'Sistema tirou Bruno da responsabilidade'],
+    ]
+    expect(await historico(Casos.map(([e]) => e))).toEqual(Casos.map(([, f]) => f))
   })
 
   // historico-legivel C3 (AC 3)

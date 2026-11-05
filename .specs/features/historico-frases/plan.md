@@ -22,7 +22,7 @@ Reusa a regra que `DaMensagem.DoAluno` já aplica (`AutorId == SolicitanteId`) e
 | Front | What changes |
 | --- | --- |
 | `## Screens` de `historico-legivel` | as linhas `RESPOSTA` e `ATRIBUICAO com para` são substituídas pelas de `## Criteria` abaixo; as outras continuam |
-| testes que codificam as frases antigas | nenhum muda: os casos de `web/src/chamados/chamado.test.tsx` com "respondeu ao aluno" e "atribuiu a" continuam valendo (AC 4, AC 7); as frases novas ganham casos próprios |
+| testes que codificam as frases antigas | `eventos em ordem no fuso` afirmava a própria frase errada ("Carla atribuiu a Carla") e passa à frase de AC 5; os casos com "respondeu ao aluno" e "atribuiu a Bruno" continuam valendo (AC 4, AC 7); as frases novas ganham casos próprios. As fixtures de 4 arquivos de teste ganham `doAluno`, porque o tipo `Evento` o exige |
 | retrato da API | `api.Tests/Retratos/sucessos.txt` ganha `doAluno` em cada evento da equipe; nenhum outro campo muda |
 | domain | nenhum termo novo; `TiposEvento` continua igual |
 | stored data | nothing to migrate - eventos antigos ganham a frase certa, porque o autor já está gravado |

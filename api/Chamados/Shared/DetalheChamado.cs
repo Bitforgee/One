@@ -23,7 +23,7 @@ public sealed record DetalheChamado(
 
     public sealed record DoAnexo(long Id, string Nome, string Tipo, long Tamanho);
 
-    public sealed record DoEvento(string Tipo, string Ator, string? De, string? Para, string? Detalhe, DateTime CriadoEm);
+    public sealed record DoEvento(string Tipo, string Ator, bool DoAluno, string? De, string? Para, string? Detalhe, DateTime CriadoEm);
 
     public sealed record Destino(long Id, string Nome);
 
@@ -85,7 +85,7 @@ public sealed record DetalheChamado(
         var fonte = await Fontes.Citadas(db, transcricao.SelectMany(m => m.Citacoes).ToList());
         var fontes = transcricao.Where(m => m.Citacoes.Count > 0).ToDictionary(m => m.Id, m => m.Citacoes.Select(fonte));
         var eventos = (await db.EventosChamado.Where(e => e.ChamadoId == c.Id).OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
-            .Select(e => new DoEvento(e.Tipo, e.AtorId is { } a ? nomes[a] : "Sistema", e.De, e.Para, e.Detalhe, e.CriadoEm)).ToList();
+            .Select(e => new DoEvento(e.Tipo, e.AtorId is { } a ? nomes[a] : "Sistema", e.AtorId == c.SolicitanteId, e.De, e.Para, e.Detalhe, e.CriadoEm)).ToList();
         var setores = await db.Setores.Where(s => s.Ativo && s.Id != c.SetorId).OrderBy(s => s.Nome).Select(s => new Destino(s.Id, s.Nome)).ToListAsync();
         var categorias = await db.Categorias.Where(x => x.Ativa).OrderBy(x => x.Nome).Select(x => new Destino(x.Id, x.Nome)).ToListAsync();
         return new DaEquipe(nomes[c.SolicitanteId], c.Resumo, c.OrigemCategoria, fontes, eventos, setores, categorias);

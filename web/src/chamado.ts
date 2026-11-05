@@ -7,7 +7,7 @@ import { useChamadoAberto, useEstadoDaConexao } from './tempo-real'
 export type Fonte = { tipo: 'ARTIGO' | 'DOCUMENTO'; versaoArtigoId: number | null; versaoDocumentoId: number | null; titulo: string; numero: number; trechos: string[]; atualizado: boolean }
 export type Anexo = { id: number; nome: string; tipo: string; tamanho: number }
 export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string; anexos?: Anexo[] }
-export type Evento = { tipo: string; ator: string; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }
+export type Evento = { tipo: string; ator: string; doAluno: boolean; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }
 
 // Resposta de GET /api/chamados/{numero}; resumo, fontes e eventos só vêm para a equipe.
 export type Chamado = {
@@ -44,13 +44,18 @@ export const Estados: Record<string, string> = {
 
 // Frase de cada evento do Histórico (historico-legivel ## Screens); tipo desconhecido sai cru para nunca esconder um evento.
 const estado = (v: string | null) => (v === null ? '—' : (Estados[v] ?? v))
+function atribuicao(e: Evento) {
+  if (!e.para) return `${e.ator} tirou ${e.de} da responsabilidade`
+  if (e.para !== e.ator) return `${e.ator} atribuiu a ${e.para}`
+  return e.de ? `${e.ator} assumiu a solicitação no lugar de ${e.de}` : `${e.ator} assumiu a solicitação`
+}
 const Frases: Record<string, (e: Evento) => string> = {
   CRIACAO: (e) => `${e.ator} abriu a solicitação`,
   TRANSICAO: (e) => `${e.ator} mudou o estado de ${estado(e.de)} para ${estado(e.para)}`,
-  ATRIBUICAO: (e) => (e.para ? `${e.ator} atribuiu a ${e.para}` : `${e.ator} tirou ${e.de} da responsabilidade`),
+  ATRIBUICAO: atribuicao,
   LEMBRETE: (e) => `${e.ator} enviou um lembrete ao aluno`,
   NOTA: (e) => `${e.ator} escreveu uma nota interna`,
-  RESPOSTA: (e) => `${e.ator} respondeu ao aluno`,
+  RESPOSTA: (e) => `${e.ator} respondeu ${e.doAluno ? 'à equipe' : 'ao aluno'}`,
   ANEXO: (e) => `${e.ator} anexou um arquivo`,
   ENCAMINHAMENTO: (e) => `${e.ator} encaminhou de ${e.de} para ${e.para}`,
   RECLASSIFICACAO: (e) => `${e.ator} mudou a categoria de ${e.de} para ${e.para}`,

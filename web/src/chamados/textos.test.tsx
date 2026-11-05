@@ -69,7 +69,7 @@ const daEquipe = chamado({
   solicitante: 'Ana',
   resumo: 'Aluna pede o boleto.',
   setorId: 5,
-  eventos: [{ tipo: 'TRANSICAO', ator: 'Carla', de: 'ABERTO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:00:00Z' }],
+  eventos: [{ tipo: 'TRANSICAO', ator: 'Carla', doAluno: false, de: 'ABERTO', para: 'EM_ATENDIMENTO', detalhe: null, criadoEm: '2026-11-02T12:00:00Z' }],
   transcricao: [
     { autor: 'ALUNO', texto: 'preciso do boleto', criadaEm: '2026-11-02T12:00:00Z' },
     { autor: 'ASSISTENTE', texto: 'O boleto fica no portal.', criadaEm: '2026-11-02T12:00:05Z', fontes: [fonte('DOCUMENTO', 'Regulamento'), fonte('ARTIGO', 'Boleto do semestre')] },

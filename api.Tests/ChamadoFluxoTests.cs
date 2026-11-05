@@ -244,6 +244,72 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(b.ClienteAluno, numero, new string('m', 4000))).StatusCode);
         Assert.Equal(Aberto, (await b.Ler(numero)).Estado);
     }
+
+    // Tipo, ator e doAluno de cada evento, como a equipe lê na rota.
+    static List<(string Tipo, string Ator, bool DoAluno)> Eventos(System.Text.Json.JsonElement detalhe) =>
+        detalhe.GetProperty("eventos").EnumerateArray()
+            .Select(e => (e.GetProperty("tipo").GetString()!, e.GetProperty("ator").GetString()!, e.GetProperty("doAluno").GetBoolean())).ToList();
+
+    // historico-frases C1
+    [Fact]
+    public async Task Evento_diz_se_veio_do_aluno()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+        Assert.Equal(HttpStatusCode.OK, (await b.A.Cliente.PostAsync($"/api/chamados/{numero}/assumir", null)).StatusCode);
+        Assert.True((await Balcao.Mensagem(b.A.Cliente, numero, "Pode enviar o comprovante?")).IsSuccessStatusCode);
+        Assert.True((await Balcao.Mensagem(b.ClienteAluno, numero, "Segue o comprovante.")).IsSuccessStatusCode);
+
+        var eventos = Eventos(await b.Detalhe(b.A.Cliente, numero));
+
+        Assert.Contains(("CRIACAO", "Sistema", false), eventos);
+        Assert.Contains(("RESPOSTA", b.A.Usuario.Nome, false), eventos);
+        Assert.Contains(("RESPOSTA", b.Aluno.Usuario.Nome, true), eventos);
+    }
+
+    // historico-frases C2
+    [Fact]
+    public async Task Atendente_com_o_nome_do_aluno_nao_vira_aluno()
+    {
+        var b = await Balcao.Criar(f);
+        await f.Db(b.Instituicao.Id, async db =>
+        {
+            var atendente = await db.Usuarios.SingleAsync(u => u.Id == b.A.Usuario.Id);
+            atendente.Nome = b.Aluno.Usuario.Nome;
+            await db.SaveChangesAsync();
+        });
+        var numero = await b.Chamado();
+        Assert.True((await Balcao.Mensagem(b.A.Cliente, numero, "Da equipe.")).IsSuccessStatusCode);
+        Assert.True((await Balcao.Mensagem(b.ClienteAluno, numero, "Do aluno.")).IsSuccessStatusCode);
+
+        var respostas = Eventos(await b.Detalhe(b.A.Cliente, numero)).Where(e => e.Tipo == "RESPOSTA").ToList();
+
+        Assert.Equal([("RESPOSTA", b.Aluno.Usuario.Nome, false), ("RESPOSTA", b.Aluno.Usuario.Nome, true)], respostas);
+    }
+
+    // historico-frases C8
+    [Fact]
+    public async Task Aluno_nao_recebe_eventos()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+        Assert.True((await Balcao.Mensagem(b.ClienteAluno, numero, "Do aluno.")).IsSuccessStatusCode);
+
+        var r = await b.ClienteAluno.GetAsync($"/api/chamados/{numero}");
+
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, (await r.Json()).GetProperty("eventos").ValueKind);
+    }
+
+    // historico-frases C8
+    [Fact]
+    public async Task Detalhe_fora_do_setor_continua_404()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await b.Alheio.Cliente.GetAsync($"/api/chamados/{numero}")).StatusCode);
+    }
 }
 
 public class FilaTests(OneFactory f) : IClassFixture<OneFactory>
