@@ -570,6 +570,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md F2, F11, F12; web/src/index.css:101-103 (css-tokens)
 - last seen: 2026-11-05T08:11:35Z
 
+### L-094 - A test that pins the only rule naming a selector must count its mentions in the whole file, because a line-based regex cannot see a selector list broken across lines
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `css-tokens` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md F18; web/src/test/interface.test.ts:193 (css-tokens)
+- last seen: 2026-11-05T11:16:28Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

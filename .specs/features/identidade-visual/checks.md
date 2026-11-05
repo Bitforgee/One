@@ -153,7 +153,7 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 | P13 | AC 14 e AC 15 davam a quebra em 768 px de janela; a `layout-painel` door 5 liga as grades de Indicadores à largura do `main` | as colunas seguem o contêiner `main` (`@container/main`): 3 e 2 colunas com o `main` de 768 px ou mais, 1 abaixo. Com a barra aberta, o `main` mede a janela − 304 px (976 a 1280 e 1136 a 1440, como em `arranjo Indicadores`), então as janelas de 1072 e 1071 px dão 768 e 767 px de `main` (C28, C29) |
 | P15 | Rodada 1 do Verifier, aprovado pelo usuário em 05/11 | a lista fechada ganha o item 9; a variação fica ao lado quando couber e abaixo do número em celular estreito; entram C47 a C53 (foco, borda do Responder, carregamento e `semDados` da variação, ordem do nome do assistente, variação a 360, data vazia e precache) |
 | P16 | Rodada 2 do Verifier: o select "Resposta pronta" no mesmo bloco ficou abaixo de 3:1, a classe `dark:border-input` do Responder anulou o foco e o erro, e o caso do aluno de C48 desenhava a tela da equipe | o orquestrador acrescenta C54, só mais estrito que a borda já aprovada em P15; o teste de C48 passa a desenhar de fato a tela do aluno; o claim de C48 não muda |
-| P17 | Rodada 3 do Verifier: 3 mutantes da regra `.form-resposta` sobreviveram (F2, F11, F12), sem prova para foco e erro do select nem para "Nota interna" marcada; o usuário escolheu em 05/11 "um teste e rodada curta" | entram C55 e C56; a área tracejada de anexos (1,21:1; 1,30:1 na base) e o `--ring` abaixo de 3:1 no app ficam fora desta feature e vão para o plano da rodada da estrutura, que o usuário aprova |
+| P17 | Rodada 3 do Verifier: 3 mutantes da regra `.form-resposta` sobreviveram (F2, F11, F12), sem prova para foco e erro do select nem para "Nota interna" marcada; o usuário escolheu em 05/11 "um teste e rodada curta" | entram C55 e C56; a área tracejada de anexos (1,21:1; 1,30:1 na base; o `bg-muted` do AC 17 desta feature a piorou) e o `--ring` abaixo de 3:1 no app (anterior a esta feature) ficam fora dela e vão, como obrigação, para o plano da rodada da estrutura: o usuário aprovou em 05/11, e `.specs/STATE.md` AD-035 registra. Os 2 continuam no produto |
 | P14 | AC 10 não dizia o que acontece se `GET /api/chamados?escopo=meus` falhar | sem a linha e sem alerta; título, frase e perguntas ficam (C20) |
 
 ## Checks
@@ -832,5 +832,5 @@ Estimativa:
 ### Correções da rodada 3 (C55 e C56)
 
 - Mecanismo: orquestrador, só testes, sem mudança de código de produto; escolha do usuário em 05/11 ("um teste e rodada curta").
-- **Boundary:** preenchido no commit dos testes; fechados C55 e C56.
+- **Boundary:** `a04ca17` (testes de C55 e C56) e o commit da linha da contagem pedida pela rodada 4 (a falha F18, seletor quebrado em 2 linhas). Fechados: C55 e C56. Rodada 4 do Verifier: Vitest 521, layout 192 de 193 (só `plataforma.spec`, que precisa de API), e2e real 201 de 201.
 - **Edições em asserções existentes:** nenhuma. `campos do form da resposta com foco, erro e borda de 3:1` passou a usar 2 funções auxiliares, com as mesmas asserções.

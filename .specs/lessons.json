@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 94,
+  "next_id": 95,
   "lessons": [
     {
       "id": "L-001",
@@ -1692,6 +1692,24 @@
       ],
       "created": "2026-11-05T08:11:35Z",
       "last_seen": "2026-11-05T08:11:35Z"
+    },
+    {
+      "id": "L-094",
+      "key": "surviving_mutant::a test that pins the only rule naming a selector must count its mentions in the whole file because a line based regex cannot see a selector list broken across lines",
+      "text": "A test that pins the only rule naming a selector must count its mentions in the whole file, because a line-based regex cannot see a selector list broken across lines",
+      "signal": "surviving_mutant",
+      "scope": "css-tokens",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F18; web/src/test/interface.test.ts:193 (css-tokens)"
+      ],
+      "created": "2026-11-05T11:16:28Z",
+      "last_seen": "2026-11-05T11:16:28Z"
     }
   ]
 }
