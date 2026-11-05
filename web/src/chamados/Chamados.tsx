@@ -52,7 +52,7 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
         {/* o link é o bloco de fora e o corte das 2 linhas fica dentro dele: nada corta o contorno de foco, e o corte mede só 2 linhas */}
         <Link to={caminho} className="block text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
           <span className="line-clamp-2">
-            <span className="font-medium">{c.numero}</span> {c.titulo}
+            <span className="font-medium">{c.numero}</span> <span>{c.titulo}</span>
           </span>
         </Link>
       </p>
