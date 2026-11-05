@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/identidade-visual/plan.md`
 
-54 checks em 6 slices (S1 a S5 e S0; C47 a C54 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (P1 a P16 decididos em 05/11 pelo orquestrador, com o plano aprovado pelo usuário)
+56 checks em 6 slices (S1 a S5 e S0; C47 a C56 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (P1 a P17 decididos em 05/11 pelo orquestrador, com o plano aprovado pelo usuário)
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o
 commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
@@ -153,6 +153,7 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 | P13 | AC 14 e AC 15 davam a quebra em 768 px de janela; a `layout-painel` door 5 liga as grades de Indicadores à largura do `main` | as colunas seguem o contêiner `main` (`@container/main`): 3 e 2 colunas com o `main` de 768 px ou mais, 1 abaixo. Com a barra aberta, o `main` mede a janela − 304 px (976 a 1280 e 1136 a 1440, como em `arranjo Indicadores`), então as janelas de 1072 e 1071 px dão 768 e 767 px de `main` (C28, C29) |
 | P15 | Rodada 1 do Verifier, aprovado pelo usuário em 05/11 | a lista fechada ganha o item 9; a variação fica ao lado quando couber e abaixo do número em celular estreito; entram C47 a C53 (foco, borda do Responder, carregamento e `semDados` da variação, ordem do nome do assistente, variação a 360, data vazia e precache) |
 | P16 | Rodada 2 do Verifier: o select "Resposta pronta" no mesmo bloco ficou abaixo de 3:1, a classe `dark:border-input` do Responder anulou o foco e o erro, e o caso do aluno de C48 desenhava a tela da equipe | o orquestrador acrescenta C54, só mais estrito que a borda já aprovada em P15; o teste de C48 passa a desenhar de fato a tela do aluno; o claim de C48 não muda |
+| P17 | Rodada 3 do Verifier: 3 mutantes da regra `.form-resposta` sobreviveram (F2, F11, F12), sem prova para foco e erro do select nem para "Nota interna" marcada; o usuário escolheu em 05/11 "um teste e rodada curta" | entram C55 e C56; a área tracejada de anexos (1,21:1; 1,30:1 na base) e o `--ring` abaixo de 3:1 no app ficam fora desta feature e vão para o plano da rodada da estrutura, que o usuário aprova |
 | P14 | AC 10 não dizia o que acontece se `GET /api/chamados?escopo=meus` falhar | sem a linha e sem alerta; título, frase e perguntas ficam (C20) |
 
 ## Checks
@@ -696,6 +697,18 @@ ausente, com a tela da equipe como controle em que ela aparece (P16; AC 17, AC 2
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "campos do form da resposta com foco, erro e borda de 3:1"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do campo Responder com 3:1"`
 
+**C55** - [x] Em `web/src/index.css`, a única regra que menciona `form-resposta` tem o seletor `.form-resposta:not(.dark *)` e
+declara só `--input`, com o valor da linha `--input` de `:root` em `Tokens` (`interface.test.ts`) trocando o cinza `0.66 0 none`
+por `0.63 0 none`: só no claro, com a cor da instituição e não mais escura que isso (P17; AC 22)
+Proof: `cd web && npx vitest run src/test/interface.test.ts -t "regra da borda do form da resposta"`
+
+**C56** - [x] No `form` da resposta, a 390 e a 1280 px, nos 3 temas e com as 2 marcas, na tela da equipe:
+- com foco, a borda do select "Resposta pronta" tem a mesma cor de um select comum com foco fora do `form`, e difere da borda
+  em repouso;
+- com `aria-invalid="true"` aplicado pelo teste, a borda do select tem a cor de `--destructive`;
+- com "Nota interna" marcada, o select some e a borda do Responder tem contraste ≥ 3:1 contra o fundo do `form` (P17; AC 22)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "select da resposta com foco e erro, e Responder com Nota interna"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -724,6 +737,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 | one-way doors do `Landing` (4) | 1 C1, C2, C3, C4, C8 · 2 C5, C6, C7 · 3 C9, C10, C11, C12, C13, C14 · 4 C31, C35, C36, C37 | - |
 | achados da rodada 1 do Verifier (8) | foco das perguntas C47 · borda do Responder C48 · variação com resposta atrasada C49 · `semDados` com número C50 · ordem do nome do assistente C51 · variação em celular estreito C52 · data vazia C53 · precache só latino C53 | - |
 | campos do form da resposta (3) | select "Resposta pronta" em repouso C54 · Responder em foco C54 · Responder em erro C54 | - |
+| regra da borda do form e estados restantes (6) | só no claro C55 · com a cor da instituição C55 · sem escurecer além de 0,63 C55 · select em foco C56 · select em erro C56 · Responder com "Nota interna" C56 | - |
 | invariantes do AC 22 (6) | alvos de 44 px C46 · campos de 16 px C46 · contrastes C46 · barra de abas C46 · cor de ação C46 · tokens tingidos C46 | - |
 | suítes do S0 (5) | Vitest e build C40 · `crapper` e `dryer` C41 · arranjo C42 · `api/` igual C43 · e2e real C44, C45 | - |
 | frases e itens de arranjo de `## Screens` (41) | coluna centrada de até 400 px C9 · logo até 48 px ou iniciais C10 · nome em serifa de 28 px C11 · texto de apoio logo acima do rótulo CPF C10 · Primeiro acesso e Criar senha com o título da tela antes do primeiro campo C12 · título e frase em texto secundário C10, C11 · formulário C10 · itens em lista com marcador abaixo do formulário C10, C11 · sem painel nem ilustração C9 · fundo `--background` tingido C11 · com foto, formulário na coluna da esquerda C13 · foto na coluna direita inteira C13 · sem gradiente e sem texto sobre a foto C13, C14 · faixa de 160 px abaixo de 1024 C14 · título em serifa de 24 px à esquerda C18 · "Atendimento ao estudante · …" C17 · frase abaixo do título C17, C18 · foto de 32 px ao lado do nome C19 · sem "Olá! Eu sou" C17 · linha da solicitação com borda na cor de ação C21 · solicitação com estado, próximo passo e link C20 · solicitação antes das perguntas C20, C21 · perguntas em linhas de 48 px com divisória C22 · `MessageCircleQuestion` à esquerda e `ChevronRight` à direita C22 · perguntas sem pílula C22 · principal com rótulo e número de 40 px `tabular-nums` C27 · variação ao lado com "vs. período anterior" C24, C27 · 3 destaques em 3 colunas, 1 no celular C28 · divisória vertical e sem caixa C28 · 9 métricas em 2 colunas, 1 no celular C29 · rótulo à esquerda e valor tabular à direita C29 · divisória entre linhas e sem caixa C29 · gráficos sem cartão, com título C30 · blocos estáticos sem borda nem fundo C32, C33, C34 · separados por 32 px C32, C33, C34 · título de seção C32, C33 · só o que pede ação com fundo tingido C34 · vazio com ícone de 28 px, título, frase e botão C35, C36 · vazio centrado na largura da lista C36 · Planilha no passo 2 numa linha C37, C38 · raiz com "One" em serifa, frase e texto, sem ilustração C16 | - |
@@ -814,3 +828,9 @@ Estimativa:
 - **Boundary:** `9511827` (código: a borda dos campos do `form` da resposta) e `7c563e3` (testes de C54 e o caso do aluno de C48), mais o commit deste handoff, sobre o `a5b75e3`. Fechado: C54. Resultado: Vitest 520 verdes em 54 arquivos, `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99, `dryer` sem candidato, `git diff --quiet 6d83112 HEAD -- api api.Tests` sai 0. Layout (`arranjo`, `celular`, `ux`, `aparencia`, `identidade`) 165 verdes contra `vite preview` na 5199. E2E real: imagem do `HEAD` (`git archive HEAD | docker build`) na 8089, instituição `e2e`, banco e bucket próprios (`one_r2`, `one-r2`, removidos): a suíte inteira, 200 testes, passou de primeira (uma tentativa anterior foi abandonada por eu a ter interrompido e reaproveitado o primeiro acesso já usado; a refeita usou banco novo). Medido (contraste da borda do select e do Responder contra o fundo do `form`, a 390 e a 1280, igual nas duas larguras): claro 3,29 sem cor, 3,31 com `#8a1538`, 3,26 com `#0b6e4f` (antes 2,96, 2,95, 2,92); escuro 3,82, 3,82, 3,85 e preto 4,10, 4,08, 4,14, que ficam como estavam. Injeções à mão, todas pegas: tirar a classe `form-resposta` derruba `campos do form da resposta com foco, erro e borda de 3:1` e `borda do campo Responder com 3:1`; pôr `dark:border-input` de volta no `Textarea` derruba o de C54 (no escuro e no preto o foco e o erro igualam o repouso); o aluno desenhando a tela da equipe (sem `eventos: null` na rota) derruba `borda do campo Responder com 3:1` no `Nota interna` ausente.
 - **Settled mid-build:** (1) Mecanismo: `.form-resposta:not(.dark *)` em `index.css` redefine `--input` no `form`, no claro só (o `.black` também vive sob `.dark`); a propriedade não pode referir a si mesma, então a regra repete a fórmula do token (`color-mix` de `--marca` a 6% sobre cinza) com o cinza em `oklch(0.63)` no lugar de 0,66, e herda a marca como o token. Os dois campos herdam, então `focus-visible:border-ring` e `aria-invalid:border-destructive` seguem valendo. Foi uma classe em `index.css` e não uma classe arbitrária do Tailwind porque `interface.test.ts` proíbe `oklch(` em arquivo `.tsx`; o token global não mudou. (2) O `Textarea` perdeu `border-foreground/60 dark:border-input`; nenhum `ui/` compartilhado foi tocado. (3) O caso do aluno de C48 usa uma rota que devolve o chamado com `eventos: null` e `mensagens: []` e deixa as `acoes` da equipe, para que só `eventos` decida a tela; o teste afirma `getByLabel('Nota interna')` ausente para o aluno e presente (1) para a equipe. (4) C54: o "campo comum" é um `input` com as mesmas classes do Responder, criado fora do `form`; o foco compara a cor da borda dele com a do Responder e com o repouso, e o erro compara as duas com `--destructive` resolvido. A fixture com `setorId` e 1 resposta pronta é de rotas do próprio teste, sem mexer em `simulada.ts`.
 - **Edições em asserções existentes:** nenhuma; o teste de C48 só ganhou a rota do aluno e a asserção de `Nota interna`, com as 24 medidas e o limite 3:1 como estavam.
+
+### Correções da rodada 3 (C55 e C56)
+
+- Mecanismo: orquestrador, só testes, sem mudança de código de produto; escolha do usuário em 05/11 ("um teste e rodada curta").
+- **Boundary:** preenchido no commit dos testes; fechados C55 e C56.
+- **Edições em asserções existentes:** nenhuma. `campos do form da resposta com foco, erro e borda de 3:1` passou a usar 2 funções auxiliares, com as mesmas asserções.

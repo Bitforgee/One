@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 93,
+  "next_id": 94,
   "lessons": [
     {
       "id": "L-001",
@@ -1674,6 +1674,24 @@
       ],
       "created": "2026-11-05T07:20:57Z",
       "last_seen": "2026-11-05T07:20:57Z"
+    },
+    {
+      "id": "L-093",
+      "key": "surviving_mutant::a rule that repeats a token s formula needs a literal assertion beside the token s own pin because a contrast floor cannot see it drift",
+      "text": "A rule that repeats a token's formula needs a literal assertion beside the token's own pin, because a contrast floor cannot see it drift",
+      "signal": "surviving_mutant",
+      "scope": "css-tokens",
+      "status": "candidate",
+      "features": [
+        "identidade-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md F2, F11, F12; web/src/index.css:101-103 (css-tokens)"
+      ],
+      "created": "2026-11-05T08:11:35Z",
+      "last_seen": "2026-11-05T08:11:35Z"
     }
   ]
 }

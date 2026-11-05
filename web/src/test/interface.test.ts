@@ -188,6 +188,15 @@ describe('interface nova', () => {
       expect(h1, arquivo).toMatch(arquivo === 'Autenticado.tsx' ? /className="(?:[^"]* )?text-base font-medium[ "]/ : /className="(?:[^"]* )?font-heading text-\[28px\][ "]/)
   })
 
+  // identidade-visual C55: fora dos temas, só o form da resposta redefine --input, e só o cinza do token claro
+  it('regra da borda do form da resposta', () => {
+    const regras = [...css.matchAll(/^([^\n{}]*form-resposta[^\n{}]*)\{([^}]*)\}/gm)]
+    expect(regras.map((r) => r[1].trim())).toEqual(['.form-resposta:not(.dark *)'])
+    const token = Tokens.find((l) => l[0] === '--input')![1]
+    expect(token).toContain('0.66 0 none')
+    expect(regras[0][2].trim()).toBe(`--input: ${token.replace('0.66 0 none', '0.63 0 none')};`)
+  })
+
   // layout-painel C35 (AC 35): os tokens de ## Visual não mudaram nos 3 temas
   it('tokens de Visual', () => {
     const t = temas()

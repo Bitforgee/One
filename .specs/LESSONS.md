@@ -564,6 +564,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md finding 1, web/src/chamados/ChamadoDetalhe.tsx:55 (web)
 - last seen: 2026-11-05T07:20:57Z
 
+### L-093 - A rule that repeats a token's formula needs a literal assertion beside the token's own pin, because a contrast floor cannot see it drift
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `css-tokens` · harmful: 0
+- features: identidade-visual
+- evidence: verification.md F2, F11, F12; web/src/index.css:101-103 (css-tokens)
+- last seen: 2026-11-05T08:11:35Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

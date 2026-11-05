@@ -1146,6 +1146,17 @@ test('borda do campo Responder com 3:1', async ({ page }) => {
   expect(medidas).toBe(24)
 })
 
+// C54 e C56: a tela da equipe com o select de respostas prontas
+const abrirFormComProntas = (page: Page, largura: number, marca: string | undefined) =>
+  em(page, largura, '/univag/chamados/ONE-123', (p) => p.getByLabel('Resposta pronta').waitFor(), {
+    aparencia: { ...comAparencia, cor: marca },
+    rotas: async (p) => {
+      await p.route('**/api/chamados/ONE-123', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...chamadoSimulado(), setorId: 1 }) }))
+      await p.route('**/api/respostas-prontas*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]) }))
+    },
+  })
+const corDestrutiva = (page: Page) => page.evaluate(() => { const t = document.createElement('i'); t.style.borderTop = '1px solid var(--destructive)'; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c })
+
 // C54
 test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }) => {
   test.setTimeout(240_000)
@@ -1157,13 +1168,7 @@ test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }
       for (const largura of [390, 1280]) {
         const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
         await emTema(page, tema)
-        await em(page, largura, '/univag/chamados/ONE-123', (p) => p.getByLabel('Resposta pronta').waitFor(), {
-          aparencia: { ...comAparencia, cor: marca },
-          rotas: async (p) => {
-            await p.route('**/api/chamados/ONE-123', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...chamadoSimulado(), setorId: 1 }) }))
-            await p.route('**/api/respostas-prontas*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]) }))
-          },
-        })
+        await abrirFormComProntas(page, largura, marca)
         const [form, select, campo] = [page.locator('form:has(#resposta)'), page.getByLabel('Resposta pronta'), page.locator('#resposta')]
         const [borda, fundo] = (await select.evaluate((e) => { const f = e.closest('form')!; return [window.__ux.pintar([...window.__ux.pilha(f), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(f))] })) as number[][]
         expect(contraste(borda, fundo), `${rotulo}: borda do select`).toBeGreaterThanOrEqual(3)
@@ -1179,10 +1184,44 @@ test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }
         expect(comumFoco, `${rotulo}: foco difere do repouso`).not.toBe(repouso)
         await campo.blur()
         for (const e of [campo, comum]) await e.evaluate((x) => x.setAttribute('aria-invalid', 'true'))
-        const destrutivo = await page.evaluate(() => { const t = document.createElement('i'); t.style.borderTop = '1px solid var(--destructive)'; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c })
+        const destrutivo = await corDestrutiva(page)
         expect(await cor(comum), `${rotulo}: campo comum em erro`).toBe(destrutivo)
         expect(await cor(campo), `${rotulo}: Responder em erro`).toBe(destrutivo)
         await expect(form).toHaveCount(1)
+        medidas++
+      }
+  expect(medidas).toBe(12)
+})
+
+// C56
+test('select da resposta com foco e erro, e Responder com Nota interna', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  const cor = (l: Locator) => l.evaluate((e) => getComputedStyle(e).borderTopColor)
+  let medidas = 0
+  for (const tema of Temas)
+    for (const marca of Marcas)
+      for (const largura of [390, 1280]) {
+        const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
+        await emTema(page, tema)
+        await abrirFormComProntas(page, largura, marca)
+        const select = page.getByLabel('Resposta pronta')
+        // um select comum fora do form, com as mesmas classes
+        await select.evaluate((e) => { const s = Object.assign(document.createElement('select'), { id: 'comum', className: e.className }); document.querySelector('main')!.append(s) })
+        const comum = page.locator('#comum')
+        const repouso = await cor(select)
+        await comum.focus()
+        const comumFoco = await cor(comum)
+        await select.focus()
+        expect(await cor(select), `${rotulo}: foco do select igual ao comum`).toBe(comumFoco)
+        expect(comumFoco, `${rotulo}: foco difere do repouso`).not.toBe(repouso)
+        await select.blur()
+        await select.evaluate((x) => x.setAttribute('aria-invalid', 'true'))
+        expect(await cor(select), `${rotulo}: select em erro`).toBe(await corDestrutiva(page))
+        await page.getByLabel('Nota interna').click()
+        await expect(select).toHaveCount(0)
+        const [borda, fundo] = (await page.locator('#resposta').evaluate((e) => { const f = e.closest('form')!; return [window.__ux.pintar([...window.__ux.pilha(f), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(f))] })) as number[][]
+        expect(contraste(borda, fundo), `${rotulo}: Responder com Nota interna`).toBeGreaterThanOrEqual(3)
         medidas++
       }
   expect(medidas).toBe(12)
