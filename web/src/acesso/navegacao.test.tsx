@@ -124,7 +124,7 @@ describe('Conta', () => {
 
 describe('operador', () => {
   // C70 (AC 9)
-  it.each(['fila', 'assistente', 'artigos'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
+  it.each(['fila', 'assistente', 'solicitacoes', 'indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia', 'conta'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['OPERADOR'] })] })
     const Local = () => <output data-testid="local">{useLocation().pathname}</output>
     render(

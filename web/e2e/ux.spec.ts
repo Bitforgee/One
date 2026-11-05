@@ -1218,6 +1218,30 @@ test.describe('S5 diálogos e administração', () => {
     expect(Buffer.concat(partes).toString('utf8').split('\n')[0]).toBe('cpf;nome;email;matricula;curso;semestre;situacao')
   })
 
+  // C48 (AC 35): o número de cada passo é visível e legível nos 3 temas
+  test('números dos passos de Matrículas visíveis nos 3 temas', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await simularApi(page)
+    for (const tema of Temas) {
+      await page.goto('/univag/matriculas')
+      await page.evaluate((t) => localStorage.setItem('one-tema', t), tema)
+      await page.reload()
+      await expect(page.locator('html'), tema).toHaveClass(tema === 'light' ? /^((?!dark|black).)*$/ : new RegExp(tema))
+      await page.getByText('Baixe o modelo').first().waitFor()
+      for (const n of ['1', '2', '3']) {
+        const numero = page.locator(`h2[id^=passo-] span`, { hasText: new RegExp(`^${n}$`) })
+        await expect(numero, `${tema}: passo ${n}`).toHaveCount(1)
+        expect((await caixa(numero)).height, `${tema} ${n}: altura`).toBeGreaterThan(0)
+        const [fundo, texto] = await numero.evaluate((el) => {
+          const pilha = window.__ux.pilha(el)
+          return [window.__ux.pintar(pilha), window.__ux.pintar([...pilha, getComputedStyle(el).color])]
+        })
+        expect(contraste(texto, fundo), `${tema} ${n}: contraste`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
   // C49 (AC 36)
   const Abas: [string, string, string, string][] = [
     ['Setores', 'Coordenação de Análise e Desenvolvimento de Sistemas', 'Editar: Setores', ''],
@@ -1296,6 +1320,26 @@ test.describe('S5 diálogos e administração', () => {
     expect(p.fundo, 'mesma cor de fundo').toEqual(s.fundo)
     expect(p.texto, 'mesmo texto').toEqual(s.texto)
     expect(contraste(p.fundo, p.texto)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  // C71 (AC 38): a cor digitada pinta o botão da prévia, medida no Chromium
+  test('prévia clara pinta a cor digitada', async ({ page }) => {
+    await instalar(page)
+    await page.addInitScript(() => localStorage.setItem('one-tema', 'light'))
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
+    await page.goto('/univag/aparencia')
+    await page.getByLabel('Cor principal').fill('#224fa7')
+    const entrar = page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar' })
+    const esperada = await page.evaluate(() => {
+      const ref = document.createElement('div')
+      ref.style.backgroundColor = '#224fa7'
+      document.body.append(ref)
+      const cor = getComputedStyle(ref).backgroundColor
+      ref.remove()
+      return cor
+    })
+    await expect(entrar).toHaveCSS('background-color', esperada)
   })
 })
 
