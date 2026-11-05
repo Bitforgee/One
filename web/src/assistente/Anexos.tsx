@@ -4,13 +4,16 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 
 export const LimiteDeAnexos = 3
-export const AjudaDosAnexos = 'Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa.'
+export const AjudaDosAnexos = 'PDF ou foto, até 10 MB'
 
 // Os arquivos escolhidos e a conta dos que a conversa já recebeu: juntos, no máximo 3.
 export function useAnexos() {
   const [escolhidos, setEscolhidos] = useState<File[]>([])
   const [enviados, setEnviados] = useState(0)
+  const [foco, setFoco] = useState(false) // o clipe com foco mostra a ajuda
   return {
+    foco,
+    setFoco,
     escolhidos,
     enviados,
     escolher: (novos: File[]) => setEscolhidos((atuais) => [...atuais, ...novos].slice(0, LimiteDeAnexos - enviados)),
@@ -35,6 +38,8 @@ export function BotaoAnexar({ anexos }: { anexos: Anexos }) {
         className="shrink-0 rounded-full"
         aria-label="Anexar arquivo"
         disabled={anexos.enviados + anexos.escolhidos.length >= LimiteDeAnexos}
+        onFocus={() => anexos.setFoco(true)}
+        onBlur={() => anexos.setFoco(false)}
         onClick={() => campo.current?.click()}
       >
         <Paperclip aria-hidden="true" />

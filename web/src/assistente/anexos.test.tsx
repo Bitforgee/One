@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 
-const Ajuda = 'Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa.'
+const Ajuda = 'PDF ou foto, até 10 MB'
 
 const responde: Rota = () => [201, { conversaId: 7, resposta: { tipo: 'pergunta', texto: 'É do semestre atual?' } }]
 
@@ -149,10 +149,11 @@ describe('anexos na conversa com o assistente', () => {
   // C34 (AC 26)
   it('texto de ajuda dos anexos', async () => {
     assistente()
+    const campo = await screen.findByLabelText('Mensagem')
+    expect(screen.queryByText(Ajuda)).not.toBeInTheDocument()
+    await escolher('foto.png')
     const ajuda = await screen.findByText(Ajuda)
-    const campo = screen.getByLabelText('Mensagem')
 
-    expect(ajuda).toBeVisible()
     // abaixo do campo: vem depois dele no documento
     expect(campo.compareDocumentPosition(ajuda) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })

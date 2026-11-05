@@ -47,7 +47,7 @@ describe('transferência', () => {
     await userEvent.selectOptions(within(dialogo).getByLabelText('Matrícula'), '2')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
 
-    await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')
+    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
     expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'Quero trancar o curso', matriculaId: 2 })
   })
 
@@ -68,11 +68,11 @@ describe('transferência', () => {
 
     await transferirConversa()
 
-    expect(await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')).toBeInTheDocument()
+    expect(await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')).toBeInTheDocument()
     expect(await screen.findByText('Olá! Vou reemitir seu boleto.')).toBeInTheDocument()
     expect(screen.getByText('Obrigada!')).toBeInTheDocument()
     expect(screen.getByText('preciso do boleto')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /ONE-1/ })).toHaveAttribute('href', '/univag/chamados/ONE-1')
+    expect(screen.getByRole('link', { name: 'Ver solicitação' })).toHaveAttribute('href', '/univag/chamados/ONE-1')
     expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
   })
 
@@ -82,7 +82,7 @@ describe('transferência', () => {
     const chamadas = emConversa({ 'POST /api/conversas/7/transferir': transferido, 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/assistente')
     await transferirConversa()
-    await screen.findByText('Transferido para Financeiro. Protocolo ONE-1.')
+    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
     const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
     await waitFor(() => expect(leituras()).toBe(1))
 

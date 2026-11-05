@@ -31,11 +31,13 @@ const Assistente = [
   'A conversa será encerrada.',
   'Cancelar',
   'Confirmar',
-  'Transferido para Financeiro. Protocolo ONE-1.',
-  'Abrir a solicitação ONE-1',
+  'Sua solicitação ONE-1 foi para Financeiro',
+  'A resposta chega em Solicitações e no seu e-mail.',
+  'Ver solicitação',
   'Que bom que resolveu! Conversa encerrada.',
   'Conversa encerrada.',
-  'Fotos e PDFs de até 10 MB, até 3 por conversa. Mostre só os dados de que o atendimento precisa.',
+  'PDF ou foto, até 10 MB',
+  'Reenviar',
 ]
 
 const Agora = '2026-11-02T15:00:00Z'
@@ -79,6 +81,10 @@ describe('textos', () => {
     const campo = await screen.findByLabelText('Mensagem')
     expect(campo).toHaveAttribute('placeholder', 'Escreva sua dúvida')
     t.conferir(tela())
+    // com um arquivo escolhido, a ajuda dos anexos aparece
+    await userEvent.upload(document.querySelector<HTMLInputElement>('input[type="file"]')!, new File(['x'], 'foto.png', { type: 'image/png' }))
+    await screen.findByText('PDF ou foto, até 10 MB')
+    t.conferir(tela(), ['foto.png'])
     montada.unmount()
 
     // digitando

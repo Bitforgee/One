@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { ArrowUp, ExternalLink, Hand, ShieldAlert } from 'lucide-react'
-import { useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, type Matricula } from '../api'
 import { Contato, temContato, urlDaImagem, useAparencia, type InstituicaoPublica } from '../aparencia'
@@ -59,14 +59,16 @@ function perguntar(conversaId: number | undefined, mensagem: string, arquivos: F
   return api<{ conversaId?: number; resposta: Resposta }>(url, corpoDaMensagem(mensagem, arquivos))
 }
 
+type Envio = { mensagem: string; reenvio?: boolean }
 type Efeitos = { adicionar: (novas: Mensagem[]) => void; abrirConversa: (id: number) => void; limparTexto: () => void; zerarAvaliacao: () => void; enviou: () => void }
 
 // Sem arquivos o balão do aluno entra antes da resposta (e fica, se a API falhar). Com arquivos, só depois do sucesso:
 // o texto e os selos ficam onde estão para o aluno tentar de novo, e os links precisam dos ids que a API gravou.
-async function enviarMensagem(mensagem: string, arquivos: File[], conversaId: number | undefined, efeitos: Efeitos) {
+// No reenvio de um envio sem arquivos o balão do aluno já está na conversa: não entra de novo.
+async function enviarMensagem({ mensagem, reenvio }: Envio, arquivos: File[], conversaId: number | undefined, efeitos: Efeitos) {
   const agora = () => new Date().toISOString()
   if (arquivos.length === 0) {
-    efeitos.adicionar([{ autor: 'ALUNO', texto: mensagem, em: agora() }])
+    if (!reenvio) efeitos.adicionar([{ autor: 'ALUNO', texto: mensagem, em: agora() }])
     efeitos.limparTexto()
   }
   efeitos.zerarAvaliacao()
@@ -136,7 +138,7 @@ function Links({ links }: { links: string[] }) {
   )
 }
 
-function Conversa({ mensagens, fuso, digitando, foto }: { mensagens: Mensagem[]; fuso: string; digitando: boolean; foto?: { src: string; alt: string } }) {
+function Conversa({ mensagens, fuso, digitando, foto, depois }: { mensagens: Mensagem[]; fuso: string; digitando: boolean; foto?: { src: string; alt: string }; depois: ReactNode }) {
   return (
     <Conversation className="overflow-y-visible">
       {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
@@ -158,19 +160,19 @@ function Conversa({ mensagens, fuso, digitando, foto }: { mensagens: Mensagem[];
             digitando…
           </div>
         )}
+        {depois}
       </ConversationContent>
     </Conversation>
   )
 }
 
-type Seguimento = { ultima?: Tipo; avaliada?: boolean; desfecho: string | null; explicar: boolean; avaliar: (resolveu: boolean) => void; pendente: boolean; transferir: () => void }
+type Seguimento = { ultima?: Tipo; desfecho: string | null; explicar: boolean; transferir: () => void }
 
-// Depois da última resposta: a avaliação, o convite para explicar melhor e a confirmação da transferência.
-function Seguimento({ ultima, avaliada, desfecho, explicar, avaliar, pendente, transferir }: Seguimento) {
+// Depois da última resposta: o convite para explicar melhor (até a transferência) e a confirmação da transferência.
+function Seguimento({ ultima, desfecho, explicar, transferir }: Seguimento) {
   return (
     <>
-      {ultima === 'resposta' && !avaliada && !desfecho && <Avaliacao avaliar={avaliar} pendente={pendente} />}
-      {explicar && <p className="my-2">Quer explicar melhor ou falar com um atendente?</p>}
+      {explicar && desfecho !== 'TRANSFERIDA' && <p className="my-2">Quer explicar melhor ou falar com um atendente?</p>}
       {ultima === 'transferir' && !desfecho && (
         <Button className="my-2" onClick={transferir}>
           Confirmar transferência
@@ -180,11 +182,15 @@ function Seguimento({ ultima, avaliada, desfecho, explicar, avaliar, pendente, t
   )
 }
 
+// A avaliação só vale para uma resposta ainda não avaliada, sem desfecho e sem erro de envio.
+const avaliavel = (ultima: Tipo | undefined, avaliada: boolean | undefined, desfecho: string | null, erro: Error | null) => ultima === 'resposta' && !avaliada && !desfecho && !erro
+
+// "Isso resolveu?" logo abaixo da última resposta, no fluxo da conversa.
 function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void; pendente: boolean }) {
   return (
-    <div className="my-2 flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <span>Isso resolveu?</span>
-      <Button size="sm" onClick={() => avaliar(true)} disabled={pendente}>
+      <Button size="sm" variant="outline" onClick={() => avaliar(true)} disabled={pendente}>
         Sim
       </Button>
       <Button size="sm" variant="outline" onClick={() => avaliar(false)} disabled={pendente}>
@@ -220,19 +226,25 @@ function BoasVindas({ ap, foto, perguntar, pendente }: { ap: InstituicaoPublica;
   )
 }
 
-// Depois da transferência, as respostas públicas do atendente aparecem aqui, relidas a cada 15 s.
+// Depois da transferência: o bloco com o número, o setor e para onde a resposta chega; as respostas públicas do atendente aparecem abaixo, relidas a cada 15 s.
 function Transferido({ transferido, fuso, contato }: { transferido: Transferencia; fuso: string; contato: InstituicaoPublica['contato'] }) {
   const { slug } = useParams()
   const { chamado } = useChamado(transferido.numero)
   return (
     <>
-      <Alert>{`Transferido para ${transferido.setor}. Protocolo ${transferido.numero}.`}</Alert>
-      {temContato(contato) && (
-        <section className="my-2 flex flex-col gap-1">
-          <h2 className="m-0 text-sm font-semibold">Contato do atendimento</h2>
-          <Contato contato={contato} />
-        </section>
-      )}
+      <section className="my-2 flex flex-col gap-2 rounded-lg border p-4">
+        <h2 className="m-0 text-base font-semibold">{`Sua solicitação ${transferido.numero} foi para ${transferido.setor}`}</h2>
+        <p className="m-0 text-sm">A resposta chega em Solicitações e no seu e-mail.</p>
+        {temContato(contato) && (
+          <section className="flex flex-col gap-1">
+            <h3 className="m-0 text-sm font-semibold">Contato do atendimento</h3>
+            <Contato contato={contato} />
+          </section>
+        )}
+        <Button asChild className="self-start">
+          <Link to={`/${slug}/chamados/${transferido.numero}`}>Ver solicitação</Link>
+        </Button>
+      </section>
       <div className="my-2 flex flex-col gap-2">
         {chamado?.mensagens
           .filter((m) => m.tipo === 'PUBLICA')
@@ -240,9 +252,6 @@ function Transferido({ transferido, fuso, contato }: { transferido: Transferenci
             <Balao key={m.id} doAluno={m.doAluno} autor={m.doAluno ? undefined : m.autor} texto={m.texto} em={m.criadaEm} fuso={fuso} />
           ))}
       </div>
-      <Link to={`/${slug}/chamados/${transferido.numero}`} className="text-primary">
-        Abrir a solicitação {transferido.numero}
-      </Link>
     </>
   )
 }
@@ -266,51 +275,59 @@ type EntradaProps = {
   anexos: Anexos
 }
 
-// Compositor no estilo do ChatGPT: uma caixa arredondada com o campo que cresce com o texto e, embaixo, as ações à esquerda e o enviar redondo à direita.
+// Compositor no estilo do ChatGPT: uma caixa arredondada com o campo que cresce com o texto e, embaixo, o enviar redondo à direita.
+// "Falar com atendente" fica numa linha própria acima da caixa.
 function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar, anexos }: EntradaProps) {
   const vazio = pendente || !texto.trim()
   // type="button": dentro do form, o padrão "submit" enviaria a mensagem
-  const acoes = (
-    <div className="flex flex-wrap gap-1.5">
-      <Button type="button" size="sm" className="rounded-full" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
-        <Hand aria-hidden="true" />
-        Falar com atendente
-      </Button>
-      {emConversa && (
-        <Button type="button" size="sm" className="rounded-full" variant="outline" onClick={() => confirmar('encerrar')}>
-          Encerrar
-        </Button>
-      )}
-    </div>
+  const atendente = (
+    <Button type="button" size="sm" className="self-start rounded-full" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
+      <Hand aria-hidden="true" />
+      Falar com atendente
+    </Button>
   )
-  if (noLimite) return acoes
+  const encerrar = emConversa && (
+    <Button type="button" size="sm" className="rounded-full" variant="outline" onClick={() => confirmar('encerrar')}>
+      Encerrar
+    </Button>
+  )
+  if (noLimite)
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {atendente}
+        {encerrar}
+      </div>
+    )
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
-      <Selos anexos={anexos} />
-      <Label htmlFor="mensagem" className="sr-only">
-        Mensagem
-      </Label>
-      <div className="flex items-end gap-1.5">
-        <BotaoAnexar anexos={anexos} />
-        <Textarea
-          id="mensagem"
-          rows={1}
-          maxLength={1000}
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          onKeyDown={(e) => enviarComEnter(e, vazio)}
-          placeholder="Escreva sua dúvida"
-          className="max-h-52 min-h-11 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
-        />
-      </div>
-      <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>
-      <div className="flex items-end justify-between gap-1.5">
-        <div className="flex flex-wrap items-center gap-1.5">{acoes}</div>
-        <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
-          {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
-        </Button>
-      </div>
-    </form>
+    <div className="flex flex-col gap-1.5">
+      {atendente}
+      <form onSubmit={enviar} className="flex flex-col gap-1 rounded-3xl border bg-background p-1.5 shadow-sm transition-[border-color] focus-within:border-ring">
+        <Selos anexos={anexos} />
+        <Label htmlFor="mensagem" className="sr-only">
+          Mensagem
+        </Label>
+        <div className="flex items-end gap-1.5">
+          <BotaoAnexar anexos={anexos} />
+          <Textarea
+            id="mensagem"
+            rows={1}
+            maxLength={1000}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => enviarComEnter(e, vazio)}
+            placeholder="Escreva sua dúvida"
+            className="max-h-52 min-h-11 flex-1 resize-none border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0 dark:bg-transparent"
+          />
+        </div>
+        {(anexos.foco || anexos.escolhidos.length > 0) && <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>}
+        <div className="flex items-end justify-between gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">{encerrar}</div>
+          <Button type="submit" size="icon" aria-label="Enviar" className="size-9 shrink-0 rounded-full" disabled={vazio}>
+            {pendente ? <Spinner /> : <ArrowUp aria-hidden="true" />}
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }
 
@@ -386,6 +403,18 @@ function Erro({ erro }: { erro: Error | null }) {
   )
 }
 
+// O erro do envio fica no lugar da resposta, com o botão que reenvia a mesma mensagem.
+function FalhaDoEnvio({ erro, reenviar }: { erro: Error; reenviar: () => void }) {
+  return (
+    <Alert variant="destructive">
+      <span>{erro.message}</span>
+      <Button type="button" size="sm" variant="outline" className="mt-2 justify-self-start" onClick={reenviar}>
+        Reenviar
+      </Button>
+    </Alert>
+  )
+}
+
 export function Assistente() {
   const { me } = useSessao()
   const { slug } = useParams()
@@ -405,8 +434,8 @@ export function Assistente() {
   const [confirmar, setConfirmar] = useState<Confirmar>()
   const anexos = useAnexos()
   const envio = useMutation({
-    mutationFn: (mensagem: string) =>
-      enviarMensagem(mensagem, anexos.escolhidos, conversaId, {
+    mutationFn: (pedido: Envio) =>
+      enviarMensagem(pedido, anexos.escolhidos, conversaId, {
         adicionar: (novas) => setMensagens((m) => [...m, ...novas]),
         abrirConversa: setConversaId,
         limparTexto: () => setTexto(''),
@@ -423,7 +452,7 @@ export function Assistente() {
 
   function enviar(e: FormEvent) {
     e.preventDefault()
-    envio.mutate(texto)
+    envio.mutate({ mensagem: texto })
   }
 
   function avaliar(resolveu: boolean) {
@@ -460,9 +489,20 @@ export function Assistente() {
         <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />
         {AvisoExterno}
       </p>
-      {mensagens.length === 0 && <BoasVindas ap={ap} foto={foto} perguntar={(p) => envio.mutate(p)} pendente={envio.isPending} />}
-      <Conversa mensagens={mensagens} fuso={fuso} digitando={envio.isPending} foto={foto} />
-      <Seguimento ultima={ultima} avaliada={avaliada} desfecho={desfecho} explicar={explicar} avaliar={avaliar} pendente={acao.isPending} transferir={() => abrir('atendente')} />
+      {mensagens.length === 0 && <BoasVindas ap={ap} foto={foto} perguntar={(p) => envio.mutate({ mensagem: p })} pendente={envio.isPending} />}
+      <Conversa
+        mensagens={mensagens}
+        fuso={fuso}
+        digitando={envio.isPending}
+        foto={foto}
+        depois={
+          <>
+            {envio.error && <FalhaDoEnvio erro={envio.error} reenviar={() => envio.mutate({ ...envio.variables!, reenvio: true })} />}
+            {avaliavel(ultima, avaliada, desfecho, envio.error) && <Avaliacao avaliar={avaliar} pendente={acao.isPending} />}
+          </>
+        }
+      />
+      <Seguimento ultima={ultima} desfecho={desfecho} explicar={explicar} transferir={() => abrir('atendente')} />
       {transferido ? (
         <Transferido transferido={transferido} fuso={fuso} contato={ap.contato} />
       ) : desfecho ? (
@@ -472,7 +512,6 @@ export function Assistente() {
           <Entrada noLimite={noLimite} texto={texto} setTexto={setTexto} enviar={enviar} pendente={envio.isPending} destaque={destaque} emConversa={emConversa} confirmar={abrir} anexos={anexos} />
         </div>
       )}
-      <Erro erro={envio.error} />
       <Erro erro={acao.error} />
       <Confirmacao
         confirmar={confirmar}

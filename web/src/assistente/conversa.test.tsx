@@ -125,7 +125,7 @@ describe('conversa com o assistente', () => {
     await userEvent.paste('a'.repeat(2000))
     expect(confirmar()).toBeEnabled()
     await userEvent.click(confirmar())
-    expect(await screen.findByText('Transferido para Triagem. Protocolo ONE-1.')).toBeInTheDocument()
+    expect(await screen.findByText('Sua solicitação ONE-1 foi para Triagem')).toBeInTheDocument()
     expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'a'.repeat(2000) })
   })
 
