@@ -42,10 +42,10 @@ O nome em cada `Proof:` é o contrato (L-022). Classes e arquivos novos: `PushRo
 2. Os testes da web que simulam `GET /api/push/chave` com `404` para o push desligado (`assistente/avisos.test.tsx`,
    `acesso/navegacao.test.tsx` e os de `e2e/` que o façam) passam a simular `204`.
 3. `web/src/assistente/conversa.test.tsx`: a tabela `separarLinks(%j)` e o teste "link da resposta vira botão que abre
+   em nova aba" passam a esperar os dois-pontos e o link no meio do texto.
 4. `api.Tests/PushRotasTests.cs` `Sem_assunto_o_push_fica_desligado`: o `GET` passa de `404` para `204` (o 4º estado de "push desligado", `Assunto` vazio) (decisão delegada pelo usuário em 04/11, depois da rodada 1).
 5. `web/e2e/arranjo.spec.ts:230`: "O boleto fica em." passa a "O boleto fica em:" (regra do C4) (decisão delegada pelo usuário em 04/11, depois da rodada 1).
 6. `web/src/test/estrutura.test.ts`: a lista `Raiz` ganha `links.test.tsx` (decisão delegada pelo usuário em 04/11, depois da rodada 1).
-   em nova aba" passam a esperar os dois-pontos e o link no meio do texto.
 
 ## Checks
 
@@ -105,7 +105,7 @@ Proof: `cd web && npx vitest run src/links.test.tsx -t "texto hostil não gera H
 | --- | --- | --- |
 | `GET /api/push/chave` statuses (3) | 200 C1 · 204 C1 · 401 C7 (suíte inteira, `PushRotasTests.Sem_cookie_401_nas_tres_rotas` sem mudança) | - |
 | estados da configuração (4) | as duas vazias C1 · só a pública C1 · só a privada C1 · as duas preenchidas C1 | - |
-| lugares dos avisos (3) | botão da barra C2 · gaveta C2 · linha da Conta C2 | - |
+| lugares dos avisos (2) | botão da barra C2 · linha da Conta C2 | - |
 | telas sem erro no console (3) | Assistente C3 · Fila C3 · Conta C3 | - |
 | formas de link (6) | final com dois-pontos C4 · final com ponto depois C4 · final depois de ">" C4 · final sem dois-pontos C4 · dois finais C4 · sem link C4 | - |
 | posição do link (3) | só no fim C4 · só no meio C5 · no meio e no fim C5 | - |

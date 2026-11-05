@@ -46,7 +46,7 @@ Proof: `dotnet test api.Tests`
 **C2** - [x] `GET /api/push/chave` com o cookie de um aluno e `Push:ChavePublica` e `Push:ChavePrivada` preenchidas responde `200` com o corpo JSON de uma só chave, `chavePublica`, igual à configurada (AC 1)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_200_com_a_chave_configurada"`
 
-**C3** - [x] Sem o par completo o push está desligado: `GET /api/push/chave` e `POST /api/push/subscricao` respondem `404` em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada), 6 pedidos; `DELETE /api/push/subscricao` continua `204` com as duas vazias (AC 2)
+**C3** - [x] Sem o par completo o push está desligado: `GET /api/push/chave` e `POST /api/push/subscricao` respondem `404` em cada um dos 3 estados da configuração (as duas vazias, só a pública, só a privada), 6 pedidos; `DELETE /api/push/subscricao` continua `204` com as duas vazias (AC 2) [Nota de 04/11: superado por `ajustes-push-e-links` C1; hoje o `GET /api/push/chave` responde `204` sem corpo com o push desligado, e o `POST` continua `404`.]
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Chave_204_sem_par_completo"` (nota de 04/11: substituído por `ajustes-push-e-links` C1 - o `GET /api/push/chave` passou a responder `204` com o push desligado, e o `POST` continua `404`; o teste antigo `Sem_par_completo_404_nas_duas_rotas` foi renomeado para este)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~PushRotasTests.Delete_204_mesmo_sem_chaves"`
 
