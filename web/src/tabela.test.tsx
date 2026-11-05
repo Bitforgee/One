@@ -32,7 +32,7 @@ describe('Tabela', () => {
     api({ 'GET /api/auth/me': () => [200, atendente], 'GET /api/chamados?escopo=fila': () => [200, fila(grupos.map(([estado]) => estado))] })
     abrir('/univag/fila')
     await screen.findByText('ONE-1')
-    for (const [, texto, classe] of grupos) expect(screen.getByText(texto), texto).toHaveClass(classe)
+    for (const [, texto, classe] of grupos) expect(screen.getByText(texto, { selector: '[data-slot=badge]' }), texto).toHaveClass(classe)
   })
 
   // aparencia-instituicao C4 (AC 4)

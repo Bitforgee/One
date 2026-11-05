@@ -16,7 +16,7 @@ describe('artigos', () => {
     abrir('/univag/artigos')
 
     expect(await screen.findByText('Os artigos são a base das respostas do assistente.')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Novo' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Novo artigo' }))
     const dialogo = within(await screen.findByRole('dialog'))
     expect(dialogo.getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria', 'Acadêmico'])
     await userEvent.type(dialogo.getByLabelText('Título'), 'Faltas não são abonadas')

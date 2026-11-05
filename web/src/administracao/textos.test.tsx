@@ -13,9 +13,9 @@ const Usuarios = [
   'Voltar', 'Usuário salvo.', 'Usuário desativado.',
 ]
 const Matriculas = [
-  'Matrículas', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
+  'Matrículas', 'Baixe o modelo', 'Baixar modelo (CSV)', 'Preencha uma linha por aluno', 'Envie o arquivo', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
   '. Alunos são atualizados pelo CPF e matrículas pelo número. Se alguma linha tiver erro, nada é importado.', 'Arquivo CSV', 'Importar',
-  'Importação concluída: ', ' matrículas criadas e ', ' atualizadas.', 'Linha', 'Motivo',
+  'Importação concluída: ', ' matrículas criadas e ', ' atualizadas.', 'Linha',
   'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Voltar',
 ]
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']
@@ -119,7 +119,7 @@ describe('textos', () => {
 
     // erros por linha
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Importar' }))
-    await screen.findByRole('table')
+    await screen.findByText('Linha 3', { exact: false })
     t.conferir(tela(), ['alunos.csv', 'Há linhas inválidas.', '3', 'CPF inválido'])
 
     // concluída

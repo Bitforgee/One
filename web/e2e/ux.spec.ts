@@ -1049,3 +1049,424 @@ test.describe('S4 detalhe', () => {
     }
   })
 })
+
+// ---------- Lote 3: S5 (formulários, erros e administração), varreduras de S6 e S7 ----------
+
+const Celular = { width: 360, height: 740 }
+
+// O que cada diálogo de formulário abre e o nome da ação do rodapé
+type Dialogo = { nome: string; caminho: string; papeis?: string[]; esperar: string; abrir: (p: Page) => Promise<void>; titulo: string; acao: string }
+const Dialogos: Dialogo[] = [
+  { nome: 'Artigos Novo', caminho: '/univag/artigos', esperar: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo artigo', acao: 'Salvar' },
+  { nome: 'Documentos Enviar PDF', caminho: '/univag/documentos', esperar: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', abrir: (p) => p.getByRole('button', { name: 'Enviar PDF' }).click(), titulo: 'Enviar PDF', acao: 'Enviar' },
+  { nome: 'Usuários Novo', caminho: '/univag/usuarios', esperar: 'Carla Regina de Souza Albuquerque', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo usuário', acao: 'Salvar' },
+  { nome: 'Cadastros Novo (Setores)', caminho: '/univag/cadastros', esperar: 'Coordenação de Análise e Desenvolvimento de Sistemas', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo: Setores', acao: 'Salvar' },
+  { nome: 'Instituições Nova instituição', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga', abrir: (p) => p.getByRole('button', { name: 'Nova instituição' }).click(), titulo: 'Nova instituição', acao: 'Criar' },
+  {
+    nome: 'Instituições Importar carga', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga',
+    abrir: async (p) => {
+      await p.getByRole('button', { name: 'Ações de Centro Universitário de Várzea Grande' }).click()
+      await p.getByRole('menuitem', { name: 'Importar carga' }).click()
+    },
+    titulo: 'Importar carga: Centro Universitário de Várzea Grande', acao: 'Importar',
+  },
+]
+
+async function noCelular(page: Page, caminho: string, esperar: string, papeis?: string[], largura = 360) {
+  await instalar(page)
+  await page.setViewportSize({ width: largura, height: 740 })
+  await simularApi(page, papeis)
+  await page.goto(caminho)
+  await page.getByText(esperar).first().waitFor()
+}
+
+test.describe('S5 diálogos e administração', () => {
+  test.setTimeout(240_000)
+
+  // C39 (AC 29)
+  for (const d of Dialogos)
+    test(`diálogos de formulário em tela inteira abaixo de 768: ${d.nome}`, async ({ page }) => {
+      await noCelular(page, d.caminho, d.esperar, d.papeis)
+      await d.abrir(page)
+      const dialogo = page.getByRole('dialog', { name: d.titulo })
+      await expect(dialogo).toHaveCount(1)
+      await expect.poll(async () => Object.values(await caixa(dialogo)).map(Math.round), 'a caixa do diálogo').toEqual([0, 0, Celular.width, Celular.height])
+
+      const cabecalho = dialogo.locator('[data-slot=sheet-header]')
+      await expect(cabecalho).toHaveCount(1)
+      await expect(cabecalho.getByText(d.titulo, { exact: true })).toHaveCount(1)
+      const x = cabecalho.getByRole('button', { name: 'Fechar', exact: true })
+      await expect(x).toHaveCount(1)
+      const xc = await caixa(x)
+      expect([xc.width, xc.height].every((v) => v >= 43.9), 'X de 44 x 44').toBe(true)
+
+      const rodape = dialogo.locator('[data-slot=sheet-footer]')
+      await expect(rodape).toHaveCount(1)
+      await expect(rodape.getByRole('button')).toHaveText(['Cancelar', d.acao])
+      const r = await caixa(rodape)
+      expect(r.y + r.height, 'o rodapé na base, antes de rolar').toBeCloseTo(Celular.height, 0)
+
+      const corpo = dialogo.locator('form > div:not([data-slot])')
+      await expect(corpo).toHaveCount(1)
+      expect(['auto', 'scroll']).toContain(await corpo.evaluate((e) => getComputedStyle(e).overflowY))
+      const [c, h, f] = [await caixa(corpo), await caixa(cabecalho), r]
+      expect(c.y, 'o corpo começa sob o cabeçalho').toBeGreaterThanOrEqual(h.y + h.height - 1)
+      expect(c.y + c.height, 'o corpo termina no rodapé').toBeLessThanOrEqual(f.y + 1)
+      if (d.titulo === 'Novo usuário') {
+        const [rolagem, visivel] = await corpo.evaluate((e) => [e.scrollHeight, e.clientHeight])
+        expect(rolagem, 'o corpo rola').toBeGreaterThan(visivel)
+      }
+    })
+
+  test('diálogos de formulário em tela inteira abaixo de 768: a 768 o Novo usuário é um diálogo', async ({ page }) => {
+    await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque', undefined, 768)
+    await page.getByRole('button', { name: 'Novo', exact: true }).click()
+    const dialogo = page.getByRole('dialog', { name: 'Novo usuário' })
+    await expect(dialogo).toHaveCount(1)
+    await expect.poll(async () => (await caixa(dialogo)).width).toBeLessThan(768)
+  })
+
+  // C40 (AC 30)
+  test('erro do CPF abaixo do campo a 360', async ({ page }) => {
+    await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque')
+    await page.route('**/api/admin/usuarios', (r) =>
+      r.request().method() === 'POST' ? r.fulfill(json({ status: 400, detail: 'CPF inválido.', errors: { cpf: ['CPF inválido.'] } }, 400)) : r.fallback(),
+    )
+    await page.getByRole('button', { name: 'Novo', exact: true }).click()
+    const dialogo = page.getByRole('dialog', { name: 'Novo usuário' })
+    await dialogo.getByRole('button', { name: 'Salvar' }).click()
+    const erro = dialogo.getByText('CPF inválido.')
+    await expect(erro).toHaveCount(1)
+    const [campo, e] = [await caixa(dialogo.getByLabel('CPF', { exact: true })), await caixa(erro)]
+    expect(e.y, 'o erro começa depois do campo').toBeGreaterThanOrEqual(campo.y + campo.height - 0.5)
+    expect(e.y, 'e a no máximo 24 px dele').toBeLessThanOrEqual(campo.y + campo.height + 24)
+    const rodape = await caixa(dialogo.locator('[data-slot=sheet-footer]'))
+    expect(rodape.y + rodape.height, 'o Salvar segue no rodapé fixo').toBeCloseTo(Celular.height, 0)
+    await expect(dialogo.locator('[data-slot=sheet-footer]').getByRole('button', { name: 'Salvar' })).toBeVisible()
+  })
+
+  // C43 (AC 32)
+  test('destaques de Indicadores em 2 colunas no celular', async ({ page }) => {
+    await instalar(page)
+    await simularApi(page)
+    for (const [largura, colunas, linhas] of [[390, 2, 2], [1440, 4, 1]] as const) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await abrirTela(page, 'Indicadores')
+      const cartoes = page.locator('[data-slot=card]').filter({ has: page.getByText(/^(Indicador principal|Chamados abertos agora|Autoatendimento|Tempo até a 1ª resposta)$/) })
+      await expect(cartoes).toHaveCount(4)
+      const caixas = await Promise.all([0, 1, 2, 3].map((i) => caixa(cartoes.nth(i))))
+      const lefts = [...new Set(caixas.map((c) => Math.round(c.x)))]
+      const tops = [...new Set(caixas.map((c) => Math.round(c.y)))]
+      expect(lefts, `${largura}: colunas`).toHaveLength(colunas)
+      expect(tops, `${largura}: linhas`).toHaveLength(linhas)
+      if (linhas === 2) {
+        expect(Math.abs(caixas[0].y - caixas[1].y)).toBeLessThanOrEqual(1)
+        expect(Math.abs(caixas[2].y - caixas[3].y)).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  // C45 (Screens: Artigos)
+  test('Indexado em ícone ao lado do título', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await simularApi(page)
+    await page.goto('/univag/artigos')
+    const linha = page.locator('tbody tr').first()
+    await linha.waitFor()
+    const titulo = linha.locator('td').first().locator('span').first()
+    const icone = linha.getByRole('img', { name: 'Indexado' })
+    await expect(titulo).toHaveCount(1)
+    await expect(icone).toHaveCount(1)
+    // o título pode quebrar em linhas: o ícone segue a última
+    const fim = await titulo.evaluate((e) => {
+      const r = [...e.getClientRects()].at(-1)!
+      return { right: r.right, meio: r.top + r.height / 2 }
+    })
+    const i = await caixa(icone)
+    expect(i.x, 'o ícone depois do texto').toBeGreaterThanOrEqual(fim.right - 0.5)
+    expect(i.x - fim.right, 'a no máximo 8 px').toBeLessThanOrEqual(8)
+    expect(Math.abs(i.y + i.height / 2 - fim.meio), 'centros verticais').toBeLessThanOrEqual(2)
+  })
+
+  // C47 (Screens: Usuários)
+  test('busca de Usuários acima da lista', async ({ page }) => {
+    await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque', undefined, 390)
+    const busca = page.getByLabel('Buscar por nome, CPF ou e-mail')
+    await expect(busca).toHaveCount(1)
+    const item = page.getByRole('main').getByRole('listitem').first()
+    await expect(item).toBeVisible()
+    const [b, i] = [await caixa(busca), await caixa(item)]
+    expect(b.y + b.height).toBeLessThanOrEqual(i.y)
+    await busca.fill('zzz')
+    await expect(page.getByText('Nenhum usuário combina com a busca.')).toBeVisible()
+  })
+
+  // C48 (AC 35)
+  test('Baixar modelo baixa o CSV com o cabeçalho', async ({ page }) => {
+    await noCelular(page, '/univag/matriculas', 'Baixe o modelo', undefined, 1280)
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Baixar modelo (CSV)' }).click()])
+    expect(download.suggestedFilename()).toMatch(/\.csv$/)
+    const fluxo = await download.createReadStream()
+    const partes: Buffer[] = []
+    for await (const parte of fluxo) partes.push(parte as Buffer)
+    expect(Buffer.concat(partes).toString('utf8').split('\n')[0]).toBe('cpf;nome;email;matricula;curso;semestre;situacao')
+  })
+
+  // C49 (AC 36)
+  const Abas: [string, string, string, string][] = [
+    ['Setores', 'Coordenação de Análise e Desenvolvimento de Sistemas', 'Editar: Setores', ''],
+    ['Categorias', 'Financeiro > Boletos e mensalidades', 'Editar: Categorias', ''],
+    ['Cursos', 'Análise e Desenvolvimento de Sistemas', 'Editar: Cursos', '/api/admin/cursos'],
+    ['Regras', 'Financeiro > Boletos e mensalidades', 'Editar: Regras', '/api/admin/regras'],
+    ['Respostas prontas', 'Boleto pronto', 'Editar: Respostas prontas', '/api/admin/respostas-prontas'],
+  ]
+  const ItemDe: Record<string, unknown> = {
+    '/api/admin/cursos': [{ id: 1, nome: 'Análise e Desenvolvimento de Sistemas', setorCoordenacaoId: 1 }],
+    '/api/admin/regras': [{ id: 1, categoriaId: 1, destino: 'SETOR', setorId: 1 }],
+    '/api/admin/respostas-prontas': [{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }],
+  }
+  test('linha inteira de Cadastros é o alvo de 48 px', async ({ page }) => {
+    await instalar(page)
+    await simularApi(page)
+    for (const url of Object.keys(ItemDe)) await page.route(`**${url}`, (r) => r.fulfill(json(ItemDe[url])))
+    let casos = 0
+    for (const largura of [390, 1280]) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      for (const [aba, texto, titulo] of Abas) {
+        await page.goto('/univag/cadastros')
+        await page.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').first().waitFor()
+        if (largura === 390) await page.getByLabel('Cadastro', { exact: true }).selectOption({ label: aba })
+        else await page.getByRole('tab', { name: aba }).click()
+        const linhas = largura === 390 ? page.getByRole('main').getByRole('listitem') : page.locator('[role=tabpanel] tbody tr')
+        await expect(linhas, `${aba} a ${largura}`).toHaveCount(1)
+        await expect(linhas.first()).toContainText(texto.split(' > ')[0])
+        const c = await caixa(linhas.first())
+        expect(c.height, `${aba} a ${largura}: altura da linha`).toBeGreaterThanOrEqual(47.9)
+        await page.mouse.click(c.x + c.width - 4, c.y + c.height / 2)
+        await expect(page.getByRole('dialog', { name: titulo }), `${aba} a ${largura}: abre a edição`).toHaveCount(1)
+        casos++
+      }
+    }
+    expect(casos).toBe(10)
+  })
+
+  // C50 (AC 37)
+  test('Aparência com o formulário primeiro e Ver prévia', async ({ page }) => {
+    await instalar(page)
+    await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
+    for (const largura of [390, 1023]) {
+      await page.setViewportSize({ width: largura, height: 844 })
+      await page.goto('/univag/aparencia')
+      await page.getByLabel('Cor principal').waitFor()
+      await expect(page.getByLabel('Cor principal'), `${largura}: o campo`).toBeVisible()
+      await expect(page.getByRole('region', { name: 'Prévia' }), `${largura}: a prévia não está na página`).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Entrar' }), `${largura}: nada da prévia`).toHaveCount(0)
+      await page.getByRole('button', { name: 'Ver prévia' }).click()
+      const dialogo = page.getByRole('dialog')
+      await expect(dialogo).toHaveCount(1)
+      await expect(dialogo.getByRole('button', { name: 'Entrar' })).toBeVisible()
+    }
+    await page.setViewportSize({ width: 1024, height: 800 })
+    await page.goto('/univag/aparencia')
+    await page.getByLabel('Cor principal').waitFor()
+    await expect(page.getByRole('button', { name: 'Ver prévia' })).toHaveCount(0)
+    const [f, p] = [await caixa(page.locator('main form')), await caixa(page.getByRole('region', { name: 'Prévia' }))]
+    expect(f.x + f.width).toBeLessThanOrEqual(p.x + 1)
+  })
+
+  // C51 (AC 38)
+  test('prévia escura com a mesma cor do app', async ({ page }) => {
+    await instalar(page)
+    await page.addInitScript(() => localStorage.setItem('one-tema', 'dark'))
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
+    await page.goto('/univag/aparencia')
+    await page.getByLabel('Cor principal').waitFor()
+    const [previa, salvar] = [page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar' }), page.locator('main form').getByRole('button', { name: 'Salvar' })]
+    await expect(previa).toHaveCount(1)
+    await expect(salvar).toHaveCount(1)
+    const pintura = async (b: Locator) => ({ fundo: await corSobreFundo(b, 'backgroundColor'), texto: await corSobreFundo(b, 'color') })
+    const [p, s] = [await pintura(previa), await pintura(salvar)]
+    expect(p.fundo, 'mesma cor de fundo').toEqual(s.fundo)
+    expect(p.texto, 'mesmo texto').toEqual(s.texto)
+    expect(contraste(p.fundo, p.texto)).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+// ---------- S6: varreduras de todas as telas ----------
+
+// As telas de C55 a C57: `Telas`, Conta e Instituições (P16)
+async function varrer(page: Page, aoAbrir: (nome: string) => Promise<void>, aparencia: object = semAparencia) {
+  const telas: [string, () => Promise<void>][] = [
+    ...Telas.map(([nome]) => [nome, () => abrirTela(page, nome)] as [string, () => Promise<void>]),
+    ['Conta', async () => { await page.goto('/univag/conta'); await page.getByText('***.456.789-**').waitFor() }],
+    ['Instituições', async () => { await page.goto('/univag/instituicoes'); await page.getByText('Faculdade Antiga').waitFor() }],
+  ]
+  for (const [nome, abrirDaTela] of telas) {
+    await page.unroute('**/api/**')
+    await simularApi(page, nome === 'Instituições' ? ['ADMINISTRADOR', 'OPERADOR'] : nome === 'Conta' ? ['ALUNO'] : undefined, false, aparencia)
+    await abrirDaTela()
+    await aoAbrir(nome)
+  }
+}
+
+test.describe('S6 varreduras', () => {
+  test.setTimeout(300_000)
+
+  // C55 (AC 41)
+  test('no máximo 4 tamanhos de texto por tela', async ({ page }) => {
+    await instalar(page)
+    let telas = 0
+    for (const largura of [390, 1440]) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await varrer(page, async (nome) => {
+        const tamanhos = await page.evaluate(() => {
+          const visivel = (e: Element) => {
+            const r = e.getBoundingClientRect()
+            return e.checkVisibility() && r.width > 1 && r.height > 1
+          }
+          const achados: Record<string, string> = {}
+          for (const el of document.querySelectorAll('body *')) {
+            if (!visivel(el) || ![...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim())) continue
+            const px = getComputedStyle(el).fontSize
+            achados[px] ??= `${el.tagName.toLowerCase()}: ${el.textContent!.trim().slice(0, 30)}`
+          }
+          return achados
+        })
+        const fora = Object.entries(tamanhos).filter(([px]) => !['12px', '14px', '16px'].includes(px))
+        expect(fora.length, `${nome} a ${largura}: no máximo 1 tamanho de título (${JSON.stringify(tamanhos)})`).toBeLessThanOrEqual(1)
+        for (const [px, exemplo] of fora) expect(['20px', '24px'], `${nome} a ${largura}: ${px} em ${exemplo}`).toContain(px)
+        telas++
+      })
+    }
+    expect(telas).toBe(2 * (Telas.length + 2))
+  })
+
+  // C56 (AC 42)
+  test('sem emoji nem gradiente', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await varrer(
+      page,
+      async (nome) => {
+        const achados = await page.evaluate(() => ({
+          emoji: [...document.querySelectorAll('h1, h2, h3')].filter((h) => /\p{Extended_Pictographic}/u.test(h.textContent ?? '')).map((h) => h.textContent),
+          // a faixa sobre a imagem do login (nas telas de acesso, que dividem o painel) é a única exceção (P10)
+          gradiente: [...document.querySelectorAll('body *')]
+            .filter((e) => getComputedStyle(e).backgroundImage.includes('gradient') && e.previousElementSibling?.tagName !== 'IMG')
+            .map((e) => `${e.tagName}.${e.className}`.slice(0, 80)),
+        }))
+        expect(achados.emoji, `${nome}: emoji em título`).toEqual([])
+        expect(achados.gradiente, `${nome}: gradiente`).toEqual([])
+      },
+      comAparencia,
+    )
+  })
+
+  // C57 (AC 43, door 3)
+  test('cor de ação só em botão principal, item ativo, link e foco', async ({ page }) => {
+    await instalar(page)
+    await varrer(
+      page,
+      async (nome) => {
+        await page.setViewportSize({ width: nome === 'Conta' ? 390 : 1440, height: 900 })
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+        const [primaria] = await Promise.all([referencia(page, '--primary')])
+        const indevidos = await page.evaluate((alvo) => {
+          const pintar = window.__ux.pintar
+          const igual = (cor: string, sobre: string) => pintar([sobre, cor]).join() === alvo.join()
+          const visivel = (e: Element) => e.checkVisibility() && e.getBoundingClientRect().width > 0
+          const ativo = (e: Element) => !!e.closest('[aria-current=page], [data-active=true]')
+          const achados: string[] = []
+          for (const el of document.querySelectorAll('body *')) {
+            if (!visivel(el)) continue
+            const s = getComputedStyle(el)
+            const rotulo = `${el.tagName.toLowerCase()}.${String(el.getAttribute('class') ?? '').slice(0, 60)}`
+            if (s.backgroundColor !== 'rgba(0, 0, 0, 0)' && igual(s.backgroundColor, '#fff')) {
+              const botao = el.matches('[data-slot=button][data-variant=default]')
+              const sigla = el.getAttribute('aria-hidden') === 'true' && el.textContent!.trim().length <= 2
+              const amostra = el.getAttribute('data-testid') === 'amostra' // a cor que o administrador digitou, mostrada como dado do campo
+              if (!botao && !ativo(el) && !sigla && !amostra) achados.push(`fundo ${rotulo}`)
+            }
+            if (igual(s.color, '#fff') && !el.closest('a, [data-variant=link], [aria-current=page], [data-active=true]')) achados.push(`texto ${rotulo}`)
+            if (el instanceof SVGElement && el.closest('.recharts-wrapper') && [s.fill, s.stroke].some((c) => c !== 'none' && igual(c, '#fff'))) achados.push(`gráfico ${rotulo}`)
+            if (s.borderTopWidth !== '0px' && igual(s.borderTopColor, '#fff')) achados.push(`borda ${rotulo}`)
+          }
+          return achados
+        }, primaria)
+        expect(indevidos, `${nome}: cor de ação fora de botão principal, item ativo, link e foco`).toEqual([])
+      },
+      { ...comAparencia, imagens: { logo: null, icone: null, login: null, assistente: null } },
+    )
+  })
+
+  test('cor de ação só em botão principal, item ativo, link e foco: o foco por Tab', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await simularApi(page, undefined, false, comAparencia)
+    await page.goto('/univag')
+    await page.getByLabel('CPF').waitFor()
+    const campo = page.getByLabel('CPF')
+    const antes = await corSobreFundo(campo, 'borderTopColor')
+    for (let i = 0; i < 5 && !(await campo.evaluate((e) => e === document.activeElement)); i++) await page.keyboard.press('Tab')
+    await expect(campo).toBeFocused()
+    expect(await corSobreFundo(campo, 'borderTopColor'), 'a borda de foco').not.toEqual(antes)
+    expect(await corSobreFundo(campo, 'borderTopColor')).toEqual(await referencia(page, '--ring'))
+  })
+})
+
+// ---------- S7: acréscimos depois do lote 2 ----------
+
+test.describe('S7 acréscimos', () => {
+  test.setTimeout(120_000)
+
+  // C66 (AC 44)
+  test('folha de ações guarda o que foi digitado', async ({ page }) => {
+    await comoEquipe(page, 390)
+    await page.route('**/api/chamados/ONE-123/resolver', (r) => r.fulfill(json({ ...chamadoSimulado(), acoes: Abertos, setores: [{ id: 2, nome: 'Financeiro' }], categorias: [{ id: 3, nome: 'Boleto' }] })))
+    const mais = () => page.getByRole('button', { name: 'Mais', exact: true }).click()
+    const folha = () => page.getByRole('dialog', { name: 'Mais ações' })
+    await mais()
+    await folha().getByLabel('Resolução').fill('Boleto reemitido')
+    await folha().getByLabel('Reclassificar').selectOption('3')
+    await folha().getByLabel('Duplicado de outro pedido do mesmo aluno').fill('ONE-9')
+    await folha().getByRole('button', { name: 'Fechar', exact: true }).click()
+    await expect(folha()).toHaveCount(0)
+    await mais()
+    await expect(folha().getByLabel('Resolução')).toHaveValue('Boleto reemitido')
+    await expect(folha().getByLabel('Reclassificar')).toHaveValue('3')
+    await expect(folha().getByLabel('Duplicado de outro pedido do mesmo aluno')).toHaveValue('ONE-9')
+    // enviada a resolução, o campo volta vazio
+    await folha().getByRole('button', { name: 'Resolver', exact: true }).click()
+    await expect(folha()).toHaveCount(0)
+    await mais()
+    await expect(folha().getByLabel('Resolução')).toHaveValue('')
+  })
+
+  // C67 (AC 45)
+  test('Fila com coluna Aberto em uma linha', async ({ page }) => {
+    await instalar(page)
+    await simularApi(page)
+    const dias = [0, 1, 2]
+    const item = (n: number) => ({ numero: `ONE-${200 + n}`, titulo: `Pedido ${n}`, categoria: 'Financeiro', estado: 'ABERTO', responsavel: null, criadoEm: new Date(Date.now() - n * 86_400_000).toISOString(), dias: n })
+    await page.route(/\/api\/chamados\?escopo=fila/, (r) => r.fulfill(json(dias.map(item))))
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/univag/fila')
+    await page.getByText('ONE-200').waitFor()
+    await expect(page.getByRole('columnheader', { name: 'Aberto', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('columnheader', { name: 'Dias' })).toHaveCount(0)
+    const cabecalhos = await page.getByRole('columnheader').allTextContents()
+    const coluna = cabecalhos.indexOf('Aberto')
+    const celulas = page.locator('tbody tr').locator(`td:nth-child(${coluna + 1})`)
+    await expect(celulas).toHaveText(['hoje', 'ontem', 'há 2 dias'])
+    for (let i = 0; i < 3; i++) {
+      const [altura, linha] = await celulas.nth(i).evaluate((e) => [e.getBoundingClientRect().height - parseFloat(getComputedStyle(e).paddingTop) - parseFloat(getComputedStyle(e).paddingBottom), parseFloat(getComputedStyle(e).lineHeight)])
+      expect(altura, `célula ${i}: uma linha`).toBeLessThanOrEqual(linha * 1.5)
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    const linhas = page.getByRole('main').getByRole('listitem')
+    await expect(linhas).toHaveCount(3)
+    for (const [i, texto] of ['aberto hoje', 'aberto ontem', 'aberto há 2 dias'].entries()) await expect(linhas.nth(i)).toContainText(texto)
+  })
+})

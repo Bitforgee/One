@@ -50,7 +50,7 @@ describe('listas de chamados', () => {
     lista('fila', () => [200, [{ numero: 'ONE-1', titulo: 'boleto', categoria: 'Boleto', estado: 'ABERTO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 1 }]])
     const montada = abrir('/univag/fila')
     const linha = (await screen.findByText('ONE-1')).closest('tr') as HTMLElement
-    expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
+    expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Aberto', 'Estado'])
     const celulas = within(linha).getAllByRole('cell')
     expect(celulas[0]).toHaveTextContent(/^ONE-1$/)
     expect(celulas[1]).toHaveTextContent(/^boleto.*aberto há \d+ dias$/) // o título e, no estreito, a linha de detalhe
@@ -90,7 +90,7 @@ describe('listas de chamados', () => {
   it('lista com erro mostra o detail sem o Spinner', async () => {
     lista('meus', () => [500, { status: 500, detail: 'Falha ao listar.' }])
     abrir('/univag/solicitacoes')
-    expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao listar.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar suas solicitações. Verifique sua conexão.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
   })
@@ -105,7 +105,7 @@ describe('listas de chamados', () => {
     onlineManager.setOnline(false)
     try {
       abrir('/univag/fila')
-      expect(await screen.findByRole('alert')).toHaveTextContent('Failed to fetch')
+      expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar a fila. Verifique sua conexão.')
       expect(screen.queryByRole('status', { name: 'Carregando' })).not.toBeInTheDocument()
       expect(fetch.mock.calls.filter(([url]) => url === '/api/chamados?escopo=fila')).toHaveLength(1)
     } finally {

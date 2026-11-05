@@ -7,10 +7,12 @@ const icone = (el: HTMLElement) => el.querySelector('svg')
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 
 describe('ícone de Indicadores', () => {
-  // C54 (## Visual): CalendarDays no botão do período
-  it('o período traz CalendarDays', async () => {
+  // C42 (AC 32): o período é um só controle, os dois campos de data; o botão do calendário (e o seu CalendarDays) saiu
+  it('o período não traz botão de calendário', async () => {
     api({ 'GET /api/auth/me': () => [200, admin] })
     abrir('/univag/indicadores')
-    expect(icone(await screen.findByRole('button', { name: 'Escolher período no calendário' }))).toHaveClass('lucide-calendar-days')
+    await screen.findByLabelText('De')
+    expect(screen.queryByRole('button', { name: 'Escolher período no calendário' })).not.toBeInTheDocument()
+    expect(document.querySelector('main .lucide-calendar-days')).toBeNull()
   })
 })

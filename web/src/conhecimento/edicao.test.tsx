@@ -27,7 +27,7 @@ describe('artigos', () => {
   it('ativar e arquivar aparecem conforme o estado, e a validade em dd/mm/aaaa', async () => {
     tela('/univag/artigos', 'artigos', [artigo(1, 'Ativo', 'ATIVO', '2026-11-01', '2026-12-31'), artigo(2, 'Rascunho', 'RASCUNHO'), artigo(3, 'Arquivado', 'ARQUIVADO', null, '2026-10-31')])
     const ativo = await item('Ativo')
-    expect(within(ativo).getByText('Ativo', { selector: '[data-slot=badge]' }).parentElement).toHaveClass('flex', 'gap-1')
+    expect(within(ativo).getAllByText('Ativo', { selector: '[data-slot=badge]' })).toHaveLength(1)
     expect(ativo).toHaveTextContent('Estágio · versão 2 · válido de 01/11/2026 · válido até 31/12/2026')
     expect(await acoesDe('Ativo')).toEqual(['Editar', 'Arquivar!'])
     const rascunho = await item('Rascunho')
@@ -79,7 +79,7 @@ describe('artigos', () => {
   it('erro ao carregar mostra o detail sem Spinner nem vazio', async () => {
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/artigos': () => [500, { status: 500, detail: 'Falha ao carregar.' }], 'GET /api/admin/categorias': () => [200, categorias] })
     abrir('/univag/artigos')
-    expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao carregar.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar os artigos. Verifique sua conexão.')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByText('Os artigos são a base das respostas do assistente.')).not.toBeInTheDocument()
   })
@@ -91,8 +91,9 @@ describe('documentos', () => {
     const arquivado = await item('Edital antigo')
     expect(within(arquivado).getByText('Arquivado')).toHaveClass('bg-foreground')
     expect(arquivado).toHaveTextContent('Estágio · versão 1 · 3 páginas · Edital antigo.pdf')
-    // o selo de indexação e o do estado ficam lado a lado, com um pequeno espaço
-    expect(within(arquivado).getByText('Indexado').parentElement).toHaveClass('flex', 'gap-1')
+    // a indexação é um ícone com nome, e só a situação é selo
+    expect(within(arquivado).getByRole('img', { name: 'Indexado' })).toBeInTheDocument()
+    expect(arquivado.querySelectorAll('[data-slot=badge]')).toHaveLength(1)
     expect(within(arquivado).queryByRole('button')).not.toBeInTheDocument()
   })
 
@@ -222,7 +223,7 @@ describe('editor Resposta', () => {
   // C70 (AC 55, door 14)
   it('resposta é o texto digitado sem marcação', async () => {
     const chamadas = tela('/univag/artigos', 'artigos', [], { 'POST /api/admin/artigos': () => [201, {}] })
-    await userEvent.click(await screen.findByRole('button', { name: /Novo/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Título'), 'Marcas')
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')
@@ -254,7 +255,7 @@ describe('editor Resposta', () => {
   // C73 (AC 58)
   it('editor Resposta acessível', async () => {
     tela('/univag/artigos', 'artigos', [])
-    await userEvent.click(await screen.findByRole('button', { name: /Novo/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const campo = within(await screen.findByRole('dialog')).getByRole('textbox', { name: 'Resposta' })
     expect(campo).toHaveAttribute('aria-multiline', 'true')
     expect(campo).toHaveAttribute('contenteditable', 'true')
@@ -280,7 +281,7 @@ describe('validade e arquivo', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 10, 10, 0))
     const chamadas = tela('/univag/artigos', 'artigos', [], { 'POST /api/admin/artigos': () => [201, {}] })
-    await userEvent.click(await screen.findByRole('button', { name: /Novo/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Título'), 'Prazo')
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')

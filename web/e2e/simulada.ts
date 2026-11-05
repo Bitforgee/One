@@ -82,7 +82,7 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
     if (caminho === '/api/admin/categorias') return json(200, [{ id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true }])
     if (caminho === '/api/admin/artigos')
 {
-      const artigo = { id: 1, estado: 'ARQUIVADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
+      const artigo = { id: 1, estado: 'ARQUIVADO', indexacao: 'INDEXADO', categoriaId: 1, categoria: 'Financeiro > Boletos e mensalidades',
         versao: { id: 1, numero: 12, titulo: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', perguntas: ['boleto?'], resposta: 'x', links: [] } }
       return json(200, mais([artigo], { ...artigo, id: 2, versao: { ...artigo.versao, id: 2, titulo: TituloLongo } }))
     }

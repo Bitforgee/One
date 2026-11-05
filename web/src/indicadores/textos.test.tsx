@@ -11,12 +11,10 @@ const Indicadores = [
   'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura',
   '12,3%', '1,5 h', '—',
   'Categorias por conversas', 'Categorias por chamados', 'Categoria', 'Total', 'Boleto3',
-  'Escolher período no calendário',
+  'Ver tabela',
   // os 4 rodapés dos destaques (*(novo)*)
-  'Resolvidas sem reabertura, sobre as conversas com desfecho', 'Chamados não fechados neste momento', 'Resolvidas pelo assistente, sobre as conversas com desfecho', 'Da abertura à primeira resposta pública',
+  'Resolvidas sem reabertura, sobre as conversas com desfecho.', 'Chamados não fechados neste momento.', 'Resolvidas pelo assistente, sobre as conversas com desfecho.', 'Da abertura à primeira resposta pública.',
 ]
-// o calendário do ptBR: título do mês, dias da semana e números dos dias (*(novo, do ptBR)*)
-const Calendario = ['novembro 2026', 'dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab', ...Array.from({ length: 31 }, (_, i) => String(i + 1))]
 
 const Inicial = 'GET /api/indicadores?de=2026-11-01&ate=2026-11-10'
 const base = {
@@ -54,15 +52,15 @@ describe('textos', () => {
     await screen.findByText('Indicador principal')
     t.conferir(tela(), ['0'])
 
-    // calendário aberto
-    await userEvent.click(screen.getByRole('button', { name: 'Escolher período no calendário' }))
-    t.conferir(await screen.findByRole('dialog'), Calendario)
+    // as tabelas dos rankings abertas
+    for (const botao of screen.getAllByRole('button', { name: 'Ver tabela' })) await userEvent.click(botao)
+    t.conferir(tela(), ['0'])
     montada.unmount()
 
-    // erro: o detail da API
+    // erro de leitura (5xx): o bloco com Tentar de novo
     montada = indicadores(() => [500, { status: 500, detail: 'Falha ao calcular.' }])
-    expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao calcular.')
-    t.conferir(tela(), ['Falha ao calcular.'])
+    expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível carregar os indicadores. Verifique sua conexão.')
+    t.conferir(tela(), ['Não foi possível carregar os indicadores. Verifique sua conexão.', 'Tentar de novo'])
     montada.unmount()
 
     t.todos()

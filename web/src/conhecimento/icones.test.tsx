@@ -10,7 +10,7 @@ const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 describe('ícones de Artigos', () => {
   // C80 (## Visual): Plus no "Novo"; CalendarDays no botão de validade
   it('Novo traz Plus e a validade traz CalendarDays', async () => {
-    api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/artigos': () => [200, []], 'GET /api/admin/categorias': () => [200, []] })
+    api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/artigos': () => [200, [{ id: 1, estado: 'ATIVO', indexacao: null, categoriaId: 3, categoria: 'Estágio', visivelDe: null, visivelAte: null, versao: { id: 10, numero: 1, titulo: 'Horas', perguntas: [], resposta: 'r', links: [] } }]], 'GET /api/admin/categorias': () => [200, []] })
     abrir('/univag/artigos')
     const novo = await screen.findByRole('button', { name: /Novo/ })
     expect(icone(novo)).toHaveClass('lucide-plus')

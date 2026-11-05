@@ -30,14 +30,13 @@ test.describe('S3 tela Aparência', () => {
     const ordem = await ys(['Marca', 'Login', 'Assistente', 'Contato'].map((t) => form.getByRole('heading', { name: t, exact: true })).concat(form.getByRole('button', { name: 'Salvar' })))
     expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
 
+    // abaixo de 1024 px (AC 37): o formulário vem primeiro, e a prévia só abre pelo "Ver prévia", numa folha
     await page.setViewportSize({ width: 390, height: 844 })
-    const [fc, pc] = [await caixa(form), await caixa(previa)]
-    expect(pc.y + pc.height, 'prévia acima do formulário').toBeLessThanOrEqual(fc.y + 1)
-    const ocultar = page.getByRole('button', { name: 'Ocultar prévia' })
-    await expect(ocultar).toBeVisible()
-    await ocultar.click()
-    await expect(page.getByRole('button', { name: 'Mostrar prévia' })).toBeVisible()
-    expect((await caixa(previa)).height, 'prévia recolhida').toBeLessThan(pc.height / 2)
+    await expect(previa).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Ver prévia' })).toBeVisible()
+    await page.getByRole('button', { name: 'Ver prévia' }).click()
+    const folha = page.getByRole('dialog', { name: 'Prévia' })
+    await expect(folha.getByRole('button', { name: 'Entrar' })).toBeVisible()
   })
 })
 

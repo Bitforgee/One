@@ -19,8 +19,7 @@ describe('administração', () => {
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
 
     expect(await screen.findByText('O arquivo tem linhas inválidas; nenhuma linha foi importada.')).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: '3' })).toBeInTheDocument()
-    expect(screen.getByRole('cell', { name: 'CPF inválido' })).toBeInTheDocument()
+    expect(screen.getByText('Linha 3').parentElement).toHaveTextContent('Linha 3CPF inválido')
   })
 
   // layout-painel C21 (AC 21): Usuários, as 5 abas de Cadastros e os erros de Matrículas
@@ -49,8 +48,8 @@ describe('administração', () => {
     await userEvent.upload(await screen.findByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
-    await screen.findByRole('table')
-    expect(cabecalhos()).toEqual(['Linha', 'Motivo'])
+    expect(await screen.findByText('Linha 3')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
   // layout-painel C24 (AC 24): Usuários e uma aba de Cadastros
@@ -173,14 +172,8 @@ describe('administração', () => {
     await userEvent.upload(await screen.findByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
-    const tabela = await screen.findByRole('table')
-    expect(within(tabela).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Linha', 'Motivo'])
-    const corpo = tabela.querySelectorAll('tbody tr')
-    expect(corpo).toHaveLength(2)
-    expect(Array.from(corpo).map((linha) => within(linha as HTMLElement).getAllByRole('cell').map((c) => c.textContent))).toEqual([
-      ['3', 'CPF inválido'],
-      ['7', 'Semestre inválido'],
-    ])
+    await screen.findByText('Linha 3')
+    expect(within(screen.getByText('Linha 3').closest('ul')!).getAllByRole('listitem').map((l) => l.textContent)).toEqual(['Linha 3CPF inválido', 'Linha 7Semestre inválido'])
   })
 
   // C85 (door 11)

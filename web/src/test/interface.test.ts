@@ -275,7 +275,7 @@ describe('interface nova', () => {
         expect([tipo('De'), tipo('Até')]).toEqual(['date', 'date'])
       }],
       ['/univag/artigos', { 'GET /api/admin/artigos': () => [200, []], 'GET /api/admin/categorias': () => [200, []] }, async () => {
-        await userEvent.click(await screen.findByRole('button', { name: /Novo/ }))
+        await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
         const dialogo = await screen.findByRole('dialog')
         expect([tipo('Válido de (opcional)', dialogo), tipo('Válido até (opcional)', dialogo)]).toEqual(['date', 'date'])
       }],

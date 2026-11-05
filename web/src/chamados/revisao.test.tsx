@@ -145,3 +145,27 @@ describe('detalhe do chamado revisado', () => {
     expect(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Encaminhar' })).toBeInTheDocument()
   })
 })
+
+describe('conversa com o assistente vista pela equipe', () => {
+  // C68 (AC 46): o link da resposta do assistente vira botão também no detalhe da equipe
+  it('links da resposta como botão na conversa da equipe', async () => {
+    const url = 'https://portal.univag.edu.br/financeiro/boletos/segunda-via'
+    const c = chamado({
+      eventos: [],
+      resumo: 'x',
+      solicitante: 'Ana',
+      transcricao: [
+        { autor: 'ALUNO', texto: 'cadê o boleto?', criadaEm: '2026-11-02T12:00:00Z' },
+        { autor: 'ASSISTENTE', texto: `O boleto fica em ${url}`, criadaEm: '2026-11-02T12:00:05Z' },
+      ],
+    })
+    api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, c] })
+    abrir('/univag/chamados/ONE-1')
+    const link = await screen.findByRole('link', { name: /portal\.univag\.edu\.br\/financeiro\/boletos\/segunda-via/ })
+    expect(link).toHaveAttribute('href', url)
+    expect(link.closest('[data-slot=button]')).not.toBeNull()
+    const texto = screen.getByText(/^O boleto fica em/)
+    expect(texto.textContent).not.toContain('https://')
+    expect(texto.parentElement).toContainElement(link) // o botão está no mesmo balão do texto
+  })
+})

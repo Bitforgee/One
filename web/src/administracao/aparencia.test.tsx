@@ -62,7 +62,7 @@ describe('tela Aparência', () => {
     abrir('/univag/aparencia')
     await digitar('Cor principal', Cor)
     const previa = within(screen.getByRole('region', { name: 'Prévia' }))
-    expect(previa.getByRole('button', { name: 'Entrar' })).toHaveStyle({ backgroundColor: Cor })
+    expect(previa.getByRole('button', { name: 'Entrar' }).closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${Cor}`)
 
     expect(document.querySelector('[aria-label="Prévia"] img[src^="blob:"]')).toBeNull()
     await userEvent.upload(screen.getByLabelText('Arquivo: Logo'), arquivo('logo.png'))
@@ -169,13 +169,21 @@ describe('tela Aparência', () => {
     expect(chamadas.filter((c) => c.metodo === 'DELETE').map((c) => c.url)).toEqual(['/api/admin/aparencia/imagens/logo'])
   })
 
-  it('a prévia recolhe e mostra de novo', async () => {
-    rotas()
-    abrir('/univag/aparencia')
-    const botao = await screen.findByRole('button', { name: 'Ocultar prévia' })
-    fireEvent.click(botao)
-    expect(screen.getByRole('button', { name: 'Mostrar prévia' })).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Marca', 'Login', 'Assistente', 'Contato'])
+  // C50 (AC 37): abaixo de 1024 px a prévia sai da página e abre pelo "Ver prévia"
+  it('a prévia abre pelo Ver prévia abaixo de 1024', async () => {
+    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 1023px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+    try {
+      rotas()
+      abrir('/univag/aparencia')
+      const botao = await screen.findByRole('button', { name: 'Ver prévia' })
+      expect(screen.queryByRole('region', { name: 'Prévia' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+      expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Marca', 'Login', 'Assistente', 'Contato'])
+      fireEvent.click(botao)
+      expect(within(await screen.findByRole('dialog', { name: 'Prévia' })).getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   // C70 (AC 15, AC 21)

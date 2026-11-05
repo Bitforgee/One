@@ -170,7 +170,7 @@ describe('textos', () => {
     rota(() => [500, { status: 500, detail: 'Falha ao listar.' }])
     montada = abrir(caminho)
     await screen.findByRole('alert')
-    t.conferir(tela(), ['Falha ao listar.'])
+    t.conferir(tela(), [`Não foi possível carregar ${escopo === 'fila' ? 'a fila' : 'suas solicitações'}. Verifique sua conexão.`, 'Tentar de novo'])
     montada.unmount()
 
     t.todos()
@@ -189,6 +189,6 @@ describe('textos', () => {
       item(1, 'ABERTO', { categoria: 'Boleto', responsavel: null, dias: 1 }),
       item(2, 'EM_ATENDIMENTO', { categoria: 'Matrícula', responsavel: 'Carla', dias: 3 }),
     ]
-    await lista('/univag/fila', 'fila', ['Fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado', 'Mais antigos primeiro', 'Boleto · sem responsável · aberto há 3 dias', 'Matrícula · Carla · aberto há 3 dias', 'sem responsável', 'aberto há 3 dias', 'Carla'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
+    await lista('/univag/fila', 'fila', ['Fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.', 'Aberto', 'Em atendimento', 'Número', 'Título', 'Categoria', 'Responsável', 'Aberto', 'Estado', 'Mais antigos primeiro', 'Boleto · sem responsável · aberto há 3 dias', 'Matrícula · Carla · aberto há 3 dias', 'sem responsável', 'aberto há 3 dias', 'há 3 dias', 'Carla'], itens, ['ONE-1', 'ONE-2', 'pedido', '1', '2', 'Boleto', 'Matrícula'])
   })
 })

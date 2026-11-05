@@ -227,7 +227,7 @@ test.describe('Detalhe do chamado', () => {
     // a fonte fica dentro do balão do assistente, abaixo do texto
     const balao = page.locator('.is-assistant').filter({ hasText: 'Como emitir a segunda via do boleto do semestre' })
     const b = await caixa(balao)
-    const texto = await caixa(balao.getByText('O boleto fica em https://portal.univag.edu.br/financeiro/boletos/segunda-via', { exact: true }))
+    const texto = await caixa(balao.getByText('O boleto fica em.', { exact: true })) // o link virou botão (AC 46)
     const fonte = await caixa(balao.locator('div.border-t'))
     expect(fonte.y).toBeGreaterThanOrEqual(texto.y + texto.height - 1)
     expect(fonte.x).toBeGreaterThanOrEqual(b.x - 1)
@@ -254,18 +254,18 @@ test.describe('Indicadores', () => {
     const campos = async () => ({
       de: await caixa(page.getByLabel('De')),
       ate: await caixa(page.getByLabel('Até')),
-      calendario: await caixa(page.getByRole('button', { name: 'Escolher período no calendário' })),
       consultar: await caixa(page.getByRole('button', { name: 'Consultar' })),
     })
     let c = await campos()
     expect(mesmaLinha(c.de, c.ate)).toBe(true)
-    expect(mesmaLinha(c.calendario, c.consultar)).toBe(true)
-    expect(c.calendario.y).toBeGreaterThanOrEqual(c.de.y + c.de.height - 1)
+    // um só controle de período (AC 32): o "Consultar" fica sob os dois campos
+    await expect(page.getByRole('button', { name: 'Escolher período no calendário' })).toHaveCount(0)
+    expect(c.consultar.y).toBeGreaterThanOrEqual(c.de.y + c.de.height - 1)
 
     const cartao = (rotulo: string) => page.getByRole('main').getByText(rotulo, { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
     const estilo = (l: Locator, propriedade: string) => l.evaluate((e, p) => getComputedStyle(e).getPropertyValue(p), propriedade)
     // layout-painel door 5: as colunas seguem o main (976 px de conteúdo a 1280 px de janela com a barra aberta, 1136 px a 1440 px)
-    for (const [largura, destaque, compactos, rankings] of [[360, 1, 2, 1], [1280, 2, 3, 2], [1440, 4, 3, 2]]) {
+    for (const [largura, destaque, compactos, rankings] of [[360, 2, 2, 1], [1280, 2, 3, 2], [1440, 4, 3, 2]]) {
       await page.setViewportSize({ width: largura, height: 740 })
       await assentar(page)
       const colunas = async (rotulos: string[]) => new Set((await Promise.all(rotulos.map((r) => caixa(cartao(r))))).map((b) => Math.round(b.x))).size
@@ -278,7 +278,7 @@ test.describe('Indicadores', () => {
       }
     }
 
-    // destaques: valor de 24 px ou mais com tabular-nums e rótulo de 14 px; compactos: valor de 20 px; os destaques vêm antes
+    // destaques: valor de 24 px ou mais com tabular-nums e rótulo de 14 px; compactos: valor de 16 px (AC 41: um só tamanho de título por tela); os destaques vêm antes
     for (const rotulo of Destaques) {
       const valor = cartao(rotulo).locator('[data-slot=card-title]')
       expect(parseFloat(await estilo(valor, 'font-size')), rotulo).toBeGreaterThanOrEqual(24)
@@ -286,7 +286,7 @@ test.describe('Indicadores', () => {
       expect(parseFloat(await estilo(cartao(rotulo).locator('[data-slot=card-description]'), 'font-size')), rotulo).toBe(14)
       expect((await caixa(cartao(rotulo))).y, rotulo).toBeLessThan((await caixa(cartao('Alunos ativos'))).y)
     }
-    for (const rotulo of Compactos) expect(Math.abs(parseFloat(await estilo(cartao(rotulo).locator('> div').nth(1), 'font-size')) - 20), rotulo).toBeLessThanOrEqual(0.5)
+    for (const rotulo of Compactos) expect(Math.abs(parseFloat(await estilo(cartao(rotulo).locator('> div').nth(1), 'font-size')) - 16), rotulo).toBeLessThanOrEqual(0.5)
 
     for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
       const ranking = cartao(titulo)
@@ -294,13 +294,14 @@ test.describe('Indicadores', () => {
       await grafico.waitFor()
       const g = await caixa(grafico)
       expect(g.height).toBeGreaterThan(0)
+      await ranking.getByRole('button', { name: 'Ver tabela' }).click() // a tabela vem recolhida (AC 32)
       expect((await caixa(ranking.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
     }
 
     await page.setViewportSize({ width: 1280, height: 740 }) // main de 976 px: a linha de ferramentas cabe numa linha
     await assentar(page)
     c = await campos()
-    for (const outro of [c.ate, c.calendario, c.consultar]) expect(mesmaLinha(c.de, outro), JSON.stringify(c)).toBe(true)
+    for (const outro of [c.ate, c.consultar]) expect(mesmaLinha(c.de, outro), JSON.stringify(c)).toBe(true)
   })
 })
 
@@ -448,7 +449,7 @@ test.describe('conhecimento', () => {
 
     await page.setViewportSize({ width: 1024, height: 740 })
     // a largura assenta no quadro seguinte ao redimensionamento
-    await expect.poll(async () => Math.abs((await caixa(dialogo)).width - 512)).toBeLessThanOrEqual(1)
+    await expect.poll(async () => Math.abs(((await dialogo.boundingBox())?.width ?? 0) - 512)).toBeLessThanOrEqual(1)
   })
 })
 
@@ -465,8 +466,8 @@ test.describe('administração', () => {
     const importar = page.getByRole('button', { name: 'Importar' })
     await importar.waitFor()
     const conteudo = async () => (await caixa(page.locator('main > div > div').first())).width
-    // o botão ocupa a largura do cartão (conteúdo menos o recuo de 16 px de cada lado do cartão)
-    expect(Math.abs((await caixa(importar)).width - ((await conteudo()) - 34))).toBeLessThanOrEqual(1)
+    // o botão ocupa a largura do passo (conteúdo menos o recuo de 16 px de cada lado do cartão e os 24 px do número do passo)
+    expect(Math.abs((await caixa(importar)).width - ((await conteudo()) - 34 - 24))).toBeLessThanOrEqual(1)
     await page.setViewportSize({ width: 1024, height: 740 })
     expect((await caixa(importar)).width).toBeLessThan(await conteudo() - 34)
 
@@ -587,15 +588,15 @@ test.describe('arranjo restante', () => {
     }
   })
 
-  // C80 (estados comuns)
+  // C80 (estados comuns); AC 29: abaixo de 768 px o diálogo de formulário é a tela inteira, sem margem
   test('diálogos a 360 px com margem de 16 px', async ({ page }) => {
     await simularApi(page)
     for (const [caminho, botao] of [['/univag/artigos', /Novo/], ['/univag/documentos', /Enviar PDF/], ['/univag/usuarios', /Novo/]] as const) {
       await page.goto(caminho)
       await page.getByRole('button', { name: botao }).click()
-      const d = await caixa(page.getByRole('dialog'))
-      expect(Math.abs(d.x - 16), caminho).toBeLessThanOrEqual(1)
-      expect(Math.abs(d.width - 328), caminho).toBeLessThanOrEqual(1)
+      const dialogo = page.getByRole('dialog')
+      await expect.poll(async () => (await dialogo.boundingBox())?.width ?? 0, caminho).toBe(360)
+      expect(Math.abs((await caixa(dialogo)).x), caminho).toBeLessThanOrEqual(1)
     }
   })
 
@@ -998,14 +999,14 @@ test.describe('painel', () => {
       await coluna.waitFor()
       expect(await padding(coluna), `acesso a ${w} px`).toBe(esperado)
     }
-    // os destaques ficam num quadro com divisórias de 1 px: a célula tem 250 px ou mais em qualquer coluna, e o valor fica em 30 px
+    // os destaques ficam num quadro com divisórias de 1 px: a célula tem 250 px ou mais em qualquer coluna (150 px nas 2 colunas do celular, AC 32), e o valor fica em 24 px (AC 41)
     for (const w of [360, 1328, 1440]) {
       await page.setViewportSize({ width: w, height: 800 })
       await page.goto('/univag/indicadores')
       const cartao = page.getByRole('main').getByText('Autoatendimento', { exact: true }).locator('xpath=ancestor::*[@data-slot="card"]')
       await cartao.waitFor()
-      expect((await caixa(cartao)).width, `cartão a ${w}`).toBeGreaterThanOrEqual(250)
-      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('30px')
+      expect((await caixa(cartao)).width, `cartão a ${w}`).toBeGreaterThanOrEqual(w === 360 ? 150 : 250)
+      expect(await cartao.locator('[data-slot=card-title]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('24px')
     }
   })
 
@@ -1070,7 +1071,7 @@ test.describe('painel', () => {
     await page.evaluate(() => localStorage.setItem('one-barra', 'recolhida'))
     await page.goto('/univag/fila')
     await page.getByText('ONE-123').waitFor()
-    await expect(page.getByRole('columnheader')).toHaveText(['Número', 'Título', 'Categoria', 'Responsável', 'Dias', 'Estado'])
+    await expect(page.getByRole('columnheader')).toHaveText(['Número', 'Título', 'Categoria', 'Responsável', 'Aberto', 'Estado'])
   })
 
   // C22: no estreito os cabeçalhos "largo" somem e os valores vão para uma linha de 12 px sob a coluna principal
@@ -1078,8 +1079,8 @@ test.describe('painel', () => {
     await simularApi(page)
     await page.route('**/api/admin/setores', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, nome: 'Secretaria', triagem: true, ativo: true }]) }))
     const Telas5: [string, string, string[], string][] = [
-      ['/univag/fila', 'ONE-123', ['Categoria', 'Responsável', 'Dias'], 'Financeiro > Boletos e mensalidades'],
-      ['/univag/usuarios', 'Carla Regina de Souza Albuquerque', ['CPF', 'E-mail', 'Papéis'], '12345678909 · carla.regina.albuquerque@univag.edu.br · Atendente, Administrador'],
+      ['/univag/fila', 'ONE-123', ['Categoria', 'Responsável', 'Aberto'], 'Financeiro > Boletos e mensalidades'],
+      ['/univag/usuarios', 'Carla Regina de Souza Albuquerque', ['CPF', 'E-mail', 'Papéis'], '123.456.789-09 · carla.regina.albuquerque@univag.edu.br · Atendente, Administrador'],
       ['/univag/artigos', 'Como emitir a segunda via', ['Categoria', 'Versão', 'Validade'], 'Financeiro > Boletos e mensalidades · versão 12'],
       ['/univag/documentos', 'Regulamento do estágio', ['Categoria', 'Versão', 'Arquivo'], 'Financeiro > Boletos e mensalidades · versão 3 · 42 páginas · regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf'],
       ['/univag/cadastros', 'Secretaria', ['Detalhe'], 'triagem'],
@@ -1263,10 +1264,10 @@ test.describe('painel', () => {
         return { tam: c.fontSize, peso: c.fontWeight, cor: c.color, num: c.fontVariantNumeric, quebra: c.whiteSpace, grampo: c.getPropertyValue('-webkit-line-clamp') }
       })
     const rodapes = [
-      'Resolvidas sem reabertura, sobre as conversas com desfecho',
-      'Chamados não fechados neste momento',
-      'Resolvidas pelo assistente, sobre as conversas com desfecho',
-      'Da abertura à primeira resposta pública',
+      'Resolvidas sem reabertura, sobre as conversas com desfecho.',
+      'Chamados não fechados neste momento.',
+      'Resolvidas pelo assistente, sobre as conversas com desfecho.',
+      'Da abertura à primeira resposta pública.',
     ]
     for (const texto of rodapes) {
       const l = page.getByText(texto, { exact: true })
@@ -1511,7 +1512,7 @@ test.describe('entrada institucional', () => {
     const p = painel(page).locator('> div')
     const [titulo, frase, lista] = [p.locator('h2'), p.locator('p'), p.locator('ul')]
     expect(await titulo.textContent()).toBe('Atendimento ao estudante')
-    expect(await estilo(titulo, 'font-size', 'font-weight', 'color')).toEqual(['30px', '600', await cor(page, '--foreground')])
+    expect(await estilo(titulo, 'font-size', 'font-weight', 'color')).toEqual(['24px', '600', await cor(page, '--foreground')]) // AC 41: um só tamanho de título por tela
     expect(await frase.textContent()).toBe('Dúvidas, solicitações e respostas da sua instituição em um só lugar.')
     expect(await estilo(frase, 'font-size', 'color')).toEqual(['16px', await cor(page, '--muted-foreground')])
     const [t, f, l] = [await caixa(titulo), await caixa(frase), await caixa(lista)]

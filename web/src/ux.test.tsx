@@ -6,7 +6,8 @@ import { MemoryRouter, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import pacote from '../package.json'
 import { App } from './App'
-import { api, me } from './test/util'
+import { textoVisivel } from './test/textos'
+import { abrir, api, chamado, instituicao, me, type Rota } from './test/util'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 
@@ -160,5 +161,108 @@ describe('ux', () => {
     expect(Object.keys(pacote.dependencies).filter((nome) => nome.startsWith('@fontsource'))).toEqual(['@fontsource-variable/inter'])
     expect(css).toMatch(/h1,\s*h2 \{\s*font-variation-settings: 'opsz' 32;\s*\}/)
     expect(css.match(/\bbody \{[^}]*\}/)![0]).not.toContain('opsz')
+  })
+
+  // C41 (AC 31, P14): a leitura que falha com 5xx mostra o alerta com ícone, o texto e "Tentar de novo", que refaz a consulta
+  type Superficie = { nome: string; papeis: string[]; caminho: string; url: string; oque: string; vazios?: string[]; depois: string | RegExp; ok?: unknown }
+  const Vazios = (...urls: string[]) => Object.fromEntries(urls.map((u) => [`GET ${u}`, (() => [200, []]) as Rota]))
+  const Superficies: Superficie[] = [
+    { nome: 'Minhas solicitações', papeis: ['ALUNO'], caminho: '/univag/solicitacoes', url: '/api/chamados?escopo=meus', oque: 'suas solicitações', depois: 'Nenhuma solicitação' },
+    { nome: 'Fila', papeis: ['ATENDENTE'], caminho: '/univag/fila', url: '/api/chamados?escopo=fila', oque: 'a fila', depois: 'Fila em dia' },
+    { nome: 'detalhe como aluno', papeis: ['ALUNO'], caminho: '/univag/chamados/ONE-1', url: '/api/chamados/ONE-1', oque: 'a solicitação', depois: 'preciso do boleto', ok: chamado() },
+    { nome: 'detalhe como equipe', papeis: ['ATENDENTE'], caminho: '/univag/chamados/ONE-1', url: '/api/chamados/ONE-1', oque: 'o chamado', depois: 'preciso do boleto', ok: chamado({ eventos: [], resumo: 'x', solicitante: 'Ana', acoes: ['responder'] }) },
+    { nome: 'Artigos', papeis: ['ADMINISTRADOR'], caminho: '/univag/artigos', url: '/api/admin/artigos', oque: 'os artigos', vazios: ['/api/admin/categorias'], depois: 'Nenhum artigo' },
+    { nome: 'Documentos', papeis: ['ADMINISTRADOR'], caminho: '/univag/documentos', url: '/api/admin/documentos', oque: 'os documentos', vazios: ['/api/admin/categorias'], depois: 'Nenhum documento' },
+    { nome: 'Usuários', papeis: ['ADMINISTRADOR'], caminho: '/univag/usuarios', url: '/api/admin/usuarios', oque: 'os usuários', vazios: ['/api/admin/setores'], depois: 'Nenhum usuário' },
+    { nome: 'Cadastros', papeis: ['ADMINISTRADOR'], caminho: '/univag/cadastros', url: '/api/admin/setores', oque: 'os cadastros', vazios: ['/api/admin/categorias', '/api/admin/cursos', '/api/admin/regras', '/api/admin/respostas-prontas'], depois: 'Nada cadastrado' },
+    { nome: 'Indicadores', papeis: ['ADMINISTRADOR'], caminho: '/univag/indicadores', url: '/api/indicadores?de=2026-11-01&ate=2026-11-10', oque: 'os indicadores', depois: 'Sem atendimentos neste período.', ok: { semDados: true } },
+    { nome: 'Aparência', papeis: ['ADMINISTRADOR'], caminho: '/univag/aparencia', url: '/api/admin/aparencia', oque: 'a aparência', depois: /Cor principal/, ok: { ...instituicao(), nome: undefined } },
+    { nome: 'Instituições', papeis: ['OPERADOR'], caminho: '/univag/instituicoes', url: '/api/plataforma/instituicoes', oque: 'as instituições', depois: 'Nada cadastrado' },
+  ]
+
+  it('erro de carregamento com Tentar de novo em 11 telas (as 11 superfícies)', () => {
+    expect(Superficies.map((x) => x.nome)).toHaveLength(11)
+  })
+
+  it.each(Superficies)('erro de carregamento com Tentar de novo em 11 telas ($nome)', async ({ papeis, caminho, url, oque, vazios = [], depois, ok = [] }) => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 10, 10, 10, 0))
+    let falhas = 1
+    const chamadas = api({
+      'GET /api/auth/me': () => [200, me({ papeis, matriculas: [] })],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      ...Vazios(...vazios),
+      [`GET ${url}`]: () => (falhas-- > 0 ? [500, { status: 500, detail: 'Falha interna do servidor.' }] : [200, ok]),
+    })
+    abrirComLocal(caminho)
+    const alerta = await screen.findByRole('alert')
+    expect(alerta.querySelector('svg')).not.toBeNull()
+    expect(alerta).toHaveTextContent(`Não foi possível carregar ${oque}. Verifique sua conexão.`)
+    expect(alerta).not.toHaveTextContent('Falha interna')
+    expect(chamadas.filter((c) => c.url === url)).toHaveLength(1)
+
+    await userEvent.click(within(alerta).getByRole('button', { name: 'Tentar de novo' }))
+    await waitFor(() => expect(chamadas.filter((c) => c.url === url)).toHaveLength(2))
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    expect(await (typeof depois === 'string' ? screen.findAllByText(depois, { exact: false }) : screen.findAllByLabelText(depois))).not.toHaveLength(0)
+    vi.useRealTimers()
+  })
+
+  it('erro de carregamento com Tentar de novo em 11 telas: 404 e 403 seguem com o detail da API', async () => {
+    for (const [status, detail] of [[404, 'Chamado não encontrado.'], [403, 'Você não tem acesso a este chamado.']] as const) {
+      api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-9': () => [status, { status, detail }] })
+      const { unmount } = abrirComLocal('/univag/chamados/ONE-9')
+      const alerta = await screen.findByRole('alert')
+      expect(alerta).toHaveTextContent(detail)
+      expect(alerta).not.toHaveTextContent('Verifique sua conexão')
+      expect(within(alerta).queryByRole('button', { name: 'Tentar de novo' })).not.toBeInTheDocument()
+      unmount()
+    }
+  })
+
+  // C56 (AC 42): o ícone Sparkles não existe no código
+  it('sem Sparkles no código', () => {
+    const usam = Object.keys(fontes).filter((caminho) => !/\.test\.tsx?$/.test(caminho) && /Sparkles/.test(fontes[caminho]))
+    expect(Object.keys(fontes).length).toBeGreaterThan(50)
+    expect(usam).toEqual([])
+  })
+
+  // C58 (Impact: textos): o aluno lê "Solicitação", a equipe continua lendo "Chamado"
+  const semChamado = () => expect(textoVisivel(document.body)).not.toMatch(/chamado/i)
+
+  it('aluno lê Solicitação e a equipe lê Chamado (Assistente com conversa e transferido)', async () => {
+    api({
+      'GET /api/auth/me': () => [200, me()],
+      'POST /api/conversas': () => [201, { conversaId: 7, resposta: { tipo: 'sem_base', texto: 'Não encontrei.' } }],
+      'POST /api/conversas/7/transferir': () => [201, { numero: 'ONE-1', estado: 'ABERTO', setor: 'Financeiro' }],
+      'GET /api/chamados/ONE-1': () => [200, chamado()],
+    })
+    abrir('/univag/assistente')
+    await userEvent.type(await screen.findByLabelText('Mensagem'), 'preciso do boleto')
+    await userEvent.click(screen.getByRole('button', { name: /Enviar/ }))
+    await screen.findByText('Não encontrei.')
+    semChamado()
+    await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
+    semChamado()
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
+    semChamado()
+  })
+
+  it.each([
+    ['Minhas solicitações', '/univag/solicitacoes', { 'GET /api/chamados?escopo=meus': () => [200, [{ numero: 'ONE-1', titulo: 'preciso do boleto', estado: 'ABERTO', criadoEm: '2026-11-02T12:00:00Z' }]] }, 'preciso do boleto'],
+    ['detalhe do chamado', '/univag/chamados/ONE-1', { 'GET /api/chamados/ONE-1': () => [200, chamado({ estado: 'ABERTO' })] }, 'preciso do boleto'],
+    ['Conta', '/univag/conta', {}, 'Trocar senha'],
+  ])('aluno lê Solicitação e a equipe lê Chamado (%s)', async (_, caminho, rotas, espera) => {
+    api({ 'GET /api/auth/me': () => [200, me()], ...(rotas as Record<string, Rota>) })
+    abrir(caminho)
+    await screen.findAllByText(espera, { exact: false })
+    semChamado()
+  })
+
+  it('aluno lê Solicitação e a equipe lê Chamado (o vazio da Fila da equipe)', async () => {
+    api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE'] })], 'GET /api/chamados?escopo=fila': () => [200, []] })
+    abrir('/univag/fila')
+    expect(await screen.findByText('Nenhum chamado na fila dos seus setores.')).toBeInTheDocument()
   })
 })

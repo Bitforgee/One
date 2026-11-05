@@ -85,6 +85,7 @@ describe('indicadores', () => {
     expect(await cartao('Roteamento correto')).toBe('Roteamento correto50%')
     expect(await cartao('Reabertura')).toBe('Reabertura—')
     const conversas = screen.getByText('Categorias por conversas').closest('[data-slot=card]') as HTMLElement
+    for (const botao of screen.getAllByRole('button', { name: 'Ver tabela' })) await userEvent.click(botao)
     expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])
     const porChamados = screen.getByText('Categorias por chamados').closest('[data-slot=card]') as HTMLElement
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
@@ -114,10 +115,10 @@ describe('indicadores', () => {
   it('destaques de Indicadores', async () => {
     const destaques = await painel()
     expect(cartoesDe(destaques)).toEqual([
-      ['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho'],
-      ['Chamados abertos agora', '4', 'Chamados não fechados neste momento'],
-      ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho'],
-      ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública'],
+      ['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'],
+      ['Chamados abertos agora', '4', 'Chamados não fechados neste momento.'],
+      ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
+      ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública.'],
     ])
     // vêm antes de qualquer outro cartão
     expect(destaques.previousElementSibling?.tagName).toBe('FORM')
@@ -152,7 +153,7 @@ describe('indicadores', () => {
     expect(screen.queryByText('Categorias por conversas')).not.toBeInTheDocument()
   })
 
-  describe('rankings e calendário', () => {
+  describe('rankings e período', () => {
     // 10/11/2026: a consulta inicial vai de 01/11 a 10/11
     const Inicial = 'GET /api/indicadores?de=2026-11-01&ate=2026-11-10'
     const dados = {
@@ -170,6 +171,7 @@ describe('indicadores', () => {
     }
     const cartao = async (titulo: string) => (await screen.findByText(titulo)).closest('[data-slot=card]') as HTMLElement
     const grafico = (c: HTMLElement) => c.querySelector('.recharts-responsive-container')
+    const verTabela = (c: HTMLElement) => userEvent.click(within(c).getByRole('button', { name: 'Ver tabela' }))
 
     // C46 (AC 34)
     it('ranking com gráfico acima da tabela', async () => {
@@ -177,6 +179,7 @@ describe('indicadores', () => {
       const conversas = await cartao('Categorias por conversas')
       await waitFor(() => expect(grafico(conversas)).not.toBeNull())
       expect(grafico(conversas)!.closest('[aria-hidden="true"]')).not.toBeNull()
+      await verTabela(conversas)
       const tabela = within(conversas).getByRole('table')
       expect(grafico(conversas)!.compareDocumentPosition(tabela) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     })
@@ -186,6 +189,7 @@ describe('indicadores', () => {
       indicadores()
       await waitFor(async () => expect(grafico(await cartao('Categorias por conversas'))).not.toBeNull())
       const chamados = await cartao('Categorias por chamados')
+      await verTabela(chamados)
       expect(within(chamados).getByText('—')).toBeInTheDocument()
       expect(grafico(chamados)).toBeNull()
     })
@@ -194,6 +198,7 @@ describe('indicadores', () => {
     it('rankings em tabela Categoria e Total', async () => {
       indicadores()
       for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
+        await verTabela(await cartao(titulo))
         const tabela = within(await cartao(titulo)).getByRole('table')
         expect(within(tabela).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Categoria', 'Total'])
       }
@@ -204,38 +209,18 @@ describe('indicadores', () => {
       ])
     })
 
-    const abrirCalendario = async () => {
-      await userEvent.click(await screen.findByRole('button', { name: 'Escolher período no calendário' }))
-      return screen.findByRole('dialog')
-    }
-
-    // C49 (AC 52, door 15)
-    it('período pelo calendário só consulta no Consultar', async () => {
+    // C49 (AC 52, door 15; AC 32): o período vem dos campos de data e só consulta no Consultar
+    it('período pelos campos de data só consulta no Consultar', async () => {
       const chamadas = indicadores()
       await screen.findByText('Indicador principal')
-      const calendario = await abrirCalendario()
-      await userEvent.click(within(calendario).getByRole('button', { name: /(^|\s)3 de novembro de 2026/ }))
-      await userEvent.click(within(calendario).getByRole('button', { name: /(^|\s)17 de novembro de 2026/ }))
-      expect(screen.getByLabelText('De')).toHaveValue('2026-11-03')
-      expect(screen.getByLabelText('Até')).toHaveValue('2026-11-17')
+      for (const [rotulo, valor] of [['De', '2026-11-03'], ['Até', '2026-11-17']]) {
+        await userEvent.clear(screen.getByLabelText(rotulo))
+        await userEvent.type(screen.getByLabelText(rotulo), valor)
+      }
       const consultas = () => chamadas.filter((c) => c.url.startsWith('/api/indicadores')).map((c) => c.url)
       expect(consultas()).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-10'])
-      await userEvent.keyboard('{Escape}')
       await userEvent.click(screen.getByRole('button', { name: 'Consultar' }))
       await waitFor(() => expect(consultas()).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-10', '/api/indicadores?de=2026-11-03&ate=2026-11-17']))
-    })
-
-    // C50 (AC 53)
-    it('calendário em pt-BR', async () => {
-      indicadores()
-      const calendario = await abrirCalendario()
-      const grade = within(calendario).getByRole('grid')
-      expect(calendario).toHaveTextContent('novembro')
-      expect(calendario).toHaveTextContent('2026')
-      // o thead dos dias da semana é aria-hidden no DayPicker: lido pelo DOM
-      const dias = Array.from(grade.querySelectorAll('thead th')).map((h) => h.getAttribute('aria-label') ?? h.textContent)
-      expect(dias).toHaveLength(7)
-      ;['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].forEach((inicio, i) => expect(dias[i], inicio).toMatch(new RegExp(`^${inicio}`)))
     })
   })
 
