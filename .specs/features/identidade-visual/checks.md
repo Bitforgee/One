@@ -220,7 +220,7 @@ e `border-radius` ≥ metade do menor lado − 1 px (pílula ou círculo) é um 
 
 Todo `[data-slot=button]` visível fora de "Enviar", avisos e "Tema" mede 6 px nos 4 cantos. O teste afirma ter
 achado pelo menos 1 pílula (a foto do assistente nos balões do Assistente) e pelo menos 1 `[data-slot=button]` no conjunto das telas da varredura (Minhas solicitações não tem nenhum: os gatilhos de "Tema" e de avisos são `popover-trigger`; decisão do orquestrador em 05/11, depois do lote 1)
-tela (AC 3, door 2)
+(AC 3, door 2)
 
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "pílula só em avatar, botão de ícone, selo e passo"`
 
