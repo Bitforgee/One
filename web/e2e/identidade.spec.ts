@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, readdirSync } from 'node:fs'
-import { comAparencia, instalar, referencia, semAparencia, simularApi, varrer } from './simulada'
+import { chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, varrer } from './simulada'
 
 // identidade-visual, lote 1 (S1 e S2): fontes, raios e login medidos no Chromium com a API simulada.
 // Medidas por boundingBox() e getComputedStyle, em px CSS, tolerância de 1 px. A fonte é lida depois de document.fonts.ready.
@@ -1132,14 +1132,60 @@ test('borda do campo Responder com 3:1', async ({ page }) => {
       for (const papeis of [['ALUNO'], ['ATENDENTE', 'ADMINISTRADOR']])
         for (const largura of [390, 1280]) {
           await emTema(page, tema)
-          await em(page, largura, '/univag/chamados/ONE-123', (p) => p.locator('#resposta').waitFor(), { aparencia: { ...comAparencia, cor: marca }, papeis })
+          // a tela do aluno é a que o chamado sem `eventos` desenha (`equipe = eventos !== null`)
+          const aluno = papeis[0] === 'ALUNO'
+          const rotas = aluno ? (p: Page) => p.route('**/api/chamados/ONE-123', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...chamadoSimulado(), eventos: null, mensagens: [] }) })) : undefined
+          await em(page, largura, '/univag/chamados/ONE-123', (p) => p.locator('#resposta').waitFor(), { aparencia: { ...comAparencia, cor: marca }, papeis, rotas })
           const campo = page.locator('#resposta')
           await expect(campo).toHaveCount(1)
+          await expect(page.getByLabel('Nota interna'), `${tema} ${marca ?? 'sem cor'} ${papeis[0]} a ${largura}: Nota interna`).toHaveCount(aluno ? 0 : 1)
           const [borda, fundo] = (await campo.evaluate((e) => [window.__ux.pintar([...window.__ux.pilha(e.parentElement!), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(e.parentElement!))])) as number[][]
           expect(contraste(borda, fundo), `${tema} ${marca ?? 'sem cor'} ${papeis[0]} a ${largura}: borda do Responder`).toBeGreaterThanOrEqual(3)
           medidas++
         }
   expect(medidas).toBe(24)
+})
+
+// C54
+test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  const cor = (l: Locator) => l.evaluate((e) => getComputedStyle(e).borderTopColor)
+  let medidas = 0
+  for (const tema of Temas)
+    for (const marca of Marcas)
+      for (const largura of [390, 1280]) {
+        const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
+        await emTema(page, tema)
+        await em(page, largura, '/univag/chamados/ONE-123', (p) => p.getByLabel('Resposta pronta').waitFor(), {
+          aparencia: { ...comAparencia, cor: marca },
+          rotas: async (p) => {
+            await p.route('**/api/chamados/ONE-123', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...chamadoSimulado(), setorId: 1 }) }))
+            await p.route('**/api/respostas-prontas*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]) }))
+          },
+        })
+        const [form, select, campo] = [page.locator('form:has(#resposta)'), page.getByLabel('Resposta pronta'), page.locator('#resposta')]
+        const [borda, fundo] = (await select.evaluate((e) => { const f = e.closest('form')!; return [window.__ux.pintar([...window.__ux.pilha(f), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(f))] })) as number[][]
+        expect(contraste(borda, fundo), `${rotulo}: borda do select`).toBeGreaterThanOrEqual(3)
+        // um campo comum fora do form, com as mesmas classes do Responder
+        await campo.evaluate((e) => { const i = Object.assign(document.createElement('input'), { id: 'comum', className: e.className }); document.querySelector('main')!.append(i) })
+        const comum = page.locator('#comum')
+        const repouso = await cor(campo)
+        await campo.focus()
+        await comum.focus()
+        const comumFoco = await cor(comum)
+        await campo.focus()
+        expect(await cor(campo), `${rotulo}: foco igual ao campo comum`).toBe(comumFoco)
+        expect(comumFoco, `${rotulo}: foco difere do repouso`).not.toBe(repouso)
+        await campo.blur()
+        for (const e of [campo, comum]) await e.evaluate((x) => x.setAttribute('aria-invalid', 'true'))
+        const destrutivo = await page.evaluate(() => { const t = document.createElement('i'); t.style.borderTop = '1px solid var(--destructive)'; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c })
+        expect(await cor(comum), `${rotulo}: campo comum em erro`).toBe(destrutivo)
+        expect(await cor(campo), `${rotulo}: Responder em erro`).toBe(destrutivo)
+        await expect(form).toHaveCount(1)
+        medidas++
+      }
+  expect(medidas).toBe(12)
 })
 
 // C51
