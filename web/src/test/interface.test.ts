@@ -27,9 +27,17 @@ function bloco(seletor: string): Record<string, string> {
   return valores
 }
 
+// color-mix(in oklch, var(--marca, oklch(L C H)) N%, oklch(L2 0 0)) sem marca: o neutro não tem matiz, então a mistura leva a da marca (CSS Color 5)
+function misturar(valor: string) {
+  const m = valor.match(/^color-mix\(in oklch, var\(--marca, oklch\(([^)]+)\)\) (\d+)%, oklch\(([^)]+)\)\)$/)
+  if (!m) return valor
+  const [[l1, c1, h1], p, [l2]] = [m[1].split(' ').map(Number), Number(m[2]) / 100, m[3].split(' ').map(Number)]
+  return `${l1 * p + l2 * (1 - p)} ${c1 * p} ${h1}`
+}
+
 // oklch -> sRGB linear (CSS Color 4), cortado em [0, 1]; luminância e contraste do WCAG 2.
 function linear(valor: string): number[] {
-  const [l, c, h] = valor.split(' ').map(Number)
+  const [l, c, h] = misturar(valor).split(' ').map(Number)
   const a = c * Math.cos((h * Math.PI) / 180)
   const b = c * Math.sin((h * Math.PI) / 180)
   const [l3, m3, s3] = [l + 0.3963377774 * a + 0.2158037573 * b, l - 0.1055613458 * a - 0.0638541728 * b, l - 0.0894841775 * a - 1.291485548 * b].map((x) => x ** 3)
@@ -48,9 +56,12 @@ const contraste = (x: string, y: string) => {
   return (claro + 0.05) / (escuro + 0.05)
 }
 
+// revisao-ux door 2: background, muted, accent, border e input = a marca (ou o azul de base) em N% sobre o neutro
+const tingido = (n: number, neutro: string) => `color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) ${n}%, oklch(${neutro}))`
+
 // redesign-institucional ## Visual: cada token em claro, escuro e preto; '=' = o .black não declara e herda do .dark
 const Tokens: [string, string, string, string][] = [
-  ['--background', '1 0 0', '0.17 0 0', '0 0 0'],
+  ['--background', tingido(2, '1 0 none'), tingido(3, '0.17 0 none'), '0 0 0'],
   ['--foreground', '0.145 0 0', '0.95 0 0', '0.92 0 0'],
   ['--card', '1 0 0', '0.205 0 0', '0.15 0 0'],
   ['--popover', '1 0 0', '0.205 0 0', '0.15 0 0'],
@@ -58,13 +69,14 @@ const Tokens: [string, string, string, string][] = [
   ['--primary', '0.45 0.15 262', '0.72 0.12 262', '='],
   ['--primary-foreground', '0.985 0 0', '0.17 0 0', '='],
   ['--primary-subtle', '0.96 0.02 262', '0.27 0.05 262', '0.24 0.05 262'],
-  ['--muted', '0.97 0 0', '0.24 0 0', '0.20 0 0'],
+  ['--muted', tingido(4, '0.985 0 none'), tingido(5, '0.22 0 none'), tingido(4, '0.19 0 none')],
+  ['--accent', tingido(5, '0.975 0 none'), tingido(6, '0.25 0 none'), tingido(6, '0.24 0 none')],
   ['--muted-foreground', '0.50 0 0', '0.71 0 0', '0.70 0 0'],
   ['--warning-subtle', '0.97 0.04 90', '0.30 0.05 85', '0.27 0.05 85'],
   ['--success', '0.52 0.13 155', '0.72 0.14 155', '='],
   ['--destructive', '0.577 0.245 27.325', '0.704 0.191 22.216', '='],
-  ['--border', '0.922 0 0', '1 0 0 / 10%', '1 0 0 / 14%'],
-  ['--input', '0.922 0 0', '1 0 0 / 15%', '1 0 0 / 18%'],
+  ['--border', tingido(6, '0.93 0 none'), tingido(5, '0.27 0 none'), tingido(5, '0.26 0 none')],
+  ['--input', tingido(6, '0.66 0 none'), tingido(5, '0.58 0 none'), tingido(5, '0.58 0 none')],
   ['--chart-1', 'var(--primary)', 'var(--primary)', '='],
   ['--chart-2', '0.60 0.10 200', '0.75 0.10 200', '='],
   ['--radius', '0.5rem', '0.5rem', '='],
