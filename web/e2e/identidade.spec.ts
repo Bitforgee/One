@@ -1227,6 +1227,33 @@ test('select da resposta com foco e erro, e Responder com Nota interna', async (
   expect(medidas).toBe(12)
 })
 
+// C57: mede no navegador, para valer qualquer que seja a escrita da regra
+test('borda do form igual à de fora no escuro e no preto', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  const cor = (l: Locator) => l.evaluate((e) => getComputedStyle(e).borderTopColor)
+  let medidas = 0
+  for (const tema of Temas)
+    for (const marca of Marcas)
+      for (const largura of [390, 1280]) {
+        const rotulo = `${tema} ${marca ?? 'sem cor'} a ${largura}`
+        await emTema(page, tema)
+        await abrirFormComProntas(page, largura, marca)
+        for (const seletor of ['#resposta', 'select[aria-label="Resposta pronta"]']) {
+          const dentro = page.locator(seletor)
+          // o mesmo elemento, com as mesmas classes, fora do form
+          await dentro.evaluate((e) => { const c = document.createElement(e.tagName); c.id = 'fora'; c.className = e.className; document.querySelector('main')!.append(c) })
+          const fora = page.locator('#fora')
+          const [d, f] = [await cor(dentro), await cor(fora)]
+          if (tema === 'light') expect(d, `${rotulo} ${seletor}: no claro o form escurece`).not.toBe(f)
+          else expect(d, `${rotulo} ${seletor}: igual à de fora`).toBe(f)
+          await fora.evaluate((e) => e.remove())
+          medidas++
+        }
+      }
+  expect(medidas).toBe(24)
+})
+
 // C51
 test('nome do assistente entre a frase e a solicitação', async ({ page }) => {
   await instalar(page)

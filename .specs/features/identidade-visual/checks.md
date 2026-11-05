@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/identidade-visual/plan.md`
 
-56 checks em 6 slices (S1 a S5 e S0; C47 a C56 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (P1 a P17 decididos em 05/11 pelo orquestrador, com o plano aprovado pelo usuário)
+57 checks em 6 slices (S1 a S5 e S0; C47 a C57 vêm das rodadas do Verifier) · 4 one-way doors · 0 perguntas abertas (P1 a P18 decididos em 05/11 pelo orquestrador, com o plano aprovado pelo usuário)
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o
 commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
@@ -154,6 +154,7 @@ decisão muda o sentido, com a nota em `## Assumptions`. A coluna "Decisão" é 
 | P15 | Rodada 1 do Verifier, aprovado pelo usuário em 05/11 | a lista fechada ganha o item 9; a variação fica ao lado quando couber e abaixo do número em celular estreito; entram C47 a C53 (foco, borda do Responder, carregamento e `semDados` da variação, ordem do nome do assistente, variação a 360, data vazia e precache) |
 | P16 | Rodada 2 do Verifier: o select "Resposta pronta" no mesmo bloco ficou abaixo de 3:1, a classe `dark:border-input` do Responder anulou o foco e o erro, e o caso do aluno de C48 desenhava a tela da equipe | o orquestrador acrescenta C54, só mais estrito que a borda já aprovada em P15; o teste de C48 passa a desenhar de fato a tela do aluno; o claim de C48 não muda |
 | P17 | Rodada 3 do Verifier: 3 mutantes da regra `.form-resposta` sobreviveram (F2, F11, F12), sem prova para foco e erro do select nem para "Nota interna" marcada; o usuário escolheu em 05/11 "um teste e rodada curta" | entram C55 e C56; a área tracejada de anexos (1,21:1; 1,30:1 na base; o `bg-muted` do AC 17 desta feature a piorou) e o `--ring` abaixo de 3:1 no app (anterior a esta feature) ficam fora dela e vão, como obrigação, para o plano da rodada da estrutura: o usuário aprovou em 05/11, e `.specs/STATE.md` AD-035 registra. Os 2 continuam no produto |
+| P18 | Rodada 5 do Verifier: uma regra extra para o escuro, com o seletor na linha de cima, escapa do C55, porque o teste lê o texto do CSS | o usuário escolheu em 05/11 "medir no navegador e encerrar": entra C57, e o teste do C55 passa a ler o seletor inteiro. Depois disso, a última rodada confere só essa classe de falha, e o que ela achar além disso vira risco aceito pelo usuário, sem nova rodada |
 | P14 | AC 10 não dizia o que acontece se `GET /api/chamados?escopo=meus` falhar | sem a linha e sem alerta; título, frase e perguntas ficam (C20) |
 
 ## Checks
@@ -709,6 +710,11 @@ Proof: `cd web && npx vitest run src/test/interface.test.ts -t "regra da borda d
 - com "Nota interna" marcada, o select some e a borda do Responder tem contraste ≥ 3:1 contra o fundo do `form` (P17; AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "select da resposta com foco e erro, e Responder com Nota interna"`
 
+**C57** - [x] No detalhe do chamado, tela da equipe, a 390 e a 1280 px, com as 2 marcas, medindo a borda em repouso do Responder e do
+select "Resposta pronta" contra um elemento igual, com as mesmas classes, fora do `form`: nos temas escuro e preto as duas cores
+são iguais; no claro são diferentes (controle: o `form` escurece a borda só ali) (P18; AC 22)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do form igual à de fora no escuro e no preto"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -738,6 +744,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 | achados da rodada 1 do Verifier (8) | foco das perguntas C47 · borda do Responder C48 · variação com resposta atrasada C49 · `semDados` com número C50 · ordem do nome do assistente C51 · variação em celular estreito C52 · data vazia C53 · precache só latino C53 | - |
 | campos do form da resposta (3) | select "Resposta pronta" em repouso C54 · Responder em foco C54 · Responder em erro C54 | - |
 | regra da borda do form e estados restantes (6) | só no claro C55 · com a cor da instituição C55 · sem escurecer além de 0,63 C55 · select em foco C56 · select em erro C56 · Responder com "Nota interna" C56 | - |
+| regra da borda do form medida no navegador (3) | escuro igual à de fora C57 · preto igual à de fora C57 · claro diferente C57 | - |
 | invariantes do AC 22 (6) | alvos de 44 px C46 · campos de 16 px C46 · contrastes C46 · barra de abas C46 · cor de ação C46 · tokens tingidos C46 | - |
 | suítes do S0 (5) | Vitest e build C40 · `crapper` e `dryer` C41 · arranjo C42 · `api/` igual C43 · e2e real C44, C45 | - |
 | frases e itens de arranjo de `## Screens` (41) | coluna centrada de até 400 px C9 · logo até 48 px ou iniciais C10 · nome em serifa de 28 px C11 · texto de apoio logo acima do rótulo CPF C10 · Primeiro acesso e Criar senha com o título da tela antes do primeiro campo C12 · título e frase em texto secundário C10, C11 · formulário C10 · itens em lista com marcador abaixo do formulário C10, C11 · sem painel nem ilustração C9 · fundo `--background` tingido C11 · com foto, formulário na coluna da esquerda C13 · foto na coluna direita inteira C13 · sem gradiente e sem texto sobre a foto C13, C14 · faixa de 160 px abaixo de 1024 C14 · título em serifa de 24 px à esquerda C18 · "Atendimento ao estudante · …" C17 · frase abaixo do título C17, C18 · foto de 32 px ao lado do nome C19 · sem "Olá! Eu sou" C17 · linha da solicitação com borda na cor de ação C21 · solicitação com estado, próximo passo e link C20 · solicitação antes das perguntas C20, C21 · perguntas em linhas de 48 px com divisória C22 · `MessageCircleQuestion` à esquerda e `ChevronRight` à direita C22 · perguntas sem pílula C22 · principal com rótulo e número de 40 px `tabular-nums` C27 · variação ao lado com "vs. período anterior" C24, C27 · 3 destaques em 3 colunas, 1 no celular C28 · divisória vertical e sem caixa C28 · 9 métricas em 2 colunas, 1 no celular C29 · rótulo à esquerda e valor tabular à direita C29 · divisória entre linhas e sem caixa C29 · gráficos sem cartão, com título C30 · blocos estáticos sem borda nem fundo C32, C33, C34 · separados por 32 px C32, C33, C34 · título de seção C32, C33 · só o que pede ação com fundo tingido C34 · vazio com ícone de 28 px, título, frase e botão C35, C36 · vazio centrado na largura da lista C36 · Planilha no passo 2 numa linha C37, C38 · raiz com "One" em serifa, frase e texto, sem ilustração C16 | - |
@@ -834,3 +841,8 @@ Estimativa:
 - Mecanismo: orquestrador, só testes, sem mudança de código de produto; escolha do usuário em 05/11 ("um teste e rodada curta").
 - **Boundary:** `a04ca17` (testes de C55 e C56) e o commit da linha da contagem pedida pela rodada 4 (a falha F18, seletor quebrado em 2 linhas). Fechados: C55 e C56. Rodada 4 do Verifier: Vitest 521, layout 192 de 193 (só `plataforma.spec`, que precisa de API), e2e real 201 de 201.
 - **Edições em asserções existentes:** nenhuma. `campos do form da resposta com foco, erro e borda de 3:1` passou a usar 2 funções auxiliares, com as mesmas asserções.
+
+### Correções da rodada 5 (C57)
+
+- Mecanismo: orquestrador, só testes, sem mudança de código de produto; escolha do usuário em 05/11 ("medir no navegador e encerrar").
+- **Edições em asserções existentes:** a regex de `regra da borda do form da resposta` (C55) passa a ler o seletor inteiro e ignora comentários; é do próprio C55 e fica mais estrita.
