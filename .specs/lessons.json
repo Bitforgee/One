@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 77,
+  "next_id": 79,
   "lessons": [
     {
       "id": "L-001",
@@ -1386,6 +1386,42 @@
       ],
       "created": "2026-11-04T23:49:12Z",
       "last_seen": "2026-11-04T23:49:12Z"
+    },
+    {
+      "id": "L-077",
+      "key": "surviving_mutant::uma varredura de cor em grafico precisa esperar as barras desenharem medir antes do render passa com qualquer cor",
+      "text": "Uma varredura de cor em gráfico precisa esperar as barras desenharem; medir antes do render passa com qualquer cor.",
+      "signal": "surviving_mutant",
+      "scope": "web/e2e",
+      "status": "candidate",
+      "features": [
+        "revisao-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/e2e/ux.spec.ts C57 (web/e2e)"
+      ],
+      "created": "2026-11-05T02:01:12Z",
+      "last_seen": "2026-11-05T02:01:12Z"
+    },
+    {
+      "id": "L-078",
+      "key": "ac_gap::lista numerada com li em display flex perde o marcador prove o numero como texto visivel nao so a tag ol",
+      "text": "Lista numerada com li em display:flex perde o marcador; prove o número como texto visível, não só a tag ol.",
+      "signal": "ac_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "revisao-ux"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/administracao/Matriculas.tsx:44 (web)"
+      ],
+      "created": "2026-11-05T02:01:12Z",
+      "last_seen": "2026-11-05T02:01:12Z"
     }
   ]
 }

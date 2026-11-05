@@ -468,6 +468,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/e2e/instituicoes.spec.ts:22 (web/e2e)
 - last seen: 2026-11-04T23:49:12Z
 
+### L-077 - Uma varredura de cor em gráfico precisa esperar as barras desenharem; medir antes do render passa com qualquer cor.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web/e2e` · harmful: 0
+- features: revisao-ux
+- evidence: web/e2e/ux.spec.ts C57 (web/e2e)
+- last seen: 2026-11-05T02:01:12Z
+
+### L-078 - Lista numerada com li em display:flex perde o marcador; prove o número como texto visível, não só a tag ol.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: revisao-ux
+- evidence: web/src/administracao/Matriculas.tsx:44 (web)
+- last seen: 2026-11-05T02:01:12Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

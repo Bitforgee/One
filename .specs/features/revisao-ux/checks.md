@@ -124,6 +124,8 @@ os checks abaixo afirmam.
 
 
 Extensão da lista fechada por decisão delegada em 04/11, depois do lote 2: `assistente/anexos.test.tsx` "texto de ajuda dos anexos" (AC 19) e `chamados/textos.test.tsx` "textos Minhas solicitações" (AC 21, AC 22); e, para o C67, os testes de `arranjo.spec.ts` e `tabela.test.tsx` que leem o cabeçalho "Dias" (AC 45).
+
+Extensão da lista fechada por decisão delegada em 04/11, depois da rodada 1: as 13 edições e a mudança de dado de teste listadas como "fora da lista" no `## Handoff` dos lotes 1 a 3, cada uma presa ao AC que a força; as duas que enfraqueciam voltam a medir o que mediam (C71).
 ## Checks
 
 ### S1 - Toque, campos e contraste (P1) · ~33 files · ~194 KB · ~48k (com S2 e os tokens de S6)
@@ -405,8 +407,8 @@ Nenhum dos 5 mostra data (P1) (AC 22)
 
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "próximo passo por estado"`
 
-**C33** - [x] Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades") e a data relativa, e
-nenhuma mostra o nome do aluno nem o setor (P2). O texto "Mais antigos primeiro" vem antes da lista no DOM. A 390 px, o `bottom` desse texto é ≤ o `top` do primeiro item
+**C33** - Na Fila, cada linha mostra a categoria ("Financeiro > Boletos e mensalidades"), o responsável (o nome, ou "sem responsável") e a data relativa, e
+nenhuma mostra o nome do aluno nem o setor (P2). A 390 px, a categoria quebra linha e não é cortada (`text-overflow` diferente de `ellipsis` e `scrollWidth` ≤ `clientWidth`) (decisão delegada pelo usuário em 04/11, depois da rodada 1). O texto "Mais antigos primeiro" vem antes da lista no DOM. A 390 px, o `bottom` desse texto é ≤ o `top` do primeiro item
 (AC 23; Screens: Fila)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "Fila com categoria, data e Mais antigos primeiro"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "Mais antigos primeiro acima da Fila"`
@@ -551,8 +553,9 @@ A 390 px, o `bottom` do campo é ≤ o `top` do primeiro item (AC 34; Screens: U
 Proof: `cd web && npx vitest run src/administracao/revisao.test.tsx -t "CPF formatado e busca por nome, CPF ou e-mail"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "busca de Usuários acima da lista"`
 
-**C48** - [x] Em Matrículas:
+**C48** - Em Matrículas:
 - há uma `ol` com 3 itens, nesta ordem: "Baixe o modelo", "Preencha uma linha por aluno" e "Envie o arquivo";
+- cada passo mostra o número ("1", "2", "3") como texto visível ao lado do título (caixa com altura > 0 e cor com contraste ≥ 4,5:1), o título de cada passo é um cabeçalho (`h2` ou `h3`) e o nome acessível do item começa pelo número (decisão delegada pelo usuário em 04/11, depois da rodada 1);
 - o botão "Baixar modelo (CSV)" dispara um download `.csv` cuja primeira linha é exatamente
   `cpf;nome;email;matricula;curso;semestre;situacao`, o cabeçalho de `Matriculas.tsx` em `<base>`;
 - um `400` com 2 erros (`linha` 2 e 5) mostra 2 linhas de erro, e cada uma tem o texto "Linha 2" (e
@@ -616,14 +619,14 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
   C66 de `aparencia-instituicao`) (AC 42)
 
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "sem Sparkles no código"`
-Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "sem emoji em título nem gradiente"`
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "sem emoji nem gradiente"`
 
-**C57** - [x] A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
+**C57** - A 1440 px, tema Claro, com `#8a1538`, em cada tela de `Telas`, em Conta (a 390 px) e em Instituições, sem
 foco em nada, cada elemento visível com a cor de ação cai num destes casos (P6):
 - `background-color` igual a `var(--primary)`: é `[data-slot=button][data-variant=default]`, um item ativo
   (`[aria-current=page]` ou `[data-active=true]`) ou a `Sigla`;
 - `color` igual a `var(--primary)`: é um `a`, um `[data-variant=link]` ou um item ativo;
-- nenhum `svg` do gráfico tem `fill` igual a `var(--primary)`;
+- nenhum `svg` do gráfico tem `fill` igual a `var(--primary)`, medido depois que as barras foram desenhadas (o teste espera pelo menos 1 `path` ou `rect` de barra com altura > 0 antes de medir) (decisão delegada pelo usuário em 04/11, depois da rodada 1);
 - nenhum elemento tem `border-color` igual a `var(--primary)`.
 
 Com o foco por `Tab` num campo, a borda dele passa a ter a cor de foco (AC 43, door 3)
@@ -695,6 +698,20 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 
 **C68** - [x] No detalhe do chamado visto pela equipe, uma resposta do assistente com `https://portal.univag.edu.br/financeiro/boletos/segunda-via` no texto mostra esse link como botão (`a[href]` com o rótulo `portal.univag.edu.br/financeiro/boletos/segunda-via`) e o texto do balão não contém `https://` (AC 46)
 Proof: `cd web && npx vitest run src/chamados/revisao.test.tsx -t "links da resposta como botão na conversa da equipe"`
+
+### S8 - Acréscimos depois da rodada 1 (P1)
+
+Decisão delegada pelo usuário em 04/11, depois da rodada 1 da verificação.
+
+**C69** - O texto reserva do aviso no celular em `web/src/sw.ts`, usado quando o push chega sem texto, diz "Sua solicitação foi atualizada." e não contém "chamado" (o texto que vem da API fica de fora: esta feature não muda a API) (C58, linguagem do aluno)
+Proof: `cd web && npx vitest run src/sw.test.ts -t "texto reserva fala em solicitação"`
+
+**C70** - Um usuário só com o papel `OPERADOR` que abre `/univag/fila`, `/univag/assistente` ou `/univag/artigos` é levado a `/univag/instituicoes` (AC 9)
+Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "operador sem outro papel vai para Instituições"`
+
+**C71** - Os testes de lista fechada não ficam mais fracos que em `<base>`: a prévia da Aparência no tema Claro é provada pela cor pintada do botão (`getComputedStyle(...).backgroundColor` igual ao de uma referência com `#8a1538`), e o texto de ajuda dos anexos, quando aparece, é provado com `toBeVisible()` (C59)
+Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "prévia muda antes de salvar"`
+Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
 ## Coverage
 
