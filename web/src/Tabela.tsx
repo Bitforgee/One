@@ -31,7 +31,7 @@ export function BlocoVazio({ Icone, titulo, frase, acao }: Vazio) {
 // Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7), ou linhas com divisória quando `densa` (revisao-ux AC 21).
 export const useEstreito = () => useConsulta('(max-width: 767px)')
 
-// A caixa com borda das listas (padrão do data-table do template); lista vazia, uma linha só com o texto de vazio (AC 24).
+// A tabela sem caixa, só com linhas; lista vazia, uma linha só com o texto de vazio (AC 24).
 // Lista ainda não chegada: 3 esqueletos (AC 4); com `erro`, nada (a tela mostra o erro).
 export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: Vazio; erro?: unknown; densa?: boolean; children: ReactNode }) {
   const cartoes = useEstreito()
@@ -46,7 +46,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
   const corpo =
     itens.length === 0 ? (
       <TableRow>
-        <TableCell colSpan={colunas.length} className="text-center">
+        <TableCell colSpan={colunas.length} className="text-center first:ps-2">
           <BlocoVazio {...vazio} />
         </TableCell>
       </TableRow>
@@ -61,20 +61,18 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
       </div>
     )
   return (
-    <div className="overflow-hidden rounded-md border">
-      <Table>
-        <TableHeader className="sticky top-0 z-10 bg-muted">
-          <TableRow className="hover:bg-transparent">
-            {colunas.map((c) => (
-              <TableHead key={c.titulo} className={c.largo ? Largo : undefined}>
-                {c.titulo}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>{corpo}</TableBody>
-      </Table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow className="hover:bg-transparent">
+          {colunas.map((c) => (
+            <TableHead key={c.titulo} className={c.largo ? Largo : undefined}>
+              {c.titulo}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>{corpo}</TableBody>
+    </Table>
   )
 }
 
