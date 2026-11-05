@@ -649,35 +649,35 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "neutros mudam com a cor da instituição"`
 Proof: `cd web && npx vitest run src/ux.test.tsx -t "neutros tingidos pela marca nos três temas"`
 
-**C47** - [ ] Levando o foco por teclado (`Tab`) a uma linha de pergunta do Assistente, a 390 e a 1440 px, nos 3 temas e
+**C47** - [x] Levando o foco por teclado (`Tab`) a uma linha de pergunta do Assistente, a 390 e a 1440 px, nos 3 temas e
 com as 2 marcas, o indicador de foco da linha tem contraste ≥ 3:1 contra o fundo vizinho e `outline` ou `box-shadow`
 visível (espessura ≥ 2 px); a mesma linha sem foco não tem esse indicador (controle) (`revisao-ux` pesquisa §15; AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "foco das perguntas com 3:1 nos três temas"`
 
-**C48** - [ ] A borda do `Textarea` "Responder" do detalhe do chamado tem contraste ≥ 3:1 contra o fundo em que está,
+**C48** - [x] A borda do `Textarea` "Responder" do detalhe do chamado tem contraste ≥ 3:1 contra o fundo em que está,
 medido pela pilha de fundos opacos, a 390 e a 1280 px, nos 3 temas e com as 2 marcas, para aluno e para atendente (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do campo Responder com 3:1"`
 
-**C49** - [ ] Depois de "Consultar", com a resposta do período novo atrasada, a tela não mostra "▲", "▼", "= sem variação"
+**C49** - [x] Depois de "Consultar", com a resposta do período novo atrasada, a tela não mostra "▲", "▼", "= sem variação"
 nem "vs. período anterior" até as 2 respostas do período novo chegarem, e nesse caso (atual 0,5; anterior 0,4) mostra
 "▲ 10,0 pts"; em outro caso, com a resposta do período anterior atrasada, também não mostra variação até ela chegar
 (AC 12, AC 13)
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "sem variação enquanto uma resposta está atrasada"`
 
-**C50** - [ ] Com o anterior em `semDados` `true` e `indicadorPrincipal` 0,670 (número presente) e o atual em 0,712, a tela
+**C50** - [x] Com o anterior em `semDados` `true` e `indicadorPrincipal` 0,670 (número presente) e o atual em 0,712, a tela
 não mostra variação nem `role="alert"`; com `semDados` `false` e os mesmos números, mostra "▲ 4,2 pts" (controle) (AC 13)
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "semDados com número no anterior esconde a variação"`
 
-**C51** - [ ] No Assistente sem conversa e com solicitação em aberto, a 390 e a 1440 px, a linha "{nome}, assistente
+**C51** - [x] No Assistente sem conversa e com solicitação em aberto, a 390 e a 1440 px, a linha "{nome}, assistente
 virtual" fica abaixo da frase de boas-vindas e acima da linha da solicitação, que fica acima da primeira pergunta
 (comparando `top` e `bottom`, tolerância de 1 px) (AC 9, AC 10; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "nome do assistente entre a frase e a solicitação"`
 
-**C52** - [ ] A 360 px, com "▲ 4,2 pts" e com "= sem variação", a variação fica abaixo do número (`top` ≥ `bottom` do
+**C52** - [x] A 360 px, com "▲ 4,2 pts" e com "= sem variação", a variação fica abaixo do número (`top` ≥ `bottom` do
 número − 1 px), alinhada à esquerda com ele (± 1 px) e sem estouro horizontal (P15; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "variação abaixo do número a 360"`
 
-**C53** - [ ] `periodoAnterior('', '2026-11-05')` e `periodoAnterior('2026-11-01', '')` devolvem `null`, e limpar "De" não
+**C53** - [x] `periodoAnterior('', '2026-11-05')` e `periodoAnterior('2026-11-01', '')` devolvem `null`, e limpar "De" não
 gera pedido com `NaN` na URL. No service worker ativo, nenhum URL de `caches` contém `cyrillic`, `greek`, `vietnamese` ou
 `latin-ext`, e os 2 arquivos latinos do C8 continuam lá (P15; AC 4)
 Proof: `cd web && npx vitest run src/indicadores/identidade.test.tsx -t "data vazia não consulta o período anterior"`
@@ -790,3 +790,6 @@ Estimativa:
 ### Correções da rodada 1 (C47 a C53)
 
 - Mecanismo: um construtor, depois do FAIL da rodada 1 do Verifier; emendas P15 aprovadas pelo usuário em 05/11.
+- **Boundary:** `73b854e` (código: foco das perguntas, borda do Responder, data vazia, precache) e `dc76063` (testes de C47 a C53), mais o commit deste handoff, sobre o `9e92f79`. Fechados: C47 a C53. Resultado: Vitest 520 verdes em 54 arquivos, `npm --prefix web run build` ok, `crapper` sai 0 no limite 9.99, `dryer` sem candidato, `git diff --quiet 6d83112 HEAD -- api api.Tests` sai 0. Layout (`arranjo`, `celular`, `ux`, `aparencia`, `identidade`) 164 verdes contra `vite preview` na 5199; o `plataforma.spec` `manifesto e service worker` não rodou nesse nível (pede API na 5226). E2E real: imagem do `HEAD` (`git archive HEAD | docker build`) na 8089, instituição `e2e`, banco, bucket e contêiner próprios (`one-ident-r1`, removidos): a suíte inteira, 199 testes, passou de primeira, com o `manifesto e service worker` verde. Injeções à mão, todas pegas: tirar `!provisorio` derruba `sem variação enquanto uma resposta está atrasada`; tirar o guard de `semDados` derruba `semDados com número no anterior esconde a variação`; tirar o `return null` da data vazia derruba `data vazia não consulta o período anterior`; descer a linha do nome para depois das perguntas derruba `nome do assistente entre a frase e a solicitação`; voltar o `vite.config.ts` ao original derruba `precache sem subconjuntos de outros alfabetos`.
+- **Settled mid-build:** (1) Foco (C47): o anel dos botões (`ring-ring/50`, 3 px) dá 2,5:1 sem cor da instituição no claro (o `--ring` é `oklch(0.708)`), então a linha usa `ring-2 ring-inset ring-foreground`: 2 px por dentro da caixa, que a divisória e o `overflow` da lista não cortam, e o contraste passa nos 3 temas e nas 2 marcas. A linha ganhou `outline-none` no lugar de `focus-visible:outline-none`. (2) Borda do Responder (C48): o `Textarea` ganhou `border-foreground/60 dark:border-input`; o bloco continua tingido com `bg-muted`, o escuro e o preto ficam como estavam. (3) Precache (C53): `globIgnores` com `**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*`; ficam os 2 arquivos latinos do C8 no precache, `sw.ts` não mudou. (4) `periodoAnterior` devolve `null` com "De" ou "Até" vazio; a consulta atual vai com a data vazia como antes, só o anterior não sai. (5) C52 não exigiu código: `flex-wrap` já põe a variação abaixo a 360 px.
+- **Edições em asserções existentes:** nenhuma.
