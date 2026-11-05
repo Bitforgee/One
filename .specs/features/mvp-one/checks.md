@@ -535,7 +535,7 @@ Proof: `dotnet test api.Tests --filter "FullyQualifiedName~AgendadorTests.Falha_
 **C160** - [x] Uma resposta pública do atendente gera para o aluno o e-mail "[Univag] ONE-1: nova resposta" com o link `/univag/chamados/ONE-1` (AC 122)
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Resposta_publica_gera_email"`
 
-**C161** - [x] Resolver gera o e-mail "[Univag] ONE-1 foi resolvido" com o texto da resolução e o link para confirmar ou rejeitar (AC 123)
+**C161** - [x] Resolver gera o e-mail "[Univag] ONE-1 foi resolvido" com o texto da resolução e o link para confirmar ou rejeitar (AC 123) [Nota de 05/11: o assunto passou a "... foi resolvida" em `push-com-marca` C10.]
 Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Resolucao_gera_email"`
 
 **C162** - [x] Uma nota interna gera 0 linhas em `email_saida` (AC 124)

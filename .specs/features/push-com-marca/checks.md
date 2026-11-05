@@ -94,7 +94,7 @@ Proof: `dotnet build api`
 Proof: `docker compose exec -T postgres psql -U postgres -d one -t -c "select enviado_em is not null from push_saida order by id desc limit 1"` (o servidor confirma o envio; o que aparece na tela fica como evidência manual no `## Handoff`)
 
 **C10** - [x] O assunto do e-mail de solicitação resolvida diz "[{nome da instituição}] {número} foi resolvida" (feminino, de "solicitação"), igual ao corpo; os assuntos de nova resposta e de aguardando o aluno não mudam. Os 4 testes que leem esse assunto (`EmailAnexoTests.cs:39`, `ExtrasTests.cs:67` e `:89`, `PrazosTests.cs:16`) passam a esperar o texto novo, inclusive o de ausência em `ExtrasTests.cs:67`, que com o texto antigo passaria sem provar nada (pedido do usuário em 05/11)
-Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailAnexoTests|FullyQualifiedName~ExtrasTests|FullyQualifiedName~PrazosTests"`
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailTests.Resolucao_gera_email|FullyQualifiedName~ExtrasTests|FullyQualifiedName~PrazosTests"` (o teste de `EmailAnexoTests.cs:39` fica na classe `EmailTests`; filtro corrigido em 05/11, depois da rodada 2)
 
 ## Coverage
 

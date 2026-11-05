@@ -480,7 +480,7 @@ O aluno é avisado por e-mail, e aluno e atendente trocam arquivos nas respostas
 **Acceptance Criteria**
 
 122. WHEN um atendente envia resposta pública THEN o sistema SHALL enviar ao aluno um e-mail com assunto "[<nome da instituição>] ONE-n: nova resposta" e o link `/{slug}/chamados/ONE-n`.
-123. WHEN um chamado é resolvido THEN o sistema SHALL enviar ao aluno um e-mail com assunto "[<nome da instituição>] ONE-n foi resolvido", o texto da resolução e o link para confirmar ou rejeitar.
+123. WHEN um chamado é resolvido THEN o sistema SHALL enviar ao aluno um e-mail com assunto "[<nome da instituição>] ONE-n foi resolvido", o texto da resolução e o link para confirmar ou rejeitar. [Nota de 05/11: o assunto passou a "... foi resolvida" em `push-com-marca` C10.]
 124. The system SHALL não enviar e-mail por nota interna.
 125. WHEN uma ação gera e-mail de chamado THEN o sistema SHALL gravá-lo em `email_saida` na mesma transação da ação, e o agendador SHALL enviá-lo na execução seguinte.
 126. IF o envio por SMTP falhar THEN o agendador SHALL somar 1 a `tentativas`, marcar a próxima tentativa para 2^`tentativas` minutos depois e registrar a falha no log; depois de 5 tentativas SHALL parar e registrar a desistência no log, sem afetar a ação já gravada.
