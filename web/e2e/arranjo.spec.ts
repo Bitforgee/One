@@ -127,10 +127,10 @@ test.describe('Assistente', () => {
 
     const falar = await caixa(page.getByRole('button', { name: /Falar com atendente/ }))
     const encerrar = await caixa(page.getByRole('button', { name: 'Encerrar' }))
-    // compositor no estilo do ChatGPT: o "Encerrar" à esquerda e o enviar à direita, embaixo do campo, e o "Falar com atendente" na linha de cima (AC 18); a 360 px, com 44 px, as ações quebram em 2 linhas (AC 2)
-    expect(encerrar.y).toBeGreaterThanOrEqual(falar.y + falar.height - 1)
-    expect(Math.abs(encerrar.y + encerrar.height - (enviarBotao.y + enviarBotao.height))).toBeLessThanOrEqual(1)
-    expect(encerrar.x + encerrar.width).toBeLessThan(enviarBotao.x)
+    // estrutura-visual AC 14 e AC 16: o "Encerrar" fica na linha do "Falar com atendente", acima do campo, e o "Enviar" escrito à direita do campo
+    expect(Math.abs(encerrar.y - falar.y)).toBeLessThanOrEqual(1)
+    expect(Math.max(encerrar.y + encerrar.height, falar.y + falar.height)).toBeLessThanOrEqual(enviarBotao.y + 1)
+    expect(encerrar.x).toBeGreaterThanOrEqual(falar.x + falar.width - 1)
 
     await page.getByRole('button', { name: 'Encerrar' }).click()
     const dialogo = page.getByRole('dialog')
@@ -279,14 +279,15 @@ test.describe('Indicadores', () => {
     }
     for (const r of Compactos) expect(Math.abs(parseFloat(await estilo(rotulo(r).locator('xpath=following-sibling::span[1]'), 'font-size')) - 16), r).toBeLessThanOrEqual(0.5)
 
+    // estrutura-visual door 4: a tabela do ranking já vem à vista, com a barra embaixo da categoria; não há gráfico nem "Ver tabela"
     for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
       const bloco = ranking(titulo)
-      const grafico = bloco.locator('.recharts-responsive-container')
-      await grafico.waitFor()
-      expect((await caixa(grafico)).height).toBeGreaterThan(0)
-      await bloco.getByRole('button', { name: 'Ver tabela' }).click() // a tabela vem recolhida (AC 32); o clique rola a página: as caixas saem depois dele
-      const g = await caixa(grafico)
-      expect((await caixa(bloco.getByRole('table'))).y).toBeGreaterThanOrEqual(g.y + g.height - 1)
+      await expect(bloco.getByRole('table')).toHaveCount(1)
+      await expect(bloco.locator('.recharts-responsive-container')).toHaveCount(0)
+      await expect(bloco.getByRole('button', { name: 'Ver tabela' })).toHaveCount(0)
+      const [categoria, barra] = [await caixa(bloco.locator('tbody td').first()), await caixa(bloco.locator('[data-barra]').first())]
+      expect(barra.height).toBeGreaterThan(0)
+      expect(barra.y + barra.height).toBeLessThanOrEqual(categoria.y + categoria.height + 1)
     }
 
     await page.setViewportSize({ width: 1280, height: 740 }) // main de 976 px: a linha de ferramentas cabe numa linha
@@ -720,10 +721,12 @@ test.describe('redesign institucional', () => {
     await simularApi(page)
     await page.goto('/univag/indicadores')
     await page.getByText('Indicador principal').waitFor()
-    const rotulo = page.locator('.recharts-yAxis-tick-labels text').first()
-    await rotulo.waitFor()
-    expect(await rotulo.locator('tspan').count()).toBe(2)
-    expect(await rotulo.textContent()).toBe('Financeiro > Boletose mensalidades')
+    // estrutura-visual door 4: o rótulo é texto da célula, inteiro e sem reticências, e não há gráfico
+    const celula = page.locator('section tbody td:first-child').first()
+    await celula.waitFor()
+    await expect(page.locator('.recharts-yAxis-tick-labels')).toHaveCount(0)
+    await expect(celula).toContainText('Financeiro > Boletos e mensalidades')
+    expect(await celula.evaluate((e) => [e.scrollWidth <= e.clientWidth, getComputedStyle(e).textOverflow])).toEqual([true, 'clip'])
   })
 
   // ## Visual: popover e diálogo mantêm a sombra; o texto do balão em leading-relaxed (16 px x 1,625 = 26 px)
@@ -781,7 +784,10 @@ test.describe('painel', () => {
       expect(marca.y + marca.height, `${w} px: marca acima do 1º grupo`).toBeLessThanOrEqual(primeiroGrupo.y + 1)
       expect(instituicao.y + instituicao.height, `${w} px: instituição acima do 1º grupo`).toBeLessThanOrEqual(primeiroGrupo.y + 1)
       const usuario = await caixa(barra.getByRole('button', { name: /Ana/ }))
-      expect(b.y + b.height - (usuario.y + usuario.height), `${w} px: botão do usuário no fim`).toBeLessThanOrEqual(16)
+      // estrutura-visual AC 12: o botão de recolher fecha o rodapé, logo abaixo da linha do usuário
+      const recolher = await caixa(barra.getByRole('button', { name: 'Alternar barra lateral' }))
+      expect(b.y + b.height - (recolher.y + recolher.height), `${w} px: botão de recolher no fim`).toBeLessThanOrEqual(16)
+      expect(usuario.y + usuario.height, `${w} px: botão do usuário acima do de recolher`).toBeLessThanOrEqual(recolher.y + 1)
       expect(usuario.y, `${w} px: botão do usuário abaixo dos links`).toBeGreaterThan((await caixa(barra.getByRole('link', { name: 'Cadastros' }))).y)
       expect(Math.abs((await caixa(page.locator('main'))).x - 256), `${w} px: main`).toBeLessThanOrEqual(1)
     }
@@ -867,16 +873,14 @@ test.describe('painel', () => {
       expect(await page.evaluate(() => window.scrollY), `${w} px: a página rolou`).toBe(400)
       const c = await caixa(cabecalho)
       expect(Math.abs(c.y), `${w} px: fixo no topo`).toBeLessThanOrEqual(1)
-      const botao = await caixa(cabecalho.getByRole('button', { name: 'Alternar barra lateral' }))
-      const separador = cabecalho.locator('[data-orientation=vertical]')
-      const s1 = await caixa(separador)
+      // estrutura-visual AC 8, AC 11 e AC 13: sem separador nem Tema no topo; o botão de menu só abaixo de 768 px, antes do h1
       const h1 = cabecalho.getByRole('heading', { level: 1 })
       const t = await caixa(h1)
-      const tema = await caixa(cabecalho.getByRole('button', { name: 'Tema' }))
-      expect(botao.x + botao.width, `${w} px: botão antes do separador`).toBeLessThanOrEqual(s1.x + 1)
-      expect(s1.x + s1.width, `${w} px: separador antes do h1`).toBeLessThanOrEqual(t.x + 1)
-      expect(t.x + t.width, `${w} px: h1 antes de Tema`).toBeLessThanOrEqual(tema.x + 1)
-      expect(c.x + c.width - (tema.x + tema.width), `${w} px: Tema na ponta direita`).toBeLessThanOrEqual(25)
+      await expect(cabecalho.locator('[data-orientation=vertical]'), `${w} px: sem separador`).toHaveCount(0)
+      await expect(cabecalho.getByRole('button', { name: 'Tema' }), `${w} px: sem Tema`).toHaveCount(0)
+      const menu = cabecalho.getByRole('button', { name: 'Alternar barra lateral' })
+      await expect(menu, `${w} px: botão de menu`).toHaveCount(w < 768 ? 1 : 0)
+      if (w < 768) expect((await caixa(menu)).x + (await caixa(menu)).width, `${w} px: botão antes do h1`).toBeLessThanOrEqual(t.x + 1)
       expect(await h1.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).fontWeight]), `${w} px: h1`).toEqual(['16px', '500'])
     }
   })
@@ -904,16 +908,15 @@ test.describe('painel', () => {
     const botao = page.locator(Conteiner).getByRole('button', { name: /Ana/ })
     await botao.waitFor()
     const b = await caixa(botao)
-    const iniciais = await caixa(botao.getByText('A', { exact: true }))
-    expect([Math.round(iniciais.width), Math.round(iniciais.height)], 'quadrado das iniciais').toEqual([32, 32])
+    // estrutura-visual AC 9: nome e papel em texto, sem círculo de iniciais e sem setas
+    await expect(botao.getByText('A', { exact: true })).toHaveCount(0)
+    await expect(botao.locator('svg.lucide-chevrons-up-down')).toHaveCount(0)
     const nome = botao.getByText('Ana', { exact: true })
     const papel = botao.getByText('Administrador', { exact: true })
-    const [n, p, seta] = [await caixa(nome), await caixa(papel), await caixa(botao.locator('svg.lucide-chevrons-up-down'))]
-    expect(n.x, 'nome à direita das iniciais').toBeGreaterThanOrEqual(iniciais.x + iniciais.width - 1)
+    const [n, p] = [await caixa(nome), await caixa(papel)]
     expect(p.y, 'papel abaixo do nome').toBeGreaterThanOrEqual(n.y + n.height - 1)
     for (const t of [nome, papel]) expect(await t.evaluate((e) => getComputedStyle(e).textOverflow)).toBe('ellipsis')
-    expect(seta.x, 'seta à direita dos textos').toBeGreaterThanOrEqual(Math.max(n.x + n.width, p.x + p.width) - 1)
-    expect(seta.x + seta.width).toBeLessThanOrEqual(b.x + b.width + 1)
+    expect(n.x + n.width).toBeLessThanOrEqual(b.x + b.width + 1)
   })
 
   // C41
@@ -1083,7 +1086,7 @@ test.describe('painel', () => {
 
       await page.setViewportSize({ width: 1280, height: 800 })
       await assentar(page)
-      // o cabeçalho da tabela tem o fundo --muted
+      // estrutura-visual AC 18: o cabeçalho da tabela não tem fundo (antes, o --muted); o controle é o --muted pintado no body
       const fundos = await page.evaluate(() => {
         const sonda = document.createElement('div')
         sonda.style.background = 'var(--muted)'
@@ -1092,7 +1095,8 @@ test.describe('painel', () => {
         sonda.remove()
         return [getComputedStyle(document.querySelector('thead')!).backgroundColor, muted]
       })
-      expect(fundos[0], caminho).toBe(fundos[1])
+      expect(fundos[1], `${caminho}: controle`).not.toBe('rgba(0, 0, 0, 0)')
+      expect(fundos[0], caminho).toBe('rgba(0, 0, 0, 0)')
       for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 1280 px: ${l}`).toHaveCount(1)
       await expect(page.locator('tbody div.text-xs').first(), caminho).toBeHidden()
     }
@@ -1197,11 +1201,15 @@ test.describe('painel', () => {
         const h1 = cabecalho.getByRole('heading', { level: 1 })
         expect(await h1.evaluate((e) => [getComputedStyle(e).whiteSpace, getComputedStyle(e).textOverflow]), `${w} px: h1`).toEqual(['nowrap', 'ellipsis'])
         await h1.evaluate((e) => (e.textContent = 'Um título de tela muito mais longo do que cabe ao lado dos botões do cabeçalho, para forçar o corte'))
-        const tema = cabecalho.getByRole('button', { name: 'Tema' })
-        const [t, h] = [await caixa(tema), await caixa(h1)]
-        expect(h.x + h.width, `${w} px: título longo não passa de Tema`).toBeLessThanOrEqual(t.x + 1)
+        // estrutura-visual AC 8: sem Tema no topo; os botões do topo são os Avisos e, abaixo de 768 px, o menu
+        await expect(cabecalho.getByRole('button', { name: 'Tema' }), `${w} px: sem Tema`).toHaveCount(0)
+        const [t, h] = [await caixa(avisos), await caixa(h1)]
+        expect(h.x + h.width, `${w} px: título longo não passa dos Avisos`).toBeLessThanOrEqual(t.x + 1)
         expect(h.height, `${w} px: título numa linha`).toBeLessThanOrEqual(24)
-        for (const [nome, b] of [['Tema', t], ['Avisos', await caixa(avisos)]] as const) {
+        const botoes: [string, Locator][] = [['Avisos', avisos]]
+        if (w < 768) botoes.push(['Menu', cabecalho.getByRole('button', { name: 'Alternar barra lateral' })])
+        for (const [nome, botao] of botoes) {
+          const b = await caixa(botao)
           const lado = w < 768 ? 44 : 36 // abaixo de 768 px o botão tem 44 px (AC 2)
           expect([Math.abs(b.width - lado) <= 1, Math.abs(b.height - lado) <= 1], `${w} px: ${nome} ${lado} x ${lado}`).toEqual([true, true])
         }
@@ -1273,9 +1281,9 @@ test.describe('painel', () => {
     await page.goto('/univag/fila')
     await page.getByText('ONE-123').waitFor()
     const cabecalho = await estilo(page.getByRole('columnheader', { name: 'Número' }))
-    expect([cabecalho.tam, cabecalho.peso], 'cabeçalho da tabela').toEqual(['14px', '500'])
+    expect([cabecalho.tam, cabecalho.peso], 'cabeçalho da tabela').toEqual(['14px', '600']) // estrutura-visual AC 18: cabeçalho em peso 600
     const caixaTabela = page.locator('[data-slot=table-container]').locator('..')
-    expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['1px', '1px', '12px'])
+    expect(await caixaTabela.evaluate((e) => { const c = getComputedStyle(e); return [c.borderTopWidth, c.borderLeftWidth, c.borderTopLeftRadius] }), 'caixa da tabela').toEqual(['0px', '0px', '0px']) // estrutura-visual AC 18: sem contorno nem raio
     expect(await page.locator('tbody tr').first().evaluate((e) => getComputedStyle(e).borderBottomWidth), 'borda entre linhas').toBe('1px')
   })
 

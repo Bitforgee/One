@@ -1321,8 +1321,8 @@ test.describe('S6 varreduras', () => {
       async (nome) => {
         await page.setViewportSize({ width: nome === 'Conta' ? 390 : 1440, height: 900 })
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
-        // C57: o gráfico (carregado sob demanda) só conta depois que ao menos uma barra tem altura
-        if (nome === 'Indicadores') await page.waitForFunction(() => [...document.querySelectorAll('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')].some((b) => b.getBoundingClientRect().height > 0))
+        // C57: o ranking só conta depois que ao menos uma barra (estrutura-visual door 4: uma div em --chart-1) tem altura
+        if (nome === 'Indicadores') await page.waitForFunction(() => [...document.querySelectorAll('[data-barra]')].some((b) => b.getBoundingClientRect().height > 0))
         const [primaria] = await Promise.all([referencia(page, '--primary')])
         const indevidos = await page.evaluate((alvo) => {
           const pintar = window.__ux.pintar
@@ -1474,14 +1474,14 @@ test.describe('S7 acréscimos', () => {
         await emTema(page, tema, marca)
         await page.goto('/univag/indicadores')
         await page.getByText('Indicador principal').waitFor()
-        const barras = page.locator('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')
+        const barras = page.locator('[data-barra]') // estrutura-visual door 4: a barra é uma div com o fundo em --chart-1
         await expect(barras).toHaveCount(2)
         await expect.poll(async () => (await Promise.all([0, 1].map((i) => barras.nth(i).boundingBox()))).every((b) => b && b.width > 0), `${tema} ${marca ?? 'sem cor'}: barras desenhadas`).toBe(true)
         const rotulo = `${tema} ${marca ?? 'sem cor'}`
-        const [a, b] = await Promise.all([0, 1].map((i) => barras.nth(i).evaluate((e) => window.__ux.pintar(['#000', getComputedStyle(e).fill]))))
+        const [a, b] = await Promise.all([0, 1].map((i) => barras.nth(i).evaluate((e) => window.__ux.pintar(['#000', getComputedStyle(e).backgroundColor]))))
         expect(a, `${rotulo}: mesma cor nos dois`).toEqual(b)
         expect(a, `${rotulo}: não é --primary`).not.toEqual(await referencia(page, '--primary'))
-        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e)))
+        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.parentElement!))) // o fundo é o do pai: a barra div tem fundo próprio
         expect(contraste(a, fundo), `${rotulo}: contraste contra o fundo opaco mais próximo`).toBeGreaterThanOrEqual(3)
         // croma em oklch a partir do sRGB de 8 bits
         const [r, g, bl] = a.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))

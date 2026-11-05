@@ -40,17 +40,20 @@ test.describe('S1 celular', () => {
     await abrirTela(page, 'Artigos')
     medidos.default = await altura(page.getByRole('button', { name: 'Novo' }))
     await abrirTela(page, 'Assistente')
-    medidos.icon = await altura(page.getByRole('button', { name: 'Enviar' }))
+    medidos.enviar = await altura(page.getByRole('button', { name: 'Enviar' })) // estrutura-visual AC 14: o Enviar escrito, de tamanho default
     medidos.sm = await altura(page.locator('[data-slot=button][data-size=sm]'))
     medidos['icon-sm'] = await altura(page.getByRole('button', { name: 'Anexar arquivo' }))
     await page.locator('input[type=file]').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('x') })
     medidos['icon-xs'] = await altura(page.getByRole('button', { name: 'Remover foto.png' }))
+    await abrirTela(page, 'Usuários')
+    medidos.icon = await altura(page.getByRole('button', { name: /^Ações de/ })) // o size="icon" em tela é o MenuAcoes
+    await abrirTela(page, 'Assistente')
     // lg não tem uso em tela (o lg da casca é SidebarMenuButton, não Button); falta só ele, e vai pelo botão de teste
     for (const tamanho of nomes.filter((n) => !(n in medidos))) {
       await page.evaluate(([id, classe]) => document.body.insertAdjacentHTML('beforeend', `<button id="${id}" class="${classe}">x</button>`), [`t-${tamanho}`, buttonVariants({ size: tamanho })])
       medidos[tamanho] = await altura(page.locator(`#t-${tamanho}`))
     }
-    for (const tamanho of nomes) expect(medidos[tamanho], `Button ${tamanho}`).toBeGreaterThanOrEqual(44)
+    for (const tamanho of [...nomes, 'enviar']) expect(medidos[tamanho], `Button ${tamanho}`).toBeGreaterThanOrEqual(44)
     await abrirTela(page, 'Login')
     expect(await altura(page.getByLabel('CPF'))).toBeGreaterThanOrEqual(44)
     await abrirTela(page, 'Cadastros')
@@ -66,7 +69,7 @@ test.describe('S1 celular', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page, undefined, true)
     await abrirTela(page, 'Indicadores')
-    await page.locator('.recharts-yAxis-tick-labels text').first().waitFor()
+    await page.locator('section tbody td:first-child').first().waitFor()
     const { varridos, cortados } = await page.evaluate(() => {
       const todos = [...document.querySelectorAll('[class*="container/main"] *')] // o conteúdo da tela: a barra do topo, que fica dentro do main, tem o título com truncate
       return {
@@ -80,9 +83,9 @@ test.describe('S1 celular', () => {
     expect(cortados).toEqual([])
     // frase de destaque inteira; rótulo de 40 caracteres em até 2 linhas
     await expect(page.getByText('Resolvidas sem reabertura, sobre as conversas com desfecho')).toBeVisible()
-    const rotulo = page.locator('.recharts-yAxis-tick-labels text', { hasText: 'Financeiro' })
+    // estrutura-visual door 4: o rótulo do ranking é o texto inteiro da célula, que a varredura acima já conferiu sem corte
+    const rotulo = page.locator('section tbody td:first-child', { hasText: 'Financeiro' })
     expect((await rotulo.textContent())!.replace(/\s/g, '')).toBe('Financeiro>Boletosemensalidades2026')
-    expect(await rotulo.locator('tspan').count()).toBeLessThanOrEqual(2)
   })
 
   test('Cadastros seletor e Novo na mesma linha', async ({ page }) => {

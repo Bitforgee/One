@@ -210,18 +210,18 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(1440, '/univag', (p) => p.getByLabel('CPF').waitFor())
   todos('"Entrar"', await quatro(page.getByRole('button', { name: 'Entrar' })), 6)
   await em(1440, '/univag/indicadores', (p) => p.getByText('Indicador principal').waitFor())
-  todos('"Ver tabela"', await quatro(page.getByRole('button', { name: 'Ver tabela' }).first()), 6)
+  todos('"Consultar"', await quatro(page.getByRole('button', { name: 'Consultar' })), 6) // estrutura-visual door 4: o "Ver tabela" saiu
   await em(1440, '/univag/assistente', (p) => p.getByLabel('Mensagem').waitFor())
   await page.getByLabel('Mensagem').fill('preciso do boleto do semestre, onde encontro a segunda via?')
   await page.getByRole('button', { name: /Enviar/ }).click()
   await page.getByText('Isso resolveu?').waitFor()
   todos('"Falar com atendente"', await quatro(page.getByRole('button', { name: 'Falar com atendente' })), 6)
   todos('botão de link da resposta', await quatro(page.getByRole('link', { name: 'portal.univag.edu.br/financeiro/boletos/segunda-via' })), 6)
-  await pilula('"Enviar"', page.getByRole('button', { name: /Enviar/ }))
+  todos('"Enviar"', await quatro(page.getByRole('button', { name: /Enviar/ })), 6) // estrutura-visual AC 14: o Enviar escrito é um botão de 6 px
 
   // pílula
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
-  await pilula('"Tema"', page.getByRole('button', { name: 'Tema' }))
+  todos('"Tema" na barra', await quatro(page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Tema' })), 4) // estrutura-visual AC 8: a linha Tema do rodapé
   await pilula('selo "Aguardando aluno"', page.locator('[data-slot=badge]').filter({ hasText: 'Aguardando aluno' }).first())
   await em(1440, '/univag/matriculas', (p) => p.getByRole('heading', { level: 2 }).first().waitFor())
   await pilula('número "1" dos passos', page.locator('h2[id^=passo-] > span').first())
@@ -230,7 +230,7 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(1440, '/univag/chamados/ONE-123', (p) => p.getByText('Resumo gerado por IA').waitFor())
   todos('cartão "Ações"', await quatro(page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })), 12)
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
-  todos('caixa da tabela da Fila', await quatro(page.locator('[data-slot=table-container]').locator('..')), 12)
+  todos('caixa da tabela da Fila', await quatro(page.locator('[data-slot=table-container]').locator('..')), 0) // estrutura-visual AC 18: sem caixa
   await em(1440, '/univag/aparencia', (p) => p.getByLabel('Cor principal').waitFor())
   todos('painel da região "Prévia"', await quatro(page.getByRole('region', { name: 'Prévia' }).locator('> *').first()), 12)
   await em(390, '/univag/artigos', (p) => p.getByText('ARQUIVADO').first().waitFor())
@@ -269,8 +269,7 @@ test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) =
           const permitida = (e: Element) =>
             e.tagName === 'IMG' || // a foto do assistente
             e.matches('[data-slot=badge]') ||
-            e.matches('button[aria-label=Enviar], button[aria-label=Tema], button[aria-label*=avisos]') ||
-            !!e.closest('button')?.matches('[data-sidebar=menu-button]') || // as iniciais do usuário
+            e.matches('button[aria-label*=avisos]') ||
             e.matches('h2[id^=passo-] > span')
           const todos = [...document.querySelectorAll('body *')].filter(visivel).filter((e) => {
             const b = e.getBoundingClientRect()
@@ -282,7 +281,7 @@ test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) =
             pilulas: todos.length,
             proibidas: todos.filter((e) => !permitida(e)).map(rotulo),
             botoes: botoes.length,
-            fora: botoes.filter((b) => !b.matches('[aria-label=Enviar], [aria-label=Tema], [aria-label*=avisos]') && !cantos(b).every((c) => c === 6)).map(rotulo),
+            fora: botoes.filter((b) => !b.matches('[aria-label*=avisos]') && !cantos(b).every((c) => c === 6)).map(rotulo),
           }
         })
         expect(r.proibidas, `${nome} a ${largura}: pílula fora da lista`).toEqual([])
@@ -848,24 +847,24 @@ test('9 métricas em lista de rótulo e valor sem caixa', async ({ page }) => {
   }
 })
 
-// C30
+// C30, estrutura-visual door 4: o ranking é uma tabela com barras, e continua sem cartão e com o título acima
 test('gráficos sem cartão com o título', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
-    const graficos = page.locator('.recharts-responsive-container')
-    await expect(graficos, `${largura}: 2 gráficos`).toHaveCount(2)
-    const barras = page.locator('.recharts-bar-rectangle path, .recharts-bar-rectangle rect')
+    const graficos = page.locator('section:has(h2) table')
+    await expect(graficos, `${largura}: 2 rankings`).toHaveCount(2)
+    const barras = page.locator('[data-barra]')
     await expect(barras).toHaveCount(2)
     await expect.poll(async () => (await Promise.all([0, 1].map((i) => barras.nth(i).boundingBox()))).every((b) => b && b.height > 0), `${largura}: barras desenhadas`).toBe(true)
     for (const [i, titulo] of ['Categorias por conversas', 'Categorias por chamados'].entries()) {
       const [c, h] = [await caixa(graficos.nth(i)), await caixa(page.getByRole('heading', { name: titulo }))]
-      expect(h.y + h.height, `${largura}: ${titulo} acima do gráfico`).toBeLessThanOrEqual(c.y + 1)
-      expect(h.x < c.x + c.width && h.x + h.width > c.x, `${largura}: ${titulo} sobre o gráfico`).toBe(true)
-      const cadeia = (await page.evaluate(`(() => { ${noMain} return cadeia(document.querySelectorAll('.recharts-responsive-container')[${i}]) })()`)) as Cadeia[]
+      expect(h.y + h.height, `${largura}: ${titulo} acima do ranking`).toBeLessThanOrEqual(c.y + 1)
+      expect(h.x < c.x + c.width && h.x + h.width > c.x, `${largura}: ${titulo} sobre o ranking`).toBe(true)
+      const cadeia = (await page.evaluate(`(() => { ${noMain} return cadeia(document.querySelectorAll('section:has(h2) table')[${i}]) })()`)) as Cadeia[]
       semCaixa(cadeia, `${largura}: ${titulo}`)
     }
     const r = await listaDe(page)
-    expect((await caixa(graficos.first())).y, `${largura}: gráficos abaixo da lista`).toBeGreaterThanOrEqual(Math.max(...r.linhas.map((l) => l.linha.y + l.linha.height)) - 1)
+    expect((await caixa(graficos.first())).y, `${largura}: rankings abaixo da lista`).toBeGreaterThanOrEqual(Math.max(...r.linhas.map((l) => l.linha.y + l.linha.height)) - 1)
   }
 })
 

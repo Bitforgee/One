@@ -96,9 +96,10 @@ test('avisos no cabeçalho', async ({ page }) => {
     const avisos = cabecalho.getByRole('button', { name: Ativar })
     await expect(avisos, `${largura} px ${estado}`).toBeVisible()
     const a = (await avisos.boundingBox())!
-    const t = (await cabecalho.getByRole('button', { name: 'Tema' }).boundingBox())!
-    expect(a.x + a.width, `${largura} px ${estado}: à esquerda de Tema`).toBeLessThanOrEqual(t.x + 1)
-    expect(Math.abs(a.y - t.y), `${largura} px ${estado}: na mesma linha`).toBeLessThanOrEqual(1)
+    // estrutura-visual AC 8: sem Tema no topo, os avisos ficam na ponta direita
+    await expect(cabecalho.getByRole('button', { name: 'Tema' }), `${largura} px ${estado}: sem Tema`).toHaveCount(0)
+    const c = (await cabecalho.boundingBox())!
+    expect(c.x + c.width - (a.x + a.width), `${largura} px ${estado}: avisos na ponta direita`).toBeLessThanOrEqual(25)
     expect(await avisos.textContent(), 'só o ícone').toBe('')
     await expect(page.locator('[data-sidebar=sidebar]').getByRole('button', { name: Ativar }), 'fora da barra').toHaveCount(0)
   }
