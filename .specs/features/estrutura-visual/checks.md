@@ -47,110 +47,110 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 
 ### S1 - Foco visível e anexos (P1) · 12 files · 60 KB · ~15k
 
-**C1** - [ ] Levando o foco com `Tab` na Fila, no Assistente, no detalhe do chamado e na Aparência, a 1280 px, nos 3 temas e com as 3 marcas, cada controle focado tem `outline-style` `solid`, `outline-width` ≥ 2 px e `outline-color` com contraste ≥ 3:1 contra o fundo opaco vizinho; ao menos 5 controles distintos por tela (door 1; AC 1)
+**C1** - [x] Levando o foco com `Tab` na Fila, no Assistente, no detalhe do chamado e na Aparência, a 1280 px, nos 3 temas e com as 3 marcas, cada controle focado tem `outline-style` `solid`, `outline-width` ≥ 2 px e `outline-color` com contraste ≥ 3:1 contra o fundo opaco vizinho; ao menos 5 controles distintos por tela (door 1; AC 1)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco de 2 px com 3:1 nas 4 telas"`
 
-**C2** - [ ] Com `forcedColors: 'active'`, nas mesmas 4 telas, a 1280 px, cada controle focado tem `outline-style` diferente de `none` e `outline-width` ≥ 2 px, incluindo a linha de pergunta do Assistente (AC 2)
+**C2** - [x] Com `forcedColors: 'active'`, nas mesmas 4 telas, a 1280 px, cada controle focado tem `outline-style` diferente de `none` e `outline-width` ≥ 2 px, incluindo a linha de pergunta do Assistente (AC 2)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco com cores forçadas"`
 
-**C3** - [ ] Um `Button` comum e um `Input` com foco têm `box-shadow` `none`. Nenhum arquivo de `web/src` contém `ring-ring/50`, `outline-ring/50` nem `focus-visible:ring-[3px]`, e a varredura lê ao menos 8 arquivos de `ui/` (door 1; AC 3)
+**C3** - [x] Um `Button` comum e um `Input` com foco têm `box-shadow` `none`. Nenhum arquivo de `web/src` contém `ring-ring/50`, `outline-ring/50` nem `focus-visible:ring-[3px]`, e a varredura lê ao menos 8 arquivos de `ui/` (door 1; AC 3)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco sem auréola no botão e no campo"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "foco sem classes de auréola"`
 
-**C4** - [ ] Pintado no `body`: no claro sem cor, `var(--ring)` é igual a `oklch(0.5 0 0)`; no claro, no escuro e no preto com `#8a1538`, `var(--ring)` difere do valor sem cor e é o mesmo de `var(--sidebar-ring)`. No escuro e no preto sem cor, `--ring` continua o de `<base>` (door 2; AC 4)
+**C4** - [x] Pintado no `body`: no claro sem cor, `var(--ring)` é igual a `oklch(0.5 0 0)`; no claro, no escuro e no preto com `#8a1538`, `var(--ring)` difere do valor sem cor e é o mesmo de `var(--sidebar-ring)`. No escuro e no preto sem cor, `--ring` continua o de `<base>` (door 2; AC 4)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "ring sem cor e com marca"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens de Visual"`
 
-**C5** - [ ] A área tracejada de anexos em Instituições, Matrículas, Documentos e no detalhe do chamado tem `border-style` `dashed` e contraste ≥ 3:1 contra o fundo em que está, nos 3 temas, sem cor e com `#0b6e4f` (AC 5)
+**C5** - [x] A área tracejada de anexos em Instituições, Matrículas, Documentos e no detalhe do chamado tem `border-style` `dashed` e contraste ≥ 3:1 contra o fundo em que está, nos 3 temas, sem cor e com `#0b6e4f` (AC 5)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "borda da área de anexos com 3:1"`
 
-**C6** - [ ] Com foco, um link da barra lateral, um link da primeira coluna da Fila e uma linha de pergunta do Assistente têm a caixa do contorno (`boundingBox` + `outline-offset` + `outline-width`) dentro do retângulo de todo ancestral com `overflow` diferente de `visible`, com 1 px de tolerância; a linha de pergunta tem `outline-offset` negativo (P2; AC 1; `## Screens`)
+**C6** - [x] Com foco, um link da barra lateral, um link da primeira coluna da Fila e uma linha de pergunta do Assistente têm a caixa do contorno (`boundingBox` + `outline-offset` + `outline-width`) dentro do retângulo de todo ancestral com `overflow` diferente de `visible`, com 1 px de tolerância; a linha de pergunta tem `outline-offset` negativo (P2; AC 1; `## Screens`)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco não cortado por overflow"`
 
 ### S2 - Barra lateral e topo (P1) · 8 files · 75 KB · ~19k
 
-**C7** - [ ] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f`, nos 3 temas; o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (AC 6)
+**C7** - [x] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f`, nos 3 temas; o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (AC 6)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra tingida pela marca"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens da paleta"`
 
-**C8** - [ ] A 1440 px, nos 3 temas e com as 3 marcas, o link ativo tem uma barra de 3 px (± 1) à esquerda (borda ou `::before`) na cor de `var(--sidebar-primary)`, com contraste ≥ 3:1 contra `--sidebar`, `color` igual à de `var(--sidebar-foreground)`, `font-weight` 600, fundo transparente e `aria-current="page"`. No mesmo teste, um link inativo não tem a barra, tem peso < 600 e não tem `aria-current` (door 3; AC 7)
+**C8** - [x] A 1440 px, nos 3 temas e com as 3 marcas, o link ativo tem uma barra de 3 px (± 1) à esquerda (borda ou `::before`) na cor de `var(--sidebar-primary)`, com contraste ≥ 3:1 contra `--sidebar`, `color` igual à de `var(--sidebar-foreground)`, `font-weight` 600, fundo transparente e `aria-current="page"`. No mesmo teste, um link inativo não tem a barra, tem peso < 600 e não tem `aria-current` (door 3; AC 7)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "item ativo com barra de 3 px"`
 
-**C9** - [ ] A 1440 px, o rodapé da barra tem o botão "Tema", que abre Claro, Escuro e Preto, e escolher Escuro põe `dark` no `<html>`. O `header` tem 0 botões "Tema", a 1440 e a 390 px (aluno e atendente). A 390 px, o aluno ainda escolhe o tema pela aba Conta (AC 8)
+**C9** - [x] A 1440 px, o rodapé da barra tem o botão "Tema", que abre Claro, Escuro e Preto, e escolher Escuro põe `dark` no `<html>`. O `header` tem 0 botões "Tema", a 1440 e a 390 px (aluno e atendente). A 390 px, o aluno ainda escolhe o tema pela aba Conta (AC 8)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Tema no rodapé da barra e fora do topo"`
 
-**C10** - [ ] Com a barra aberta, o rodapé mostra nome e papel; a página tem 0 `svg.lucide-chevrons-up-down` e 0 elementos com as iniciais do usuário; clicar na linha do usuário abre o menu com "Sair" (P4; AC 9)
+**C10** - [x] Com a barra aberta, o rodapé mostra nome e papel; a página tem 0 `svg.lucide-chevrons-up-down` e 0 elementos com as iniciais do usuário; clicar na linha do usuário abre o menu com "Sair" (P4; AC 9)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "usuário em texto com a barra aberta"`
 
-**C11** - [ ] Com a barra recolhida, o rodapé mostra as iniciais do usuário, e o nome fica visualmente escondido; ao reabrir, as iniciais somem (controle) (AC 10)
+**C11** - [x] Com a barra recolhida, o rodapé mostra as iniciais do usuário, e o nome fica visualmente escondido; ao reabrir, as iniciais somem (controle) (AC 10)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "iniciais só com a barra recolhida"`
 
-**C12** - [ ] A 1440 e a 390 px, nos 3 temas, o `header` tem `background-color` opaco (alfa 1), `backdrop-filter` `none` e 0 `[data-slot=separator]` (AC 11)
+**C12** - [x] A 1440 e a 390 px, nos 3 temas, o `header` tem `background-color` opaco (alfa 1), `backdrop-filter` `none` e 0 `[data-slot=separator]` (AC 11)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "topo opaco e sem separador"`
 
-**C13** - [ ] A 768 e a 1440 px, o botão de recolher está no rodapé da barra, com 1 `svg`, sem texto visível e o mesmo `aria-label` de `<base>`; o `header` tem 0 botões de recolher; clicar recolhe e clicar de novo reabre (P3; AC 12)
+**C13** - [x] A 768 e a 1440 px, o botão de recolher está no rodapé da barra, com 1 `svg`, sem texto visível e o mesmo `aria-label` de `<base>`; o `header` tem 0 botões de recolher; clicar recolhe e clicar de novo reabre (P3; AC 12)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "recolher no rodapé a partir de 768"`
 
-**C14** - [ ] A 390 px, o atendente tem no `header` um botão de menu com `svg.lucide-menu`, que abre a gaveta com os links, Tema e o usuário; a 767 px, o mesmo. O aluno a 390 px não tem esse botão (controle) (AC 13)
+**C14** - [x] A 390 px, o atendente tem no `header` um botão de menu com `svg.lucide-menu`, que abre a gaveta com os links, Tema e o usuário; a 767 px, o mesmo. O aluno a 390 px não tem esse botão (controle) (AC 13)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "menu no topo abaixo de 768 para quem não é aluno"`
 
 ### S3 - Caixa de envio (P1) · 4 files · 40 KB · ~10k
 
-**C15** - [ ] A 360, 390 e 1440 px, anexar, o campo e o botão "Enviar", nessa ordem da esquerda para a direita, se sobrepõem na vertical, sem estouro horizontal. O `form` e o campo têm `box-shadow` `none`, o `form` tem `border-width` 0, e com 1 linha de texto e sem anexo o `form` mede ≤ 60 px. A 390 px, anexar e "Enviar" medem ≥ 44 px de altura, e o campo tem `font-size` 16 px (P5; AC 14)
+**C15** - [x] A 360, 390 e 1440 px, anexar, o campo e o botão "Enviar", nessa ordem da esquerda para a direita, se sobrepõem na vertical, sem estouro horizontal. O `form` e o campo têm `box-shadow` `none`, o `form` tem `border-width` 0, e com 1 linha de texto e sem anexo o `form` mede ≤ 60 px. A 390 px, anexar e "Enviar" medem ≥ 44 px de altura, e o campo tem `font-size` 16 px (P5; AC 14)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "caixa de envio em uma linha"`
 
-**C16** - [ ] O campo da caixa de envio tem `border-width` ≥ 1 px e contraste ≥ 3:1 contra o fundo, nos 3 temas e com as 2 marcas, a 390 e a 1440 px (AC 15)
+**C16** - [x] O campo da caixa de envio tem `border-width` ≥ 1 px e contraste ≥ 3:1 contra o fundo, nos 3 temas e com as 2 marcas, a 390 e a 1440 px (AC 15)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "borda da caixa de envio com 3:1"`
 
-**C17** - [ ] Com conversa aberta que pode ser encerrada, "Encerrar" e "Falar com atendente" se sobrepõem na vertical, acima da linha do campo. Sem conversa, "Encerrar" não aparece e "Falar com atendente" continua (controle) (AC 16)
+**C17** - [x] Com conversa aberta que pode ser encerrada, "Encerrar" e "Falar com atendente" se sobrepõem na vertical, acima da linha do campo. Sem conversa, "Encerrar" não aparece e "Falar com atendente" continua (controle) (AC 16)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Encerrar junto de Falar com atendente"`
 
-**C18** - [ ] Enter com texto faz 1 `POST` da mensagem e limpa o campo; Shift+Enter quebra a linha sem `POST`; com o campo vazio ou só com espaços, "Enviar" está desabilitado (AC 17)
+**C18** - [x] Enter com texto faz 1 `POST` da mensagem e limpa o campo; Shift+Enter quebra a linha sem `POST`; com o campo vazio ou só com espaços, "Enviar" está desabilitado (AC 17)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Enter envia e campo vazio desabilita"`
 
 ### S4 - Tabelas sem caixa (P1) · 2 files · 10 KB · ~3k
 
-**C19** - [ ] Em Fila e Usuários, a 1440 px, nos 3 temas: o ancestral imediato da rolagem da tabela tem `border-width` 0 e `border-radius` 0; o `th` tem fundo transparente, `font-weight` 600 e `border-bottom-width` ≥ 1 px, com contraste contra o fundo maior que o do fio entre linhas; o texto da primeira coluna fica alinhado (± 1 px) à esquerda do conteúdo da página (AC 18)
+**C19** - [x] Em Fila e Usuários, a 1440 px, nos 3 temas: o ancestral imediato da rolagem da tabela tem `border-width` 0 e `border-radius` 0; o `th` tem fundo transparente, `font-weight` 600 e `border-bottom-width` ≥ 1 px, com contraste contra o fundo maior que o do fio entre linhas; o texto da primeira coluna fica alinhado (± 1 px) à esquerda do conteúdo da página (AC 18)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "tabela sem caixa e cabeçalho sem fundo"`
 
 ### S5 - Rankings sem biblioteca de gráfico (P1) · 6 files · 30 KB · ~8k
 
-**C20** - [ ] Com totais 50, 25, 5 e 0, na ordem da API: 4 linhas nessa ordem, com a categoria inteira e o total em texto, e barras de largura 100%, 50%, 10% e 0% (P6; AC 19)
+**C20** - [x] Com totais 50, 25, 5 e 0, na ordem da API: 4 linhas nessa ordem, com a categoria inteira e o total em texto, e barras de largura 100%, 50%, 10% e 0% (P6; AC 19)
 Proof: `cd web && npx vitest run src/indicadores/ranking.test.tsx -t "ranking com total e barra proporcional"`
 
-**C21** - [ ] Em Indicadores, nos 3 temas e com as 2 marcas, a 390 e a 1440 px, cada barra tem cor igual à de `var(--chart-1)`, diferente da de `var(--primary)` e com contraste ≥ 3:1 contra o fundo; o total tem `font-variant-numeric` com `tabular-nums` e fica à direita da categoria; a página tem 0 `svg.recharts-surface` e 0 botões "Ver tabela" (door 4; AC 19)
+**C21** - [x] Em Indicadores, nos 3 temas e com as 2 marcas, a 390 e a 1440 px, cada barra tem cor igual à de `var(--chart-1)`, diferente da de `var(--primary)` e com contraste ≥ 3:1 contra o fundo; o total tem `font-variant-numeric` com `tabular-nums` e fica à direita da categoria; a página tem 0 `svg.recharts-surface` e 0 botões "Ver tabela" (door 4; AC 19)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barras do ranking na cor calma e sem Recharts"`
 
-**C22** - [ ] Sem linhas no ranking, a seção mostra o título e o mesmo estado vazio de `<base>`, com 0 barras; com a API sem o ranking, a seção não aparece (AC 20)
+**C22** - [x] Sem linhas no ranking, a seção mostra o título e o mesmo estado vazio de `<base>`, com 0 barras; com a API sem o ranking, a seção não aparece (AC 20)
 Proof: `cd web && npx vitest run src/indicadores/ranking.test.tsx -t "ranking vazio e ausente"`
 
-**C23** - [ ] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` e `text-overflow` diferente de `ellipsis` na linha, sem estouro horizontal da página (AC 21)
+**C23** - [x] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` e `text-overflow` diferente de `ellipsis` na linha, sem estouro horizontal da página (AC 21)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "categoria longa inteira nas 5 larguras"`
 
-**C24** - [ ] `recharts` não está em `web/package.json` nem em `package-lock.json` como dependência direta; `web/src/indicadores/Grafico.tsx` não existe; o build não gera arquivo `Grafico-*` em `api/wwwroot/assets` (door 4)
+**C24** - [x] `recharts` não está em `web/package.json` nem em `package-lock.json` como dependência direta; `web/src/indicadores/Grafico.tsx` não existe; o build não gera arquivo `Grafico-*` em `api/wwwroot/assets` (door 4)
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "sem biblioteca de gráfico"`
 
 ### S0 - Invariantes e barreiras (P1)
 
-**C25** - [ ] A suíte Vitest inteira e o build passam. As edições em asserções existentes são as da lista fechada ou as permitidas por ela, cada uma no `## Handoff` com o AC que a força (AC 22)
+**C25** - [x] A suíte Vitest inteira e o build passam. As edições em asserções existentes são as da lista fechada ou as permitidas por ela, cada uma no `## Handoff` com o AC que a força (AC 22)
 Proof: `npm --prefix web test`
 Proof: `npm --prefix web run build`
 
-**C26** - [ ] O `crapper` sobre `web/src` sai 0 no limite 9.99, o `dryer` não acha candidato com nota 0.8 ou mais, e nenhum arquivo de `api/` nem de `api.Tests/` muda desde `<base>` (AC 22)
+**C26** - [x] O `crapper` sobre `web/src` sai 0 no limite 9.99, o `dryer` não acha candidato com nota 0.8 ou mais, e nenhum arquivo de `api/` nem de `api.Tests/` muda desde `<base>` (AC 22)
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao -s src/ilustracoes --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts src/Opcoes.tsx src/sw.ts src/push.ts src/AvisosPush.tsx src/aparencia.tsx src/LinksDaResposta.tsx src/Balao.tsx | grep -q "No duplicate candidates found"`
 Proof: `git diff --quiet <base> HEAD -- api api.Tests`
 
-**C27** - [ ] A suíte de arranjo passa inteira com a API simulada, salvo `plataforma.spec.ts` `manifesto e service worker`, que precisa de API e é julgado em C29 (AC 22)
+**C27** - [x] A suíte de arranjo passa inteira com a API simulada, salvo `plataforma.spec.ts` `manifesto e service worker`, que precisa de API e é julgado em C29 (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/arranjo.spec.ts e2e/celular.spec.ts e2e/ux.spec.ts e2e/aparencia.spec.ts e2e/identidade.spec.ts e2e/casca.spec.ts`
 
-**C28** - [ ] De ponta a ponta na imagem própria: o atendente escolhe Escuro no rodapé da barra, recarrega e continua em Escuro; o aluno manda uma mensagem pela caixa nova com Enter, e ela aparece na conversa; em Indicadores, com chamados criados, o ranking mostra a categoria e o total reais, com 1 barra por linha (AC 8, AC 17, AC 19)
+**C28** - [x] De ponta a ponta na imagem própria: o atendente escolhe Escuro no rodapé da barra, recarrega e continua em Escuro; o aluno manda uma mensagem pela caixa nova com Enter, e ela aparece na conversa; em Indicadores, com chamados criados, o ranking mostra a categoria e o total reais, com 1 barra por linha (AC 8, AC 17, AC 19)
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/casca-real.spec.ts`
 
-**C29** - [ ] A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8089 (AC 22)
+**C29** - [x] A suíte e2e inteira passa contra a imagem própria do `HEAD` na porta 8089 (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test`
 
-**C30** - [ ] Os testes dos invariantes de AC 22 passam sem baixar limite: alvos de 44 px, campos de 16 px, barra de abas, cor de ação e neutros tingidos, mais os checks C47 a C57 de `identidade-visual` (AC 22)
+**C30** - [x] Os testes dos invariantes de AC 22 passam sem baixar limite: alvos de 44 px, campos de 16 px, barra de abas, cor de ação e neutros tingidos, mais os checks C47 a C57 de `identidade-visual` (AC 22)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "alvos de 44 px abaixo de 768 em todas as telas"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "campos de 16 px abaixo de 768 e com ponteiro grosso"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "barra de abas: 3 colunas iguais e ícone sobre rótulo de 12 px"`
@@ -193,5 +193,11 @@ Tamanho: bytes dos arquivos que cada slice lê e edita (`wc -c` em 05/11/2026), 
 
 Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mecanismo: um construtor, no modelo Sonnet. Sem pergunta, porque cabe.
 
-- **Base:** `<base>` é o commit que grava este arquivo.
+- **Base:** `<base>` = `93d5889`, o commit que grava `plan.md` e este arquivo.
 - **Verificação:** Verifier novo, no modelo padrão, sobre `<base>..HEAD`, com até 3 rodadas; depois disso a decisão é do usuário. Na última entrega, um revisor novo dá a nota de "cara de IA" com prints antes e depois, usando logo e foto reais de teste.
+- **Boundary:** `8aac849` (foco global e tokens, e a remoção de `Grafico.tsx`, que ficou nesse commit por ter sido apagado com `git rm` antes), `6d24532` (rodapé da barra, topo, item ativo), `3ede672` (caixa de envio), `5620241` (tabela), `e8476a9` (rankings, `recharts` fora) e `18c7491` (testes novos e ajustados), sobre `93d5889`. Fechados: C1 a C30. Resultado no `18c7491`: Vitest 524 verdes em 55 arquivos; `npm --prefix web run build` ok; `crapper` sai 0 no limite 9.99 (maior nota 9,8, `Sidebar`); `dryer` sem candidato; `git diff --quiet 93d5889 HEAD -- api api.Tests` sai 0. Arranjo (C27) 188 verdes contra `vite preview` na 5199. E2E real: imagem do `HEAD` (`git archive HEAD | docker build`) na 8089, banco `one_estrutura`, bucket `one-estrutura`, instituição `e2e` e contêiner `one-estrutura-api` próprios, todos removidos: a suíte inteira, 224 testes, verde (uma primeira tentativa falhou por eu não ter passado `E2E_INSTITUICAO=e2e`, `E2E_ADMIN_EMAIL=admin@e2e.one` e `E2E_CONTAINER=one-estrutura-api` aos specs reais antigos, e foi refeita com banco novo). Injeções à mão, todas pegas: contorno de foco de 2 px para 1 px (`foco de 2 px com 3:1 nas 4 telas` e `foco com cores forçadas`), barra do item ativo de 3 px para 1 px (`item ativo com barra de 3 px`), a caixa de envio de volta com borda, raio e sombra (`caixa de envio em uma linha`), o `first:ps-0` tirado da tabela (`tabela sem caixa e cabeçalho sem fundo`), `--ring` claro de volta a `0.708` (`ring sem cor e com marca` e `foco de 2 px com 3:1 nas 4 telas`) e a largura da barra dividida por `maior + 1` (`ranking com total e barra proporcional`). Prints de antes e depois em `.playwright-mcp/estrutura/` (22 de cada, a partir do fixture da API simulada; o de antes numa árvore de trabalho de `93d5889`).
+- **Settled mid-build:** nada com o usuário. Decisões do construtor, para o Verifier julgar: (1) o topo mantém o `border-b` de 1 px; "sem separador" foi lido como o componente `Separator` (C12 mede `[data-slot=separator]`, `backdrop-filter` e o alfa do fundo). (2) C7 exige que `--sidebar` difira entre as marcas nos 3 temas, e uma mistura de 4% sobre `oklch(0 0 0)` dá `rgb(0,0,0)` nas duas; no Preto a barra ficou `color-mix(8% marca, oklch(0.1 0 none))`, portanto deixa de ser `#000` puro. (3) C3 exige `box-shadow` `none` no `Input` com foco, e o `Input` trazia `shadow-xs`; o `shadow-xs` saiu de `Input`, `Textarea` e `NativeSelect`. (4) `first:ps-0` entrou em `TableHead` e `TableCell` de `ui/table.tsx`, e a célula do estado vazio ganhou `first:ps-2` para continuar centrada; a barra do ranking tem 6 px de altura (com 8 px ela contaria como pílula em `pílula só em avatar, botão de ícone, selo e passo`). (5) A linha de pergunta ganhou `data-foco="dentro"`, e `index.css` tem a regra de `outline-offset: -2px` para `[data-sidebar='content']`, `[data-slot='table-container']` e `[data-foco='dentro']`, que são os contêineres que cortam. (6) O `input` de `CampoArquivo` é `sr-only`, então o contorno dele ficaria cortado; o contêiner ganhou o contorno por `has-[input:focus-visible]`. (7) `TabelaRanking` continua usando `useReactTable`, porque `interface.test.ts` `TanStack Table só nas 3 tabelas` exige isso de `Indicadores.tsx`. (8) No celular o botão de menu do topo só aparece com `isMobile` (JS), e o botão de recolher do rodapé tem `max-md:hidden`, o que evita botão duplicado no DOM dos testes de jsdom.
+- **Asserções existentes editadas na lista fechada** (cada uma com o AC que a força): `arranjo.spec.ts` `painel cabeçalho` (AC 8, 11, 13: sem Tema nem separador, menu só abaixo de 768 px), `botão do usuário` (AC 9: sem iniciais nem seta), `cabeçalho: borda, título numa linha e botões de 36 px` (AC 8), `colunas largas somem no estreito` (AC 18: `thead` sem fundo, com o `--muted` pintado como controle), `arranjo Indicadores` e `rótulo do gráfico em até 2 linhas sem reticências` (AC 19, 21: tabela à vista, texto da célula); `push.spec.ts` `avisos no cabeçalho` (AC 8); `identidade.spec.ts` `raio pelo papel do componente` (AC 8, 14, 18, 19: "Consultar" no lugar de "Ver tabela", "Enviar" e "Tema" a 6 e 4 px, caixa da tabela a 0), `pílula só em avatar, botão de ícone, selo e passo` (AC 8, 9, 14: saem "Enviar", "Tema" e as iniciais da lista de pílulas permitidas) e `gráficos sem cartão com o título` (AC 19); `celular.spec.ts` `alvos de toque de 44 px abaixo de 768` (AC 14: o `Enviar` mede como `default` e o `icon` vem do `MenuAcoes`) e `Indicadores sem texto cortado` (AC 19, 21); `ux.spec.ts` `cor de ação só em botão principal, item ativo, link e foco` e `gráficos com a mesma cor calma` (AC 19: seletor `[data-barra]`; a barra é uma `div` com fundo próprio e o fundo vizinho vem do pai); `interface.test.ts` linha `--sidebar` de `Tokens` (AC 6) e as linhas `--sidebar-accent`, `--sidebar-border`, `--sidebar-ring` e `--ring`, que não existiam e entraram (AC 4, 6); `indicadores.test.tsx` `ranking com gráfico acima da tabela` e `ranking vazio sem gráfico` (renomeados `ranking com barras na própria tabela` e `ranking vazio sem barras`) e `rankings em tabela Categoria e Total`, e `revisao.test.tsx` `Ver tabela de %s` (agora `a tabela de %s já vem à vista`) (AC 19, 20).
+- **Edições fora da lista, forçadas por um AC** (nenhuma baixa limite; para o Verifier julgar): `arranjo.spec.ts` `arranjo Assistente` (AC 14, 16: "Encerrar" na linha de "Falar com atendente", acima do campo), `painel barra aberta` (AC 12: o recolher fecha o rodapé e o usuário fica acima dele) e `valores de tipo e bordas` (AC 18: cabeçalho 600 e caixa da tabela a 0); `acesso.test.tsx` `botões do cabeçalho por papel` (AC 8, 13: a lista de botões do topo perde "Tema" e "Alternar barra lateral", que só existe abaixo de 768 px) e `sem tema gravado segue o sistema` (AC 8: espera o título, não o botão Tema, que abaixo de 768 px mora na gaveta); `acesso/textos.test.tsx` (AC 8: "Tema" entra no vocabulário visível); `assistente/textos.test.tsx` (AC 14: "Enviar" é texto visível); `assistente/icones.test.tsx` `Assistente traz ArrowUp, Hand e ShieldAlert` (AC 14; renomeado `Assistente traz Enviar escrito, Hand e ShieldAlert`: sem seta); `interface.test.ts` `tema claro enquanto houver react-bootstrap` (AC 8: o Tema só é esperado no desktop, e o aluno no celular tem a aba Conta); `indicadores/textos.test.tsx` (AC 19: sai "Ver tabela" e o clique nele); `indicadores.test.tsx` `cartões formatam taxa, horas e número...` (AC 19: sai o clique em "Ver tabela").
+- **Apagado:** o teste `rótulo do gráfico` de `indicadores.test.tsx` (importava `linhasDoRotulo` de `Grafico.tsx`, que a door 4 e o C24 apagam; o corte do rótulo passou a ser medido por C23, `arranjo.spec.ts` e `celular.spec.ts`).
+- **Abandonado ou não feito:** nada dos 30 checks. Fora do escopo e intocado: ícones da barra, formulário da Aparência, listas de `Conta` e `Matriculas`, mensagem sem internet do login. `web/e2e/zz-prints.spec.ts`, usado só para os prints, não foi commitado.
