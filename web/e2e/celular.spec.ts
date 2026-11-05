@@ -101,15 +101,11 @@ test.describe('S2 celular', () => {
       const cartoes = principal.getByRole('listitem')
       expect(await cartoes.count(), nome).toBeGreaterThan(0)
       if (nome === 'Fila' || nome === 'Minhas solicitações') {
-        // C7: 1 selo por cartão antes de medir (L-069): sem selo o teste falha, não pula
-        expect(await cartoes.locator('[data-celula=selo] [data-slot=badge]').count(), `${nome}: 1 selo por cartão`).toBe(await cartoes.count())
-        const selo = cartoes.first().locator('[data-celula=selo] [data-slot=badge]')
-        const primeira = await caixa(cartoes.first().locator('[data-slot=table-cell]').first())
-        const s = await caixa(selo)
-        expect(Math.abs(s.y - primeira.y), `${nome}: selo no mesmo top`).toBeLessThanOrEqual(1)
-        expect(s.x, `${nome}: selo à direita`).toBeGreaterThanOrEqual(primeira.x + primeira.width - 1)
-        const titulo = await caixa(cartoes.first().locator('[data-slot=table-cell]').nth(1))
-        expect(titulo.y, `${nome}: título abaixo`).toBeGreaterThanOrEqual(Math.max(primeira.y + primeira.height, s.y + s.height) - 1)
+        // C29: linhas densas; 1 selo por linha antes de medir (L-069): sem selo o teste falha, não pula
+        expect(await cartoes.locator('[data-slot=badge]').count(), `${nome}: 1 selo por linha`).toBe(await cartoes.count())
+        const s = await caixa(cartoes.first().locator('[data-slot=badge]'))
+        const assunto = await caixa(cartoes.first().getByRole('link'))
+        expect(s.y, `${nome}: selo abaixo do assunto`).toBeGreaterThanOrEqual(assunto.y + assunto.height - 1)
       }
       await page.setViewportSize({ width: 1024, height: 800 })
       await abrirTela(page, nome)
@@ -121,14 +117,15 @@ test.describe('S2 celular', () => {
     await simularApi(page)
     await page.setViewportSize({ width: 1024, height: 800 })
     await abrirTela(page, 'Detalhe do chamado')
-    expect(await page.getByRole('button', { name: 'Ações', exact: true }).count()).toBe(0)
+    expect(await page.getByRole('button', { name: 'Mais', exact: true }).count()).toBe(0)
     const nomesNoCartao = await page.locator('[data-slot=card]', { has: page.getByText('Ações', { exact: true }) }).getByRole('button').allInnerTexts()
     expect(nomesNoCartao.length).toBeGreaterThan(0)
     for (const largura of [390, 1023]) {
       await page.setViewportSize({ width: largura, height: 800 })
       await abrirTela(page, 'Detalhe do chamado')
-      const botao = page.getByRole('button', { name: 'Ações', exact: true })
-      const estilo = await botao.evaluate((b) => ({ posicao: getComputedStyle(b).position, fundo: getComputedStyle(b).bottom }))
+      // a barra fixa tem a ação principal ("Responder") e "Mais" (AC 24)
+      const botao = page.getByRole('button', { name: 'Mais', exact: true })
+      const estilo = await botao.evaluate((b) => ({ posicao: getComputedStyle(b.parentElement!).position, fundo: getComputedStyle(b.parentElement!).bottom }))
       expect(estilo, `${largura} px`).toEqual({ posicao: 'fixed', fundo: '0px' })
       expect(await altura(botao)).toBeGreaterThanOrEqual(44)
       await botao.click()
@@ -142,21 +139,22 @@ test.describe('S2 celular', () => {
 
   test('ação no Sheet fecha e atualiza', async ({ page }) => {
     await simularApi(page)
-    let assumido = false
+    let resolvido = false
     const json = (estado: string) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(chamadoSimulado(estado)) })
-    await page.route('**/api/chamados/ONE-123', (rota) => rota.fulfill(json(assumido ? 'EM_ATENDIMENTO' : 'ABERTO')))
-    await page.route('**/api/chamados/ONE-123/assumir', (rota) => {
-      assumido = true
-      return rota.fulfill(json('EM_ATENDIMENTO'))
+    await page.route('**/api/chamados/ONE-123', (rota) => rota.fulfill(json(resolvido ? 'RESOLVIDO' : 'ABERTO')))
+    await page.route('**/api/chamados/ONE-123/resolver', (rota) => {
+      resolvido = true
+      return rota.fulfill(json('RESOLVIDO'))
     })
     await page.setViewportSize({ width: 390, height: 844 })
     await abrirTela(page, 'Detalhe do chamado')
     const selo = page.getByRole('main').locator('[data-slot=badge]').first()
     await expect(selo).toHaveText('Aberto')
-    await page.getByRole('button', { name: 'Ações', exact: true }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Assumir' }).click()
+    await page.getByRole('button', { name: 'Mais', exact: true }).click()
+    await page.getByRole('dialog').getByLabel('Resolução').fill('Boleto reemitido.')
+    await page.getByRole('dialog').getByRole('button', { name: 'Resolver' }).click()
     await expect(page.getByRole('dialog')).toBeHidden()
-    await expect(selo).toHaveText('Em atendimento')
+    await expect(selo).toHaveText('Resolvido')
   })
 
   test('sem rolagem horizontal a 360', async ({ page }) => {

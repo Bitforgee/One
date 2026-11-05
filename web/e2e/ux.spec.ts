@@ -658,3 +658,394 @@ test.describe('S6 tokens', () => {
     expect(await h2.evaluate((e) => getComputedStyle(e).fontVariationSettings)).toBe('"opsz" 32')
   })
 })
+
+// ---------- Lote 2: S3 (assistente) e S4 (solicitações, fila e chamado) ----------
+
+const Longa =
+  'O boleto do semestre fica no Portal do Aluno, em Financeiro, Boletos e mensalidades. Escolha o mês, confira o valor e gere a segunda via; se o valor estiver diferente do contrato, abra uma solicitação para o financeiro conferir a rematrícula do semestre anterior. '.repeat(3)
+const Titulo104 = 'Pedido de segunda via do boleto de novembro com o valor da rematrícula do semestre anterior errado'.padEnd(104, '.')
+
+// Cada pergunta do aluno recebe a resposta `texto` (a primeira abre a conversa 1)
+async function respostas(page: Page, texto: string | ((n: number) => string)) {
+  let n = 0
+  const resposta = () => ({ resposta: { tipo: 'resposta', texto: typeof texto === 'string' ? texto : texto(++n) } })
+  await page.route('**/api/conversas', (r) => r.fulfill(json({ conversaId: 1, ...resposta() }, 201)))
+  await page.route('**/api/conversas/1/mensagens', (r) => r.fulfill(json(resposta())))
+}
+async function perguntar(page: Page, texto: string) {
+  await page.getByLabel('Mensagem').fill(texto)
+  await page.getByRole('button', { name: /Enviar/ }).click()
+}
+
+test.describe('S3 conversa', () => {
+  // C22 (AC 15)
+  test('Isso resolveu no fluxo sob a resposta', async ({ page }) => {
+    await comoAluno(page)
+    await respostas(page, (n) => `Resposta ${n}. ${Longa}`)
+    await page.goto('/univag/assistente')
+    for (const n of [1, 2, 3]) {
+      await perguntar(page, `pergunta ${n}`)
+      await expect(page.getByText(`Resposta ${n}.`)).toBeVisible()
+    }
+    const baloes = page.locator('.is-assistant')
+    await expect(baloes).toHaveCount(3)
+    const grupo = page.getByText('Isso resolveu?')
+    await expect(grupo).toHaveCount(1)
+    const ultimo = await caixa(baloes.last())
+    const g = await caixa(grupo)
+    expect(g.y).toBeGreaterThanOrEqual(ultimo.y + ultimo.height - 1)
+    expect(g.y).toBeLessThanOrEqual(ultimo.y + ultimo.height + 24)
+    const posicoes = await grupo.evaluate((el) => {
+      const lista: string[] = []
+      for (let n: Element | null = el; n && n.tagName !== 'MAIN'; n = n.parentElement) lista.push(getComputedStyle(n).position)
+      return lista
+    })
+    expect(posicoes.length).toBeGreaterThan(0)
+    expect(posicoes.filter((p) => p === 'fixed' || p === 'sticky')).toEqual([])
+  })
+
+  // C24 (Screens: Transferido)
+  test('Transferido num bloco único com borda', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page, ['ALUNO'], false, comAparencia)
+    await respostas(page, 'O boleto fica no portal.')
+    await page.route('**/api/conversas/1/avaliacao', (r) => r.fulfill(json({ desfecho: null })))
+    await page.route('**/api/conversas/1/transferir', (r) => r.fulfill(json({ numero: 'ONE-5', estado: 'ABERTO', setor: 'Financeiro' }, 201)))
+    await page.goto('/univag/assistente')
+    await perguntar(page, 'preciso do boleto')
+    await page.getByRole('button', { name: 'Não' }).click()
+    await page.getByRole('button', { name: /Falar com atendente/ }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+    await expect(page.getByText('Sua solicitação ONE-5 foi para Financeiro')).toHaveCount(1)
+    const medidas = await page.evaluate(() => {
+      const por = (seletor: string, texto: string) => [...document.querySelectorAll(seletor)].filter((e) => e.textContent === texto)
+      const contato = por('h3', 'Contato do atendimento')[0].closest('section')!
+      const alvos = [por('h2', 'Sua solicitação ONE-5 foi para Financeiro')[0], por('p', 'A resposta chega em Solicitações e no seu e-mail.')[0], contato, por('a', 'Ver solicitação')[0]]
+      let comum: Element = alvos[0]
+      while (!alvos.every((a) => comum.contains(a))) comum = comum.parentElement!
+      const borda = (e: Element) => ['Top', 'Right', 'Bottom', 'Left'].map((l) => parseFloat(getComputedStyle(e)[`border${l}Width` as 'borderTopWidth']))
+      const dentroDeBorda = alvos.map((a) => {
+        for (let n = a.parentElement; n && n !== comum; n = n.parentElement) if (borda(n).some((w) => w > 0)) return true
+        return false
+      })
+      return { achados: alvos.length, borda: borda(comum), dentroDeBorda }
+    })
+    expect(medidas.achados).toBe(4)
+    expect(medidas.borda.every((w) => w >= 1), `bordas ${medidas.borda}`).toBe(true)
+    expect(medidas.dentroDeBorda).toEqual([false, false, false, false])
+  })
+
+  // C25 (AC 17)
+  test('balão com até 68 caracteres de largura', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await simularApi(page)
+    await respostas(page, Longa)
+    const emCaracteres = (alvo: Locator) =>
+      alvo.evaluate((el) => {
+        const medida = document.createElement('span')
+        medida.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'
+        medida.style.font = getComputedStyle(el).font
+        medida.textContent = '0'.repeat(68)
+        document.body.append(medida)
+        const limite = medida.getBoundingClientRect().width
+        medida.remove()
+        return { largura: el.getBoundingClientRect().width, limite }
+      })
+    await page.goto('/univag/assistente')
+    await perguntar(page, 'preciso do boleto')
+    const naConversa = page.locator('.is-assistant').getByText(Longa.trim().slice(0, 50))
+    await expect(naConversa).toHaveCount(1)
+    const a = await emCaracteres(naConversa)
+    expect(a.largura, 'a resposta passa de 1 linha').toBeGreaterThan(300)
+    expect(a.largura).toBeLessThanOrEqual(a.limite + 1)
+
+    await page.route('**/api/chamados/ONE-123', (r) => r.fulfill(json({ ...chamadoSimulado(), transcricao: [{ autor: 'ALUNO', texto: Longa, criadaEm: '2026-11-02T12:00:00Z' }], mensagens: [] })))
+    await page.goto('/univag/chamados/ONE-123')
+    const noChamado = page.getByText(Longa.trim().slice(0, 50))
+    await expect(noChamado).toHaveCount(1)
+    const d = await emCaracteres(noChamado)
+    expect(d.largura, 'o texto passa de 1 linha').toBeGreaterThan(300)
+    expect(d.largura).toBeLessThanOrEqual(d.limite + 1)
+  })
+
+  // C26 (AC 18)
+  test('compositor de 44 px e Falar com atendente na linha de cima', async ({ page }) => {
+    await instalar(page)
+    await simularApi(page, ['ALUNO'])
+    for (const largura of [390, 1440]) {
+      await page.setViewportSize({ width: largura, height: 900 })
+      await page.goto('/univag/assistente')
+      const campo = page.getByLabel('Mensagem')
+      await expect(campo).toHaveCount(1)
+      expect((await caixa(campo)).height).toBeGreaterThanOrEqual(43.9)
+      const falar = page.getByRole('button', { name: /Falar com atendente/ })
+      await expect(falar).toHaveCount(1)
+      const f = await caixa(falar)
+      const form = await caixa(page.locator('form').filter({ has: campo }))
+      expect(f.y + f.height, `${largura}: acima do compositor`).toBeLessThanOrEqual(form.y)
+      expect(await falar.getAttribute('data-variant')).toBe('outline')
+      const outros = page.getByRole('main').locator('button, a')
+      const sobrepostos: (string | null)[] = []
+      for (const o of await outros.all()) {
+        const b = await o.boundingBox()
+        const mesmo = (await o.getAttribute('data-slot')) === 'button' && (await o.textContent()) === (await falar.textContent())
+        if (!mesmo && b && b.height > 0 && b.y < f.y + f.height && b.y + b.height > f.y) sobrepostos.push(await o.textContent())
+      }
+      expect(sobrepostos, `${largura}: botões na mesma linha`).toEqual([])
+    }
+  })
+
+  // C28 (AC 20)
+  test('erro de envio entre o balão e o compositor', async ({ page }) => {
+    await comoAluno(page)
+    await page.route('**/api/conversas', (r) => r.fulfill(json({ status: 500, detail: 'Falha simulada' }, 500)))
+    await page.goto('/univag/assistente')
+    await perguntar(page, 'preciso do boleto')
+    const alerta = page.getByRole('log').getByRole('alert')
+    await expect(alerta).toHaveCount(1)
+    await expect(alerta).toContainText('Falha simulada')
+    await expect(alerta.getByRole('button', { name: 'Reenviar' })).toBeVisible()
+    const [a, aluno, form] = [await caixa(alerta), await caixa(page.locator('.is-user')), await caixa(page.locator('form').filter({ has: page.getByLabel('Mensagem') }))]
+    expect(a.y).toBeGreaterThanOrEqual(aluno.y + aluno.height - 1)
+    expect(a.y + a.height).toBeLessThanOrEqual(form.y + 1)
+  })
+})
+
+// Minhas solicitações com 3 itens e a Fila com o título longo de C31
+const longoTitulo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
+const MeusTres = (titulo: string) => [
+  { numero: 'ONE-1', titulo, estado: 'AGUARDANDO_ALUNO', criadoEm: '2026-11-02T12:00:00Z' },
+  { numero: 'ONE-2', titulo: 'Segunda via', estado: 'ABERTO', criadoEm: '2026-11-01T12:00:00Z' },
+  { numero: 'ONE-3', titulo: 'Declaração', estado: 'RESOLVIDO', criadoEm: '2026-10-30T12:00:00Z' },
+]
+const listasDeChamados = async (page: Page, titulo = longoTitulo) => {
+  await page.route(/\/api\/chamados\?escopo=meus/, (r) => r.fulfill(json(MeusTres(titulo))))
+  await page.route(/\/api\/chamados\?escopo=fila/, (r) =>
+    r.fulfill(
+      json([
+        { numero: 'ONE-1', titulo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 2 },
+        { numero: 'ONE-2', titulo: 'Segunda via', categoria: 'Financeiro > Boletos e mensalidades', estado: 'ABERTO', responsavel: null, criadoEm: '2026-11-03T12:00:00Z', dias: 1 },
+      ]),
+    ),
+  )
+}
+
+test.describe('S4 listas', () => {
+  // C29 (AC 21)
+  test('listas em linhas com divisória e sem borda de cartão', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page, undefined, true)
+    await listasDeChamados(page)
+    for (const [rota, itens] of [['fila', 2], ['solicitacoes', 3]] as const) {
+      await page.goto(`/univag/${rota}`)
+      const linhas = page.getByRole('main').getByRole('listitem')
+      await expect(linhas, rota).toHaveCount(itens)
+      const m = await linhas.evaluateAll((els) =>
+        els.map((e) => {
+          const s = getComputedStyle(e)
+          const r = e.getBoundingClientRect()
+          return { esq: s.borderLeftWidth, dir: s.borderRightWidth, raio: s.borderRadius, sombra: s.boxShadow, baixo: parseFloat(s.borderBottomWidth), cima: parseFloat(s.borderTopWidth), top: r.top, bottom: r.bottom }
+        }),
+      )
+      for (const l of m) expect([l.esq, l.dir, l.raio, l.sombra], rota).toEqual(['0px', '0px', '0px', 'none'])
+      for (let i = 0; i < m.length - 1; i++) {
+        expect(m[i].baixo >= 1 || m[i + 1].cima >= 1, `${rota}: divisória entre ${i} e ${i + 1}`).toBe(true)
+        expect(Math.abs(m[i + 1].top - m[i].bottom)).toBeLessThanOrEqual(1)
+      }
+    }
+    await page.setViewportSize({ width: 1024, height: 768 })
+    for (const rota of ['fila', 'solicitacoes']) {
+      await page.goto(`/univag/${rota}`)
+      const linhas = page.locator('tbody tr')
+      await expect(linhas.first()).toBeVisible()
+      const m = await linhas.evaluateAll((els) => els.map((e) => ({ raio: getComputedStyle(e).borderRadius, esq: getComputedStyle(e).borderLeftWidth })))
+      expect(m.length, rota).toBeGreaterThan(0)
+      for (const l of m) expect([l.raio, l.esq], rota).toEqual(['0px', '0px'])
+    }
+  })
+
+  // C31 (Screens: Minhas solicitações, Fila)
+  test('linha de solicitação em 3 linhas', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await listasDeChamados(page, Titulo104)
+    const perto = (a: number, b: number, folga = 2) => Math.abs(a - b) <= folga
+    for (const rota of ['solicitacoes', 'fila']) {
+      await page.goto(`/univag/${rota}`)
+      const linha = page.getByRole('main').getByRole('listitem').first()
+      await expect(linha).toHaveCount(1)
+      const assunto = linha.locator('p', { hasText: Titulo104 }) // o assunto, com o número na frente
+      await expect(assunto).toHaveCount(1)
+      const a = await caixa(assunto)
+      const altura = await assunto.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
+      expect(a.height, `${rota}: assunto em até 2 linhas`).toBeLessThanOrEqual(2 * altura + 1)
+      const selo = linha.locator('[data-slot=badge]')
+      await expect(selo).toHaveCount(1)
+      const data = linha.getByText(/^aberto /)
+      await expect(data).toHaveCount(1)
+      const [s, d] = [await caixa(selo), await caixa(data)]
+      expect(perto(s.y, d.y), `${rota}: selo e data no mesmo top`).toBe(true)
+      expect(s.y).toBeGreaterThanOrEqual(a.y + a.height - 1)
+      if (rota === 'fila') {
+        const categoria = await caixa(linha.getByText('Financeiro > Boletos e mensalidades'))
+        expect(perto(categoria.y, d.y), 'categoria na linha da data').toBe(true)
+      } else {
+        const passo = linha.getByText('Responda para continuar')
+        await expect(passo).toHaveCount(1)
+        expect(await passo.evaluate((e) => getComputedStyle(e).fontSize)).toBe('12px')
+        expect((await caixa(passo)).y).toBeGreaterThanOrEqual(s.y + s.height - 1)
+      }
+    }
+  })
+
+  // C33 (AC 23)
+  test('Mais antigos primeiro acima da Fila', async ({ page }) => {
+    await instalar(page)
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await page.goto('/univag/fila')
+    const aviso = page.getByText('Mais antigos primeiro')
+    await expect(aviso).toHaveCount(1)
+    const [a, primeiro] = [await caixa(aviso), await caixa(page.getByRole('main').getByRole('listitem').first())]
+    expect(a.y + a.height).toBeLessThanOrEqual(primeiro.y)
+  })
+})
+
+// ---------- S4: detalhe do chamado ----------
+
+const Abertos = ['responder', 'nota', 'assumir', 'resolver', 'encaminhar', 'reclassificar', 'duplicado']
+const PorEstado: [string, string[], string[]][] = [
+  ['ABERTO', Abertos, ['Assumir', 'Mais']],
+  ['EM_ATENDIMENTO', Abertos, ['Responder', 'Mais']],
+  ['AGUARDANDO_ALUNO', Abertos, ['Responder', 'Mais']],
+  ['RESOLVIDO', ['nota', 'reclassificar'], ['Mais']],
+  ['FECHADO', [], []],
+]
+async function comoEquipe(page: Page, largura: number, estado = 'EM_ATENDIMENTO', acoes = Abertos) {
+  await page.unroute('**/api/**').catch(() => undefined)
+  await instalar(page)
+  await page.setViewportSize({ width: largura, height: 844 })
+  await simularApi(page)
+  await page.route('**/api/chamados/ONE-123', (r) =>
+    r.fulfill(json({ ...chamadoSimulado(estado), acoes, setores: [{ id: 2, nome: 'Financeiro' }], categorias: [{ id: 3, nome: 'Boleto' }] })),
+  )
+  await page.goto('/univag/chamados/ONE-123')
+  await page.getByText('Resumo gerado por IA').waitFor()
+}
+// A barra fixa: o contêiner fixo do botão "Mais" ou da ação principal
+const barraDe = (page: Page) => page.locator('div.fixed').filter({ has: page.getByRole('button', { name: /^(Mais|Assumir|Responder)$/ }) })
+// Os botões e rótulos de um contêiner, na ordem, sem o X do Sheet
+const itensDe = (alvo: Locator) => alvo.evaluate((el) => [...el.querySelectorAll('button, label')].map((e) => e.textContent!.trim()).filter((t) => t && t !== 'Fechar'))
+
+test.describe('S4 detalhe', () => {
+  test.setTimeout(180_000)
+
+  // C34 (AC 24, P4, P5)
+  test('barra do detalhe com a ação principal do estado', async ({ page }) => {
+    // o cartão a 1024 px dá a ordem das ações de cada estado, e não há barra
+    const doCartao: Record<string, string[]> = {}
+    for (const [estado, acoes] of PorEstado) {
+      await comoEquipe(page, 1024, estado, acoes)
+      await expect(barraDe(page), `${estado}: sem barra a 1024`).toHaveCount(0)
+      await expect(page.getByRole('button', { name: 'Mais' })).toHaveCount(0)
+      const cartao = page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })
+      doCartao[estado] = (await cartao.count()) ? await itensDe(cartao) : []
+    }
+    for (const largura of [390, 1023]) {
+      for (const [estado, acoes, botoes] of PorEstado) {
+        await comoEquipe(page, largura, estado, acoes)
+        const nome = `${estado} a ${largura}`
+        if (botoes.length === 0) {
+          await expect(page.getByRole('button', { name: /^(Mais|Assumir|Responder)$/ }), nome).toHaveCount(0)
+          continue
+        }
+        const barra = barraDe(page)
+        await expect(barra, nome).toHaveCount(1)
+        expect(await barra.evaluate((e) => getComputedStyle(e).position)).toBe('fixed')
+        const b = await caixa(barra)
+        expect(b.y + b.height, `${nome}: colada na base`).toBeCloseTo(844, 0)
+        expect(b.height).toBeGreaterThanOrEqual(43.9)
+        expect(await barra.getByRole('button').allTextContents(), nome).toEqual(botoes)
+        await barra.getByRole('button', { name: 'Mais' }).click()
+        const folha = page.getByRole('dialog')
+        await expect(folha).toHaveCount(1)
+        const f = await caixa(folha)
+        expect(f.y + f.height).toBeCloseTo(844, 0)
+        const esperado = estado === 'ABERTO' ? doCartao[estado].filter((t) => t !== 'Assumir') : doCartao[estado]
+        expect(esperado.length, `${nome}: o cartão tem ações`).toBeGreaterThan(0)
+        expect(await itensDe(folha), `${nome}: as outras ações, na ordem do cartão`).toEqual(esperado)
+        if (estado === 'RESOLVIDO') expect(esperado).toContain('Reclassificar')
+      }
+    }
+  })
+
+  // C35 (AC 25)
+  test('Responder rola até o campo e foca', async ({ page }) => {
+    await comoEquipe(page, 390)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await barraDe(page).getByRole('button', { name: 'Responder' }).click()
+    await expect.poll(() => page.evaluate(() => document.activeElement?.id)).toBe('resposta')
+    const campo = await caixa(page.locator('#resposta'))
+    const barra = await caixa(barraDe(page))
+    expect(campo.y).toBeGreaterThanOrEqual(49)
+    expect(campo.y + campo.height).toBeLessThanOrEqual(barra.y)
+  })
+
+  // C37 (AC 27)
+  test('Enviar inteiro acima da barra no fim do detalhe', async ({ page }) => {
+    for (const largura of [390, 1023]) {
+      await comoEquipe(page, largura)
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+      const enviar = page.getByRole('button', { name: 'Enviar' })
+      await expect(enviar).toHaveCount(1)
+      const [e, barra] = [await caixa(enviar), await caixa(barraDe(page))]
+      expect(e.y + e.height, `${largura}: acima da barra`).toBeLessThanOrEqual(barra.y)
+      expect(e.y).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  // C36 (AC 26)
+  test('aluno cancela por botão de texto no fim do detalhe', async ({ page }) => {
+    for (const largura of [390, 1280]) {
+      await page.unroute('**/api/**').catch(() => undefined)
+      await instalar(page)
+      await page.setViewportSize({ width: largura, height: 844 })
+      await simularApi(page, ['ALUNO'])
+      const doAluno = (estado: string, acoes: string[]) => ({ ...chamadoSimulado(estado), eventos: null, resumo: null, solicitante: null, acoes })
+      await page.route('**/api/chamados/ONE-123', (r) => r.fulfill(json(doAluno('ABERTO', ['responder', 'cancelar']))))
+      const pedidos: string[] = []
+      await page.route('**/api/chamados/ONE-123/cancelar', (r) => {
+        pedidos.push(r.request().method())
+        return r.fulfill(json(doAluno('FECHADO', [])))
+      })
+      await page.goto('/univag/chamados/ONE-123')
+      const cancelar = page.getByRole('button', { name: 'Cancelar solicitação' })
+      await expect(cancelar).toHaveCount(1)
+      await expect(page.getByRole('button', { name: /^(Ações|Mais)$/ })).toHaveCount(0)
+      const fixos = await page.evaluate(() => {
+        // a navegação é a barra de abas (celular) ou a barra lateral (desktop)
+        const nav = document.querySelector('nav[aria-label="Navegação"], [data-slot=sidebar-container]')
+        return [...document.querySelectorAll('body *')]
+          .filter((e) => getComputedStyle(e).position === 'fixed' && !(nav && (nav.contains(e) || e.contains(nav))) && e.getBoundingClientRect().height > 0)
+          .map((e) => `${e.tagName}.${e.className}`.slice(0, 80))
+      })
+      expect(fixos, `${largura}: nada fixo fora da navegação`).toEqual([])
+      const ultimo = await page.getByRole('main').evaluate((m) => {
+        const focaveis = [...m.querySelectorAll('a[href], button, input, textarea, select')].filter((e) => e.getBoundingClientRect().height > 0)
+        return focaveis.at(-1)?.textContent
+      })
+      expect(ultimo).toBe('Cancelar solicitação')
+      expect(await cancelar.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
+      expect(await corSobreFundo(cancelar, 'color')).toEqual(await referencia(page, '--destructive'))
+      await cancelar.click()
+      const dialogo = page.getByRole('dialog', { name: 'Cancelar a solicitação?' })
+      await expect(dialogo).toHaveCount(1)
+      await dialogo.getByRole('button', { name: 'Cancelar solicitação' }).click()
+      await expect.poll(() => pedidos).toEqual(['POST'])
+    }
+  })
+})

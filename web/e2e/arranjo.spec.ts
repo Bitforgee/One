@@ -140,8 +140,7 @@ test.describe('Assistente', () => {
 
     const falar = await caixa(page.getByRole('button', { name: /Falar com atendente/ }))
     const encerrar = await caixa(page.getByRole('button', { name: 'Encerrar' }))
-    // compositor no estilo do ChatGPT: as ações à esquerda e o enviar à direita, embaixo do campo; a 360 px, com 44 px, as ações quebram em 2 linhas (AC 2)
-    expect(Math.abs(falar.x - encerrar.x)).toBeLessThanOrEqual(1)
+    // compositor no estilo do ChatGPT: o "Encerrar" à esquerda e o enviar à direita, embaixo do campo, e o "Falar com atendente" na linha de cima (AC 18); a 360 px, com 44 px, as ações quebram em 2 linhas (AC 2)
     expect(encerrar.y).toBeGreaterThanOrEqual(falar.y + falar.height - 1)
     expect(Math.abs(encerrar.y + encerrar.height - (enviarBotao.y + enviarBotao.height))).toBeLessThanOrEqual(1)
     expect(encerrar.x + encerrar.width).toBeLessThan(enviarBotao.x)
@@ -539,7 +538,9 @@ test.describe('arranjo restante', () => {
     await page.route('**/api/conversas/1/mensagens', (r) => r.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ status: 500, detail: 'Falha no serviço.' }) }))
     await enviar(page, 'outra pergunta')
     const erro = await caixa(page.getByRole('alert'))
-    expect(abaixo(await caixa(page.getByRole('button', { name: /Enviar/ })), erro)).toBe(true)
+    // o erro do envio fica no lugar da resposta: depois do balão do aluno e acima do compositor (AC 20)
+    expect(abaixo(await caixa(page.locator('.is-user').last()), erro)).toBe(true)
+    expect(abaixo(erro, await caixa(page.getByRole('button', { name: /Enviar/ })))).toBe(true)
   })
 
   // C44 (linha 9)
@@ -552,7 +553,7 @@ test.describe('arranjo restante', () => {
     const conversa = await caixa(page.locator('.is-user').first())
     expect(abaixo(await caixa(equipe), conversa)).toBe(true)
 
-    await page.getByRole('button', { name: 'Ações', exact: true }).click() // abaixo de 1024 px as ações estão no Sheet (AC 8)
+    await page.getByRole('button', { name: 'Mais', exact: true }).click() // abaixo de 1024 px as outras ações estão no Sheet (AC 24)
     const acoes = page.getByRole('dialog').locator('div.flex-wrap').filter({ has: page.getByRole('button', { name: 'Encaminhar' }) })
     expect(await acoes.evaluate((e) => getComputedStyle(e).flexWrap)).toBe('wrap')
     const ys = new Set<number>()
@@ -1077,7 +1078,7 @@ test.describe('painel', () => {
     await simularApi(page)
     await page.route('**/api/admin/setores', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 1, nome: 'Secretaria', triagem: true, ativo: true }]) }))
     const Telas5: [string, string, string[], string][] = [
-      ['/univag/fila', 'ONE-123', ['Categoria', 'Responsável', 'Dias'], 'Financeiro > Boletos e mensalidades · Carla Regina de Souza · 12 dias'],
+      ['/univag/fila', 'ONE-123', ['Categoria', 'Responsável', 'Dias'], 'Financeiro > Boletos e mensalidades'],
       ['/univag/usuarios', 'Carla Regina de Souza Albuquerque', ['CPF', 'E-mail', 'Papéis'], '12345678909 · carla.regina.albuquerque@univag.edu.br · Atendente, Administrador'],
       ['/univag/artigos', 'Como emitir a segunda via', ['Categoria', 'Versão', 'Validade'], 'Financeiro > Boletos e mensalidades · versão 12'],
       ['/univag/documentos', 'Regulamento do estágio', ['Categoria', 'Versão', 'Arquivo'], 'Financeiro > Boletos e mensalidades · versão 3 · 42 páginas · regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf'],
@@ -1297,7 +1298,7 @@ test.describe('painel', () => {
     for (const w of [360, 1440]) {
       await page.setViewportSize({ width: w, height: 900 })
       await page.goto('/univag/fila')
-      const celula = page.locator('[data-slot=table-cell]').first() // td ou div de cartão (AC 7)
+      const celula = w < 768 ? page.getByRole('main').getByRole('listitem').first().getByText(/^Preciso/) : page.locator('[data-slot=table-cell]').first() // o assunto da linha densa ou a célula do corpo (AC 21)
       await celula.waitFor()
       expect(await celula.evaluate((e) => getComputedStyle(e).fontSize), `${w} px: célula do corpo`).toBe('14px')
     }

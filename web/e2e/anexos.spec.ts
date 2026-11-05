@@ -186,9 +186,10 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   // transfere para um atendente; o administrador abre o chamado e baixa a mesma foto
   await page.getByRole('button', { name: 'Falar com atendente' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
-  const protocolo = page.getByRole('link', { name: /^Abrir a solicitação / })
+  const protocolo = page.getByRole('link', { name: 'Ver solicitação' })
   await expect(protocolo).toBeVisible()
-  const numero = (await protocolo.textContent())!.replace('Abrir a solicitação ', '').trim()
+  const numero = (await page.getByRole('heading', { name: /^Sua solicitação / }).textContent())!.match(/ONE-\d+/)![0]
+  expect(await protocolo.getAttribute('href')).toBe(`/${slug}/chamados/${numero}`)
 
   const equipe = await browser.newContext({ baseURL, storageState: await admin.storageState() })
   const painel = await equipe.newPage()
