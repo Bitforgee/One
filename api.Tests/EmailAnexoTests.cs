@@ -36,7 +36,7 @@ public class EmailTests(OneFactory f) : IClassFixture<OneFactory>
         await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/resolver", new { texto = "Boleto reemitido no portal." });
 
         var e = (await Emails(b)).Last();
-        Assert.Equal($"[Univag] {numero} foi resolvido", e.Assunto);
+        Assert.Equal($"[Univag] {numero} foi resolvida", e.Assunto);
         Assert.Contains("Boleto reemitido no portal.", e.Corpo);
         Assert.Contains($"/{b.Instituicao.Slug}/chamados/{numero}", e.Corpo);
         Assert.Contains("confirmar ou rejeitar", e.Corpo);

@@ -13,7 +13,7 @@ namespace One.Api.Tests;
 public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<OneFactoryPrazos>, IClassFixture<OneFactory>
 {
     static Task<string> CorpoResolvido(OneFactory f, Balcao b, string numero) =>
-        f.Db(b.Instituicao.Id, db => db.EmailsSaida.Where(e => e.Assunto == $"[{b.Instituicao.Nome}] {numero} foi resolvido").Select(e => e.Corpo).SingleAsync());
+        f.Db(b.Instituicao.Id, db => db.EmailsSaida.Where(e => e.Assunto == $"[{b.Instituicao.Nome}] {numero} foi resolvida").Select(e => e.Corpo).SingleAsync());
 
     static Task AguardandoHa(OneFactory f, Balcao b, string numero, TimeSpan quanto) =>
         f.Db(b.Instituicao.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s.SetProperty(c => c.AguardandoDesde, c => c.AguardandoDesde - quanto)));

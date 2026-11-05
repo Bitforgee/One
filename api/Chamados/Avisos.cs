@@ -22,7 +22,7 @@ public static class Avisos
             $"Sua solicitação {c.Numero} recebeu uma nova resposta.\n\nPara ler e responder, abra:\n{Link(cfg, i, c)}\n");
 
     public static Task Resolvido(OneDb db, IConfiguration cfg, Prazos prazos, Instituicao i, Chamado c, string texto, DateTime agora) =>
-        Enfileirar(db, cfg, c, agora, $"[{i.Nome}] {c.Numero} foi resolvido",
+        Enfileirar(db, cfg, c, agora, $"[{i.Nome}] {c.Numero} foi resolvida",
             $"Sua solicitação {c.Numero} foi resolvida:\n\n{texto}\n\nPara confirmar ou rejeitar a resolução (até {prazos.RejeicaoDias} dias), abra:\n{Link(cfg, i, c)}\n");
 
     public static string DataLocal(Instituicao i, DateTime utc) =>

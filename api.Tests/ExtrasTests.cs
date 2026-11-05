@@ -64,7 +64,7 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.DoesNotContain(await b.Eventos(numero), e => e.Tipo == "LEMBRETE" || e.Para == Resolvido);
         }
         Assert.Empty(await Emails(b, $"[Univag] {lembrete} aguarda sua resposta"));
-        Assert.Empty(await Emails(b, $"[Univag] {resolver} foi resolvido"));
+        Assert.Empty(await Emails(b, $"[Univag] {resolver} foi resolvida"));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.", (long?)null, "PUBLICA"), (m.Texto, m.AutorId, m.Tipo));
         var t = (await b.Eventos(numero)).Last(e => e.Tipo == "TRANSICAO");
         Assert.Equal((AguardandoAluno, Resolvido, (long?)null), (t.De, t.Para, t.AtorId));
-        Assert.Single(await Emails(b, $"[Univag] {numero} foi resolvido"));
+        Assert.Single(await Emails(b, $"[Univag] {numero} foi resolvida"));
 
         Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{numero}/rejeitar", new { motivo = "Agora respondo." })).StatusCode);
     }

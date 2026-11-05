@@ -53,6 +53,8 @@ ficam em `api.Tests/PushAgendadorTests.cs` e `web/src/sw.test.ts`.
 4. `api.Tests/PushEnviadorTests.cs` `Real_envia_post_cifrado_com_vapid`: os argumentos novos de `PayloadPush.De` e a busca pelos bytes do payload inteiro no lugar de "One" (fortalece; C8).
 5. `api.Tests/PushAgendadorTests.cs` `Cada_item_usa_a_instituicao_da_linha` e o helper `Payload`: uma das duas instituições ganha ícone (fortalece; C7).
 
+
+Extensão da lista fechada (pedido do usuário em 05/11): os 4 testes do C10 trocam "foi resolvido" por "foi resolvida" no assunto esperado.
 ## Checks
 
 ### S1 - Payload com a marca e o texto do estado (P1)
@@ -90,6 +92,9 @@ Proof: `dotnet build api`
 
 **C9** - [x] De ponta a ponta, no Chrome do usuário (verificação manual de go-live, registrada no `## Handoff`): com o push ligado no `.env`, o aviso de uma resposta ao chamado de um aluno chega com o título "Univag", o ícone da instituição e o texto "Sua solicitação {n} tem uma resposta nova." (Intent)
 Proof: `docker compose exec -T postgres psql -U postgres -d one -t -c "select enviado_em is not null from push_saida order by id desc limit 1"` (o servidor confirma o envio; o que aparece na tela fica como evidência manual no `## Handoff`)
+
+**C10** - [x] O assunto do e-mail de solicitação resolvida diz "[{nome da instituição}] {número} foi resolvida" (feminino, de "solicitação"), igual ao corpo; os assuntos de nova resposta e de aguardando o aluno não mudam. Os 4 testes que leem esse assunto (`EmailAnexoTests.cs:39`, `ExtrasTests.cs:67` e `:89`, `PrazosTests.cs:16`) passam a esperar o texto novo, inclusive o de ausência em `ExtrasTests.cs:67`, que com o texto antigo passaria sem provar nada (pedido do usuário em 05/11)
+Proof: `dotnet test api.Tests --filter "FullyQualifiedName~EmailAnexoTests|FullyQualifiedName~ExtrasTests|FullyQualifiedName~PrazosTests"`
 
 ## Coverage
 
