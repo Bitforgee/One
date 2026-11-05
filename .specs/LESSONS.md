@@ -582,6 +582,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md F29 (round 5); web/e2e/identidade.spec.ts C57 (css-tokens)
 - last seen: 2026-11-05T12:24:23Z
 
+### L-096 - Prove that text is not cut in a table by measuring the scroll container, because td and tr grow with the table and always report scrollWidth equal to clientWidth.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web e2e` · harmful: 0
+- features: estrutura-visual
+- evidence: F8, verification.md; web/e2e/casca.spec.ts:694 (web e2e)
+- last seen: 2026-11-05T14:44:33Z
+
+### L-097 - When a check names two cells of a row, measure rendered lines for both, since textContent stays right when a number breaks mid-digit.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web tables` · harmful: 0
+- features: estrutura-visual
+- evidence: C20, C21; web/src/indicadores/Indicadores.tsx:88 (web tables)
+- last seen: 2026-11-05T14:44:33Z
+
+### L-098 - A check written across all themes must be read against each theme's own decisions, because a blanket rule can force a value an active decision fixes.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `tokens` · harmful: 0
+- features: estrutura-visual
+- evidence: C7; web/src/index.css:87; AD-027 (tokens)
+- last seen: 2026-11-05T14:44:33Z
+
+### L-099 - A design that lists items in order needs one order assertion, since presence checks for each item survive any reordering.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `web arrangement` · harmful: 0
+- features: estrutura-visual
+- evidence: F3, verification.md; web/src/Autenticado.tsx:231 (web arrangement)
+- last seen: 2026-11-05T14:44:33Z
+
+### L-100 - Decoration meant to survive forced colours must be measured under forced colours, because background-color is replaced there just as box-shadow is removed.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `web a11y` · harmful: 0
+- features: estrutura-visual
+- evidence: web/src/ui/sidebar.tsx:471 (web a11y)
+- last seen: 2026-11-05T14:44:33Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

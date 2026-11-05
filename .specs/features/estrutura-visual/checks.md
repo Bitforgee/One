@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/estrutura-visual/plan.md`
 
-30 checks em 6 slices (S1 a S5 e S0) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
+35 checks em 6 slices (S1 a S5 e S0; C31 a C35 vêm da rodada 1 do Verifier) · 4 one-way doors · 0 perguntas abertas (plano, emenda de AC 31 e rankings em HTML aprovados pelo usuário em 05/11)
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md` e este `checks.md`, gravado no `## Handoff`.
 
@@ -41,6 +41,7 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 | P3 | AC 12 e o clique em recolher | continua alternando aberta e recolhida, e o atalho do primitivo não muda (C13) |
 | P4 | O usuário sem setas continua abrindo "Sair" | continua: a linha é um botão com o mesmo menu (AD-028) (C10) |
 | P5 | Altura da caixa de envio não tinha número | com 1 linha de texto e sem anexo, o `form` mede ≤ 60 px (C15) |
+| P7 | Rodada 1 do Verifier, 05/11 | **o usuário escolheu voltar a `--sidebar` `#000` no Preto** (AD-027 fica intacta): C7 passa a exigir a diferença entre marcas só no claro e no escuro e `#000` no Preto. C23 passa a medir o contêiner da tabela. Entram C31 a C35, do que a rodada achou |
 | P6 | Largura da barra quando o total é 0 | total 0 dá largura 0, e o maior total dá 100% (C20) |
 
 ## Checks
@@ -69,7 +70,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 
 ### S2 - Barra lateral e topo (P1) · 8 files · 75 KB · ~19k
 
-**C7** - [x] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f`, nos 3 temas; o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (AC 6)
+**C7** - [ ] Pintados no `body`, `--sidebar`, `--sidebar-accent` e `--sidebar-border` diferem entre `#8a1538` e `#0b6e4f` nos temas claro e escuro; no Preto, com as 3 marcas, `--sidebar` pinta `rgb(0, 0, 0)` (AD-027); o texto `--sidebar-foreground` sobre `--sidebar` tem contraste ≥ 4,5:1 nos 3 temas e com as 3 marcas (P7; AC 6)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "barra tingida pela marca"`
 Proof: `cd web && npx vitest run src/test/interface.test.ts -t "tokens da paleta"`
 
@@ -124,7 +125,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.sp
 **C22** - [x] Sem linhas no ranking, a seção mostra o título e o mesmo estado vazio de `<base>`, com 0 barras; com a API sem o ranking, a seção não aparece (AC 20)
 Proof: `cd web && npx vitest run src/indicadores/ranking.test.tsx -t "ranking vazio e ausente"`
 
-**C23** - [x] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` e `text-overflow` diferente de `ellipsis` na linha, sem estouro horizontal da página (AC 21)
+**C23** - [ ] A 360, 390, 768, 1024 e 1440 px, com uma categoria de 60 caracteres, o texto inteiro está visível: `scrollWidth` ≤ `clientWidth` no `table-container` do ranking e na linha, e `text-overflow` diferente de `ellipsis`, sem estouro horizontal da página (P7; AC 21)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "categoria longa inteira nas 5 larguras"`
 
 **C24** - [x] `recharts` não está em `web/package.json` nem em `package-lock.json` como dependência direta; `web/src/indicadores/Grafico.tsx` não existe; o build não gera arquivo `Grafico-*` em `api/wwwroot/assets` (door 4)
@@ -158,6 +159,21 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "neutros mudam com a cor da instituição"`
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identidade.spec.ts -g "borda do form igual ao token no escuro e no preto"`
 
+**C31** - [ ] Com totais 999, 1000, 12345 e 1234567, a 360, 390, 768, 1024 e 1440 px, o total de cada linha do ranking ocupa 1 linha só (altura do `Range` do texto ≤ 1 `line-height`), e a categoria de 60 caracteres continua inteira (P7; AC 19, AC 21)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "total do ranking em uma linha"`
+
+**C32** - [ ] Com `forcedColors: 'active'`, a 1440 px, o item ativo da barra continua com a barra visível de 3 px (± 1): medida como `border` sólida no elemento ou no `::before`, com largura ≥ 2 px e cor diferente da cor de fundo pintada; um link inativo não tem essa borda (P7; AC 7)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "item ativo visível com cores forçadas"`
+
+**C33** - [ ] A 390 px, nos cartões da Fila e de Minhas solicitações, a caixa do contorno do controle focado fica dentro de todo ancestral com `overflow` diferente de `visible`, inclusive `line-clamp`. A 1280 px, na primeira coluna da Fila, a caixa do contorno contém a caixa do texto do link, sem cruzar as letras. O botão Fechar de um diálogo, com foco, tem `opacity` 1 e contorno com contraste ≥ 3:1 nos 3 temas, sem cor (P7; AC 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "foco inteiro nos cartões, na primeira coluna e no Fechar"`
+
+**C34** - [ ] O rodapé da barra aberta mostra, de cima para baixo: Contato, Tema, usuário e recolher. Na barra recolhida, com ponteiro grosso, o botão de recolher tem `x` ≥ 0 e a largura inteira dentro da barra (P7; AC 8, AC 9, AC 12)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "ordem do rodapé e recolher dentro da barra"`
+
+**C35** - [ ] A 1440 px, com 1 linha de texto, "Enviar" e o campo da caixa de envio têm a mesma altura (± 1 px) e estão alinhados na vertical; a 390 px, os dois medem ≥ 44 px (P7; AC 14)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/casca.spec.ts -g "Enviar da altura do campo"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -173,6 +189,7 @@ Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/identida
 | larguras do corte (5) | 360 C23 · 390 C23 · 768 C23 · 1024 C23 · 1440 C23 | - |
 | estados do ranking (3) | com dados C20, C21, C28 · vazio C22 · ausente C22 | - |
 | frases de `## Screens` (8) | barra aberta C8, C9, C10, C13 · barra recolhida C11 · topo C9, C12, C14 · caixa de envio C15, C17 · tabela C19 · ranking C20, C21, C23 · foco C1, C6 · anexos C5 | - |
+| achados da rodada 1 (7) | total em uma linha C31 · corte da categoria C23 · Preto em `#000` C7 · barra ativa em cores forçadas C32 · foco nos cartões C33 · ordem do rodapé C34 · Enviar e campo C35 | - |
 | suítes do S0 (5) | Vitest e build C25 · `crapper`, `dryer` e `api/` C26 · arranjo C27 · fluxo real C28 · e2e inteira C29 | - |
 
 ## Swept
@@ -201,3 +218,7 @@ Total: 22k + 24k + 10k + 15k + 3k ≈ **74k**, abaixo do orçamento de 150k. Mec
 - **Edições fora da lista, forçadas por um AC** (nenhuma baixa limite; para o Verifier julgar): `arranjo.spec.ts` `arranjo Assistente` (AC 14, 16: "Encerrar" na linha de "Falar com atendente", acima do campo), `painel barra aberta` (AC 12: o recolher fecha o rodapé e o usuário fica acima dele) e `valores de tipo e bordas` (AC 18: cabeçalho 600 e caixa da tabela a 0); `acesso.test.tsx` `botões do cabeçalho por papel` (AC 8, 13: a lista de botões do topo perde "Tema" e "Alternar barra lateral", que só existe abaixo de 768 px) e `sem tema gravado segue o sistema` (AC 8: espera o título, não o botão Tema, que abaixo de 768 px mora na gaveta); `acesso/textos.test.tsx` (AC 8: "Tema" entra no vocabulário visível); `assistente/textos.test.tsx` (AC 14: "Enviar" é texto visível); `assistente/icones.test.tsx` `Assistente traz ArrowUp, Hand e ShieldAlert` (AC 14; renomeado `Assistente traz Enviar escrito, Hand e ShieldAlert`: sem seta); `interface.test.ts` `tema claro enquanto houver react-bootstrap` (AC 8: o Tema só é esperado no desktop, e o aluno no celular tem a aba Conta); `indicadores/textos.test.tsx` (AC 19: sai "Ver tabela" e o clique nele); `indicadores.test.tsx` `cartões formatam taxa, horas e número...` (AC 19: sai o clique em "Ver tabela").
 - **Apagado:** o teste `rótulo do gráfico` de `indicadores.test.tsx` (importava `linhasDoRotulo` de `Grafico.tsx`, que a door 4 e o C24 apagam; o corte do rótulo passou a ser medido por C23, `arranjo.spec.ts` e `celular.spec.ts`).
 - **Abandonado ou não feito:** nada dos 30 checks. Fora do escopo e intocado: ícones da barra, formulário da Aparência, listas de `Conta` e `Matriculas`, mensagem sem internet do login. `web/e2e/zz-prints.spec.ts`, usado só para os prints, não foi commitado.
+
+### Correções da rodada 1 (P7)
+
+- Mecanismo: um construtor, depois do FAIL da rodada 1 do Verifier; a volta a `#000` é decisão do usuário em 05/11.

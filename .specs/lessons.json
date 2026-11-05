@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 96,
+  "next_id": 101,
   "lessons": [
     {
       "id": "L-001",
@@ -1728,6 +1728,96 @@
       ],
       "created": "2026-11-05T12:24:23Z",
       "last_seen": "2026-11-05T12:24:23Z"
+    },
+    {
+      "id": "L-096",
+      "key": "surviving_mutant::prove that text is not cut in a table by measuring the scroll container because td and tr grow with the table and always report scrollwidth equal to clientwidth",
+      "text": "Prove that text is not cut in a table by measuring the scroll container, because td and tr grow with the table and always report scrollWidth equal to clientWidth.",
+      "signal": "surviving_mutant",
+      "scope": "web e2e",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F8, verification.md; web/e2e/casca.spec.ts:694 (web e2e)"
+      ],
+      "created": "2026-11-05T14:44:33Z",
+      "last_seen": "2026-11-05T14:44:33Z"
+    },
+    {
+      "id": "L-097",
+      "key": "spec_precision_gap::when a check names two cells of a row measure rendered lines for both since textcontent stays right when a number breaks mid digit",
+      "text": "When a check names two cells of a row, measure rendered lines for both, since textContent stays right when a number breaks mid-digit.",
+      "signal": "spec_precision_gap",
+      "scope": "web tables",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C20, C21; web/src/indicadores/Indicadores.tsx:88 (web tables)"
+      ],
+      "created": "2026-11-05T14:44:33Z",
+      "last_seen": "2026-11-05T14:44:33Z"
+    },
+    {
+      "id": "L-098",
+      "key": "spec_deviation::a check written across all themes must be read against each theme s own decisions because a blanket rule can force a value an active decision fixes",
+      "text": "A check written across all themes must be read against each theme's own decisions, because a blanket rule can force a value an active decision fixes.",
+      "signal": "spec_deviation",
+      "scope": "tokens",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C7; web/src/index.css:87; AD-027 (tokens)"
+      ],
+      "created": "2026-11-05T14:44:33Z",
+      "last_seen": "2026-11-05T14:44:33Z"
+    },
+    {
+      "id": "L-099",
+      "key": "surviving_mutant::a design that lists items in order needs one order assertion since presence checks for each item survive any reordering",
+      "text": "A design that lists items in order needs one order assertion, since presence checks for each item survive any reordering.",
+      "signal": "surviving_mutant",
+      "scope": "web arrangement",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "F3, verification.md; web/src/Autenticado.tsx:231 (web arrangement)"
+      ],
+      "created": "2026-11-05T14:44:33Z",
+      "last_seen": "2026-11-05T14:44:33Z"
+    },
+    {
+      "id": "L-100",
+      "key": "ac_gap::decoration meant to survive forced colours must be measured under forced colours because background color is replaced there just as box shadow is removed",
+      "text": "Decoration meant to survive forced colours must be measured under forced colours, because background-color is replaced there just as box-shadow is removed.",
+      "signal": "ac_gap",
+      "scope": "web a11y",
+      "status": "candidate",
+      "features": [
+        "estrutura-visual"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/ui/sidebar.tsx:471 (web a11y)"
+      ],
+      "created": "2026-11-05T14:44:33Z",
+      "last_seen": "2026-11-05T14:44:33Z"
     }
   ]
 }
