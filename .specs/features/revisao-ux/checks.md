@@ -713,6 +713,12 @@ Proof: `cd web && npx vitest run src/acesso/navegacao.test.tsx -t "operador sem 
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx -t "prévia muda antes de salvar"`
 Proof: `cd web && npx vitest run src/assistente/anexos.test.tsx -t "texto de ajuda dos anexos"`
 
+**C72** - A 390 px, na Fila, a linha de detalhe de cada item é um texto corrido com "aberto há 2 dias", a categoria e o responsável separados por " · ", que quebra entre palavras: nenhuma palavra é partida (o texto visível de cada linha renderizada termina numa fronteira de palavra; `overflow-wrap` diferente de `anywhere` e `word-break` diferente de `break-all`) e nenhum pedaço do detalhe fica numa coluna mais estreita que 120 px (decisão delegada pelo usuário em 04/11, depois da correção da rodada 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "detalhe da Fila em texto corrido no celular"`
+
+**C73** - Em Indicadores, os dois gráficos usam a mesma cor de barra: o `fill` das barras de "Categorias por conversas" é igual ao de "Categorias por chamados", diferente de `var(--primary)`, com contraste de 3:1 ou mais contra o fundo do cartão nos temas Claro, Escuro e Preto, com e sem `#8a1538`; a cor é um tom derivado de `--marca` (ou do azul de base), e não um cinza puro (croma em `oklch` > 0,02) (decisão delegada em 04/11, depois da correção da rodada 1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/ux.spec.ts -g "gráficos com a mesma cor calma"`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
