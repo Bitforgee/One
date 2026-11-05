@@ -49,13 +49,12 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <p className="m-0 [overflow-wrap:anywhere]" data-linha="assunto">
-        {/* o corte das 2 linhas fica aqui dentro, com 4 px de folga, para o contorno de foco do link não ser cortado */}
-        <span className="-m-1 line-clamp-2 p-1">
-          <Link to={caminho} className="font-medium text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
-            {c.numero}
-          </Link>{' '}
-          <span>{c.titulo}</span>
-        </span>
+        {/* o link é o bloco de fora e o corte das 2 linhas fica dentro dele: nada corta o contorno de foco, e o corte mede só 2 linhas */}
+        <Link to={caminho} className="block text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
+          <span className="line-clamp-2">
+            <span className="font-medium">{c.numero}</span> {c.titulo}
+          </span>
+        </Link>
       </p>
       <div className="flex items-start gap-2 text-xs text-muted-foreground" data-linha="meta">
         <SeloDoChamado estado={c.estado} />

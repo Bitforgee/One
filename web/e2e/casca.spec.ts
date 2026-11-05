@@ -787,11 +787,18 @@ test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page 
     await expect(link, `${rota}: 1 link no cartão`).toHaveCount(1)
     await tabAte(page, link)
     const r = await link.evaluate(foraDoCorte, undefined)
-    expect(r.cortes, `${rota}: o link tem ancestral que corta (line-clamp)`).toBeGreaterThanOrEqual(1)
+    // o corte das 2 linhas (line-clamp) fica dentro do link, não em ancestral dele; o controle põe um corte no pai para a medida acusar
+    expect(await link.locator('*').evaluateAll((es) => es.filter((e) => getComputedStyle(e).overflowY !== 'visible').length), `${rota}: 1 line-clamp dentro do link`).toBe(1)
     expect(r.fora, `${rota}: contorno inteiro`).toEqual([])
-    await link.evaluate((e) => (e.style.outlineOffset = '40px'))
+    await link.evaluate((e) => {
+      e.parentElement!.style.overflow = 'hidden'
+      e.style.outlineOffset = '40px'
+    })
     expect((await link.evaluate(foraDoCorte, undefined)).fora.length, `${rota}: controle: o contorno de fora é cortado`).toBeGreaterThan(0)
-    await link.evaluate((e) => (e.style.outlineOffset = ''))
+    await link.evaluate((e) => {
+      e.parentElement!.style.overflow = ''
+      e.style.outlineOffset = ''
+    })
     medidas++
   }
   // 1280: o contorno do link da primeira coluna cerca o texto, sem cruzar as letras
@@ -882,4 +889,135 @@ test('Enviar da altura do campo', async ({ page }) => {
     medidas++
   }
   expect(medidas).toBe(2)
+})
+
+// C36: o corte das 2 linhas mede 2 × line-height, sem folga vertical, e o alto da 3ª linha não aparece
+test('corte de 2 linhas sem o alto da terceira', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  const titulo = 'SOLICITAÇÃO DE SEGUNDA VIA DO BOLETO DA MENSALIDADE DE NOVEMBRO, ÁREA FINANCEIRA, ÍNDICE DE REMATRÍCULA DO SEMESTRE ANTERIOR: ÃO ÁGUA ÍNDIO'
+  const fila = { numero: 'ONE-123', titulo, categoria: 'Financeiro > Boletos e mensalidades', estado: 'AGUARDANDO_ALUNO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 2 }
+  const rotas = (p: Page) =>
+    p.route(/\/api\/chamados\?escopo=/, (r) =>
+      r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().url().includes('escopo=fila') ? [fila] : [{ numero: 'ONE-123', titulo, estado: 'AGUARDANDO_ALUNO', criadoEm: fila.criadoEm }]) }),
+    )
+  let medidas = 0
+  for (const [rota, papeis] of [['/univag/fila', ['ATENDENTE']], ['/univag/solicitacoes', ['ALUNO']]] as const)
+    for (const largura of [360, 390]) {
+      const r = `${rota} a ${largura}`
+      await abrir(page, largura, rota, esperaFila, { papeis: [...papeis], rotas })
+      const link = page.getByRole('main').getByRole('link', { name: /ONE-123/ })
+      await expect(link, `${r}: 1 link`).toHaveCount(1)
+      const m = await page.locator('p[data-linha=assunto]').evaluate((p) => {
+        const cortes = [...p.querySelectorAll('*')].filter((e) => getComputedStyle(e).overflowY !== 'visible')
+        if (cortes.length !== 1) return { cortes: cortes.length }
+        const c = cortes[0]
+        const [cs, cr] = [getComputedStyle(c), c.getBoundingClientRect()]
+        const g = document.createRange()
+        g.selectNodeContents(c)
+        const rects = [...g.getClientRects()]
+        const tops = [...new Set(rects.map((x) => Math.round(x.top)))]
+        const visiveis = rects.filter((x) => x.top < cr.bottom - 1)
+        return {
+          cortes: 1, altura: cr.height, lh: parseFloat(cs.lineHeight), padding: parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom),
+          linhasNoTexto: tops.length, fimVisivel: Math.max(...visiveis.map((x) => x.bottom)), fundo: cr.bottom,
+        }
+      })
+      expect(m.cortes, `${r}: 1 caixa que corta`).toBe(1)
+      expect(m.linhasNoTexto, `${r}: o título tem ao menos 3 linhas (a 3ª existe)`).toBeGreaterThanOrEqual(3)
+      expect(m.padding, `${r}: sem folga vertical`).toBe(0)
+      expect(Math.abs(m.altura! - 2 * m.lh!), `${r}: a caixa mede 2 × line-height`).toBeLessThanOrEqual(1)
+      expect(m.fimVisivel!, `${r}: o texto visível termina dentro da caixa`).toBeLessThanOrEqual(m.fundo! + 1)
+      await tabAte(page, link)
+      expect((await link.evaluate(foraDoCorte, undefined)).fora, `${r}: contorno inteiro`).toEqual([])
+      medidas++
+    }
+  expect(medidas).toBe(4)
+})
+
+// C37: com a coluna estreita, a barra fica embaixo do rótulo
+test('barra do ranking embaixo do rótulo no estreito', async ({ page }) => {
+  const ranking = [
+    { categoria: 'Acadêmico > Secretaria > Declarações e históricos escolares!', total: 1000 },
+    { categoria: 'Financeiro > Boletos e mensalidades', total: 500 },
+  ]
+  const dados = {
+    semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.65, taxaEscalonamento: 0.2, taxaAbandono: 0.14, taxaPerguntasSemArtigo: 0.12,
+    chamadosAbertos: 321, chamadosResolvidos: 1200, tempoPrimeiraRespostaHoras: 12.75, tempoResolucaoHoras: 123.25, roteamentoCorreto: 0.91, taxaReabertura: 0.05,
+    principaisCategorias: { porConversas: ranking, porChamados: ranking }, indicadorPrincipal: 0.7123,
+  }
+  let medidas = 0
+  for (const largura of [360, 390]) {
+    await abrir(page, largura, '/univag/indicadores', esperaIndicadores, {
+      papeis: ['ADMINISTRADOR'],
+      rotas: (p) => p.route('**/api/indicadores**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dados) })),
+    })
+    const barras = page.locator('section:has(h2) [data-barra]')
+    await expect(barras, `${largura}: 1 barra por linha`).toHaveCount(4)
+    const m = await barras.evaluateAll((bs) =>
+      bs.map((b) => {
+        const g = document.createRange()
+        const rotulo = [...b.parentElement!.childNodes].filter((n) => n !== b)
+        g.setStartBefore(rotulo[0])
+        g.setEndAfter(rotulo[rotulo.length - 1])
+        const r = g.getBoundingClientRect()
+        return { topoBarra: b.getBoundingClientRect().top, fimRotulo: r.bottom, alturaRotulo: r.height, lh: parseFloat(getComputedStyle(b.parentElement!).lineHeight) }
+      }),
+    )
+    for (const x of m) {
+      expect(x.alturaRotulo, `${largura}: o rótulo existe`).toBeGreaterThan(0)
+      expect(x.topoBarra, `${largura}: barra abaixo do rótulo`).toBeGreaterThanOrEqual(x.fimRotulo - 1)
+      medidas++
+    }
+    expect(Math.max(...m.map((x) => x.alturaRotulo / x.lh)), `${largura}: a coluna é estreita, o rótulo quebra`).toBeGreaterThan(1.5)
+  }
+  expect(medidas).toBe(8)
+})
+
+// C38: dicas do recolher e do usuário, só com a barra recolhida
+test('dica em recolher e no usuário com a barra recolhida', async ({ page }) => {
+  await instalar(page)
+  for (const estado of ['recolhida', 'aberta']) {
+    await page.addInitScript((e) => localStorage.setItem('one-barra', e), estado)
+    await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+    await expect(page.locator(`[data-slot=sidebar][data-state=${estado === 'aberta' ? 'expanded' : 'collapsed'}]`), `${estado}: estado da barra`).toHaveCount(1)
+    const rodape = page.locator('[data-sidebar=footer]')
+    for (const [botao, nome] of [
+      [rodape.getByRole('button', { name: 'Alternar barra lateral' }), 'Alternar barra lateral'],
+      [rodape.getByRole('button', { name: /Ana/ }), 'Ana'],
+    ] as const) {
+      await expect(botao, `${estado}: ${nome}`).toHaveCount(1)
+      await botao.hover()
+      if (estado === 'recolhida') await expect(page.getByRole('tooltip'), `${nome}: 1 dica com o nome`).toHaveText(nome)
+      else {
+        await page.waitForTimeout(800)
+        await expect(page.getByRole('tooltip'), `${nome}: controle, sem dica com a barra aberta`).toHaveCount(0)
+      }
+      await page.mouse.move(700, 400)
+    }
+  }
+})
+
+// C39: o Fechar da gaveta, com foco, tem opacidade 1 e contorno de 3:1 nos 3 temas
+test('foco inteiro no Fechar da gaveta', async ({ page }) => {
+  test.setTimeout(240_000)
+  await instalar(page)
+  let medidas = 0
+  for (const tema of Temas) {
+    await abrir(page, 390, '/univag/chamados/ONE-123', (p) => p.getByText('Resumo gerado por IA').waitFor(), { papeis: ['ATENDENTE'], tema })
+    const mais = page.getByRole('button', { name: 'Mais', exact: true })
+    await expect(mais, `${tema}: 1 Mais`).toHaveCount(1)
+    await tabAte(page, mais)
+    await page.keyboard.press('Enter')
+    const fechar = page.getByRole('dialog', { name: 'Mais ações' }).getByRole('button', { name: 'Fechar' })
+    await expect(fechar, `${tema}: 1 Fechar`).toHaveCount(1)
+    await tabAte(page, fechar).catch(() => {})
+    await expect(fechar).toBeFocused()
+    await expect.poll(() => fechar.evaluate((e) => getComputedStyle(e).opacity), `${tema}: opacidade 1`).toBe('1')
+    const f = (await lerFoco(page))!
+    expect(f.largura, `${tema}: contorno de 2 px`).toBeGreaterThanOrEqual(2)
+    expect(contraste(f.composta, f.fundo), `${tema}: contorno do Fechar`).toBeGreaterThanOrEqual(3)
+    medidas++
+  }
+  expect(medidas).toBe(3)
 })
