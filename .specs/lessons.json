@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 109,
+  "next_id": 113,
   "lessons": [
     {
       "id": "L-001",
@@ -1962,6 +1962,78 @@
       ],
       "created": "2026-11-08T04:58:15Z",
       "last_seen": "2026-11-08T04:58:15Z"
+    },
+    {
+      "id": "L-109",
+      "key": "spec_precision_gap::run an e2e check command only with specs that match its backend mode specs that call the real api fail with 502 against a simulated preview",
+      "text": "Run an e2e check command only with specs that match its backend mode; specs that call the real API fail with 502 against a simulated preview.",
+      "signal": "spec_precision_gap",
+      "scope": "e2e",
+      "status": "candidate",
+      "features": [
+        "fluxos-atendimento"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md C106; web/e2e/anexos.spec.ts:3, web/e2e/plataforma.spec.ts:4 (e2e)"
+      ],
+      "created": "2026-11-08T14:50:40Z",
+      "last_seen": "2026-11-08T14:50:40Z"
+    },
+    {
+      "id": "L-110",
+      "key": "ac_gap::cite in each coverage row the check whose proof asserts that exact status not a neighbouring route s check",
+      "text": "Cite in each Coverage row the check whose proof asserts that exact status, not a neighbouring route's check.",
+      "signal": "ac_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "fluxos-atendimento"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md Coverage: POST /transferir 400 and 404 (specs/checks)"
+      ],
+      "created": "2026-11-08T14:50:40Z",
+      "last_seen": "2026-11-08T14:50:40Z"
+    },
+    {
+      "id": "L-111",
+      "key": "spec_deviation::localize the accessibility strings of a third party widget when the interface is not english and add a check for them",
+      "text": "Localize the accessibility strings of a third-party widget when the interface is not English, and add a check for them.",
+      "signal": "spec_deviation",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "fluxos-atendimento"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/administracao/Canvas.tsx; verification.md Binding sources (web-tests)"
+      ],
+      "created": "2026-11-08T14:50:40Z",
+      "last_seen": "2026-11-08T14:50:40Z"
+    },
+    {
+      "id": "L-112",
+      "key": "spec_deviation::give each screens arrangement claim same bar column side a selector reachable check or the layout drifts from the design unseen",
+      "text": "Give each Screens arrangement claim (same bar, column, side) a selector-reachable check, or the layout drifts from the design unseen.",
+      "signal": "spec_deviation",
+      "scope": "web-tests",
+      "status": "candidate",
+      "features": [
+        "fluxos-atendimento"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "checks.md Screens: Simular e Publicar na mesma barra; verification.md (web-tests)"
+      ],
+      "created": "2026-11-08T14:50:40Z",
+      "last_seen": "2026-11-08T14:50:40Z"
     }
   ]
 }

@@ -660,6 +660,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md rodada 3 F2; .specs/STATE.md AD-040 (specs/checks)
 - last seen: 2026-11-08T04:58:15Z
 
+### L-109 - Run an e2e check command only with specs that match its backend mode; specs that call the real API fail with 502 against a simulated preview.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `e2e` · harmful: 0
+- features: fluxos-atendimento
+- evidence: checks.md C106; web/e2e/anexos.spec.ts:3, web/e2e/plataforma.spec.ts:4 (e2e)
+- last seen: 2026-11-08T14:50:40Z
+
+### L-110 - Cite in each Coverage row the check whose proof asserts that exact status, not a neighbouring route's check.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: fluxos-atendimento
+- evidence: verification.md Coverage: POST /transferir 400 and 404 (specs/checks)
+- last seen: 2026-11-08T14:50:40Z
+
+### L-111 - Localize the accessibility strings of a third-party widget when the interface is not English, and add a check for them.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: fluxos-atendimento
+- evidence: web/src/administracao/Canvas.tsx; verification.md Binding sources (web-tests)
+- last seen: 2026-11-08T14:50:40Z
+
+### L-112 - Give each Screens arrangement claim (same bar, column, side) a selector-reachable check, or the layout drifts from the design unseen.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `web-tests` · harmful: 0
+- features: fluxos-atendimento
+- evidence: checks.md Screens: Simular e Publicar na mesma barra; verification.md (web-tests)
+- last seen: 2026-11-08T14:50:40Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
