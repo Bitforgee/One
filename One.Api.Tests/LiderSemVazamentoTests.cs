@@ -108,6 +108,33 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([$"Sonda:{daLideranca}"], (await c.Quieto()).ToList());
     }
 
+    // C25: a regra direto, um caso por linha
+    [Fact]
+    public async Task So_lideranca_por_caso()
+    {
+        var m = await Montar();
+        var antigo = await f.Setor(m.I, "Antigo");
+        await f.Db(m.I.Id, db => db.Setores.Where(s => s.Id == antigo.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativo, false)));
+        var liderComAntigo = await f.Atendente(m.I, m.Lideranca, antigo);
+        var admin = await f.Usuario(m.I, [Papeis.Administrador]);
+        var administradorLider = await f.Usuario(m.I, [Papeis.Administrador, Papeis.Atendente]);
+        await f.Db(m.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = administradorLider.Id, SetorId = m.Lideranca.Id }); await db.SaveChangesAsync(); });
+
+        var casos = new (string Nome, long Id, bool Esperado)[]
+        {
+            ("só liderança", m.Lider.Usuario.Id, true),
+            ("liderança e setor comum ativo", m.Misto.Usuario.Id, false),
+            ("liderança e setor comum desativado", liderComAntigo.Usuario.Id, true),
+            ("só setor comum", m.DoComum.Usuario.Id, false),
+            ("sem nenhum setor", m.SemSetor.Usuario.Id, false),
+            ("administrador sem setor", admin.Id, false),
+            ("administrador numa liderança", administradorLider.Id, false),
+        };
+
+        foreach (var (nome, id, esperado) in casos)
+            Assert.True(esperado == await f.Db(m.I.Id, async db => await db.SoLideranca(await db.Usuarios.Include(u => u.Papeis).SingleAsync(u => u.Id == id))), nome);
+    }
+
     // C6
     [Fact]
     public async Task Lider_segue_vendo_a_fila_da_turma()

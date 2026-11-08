@@ -28,7 +28,7 @@ Reaproveita o jeito que `Chamado.Encaminhar` já sai do fluxo (`EtapaOrdem` e `E
 
 | Front | What changes |
 | --- | --- |
-| domain | novo termo: "só liderança" - atendente que tem ao menos um setor e todos os seus setores são liderança de turma (`Setor.CursoId` não nulo). Vive em `One.Api/Dados/Usuarios/` ao lado de `Usuario.Tem`. Quem ramifica nele: as 3 rotas acima |
+| domain | novo termo: "só liderança" - atendente que tem ao menos um setor de liderança de turma e nenhum setor comum ativo (`Setor.CursoId` não nulo é liderança). Vive em `One.Api/Dados/Usuarios/` ao lado de `Usuario.Tem`. Quem ramifica nele: as 3 rotas acima |
 | domain | termo que muda: "fora do fluxo" passa a incluir o chamado reclassificado. Quem ramifica em `EtapaOrdem == null`: `Agendador.PrazoDaEtapaVencido`, `ResolverFluxo.Seguinte`, `ResolverFluxo.TemEtapaSeguinte`, `DetalheChamado.DoFluxoDoChamado`, `PermissoesChamado` via `acoes` |
 | domain | termo que muda: "desativar setor" ganha uma recusa. Quem chama: tela Cadastros > Setores (`PUT /setores/{id}`) |
 | stored data | nada a migrar. Setores já inativos que estão em fluxo publicado hoje continuam como estão; a recusa vale só para a próxima desativação |
@@ -67,7 +67,7 @@ Um aluno com papel `ATENDENTE` apenas em setores de liderança (F1) deixa de ver
 2. WHEN um usuário só líder pede `GET /api/documentos/versoes/{id}` de uma versão existente THEN the system SHALL responder 404 com o detalhe "Documento não encontrado."
 3. WHEN um usuário só líder pede `GET /api/indicadores` com período válido THEN the system SHALL responder 403 com o detalhe "Os indicadores não estão disponíveis para a liderança de turma."
 4. WHILE o usuário é administrador, ou é atendente de ao menos um setor que não é liderança, the system SHALL responder às três rotas como hoje (200 nos casos válidos).
-5. The system SHALL tratar como só líder apenas o atendente que tem ao menos um setor e cujos setores têm todos `curso_id` não nulo; um atendente sem nenhum setor segue como hoje.
+5. The system SHALL tratar como só líder o atendente que tem ao menos um setor de liderança (`curso_id` não nulo) e nenhum setor comum ativo (`curso_id` nulo e `ativo`); um atendente sem nenhum setor e o administrador seguem como hoje.
 6. WHEN um usuário só líder abre o hub de tempo real THEN the system SHALL colocá-lo no grupo de cada setor dele, como hoje.
 
 **Independent test:** criar um aluno com `ATENDENTE` numa liderança, pedir as três rotas e ver 404, 404 e 403; pedir como atendente de um setor comum e ver 200.

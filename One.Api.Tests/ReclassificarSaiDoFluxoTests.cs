@@ -51,7 +51,7 @@ public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFacto
         Assert.True(r.IsSuccessStatusCode, $"{(int)r.StatusCode}");
         var depois = await c.Ler(numero);
         Assert.Equal((nova.Id, antes.SetorId, (long?)null, (int?)null, (DateTime?)null), (depois.CategoriaId, depois.SetorId, depois.VersaoFluxoId, depois.EtapaOrdem, depois.EtapaDesde));
-        Assert.Single((await c.Eventos(numero)).Where(e => e.Tipo == "RECLASSIFICACAO"));
+        Assert.Single(await c.Eventos(numero), e => e.Tipo == "RECLASSIFICACAO");
     }
 
     // C10

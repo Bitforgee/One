@@ -3,7 +3,7 @@
 Profile: standard
 Plan: `.specs/features/base-fluxos/plan.md`
 
-24 checks em 4 slices · 0 one-way doors · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado")
+25 checks em 4 slices · 0 one-way doors · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado")
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `--prefix web`. A API usa `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez. Cada filtro `--filter "FullyQualifiedName~<Classe>.<Método>"` precisa executar pelo menos 1 teste (L-002), e o nome na linha `Proof:` é o contrato (L-022).
 
@@ -43,6 +43,9 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderSemVazamento
 **C7** - Na tela Indicadores, uma resposta 403 com o detalhe `Os indicadores não estão disponíveis para a liderança de turma.` aparece no alerta da tela e não deixa a página em branco (AC 3; screen Indicadores, unauthorised state)
 Proof: `npm --prefix web test -- --run src/indicadores/lideranca.test.tsx -t "403 da liderança aparece no alerta"`
 
+**C25** - A regra "só liderança" decide por caso: só liderança → verdadeiro; liderança e setor comum ativo → falso; liderança e setor comum desativado → verdadeiro; só setor comum → falso; nenhum setor → falso; administrador sem setor e administrador numa liderança → falso (AC 5; nível da regra, sem a rota)
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderSemVazamentoTests.So_lideranca_por_caso"`
+
 ### S2 - o chamado reclassificado sai do fluxo (P1) · 3 arquivos · ~38 KB · ~10k
 
 **C8** - Reclassificar um chamado que está na etapa 1 de um fluxo grava a categoria nova e deixa `etapa_ordem` e `etapa_desde` nulos, mantendo `setor_id`, o estado e `versao_fluxo_id`, e grava exatamente 1 evento `RECLASSIFICACAO` com `de` e `para` os nomes das categorias (AC 7)
@@ -81,7 +84,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~SetorEmFluxoTests
 Proof: `npm --prefix web test -- --run src/administracao/setorEmFluxo.test.tsx -t "409 do setor aparece no editor"`
 
 **C22** - `PUT /api/admin/setores/{id}` segue respondendo 400 para a Triagem tirada ou duplicada, e responde 404 para um id que não existe e para o setor de outra instituição (AC 13; regressão das recusas vizinhas)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AdminTests.Triagem_zero_ou_duas_400"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~CadastroTests.Triagem_zero_ou_duas_400"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~SetorEmFluxoTests.Setor_inexistente_ou_alheio_404"`
 
 ### Regressões das rotas vizinhas (provas que já existem; a lista é fechada)
@@ -92,9 +95,9 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IndicadoresTests.
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IndicadoresTests.Atendente_ve_so_seus_setores"`
 
 **C24** - `POST /api/chamados/{numero}/reclassificar` segue respondendo 403 por papel, 404 para o chamado de outro setor e 409 por estado (AC 7)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Matriz_acao_papel"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_papel"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Atendente_de_outro_setor_404"`
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~VisibilidadeTests.Matriz_acao_estado"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~TransicoesTests.Matriz_acao_estado"`
 
 ### S4 - fluxos-atendimento fecha com contas feitas (P1) · só artefatos e comandos · ~4k
 
@@ -106,7 +109,7 @@ Proof: `npm --prefix web run build`
 
 **C20** - O comando do C106 de `fluxos-atendimento` lista só specs que usam `e2e/simulada.ts` (nenhum de `anexos.spec.ts` e `plataforma.spec.ts`) e sai com 0, e os dois reais saem com 0 contra a imagem própria em `:8089` (AC 15)
 Proof: `node -e "const s=require('fs').readFileSync('.specs/features/fluxos-atendimento/checks.md','utf8');const c=s.split('**C106**')[1];if(/anexos\.spec|plataforma\.spec/.test(c.split('Proof:')[1].split('\n')[0]))process.exit(1)"`
-Proof: `npm --prefix web run e2e` (specs simulados, com o `vite preview` em :5199 e `E2E_URL=http://localhost:5199`)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/aparencia.spec.ts e2e/arranjo.spec.ts e2e/casca.spec.ts e2e/celular.spec.ts e2e/identidade.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts e2e/fluxos.spec.ts` (o C106 emendado de `fluxos-atendimento`, com o `vite preview` em :5199)
 
 **C21** - O relatório `.specs/features/fluxos-atendimento/verification.md` da rodada 2 cobre cada check da lista emendada (sem C42, C70, C71, C72 do AD-042) com `PASS` ou `FAIL` e evidência, e `validate_verification.py fluxos-atendimento` sai com 0, ou um AD no `STATE.md` registra o risco aceito do C104 (`crapper` bloqueado) (AC 16)
 Proof: `python "C:\Users\Alfredo Neto\.kiro\skills\tlc-spec-lean\scripts\validate_verification.py" fluxos-atendimento --root D:\one-system`
@@ -122,7 +125,7 @@ Proof: `python "C:\Users\Alfredo Neto\.kiro\skills\tlc-spec-lean\scripts\validat
 | statuses de `PUT /api/admin/setores/{id}` (4) | 200 C15 · 400 C22 · 404 C22 · 409 C14 | - |
 | statuses de `POST /api/chamados/{numero}/reclassificar` (5) | 200 C8 · 400 C12 · 403 C24 · 404 C24 · 409 C24 | - |
 | perfis em cada uma das 3 rotas de S1 (4) | administrador C4 · atendente de setor comum C4 · atendente de liderança e setor comum C4 · atendente sem setor C4 (cada um nas 3 rotas, table-driven) | - |
-| quem é "só liderança" (3 casos) | todos os setores são liderança C1, C2, C3 · liderança e setor comum C4 · nenhum setor C4 | - |
+| quem é "só liderança" (5 casos) | todos os setores são liderança C1, C2, C3, C25 · liderança e setor comum ativo C4, C25 · liderança e setor comum desativado C25 · nenhum setor C4, C25 · administrador numa liderança C25 | - |
 | estados do chamado ao reclassificar (2 que o plano separa) | em etapa de fluxo C8, C13 · fora de fluxo C9 | - |
 | efeitos de sair do fluxo (4) | `acoes` sem `subir` C10 · `fluxo` nulo C10 · `POST /subir` 409 C10 · `Agendador` não sobe C11 | - |
 | onde um setor pode estar para desativar (4) | versão vigente C14 · só rascunho C15 · versão antiga C15 · outra instituição C17 | - |
