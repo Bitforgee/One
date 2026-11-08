@@ -3,7 +3,9 @@
 Profile: standard
 Plan: `.specs/features/pastas-padrao-dotnet/plan.md`
 
-14 checks em 2 slices · 2 one-way doors · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado, pode seguir com os checks e o build")
+16 checks em 2 slices · 2 one-way doors · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado, pode seguir com os checks e o build")
+
+**Emenda de 08/11, aprovada pelo usuário** depois da verificação rodada 1 (FAIL): `web/e2e/identidade.spec.ts` e `web/src/test/interface.test.ts` ainda liam `../api/wwwroot`, e o primeiro falhava. O usuário escolheu "Corrigir e emendar" e "AD-040 + glossário + comentários". O C11 foi reescrito (antes: "nenhum arquivo em `web/src` muda"); C15 e C16 são novos. Os outros checks não mudaram.
 
 **Como as provas rodam.** No Git Bash, na raiz `D:\one-system`. `BASE=0fd86f1` é a `main` de onde a branch saiu: nenhum `.cs` mudou entre ela e o commit que congela este arquivo. API: `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez. Um filtro que não seleciona teste sai com 0 (L-002): conferir a contagem no relatório. Mutação suspensa (AD-025).
 
@@ -44,8 +46,14 @@ Proof: `git check-ignore -q One.Api/wwwroot/index.html && grep -qx 'One.Api/wwwr
 **C10** - [x] Os scripts de `web/apresentacao` rodam o comando da API na pasta `One.Api` e não citam mais a pasta `api` (Flow, hop 8)
 Proof: `grep -q "'One.Api'" web/apresentacao/preparar.ts && grep -q "'One.Api'" web/apresentacao/tts.ts && ! grep -nE "Raiz, 'api'" web/apresentacao/preparar.ts web/apresentacao/tts.ts`
 
-**C11** - [x] Nenhum arquivo em `web/src` muda, então os gates `crapper` e `dryer` do AD-018 não têm o que medir de novo (Impact)
-Proof: `git diff --quiet $BASE HEAD -- web/src`
+**C11** - [ ] Em `web/src` mudam só 3 arquivos, `aparencia.tsx`, `test/estrutura.test.ts` e `test/interface.test.ts`, e toda linha mudada cita a pasta (`api/` antes, `One.Api/` depois); nenhuma linha de lógica muda, então os gates `crapper` e `dryer` do AD-018 não têm o que medir de novo (Impact, emenda)
+Proof: `test "$(git diff --name-only $BASE HEAD -- web/src | sort | tr '\n' ' ')" = "web/src/aparencia.tsx web/src/test/estrutura.test.ts web/src/test/interface.test.ts "`
+Proof: `test -z "$(git diff -U0 $BASE HEAD -- web/src | grep -E '^[-+][^-+]' | grep -vE 'api/|One\.Api/')"`
+
+**C15** - [ ] Os dois testes do `web/` que olham a saída do build leem `One.Api/wwwroot/assets` e passam: o Vitest "sem biblioteca de gráfico" com a pasta gerada, e o e2e "fontes latin no precache" contra a imagem da 8080; nenhum arquivo em `web/` cita mais `../api/` (Flow, hop 9, emenda)
+Proof: `grep -q "'../One.Api/wwwroot/assets'" web/src/test/interface.test.ts && grep -q '/../One.Api/wwwroot/assets' web/e2e/identidade.spec.ts && ! git grep -n '\.\./api/' -- web`
+Proof: `npm --prefix web run build && test -d One.Api/wwwroot/assets && cd web && npx vitest run src/test/interface.test.ts -t "sem biblioteca de gráfico"`
+Proof: `docker compose up -d --build api && cd web && npx playwright test e2e/identidade.spec.ts -g "fontes latin no precache"`
 
 ### S2 - as regras e os comandos escritos batem com o layout · 4 arquivos · 55 KB · ~14k
 
@@ -59,11 +67,16 @@ Proof: `grep -E '^\| AD-040 \|' .specs/STATE.md | grep 'One.Api/' | grep 'One.Ap
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests"`
 Proof: `test "$(git grep -c 'Assert\.' HEAD -- One.Api.Tests | awk -F: '{s+=$NF} END {print s}')" = 2280`
 
+**C16** - [ ] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
+Proof: `! git grep -nE '(^|[^A-Za-z./])api/' -- .specs/GLOSSARIO.md web/src/aparencia.tsx web/src/test/estrutura.test.ts One.Api.Tests/ArquiteturaTests.cs`
+Proof: `test "$(grep -E '^\| AD-0(05|17|18|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 4`
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
 | --- | --- | --- |
-| lugares que guardam a pasta (12) | `One.slnx` C2 · `ProjectReference` do teste C3 · `vite.config.ts` C5 · `Dockerfile` C6 · `.gitignore` C9 · `.dockerignore` C9 · `ArquiteturaTests` C14 · `PlataformaTests` C4 · `ProvedorTests` C4 · `RetratoTests` C4 · `preparar.ts` C10 · `tts.ts` C10 | - |
+| lugares que guardam a pasta (14) | `One.slnx` C2 · `ProjectReference` do teste C3 · `vite.config.ts` C5 · `Dockerfile` C6 · `.gitignore` C9 · `.dockerignore` C9 · `ArquiteturaTests` C14 · `PlataformaTests` C4 · `ProvedorTests` C4 · `RetratoTests` C4 · `preparar.ts` C10 · `tts.ts` C10 · `interface.test.ts` C15 · `identidade.spec.ts` C15 | - |
+| textos vivos com a pasta (6) | `GLOSSARIO.md` C16 · `aparencia.tsx` C16 · `estrutura.test.ts` C16 · `ArquiteturaTests.cs` C16 · ADs ativos (AD-005, AD-017, AD-018, AD-024) C16 · `AGENTS.md` C12 | - |
 | montagens da API (3) | `dotnet run`/build local C3 · `WebApplicationFactory` dos testes C4 · imagem Docker C6 | - |
 | doors do Landing (2) | layout das pastas C1, C2 · AD-040 C13 | - |
 | documentos com comando ou regra (2) | `AGENTS.md` C12 · `STATE.md` C13 | - |

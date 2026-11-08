@@ -29,14 +29,15 @@ caminhos.
 6. `.gitignore` (exists) e `.dockerignore` (exists) - ignoram `One.Api/wwwroot`
 7. `ArquiteturaTests` (exists), `PlataformaTests` (exists), `ProvedorTests` (exists) e `RetratoTests` (exists) - os testes que montam caminho leem as pastas novas
 8. `web/apresentacao/preparar.ts` e `tts.ts` (exist) - `cwd` e `--project` apontam para `One.Api`
-9. out: `AGENTS.md` (comandos e regras) e `.specs/STATE.md` (AD-040 substitui o trecho de caminhos do AD-017)
+9. `web/src/test/interface.test.ts` (exists) e `web/e2e/identidade.spec.ts` (exists) - os testes do `web/` que olham a saída do build leem `../One.Api/wwwroot/assets` (achados na verificação rodada 1)
+10. out: `AGENTS.md` (comandos e regras), `.specs/GLOSSARIO.md` e os comentários que citavam a pasta, e `.specs/STATE.md` (AD-040 substitui os caminhos `api/` escritos nos ADs ativos: AD-005, AD-017, AD-018, AD-024)
 
 ## Impact
 
 | Front | What changes |
 | --- | --- |
 | domain | nenhum termo do domínio muda; namespaces `One.Api.*` e `One.Api.Tests` continuam iguais |
-| repositório | `api/` → `One.Api/` e `api.Tests/` → `One.Api.Tests/`; quem tiver branch aberta a partir de antes do rename precisa rebasear (hoje só existe `origin/main`) |
+| repositório | `api/` → `One.Api/` e `api.Tests/` → `One.Api.Tests/`: para o git, todo arquivo da API e dos testes muda de lugar. No GitHub só existe `main`, mas a outra pessoa do par pode ter branch local ainda não enviada; uma branch criada antes do rename ainda aponta para `api/`, e no merge um arquivo novo dela pode dar conflito ou cair na pasta antiga, e uma migration nova dela vai para o caminho antigo |
 | decisões | AD-017 cita `api/<Fatia>/`, `api/Dados/` e `api/*.cs`: o AD-040 troca só esses caminhos, a regra das fatias fica |
 | migrations | `api/Dados/Migracoes/` muda de pasta sem mudar conteúdo; namespace igual, então o EF não vê diferença e nenhuma migration nova é gerada |
 | documentos | `AGENTS.md` (comandos `dotnet test`, `--project`, regras com caminho) é atualizado; `ROADMAP.md` e as features fechadas em `.specs/features/` ficam como estão, porque registram o que era verdade quando foram escritos |
@@ -105,7 +106,7 @@ Quem segue o `AGENTS.md` ou o `STATE.md` encontra os caminhos certos.
 
 | Assumption | Chosen default | Rationale | Confirmed? |
 | --- | --- | --- | --- |
-| Quando fazer | agora, antes do congelamento de 17/11 | só existe `origin/main` e nenhuma feature em construção (Handoff), então o rename não conflita com ninguém; depois de 17/11 está congelado | n |
+| Quando fazer o merge | combinado com a outra pessoa do par: primeiro entra na `main` o que ela já tem pronto, depois este PR, e ela faz rebase das branches dela logo em seguida; bem antes do congelamento de 17/11 | o rename move todos os arquivos da API e dos testes, e uma branch local dela criada antes dele ainda aponta para `api/`; depois de 17/11 está congelado | y |
 | `.idea/` (Rider) local | não versionado; cada pessoa reabre a solução | está fora do git | n |
 
 **Open questions:** none - all resolved or logged above.
