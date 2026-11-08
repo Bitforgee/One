@@ -2,7 +2,7 @@ bin/
 obj/
 node_modules/
 dist/
-api/wwwroot/
+One.Api/wwwroot/
 .env
 *.user
 .vs/

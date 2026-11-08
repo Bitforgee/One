@@ -66,7 +66,7 @@ public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
     public void Configuracao_padrao_openai()
     {
         var raiz = ArquiteturaTests.Raiz();
-        var llm = JsonDocument.Parse(File.ReadAllText(Path.Combine(raiz, "api", "appsettings.json"))).RootElement.GetProperty("Llm");
+        var llm = JsonDocument.Parse(File.ReadAllText(Path.Combine(raiz, "One.Api", "appsettings.json"))).RootElement.GetProperty("Llm");
         Assert.Equal("https://api.openai.com/v1", llm.GetProperty("BaseUrl").GetString());
         Assert.Equal("gpt-6-luna", llm.GetProperty("Modelo").GetString());
         Assert.Equal("text-embedding-3-small", llm.GetProperty("ModeloEmbeddings").GetString());
@@ -154,11 +154,11 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
     public void Sem_framework_de_agentes()
     {
         var raiz = ArquiteturaTests.Raiz();
-        var projeto = File.ReadAllText(Path.Combine(raiz, "api", "One.Api.csproj"));
+        var projeto = File.ReadAllText(Path.Combine(raiz, "One.Api", "One.Api.csproj"));
         Assert.DoesNotContain("Microsoft.Agents.AI", projeto);
         Assert.DoesNotContain("Microsoft.Extensions.AI", projeto);
         foreach (var arquivo in new[] { "Assistente.cs", "Embeddings.cs" })
-            Assert.Contains("CreateClient(\"llm\")", File.ReadAllText(Path.Combine(raiz, "api", "Assistente", arquivo)));
+            Assert.Contains("CreateClient(\"llm\")", File.ReadAllText(Path.Combine(raiz, "One.Api", "Assistente", arquivo)));
     }
 }
 

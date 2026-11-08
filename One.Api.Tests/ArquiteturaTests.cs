@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
-        var api = Path.Combine(Raiz(), "api");
+        var api = Path.Combine(Raiz(), "One.Api");
         var permitidos = new[] { Path.Combine(api, "Instituicoes", "InstituicaoComando.cs"), Path.Combine(api, "Agendador.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
@@ -89,12 +89,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Matches(new Regex(@"^\s+image:\s*axllent/mailpit\s*$", RegexOptions.Multiline), compose);
 
         var solucao = File.ReadAllText(Path.Combine(raiz, "One.slnx"));
-        Assert.Contains("api/One.Api.csproj", solucao);
-        Assert.Contains("api.Tests/One.Api.Tests.csproj", solucao);
+        Assert.Contains("One.Api/One.Api.csproj", solucao);
+        Assert.Contains("One.Api.Tests/One.Api.Tests.csproj", solucao);
         Assert.Contains("web/package.json", solucao);
         Assert.True(File.Exists(Path.Combine(raiz, "web", "package.json")));
-        Assert.True(File.Exists(Path.Combine(raiz, "api", "One.Api.csproj")));
-        Assert.True(File.Exists(Path.Combine(raiz, "api.Tests", "One.Api.Tests.csproj")));
+        Assert.True(File.Exists(Path.Combine(raiz, "One.Api", "One.Api.csproj")));
+        Assert.True(File.Exists(Path.Combine(raiz, "One.Api.Tests", "One.Api.Tests.csproj")));
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     }
 
     // refatoracao-solid: regras de texto sobre o código de api/, sem bin, obj nem Dados/Migracoes.
-    static string Api => Path.Combine(Raiz(), "api");
+    static string Api => Path.Combine(Raiz(), "One.Api");
 
     static IEnumerable<string> CodigoApi()
     {
@@ -218,7 +218,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         foreach (var classe in new[] { "PermissoesChamadoTests", "IndicadoresCalculoTests", "CargaValidacaoTests", "CsvMatriculasTests", "PerguntaTests" })
         {
-            var texto = File.ReadAllText(Path.Combine(Raiz(), "api.Tests", classe + ".cs"));
+            var texto = File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", classe + ".cs"));
             Assert.Contains($"public class {classe}", texto);
             foreach (var proibido in new[] { "OneFactory", "OneDb", "HttpClient" })
                 Assert.False(texto.Contains(proibido), $"{classe} usa {proibido}");
@@ -555,7 +555,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             }
         Assert.Equal(new[] { "IDaInstituicao", "Papeis", "EstadosArtigo", "Desfechos", "EstadosDocumento", "EstadosChamado", "TiposEvento", "TiposMensagem", "MotivosFechamento" }.Order(),
             TipoDeTopo.Matches(SemComentarios(Path.Combine(Api, "Dados", "Entidades.cs"))).Select(m => m.Groups[1].Value).Order());
-        foreach (var projeto in new[] { Path.Combine(Api, "One.Api.csproj"), Path.Combine(Raiz(), "api.Tests", "One.Api.Tests.csproj") })
+        foreach (var projeto in new[] { Path.Combine(Api, "One.Api.csproj"), Path.Combine(Raiz(), "One.Api.Tests", "One.Api.Tests.csproj") })
             foreach (var pasta in EntidadesPorPasta.Keys.Where(p => p != ""))
                 Assert.Contains($"<Using Include=\"One.Api.Dados.{pasta}\" />", File.ReadAllText(projeto));
     }
@@ -614,7 +614,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (entidade, metodos) in publicos)
         {
             var classe = entidade.Name + "DominioTests";
-            var texto = File.ReadAllText(Path.Combine(Raiz(), "api.Tests", classe + ".cs"));
+            var texto = File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", classe + ".cs"));
             Assert.Contains($"public class {classe}", texto);
             foreach (var proibido in new[] { "OneFactory", "OneDb", "HttpClient" })
                 Assert.False(texto.Contains(proibido), $"{classe} usa {proibido}");
@@ -639,7 +639,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Dois_projetos_sem_repositorio()
     {
         var projetos = Regex.Matches(File.ReadAllText(Path.Combine(Raiz(), "One.slnx")), "<Project Path=\"([^\"]+)\"").Select(m => m.Groups[1].Value);
-        Assert.Equal(["api.Tests/One.Api.Tests.csproj", "api/One.Api.csproj"], projetos.Order(StringComparer.Ordinal));
+        Assert.Equal(["One.Api.Tests/One.Api.Tests.csproj", "One.Api/One.Api.csproj"], projetos.Order(StringComparer.Ordinal));
         IEnumerable<string> Csproj(string pasta) => Directory.GetFiles(pasta, "*.csproj").Concat(Directory.GetDirectories(pasta)
             .Where(d => Path.GetFileName(d) is not ("bin" or "obj" or "node_modules" or ".git" or "target")).SelectMany(Csproj));
         Assert.Equal(2, Csproj(Raiz()).Count());
@@ -951,7 +951,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Amazon.Runtime.RequestChecksumCalculation.WHEN_REQUIRED, s3.Config.RequestChecksumCalculation);
         Assert.Equal(Amazon.Runtime.ResponseChecksumValidation.WHEN_REQUIRED, s3.Config.ResponseChecksumValidation);
 
-        var codigos = new[] { File.ReadAllText(Path.Combine(Api, "Program.cs")), File.ReadAllText(Path.Combine(Raiz(), "api.Tests", "Infra", "OneFactory.cs")) };
+        var codigos = new[] { File.ReadAllText(Path.Combine(Api, "Program.cs")), File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", "Infra", "OneFactory.cs")) };
         foreach (var chave in new[] { "Endpoint", "Chave", "Segredo", "Bucket" })
             foreach (var codigo in codigos)
                 Assert.Contains($"\"Armazenamento:{chave}\"", codigo);
@@ -1026,7 +1026,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     }
 
     static IEnumerable<string> ArquivosDaApi() =>
-        Directory.EnumerateFiles(Path.Combine(Raiz(), "api"), "*.cs", SearchOption.AllDirectories)
+        Directory.EnumerateFiles(Path.Combine(Raiz(), "One.Api"), "*.cs", SearchOption.AllDirectories)
             .Where(a => !a.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !a.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"));
 
     // tempo-real-signalr C15: o contrato do hub (door 1); nada em fluxo, a resposta da IA vai inteira (AD-012)
@@ -1076,7 +1076,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Contains(termo, program);
             Assert.Equal(["Program.cs"], ArquivosDaApi().Where(a => File.ReadAllText(a).Contains(termo)).Select(Path.GetFileName));
         }
-        var infra = Directory.EnumerateFiles(Path.Combine(Raiz(), "api.Tests", "Infra"), "*.cs").Select(File.ReadAllText).ToList();
+        var infra = Directory.EnumerateFiles(Path.Combine(Raiz(), "One.Api.Tests", "Infra"), "*.cs").Select(File.ReadAllText).ToList();
         foreach (var termo in new[] { "AddSignalR", "MapHub", "AvisarMudanca" })
             Assert.DoesNotContain(infra, t => t.Contains(termo));
         Assert.True(program.IndexOf("Servicos(builder.Services)", StringComparison.Ordinal) < program.IndexOf("InstituicaoComando.Executar", StringComparison.Ordinal));

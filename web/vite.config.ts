@@ -37,7 +37,7 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
-  build: { outDir: '../api/wwwroot', emptyOutDir: true },
+  build: { outDir: '../One.Api/wwwroot', emptyOutDir: true },
   server: { proxy: { '/api': { target: 'http://localhost:5226', ws: true } } }, // ws: o hub de tempo real
   test: {
     environment: 'jsdom',

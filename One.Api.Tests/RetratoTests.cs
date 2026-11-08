@@ -14,10 +14,10 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// vertical-slice-completa S1: a tabela de rotas e os corpos de erro gravados com o código da base (api.Tests/Retratos).
+// vertical-slice-completa S1: a tabela de rotas e os corpos de erro gravados com o código da base (One.Api.Tests/Retratos).
 public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    static string Retrato(string nome) => Path.Combine(ArquiteturaTests.Raiz(), "api.Tests", "Retratos", nome);
+    static string Retrato(string nome) => Path.Combine(ArquiteturaTests.Raiz(), "One.Api.Tests", "Retratos", nome);
 
     static List<RouteEndpoint> Endpoints(OneFactory f) =>
         f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToList();

@@ -74,7 +74,7 @@ async function primeiroAcesso(cpf: string, email: string, senha: string) {
 }
 
 const cli = (...args: string[]) =>
-  execFileSync('dotnet', [path.join('bin', 'Debug', 'net10.0', 'One.Api.dll'), 'instituicao', ...args], { cwd: path.join(Raiz, 'api'), encoding: 'utf8' })
+  execFileSync('dotnet', [path.join('bin', 'Debug', 'net10.0', 'One.Api.dll'), 'instituicao', ...args], { cwd: path.join(Raiz, 'One.Api'), encoding: 'utf8' })
 const sql = (consulta: string) =>
   execFileSync('docker', ['compose', 'exec', '-T', 'postgres', 'psql', '-U', 'postgres', '-d', 'one', '-At', '-c', consulta], { cwd: Raiz, encoding: 'utf8' }).trim()
 

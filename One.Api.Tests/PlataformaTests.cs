@@ -481,7 +481,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void InstituicaoAtual_so_onde_ja_era_e_na_plataforma()
     {
-        var api = Path.Combine(ArquiteturaTests.Raiz(), "api");
+        var api = Path.Combine(ArquiteturaTests.Raiz(), "One.Api");
         var sep = Path.DirectorySeparatorChar;
         var atribui = new Regex(@"\bInstituicaoAtual\s*=(?!=)");
         var fora = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)

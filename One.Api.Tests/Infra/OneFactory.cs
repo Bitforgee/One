@@ -77,7 +77,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         }
         if (WebRoot is not null)
         {
-            // com e sem api/wwwroot compilado: o caminho e o provedor de arquivos apontam para a pasta do teste
+            // com e sem One.Api/wwwroot compilado: o caminho e o provedor de arquivos apontam para a pasta do teste
             builder.UseWebRoot(WebRoot);
             builder.ConfigureServices((ctx, _) => ctx.HostingEnvironment.WebRootFileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(WebRoot));
         }
