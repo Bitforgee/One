@@ -24,7 +24,7 @@ describe('administração', () => {
 
   // layout-painel C21 (AC 21): Usuários, as 5 abas de Cadastros e os erros de Matrículas
   it('colunas das tabelas de administração', async () => {
-    const vazias = Object.fromEntries(['categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []] as [number, unknown]]))
+    const vazias = Object.fromEntries(['categorias', 'cursos', 'fluxos', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []] as [number, unknown]]))
     api({
       'GET /api/auth/me': () => [200, admin],
       'GET /api/admin/usuarios': () => [200, []],
@@ -38,7 +38,7 @@ describe('administração', () => {
     montada.unmount()
 
     montada = abrir('/univag/cadastros')
-    for (const aba of ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']) {
+    for (const aba of ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas']) {
       await userEvent.click(await screen.findByRole('tab', { name: aba }))
       expect(cabecalhos(within(screen.getByRole('tabpanel', { name: aba })).getByRole('table'))).toEqual(['Nome', 'Detalhe'])
     }
@@ -60,7 +60,7 @@ describe('administração', () => {
       'GET /api/admin/setores': () => [200, []],
       'GET /api/admin/categorias': () => [200, []],
       'GET /api/admin/cursos': () => [200, []],
-      'GET /api/admin/regras': () => [200, []],
+      'GET /api/admin/fluxos': () => [200, []],
       'GET /api/admin/respostas-prontas': () => [200, []],
     })
     const montada = abrir('/univag/usuarios')
@@ -94,32 +94,29 @@ describe('administração', () => {
     expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({ cpf: '12345678909', nome: 'Carla', email: 'carla@univag.edu.br', papeis: ['ATENDENTE'], setores: [2] })
   })
 
-  it('regra por coordenação não envia setor', async () => {
+  it('fluxo para todos os cursos envia só a categoria', async () => {
     const chamadas = api({
       'GET /api/auth/me': () => [200, admin],
       'GET /api/admin/setores': () => [200, setores],
       'GET /api/admin/categorias': () => [200, [{ id: 7, nome: 'Notas', ativa: true, padrao: false }, { id: 8, nome: 'Não classificado', ativa: true, padrao: true }]],
       'GET /api/admin/cursos': () => [200, []],
-      'GET /api/admin/regras': () => [200, []],
+      'GET /api/admin/fluxos': () => [200, []],
       'GET /api/admin/respostas-prontas': () => [200, []],
-      'POST /api/admin/regras': () => [201, {}],
+      'POST /api/admin/fluxos': () => [201, {}],
     })
     abrir('/univag/cadastros')
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Regras' }))
+    await userEvent.click(await screen.findByRole('tab', { name: 'Fluxos' }))
     await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
     const d = within(await screen.findByRole('dialog'))
     expect(within(d.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria', 'Notas'])
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '7')
-    await userEvent.selectOptions(d.getByLabelText('Setor'), '2')
-    await userEvent.selectOptions(d.getByLabelText('Destino'), 'COORDENACAO_CURSO')
-    expect(d.queryByLabelText('Setor')).not.toBeInTheDocument()
+    expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
     await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
 
     await waitFor(() => expect(chamadas.some((c) => c.metodo === 'POST')).toBe(true))
-    expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({ categoriaId: 7, destino: 'COORDENACAO_CURSO', setorId: null })
+    expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({ categoriaId: 7, cursoId: null, semestre: null })
   })
-
   it('importação concluída mostra o total e fecha a confirmação', async () => {
     const chamadas = api({ 'GET /api/auth/me': () => [200, admin], 'POST /api/admin/matriculas/importacao': () => [200, { criados: 2, atualizados: 1 }] })
     abrir('/univag/matriculas')

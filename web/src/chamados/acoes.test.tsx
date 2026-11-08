@@ -152,4 +152,25 @@ describe('ações do chamado', () => {
     await userEvent.type(dialogo.getByLabelText('Motivo'), '  ')
     expect(dialogo.getByRole('button', { name: 'Encaminhar' })).toBeDisabled()
   })
+
+  // fluxos-atendimento C58 (S3): o botão Subir aparece com a ação `subir`, pede o motivo e envia POST /subir
+  it('subir pede o motivo', async () => {
+    const chamadas = detalhe(daEquipe({ acoes: ['responder', 'subir'] }), { 'POST /api/chamados/ONE-1/subir': () => [200, daEquipe({ acoes: [], setor: 'Coordenação' })] })
+    await userEvent.click(await screen.findByRole('button', { name: 'Subir' }))
+    const dialogo = within(await screen.findByRole('dialog', { name: 'Subir para a próxima etapa?' }))
+    expect(dialogo.getByRole('button', { name: 'Subir' })).toBeDisabled()
+    await userEvent.type(dialogo.getByLabelText('Motivo'), '  ')
+    expect(dialogo.getByRole('button', { name: 'Subir' })).toBeDisabled()
+    await userEvent.type(dialogo.getByLabelText('Motivo'), 'A coordenação resolve.')
+    await userEvent.click(dialogo.getByRole('button', { name: 'Subir' }))
+
+    await waitFor(() => expect(enviados(chamadas)).toEqual([['/api/chamados/ONE-1/subir', { motivo: '  A coordenação resolve.' }]]))
+    await waitFor(() => expect(botao('Subir')).not.toBeInTheDocument())
+  })
+
+  it('sem a ação subir não há botão', async () => {
+    detalhe(daEquipe({ acoes: ['responder', 'encaminhar'] }))
+    await screen.findByRole('button', { name: 'Encaminhar' })
+    expect(botao('Subir')).not.toBeInTheDocument()
+  })
 })

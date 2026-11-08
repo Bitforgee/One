@@ -123,7 +123,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   )
 }
 
-function BotoesDeAcao({ pode, executar, pendente, abrir, semAssumir }: Acoes & { abrir: (modal: 'encaminhar' | 'cancelar') => void; semAssumir: boolean }) {
+function BotoesDeAcao({ pode, executar, pendente, abrir, semAssumir }: Acoes & { abrir: (modal: Modal) => void; semAssumir: boolean }) {
   return (
     <div className="flex flex-wrap gap-2 empty:hidden">
       {pode('assumir') && !semAssumir && (
@@ -139,6 +139,11 @@ function BotoesDeAcao({ pode, executar, pendente, abrir, semAssumir }: Acoes & {
       {pode('encaminhar') && (
         <BotaoAcao pendente={false} variant="outline" onClick={() => abrir('encaminhar')} disabled={pendente}>
           Encaminhar
+        </BotaoAcao>
+      )}
+      {pode('subir') && (
+        <BotaoAcao pendente={false} variant="outline" onClick={() => abrir('subir')} disabled={pendente}>
+          Subir
         </BotaoAcao>
       )}
       {pode('cancelar') && (
@@ -235,7 +240,7 @@ function CampoMotivo({ id, rotulo, valor, setValor }: Campo & { id: string; rotu
   )
 }
 
-const ACOES = ['assumir', 'confirmar', 'encaminhar', 'cancelar', 'resolver', 'reclassificar', 'duplicado', 'rejeitar']
+const ACOES = ['assumir', 'confirmar', 'encaminhar', 'subir', 'cancelar', 'resolver', 'reclassificar', 'duplicado', 'rejeitar']
 
 const AlertaDaAcao = ({ erro }: { erro: Error | null }) => erro && <Alert variant="destructive">{erro.message}</Alert>
 
@@ -314,7 +319,7 @@ function CaixaDeAcoes({ barra, folha, setFolha, erro, tem, children }: { barra?:
 }
 
 type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
-type Modal = 'encaminhar' | 'cancelar'
+type Modal = 'encaminhar' | 'cancelar' | 'subir'
 type Motivo = { motivo: string; setMotivo: (m: string) => void }
 
 // O que foi digitado nos formulários vive em `Detalhe`: a folha "Mais" desmonta ao fechar e o texto não se perde (AC 44).
@@ -368,6 +373,12 @@ function Dialogos({ c, modal, fechar, executar, motivo, setMotivo }: { c: Chamad
         <CampoMotivo id="motivo-encaminhar" rotulo="Motivo" valor={motivo} setValor={setMotivo} />
       </Confirmacao>
 
+      <Confirmacao aberto={modal === 'subir'} fechar={fechar} titulo="Subir para a próxima etapa?" botao="Subir" pronto={motivo.trim() !== ''}
+        confirmar={() => executar('subir', { motivo }, () => setMotivo(''))}>
+        <p className="mb-0 text-sm">O chamado vai para o setor da próxima etapa do fluxo, sem responsável. O motivo fica como nota interna.</p>
+        <CampoMotivo id="motivo-subir" rotulo="Motivo" valor={motivo} setValor={setMotivo} />
+      </Confirmacao>
+
       <Confirmacao aberto={modal === 'cancelar'} fechar={fechar} titulo="Cancelar a solicitação?" botao="Cancelar solicitação" destrutivo pronto
         confirmar={() => executar('cancelar', { motivo: motivo.trim() || undefined }, () => setMotivo(''))}>
         <CampoMotivo id="justificativa" rotulo="Justificativa (opcional)" valor={motivo} setValor={setMotivo} />
@@ -401,6 +412,11 @@ const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('conf
 function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-8">
+      {c.fluxo && (
+        <p className="m-0 text-sm text-muted-foreground">
+          Etapa {c.fluxo.etapa} de {c.fluxo.total} · {c.fluxo.abrangencia}
+        </p>
+      )}
       {!folha && erro}
       <CaixaDeAcoes barra={barra} folha={folha} setFolha={setFolha} erro={erro} tem={tem}>
         {painel}

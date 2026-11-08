@@ -1134,7 +1134,7 @@ test.describe('painel', () => {
     const select = page.getByRole('combobox', { name: 'Cadastro' })
     await select.waitFor()
     await expect(abas).toBeHidden()
-    expect(await select.locator('option').allTextContents()).toEqual(['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas'])
+    expect(await select.locator('option').allTextContents()).toEqual(['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas'])
     await select.selectOption({ label: 'Cursos' })
     await expect(page.getByRole('tabpanel').getByRole('button', { name: 'Direito' })).toBeVisible()
 

@@ -19,9 +19,12 @@ const listas: Record<string, unknown[]> = {
     { id: 4, nome: 'ADS', setorCoordenacaoId: 2 },
     { id: 5, nome: 'Direito', setorCoordenacaoId: null },
   ],
-  regras: [
-    { id: 6, categoriaId: 7, destino: 'SETOR', setorId: 2 },
-    { id: 7, categoriaId: 9, destino: 'COORDENACAO_CURSO', setorId: null },
+  fluxos: [
+    { id: 6, categoriaId: 7, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [{ destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }] }, rascunho: null },
+    {
+      id: 7, categoriaId: 9, cursoId: 4, semestre: 3, rascunho: null,
+      vigente: { numero: 2, etapas: [{ destino: 'LIDERANCA_SEMESTRE', setorId: null, prazoHoras: null, x: null, y: null }, { destino: 'COORDENACAO_CURSO', setorId: null, prazoHoras: 48, x: null, y: null }] },
+    },
   ],
   'respostas-prontas': [{ id: 8, setorId: 2, titulo: 'Boleto', texto: 'Seu boleto está no Portal.' }],
 }
@@ -53,8 +56,8 @@ describe('cadastros', () => {
     expect(linhas('Categorias')).toEqual([['Notas'], ['Não classificado', 'padrão'], ['Velha', 'inativa']])
     await aba('Cursos')
     expect(linhas('Cursos')).toEqual([['ADS', 'coordenação: Financeiro'], ['Direito', 'coordenação: —']])
-    await aba('Regras')
-    expect(linhas('Regras')).toEqual([['Notas', 'setor Financeiro'], ['Velha', 'coordenação do curso']])
+    await aba('Fluxos')
+    expect(linhas('Fluxos')).toEqual([['Notas', 'Todos os cursos · Setor Financeiro'], ['Velha', 'ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)']])
     await aba('Respostas prontas')
     expect(linhas('Respostas prontas')).toEqual([['Boleto', 'Financeiro']])
   })
@@ -119,42 +122,28 @@ describe('cadastros', () => {
     )
   })
 
-  it('regra por setor e resposta pronta gravam os números escolhidos', async () => {
-    const chamadas = cadastros({ 'PUT /api/admin/regras/6': () => [200, {}], 'POST /api/admin/respostas-prontas': () => [201, {}] })
-    await aba('Regras')
-    await userEvent.click(await screen.findByRole('button', { name: 'Notas' }))
-    let d = within(await screen.findByRole('dialog'))
-    expect(d.getByLabelText('Categoria')).toHaveValue('7')
-    expect(d.getByLabelText('Setor')).toHaveValue('2')
-    await userEvent.selectOptions(d.getByLabelText('Setor'), '1')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-
+  it('resposta pronta grava os números escolhidos', async () => {
+    const chamadas = cadastros({ 'POST /api/admin/respostas-prontas': () => [201, {}] })
     await aba('Respostas prontas')
     await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
-    d = within(await screen.findByRole('dialog'))
+    const d = within(await screen.findByRole('dialog'))
     await userEvent.selectOptions(d.getByLabelText('Setor'), '2')
     await userEvent.type(d.getByLabelText('Título'), 'Atestado')
     await userEvent.type(d.getByLabelText('Texto'), 'Envie o atestado.')
     await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
-    await waitFor(() =>
-      expect(gravadas(chamadas)).toEqual([
-        ['PUT', '/api/admin/regras/6', { categoriaId: 7, destino: 'SETOR', setorId: 1 }],
-        ['POST', '/api/admin/respostas-prontas', { setorId: 2, titulo: 'Atestado', texto: 'Envie o atestado.' }],
-      ]),
-    )
+    await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/respostas-prontas', { setorId: 2, titulo: 'Atestado', texto: 'Envie o atestado.' }]]))
   })
-
   it('o editor abre antes de as listas chegarem', async () => {
     const pendentes = Object.fromEntries(Object.keys(listas).map((k) => [`GET /api/admin/${k}`, (() => new Promise(() => {})) as Rota]))
     api({ 'GET /api/auth/me': () => [200, admin], ...pendentes })
     abrir('/univag/cadastros')
-    await aba('Regras')
+    await aba('Fluxos')
     expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
     await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
     const d = within(await screen.findByRole('dialog'))
     expect(within(d.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria'])
-    expect(within(d.getByLabelText('Setor')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha o setor'])
+    await userEvent.selectOptions(d.getByLabelText('Abrangência'), 'CURSO')
+    expect(within(d.getByLabelText('Curso')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha o curso'])
     await userEvent.click(d.getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 

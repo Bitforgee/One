@@ -18,12 +18,13 @@ const Matriculas = [
   'Importação concluída: ', ' matrículas criadas e ', ' atualizadas.', 'Linha',
   'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Voltar',
 ]
-const Titulos = ['Setores', 'Categorias', 'Cursos', 'Regras', 'Respostas prontas']
+const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas']
 const Cadastros = [
   'Cadastros', 'Novo', 'Detalhe', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
-  'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'setor', 'coordenação do curso', '·', 'Nada cadastrado', 'Nenhum item cadastrado.',
+  'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', '→', '·', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
-  'Categoria', 'Destino', 'Setor fixo', 'Coordenação do curso da matrícula', 'Setor', 'Escolha o setor', 'Escolha a categoria', 'Título', 'Texto',
+  'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
+  'Etapa 1', 'Setor fixo', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'O aluno aceita a liderança do semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho',
   'Cancelar', 'Salvar', 'Cadastro salvo.',
 ]
 
@@ -138,7 +139,13 @@ describe('textos', () => {
       setores: [...setores, { id: 4, nome: 'Reserva', triagem: true, ativo: false }], // triagem e inativo juntos mostram o ponto médio
       categorias: [{ id: 7, nome: 'Notas', ativa: true, padrao: false }, { id: 8, nome: 'Não classificado', ativa: true, padrao: true }, { id: 9, nome: 'Velha', ativa: false, padrao: false }],
       cursos: [{ id: 4, nome: 'ADS', setorCoordenacaoId: 2 }, { id: 5, nome: 'Direito', setorCoordenacaoId: null }],
-      regras: [{ id: 6, categoriaId: 7, destino: 'SETOR', setorId: 2 }, { id: 7, categoriaId: 9, destino: 'COORDENACAO_CURSO', setorId: null }],
+      fluxos: [
+        { id: 6, categoriaId: 7, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [{ destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }] }, rascunho: null },
+        {
+          id: 7, categoriaId: 9, cursoId: 4, semestre: 3, rascunho: null,
+          vigente: { numero: 1, etapas: [{ destino: 'LIDERANCA_SEMESTRE', setorId: null, prazoHoras: null, x: null, y: null }, { destino: 'COORDENACAO_CURSO', setorId: null, prazoHoras: 48, x: null, y: null }] },
+        },
+      ],
       'respostas-prontas': [{ id: 8, setorId: 2, titulo: 'Boleto', texto: 'Seu boleto está no Portal.' }],
     }
     const leituras = (vazias: boolean) =>
@@ -149,6 +156,9 @@ describe('textos', () => {
     let montada = abrir('/univag/cadastros')
     await screen.findByText('Nenhum item cadastrado.')
     expect(screen.getByRole('combobox', { name: 'Cadastro' })).toBeInTheDocument() // nome acessível novo, não é texto visível
+    t.conferir(tela())
+    await userEvent.click(screen.getByRole('tab', { name: 'Fluxos' }))
+    await screen.findByText('Sem fluxo, os chamados vão para a Triagem.')
     t.conferir(tela())
     montada.unmount()
 

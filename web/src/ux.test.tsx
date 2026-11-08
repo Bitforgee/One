@@ -165,7 +165,7 @@ describe('ux', () => {
     { nome: 'Artigos', papeis: ['ADMINISTRADOR'], caminho: '/univag/artigos', url: '/api/admin/artigos', oque: 'os artigos', vazios: ['/api/admin/categorias'], depois: 'Nenhum artigo' },
     { nome: 'Documentos', papeis: ['ADMINISTRADOR'], caminho: '/univag/documentos', url: '/api/admin/documentos', oque: 'os documentos', vazios: ['/api/admin/categorias'], depois: 'Nenhum documento' },
     { nome: 'Usuários', papeis: ['ADMINISTRADOR'], caminho: '/univag/usuarios', url: '/api/admin/usuarios', oque: 'os usuários', vazios: ['/api/admin/setores'], depois: 'Nenhum usuário' },
-    { nome: 'Cadastros', papeis: ['ADMINISTRADOR'], caminho: '/univag/cadastros', url: '/api/admin/setores', oque: 'os cadastros', vazios: ['/api/admin/categorias', '/api/admin/cursos', '/api/admin/regras', '/api/admin/respostas-prontas'], depois: 'Nada cadastrado' },
+    { nome: 'Cadastros', papeis: ['ADMINISTRADOR'], caminho: '/univag/cadastros', url: '/api/admin/setores', oque: 'os cadastros', vazios: ['/api/admin/categorias', '/api/admin/cursos', '/api/admin/fluxos', '/api/admin/respostas-prontas'], depois: 'Nada cadastrado' },
     { nome: 'Indicadores', papeis: ['ADMINISTRADOR'], caminho: '/univag/indicadores', url: '/api/indicadores?de=2026-11-01&ate=2026-11-10', oque: 'os indicadores', depois: 'Sem atendimentos neste período.', ok: { semDados: true } },
     { nome: 'Aparência', papeis: ['ADMINISTRADOR'], caminho: '/univag/aparencia', url: '/api/admin/aparencia', oque: 'a aparência', depois: /Cor principal/, ok: { ...instituicao(), nome: undefined } },
     { nome: 'Instituições', papeis: ['OPERADOR'], caminho: '/univag/instituicoes', url: '/api/plataforma/instituicoes', oque: 'as instituições', depois: 'Nada cadastrado' },

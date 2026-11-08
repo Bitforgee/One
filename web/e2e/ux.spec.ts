@@ -1160,12 +1160,12 @@ test.describe('S5 diálogos e administração', () => {
     ['Setores', 'Coordenação de Análise e Desenvolvimento de Sistemas', 'Editar: Setores', ''],
     ['Categorias', 'Financeiro > Boletos e mensalidades', 'Editar: Categorias', ''],
     ['Cursos', 'Análise e Desenvolvimento de Sistemas', 'Editar: Cursos', '/api/admin/cursos'],
-    ['Regras', 'Financeiro > Boletos e mensalidades', 'Editar: Regras', '/api/admin/regras'],
+    ['Fluxos', 'Financeiro > Boletos e mensalidades', 'Editar: Fluxos', '/api/admin/fluxos'],
     ['Respostas prontas', 'Boleto pronto', 'Editar: Respostas prontas', '/api/admin/respostas-prontas'],
   ]
   const ItemDe: Record<string, unknown> = {
     '/api/admin/cursos': [{ id: 1, nome: 'Análise e Desenvolvimento de Sistemas', setorCoordenacaoId: 1 }],
-    '/api/admin/regras': [{ id: 1, categoriaId: 1, destino: 'SETOR', setorId: 1 }],
+    '/api/admin/fluxos': [{ id: 1, categoriaId: 1, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [{ destino: 'SETOR', setorId: 1, prazoHoras: null, x: null, y: null }] }, rascunho: null }],
     '/api/admin/respostas-prontas': [{ id: 1, setorId: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }],
   }
   test('linha inteira de Cadastros é o alvo de 48 px', async ({ page }) => {

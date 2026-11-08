@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Workflow } from 'lucide-react'
 import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
@@ -8,29 +8,30 @@ import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
-import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
+import { CelulaLargo, Detalhe, Principal, Tabela, type Vazio } from '../Tabela'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Textarea } from '../ui/textarea'
-import type { Categoria, Curso, Pronta, Regra, Setor } from './comum'
+import { abrangenciaDoFluxo, cadeiaDoFluxo, SemestresDe1a12, type Categoria, type Curso, type Fluxo, type Pronta, type Setor } from './comum'
+import { EdicaoDoFluxo } from './EdicaoDoFluxo'
 
-type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; regras: Regra[]; prontas: Pronta[] }
+type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; fluxos: Fluxo[]; prontas: Pronta[] }
 type Aba = keyof Listas
 // O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
 type Ficha = Record<string, any>
 type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas; erros: Record<string, string> }
-const CamposComErro = ['nome', 'titulo', 'texto', 'setorId', 'categoriaId', 'setorCoordenacaoId', 'destino']
+const CamposComErro = ['nome', 'titulo', 'texto', 'setorId', 'categoriaId', 'setorCoordenacaoId', 'cursoId', 'semestre']
 
-const Titulos: Record<Aba, string> = { setores: 'Setores', categorias: 'Categorias', cursos: 'Cursos', regras: 'Regras', prontas: 'Respostas prontas' }
-const Rotas: Record<Aba, string> = { setores: 'setores', categorias: 'categorias', cursos: 'cursos', regras: 'regras', prontas: 'respostas-prontas' }
+const Titulos: Record<Aba, string> = { setores: 'Setores', categorias: 'Categorias', cursos: 'Cursos', fluxos: 'Fluxos', prontas: 'Respostas prontas' }
+const Rotas: Record<Aba, string> = { setores: 'setores', categorias: 'categorias', cursos: 'cursos', fluxos: 'fluxos', prontas: 'respostas-prontas' }
 const Novos: Record<Aba, Ficha> = {
   setores: { nome: '', triagem: false, ativo: true },
   categorias: { nome: '', ativa: true },
   cursos: { nome: '', setorCoordenacaoId: '' },
-  regras: { categoriaId: '', destino: 'SETOR', setorId: '' },
+  fluxos: { categoriaId: '', abrangencia: 'TODOS', cursoId: '', semestre: '' },
   prontas: { setorId: '', titulo: '', texto: '' },
 }
 const ficha = (x: object): Ficha => Object.fromEntries(Object.entries(x).map(([k, v]) => [k, v === null ? '' : v]))
@@ -40,7 +41,7 @@ const Corpos: Record<Aba, (r: Ficha) => unknown> = {
   setores: (r) => ({ nome: r.nome, triagem: r.triagem, ativo: r.ativo }),
   categorias: (r) => ({ nome: r.nome, ativa: r.ativa }),
   cursos: (r) => ({ nome: r.nome, setorCoordenacaoId: num(r.setorCoordenacaoId) }),
-  regras: (r) => ({ categoriaId: num(r.categoriaId), destino: r.destino, setorId: r.destino === 'SETOR' ? num(r.setorId) : null }),
+  fluxos: (r) => ({ categoriaId: num(r.categoriaId), cursoId: r.abrangencia === 'TODOS' ? null : num(r.cursoId), semestre: r.abrangencia === 'SEMESTRE' ? num(r.semestre) : null }),
   prontas: (r) => ({ setorId: num(r.setorId), titulo: r.titulo, texto: r.texto }),
 }
 
@@ -54,17 +55,18 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
     setores: (s: Setor) => [s.nome, [s.triagem && 'triagem', !s.ativo && 'inativo'].filter(Boolean).join(' · ')],
     categorias: (c: Categoria) => [c.nome, [c.padrao && 'padrão', !c.ativa && 'inativa'].filter(Boolean).join(' · ')],
     cursos: (c: Curso) => [c.nome, `coordenação: ${nome(dados.setores, c.setorCoordenacaoId)}`],
-    regras: (r: Regra) => [nome(dados.categorias, r.categoriaId), r.destino === 'SETOR' ? `setor ${nome(dados.setores, r.setorId)}` : 'coordenação do curso'],
+    fluxos: (f: Fluxo) => [nome(dados.categorias, f.categoriaId), `${abrangenciaDoFluxo(f, dados.cursos)} · ${cadeiaDoFluxo(f.vigente, dados.setores)}`],
     prontas: (p: Pronta) => [p.titulo, nome(dados.setores, p.setorId)],
   }
 }
 
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
+const SemFluxo: Vazio = { Icone: Workflow, titulo: 'Nenhum fluxo', frase: 'Sem fluxo, os chamados vão para a Triagem.' }
 
 // Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
-function ListaDaAba({ itens, erro, linha, editar }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => [string, string]; editar: (x: object) => void }) {
+function ListaDaAba({ itens, erro, linha, editar, vazio }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => [string, string]; editar: (x: object) => void; vazio?: Vazio }) {
   return (
-    <Tabela colunas={Colunas} itens={itens} erro={erro}>
+    <Tabela colunas={Colunas} itens={itens} erro={erro} vazio={vazio}>
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
@@ -150,21 +152,43 @@ const CamposDeCurso = (c: Campos) => (
   </>
 )
 
-function CamposDeRegra(c: Campos) {
+const Abrangencias: [string, string][] = [
+  ['TODOS', 'Todos os cursos'],
+  ['CURSO', 'Um curso'],
+  ['SEMESTRE', 'Um semestre de um curso'],
+]
+
+// O fluxo novo: a categoria e a abrangência (todos os cursos, um curso, ou um semestre de um curso); o curso e o semestre só aparecem quando a abrangência os pede.
+function CamposDeFluxo(c: Campos) {
+  const abrangencia = c.editando.abrangencia
   return (
     <>
       <Escolha c={c} id="cad-categoria" rotulo="Categoria" chave="categoriaId" vazio="Escolha a categoria" itens={c.dados?.categorias.filter((x) => !x.padrao)} />
-      <Rotulado id="cad-destino" rotulo="Destino" erro={c.erros.destino}>
-        <NativeSelect id="cad-destino" className="w-full" {...campo(c, 'destino', 'cad-destino')}>
-          <option value="SETOR">Setor fixo</option>
-          <option value="COORDENACAO_CURSO">Coordenação do curso da matrícula</option>
+      <Rotulado id="cad-abrangencia" rotulo="Abrangência" erro={c.erros.abrangencia}>
+        <NativeSelect id="cad-abrangencia" className="w-full" {...campo(c, 'abrangencia', 'cad-abrangencia')}>
+          {Abrangencias.map(([valor, rotulo]) => (
+            <option key={valor} value={valor}>
+              {rotulo}
+            </option>
+          ))}
         </NativeSelect>
       </Rotulado>
-      {c.editando.destino === 'SETOR' && <Escolha c={c} id="cad-setor" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />}
+      {abrangencia !== 'TODOS' && <Escolha c={c} id="cad-curso" rotulo="Curso" chave="cursoId" vazio="Escolha o curso" itens={c.dados?.cursos} />}
+      {abrangencia === 'SEMESTRE' && (
+        <Rotulado id="cad-semestre" rotulo="Semestre" erro={c.erros.semestre}>
+          <NativeSelect id="cad-semestre" className="w-full" {...campo(c, 'semestre', 'cad-semestre')}>
+            <option value="">Escolha o semestre</option>
+            {SemestresDe1a12.map((n) => (
+              <option key={n} value={n}>
+                {n}º semestre
+              </option>
+            ))}
+          </NativeSelect>
+        </Rotulado>
+      )}
     </>
   )
 }
-
 const CamposDePronta = (c: Campos) => (
   <>
     <Escolha c={c} id="cad-setor-pronta" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />
@@ -181,23 +205,24 @@ const CamposDaAba: Record<Aba, (c: Campos) => JSX.Element> = {
   setores: CamposDeSetor,
   categorias: CamposDeCategoria,
   cursos: CamposDeCurso,
-  regras: CamposDeRegra,
+  fluxos: CamposDeFluxo,
   prontas: CamposDePronta,
 }
 
 const tituloDaJanela = (aba: Aba, f?: Ficha) => `${f?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`
 
-// Setores, categorias, cursos, regras de roteamento e respostas prontas.
+// Setores, categorias, cursos, fluxos de atendimento e respostas prontas.
 export function Cadastros() {
   const { dados, erro, recarregar } = useLeituras<Listas>({
     setores: '/api/admin/setores',
     categorias: '/api/admin/categorias',
     cursos: '/api/admin/cursos',
-    regras: '/api/admin/regras',
+    fluxos: '/api/admin/fluxos',
     prontas: '/api/admin/respostas-prontas',
   })
   const [aba, setAba] = useState<Aba>('setores')
   const [editando, setEditando] = useState<Ficha>()
+  const [fluxoAberto, setFluxoAberto] = useState<number>()
   const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
   const abas = Object.keys(Titulos) as Aba[]
@@ -229,11 +254,14 @@ export function Cadastros() {
         </Cabecalho>
         {abas.map((k) => (
           <TabsContent key={k} value={k} className="flex flex-col gap-2">
-            <ListaDaAba itens={dados?.[k]} erro={erro} linha={(x) => linhas(dados!)[k](x)} editar={(x) => setEditando(ficha(x))} />
+            <ListaDaAba itens={dados?.[k]} erro={erro} linha={(x) => linhas(dados!)[k](x)} editar={(x) => (k === 'fluxos' ? setFluxoAberto((x as Fluxo).id) : setEditando(ficha(x)))} vazio={k === 'fluxos' ? SemFluxo : undefined} />
           </TabsContent>
         ))}
       </Tabs>
 
+      {dados && fluxoAberto && dados.fluxos.some((f) => f.id === fluxoAberto) && (
+        <EdicaoDoFluxo key={fluxoAberto} fluxo={dados.fluxos.find((f) => f.id === fluxoAberto)!} categorias={dados.categorias} cursos={dados.cursos} setores={dados.setores} fechar={() => setFluxoAberto(undefined)} recarregar={recarregar} />
+      )}
       <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>

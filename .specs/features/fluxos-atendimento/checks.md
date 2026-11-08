@@ -161,16 +161,16 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.S
 **C39** - [x] `GET /api/admin/fluxos` responde `200` com `id`, `categoriaId`, `cursoId`, `semestre`, `vigente` e `rascunho`, cada versão com `numero` e `etapas`, e só os fluxos da instituição do admin (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Lista_so_da_instituicao"`
 
-**C40** - Na aba Fluxos, uma linha mostra o nome da categoria e, em `Detalhe`, a abrangência e a cadeia: `Todos os cursos · Setor Financeiro` e `ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)` (AC 31)
+**C40** - [x] Na aba Fluxos, uma linha mostra o nome da categoria e, em `Detalhe`, a abrangência e a cadeia: `Todos os cursos · Setor Financeiro` e `ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)` (AC 31)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "lista com abrangência e cadeia"`
 
-**C41** - Ao criar, o formulário pede a categoria e oferece a abrangência como três opções: `Todos os cursos`, `Um curso` e `Um semestre de um curso`, e só então mostra o curso e o semestre (AC 32)
+**C41** - [x] Ao criar, o formulário pede a categoria e oferece a abrangência como três opções: `Todos os cursos`, `Um curso` e `Um semestre de um curso`, e só então mostra o curso e o semestre (AC 32)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "criar pede categoria e abrangência"`
 
-**C42** - Na edição, `Simular` pede curso, semestre e aceite; `Publicar` fica desligado enquanto a API devolve erro de validação do rascunho e liga quando o rascunho passa (AC 33)
+**C42** - [x] Na edição, `Simular` pede curso, semestre e aceite; `Publicar` fica desligado enquanto a API devolve erro de validação do rascunho e liga quando o rascunho passa (AC 33)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "simular e publicar"`
 
-**C43** - Sem nenhum fluxo, a aba mostra `Sem fluxo, os chamados vão para a Triagem.` e o botão `Novo` (AC 34)
+**C43** - [x] Sem nenhum fluxo, a aba mostra `Sem fluxo, os chamados vão para a Triagem.` e o botão `Novo` (AC 34)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "estado vazio"`
 
 ### S3 - o chamado sobe de etapa (P1) · ~12 arquivos · ~170 KB · ~43k
@@ -211,13 +211,13 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.R
 **C55** - [x] O Agendador não move um chamado `AGUARDANDO_ALUNO` vencido (AC 46)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Aguardando_aluno_nao_sobe"`
 
-**C56** - O Histórico escreve `Ana subiu o chamado de Líderes para Coordenação` com autor e `O chamado subiu de Líderes para Coordenação. Sem resposta em 48 horas` sem autor (AC 47)
+**C56** - [x] O Histórico escreve `Ana subiu o chamado de Líderes para Coordenação` com autor e `O chamado subiu de Líderes para Coordenação. Sem resposta em 48 horas` sem autor (AC 47)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frase da subida"`
 
 **C57** - [x] `encaminhar` manual deixa `etapa_ordem` e `etapa_desde` nulos, e o Agendador não move mais o chamado (AC 48)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Encaminhar_manual_sai_do_fluxo"`
 
-**C58** - No Detalhe, o botão `Subir` aparece quando `acoes` tem `subir`, abre o diálogo que pede o motivo e envia `POST /subir` com `{ motivo }` (Observable)
+**C58** - [x] No Detalhe, o botão `Subir` aparece quando `acoes` tem `subir`, abre o diálogo que pede o motivo e envia `POST /subir` com `{ motivo }` (Observable)
 Proof: `cd web && npx vitest run src/chamados/acoes.test.tsx -t "subir pede o motivo"`
 
 **C59** - [x] Um chamado que subiu da liderança à coordenação e foi resolvido conta como roteado corretamente em `RoteamentoCorreto` (Impact, door 8)
@@ -294,7 +294,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRastroTests.
 **C81** - [x] O detalhe de um chamado fora de fluxo traz `fluxo: null` (AC 68)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRastroTests.Fora_de_fluxo_traz_null"`
 
-**C82** - A coluna lateral escreve `Etapa 1 de 2 · ADS, 3º semestre` com `fluxo`, e não escreve a linha quando `fluxo` é null (AC 69)
+**C82** - [x] A coluna lateral escreve `Etapa 1 de 2 · ADS, 3º semestre` com `fluxo`, e não escreve a linha quando `fluxo` é null (AC 69)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "etapa do fluxo na coluna lateral"`
 
 ### S6 - o gestor monta o fluxo arrastando e soltando (P2) · ~12 arquivos · ~110 KB · ~28k

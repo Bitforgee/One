@@ -267,6 +267,35 @@ describe('chamado', () => {
     expect(await historico(Casos.map(([e]) => e))).toEqual(Casos.map(([, f]) => f))
   })
 
+  // fluxos-atendimento C56 (AC 47): a frase da subida, com e sem autor
+  it('frase da subida', async () => {
+    const itens = await historico([
+      { tipo: 'SUBIDA', ator: 'Ana', de: 'Líderes', para: 'Coordenação' },
+      { tipo: 'SUBIDA', ator: 'Ana', de: 'Líderes', para: 'Coordenação', detalhe: 'A coordenação resolve' },
+      { tipo: 'SUBIDA', ator: 'Sistema', de: 'Líderes', para: 'Coordenação', detalhe: 'Sem resposta em 48 horas' },
+    ])
+    expect(itens).toEqual([
+      'Ana subiu o chamado de Líderes para Coordenação',
+      'Ana subiu o chamado de Líderes para Coordenação · A coordenação resolve',
+      'O chamado subiu de Líderes para Coordenação. Sem resposta em 48 horas',
+    ])
+  })
+
+  // fluxos-atendimento C82 (AC 69): a coluna lateral diz em que etapa o chamado está, e nada quando não há fluxo
+  it('etapa do fluxo na coluna lateral', async () => {
+    api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () => [200, daEquipe({ fluxo: { versao: 1, etapa: 1, total: 2, destino: 'LIDERANCA_SEMESTRE', abrangencia: 'ADS, 3º semestre' } })],
+      'GET /api/chamados/ONE-2': () => [200, daEquipe({ numero: 'ONE-2', fluxo: null })],
+    })
+    const aberta = abrir('/univag/chamados/ONE-1')
+    expect(await screen.findByText('Etapa 1 de 2 · ADS, 3º semestre')).toBeInTheDocument()
+    aberta.unmount()
+
+    abrir('/univag/chamados/ONE-2')
+    await screen.findByText('Histórico')
+    expect(screen.queryByText(/^Etapa \d+ de \d+/)).not.toBeInTheDocument()
+  })
   // historico-legivel C3 (AC 3)
   it('detalhe no fim da frase', async () => {
     expect(

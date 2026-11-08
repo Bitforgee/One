@@ -9,6 +9,9 @@ export type Anexo = { id: number; nome: string; tipo: string; tamanho: number }
 export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string; anexos?: Anexo[] }
 export type Evento = { tipo: string; ator: string; doAluno: boolean; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }
 
+// Por que o chamado caiu ali: a versão do fluxo, a etapa atual, o total, o tipo de destino e a abrangência (só a equipe recebe).
+export type DoFluxo = { versao: number; etapa: number; total: number; destino: string; abrangencia: string }
+
 // Resposta de GET /api/chamados/{numero}; resumo, fontes e eventos só vêm para a equipe.
 export type Chamado = {
   numero: string
@@ -32,6 +35,7 @@ export type Chamado = {
   acoes: string[]
   setores?: { id: number; nome: string }[] | null
   categorias?: { id: number; nome: string }[] | null
+  fluxo?: DoFluxo | null
 }
 
 export const Estados: Record<string, string> = {
@@ -49,6 +53,12 @@ function atribuicao(e: Evento) {
   if (e.para !== e.ator) return `${e.ator} atribuiu a ${e.para}`
   return e.de ? `${e.ator} assumiu a solicitação no lugar de ${e.de}` : `${e.ator} assumiu a solicitação`
 }
+// Sem autor (o prazo da etapa venceu), a frase já leva o detalhe; com autor, o motivo vai ao fim como nos outros eventos.
+const semAutor = (e: Evento) => e.tipo === 'SUBIDA' && e.ator === 'Sistema'
+function subida(e: Evento) {
+  if (!semAutor(e)) return `${e.ator} subiu o chamado de ${e.de} para ${e.para}`
+  return `O chamado subiu de ${e.de} para ${e.para}.${e.detalhe ? ' ' + e.detalhe : ''}`
+}
 const Frases: Record<string, (e: Evento) => string> = {
   CRIACAO: (e) => `${e.ator} abriu a solicitação`,
   TRANSICAO: (e) => `${e.ator} mudou o estado de ${estado(e.de)} para ${estado(e.para)}`,
@@ -59,11 +69,12 @@ const Frases: Record<string, (e: Evento) => string> = {
   ANEXO: (e) => `${e.ator} anexou um arquivo`,
   ENCAMINHAMENTO: (e) => `${e.ator} encaminhou de ${e.de} para ${e.para}`,
   RECLASSIFICACAO: (e) => `${e.ator} mudou a categoria de ${e.de} para ${e.para}`,
+  SUBIDA: subida,
 }
 
 export function frase(e: Evento) {
   const texto = Frases[e.tipo]?.(e) ?? `${e.ator} · ${e.tipo}`
-  return e.detalhe ? `${texto} · ${e.detalhe}` : texto
+  return e.detalhe && !semAutor(e) ? `${texto} · ${e.detalhe}` : texto
 }
 
 export const IntervaloAtualizacao = 15_000
