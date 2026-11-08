@@ -71,7 +71,7 @@ Proof: `grep -E '^\| AD-040 \|' .specs/STATE.md | grep 'One.Api/' | grep 'One.Ap
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests"`
 Proof: `test "$(git grep -c 'Assert\.' HEAD -- One.Api.Tests | awk -F: '{s+=$NF} END {print s}')" = 2280`
 
-**C16** - [ ] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-019, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040, e o texto do AD-040 cita os mesmos 5 (emenda)
+**C16** - [x] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-019, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040, e o texto do AD-040 cita os mesmos 5 (emenda)
 Proof: `! git grep -nE '(^|[^A-Za-z./])api/' -- .specs/GLOSSARIO.md web/src/aparencia.tsx web/src/test/estrutura.test.ts One.Api.Tests/ArquiteturaTests.cs`
 Proof: `test "$(grep -E '^\| AD-0(05|17|18|19|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 5`
 Proof: `test "$(grep -E '^\| AD-040 \|' .specs/STATE.md | grep -oE 'AD-0(05|17|18|19|24)' | sort -u | wc -l)" = 5`
@@ -117,3 +117,6 @@ Sem linhas novas: o `AGENTS.md` (`## Testes`) já diz o nível de cada camada, e
 - **Boundary (rodada 2 → correção):** C16 fechado em `6ee5348` com 5 ADs; nenhum outro AD ativo escreve `api/` como pasta sem a marca (AD-032 e AD-033 citam rotas `/api/...`)
 - **Settled mid-build:** o usuário aprovou a emenda 2 ("Emendar e corrigir") e pediu que, com PASS, a feature entre direto na `main` com push, sem PR, como exceção
 - **Abandoned:** nada. A lacuna 2 da rodada 2 (o Vitest de `interface.test.ts` passa vazio com caminho errado, por causa do `existsSync ? : []`) fica como está: a prova por grep do C15 mata essa falha, e endurecer o teste quebraria o Vitest sem build
+- **Boundary (rodada 3 → emenda 3):** C16 com a terceira prova; nenhum arquivo além do `checks.md` mudou, porque o texto do AD-040 já citava os 5 ADs. Falha à mão (tirar `AD-019, ` da lista do AD-040 numa cópia) faz a prova sair 1
+- **Settled mid-build:** depois da rodada 3, terceira de três, o usuário escolheu "Emendar e rodada 4" em vez de fechar com risco aceito
+- **Abandoned:** nada
