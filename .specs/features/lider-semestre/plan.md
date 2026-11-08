@@ -1,5 +1,7 @@
 # Líder de semestre entre o assistente e a coordenação
 
+> Absorvido por `.specs/features/fluxos-atendimento/plan.md` (proposta de 08/11): a liderança vira o tipo de destino `LIDERANCA_SEMESTRE`, e os critérios 1 a 34 daqui viram os de S4 de lá (49 a 66). Este plano não deve ser construído à parte.
+
 ## Problem
 
 O assistente só consegue passar a dúvida a um setor fixo ou à coordenação do curso. Toda dúvida simples de turma chega à coordenação, e o líder de semestre, que poderia responder antes, não aparece no fluxo. Quem paga é a coordenação, com a fila, e o aluno, com a espera.
