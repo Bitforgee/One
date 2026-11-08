@@ -66,6 +66,14 @@ public static class ResolverFluxo
         return new Contexto(setores, coordenacao, semestre is { } s ? await Lideranca(db, cursoId, s, alunoId) : null);
     }
 
+    // Os nomes (únicos, em ordem) das categorias cujo fluxo publicado tem uma etapa de setor fixo neste setor, na versão vigente (base-fluxos, F7).
+    public static async Task<List<string>> CategoriasQueUsamOSetor(OneDb db, long setorId)
+    {
+        var fluxos = await db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas).ToListAsync();
+        var categorias = fluxos.Where(f => f.Vigente is { } v && v.Etapas.Any(e => e.Destino == DestinosEtapa.Setor && e.SetorId == setorId)).Select(f => f.CategoriaId).ToHashSet();
+        return [.. (await db.Categorias.Where(c => categorias.Contains(c.Id)).Select(c => c.Nome).ToListAsync()).Distinct().Order()];
+    }
+
     public static Task<List<Fluxo>> Candidatos(OneDb db, long categoriaId, long cursoId) =>
         db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas)
             .Where(f => f.CategoriaId == categoriaId && (f.CursoId == null || f.CursoId == cursoId)).ToListAsync();

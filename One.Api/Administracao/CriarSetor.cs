@@ -17,7 +17,16 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
     {
         if (!AdminRotas.Nome(e.Nome)) return Problemas.Invalido("Informe o nome do setor.", "nome");
         if (atual is null && await Turma(db, e) is { } erroDaTurma) return erroDaTurma;
-        return await TriagemENome(db, e, atual) ?? await LiderancaRepetida(db, e, atual);
+        return await EmFluxoPublicado(db, e, atual) ?? await TriagemENome(db, e, atual) ?? await LiderancaRepetida(db, e, atual);
+    }
+
+    // base-fluxos F7: desativar o setor de uma etapa da versão vigente de um fluxo faria o fluxo pulá-la em silêncio.
+    static async Task<IResult?> EmFluxoPublicado(OneDb db, Entrada e, Setor? atual)
+    {
+        if (atual is not { Ativo: true } || e.Ativo != false) return null;
+        var categorias = await ResolverFluxo.CategoriasQueUsamOSetor(db, atual.Id);
+        return categorias.Count == 0 ? null
+            : AdminRotas.Repetido($"O setor é usado em fluxo publicado (categoria: {string.Join("; ", categorias.Order())}). Publique o fluxo sem ele antes de desativar.");
     }
 
     static async Task<IResult?> TriagemENome(OneDb db, Entrada e, Setor? atual)
