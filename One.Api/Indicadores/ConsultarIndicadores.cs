@@ -19,6 +19,7 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
     {
         var (u, de, ate, setorId) = (m.Usuario, m.De, m.Ate, m.SetorId);
         if (!u.Tem(Papeis.Administrador) && !u.Tem(Papeis.Atendente)) return Problemas.Erro(403, "Os indicadores são para administradores e atendentes.");
+        if (await db.SoLideranca(u)) return Problemas.Erro(403, "Os indicadores não estão disponíveis para a liderança de turma.");
         if (de is null || ate is null) return Problemas.Invalido("Informe o período (de e ate).", "de");
         if (de > ate) return Problemas.Invalido("A data inicial deve ser anterior ou igual à final.", "de");
         var (setores, recusa) = await Escopo(u, setorId);

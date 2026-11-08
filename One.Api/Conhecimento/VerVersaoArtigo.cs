@@ -17,7 +17,7 @@ public sealed class VerVersaoArtigoHandler(OneDb db) : IRequestHandler<VerVersao
     public async ValueTask<IResult> Handle(VerVersaoArtigo m, CancellationToken ct)
     {
         var u = m.Usuario;
-        if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador)) return Problemas.Erro(404, "Versão de artigo não encontrada.");
+        if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador) || await db.SoLideranca(u)) return Problemas.Erro(404, "Versão de artigo não encontrada.");
         var v = await db.VersoesArtigo.Include(x => x.Artigo).FirstOrDefaultAsync(x => x.Id == m.Id);
         if (v is null) return Problemas.Erro(404, "Versão de artigo não encontrada.");
         var atual = await db.VersoesAtuais().Where(x => x.ArtigoId == v.ArtigoId).Select(x => x.Id).FirstAsync();
