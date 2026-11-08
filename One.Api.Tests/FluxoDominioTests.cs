@@ -88,7 +88,7 @@ public class FluxoDominioTests
     }
 
     [Fact]
-    public void Lideranca_sem_aceite_nao_resolve_e_o_proximo_passo_a_pula()
+    public void Lideranca_sem_conversa_nao_resolve_e_o_proximo_passo_a_pula()
     {
         var fluxo = Fluxo.Criar(1, Curso, Semestre);
         fluxo.SalvarRascunho([new(DestinosEtapa.LiderancaSemestre, null, null, null, null), new(DestinosEtapa.CoordenacaoCurso, null, null, null, null)]);
@@ -96,9 +96,9 @@ public class FluxoDominioTests
         var etapas = fluxo.Vigente!.Etapas;
         var contexto = Ctx(coordenacao: 7, lideranca: 9);
 
-        Assert.Equal(SemAceite, Situacao(etapas[0], contexto, aceitaLideranca: false).Motivo);
-        Assert.Equal(9, Proximo(etapas, 0, contexto, aceitaLideranca: true)!.SetorId);
-        var pulou = Proximo(etapas, 0, contexto, aceitaLideranca: false)!;
+        Assert.Equal(SemConversa, Situacao(etapas[0], contexto, comLideranca: false).Motivo);
+        Assert.Equal(9, Proximo(etapas, 0, contexto, comLideranca: true)!.SetorId);
+        var pulou = Proximo(etapas, 0, contexto, comLideranca: false)!;
         Assert.Equal((7L, 2), (pulou.SetorId, pulou.Etapa.Ordem));
     }
 
@@ -134,29 +134,29 @@ public class FluxoDominioTests
         Assert.Equal(1, fluxo.Vigente!.Numero);
     }
 
-    // C98 (door 3): o que cada tipo enxerga e se pede aceite vem do tipo, sem coluna nem entrada
+    // C98 (door 3): o que cada tipo enxerga e se avisa o aluno vem do tipo, sem coluna nem entrada
     [Theory]
     [InlineData(DestinosEtapa.Setor, true, false)]
     [InlineData(DestinosEtapa.CoordenacaoCurso, true, false)]
     [InlineData(DestinosEtapa.LiderancaSemestre, false, true)]
-    public void Visao_e_aceite_vem_do_tipo(string destino, bool veTudo, bool pedeAceite)
+    public void Visao_e_ciencia_vem_do_tipo(string destino, bool veTudo, bool pedeCiencia)
     {
         Assert.Equal(veTudo, DestinosEtapa.VeTudo(destino));
-        Assert.Equal(pedeAceite, DestinosEtapa.ExigeAceite(destino));
+        Assert.Equal(pedeCiencia, DestinosEtapa.PedeCiencia(destino));
 
-        // o aceite decide na resolução: só a liderança some sem ele, e as outras resolvem como sempre
+        // sem conversa (atendimento direto) só a liderança some, e as outras resolvem como sempre
         var etapa = Etapa(destino, destino == DestinosEtapa.Setor ? 1 : null);
-        var resolucao = Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), aceitaLideranca: false);
-        Assert.Equal(!pedeAceite, resolucao.Resolvida);
-        Assert.Equal(pedeAceite ? SemAceite : null, resolucao.Motivo);
-        Assert.True(Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), aceitaLideranca: true).Resolvida);
+        var resolucao = Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), comLideranca: false);
+        Assert.Equal(!pedeCiencia, resolucao.Resolvida);
+        Assert.Equal(pedeCiencia ? SemConversa : null, resolucao.Motivo);
+        Assert.True(Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), comLideranca: true).Resolvida);
     }
 
     [Fact]
     public void Todo_tipo_de_destino_tem_visao_definida()
     {
         Assert.Equal(3, DestinosEtapa.Todos.Length);
-        Assert.Single(DestinosEtapa.Todos, d => DestinosEtapa.ExigeAceite(d));
+        Assert.Single(DestinosEtapa.Todos, d => DestinosEtapa.PedeCiencia(d));
         Assert.Single(DestinosEtapa.Todos, d => !DestinosEtapa.VeTudo(d));
     }
 }

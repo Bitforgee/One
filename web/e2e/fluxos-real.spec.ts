@@ -196,7 +196,7 @@ test('o aluno aceita a liderança e o chamado abre nela', async ({ browser, base
   await page.getByRole('button', { name: /Falar com atendente/ }).click()
   const dialogo = page.getByRole('dialog')
   await expect(dialogo.getByText(/Sua dúvida vai primeiro para a liderança do seu semestre/)).toBeVisible()
-  await expect(dialogo.getByRole('button', { name: 'Prefiro a coordenação' })).toBeVisible()
+  await expect(dialogo.getByRole('button', { name: 'Prefiro a coordenação' })).toHaveCount(0)
   await dialogo.getByRole('button', { name: 'Enviar à liderança' }).click()
 
   const titulo = page.getByRole('heading', { name: new RegExp(`foi para ${nomeDaLideranca}`) })

@@ -38,14 +38,14 @@ public static class Transferencia
         return (await db.Categorias.SingleAsync(c => c.Id == categoriaId), OrigemArtigo);
     }
 
-    public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora, bool aceitaLideranca = false)
+    public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora, bool comLideranca = true)
     {
         await using var tx = await db.Database.BeginTransactionAsync();
         if (conversa.Id == 0) await db.SaveChangesAsync();
         var (categoria, origem) = await EscolherCategoria(db, conversa);
         var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
         var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
-        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, aceitaLideranca);
+        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, comLideranca);
         conversa.Desfecho = Desfechos.Transferida;
         conversa.DesfechoEm = agora;
 

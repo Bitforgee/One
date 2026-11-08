@@ -110,11 +110,10 @@ describe('fluxos', () => {
     })
     const d = await abrirFluxo('Notas')
 
-    // Simular pede curso, semestre e aceite, e usa a versão vigente enquanto nada mudou
+    // Simular pede curso e semestre, e usa a versão vigente enquanto nada mudou
     expect(d.getByRole('button', { name: 'Simular' })).toBeDisabled()
     await userEvent.selectOptions(d.getByLabelText('Curso do aluno'), '4')
     await userEvent.selectOptions(d.getByLabelText('Semestre do aluno'), '3')
-    await userEvent.click(d.getByLabelText('O aluno aceita a liderança do semestre'))
     await userEvent.click(d.getByRole('button', { name: 'Simular' }))
     expect(await d.findByText('Liderança do semestre: Pulada: Sem liderança disponível')).toBeInTheDocument()
     expect(d.getByText('Setor fixo: Financeiro')).toBeInTheDocument()
@@ -133,7 +132,7 @@ describe('fluxos', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(gravadas(chamadas)).toEqual([
-      ['POST', '/api/admin/fluxos/6/simular', { versao: 'VIGENTE', cursoId: 4, semestre: 3, aceitaLideranca: true }],
+      ['POST', '/api/admin/fluxos/6/simular', { versao: 'VIGENTE', cursoId: 4, semestre: 3 }],
       ['PUT', '/api/admin/fluxos/6/rascunho', { etapas: [{ destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }, { destino: 'SETOR', setorId: null, prazoHoras: null, x: null, y: null }] }],
       ['PUT', '/api/admin/fluxos/6/rascunho', { etapas: [{ destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }, { destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }] }],
       ['POST', '/api/admin/fluxos/6/publicar', {}],

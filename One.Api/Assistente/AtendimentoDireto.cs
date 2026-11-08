@@ -30,7 +30,7 @@ public sealed class AtendimentoDiretoHandler(OneDb db, TimeProvider relogio) : I
         var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
         conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = i.Descricao, CriadaEm = agora });
         db.Conversas.Add(conversa);
-        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, agora),
+        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, agora, comLideranca: false),
             (numero, estado, setor) => new AtendimentoDireto.Resposta(numero, estado, setor));
     }
 }

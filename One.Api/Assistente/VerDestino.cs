@@ -26,6 +26,6 @@ public sealed class VerDestinoHandler(OneDb db) : IRequestHandler<VerDestino, IR
         if (matricula is null) return Transferencia.MatriculaInvalida();
         var (categoria, _) = await Transferencia.EscolherCategoria(db, conversa);
         var rota = await ResolverFluxo.Rotear(db, categoria, matricula, true);
-        return Results.Ok(new VerDestino.Resposta(rota.Passo is { } p && DestinosEtapa.ExigeAceite(p.Etapa.Destino)));
+        return Results.Ok(new VerDestino.Resposta(rota.Passo is { } p && DestinosEtapa.PedeCiencia(p.Etapa.Destino)));
     }
 }

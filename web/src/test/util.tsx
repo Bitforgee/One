@@ -9,6 +9,9 @@ import type { Chamado } from '../chamado'
 export type Rota = (corpo: any) => [number, unknown] | Promise<[number, unknown]>
 export type Chamada = { metodo: string; url: string; corpo: any }
 
+// A prévia do destino (GET /destino) que o diálogo de transferência lê: sem rota dita no teste, o fluxo não passa pela liderança.
+const previaPadrao = (metodo: string, url: string): Rota | undefined => (metodo === 'GET' && /^\/api\/conversas\/\d+\/destino/.test(url) ? () => [200, { lideranca: false }] : undefined)
+
 // Troca o fetch por um mapa "MÉTODO /caminho" -> [status, corpo]; devolve as chamadas feitas.
 export function api(rotas: Record<string, Rota>) {
   const chamadas: Chamada[] = []
@@ -18,7 +21,7 @@ export function api(rotas: Record<string, Rota>) {
       const metodo = init?.method ?? 'GET'
       const corpo = init?.body instanceof FormData ? Object.fromEntries(init.body) : init?.body ? JSON.parse(String(init.body)) : undefined
       chamadas.push({ metodo, url, corpo })
-      const rota = rotas[`${metodo} ${url}`]
+      const rota = rotas[`${metodo} ${url}`] ?? previaPadrao(metodo, url)
       const [status, json] = rota ? await rota(corpo) : [404, { title: 'Não encontrado', status: 404, detail: 'Recurso não encontrado.' }]
       return new Response(json === undefined ? null : JSON.stringify(json), {
         status,

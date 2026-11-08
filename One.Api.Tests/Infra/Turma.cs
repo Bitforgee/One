@@ -50,8 +50,8 @@ public record Turma(OneFactory F, Instituicao I, Curso Curso, Setor Coordenacao,
         return (await r.Json()).GetProperty("numero").GetString()!;
     }
 
-    // Um chamado aberto na liderança, com o aceite do aluno.
-    public Task<string> NaLideranca() => Transferir(new { aceitaLideranca = true });
+    // Um chamado aberto na liderança: o fluxo decide, o aluno não manda nada.
+    public Task<string> NaLideranca() => Transferir();
 
     public async Task<JsonElement> Destino(long conversa, Aluno? aluno = null, long? matriculaId = null)
     {

@@ -6,7 +6,7 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento C67 a C69 e C72 (door 6): a liderança só recebe o chamado com o aceite do aluno, e o aluno é avisado antes.
+// fluxos-atendimento C67 a C69 e C72 (door 6, emenda 1): quem decide se o chamado passa pela liderança é o fluxo; o aluno é avisado antes e nunca escolhe.
 public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<bool> Prevista(Turma t) => (await t.Destino(await t.Conversa())).GetProperty("lideranca").GetBoolean();
@@ -78,34 +78,46 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         var recusada = await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { matriculaId = matriculaDoOutro });
         Assert.Equal(HttpStatusCode.BadRequest, recusada.StatusCode);
         Assert.True((await recusada.Json()).GetProperty("errors").TryGetProperty("matriculaId", out _));
-        Assert.Equal(HttpStatusCode.NotFound, (await outro.Cliente.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await outro.Cliente.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { })).StatusCode);
 
-        Assert.Equal(HttpStatusCode.Created, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { })).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.GetAsync($"/api/conversas/{conversa}/destino")).StatusCode);
-        Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { })).StatusCode);
     }
 
     // C72
     [Fact]
-    public async Task Aceite_decide_se_vai_ao_lider()
+    public async Task Fluxo_decide_e_o_aluno_nao_escolhe()
     {
         var t = await Turma.Criar(f);
 
-        var aceitou = await t.Ler(await t.Transferir(new { aceitaLideranca = true }));
+        // o corpo antigo, com a recusa, é ignorado: o aluno não consegue pular a liderança
         var recusou = await t.Ler(await t.Transferir(new { aceitaLideranca = false }));
         var omitiu = await t.Ler(await t.Transferir(new { }));
 
-        Assert.Equal((t.Lideranca!.Id, 1), (aceitou.SetorId, aceitou.EtapaOrdem));
-        foreach (var pulou in new[] { recusou, omitiu }) Assert.Equal((t.Coordenacao.Id, 2), (pulou.SetorId, pulou.EtapaOrdem));
+        foreach (var chamado in new[] { recusou, omitiu }) Assert.Equal((t.Lideranca!.Id, 1), (chamado.SetorId, chamado.EtapaOrdem));
     }
 
-    // AC 7 e AC 59: com o aceite mas sem liderança disponível, o chamado vai à coordenação
+    // AC 8: sem conversa a resumir, o atendimento direto nunca abre na liderança
     [Fact]
-    public async Task Aceite_sem_lideranca_disponivel_vai_a_coordenacao()
+    public async Task Atendimento_direto_nao_passa_pela_lideranca()
+    {
+        var t = await Turma.Criar(f);
+
+        var r = await t.ClienteAluno.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "Preciso falar com alguém sobre minha matrícula" });
+
+        Assert.Equal(HttpStatusCode.Created, r.StatusCode);
+        var chamado = await t.Ler((await r.Json()).GetProperty("numero").GetString()!);
+        Assert.NotEqual(t.Lideranca!.Id, chamado.SetorId);
+    }
+
+    // AC 7: sem liderança disponível, o fluxo segue para a coordenação
+    [Fact]
+    public async Task Sem_lideranca_disponivel_vai_a_coordenacao()
     {
         var t = await Turma.Criar(f, comLider: false);
 
-        var chamado = await t.Ler(await t.Transferir(new { aceitaLideranca = true }));
+        var chamado = await t.Ler(await t.Transferir());
 
         Assert.Equal((t.Coordenacao.Id, 2), (chamado.SetorId, chamado.EtapaOrdem));
     }

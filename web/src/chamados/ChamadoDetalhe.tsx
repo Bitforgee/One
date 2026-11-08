@@ -411,7 +411,7 @@ const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('conf
 // A coluna da equipe: o erro da ação, o cartão (ou a barra e o Sheet) de ações e o histórico.
 function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8 @5xl/main:sticky @5xl/main:top-4 @5xl/main:-m-1 @5xl/main:max-h-[calc(100dvh-2rem)] @5xl/main:self-start @5xl/main:overflow-y-auto @5xl/main:p-1">
       {c.fluxo && (
         <p className="m-0 text-sm text-muted-foreground">
           Etapa {c.fluxo.etapa} de {c.fluxo.total} · {c.fluxo.abrangencia}

@@ -175,7 +175,7 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var b = await Turma.Criar(f, comLider: false);
         await f.Db(b.I.Id, db => db.Setores.Where(s => s.Id == b.Lideranca!.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativo, false)));
 
-        var numero = await b.Transferir(new { aceitaLideranca = true });
+        var numero = await b.Transferir();
 
         var chamado = await b.Ler(numero);
         Assert.Equal((b.Coordenacao.Id, 2), (chamado.SetorId, chamado.EtapaOrdem));

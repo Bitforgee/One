@@ -28,23 +28,23 @@ async function abrirODialogo() {
 const nomesDosBotoes = (dialogo: HTMLElement) => within(dialogo).getAllByRole('button').map((b) => b.textContent)
 
 describe('liderança do semestre', () => {
-  it('aviso da liderança, com os três botões, e enviar à liderança aceita', async () => {
+  it('aviso da liderança, sem escolha de coordenação, e enviar à liderança', async () => {
     const chamadas = emConversa({ 'GET /api/conversas/7/destino': () => [200, { lideranca: true }], 'POST /api/conversas/7/transferir': transferido })
     abrir('/univag/assistente')
 
     const dialogo = await abrirODialogo()
 
     expect(await within(dialogo).findByText(Aviso)).toBeInTheDocument()
-    expect(nomesDosBotoes(dialogo).filter((n) => ['Cancelar', 'Prefiro a coordenação', 'Enviar à liderança', 'Confirmar'].includes(n!))).toEqual(['Cancelar', 'Prefiro a coordenação', 'Enviar à liderança'])
+    expect(nomesDosBotoes(dialogo).filter((n) => ['Cancelar', 'Prefiro a coordenação', 'Enviar à liderança', 'Confirmar'].includes(n!))).toEqual(['Cancelar', 'Enviar à liderança'])
     expect(within(dialogo).queryByText(/Sua conversa será enviada a um atendente/)).not.toBeInTheDocument()
 
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Enviar à liderança' }))
 
     await screen.findByText('Sua solicitação ONE-1 foi para Líderes ADS')
-    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({ aceitaLideranca: true })
+    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
   })
 
-  it('aviso da liderança: prefiro a coordenação envia sem o campo, e cancelar não envia nada', async () => {
+  it('aviso da liderança: o aluno só cancela ou envia, nunca escolhe a coordenação', async () => {
     const chamadas = emConversa({ 'GET /api/conversas/7/destino': () => [200, { lideranca: true }], 'POST /api/conversas/7/transferir': transferido })
     abrir('/univag/assistente')
 
@@ -57,7 +57,8 @@ describe('liderança do semestre', () => {
     await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
     dialogo = await screen.findByRole('dialog')
     await within(dialogo).findByText(Aviso)
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Prefiro a coordenação' }))
+    expect(within(dialogo).queryByRole('button', { name: 'Prefiro a coordenação' })).not.toBeInTheDocument()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Enviar à liderança' }))
 
     await screen.findByText('Sua solicitação ONE-1 foi para Líderes ADS')
     expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
@@ -78,20 +79,17 @@ describe('liderança do semestre', () => {
     expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
   })
 
-  it('prévia que falha mantém o diálogo de hoje e não envia o aceite', async () => {
+  it('prévia que falha segura o envio: nenhum dado vai à liderança sem o aviso', async () => {
     const chamadas = emConversa({ 'GET /api/conversas/7/destino': () => [500, { title: 'Erro', status: 500, detail: 'Falhou.' }], 'POST /api/conversas/7/transferir': transferido })
     abrir('/univag/assistente')
 
     const dialogo = await abrirODialogo()
 
     await waitFor(() => expect(chamadas.some((c) => c.url === '/api/conversas/7/destino')).toBe(true))
-    expect(within(dialogo).getByText('Sua conversa será enviada a um atendente da instituição, que responde por aqui.')).toBeInTheDocument()
-    expect(within(dialogo).queryByRole('button', { name: 'Enviar à liderança' })).not.toBeInTheDocument()
+    expect(await within(dialogo).findByText('Não foi possível confirmar para onde sua dúvida vai. Feche esta janela e tente de novo.')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: 'Confirmar' })).toBeDisabled()
     expect(within(dialogo).queryByRole('button', { name: 'Prefiro a coordenação' })).not.toBeInTheDocument()
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
-
-    await screen.findByText(/Sua solicitação ONE-1 foi para/)
-    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
+    expect(chamadas.some((c) => c.url.endsWith('/transferir'))).toBe(false)
   })
 
   it('prévia só depois de escolhida a matrícula, e de novo ao trocá-la', async () => {
@@ -127,7 +125,7 @@ describe('liderança do semestre', () => {
     await userEvent.selectOptions(within(dialogo).getByLabelText('Matrícula'), '1')
     await userEvent.click(await within(dialogo).findByRole('button', { name: 'Enviar à liderança' }))
     await screen.findByText(/Sua solicitação ONE-1 foi para/)
-    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({ matriculaId: 1, aceitaLideranca: true })
+    expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({ matriculaId: 1 })
   })
 
   it('atendimento direto nunca consulta a prévia', async () => {

@@ -71,7 +71,7 @@ function ListaDaAba({ itens, erro, linha, editar, vazio }: { itens?: { id: numbe
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
-          <TableRow key={x.id} className="h-12 min-h-12 cursor-pointer" onClick={() => editar(x)}>
+          <TableRow key={x.id} className="min-h-12 cursor-pointer" onClick={() => editar(x)}>
             <TableCell className={Principal}>
               <button type="button" className="text-start font-medium hover:underline">
                 {principal}

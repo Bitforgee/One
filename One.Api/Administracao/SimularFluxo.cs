@@ -11,7 +11,7 @@ public sealed record SimularFluxo(long Id, SimularFluxo.Entrada Corpo) : IReques
     public const string Resolvida = "RESOLVIDA";
     public const string NaoResolvida = "NAO_RESOLVIDA";
 
-    public sealed record Entrada(string? Versao, long? CursoId, int? Semestre, bool? AceitaLideranca);
+    public sealed record Entrada(string? Versao, long? CursoId, int? Semestre);
 
     public sealed record Resposta(IReadOnlyList<Resposta.DaEtapa> Etapas, string Inicial, Resposta.DoFluxo? Escolhido)
     {
@@ -35,9 +35,8 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
 
         var versao = i.Versao == SimularFluxo.Rascunho ? fluxo.Rascunho! : fluxo.Vigente!;
         var contexto = await ResolverFluxo.CarregarContexto(db, i.CursoId!.Value, i.Semestre);
-        var aceita = i.AceitaLideranca == true;
-        var etapas = versao.Etapas.OrderBy(e => e.Ordem).Select(e => Etapa(e, contexto, aceita)).ToList();
-        var primeira = ResolverFluxo.Proximo(versao.Etapas, 0, contexto, aceita);
+        var etapas = versao.Etapas.OrderBy(e => e.Ordem).Select(e => Etapa(e, contexto)).ToList();
+        var primeira = ResolverFluxo.Proximo(versao.Etapas, 0, contexto, true);
         var escolhido = ResolverFluxo.Escolher(await ResolverFluxo.Candidatos(db, fluxo.CategoriaId, i.CursoId.Value), i.CursoId.Value, i.Semestre!.Value);
         var inicial = primeira?.SetorId ?? contexto.Setores.Values.Single(s => s.Triagem).Id;
         return Results.Ok(new SimularFluxo.Resposta(etapas, contexto.Setores[inicial].Nome,
@@ -52,9 +51,9 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
         return i.CursoId is null || !await db.Cursos.AnyAsync(c => c.Id == i.CursoId) ? Problemas.Invalido("Escolha um curso da instituição.", "cursoId") : null;
     }
 
-    static SimularFluxo.Resposta.DaEtapa Etapa(EtapaFluxo e, ResolverFluxo.Contexto contexto, bool aceita)
+    static SimularFluxo.Resposta.DaEtapa Etapa(EtapaFluxo e, ResolverFluxo.Contexto contexto)
     {
-        var r = ResolverFluxo.Situacao(e, contexto, aceita);
+        var r = ResolverFluxo.Situacao(e, contexto, true);
         return new(e.Ordem, e.Destino, r.SetorId is { } id ? contexto.Setores[id].Nome : null, r.Resolvida ? SimularFluxo.Resolvida : SimularFluxo.NaoResolvida, r.Motivo);
     }
 }

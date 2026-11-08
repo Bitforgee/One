@@ -28,8 +28,8 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         return new Mundo(i, admin, await f.Categoria(i, "Dúvida"), ads, direito, await f.Setor(i, "Financeiro"), await f.Setor(i, "Biblioteca"), coordAds);
     }
 
-    static Task<HttpResponseMessage> Simular(HttpClient admin, long fluxo, string versao, long cursoId, int semestre, bool aceita = false) =>
-        admin.PostAsJsonAsync($"/api/admin/fluxos/{fluxo}/simular", new { versao, cursoId, semestre, aceitaLideranca = aceita });
+    static Task<HttpResponseMessage> Simular(HttpClient admin, long fluxo, string versao, long cursoId, int semestre) =>
+        admin.PostAsJsonAsync($"/api/admin/fluxos/{fluxo}/simular", new { versao, cursoId, semestre });
 
     async Task<int[]> Contagens(Mundo m) => await f.Db(m.I.Id, async db =>
         new[] { await db.Chamados.CountAsync(), await db.Fluxos.CountAsync(), await db.VersoesFluxo.CountAsync(), await db.EtapasFluxo.CountAsync() });
@@ -80,7 +80,7 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var fluxo = await f.Fluxo(m.I, m.Duvida, null, null, Etapa(DestinosEtapa.LiderancaSemestre), Etapa(DestinosEtapa.CoordenacaoCurso), Etapa(DestinosEtapa.Setor, m.Biblioteca.Id));
 
         // Direito não tem coordenação, e nenhuma liderança existe
-        var j = await (await Simular(m.Admin, fluxo.Id, "VIGENTE", m.Direito.Id, 2, aceita: true)).Json();
+        var j = await (await Simular(m.Admin, fluxo.Id, "VIGENTE", m.Direito.Id, 2)).Json();
 
         var etapas = j.GetProperty("etapas").EnumerateArray().ToList();
         Assert.Equal([("NAO_RESOLVIDA", "Sem liderança disponível", (string?)null), ("NAO_RESOLVIDA", "Curso sem coordenação", null), ("RESOLVIDA", null, "Biblioteca")],

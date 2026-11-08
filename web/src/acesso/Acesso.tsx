@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import { Eye, EyeOff } from 'lucide-react'
 import { useState, type ComponentProps, type ReactNode } from 'react'
 import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
@@ -118,12 +119,32 @@ function Entrada({ tela, children }: { tela?: string; children: ReactNode }) {
 
 type Props<T extends FieldValues> = { f: UseFormReturn<T>; nome: Path<T>; rotulo: string; dica?: string } & ComponentProps<'input'>
 
-function Campo<T extends FieldValues>({ f, nome, rotulo, dica, ...props }: Props<T>) {
+// Campo de senha com o botão de mostrar/ocultar (quem digita no celular erra menos vendo o que escreve).
+function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }: Props<T>) {
+  const [visivel, setVisivel] = useState(false)
+  const senha = type === 'password'
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={nome}>{rotulo}</Label>
-      <Input id={nome} aria-invalid={!!f.formState.errors[nome]} {...props} {...f.register(nome)} />
-      {dica && <p className="text-sm text-muted-foreground">{dica}</p>}
+      <div className="relative">
+        <Input id={nome} type={senha && visivel ? 'text' : type} aria-invalid={!!f.formState.errors[nome]} aria-describedby={dica ? `${nome}-dica` : undefined} className={senha ? 'pr-12' : undefined} {...props} {...f.register(nome)} />
+        {senha && (
+          <button
+            type="button"
+            aria-label={visivel ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-pressed={visivel}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+            onClick={() => setVisivel((v) => !v)}
+          >
+            {visivel ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+          </button>
+        )}
+      </div>
+      {dica && (
+        <p id={`${nome}-dica`} className="text-sm text-muted-foreground">
+          {dica}
+        </p>
+      )}
     </div>
   )
 }
@@ -190,7 +211,7 @@ export function Login() {
           </>
         )}
       </Formulario>
-      <Link to={`/${slug}/primeiro-acesso`} className="self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+      <Link to={`/${slug}/primeiro-acesso`} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
         Primeiro acesso ou esqueci minha senha
       </Link>
     </Entrada>
@@ -214,7 +235,7 @@ export function PrimeiroAcesso() {
           {(form) => <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" dica="Enviaremos um link para criar a senha no e-mail registrado na instituição." />}
         </Formulario>
       )}
-      <Link to={`/${slug}`} className="self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
+      <Link to={`/${slug}`} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
         Voltar para o login
       </Link>
     </Entrada>

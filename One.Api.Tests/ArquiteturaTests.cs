@@ -673,9 +673,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["assumir", "nota", "resolver", "responder", "subir"], nomes.Where(n => One.Api.Chamados.PermissoesChamado.Estados(n, "LIDER") is not null).Order());
     }
 
-    // fluxos-atendimento C98 (door 3): visão e aceite saem do tipo de destino, nunca de coluna do banco nem de campo de entrada do gestor
+    // fluxos-atendimento C98 (door 3): visão e ciência saem do tipo de destino, nunca de coluna do banco nem de campo de entrada do gestor
     [Fact]
-    public async Task Visao_e_aceite_fora_do_banco_e_da_entrada()
+    public async Task Visao_e_ciencia_fora_do_banco_e_da_entrada()
     {
         Assert.Equal(["COORDENACAO_CURSO", "LIDERANCA_SEMESTRE", "SETOR"], DestinosEtapa.Todos.Order(StringComparer.Ordinal));
         var proibido = new Regex("visao|aceit|exige|restrit", RegexOptions.IgnoreCase);

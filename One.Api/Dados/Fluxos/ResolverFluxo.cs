@@ -8,7 +8,7 @@ public static class ResolverFluxo
     public const string SemCoordenacao = "Curso sem coordenação";
     public const string SemLideranca = "Sem liderança disponível";
     public const string SetorInativo = "Setor inativo";
-    public const string SemAceite = "O aluno não aceitou a liderança";
+    public const string SemConversa = "Atendimento direto não passa pela liderança";
 
     public sealed record Contexto(IReadOnlyDictionary<long, Setor> Setores, long? CoordenacaoDoCurso, long? Lideranca);
 
@@ -37,17 +37,17 @@ public static class ResolverFluxo
         _ => contexto.Lideranca is { } lider ? new Resolucao(lider, null) : new Resolucao(null, SemLideranca),
     };
 
-    // A etapa de liderança só vale com o aceite do aluno; sem liderança disponível o motivo é a falta dela.
-    public static Resolucao Situacao(EtapaFluxo etapa, Contexto contexto, bool aceitaLideranca)
+    // Quem decide é o fluxo, nunca o aluno. A liderança só fica de fora quando não há conversa a resumir (atendimento direto); sem liderança disponível o motivo é a falta dela.
+    public static Resolucao Situacao(EtapaFluxo etapa, Contexto contexto, bool comLideranca)
     {
         var resolucao = Etapa(etapa, contexto);
-        return DestinosEtapa.ExigeAceite(etapa.Destino) && resolucao.Resolvida && !aceitaLideranca ? new Resolucao(null, SemAceite) : resolucao;
+        return DestinosEtapa.PedeCiencia(etapa.Destino) && resolucao.Resolvida && !comLideranca ? new Resolucao(null, SemConversa) : resolucao;
     }
 
     // A primeira etapa depois de `depoisDe` que resolve.
-    public static Passo? Proximo(IEnumerable<EtapaFluxo> etapas, int depoisDe, Contexto contexto, bool aceitaLideranca) =>
+    public static Passo? Proximo(IEnumerable<EtapaFluxo> etapas, int depoisDe, Contexto contexto, bool comLideranca) =>
         etapas.Where(e => e.Ordem > depoisDe).OrderBy(e => e.Ordem)
-            .Select(e => (Etapa: e, Resolucao: Situacao(e, contexto, aceitaLideranca)))
+            .Select(e => (Etapa: e, Resolucao: Situacao(e, contexto, comLideranca)))
             .Where(x => x.Resolucao.Resolvida)
             .Select(x => new Passo(x.Etapa, x.Resolucao.SetorId!.Value))
             .FirstOrDefault();
@@ -70,13 +70,13 @@ public static class ResolverFluxo
         db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas)
             .Where(f => f.CategoriaId == categoriaId && (f.CursoId == null || f.CursoId == cursoId)).ToListAsync();
 
-    public static async Task<Rota> Rotear(OneDb db, Categoria categoria, Matricula matricula, bool aceitaLideranca)
+    public static async Task<Rota> Rotear(OneDb db, Categoria categoria, Matricula matricula, bool comLideranca)
     {
         var contexto = await CarregarContexto(db, matricula.CursoId, matricula.Semestre, matricula.UsuarioId);
         var triagem = contexto.Setores.Values.Single(s => s.Triagem).Id;
         if (categoria.Padrao) return new Rota(null, null, triagem);
         var fluxo = Escolher(await Candidatos(db, categoria.Id, matricula.CursoId), matricula.CursoId, matricula.Semestre);
-        var passo = fluxo is null ? null : Proximo(fluxo.Vigente!.Etapas, 0, contexto, aceitaLideranca);
+        var passo = fluxo is null ? null : Proximo(fluxo.Vigente!.Etapas, 0, contexto, comLideranca);
         return new Rota(passo is null ? null : fluxo, passo, passo?.SetorId ?? triagem);
     }
 

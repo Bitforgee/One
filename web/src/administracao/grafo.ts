@@ -15,7 +15,8 @@ let sequencia = 0
 const novoId = () => `no-${++sequencia}`
 
 // Onde um nó sem posição aparece no canvas: da esquerda para a direita, depois do Início.
-export const posicaoPadrao = (i: number) => ({ x: 240 * (i + 1), y: 80 })
+export const Passo = 240
+export const posicaoPadrao = (i: number) => ({ x: Passo * (i + 1), y: 80 })
 
 export function novoNo(destino: Destino = 'SETOR', x: number | null = null, y: number | null = null): No {
   return { id: novoId(), destino, setorId: '', prazoHoras: '', x, y }
@@ -122,3 +123,24 @@ export const etapasParaApi = (g: Grafo) => caminho(g).map(paraApi)
 
 // Para os rótulos: o nó como a etapa que a API devolve.
 export const comoEtapa = (n: No): Etapa => paraApi(n)
+
+// Onde o canvas oferece a próxima etapa: um passo à direita da ponta da cadeia, ou no primeiro lugar quando não há etapa.
+export function posicaoDoProximo(g: Grafo) {
+  const lista = caminho(g)
+  const ponta = lista.at(-1)
+  if (!ponta) return posicaoPadrao(0)
+  const padrao = posicaoPadrao(lista.length - 1)
+  return { x: (ponta.x ?? padrao.x) + Passo, y: ponta.y ?? padrao.y }
+}
+
+
+// O quadro que o canvas enquadra: o Início, as etapas e o lugar do botão de adicionar, para o botão nunca ficar fora da tela.
+export const Tamanho = { inicio: 160, etapa: 192, altura: 64, botao: 44 }
+export function limites(g: Grafo, comBotao: boolean) {
+  const caixas = [{ x: 0, y: posicaoPadrao(0).y, largura: Tamanho.inicio }]
+  ordenados(g).forEach((n, i) => caixas.push({ x: n.x ?? posicaoPadrao(i).x, y: n.y ?? posicaoPadrao(i).y, largura: Tamanho.etapa }))
+  if (comBotao) caixas.push({ ...posicaoDoProximo(g), largura: g.nos.length === 0 ? Tamanho.etapa : Tamanho.botao })
+  const [x0, y0] = [Math.min(...caixas.map((c) => c.x)), Math.min(...caixas.map((c) => c.y))]
+  return { x: x0, y: y0, width: Math.max(...caixas.map((c) => c.x + c.largura)) - x0, height: Math.max(...caixas.map((c) => c.y)) - y0 + Tamanho.altura }
+}
+

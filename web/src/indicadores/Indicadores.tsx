@@ -34,7 +34,8 @@ type Indicadores = {
 
 const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 1000) / 10}%`.replace('.', ','))
 const horas = (v: number | null) => (v === null ? '—' : `${String(v).replace('.', ',')} h`)
-const num = (v: number | null) => (v === null ? '—' : String(v))
+const inteiro = new Intl.NumberFormat('pt-BR')
+const num = (v: number | null) => (v === null ? '—' : inteiro.format(v))
 
 function cartoes(dados: Indicadores): [string, string][] {
   return [
@@ -45,8 +46,8 @@ function cartoes(dados: Indicadores): [string, string][] {
     ['Escalonamento', pct(dados.taxaEscalonamento)],
     ['Abandono', pct(dados.taxaAbandono)],
     ['Perguntas sem artigo', pct(dados.taxaPerguntasSemArtigo)],
-    ['Chamados abertos agora', String(dados.chamadosAbertos)],
-    ['Chamados resolvidos', String(dados.chamadosResolvidos)],
+    ['Chamados abertos agora', num(dados.chamadosAbertos)],
+    ['Chamados resolvidos', num(dados.chamadosResolvidos)],
     ['Tempo até a 1ª resposta', horas(dados.tempoPrimeiraRespostaHoras)],
     ['Tempo de resolução', horas(dados.tempoResolucaoHoras)],
     ['Roteamento correto', pct(dados.roteamentoCorreto)],

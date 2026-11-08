@@ -55,7 +55,8 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var t = await Turma.Criar(f);
         var financeiro = await f.Setor(t.I, "Financeiro");
-        var numero = await t.Transferir(new { aceitaLideranca = false }); // vai à coordenação, vista pela equipe comum
+        var numero = await t.NaLideranca();
+        Assert.Equal(HttpStatusCode.OK, (await t.Lider!.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/subir", new { motivo = "É da coordenação" })).StatusCode); // sobe à coordenação, vista pela equipe comum
 
         var d = await t.Detalhe(t.Coord.Cliente, numero);
 
@@ -92,7 +93,7 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
             { new ByteArrayContent(Balcao.Arquivo(Balcao.Pdf, 200)), "anexos", "prova.pdf" },
         });
         Assert.True(mensagem.IsSuccessStatusCode, $"{(int)mensagem.StatusCode}");
-        var numero = (await (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).Json()).GetProperty("numero").GetString()!;
+        var numero = (await (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { })).Json()).GetProperty("numero").GetString()!;
         var anexo = await f.Db(t.I.Id, db => db.AnexosConversa.Select(a => a.Id).SingleAsync());
 
         Assert.Equal(HttpStatusCode.NotFound, (await t.Lider!.Cliente.GetAsync($"/api/conversas/anexos/{anexo}")).StatusCode);
@@ -128,7 +129,7 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         var dupla = await f.Usuario(t.I, [Papeis.Aluno, Papeis.Atendente]);
         await f.Db(t.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = dupla.Id, SetorId = t.Lideranca!.Id }); await db.SaveChangesAsync(); });
         var aluno = new Aluno(t.I, dupla, Semente.Senha, await f.Entrar(t.I, dupla));
-        var numero = await t.Transferir(new { aceitaLideranca = true }, aluno);
+        var numero = await t.Transferir(null, aluno);
         Assert.Equal(t.Lideranca!.Id, (await t.Ler(numero)).SetorId);
 
         var d = await t.Detalhe(aluno.Cliente, numero);
