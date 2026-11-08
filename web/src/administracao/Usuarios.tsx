@@ -10,7 +10,7 @@ import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Badge } from '../ui/badge'
-import { DropdownMenuItem } from '../ui/dropdown-menu'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { TableCell, TableRow } from '../ui/table'
@@ -53,6 +53,7 @@ function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario;
         {u.ativo && (
           <MenuAcoes nome={u.nome} pendente={pendente}>
             <DropdownMenuItem onSelect={editar}>Editar</DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={desativar}>
               Desativar
             </DropdownMenuItem>

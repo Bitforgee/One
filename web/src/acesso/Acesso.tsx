@@ -6,10 +6,12 @@ import { useForm, type FieldValues, type Path, type Resolver, type UseFormReturn
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { BotaoAcao } from '../acao'
-import { api } from '../api'
+import { api, ErroApi } from '../api'
+import { ErroDe } from '../ErroDe'
 import { Sigla, urlDaImagem, useInstituicao, type InstituicaoPublica } from '../aparencia'
 import { telaInicial, useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
+import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
@@ -177,12 +179,12 @@ const schemaLogin = z.object({ cpf: obrigatorio, senha: obrigatorio })
 export function Login() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const { isError, isPending } = useInstituicao(slug)
+  const { isError, isPending, error, refetch } = useInstituicao(slug)
 
   if (isError)
     return (
       <Centro>
-        <Alert>Instituição não encontrada.</Alert>
+        {error instanceof ErroApi ? <Alert>Instituição não encontrada.</Alert> : <ErroDe erro={error} oque="a instituição" tentar={() => void refetch()} />}
       </Centro>
     )
   if (isPending)
@@ -249,9 +251,12 @@ export function DefinirSenha() {
   return (
     <Entrada tela="Criar senha">
       {pronto ? (
-        <Alert>
-          Senha criada. <Link to={`/${slug}`}>Entre com o CPF e a nova senha.</Link>
-        </Alert>
+        <>
+          <Alert>Senha criada. Entre com o CPF e a nova senha.</Alert>
+          <Button asChild className="h-11">
+            <Link to={`/${slug}`}>Entrar</Link>
+          </Button>
+        </>
       ) : (
         <Formulario
           schema={z.object({ novaSenha: obrigatorio })}

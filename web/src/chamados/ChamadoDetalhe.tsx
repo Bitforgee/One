@@ -71,6 +71,7 @@ function MarcasDaEquipe({ equipe, nota, pode, setNota, aguardaAluno, setAguardaA
     <div className="flex flex-wrap gap-x-4">
       {pode('nota') && <Marca id="nota" rotulo="Nota interna" marcado={nota} mudar={setNota} />}
       {pode('responder') && !nota && <Marca id="aguarda" rotulo="Aguardando aluno" marcado={aguardaAluno} mudar={setAguardaAluno} />}
+      {nota && <p className="m-0 w-full rounded-md bg-warning-subtle px-3 py-2 text-sm">Só a equipe vê esta nota.</p>}
     </div>
   )
 }
@@ -448,19 +449,23 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
   const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
   const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
+  // o aluno decide (confirmar ou rejeitar) antes do formulário que reabre a solicitação (mobile-m0 AC 3)
+  const decisao = !equipe && pode('confirmar')
+  const acoesDoAluno = doAluno(pode, equipe) && (
+    <div className="flex flex-col gap-4">
+      {erro}
+      {painel}
+    </div>
+  )
   return (
     <div className={gradeDoDetalhe(equipe, !!barra)}>
       <div className="flex min-w-0 flex-col gap-8">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
         <Mensagens mensagens={c.mensagens} fuso={fuso} />
+        {decisao && acoesDoAluno}
         <Responder c={c} equipe={equipe} {...acoes} />
-        {doAluno(pode, equipe) && (
-          <div className="flex flex-col gap-4">
-            {erro}
-            {painel}
-          </div>
-        )}
+        {!decisao && acoesDoAluno}
       </div>
       {equipe && <ColunaDaEquipe c={c} fuso={fuso} erro={erro} folha={folha} setFolha={setFolha} barra={barra} tem={!!(principal || temMais)} painel={painel} />}
       <Dialogos c={c} modal={modal} fechar={() => setModal(undefined)} executar={executar} motivo={motivo} setMotivo={setMotivo} />

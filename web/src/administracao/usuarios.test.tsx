@@ -100,6 +100,16 @@ describe('usuários', () => {
     expect(d.queryByText('Setores do atendente')).not.toBeInTheDocument()
   })
 
+  it('separador antes de Desativar', async () => {
+    usuarios()
+    await userEvent.click(await screen.findByRole('button', { name: 'Ações de Carla' }))
+    const menu = await screen.findByRole('menu')
+    const itens = within(menu).getAllByRole('menuitem')
+    const sep = within(menu).getByRole('separator')
+    expect(itens[1]).toHaveTextContent('Desativar')
+    expect(sep.compareDocumentPosition(itens[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(itens[0].compareDocumentPosition(sep) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
   it('desativar pede confirmação', async () => {
     const chamadas = usuarios({ 'POST /api/admin/usuarios/1/desativar': () => [200, {}] })
     await escolher('Carla', 'Desativar')

@@ -178,3 +178,47 @@ test.describe('S2 celular', () => {
     }
   })
 })
+
+test.describe('mobile-m0 celular', () => {
+  test('caixas de marcação: a linha inteira é o rótulo de 44 px', async ({ page }) => {
+    for (const largura of [390, 360]) {
+      await page.setViewportSize({ width: largura, height: 780 })
+      await simularApi(page)
+      await abrirTela(page, 'Detalhe do chamado')
+      for (const nome of ['Nota interna', 'Aguardando aluno']) {
+        const linha = page.locator('label', { hasText: nome })
+        const medida = await caixa(linha)
+        expect(medida.height, nome + ' a ' + largura).toBeGreaterThanOrEqual(44)
+        // tocar no texto (fora dos 20 px da caixa) alterna a caixa
+        await linha.getByText(nome, { exact: true }).click()
+        await expect(page.getByLabel(nome)).toBeChecked()
+        await linha.getByText(nome, { exact: true }).click()
+      }
+    }
+  })
+
+  test('itens de menu de 44 px e Desativar depois do separador', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await abrirTela(page, 'Usuários')
+    await page.getByRole('button', { name: /^Ações de/ }).first().click()
+    const itens = page.getByRole('menuitem')
+    for (const item of await itens.all()) expect((await caixa(item)).height).toBeGreaterThanOrEqual(44)
+    const desativar = await caixa(page.getByRole('menuitem', { name: 'Desativar' }))
+    const separador = await caixa(page.getByRole('separator'))
+    expect(separador.y + separador.height).toBeLessThanOrEqual(desativar.y + 1)
+  })
+
+  test('botão depois da senha criada tem 44 px e leva ao login', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await simularApi(page)
+    await page.route('**/api/auth/definir-senha', (rota) => rota.fulfill({ status: 204 }))
+    await abrirTela(page, 'Criar senha')
+    await page.getByLabel('Nova senha').fill('senha-boa-123')
+    await page.getByRole('button', { name: 'Salvar senha' }).click()
+    const entrar = page.getByRole('link', { name: 'Entrar' })
+    expect((await caixa(entrar)).height).toBeGreaterThanOrEqual(44)
+    await entrar.click()
+    await expect(page).toHaveURL(/\/univag$/)
+  })
+})

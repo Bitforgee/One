@@ -171,3 +171,30 @@ describe('conversa do chamado', () => {
     expect(itens).toEqual(['02/11/2026 08:00 · Carla escreveu uma nota interna', '02/11/2026 08:00 · Carla mudou o estado de Em atendimento para —'])
   })
 })
+
+// mobile-m0: a linha inteira da caixa é a área de toque, a nota avisa quem a vê e o aluno decide antes de reabrir.
+describe('mobile m0 no chamado', () => {
+  it('toque no texto da marca: a linha é o rótulo e mede 44 px', async () => {
+    detalhe(chamado({ eventos: [], acoes: ['responder', 'nota'] }))
+    const caixa = await screen.findByLabelText('Nota interna')
+    const linha = caixa.closest('label')!
+    expect(linha).toHaveClass('min-h-11')
+    await userEvent.click(within(linha).getByText('Nota interna'))
+    expect(caixa).toBeChecked()
+  })
+
+  it('aviso da nota interna só com a caixa marcada', async () => {
+    detalhe(chamado({ eventos: [], acoes: ['responder', 'nota'] }))
+    await userEvent.click(await screen.findByLabelText('Nota interna'))
+    expect(screen.getByText('Só a equipe vê esta nota.')).toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Nota interna'))
+    expect(screen.queryByText('Só a equipe vê esta nota.')).not.toBeInTheDocument()
+  })
+
+  it('confirmar antes de responder no chamado resolvido do aluno', async () => {
+    detalhe(chamado({ estado: 'RESOLVIDO', acoes: ['confirmar', 'rejeitar', 'responder'] }), {}, me())
+    const confirmar = await screen.findByRole('button', { name: 'Confirmar resolução' })
+    const responder = screen.getByLabelText('Responder (reabre a solicitação)')
+    expect(confirmar.compareDocumentPosition(responder) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})

@@ -156,6 +156,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* mobile-m0: com viewport-fit=cover o celular deitado não esconde o conteúdo atrás do entalhe */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
 

@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookText, Building2, ChartColumn, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
-import { api, type Me } from './api'
+import { api, ErroApi, type Me } from './api'
+import { ErroDe } from './ErroDe'
 import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
 import { AvisosPush } from './AvisosPush'
 import { telaInicial, useSair, type Sessao } from './sessao'
@@ -326,8 +327,11 @@ function useBarra() {
 }
 
 // Para onde a sessão manda quem abriu esta rota: o login, a instituição certa, a troca de senha ou a tela do papel (AC 9); nada = fica.
-function desvio({ me, isError, slug, pathname }: { me?: Me; isError: boolean; slug?: string; pathname: string }) {
-  if (isError) return `/${slug}`
+// Só uma resposta da API diz que não há sessão; rede caída (o fetch falha sem resposta) não manda ninguém ao login (mobile-m0).
+const semSessao = (erro: Error | null) => erro instanceof ErroApi
+
+function desvio({ me, erro, slug, pathname }: { me?: Me; erro: Error | null; slug?: string; pathname: string }) {
+  if (semSessao(erro)) return `/${slug}`
   if (!me) return undefined
   if (me.instituicao.slug !== slug) return `/${me.instituicao.slug}`
   if (me.deveTrocarSenha && !pathname.endsWith('/trocar-senha')) return `/${slug}/trocar-senha`
@@ -340,12 +344,18 @@ export function Autenticado() {
   const { slug } = useParams()
   const { pathname } = useLocation()
   const cliente = useQueryClient()
-  const { data: me, isError } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
+  const { data: me, error, refetch } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
   const { data: instituicao } = useInstituicao(slug)
   useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
 
-  const destino = desvio({ me, isError, slug, pathname })
+  const destino = desvio({ me, erro: error, slug, pathname })
   if (destino) return <Navigate to={destino} replace />
+  if (error)
+    return (
+      <div className="mx-auto flex min-h-svh max-w-sm items-center p-6">
+        <ErroDe erro={error} oque="sua sessão" tentar={() => void refetch()} />
+      </div>
+    )
   if (!me)
     return (
       <div className="flex justify-center py-12">

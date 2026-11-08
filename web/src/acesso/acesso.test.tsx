@@ -340,11 +340,20 @@ describe('acesso', () => {
     await userEvent.type(screen.getByLabelText('Nova senha'), 'senha-boa-123')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar senha' }))
     expect(await screen.findByText(/Senha criada/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Entre com o CPF e a nova senha.' })).toHaveAttribute('href', '/univag')
+    expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/univag')
     expect(screen.queryByLabelText('Nova senha')).not.toBeInTheDocument()
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.corpo)).toEqual([{ token: 'abc123', novaSenha: 'senha-boa-123' }])
   })
 
+  it('Login sem rede pede para tentar de novo e 404 continua não encontrada', async () => {
+    let n = 0
+    api({ 'GET /api/instituicoes/univag': () => { if (n++ === 0) throw new TypeError('Failed to fetch'); return [200, { nome: 'Univag' }] } })
+    abrir('/univag')
+    expect(await screen.findByText(/Verifique sua conexão/)).toBeInTheDocument()
+    expect(screen.queryByText('Instituição não encontrada.')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }))
+    expect(await screen.findByLabelText('CPF')).toBeInTheDocument()
+  })
   it('troca de senha por vontade própria não mostra o aviso da senha temporária', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')

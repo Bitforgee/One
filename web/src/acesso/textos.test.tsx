@@ -105,7 +105,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Criar senha', async () => {
-    const t = estados(['Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. ', 'Entre com o CPF e a nova senha.', ...Painel])
+    const t = estados(['Criar senha', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar senha', 'Senha criada. Entre com o CPF e a nova senha.', 'Entrar', ...Painel])
     api({ 'POST /api/auth/definir-senha': () => [204, undefined] })
     const { container } = abrir('/univag/definir-senha?token=t')
     t.conferir(container)

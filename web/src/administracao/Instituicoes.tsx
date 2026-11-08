@@ -14,7 +14,7 @@ import { ErroDe, errosDeCampo } from '../ErroDe'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
-import { DropdownMenuItem } from '../ui/dropdown-menu'
+import { DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
@@ -156,9 +156,12 @@ function Linha({ i, importar, desativar, agir, pendente }: { i: Item; importar: 
           <DropdownMenuItem onSelect={importar}>Importar carga</DropdownMenuItem>
           <DropdownMenuItem onSelect={() => agir((r) => `Enviamos o link para ${(r as { enviados: number }).enviados} administrador(es).`, `${i.slug}/reenviar-acesso`)}>Reenviar acesso do admin</DropdownMenuItem>
           {i.ativa ? (
-            <DropdownMenuItem variant="destructive" onSelect={desativar}>
-              Desativar
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={desativar}>
+                Desativar
+              </DropdownMenuItem>
+            </>
           ) : (
             <DropdownMenuItem onSelect={() => agir('Instituição reativada.', `${i.slug}/reativar`)}>Reativar</DropdownMenuItem>
           )}
