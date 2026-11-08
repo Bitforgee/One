@@ -648,6 +648,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: verification.md Coverage: ATRIBUICAO renomeada; web/src/chamado.ts:49 (specs/coverage)
 - last seen: 2026-11-05T20:44:09Z
 
+### L-107 - Ao renomear uma pasta, busque o caminho antigo com git grep sem cortar a saída e conte os acertos; um head -40 escondeu dois testes do web.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/refactor` · harmful: 0
+- features: pastas-padrao-dotnet
+- evidence: verification.md rodada 1; web/e2e/identidade.spec.ts:323 (specs/refactor)
+- last seen: 2026-11-08T04:58:15Z
+
+### L-108 - Quando um texto repete uma lista que outros lugares já marcam, dê à lista uma prova própria; provar só as marcas deixa a lista sem guarda.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: pastas-padrao-dotnet
+- evidence: verification.md rodada 3 F2; .specs/STATE.md AD-040 (specs/checks)
+- last seen: 2026-11-08T04:58:15Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 107,
+  "next_id": 109,
   "lessons": [
     {
       "id": "L-001",
@@ -1926,6 +1926,42 @@
       ],
       "created": "2026-11-05T20:44:09Z",
       "last_seen": "2026-11-05T20:44:09Z"
+    },
+    {
+      "id": "L-107",
+      "key": "ac_gap::ao renomear uma pasta busque o caminho antigo com git grep sem cortar a saida e conte os acertos um head 40 escondeu dois testes do web",
+      "text": "Ao renomear uma pasta, busque o caminho antigo com git grep sem cortar a saída e conte os acertos; um head -40 escondeu dois testes do web.",
+      "signal": "ac_gap",
+      "scope": "specs/refactor",
+      "status": "candidate",
+      "features": [
+        "pastas-padrao-dotnet"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md rodada 1; web/e2e/identidade.spec.ts:323 (specs/refactor)"
+      ],
+      "created": "2026-11-08T04:58:15Z",
+      "last_seen": "2026-11-08T04:58:15Z"
+    },
+    {
+      "id": "L-108",
+      "key": "surviving_mutant::quando um texto repete uma lista que outros lugares ja marcam de a lista uma prova propria provar so as marcas deixa a lista sem guarda",
+      "text": "Quando um texto repete uma lista que outros lugares já marcam, dê à lista uma prova própria; provar só as marcas deixa a lista sem guarda.",
+      "signal": "surviving_mutant",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "pastas-padrao-dotnet"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "verification.md rodada 3 F2; .specs/STATE.md AD-040 (specs/checks)"
+      ],
+      "created": "2026-11-08T04:58:15Z",
+      "last_seen": "2026-11-08T04:58:15Z"
     }
   ]
 }
