@@ -20,7 +20,7 @@ const Explicacoes = {
 export function PainelDoNo({ no, setores, mudar, remover, fechar }: Props) {
   const Icone = Icones[no.destino]
   return (
-    <section aria-label="Etapa selecionada" className="flex w-full shrink-0 flex-col gap-4 rounded-lg border bg-card p-4 lg:w-72">
+    <section aria-label="Etapa selecionada" className="flex w-full flex-col gap-4 rounded-lg border bg-card p-4">
       <header className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Icone aria-hidden="true" className="size-5" />

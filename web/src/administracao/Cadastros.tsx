@@ -1,25 +1,24 @@
-import { Plus, Workflow } from 'lucide-react'
+import { Plus, Search, SearchX, Workflow } from 'lucide-react'
 import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
-import { Cabecalho } from '../Cabecalho'
 import { ErroDoCampo } from '../Campo'
 import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
 import { CelulaLargo, Detalhe, Principal, Tabela, type Vazio } from '../Tabela'
+import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Textarea } from '../ui/textarea'
-import { abrangenciaDoFluxo, cadeiaDoFluxo, semLideranca, SemestresDe1a12, type Categoria, type Curso, type Fluxo, type Pronta, type Setor } from './comum'
+import { abrangenciaDoFluxo, semLideranca, SemestresDe1a12, type Fluxo } from './comum'
 import { EdicaoDoFluxo } from './EdicaoDoFluxo'
+import { linhas, type Aba, type Linha, type Listas } from './LinhasDosCadastros'
 
-type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; fluxos: Fluxo[]; prontas: Pronta[] }
-type Aba = keyof Listas
 // O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
 type Ficha = Record<string, any>
 type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas; erros: Record<string, string> }
@@ -46,32 +45,59 @@ const Corpos: Record<Aba, (r: Ficha) => unknown> = {
   prontas: (r) => ({ setorId: num(r.setorId), titulo: r.titulo, texto: r.texto }),
 }
 
-// Linha da lista de cada aba: o nome e, abaixo, o que distingue o registro.
-function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
-  const nome = (lista: { id: number; nome: string }[], id: number | null) => {
-    const nomes = new Map(lista.map((x) => [x.id, x.nome]))
-    return nomes.has(id!) ? nomes.get(id!)! : '—'
-  }
-  return {
-    setores: (s: Setor) => [s.nome, [s.triagem && 'triagem', s.cursoId && `liderança de ${abrangenciaDoFluxo({ cursoId: s.cursoId, semestre: s.semestre ?? null }, dados.cursos)}`, !s.ativo && 'inativo'].filter(Boolean).join(' · ')],
-    categorias: (c: Categoria) => [c.nome, [c.padrao && 'padrão', !c.ativa && 'inativa'].filter(Boolean).join(' · ')],
-    cursos: (c: Curso) => [c.nome, `coordenação: ${nome(dados.setores, c.setorCoordenacaoId)}`],
-    fluxos: (f: Fluxo) => [nome(dados.categorias, f.categoriaId), `${abrangenciaDoFluxo(f, dados.cursos)} · ${cadeiaDoFluxo(f.vigente, dados.setores)}`],
-    prontas: (p: Pronta) => [p.titulo, nome(dados.setores, p.setorId)],
-  }
+const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
+const Ajudas: Record<Aba, string> = {
+  setores: 'Quem atende os chamados. Cada setor tem a sua fila.',
+  categorias: 'Os assuntos dos chamados. Cada categoria pode ter um fluxo.',
+  cursos: 'Os cursos da instituição e o setor que coordena cada um.',
+  fluxos: 'O caminho que o chamado percorre, etapa por etapa, até alguém responder.',
+  prontas: 'Textos prontos que o atendente insere ao responder.',
+}
+const SemFluxo: Vazio = { Icone: Workflow, titulo: 'Nenhum fluxo', frase: 'Sem fluxo, os chamados vão para a Triagem.' }
+const Botoes: Record<Aba, string> = { setores: 'Novo setor', categorias: 'Nova categoria', cursos: 'Novo curso', fluxos: 'Novo fluxo', prontas: 'Nova resposta pronta' }
+// Sem acento nem caixa: "secretaria" acha "Secretaria Acadêmica".
+const simples = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+const SemResultado = (busca: string, limpar: () => void): Vazio => ({
+  Icone: SearchX,
+  titulo: `Nenhum resultado para «${busca}»`,
+  frase: 'Confira a grafia ou limpe a busca.',
+  acao: (
+    <Button type="button" variant="outline" onClick={limpar}>
+      Limpar busca
+    </Button>
+  ),
+})
+
+// O título do cadastro, a frase do que ele é, o botão que cria e a busca pelo nome.
+function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string; buscar: (b: string) => void; novo: () => void }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="m-0 text-xl font-semibold">{Titulos[aba]}</h2>
+          <p className="m-0 text-sm text-muted-foreground">{Ajudas[aba]}</p>
+        </div>
+        <Button type="button" onClick={novo}>
+          <Plus aria-hidden="true" />
+          {Botoes[aba]}
+        </Button>
+      </div>
+      <div className="relative">
+        <Search aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input type="search" aria-label={`Buscar em ${Titulos[aba]}`} placeholder="Buscar pelo nome" className="ps-9" value={busca} onChange={(e) => buscar(e.target.value)} />
+      </div>
+    </div>
+  )
 }
 
-const Colunas = [{ titulo: 'Nome' }, { titulo: 'Detalhe', largo: true }]
-const SemFluxo: Vazio = { Icone: Workflow, titulo: 'Nenhum fluxo', frase: 'Sem fluxo, os chamados vão para a Triagem.' }
-
 // Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
-function ListaDaAba({ itens, erro, linha, editar, vazio }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => [string, string]; editar: (x: object) => void; vazio?: Vazio }) {
+function ListaDaAba({ itens, erro, linha, editar, vazio }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => Linha; editar: (x: object) => void; vazio?: Vazio }) {
   return (
     <Tabela colunas={Colunas} itens={itens} erro={erro} vazio={vazio}>
       {itens?.map((x) => {
         const [principal, detalhe] = linha(x)
         return (
-          <TableRow key={x.id} className="min-h-12 cursor-pointer" onClick={() => editar(x)}>
+          <TableRow key={x.id} className="min-h-12 cursor-pointer md:h-12" onClick={() => editar(x)}>
             <TableCell className={Principal}>
               <button type="button" className="text-start font-medium hover:underline">
                 {principal}
@@ -245,6 +271,39 @@ const CamposDaAba: Record<Aba, (c: Campos) => JSX.Element> = {
 
 const tituloDaJanela = (aba: Aba, f?: Ficha) => `${f?.id ? 'Editar' : 'Novo'}: ${Titulos[aba]}`
 
+type Painel = { aba: Aba; dados?: Listas; erro?: Error; novo: () => void; editar: (x: object) => void }
+
+// Um cadastro: o cabeçalho com a busca e a lista filtrada pelo nome (sem acento nem caixa).
+function PainelDaAba({ aba, dados, erro, novo, editar }: Painel) {
+  const [busca, setBusca] = useState('')
+  const linha = dados ? linhas(dados)[aba] : undefined
+  const todos = dados?.[aba] as { id: number }[] | undefined
+  const itens = busca.trim() && todos && linha ? todos.filter((x) => simples(linha(x)[0]).includes(simples(busca.trim()))) : todos
+  const vazio = busca.trim() && todos?.length ? SemResultado(busca.trim(), () => setBusca('')) : aba === 'fluxos' ? SemFluxo : undefined
+  return (
+    <>
+      <CabecalhoDaAba aba={aba} busca={busca} buscar={setBusca} novo={novo} />
+      <ListaDaAba itens={itens} erro={erro} linha={(x) => linha!(x)} editar={editar} vazio={vazio} />
+    </>
+  )
+}
+
+// A navegação em coluna: cada cadastro com a contagem (só para quem enxerga; o nome acessível é o do cadastro).
+function Navegacao({ abas, dados }: { abas: Aba[]; dados?: Listas }) {
+  return (
+    <TabsList className="hidden h-auto w-56 shrink-0 flex-col items-stretch gap-0.5 self-start bg-transparent p-0 @4xl/main:flex">
+      {abas.map((k) => (
+        <TabsTrigger key={k} value={k} className="h-9 flex-none justify-between px-3 data-[state=active]:bg-accent data-[state=active]:shadow-none">
+          {Titulos[k]}
+          <span aria-hidden="true" className="text-xs text-muted-foreground tabular-nums">
+            {dados?.[k].length}
+          </span>
+        </TabsTrigger>
+      ))}
+    </TabsList>
+  )
+}
+
 // Setores, categorias, cursos, fluxos de atendimento e respostas prontas.
 export function Cadastros() {
   const { dados, erro, recarregar } = useLeituras<Listas>({
@@ -265,30 +324,25 @@ export function Cadastros() {
     const { id, ...resto } = editando!
     acao.mutate({ chamar: () => gravar(`/api/admin/${Rotas[aba]}`, id, Corpos[aba](resto)), aviso: 'Cadastro salvo.', depois: () => setEditando(undefined) })
   }
+  const editar = (x: object) => (aba === 'fluxos' ? setFluxoAberto((x as Fluxo).id) : setEditando(ficha(x)))
 
   return (
     <div className="flex flex-col gap-2">
       <ErroDe erro={erro} oque="os cadastros" tentar={recarregar} />
-      <Tabs value={aba} onValueChange={(k) => setAba(k as Aba)} className="gap-2">
-        <Cabecalho linha botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novos[aba] })}>
-          <NativeSelect aria-label="Cadastro" className="w-full min-w-0 @4xl/main:hidden" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
-            {abas.map((k) => (
-              <option key={k} value={k}>
-                {Titulos[k]}
-              </option>
-            ))}
-          </NativeSelect>
-          <TabsList className="hidden @4xl/main:inline-flex">
-            {abas.map((k) => (
-              <TabsTrigger key={k} value={k}>
-                {Titulos[k]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Cabecalho>
+      <Tabs orientation="vertical" value={aba} onValueChange={(k) => setAba(k as Aba)} className="gap-4 @4xl/main:flex-row @4xl/main:gap-8">
+        <div className="@4xl/main:hidden">
+          <NativeSelect aria-label="Cadastro" className="w-full min-w-0" value={aba} onChange={(e) => setAba(e.target.value as Aba)}>
+          {abas.map((k) => (
+            <option key={k} value={k}>
+              {Titulos[k]}
+            </option>
+          ))}
+        </NativeSelect>
+        </div>
+        <Navegacao abas={abas} dados={dados} />
         {abas.map((k) => (
-          <TabsContent key={k} value={k} className="flex flex-col gap-2">
-            <ListaDaAba itens={dados?.[k]} erro={erro} linha={(x) => linhas(dados!)[k](x)} editar={(x) => (k === 'fluxos' ? setFluxoAberto((x as Fluxo).id) : setEditando(ficha(x)))} vazio={k === 'fluxos' ? SemFluxo : undefined} />
+          <TabsContent key={k} value={k} className="flex min-w-0 flex-1 flex-col gap-4">
+            <PainelDaAba aba={k} dados={dados} erro={erro} novo={() => setEditando({ ...Novos[k] })} editar={editar} />
           </TabsContent>
         ))}
       </Tabs>

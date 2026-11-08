@@ -41,7 +41,7 @@ describe('erro de campo da API abaixo do campo', () => {
         ...Object.fromEntries(['setores', 'categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, ok([])])),
         'POST /api/admin/setores': campo400('nome', 'Informe o nome do setor.'),
       },
-      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo' }))),
+      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo setor' }))),
     },
     {
       nome: 'Nova instituição', caminho: '/univag/instituicoes', eu: operador, texto: 'Esse endereço não é válido.', rotulo: 'Endereço', proximo: 'Fuso horário', enviar: 'Criar',

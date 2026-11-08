@@ -1071,7 +1071,7 @@ test.describe('painel', () => {
       ['/univag/usuarios', 'Carla Regina de Souza Albuquerque', ['CPF', 'E-mail', 'Papéis'], '123.456.789-09 · carla.regina.albuquerque@univag.edu.br · Atendente, Administrador'],
       ['/univag/artigos', 'Como emitir a segunda via', ['Categoria', 'Versão', 'Validade'], 'Financeiro > Boletos e mensalidades · versão 12'],
       ['/univag/documentos', 'Regulamento do estágio', ['Categoria', 'Versão', 'Arquivo'], 'Financeiro > Boletos e mensalidades · versão 3 · 42 páginas · regulamento-do-estagio-supervisionado-obrigatorio-2026.pdf'],
-      ['/univag/cadastros', 'Secretaria', ['Detalhe'], 'triagem'],
+      ['/univag/cadastros', 'Secretaria', ['Detalhe'], 'Triagem'],
     ]
     for (const [caminho, espera, largos, linha] of Telas5) {
       await page.setViewportSize({ width: 360, height: 800 })
@@ -1142,10 +1142,9 @@ test.describe('painel', () => {
     await assentar(page)
     await expect(abas).toBeVisible()
     await expect(select).toBeHidden()
-    // C44: as abas à esquerda e "Novo" à direita, na mesma linha
+    // cadastros-fluxo-visual: as abas em coluna à esquerda e "Novo …" no painel, à direita delas
     const a = await caixa(abas)
-    const novo = await caixa(page.getByRole('button', { name: /Novo/ }))
-    expect(Math.abs(a.y + a.height / 2 - (novo.y + novo.height / 2)), 'mesma linha').toBeLessThanOrEqual(4)
+    const novo = await caixa(page.getByRole('button', { name: /^Novo / }))
     expect(novo.x, 'Novo à direita das abas').toBeGreaterThanOrEqual(a.x + a.width - 1)
   })
 

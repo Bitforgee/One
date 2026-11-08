@@ -58,8 +58,8 @@ describe('fluxos', () => {
       return [nome.querySelector('button')!.textContent, detalhe.textContent]
     })
     expect(linhas).toEqual([
-      ['Notas', 'Todos os cursos · Setor Financeiro'],
-      ['Boletos', 'ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)'],
+      ['Notas', 'Todos os cursosSetor FinanceiroPublicado v1'],
+      ['Boletos', 'ADS, 3º semestreLiderança do semestreCoordenação do curso (48 h)Publicado v2'],
     ])
   })
 
@@ -67,7 +67,7 @@ describe('fluxos', () => {
   it('criar pede categoria e abrangência', async () => {
     const chamadas = cadastros({ 'POST /api/admin/fluxos': () => [201, {}] })
     await abaFluxos()
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Novo fluxo' }))
     const d = within(await screen.findByRole('dialog', { name: 'Novo: Fluxos' }))
     expect(opcoes(d.getByLabelText('Categoria'))).toEqual(['Escolha a categoria', 'Notas', 'Boletos'])
     expect(opcoes(d.getByLabelText('Abrangência'))).toEqual(['Todos os cursos', 'Um curso', 'Um semestre de um curso'])
@@ -147,7 +147,8 @@ describe('fluxos', () => {
     expect(d.getByRole('button', { name: 'Publicar' })).toBeEnabled()
     expect(d.getByLabelText('Destino da etapa 1')).toHaveValue('COORDENACAO_CURSO')
 
-    await userEvent.click(d.getByRole('button', { name: 'Descartar rascunho' }))
+    await userEvent.click(d.getByRole('button', { name: 'Mais' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
 
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]]))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -158,7 +159,7 @@ describe('fluxos', () => {
     cadastros({}, { fluxos: [] })
     const painel = within(await abaFluxos())
     expect(await painel.findByText('Sem fluxo, os chamados vão para a Triagem.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Novo/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Novo fluxo' })).toBeInTheDocument()
   })
 
   // C92 (AC 78): as operações do canvas, na lista, cada uma com um botão ou campo nomeado

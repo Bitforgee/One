@@ -57,7 +57,7 @@ export function Simulador({ s, cursos, resultado }: { s: EstadoDoSimulador; curs
   return (
     <section className="flex flex-col gap-2" aria-label="Simulação">
       <h3 className="m-0 text-base font-semibold">Simular um aluno</h3>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
       <NativeSelect aria-label="Curso do aluno" className="w-full" value={s.cursoId} onChange={(e) => s.setCursoId(e.target.value)}>
         <Opcoes vazio="Escolha o curso" itens={cursos} />
       </NativeSelect>

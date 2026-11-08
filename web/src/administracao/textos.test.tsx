@@ -20,11 +20,13 @@ const Matriculas = [
 ]
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas']
 const Cadastros = [
-  'Cadastros', 'Novo', 'Detalhe', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
-  'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', '→', '·', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
+  'Cadastros', 'Novo setor', 'Nova categoria', 'Novo curso', 'Novo fluxo', 'Nova resposta pronta', 'Detalhe',
+  'Quem atende os chamados. Cada setor tem a sua fila.', 'Os assuntos dos chamados. Cada categoria pode ter um fluxo.', 'Os cursos da instituição e o setor que coordena cada um.', 'O caminho que o chamado percorre, etapa por etapa, até alguém responder.', 'Textos prontos que o atendente insere ao responder.',
+  'Publicado v1', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
+  'Triagem', 'Inativo', 'Padrão', 'Inativa', 'Coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Liderança de semestre', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
-  'Etapa 1', 'Setor fixo', 'Lista', 'Canvas', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho',
+  'Etapa 1', 'Setor fixo', 'Lista', 'Canvas', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho', 'Mais',
   'Cancelar', 'Salvar', 'Cadastro salvo.',
 ]
 
@@ -175,8 +177,13 @@ describe('textos', () => {
       await waitFor(() => expect(within(screen.getByRole('tabpanel', { name: titulo })).getAllByRole('button').length).toBeGreaterThan(0))
       t.conferir(tela(), Fixture)
 
-      await userEvent.click(within(screen.getByRole('tabpanel', { name: titulo })).getAllByRole('button')[0])
+      await userEvent.click(within(within(screen.getByRole('tabpanel', { name: titulo })).getByRole('table')).getAllByRole('button')[0])
       t.conferir(await screen.findByRole('dialog', { name: `Editar: ${titulo}` }), Fixture)
+      if (titulo === 'Fluxos') {
+        await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mais' }))
+        t.conferir(await screen.findByRole('menu'), Fixture)
+        await userEvent.keyboard('{Escape}')
+      }
       if (titulo === 'Setores') {
         await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
         await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
@@ -184,7 +191,7 @@ describe('textos', () => {
       } else await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-      await userEvent.click(within(tela()).getByRole('button', { name: /Novo/ }))
+      await userEvent.click(within(tela()).getByRole('button', { name: /^Nov[oa] / }))
       t.conferir(await screen.findByRole('dialog', { name: `Novo: ${titulo}` }), Fixture)
       await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())

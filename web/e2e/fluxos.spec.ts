@@ -32,6 +32,13 @@ async function abrirCanvas(page: Page) {
   return dialogo
 }
 
+// arrasta um destino do menu do botão Adicionar etapa até um ponto do canvas (a paleta em fileira deu lugar ao menu)
+async function arrastar(page: Page, destino: string, alvo: { x: number; y: number }) {
+  await page.getByRole('button', { name: 'Adicionar etapa', exact: true }).click()
+  await page.getByRole('button', { name: new RegExp(`^${destino}`) }).dragTo(page.locator('.react-flow'), { targetPosition: alvo })
+  await page.keyboard.press('Escape')
+}
+
 const nos = (page: Page) => page.locator('.react-flow__node')
 const arestas = (page: Page) => page.locator('.react-flow__edge')
 const centro = async (alvo: ReturnType<Page['locator']>) => {
@@ -57,7 +64,7 @@ test.describe('canvas dos fluxos', () => {
     await expect(nos(page)).toHaveCount(1) // só o Início
     await expect(page.getByText('Arraste um destino para começar.')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Coordenação do curso' }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 320, y: 160 } })
+    await arrastar(page, 'Coordenação do curso', { x: 320, y: 160 })
 
     await expect(nos(page)).toHaveCount(2)
     const novo = page.getByLabel('Etapa 1: Coordenação do curso')
@@ -74,8 +81,8 @@ test.describe('canvas dos fluxos', () => {
   test('ligar nós em cadeia', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [] })
     await abrirCanvas(page)
-    await page.getByRole('button', { name: 'Liderança do semestre' }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 200, y: 60 } })
-    await page.getByRole('button', { name: 'Coordenação do curso' }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 200, y: 260 } })
+    await arrastar(page, 'Liderança do semestre', { x: 330, y: 60 })
+    await arrastar(page, 'Coordenação do curso', { x: 330, y: 360 })
     const inicio = page.getByLabel('Início', { exact: true })
     const primeiro = page.getByLabel('Etapa 1: Liderança do semestre')
     const segundo = page.getByLabel('Etapa 2: Coordenação do curso')
@@ -100,7 +107,7 @@ test.describe('canvas dos fluxos', () => {
 
   // C91 (AC 77)
   test('teclado no canvas', async ({ page }) => {
-    await fluxos(page, { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE', 160, 40), etapa('COORDENACAO_CURSO', 460, 40)] })
+    await fluxos(page, { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE', 320, 40), etapa('COORDENACAO_CURSO', 620, 40)] })
     const dialogo = await abrirCanvas(page)
     await dialogo.getByRole('tab', { name: 'Canvas' }).focus()
 

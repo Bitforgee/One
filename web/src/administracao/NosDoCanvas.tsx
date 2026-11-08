@@ -1,5 +1,7 @@
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
-import { Check, Flag, SkipForward, TriangleAlert } from 'lucide-react'
+import { Handle, NodeToolbar, Position, type Node, type NodeProps } from '@xyflow/react'
+import { Check, Clock, Flag, SkipForward, Trash2, TriangleAlert } from 'lucide-react'
+import { useState } from 'react'
+import { Button } from '../ui/button'
 import type { Destino } from './comum'
 import { Icones } from './IconesDoDestino'
 
@@ -9,7 +11,7 @@ const Cartao = 'relative flex h-16 items-center gap-3 border bg-card text-card-f
 const Bloco = 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'
 const Bolinha = 'size-3! border-2! border-card! bg-primary!'
 
-export type DadosDaEtapa = { rotulo: string; destino: Destino; posicao: number; marca?: string; invalido: boolean }
+export type DadosDaEtapa = { titulo: string; prazo: number | null; destino: Destino; posicao: number; marca?: string; invalido: boolean; remover: () => void }
 
 // O Início tem só saída e a ponta esquerda arredondada, como o gatilho de uma automação.
 export function NoInicio() {
@@ -51,22 +53,43 @@ function bordaDoCartao(invalido: boolean, marca: string | undefined, selecionada
   return marca ? 'border-dashed opacity-70' : 'hover:border-primary/50'
 }
 
+// A barra que aparece sobre a etapa ao passar o mouse ou selecionar, como a do n8n.
+function BarraDaEtapa({ visivel, remover }: { visivel: boolean; remover: () => void }) {
+  return (
+    <NodeToolbar isVisible={visivel} offset={8}>
+      <Button type="button" variant="outline" size="sm" className="nodrag nopan bg-card text-destructive hover:text-destructive" onClick={remover}>
+        <Trash2 aria-hidden="true" />
+        Remover
+      </Button>
+    </NodeToolbar>
+  )
+}
+
 export function NoEtapa({ data, selected }: NodeProps<Node<DadosDaEtapa>>) {
   const Icone = Icones[data.destino]
+  const [sobre, setSobre] = useState(false)
   return (
-    <div className={`${Cartao} w-48 rounded-xl px-3 ${bordaDoCartao(data.invalido, data.marca, selected)}`}>
+    <div className={`${Cartao} w-48 rounded-xl px-3 ${bordaDoCartao(data.invalido, data.marca, selected)}`} onMouseEnter={() => setSobre(true)} onMouseLeave={() => setSobre(false)}>
+      <BarraDaEtapa visivel={sobre || !!selected} remover={data.remover} />
       <Handle type="target" position={Position.Left} className={Bolinha} />
       <span className={Bloco}>
         <Icone aria-hidden="true" className="size-5" />
       </span>
-      <span className="flex min-w-0 flex-col">
-        <span className="line-clamp-2 text-sm leading-tight font-medium break-words">{data.rotulo}</span>
-        <span className="text-xs text-muted-foreground">{data.posicao}ª etapa</span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="line-clamp-2 text-sm leading-tight font-medium break-words">{data.titulo}</span>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {data.posicao}ª etapa
+          {data.prazo && (
+            <span className="flex items-center gap-0.5 rounded-sm bg-muted px-1 text-foreground">
+              <Clock aria-hidden="true" className="size-3" />
+              {data.prazo} h
+            </span>
+          )}
+        </span>
       </span>
       <Aviso invalido={data.invalido} marca={data.marca} />
       <Handle type="source" position={Position.Right} className={Bolinha} />
     </div>
   )
 }
-
 export const TiposDeNo = { inicio: NoInicio, etapa: NoEtapa }

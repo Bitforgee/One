@@ -999,7 +999,7 @@ const Dialogos: Dialogo[] = [
   { nome: 'Artigos Novo', caminho: '/univag/artigos', esperar: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo artigo', acao: 'Salvar' },
   { nome: 'Documentos Enviar PDF', caminho: '/univag/documentos', esperar: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', abrir: (p) => p.getByRole('button', { name: 'Enviar PDF' }).click(), titulo: 'Enviar PDF', acao: 'Enviar' },
   { nome: 'Usuários Novo', caminho: '/univag/usuarios', esperar: 'Carla Regina de Souza Albuquerque', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo usuário', acao: 'Salvar' },
-  { nome: 'Cadastros Novo (Setores)', caminho: '/univag/cadastros', esperar: 'Coordenação de Análise e Desenvolvimento de Sistemas', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo: Setores', acao: 'Salvar' },
+  { nome: 'Cadastros Novo (Setores)', caminho: '/univag/cadastros', esperar: 'Coordenação de Análise e Desenvolvimento de Sistemas', abrir: (p) => p.getByRole('button', { name: 'Novo setor', exact: true }).click(), titulo: 'Novo: Setores', acao: 'Salvar' },
   { nome: 'Instituições Nova instituição', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga', abrir: (p) => p.getByRole('button', { name: 'Nova instituição' }).click(), titulo: 'Nova instituição', acao: 'Criar' },
   {
     nome: 'Instituições Importar carga', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga',

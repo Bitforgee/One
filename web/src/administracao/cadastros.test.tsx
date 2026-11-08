@@ -50,21 +50,21 @@ async function aba(nome: string) {
 describe('cadastros', () => {
   it('cada aba lista o nome e o que distingue o registro', async () => {
     cadastros()
-    await screen.findByText('Triagem')
-    expect(linhas('Setores')).toEqual([['Triagem', 'triagem'], ['Financeiro'], ['Antigo', 'inativo']])
+    await screen.findByRole('button', { name: 'Triagem' })
+    expect(linhas('Setores')).toEqual([['Triagem', 'Triagem'], ['Financeiro'], ['Antigo', 'Inativo']])
     await aba('Categorias')
-    expect(linhas('Categorias')).toEqual([['Notas'], ['Não classificado', 'padrão'], ['Velha', 'inativa']])
+    expect(linhas('Categorias')).toEqual([['Notas'], ['Não classificado', 'Padrão'], ['Velha', 'Inativa']])
     await aba('Cursos')
-    expect(linhas('Cursos')).toEqual([['ADS', 'coordenação: Financeiro'], ['Direito', 'coordenação: —']])
+    expect(linhas('Cursos')).toEqual([['ADS', 'Coordenação: Financeiro'], ['Direito', 'Coordenação: —']])
     await aba('Fluxos')
-    expect(linhas('Fluxos')).toEqual([['Notas', 'Todos os cursos · Setor Financeiro'], ['Velha', 'ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)']])
+    expect(linhas('Fluxos')).toEqual([['Notas', 'Todos os cursosSetor FinanceiroPublicado v1'], ['Velha', 'ADS, 3º semestreLiderança do semestreCoordenação do curso (48 h)Publicado v2']])
     await aba('Respostas prontas')
     expect(linhas('Respostas prontas')).toEqual([['Boleto', 'Financeiro']])
   })
 
   it('editar setor grava triagem e ativo', async () => {
     const chamadas = cadastros({ 'PUT /api/admin/setores/1': () => [200, {}] })
-    await userEvent.click(await screen.findByText('Triagem'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Triagem' }))
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('Editar: Setores')).toBeInTheDocument()
     expect(d.getByLabelText('Nome')).toHaveValue('Triagem')
@@ -77,8 +77,8 @@ describe('cadastros', () => {
 
   it('setor e categoria novos nascem ativos e fora da triagem', async () => {
     const chamadas = cadastros({ 'POST /api/admin/setores': () => [201, {}], 'POST /api/admin/categorias': () => [201, {}] })
-    await screen.findByText('Triagem')
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await screen.findByRole('button', { name: 'Triagem' })
+    await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     let d = within(await screen.findByRole('dialog'))
     expect(d.getByText('Novo: Setores')).toBeInTheDocument()
     expect(d.getByLabelText(/Setor de triagem/)).not.toBeChecked()
@@ -87,7 +87,7 @@ describe('cadastros', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await aba('Categorias')
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     d = within(await screen.findByRole('dialog'))
     expect(d.getByLabelText('Ativa')).toBeChecked()
     await userEvent.type(d.getByLabelText('Nome'), 'Estágio')
@@ -109,7 +109,7 @@ describe('cadastros', () => {
     await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Nome'), 'Medicina')
     await userEvent.selectOptions(d.getByLabelText('Setor de coordenação'), '2')
@@ -125,7 +125,7 @@ describe('cadastros', () => {
   it('resposta pronta grava os números escolhidos', async () => {
     const chamadas = cadastros({ 'POST /api/admin/respostas-prontas': () => [201, {}] })
     await aba('Respostas prontas')
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.selectOptions(d.getByLabelText('Setor'), '2')
     await userEvent.type(d.getByLabelText('Título'), 'Atestado')
@@ -139,7 +139,7 @@ describe('cadastros', () => {
     abrir('/univag/cadastros')
     await aba('Fluxos')
     expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
-    await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     const d = within(await screen.findByRole('dialog'))
     expect(within(d.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria'])
     await userEvent.selectOptions(d.getByLabelText('Abrangência'), 'CURSO')
@@ -152,7 +152,7 @@ describe('cadastros', () => {
       ['Respostas prontas', 'Setor', 'Escolha o setor'],
     ]) {
       await aba(nome)
-      await userEvent.click(screen.getByRole('button', { name: /Novo/ }))
+      await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
       const e = within(await screen.findByRole('dialog'))
       expect(within(e.getByLabelText(campo)).getAllByRole('option').map((o) => o.textContent)).toEqual([vazio])
       await userEvent.click(e.getByRole('button', { name: 'Cancelar' }))
@@ -174,7 +174,7 @@ describe('cadastros', () => {
     let tentativa = 0
     cadastros({ 'PUT /api/admin/setores/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'Já existe um setor de triagem.' }] : [200, {}]) })
     const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
-    await userEvent.click(await screen.findByText('Triagem'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Triagem' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Já existe um setor de triagem.')
     expect(avisos()).not.toHaveTextContent('Cadastro salvo.')
@@ -189,9 +189,9 @@ describe('cadastros', () => {
     try {
       const chamadas = cadastros({ 'POST /api/admin/setores': () => [201, {}], 'PUT /api/admin/setores/10': () => [200, {}] })
       await screen.findByText('Líderes ADS 3º')
-      expect(linhas('Setores').at(-1)).toEqual(['Líderes ADS 3º', 'liderança de ADS, 3º semestre'])
+      expect(linhas('Setores').at(-1)).toEqual(['Líderes ADS 3º', 'Liderança de ADS, 3º semestre'])
 
-      await userEvent.click(screen.getByRole('button', { name: 'Novo' }))
+      await userEvent.click(screen.getByRole('button', { name: 'Novo setor' }))
       let d = within(await screen.findByRole('dialog'))
       expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
       await userEvent.type(d.getByLabelText('Nome'), 'Líderes Direito 1º')
@@ -225,6 +225,49 @@ describe('cadastros', () => {
       expect(opcoes).toEqual(['Sem coordenação (vai para a triagem)', 'Triagem', 'Financeiro', 'Antigo'])
     } finally {
       listas.setores.pop()
+    }
+  })
+
+  // cadastros-fluxo-visual K1
+  it('abas em coluna com a contagem', async () => {
+    cadastros()
+    await screen.findByRole('button', { name: 'Triagem' })
+    expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', 'vertical')
+    const contagens = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas'].map((n) => screen.getByRole('tab', { name: n }).querySelector('[aria-hidden="true"]')!.textContent)
+    expect(contagens).toEqual(['3', '3', '2', '2', '1'])
+  })
+
+  // K2 e K5
+  it('título, ajuda, botão com o objeto e busca pelo nome', async () => {
+    cadastros()
+    await screen.findByRole('button', { name: 'Triagem' })
+    const painel = within(screen.getByRole('tabpanel', { name: 'Setores' }))
+    expect(painel.getByRole('heading', { name: 'Setores' })).toBeInTheDocument()
+    expect(painel.getByText('Quem atende os chamados. Cada setor tem a sua fila.')).toBeInTheDocument()
+    const busca = painel.getByRole('searchbox', { name: 'Buscar em Setores' })
+    await userEvent.type(busca, 'FIN')
+    expect(linhas('Setores')).toEqual([['Financeiro']])
+    await userEvent.clear(busca)
+    await userEvent.type(busca, 'zzz')
+    expect(painel.getByText('Nenhum resultado para «zzz»')).toBeInTheDocument()
+    await userEvent.click(painel.getByRole('button', { name: 'Limpar busca' }))
+    expect(linhas('Setores')).toHaveLength(3)
+    for (const [aba, botao] of [['Categorias', 'Nova categoria'], ['Cursos', 'Novo curso'], ['Fluxos', 'Novo fluxo'], ['Respostas prontas', 'Nova resposta pronta']]) {
+      await userEvent.click(screen.getByRole('tab', { name: aba }))
+      expect(within(screen.getByRole('tabpanel', { name: aba })).getByRole('button', { name: botao })).toBeInTheDocument()
+    }
+  })
+
+  it('fluxo com rascunho em edição e sem versão', async () => {
+    const f = listas.fluxos as { id: number; categoriaId: number; cursoId: null; semestre: null; vigente: unknown; rascunho: unknown }[]
+    f.push({ id: 9, categoriaId: 7, cursoId: null, semestre: null, vigente: null, rascunho: { numero: 1, etapas: [] } })
+    try {
+      cadastros()
+      await aba('Fluxos')
+      expect(await within(screen.getByRole('tabpanel', { name: 'Fluxos' })).findAllByText('Rascunho')).not.toHaveLength(0)
+      expect(linhas('Fluxos').at(-1)).toEqual(['Notas', 'Todos os cursosSem etapasRascunho'])
+    } finally {
+      f.pop()
     }
   })
 })

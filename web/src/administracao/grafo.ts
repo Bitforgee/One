@@ -15,7 +15,7 @@ let sequencia = 0
 const novoId = () => `no-${++sequencia}`
 
 // Onde um nó sem posição aparece no canvas: da esquerda para a direita, depois do Início.
-export const Passo = 240
+export const Passo = 288
 export const posicaoPadrao = (i: number) => ({ x: Passo * (i + 1), y: 80 })
 
 export function novoNo(destino: Destino = 'SETOR', x: number | null = null, y: number | null = null): No {
@@ -103,11 +103,40 @@ export function mover(g: Grafo, id: string, delta: number): Grafo {
   return { ...g, ligacoes: [...g.ligacoes.filter((l) => !ids.includes(l.para)), ...cadeiaDe(ids)] }
 }
 
-// Dá a cada nó sem posição o lugar em que o canvas o desenha, para o que a tela mostra ser o que a API recebe.
+// O quadro do Início e o das etapas (a altura vale para os dois): uma etapa que cai em cima do Início esconde a entrada da cadeia.
+export const Tamanho = { inicio: 160, etapa: 192, altura: 64, botao: 44 }
+const sobrepoeInicio = (n: No) => n.x !== null && n.y !== null && n.x < Tamanho.inicio + 16 && Math.abs(n.y - posicaoPadrao(0).y) < Tamanho.altura
+
+// Alinha a cadeia em linha, um passo à direita do Início; os nós soltos ficam numa linha embaixo.
+export function organizar(g: Grafo): Grafo {
+  const cadeia = caminho(g).map((n) => n.id)
+  const soltos = g.nos.filter((n) => !cadeia.includes(n.id)).map((n) => n.id)
+  const lugar = (id: string) => {
+    const i = cadeia.indexOf(id)
+    return i >= 0 ? posicaoPadrao(i) : { x: Passo * (soltos.indexOf(id) + 1), y: posicaoPadrao(0).y + Tamanho.altura * 2 }
+  }
+  return { ...g, nos: g.nos.map((n) => ({ ...n, ...lugar(n.id) })) }
+}
+
+// Dá a cada nó sem posição o lugar em que o canvas o desenha, para o que a tela mostra ser o que a API recebe;
+// um fluxo com etapa em cima do Início é realinhado.
 export function fixarPosicoes(g: Grafo): Grafo {
   const ordem = ordenados(g)
-  if (g.nos.every((n) => n.x !== null)) return g
-  return { ...g, nos: g.nos.map((n) => (n.x !== null ? n : { ...n, ...posicaoPadrao(ordem.indexOf(n)) })) }
+  const fixo = g.nos.every((n) => n.x !== null) ? g : { ...g, nos: g.nos.map((n) => (n.x !== null ? n : { ...n, ...posicaoPadrao(ordem.indexOf(n)) })) }
+  return fixo.nos.some(sobrepoeInicio) ? organizar(fixo) : fixo
+}
+
+// Põe o nó entre `de` e `para`: o nó e tudo o que vem depois dele na cadeia andam um passo para a direita.
+export function inserirEntre(g: Grafo, de: string, para: string, no: No): Grafo {
+  const fixo = fixarPosicoes(g)
+  const lista = caminho(fixo)
+  const alvo = lista.findIndex((n) => n.id === para)
+  if (alvo < 0 || !fixo.ligacoes.some((l) => l.de === de && l.para === para) || lista.length >= MaximoDeEtapas) return g
+  const depois = new Set(lista.slice(alvo).map((n) => n.id))
+  const lugar = lista[alvo]
+  const nos = fixo.nos.map((n) => (depois.has(n.id) ? { ...n, x: n.x! + Passo } : n))
+  const ligacoes = [...fixo.ligacoes.filter((l) => l.de !== de || l.para !== para), { de, para: no.id }, { de: no.id, para }]
+  return { nos: [...nos, { ...no, x: lugar.x, y: lugar.y }], ligacoes }
 }
 
 export const paraApi = (n: No) => ({
@@ -135,7 +164,6 @@ export function posicaoDoProximo(g: Grafo) {
 
 
 // O quadro que o canvas enquadra: o Início, as etapas e o lugar do botão de adicionar, para o botão nunca ficar fora da tela.
-export const Tamanho = { inicio: 160, etapa: 192, altura: 64, botao: 44 }
 export function limites(g: Grafo, comBotao: boolean) {
   const caixas = [{ x: 0, y: posicaoPadrao(0).y, largura: Tamanho.inicio }]
   ordenados(g).forEach((n, i) => caixas.push({ x: n.x ?? posicaoPadrao(i).x, y: n.y ?? posicaoPadrao(i).y, largura: Tamanho.etapa }))
