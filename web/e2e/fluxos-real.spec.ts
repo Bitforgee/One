@@ -171,10 +171,9 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await editor.getByRole('button', { name: 'Salvar rascunho' }).click()
   await expect(editor.getByRole('button', { name: 'Publicar' })).toBeEnabled()
 
-  // o simulador: um aluno de ADS no 3º semestre que aceita a liderança abre o chamado na liderança
+  // o simulador: um aluno de ADS no 3º semestre abre o chamado na liderança (o fluxo decide, AD-042)
   await editor.getByLabel('Curso do aluno').selectOption({ label: nomeDoCurso })
   await editor.getByLabel('Semestre do aluno').selectOption({ label: '3º semestre' })
-  await editor.getByLabel('O aluno aceita a liderança do semestre').check()
   await editor.getByRole('button', { name: 'Simular' }).click()
   await expect(editor.getByText(`O chamado abre em ${nomeDaLideranca}.`)).toBeVisible()
   await expect(editor.getByText(/Coordenação do curso: Coordenação \d+/)).toBeVisible()
@@ -185,7 +184,7 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await contexto.close()
 })
 
-test('o aluno aceita a liderança e o chamado abre nela', async ({ browser, baseURL }) => {
+test('o fluxo leva o chamado à liderança', async ({ browser, baseURL }) => {
   const contexto = await comSessao(browser, baseURL, aluno)
   const page = await contexto.newPage()
   await page.goto(`/${slug}/assistente`)

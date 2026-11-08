@@ -74,7 +74,7 @@ function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string;
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="m-0 text-xl font-semibold">{Titulos[aba]}</h2>
+          <h2 className="m-0 font-heading text-xl font-semibold">{Titulos[aba]}</h2>
           <p className="m-0 text-sm text-muted-foreground">{Ajudas[aba]}</p>
         </div>
         <Button type="button" onClick={novo}>

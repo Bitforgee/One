@@ -493,11 +493,11 @@ test.describe('arranjo restante', () => {
     await page.route('**/api/auth/login', (r) => r.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ status: 401, detail: 'CPF ou senha inválidos.' }) }))
     await page.goto('/univag')
     await page.getByLabel('CPF').fill('12345678909')
-    await page.getByLabel('Senha').fill('senha-errada')
+    await page.getByLabel('Senha', { exact: true }).fill('senha-errada')
     await page.getByRole('button', { name: 'Entrar' }).click()
     const erro = await caixa(page.getByRole('alert'))
     const cpf = await caixa(page.getByLabel('CPF'))
-    const senha = await caixa(page.getByLabel('Senha'))
+    const senha = await caixa(page.getByLabel('Senha', { exact: true }))
     const entrar = await caixa(page.getByRole('button', { name: 'Entrar' }))
     expect(abaixo(cpf, senha)).toBe(true)
     expect(abaixo(senha, entrar)).toBe(true)
@@ -1324,7 +1324,7 @@ test.describe('entrada institucional', () => {
     await page.locator('h1').waitFor()
   }
   const bloco = (page: Page) => page.locator('h1').locator('xpath=../..') // a coluna única de até 400 px
-  const campo = (l: Locator) => l.locator('xpath=..') // o Campo inteiro: rótulo, campo e dica
+  const campo = (l: Locator) => l.locator('xpath=ancestor::div[./label][1]') // o Campo inteiro: rótulo, campo (com o botão de mostrar senha) e dica
   const coluna = (page: Page) => page.locator('h1').locator('xpath=../../..')
   const marca = (page: Page) => page.locator('h1').locator('xpath=preceding-sibling::*[1]') // o logo ou as iniciais
   const perto = (a: number, b: number, rotulo: string, tol = 1) => expect(Math.abs(a - b), `${rotulo}: ${a} contra ${b}`).toBeLessThanOrEqual(tol)
@@ -1423,7 +1423,7 @@ test.describe('entrada institucional', () => {
     for (const w of [360, 1280]) {
       await ir(page, '/univag', w)
       const r = `Login a ${w}`
-      const [cpf, senha, entrar, link, b] = [page.getByLabel('CPF'), page.getByLabel('Senha'), page.getByRole('button', { name: 'Entrar' }), page.getByRole('link', { name: 'Primeiro acesso ou esqueci minha senha' }), bloco(page)]
+      const [cpf, senha, entrar, link, b] = [page.getByLabel('CPF'), page.getByLabel('Senha', { exact: true }), page.getByRole('button', { name: 'Entrar' }), page.getByRole('link', { name: 'Primeiro acesso ou esqueci minha senha' }), bloco(page)]
       const [c, s, e, l, bb] = [await caixa(campo(cpf)), await caixa(campo(senha)), await caixa(entrar), await caixa(link), await caixa(b)]
       perto(s.y, c.y + c.height + 24, `${r}: Senha`)
       perto(e.y, s.y + s.height + 24, `${r}: Entrar`)
@@ -1431,7 +1431,7 @@ test.describe('entrada institucional', () => {
       expect(l.y, `${r}: link abaixo`).toBeGreaterThanOrEqual(e.y + e.height - 1)
       perto(l.x, bb.x, `${r}: link à esquerda`)
       await cpf.focus()
-      for (const alvo of [senha, entrar, link]) {
+      for (const alvo of [senha, page.getByRole('button', { name: 'Mostrar senha' }), entrar, link]) {
         await page.keyboard.press('Tab')
         await expect(alvo, `${r}: Tab`).toBeFocused()
       }

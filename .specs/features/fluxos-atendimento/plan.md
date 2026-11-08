@@ -200,9 +200,9 @@ Nenhum dado chega a um colega sem o aluno saber antes, e o líder não vê o que
 54. IF a `SETOR` stage or a course coordination points to a leadership sector THEN the API SHALL return `400` with field `setorId` or `setorCoordenacaoId`
 55. The system SHALL treat a leadership as available only when its sector is active and has at least one active attendant other than the student
 56. WHEN the student's flow starts with `LIDERANCA_SEMESTRE` and the leadership is available THEN `GET /destino` SHALL return `lideranca: true`, and otherwise `false` with nothing written
-57. WHEN `lideranca` is true THEN the web SHALL show in the confirmation dialog "Sua dúvida vai primeiro para a liderança do seu semestre, formada por estudantes da sua turma. A liderança vê seu nome, curso, semestre e um resumo da dúvida. A conversa com o assistente e os anexos dela não são mostrados." with `Cancelar`, `Prefiro a coordenação` and `Enviar à liderança`
-58. IF `GET /destino` fails THEN the web SHALL show the current dialog and send no `aceitaLideranca`
-59. IF `aceitaLideranca` is absent or false THEN the system SHALL skip the `LIDERANCA_SEMESTRE` stage and open the ticket in the next stage that resolves
+57. WHEN `lideranca` is true THEN the web SHALL show in the confirmation dialog "Sua dúvida vai primeiro para a liderança do seu semestre, formada por estudantes da sua turma. A liderança vê seu nome, curso, semestre e um resumo da dúvida. A conversa com o assistente e os anexos dela não são mostrados." with `Cancelar` and `Enviar à liderança` (AD-042 removed `Prefiro a coordenação`; the flow alone decides)
+58. IF `GET /destino` fails THEN the web SHALL hold the send, so no data reaches a colleague without the warning (AD-042; `aceitaLideranca` no longer exists)
+59. WHERE the leadership is not available THEN the system SHALL skip the `LIDERANCA_SEMESTRE` stage and open the ticket in the next stage that resolves (AD-042: there is no student choice)
 60. WHILE the ticket's sector is a leadership and the viewer is its attendant, `GET /api/chamados/{numero}` SHALL return `transcricao: []`, `matricula.numero: null` and `categorias: null`, and SHALL still return `solicitante`, `resumo`, `matricula.curso`, `matricula.semestre`, `mensagens`, `eventos` and `fluxo`
 61. IF a leader calls `reclassificar`, `duplicado` or `encaminhar`, THEN the API SHALL return `403`
 62. IF a leader requests a conversation attachment of a ticket in their leadership THEN `GET /api/conversas/anexos/{id}` SHALL return `404`
@@ -230,7 +230,7 @@ O canvas é uma segunda tela para o mesmo rascunho. Tudo que ele faz a lista tam
 **Acceptance Criteria**
 
 70. WHEN the admin opens a draft THEN the web SHALL offer the views "Lista" and "Canvas" of the same draft and SHALL keep the unsaved edits when switching
-71. WHEN the Canvas view opens THEN the web SHALL show a fixed "Início" node and one node per stage linked in order, each with the type icon, the sector name or type label, and "sobe após N h" when the stage has `prazoHoras`
+71. WHEN the Canvas view opens THEN the web SHALL show a fixed "Início" node and one node per stage linked in order, each with the type icon, the sector name or type label, and " (N h)" after the label when the stage has `prazoHoras`
 72. WHEN the admin drags a destination type from the palette onto the canvas THEN the web SHALL add an unlinked stage node at the drop position
 73. WHEN the admin links two nodes THEN the web SHALL accept the link only from a node with no outgoing link to a node with no incoming link, and never one that closes a cycle
 74. IF the canvas has a node not on the path from "Início", or has more than 5 stage nodes THEN the web SHALL mark it and disable Salvar rascunho and Publicar with the sentence "Ligue todas as etapas ao Início, em uma única cadeia, com até 5 etapas."

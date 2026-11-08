@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/fluxos-atendimento/plan.md`
 
-106 checks em 6 slices · 10 one-way doors · 2 perguntas abertas, das quais 1 bloqueia o go-live (plano aprovado pelo usuário em 08/11: "aprovo pode continuar")
+113 checks em 6 slices · 10 one-way doors · 2 perguntas abertas, das quais 1 bloqueia o go-live (plano aprovado pelo usuário em 08/11: "aprovo pode continuar")
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md` e este `checks.md`, gravado em `## Handoff`.
 
@@ -348,8 +348,8 @@ Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "canvas va
 Proof: `node -e "process.exit(require('./web/package.json').dependencies['@xyflow/react']==='12.12.1'?0:1)"`
 
 **C98** - [x] O tipo de destino é uma lista fechada no código, e o que cada tipo enxerga e se exige aceite vem do tipo: `SETOR` e `COORDENACAO_CURSO` veem tudo e não pedem aceite, `LIDERANCA_SEMESTRE` vê o resumo restrito e pede aceite; nenhuma coluna nem campo de entrada guarda isso (door 3)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Visao_e_aceite_vem_do_tipo"`
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Visao_e_aceite_fora_do_banco_e_da_entrada"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Visao_e_ciencia_vem_do_tipo"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Visao_e_ciencia_fora_do_banco_e_da_entrada"`
 
 **C99** - [x] O modelo do EF Core não tem mudança pendente em relação à migration nova, as entidades novas têm `instituicao_id` e filtro, e o domínio do fluxo não referencia ASP.NET Core nem Mediator (door 1, AD-008, AD-024)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Modelo_sem_mudanca_pendente"`
@@ -385,6 +385,29 @@ Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/fluxos-r
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/aparencia.spec.ts e2e/arranjo.spec.ts e2e/casca.spec.ts e2e/celular.spec.ts e2e/identidade.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts e2e/fluxos.spec.ts`
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/anexos.spec.ts e2e/plataforma.spec.ts` (imagem própria do `HEAD`, como no C105)
 
+**C107** - [x] A edição do fluxo abre em tela cheia (w-screen), com o estado Publicado v1 e o menu Mais na barra, e o simulador na lista fica embaixo das etapas e no canvas fica na coluna lateral (arranjo; emenda cadastros-fluxo-visual)
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "editor em tela cheia, com o estado na barra e o simulador na coluna do canvas"`
+
+**C108** - [x] O + entre duas etapas insere a etapa naquele ponto da cadeia e o limite de 5 etapas é respeitado (arranjo; emenda cadastros-fluxo-visual)
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "inserir etapa no meio da cadeia"`
+
+**C109** - [x] Organizar realinha as etapas sem cobrir o Início, abrir um fluxo salvo em cima do Início o realinha, e a barra da etapa remove sem confirmar quando a etapa está em branco (arranjo; emenda cadastros-fluxo-visual)
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "organizar alinha a cadeia, inserir respeita o limite e o Início nunca fica coberto"`
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "abrir o canvas realinha o fluxo salvo em cima do Início"`
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "a barra da etapa remove sem confirmar quando a etapa está em branco"`
+
+**C110** - [x] Os textos acessíveis do canvas estão em português e não expõem ids internos: nenhum de Control Panel, Zoom In, Zoom Out, Fit View, Edge from, Press enter (AD-042; round 1 A2)
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "textos acessíveis em português, sem ids internos"`
+
+**C111** - [x] A 1440 x 900 Simular e Publicar ficam na mesma barra de ações, visível sem rolar (round 1 A1)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "arranjo da barra de ações"`
+
+**C112** - [x] O canvas tem a grade pontilhada; selecionar uma etapa abre o painel Etapa selecionada com o setor e o prazo, editar o prazo para 36 muda o nó para (36 h) e Fechar etapa selecionada fecha o painel (AD-042)
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "grade pontilhada e painel da etapa selecionada"`
+
+**C113** - [x] O zoom do canvas nunca passa de 100%: com um fluxo de uma etapa a escala do iewport fica entre 0 e 1 (AD-042)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "zoom máximo de 100%"`
+
 ## Screens
 
 Enumeração por tela do que se vê e de onde. Os valores visuais vêm dos tokens existentes de `web/src/index.css` e do `estrutura-visual` (AD-037), sem valor novo: texto `foreground`, painéis `card`, ação principal `primary`, foco global `:focus-visible`. Nenhuma cor, raio ou fonte nova entra nesta feature. A fonte vinculante é `AD-034` e `AD-037`; o canvas pinta nós e linhas só com `--border`, `--muted`, `--primary` e `--foreground`, nos três temas.
@@ -394,12 +417,12 @@ Enumeração por tela do que se vê e de onde. Os valores visuais vêm dos token
 | Cadastros, aba `Fluxos` | tabela de 2 colunas `Nome` (categoria) e `Detalhe` (abrangência e cadeia), sem coluna nova | C40 |
 | Cadastros, aba `Fluxos` | vazia: a frase do AC 34 e `Novo` | C43 |
 | Cadastros, formulário `Novo: Fluxos` | categoria, abrangência em três opções, curso e semestre só quando a opção os pede | C41 |
-| Edição do fluxo | alternador `Lista`/`Canvas` no topo; `Simular` e `Publicar` na mesma barra; `Publicar` desligado enquanto inválido | C42, C83 |
-| Canvas | paleta com três itens numa coluna à esquerda do canvas; `Início` na extremidade esquerda; nós da esquerda para a direita; altura mínima de 360 px | C84, C85, C96 |
+| Edição do fluxo | tela cheia, alternador `Lista`/`Canvas` e `Simular`, `Salvar rascunho` e `Publicar` na barra do topo (emenda: `cadastros-fluxo-visual`, `675d6df`); `Publicar` desligado enquanto inválido | C42, C83, C107, C111 |
+| Canvas | botão flutuante `Adicionar etapa` no lugar da paleta em fileira (arrastar da lista de destinos segue valendo); `+` no meio de cada ligação; barra da etapa; `Organizar`; `Início` chamado "Chamado aberto" nunca coberto; nós da esquerda para a direita (emenda: `cadastros-fluxo-visual`, `675d6df`, que substitui o arranjo do AD-042) | C84, C85, C96, C108, C109, C110 |
 | Canvas | nó marcado `Vai por aqui` ou `Pulada: {motivo}` depois de simular | C95 |
 | Canvas, cadeia inválida | frase de erro acima do canvas e os dois botões desligados | C88 |
 | Edição do fluxo, abaixo de 768 px | só a Lista e a frase do canvas | C93 |
-| Diálogo de transferência | aviso, `Cancelar`, `Prefiro a coordenação`, `Enviar à liderança`, nessa ordem | C70 |
+| Diálogo de transferência | aviso, `Cancelar`, `Enviar à liderança`, nessa ordem (AD-042: o aluno não escolhe) | C70 |
 | Detalhe do chamado | botão `Subir` entre as ações da equipe; diálogo pede o motivo | C58 |
 | Detalhe do chamado, coluna lateral | linha `Etapa X de Y · {abrangência}` | C82 |
 | Detalhe do chamado, líder | sem `Conversa com o assistente`, sem número de matrícula | C79 |

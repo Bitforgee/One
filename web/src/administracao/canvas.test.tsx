@@ -228,6 +228,24 @@ describe('canvas', () => {
     expect(screen.queryByRole('dialog', { name: 'Remover a etapa?' })).not.toBeInTheDocument()
     expect(screen.getByText('Arraste um destino para começar.')).toBeInTheDocument()
   })
+  // C112 (AD-042): a grade pontilhada e o painel da etapa selecionada, que edita prazo e setor sem esconder o desenho
+  it('grade pontilhada e painel da etapa selecionada', async () => {
+    cadastros()
+    await abrirNoCanvas('Notas')
+    expect(document.querySelector('.react-flow__background')).not.toBeNull()
+    expect(screen.queryByRole('region', { name: 'Etapa selecionada' })).not.toBeInTheDocument()
+
+    await selecionar(noDeEtapa(1, 'Setor Financeiro (24 h)'))
+    const painel = within(await screen.findByRole('region', { name: 'Etapa selecionada' }))
+    expect(painel.getByLabelText('Setor da etapa selecionada')).toHaveValue('2')
+    await userEvent.clear(painel.getByLabelText('Prazo da etapa selecionada (horas)'))
+    await userEvent.type(painel.getByLabelText('Prazo da etapa selecionada (horas)'), '36')
+    expect(await screen.findByLabelText('Etapa 1: Setor Financeiro (36 h)')).toBeInTheDocument()
+
+    await userEvent.click(painel.getByRole('button', { name: 'Fechar etapa selecionada' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Etapa selecionada' })).not.toBeInTheDocument())
+  })
+
   // C95 (AC 81)
   it('simulação marca os nós', async () => {
     cadastros({

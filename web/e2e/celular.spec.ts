@@ -88,13 +88,16 @@ test.describe('S1 celular', () => {
     expect((await rotulo.textContent())!.replace(/\s/g, '')).toBe('Financeiro>Boletosemensalidades2026')
   })
 
-  test('Cadastros seletor e Novo na mesma linha', async ({ page }) => {
+  test('Cadastros: seletor no topo e o botão de criar logo abaixo, na primeira tela', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page)
     await abrirTela(page, 'Cadastros')
     const seletor = await caixa(page.getByLabel('Cadastro'))
-    const novo = await caixa(page.getByRole('button', { name: 'Novo' }))
-    expect(Math.abs(seletor.y - novo.y)).toBeLessThanOrEqual(1)
+    // cadastros-fluxo-visual (AC 1, AC 2): o cabeçalho do cadastro traz o botão com o nome do objeto, abaixo do seletor
+    const novo = await caixa(page.getByRole('button', { name: /^Nov[oa] / }))
+    expect(novo.y).toBeGreaterThan(seletor.y)
+    expect(novo.y + novo.height).toBeLessThanOrEqual(844)
+    expect(novo.height).toBeGreaterThanOrEqual(36)
   })
 })
 

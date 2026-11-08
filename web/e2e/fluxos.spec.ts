@@ -134,6 +134,15 @@ test.describe('canvas dos fluxos', () => {
     expect(depois.y).toBeGreaterThan(antes.y)
   })
 
+  // C113 (AD-042): o zoom nunca passa de 100%, nem com um fluxo curto
+  test('zoom máximo de 100%', async ({ page }) => {
+    await fluxos(page, { numero: 1, etapas: [etapa('COORDENACAO_CURSO', 320, 40)] })
+    await abrirCanvas(page)
+    const escala = await page.locator('.react-flow__viewport').evaluate((e) => new DOMMatrixReadOnly(getComputedStyle(e).transform).a)
+    expect(escala).toBeLessThanOrEqual(1)
+    expect(escala).toBeGreaterThan(0)
+  })
+
   // C93 (AC 79)
   test('celular só com a lista', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('COORDENACAO_CURSO')] })
