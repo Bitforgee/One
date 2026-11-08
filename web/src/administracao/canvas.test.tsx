@@ -233,6 +233,7 @@ describe('canvas', () => {
     cadastros()
     await abrirNoCanvas('Notas')
     expect(document.querySelector('.react-flow__background')).not.toBeNull()
+    expect(document.querySelector('.react-flow__background pattern circle')).not.toBeNull() // a variante de pontos, não de linhas
     expect(screen.queryByRole('region', { name: 'Etapa selecionada' })).not.toBeInTheDocument()
 
     await selecionar(noDeEtapa(1, 'Setor Financeiro (24 h)'))

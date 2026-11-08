@@ -180,7 +180,7 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
 
   await editor.getByRole('button', { name: 'Publicar' }).click()
   await expect(editor).toHaveCount(0)
-  await expect(page.getByRole('tabpanel', { name: 'Fluxos' })).toContainText(`${nomeDoCurso}, 3º semestre · Liderança do semestre (48 h) → Coordenação do curso`)
+  const linhaDoFluxo = page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('row').filter({ hasText: `${nomeDoCurso}, 3º semestre` })`n  await expect(linhaDoFluxo).toContainText('Liderança do semestre')`n  await expect(linhaDoFluxo).toContainText('Coordenação do curso')`n  await expect(linhaDoFluxo).toContainText('(48 h)')
   await contexto.close()
 })
 

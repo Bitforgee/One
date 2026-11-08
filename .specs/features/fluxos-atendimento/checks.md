@@ -161,7 +161,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.S
 **C39** - [x] `GET /api/admin/fluxos` responde `200` com `id`, `categoriaId`, `cursoId`, `semestre`, `vigente` e `rascunho`, cada versão com `numero` e `etapas`, e só os fluxos da instituição do admin (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Lista_so_da_instituicao"`
 
-**C40** - [x] Na aba Fluxos, uma linha mostra o nome da categoria e, em `Detalhe`, a abrangência e a cadeia: `Todos os cursos · Setor Financeiro` e `ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)` (AC 31)
+**C40** - [x] Na aba Fluxos, uma linha mostra o nome da categoria e, a abrangência, a cadeia em etapas e o estado, nessa ordem: `Todos os cursos`, `Setor Financeiro`, `Publicado v1` e `ADS, 3º semestre`, `Liderança do semestre`, `Coordenação do curso (48 h)`, `Publicado v2` (AC 31; emenda `cadastros-fluxo-visual`, sem os separadores ` · ` e ` → `)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "lista com abrangência e cadeia"`
 
 **C41** - [x] Ao criar, o formulário pede a categoria e oferece a abrangência como três opções: `Todos os cursos`, `Um curso` e `Um semestre de um curso`, e só então mostra o curso e o semestre (AC 32)
@@ -264,6 +264,7 @@ Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "prévia q
 
 **C72** - [x] `POST /transferir` não aceita `aceitaLideranca`: quem decide é o fluxo, e o chamado abre na liderança quando o fluxo manda e há liderança disponível, e na coordenação quando não há (AC 59; emenda AD-042)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Fluxo_decide_e_o_aluno_nao_escolhe"`
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Sem_lideranca_disponivel_vai_a_coordenacao"`
 
 **C73** - [x] Para o líder, o detalhe traz `transcricao: []`, `matricula.numero: null` e `categorias: null`, e traz `solicitante`, `resumo`, `matricula.curso`, `matricula.semestre`, `mensagens`, `eventos` e `fluxo` (AC 60)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Detalhe_do_lider_sem_transcricao_nem_matricula"`
@@ -390,6 +391,7 @@ Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "editor em
 
 **C108** - [x] O + entre duas etapas insere a etapa naquele ponto da cadeia e o limite de 5 etapas é respeitado (arranjo; emenda cadastros-fluxo-visual)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "inserir etapa no meio da cadeia"`
+Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "organizar alinha a cadeia, inserir respeita o limite e o Início nunca fica coberto"`
 
 **C109** - [x] Organizar realinha as etapas sem cobrir o Início, abrir um fluxo salvo em cima do Início o realinha, e a barra da etapa remove sem confirmar quando a etapa está em branco (arranjo; emenda cadastros-fluxo-visual)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "organizar alinha a cadeia, inserir respeita o limite e o Início nunca fica coberto"`
@@ -418,7 +420,7 @@ Enumeração por tela do que se vê e de onde. Os valores visuais vêm dos token
 | Cadastros, aba `Fluxos` | vazia: a frase do AC 34 e `Novo` | C43 |
 | Cadastros, formulário `Novo: Fluxos` | categoria, abrangência em três opções, curso e semestre só quando a opção os pede | C41 |
 | Edição do fluxo | tela cheia, alternador `Lista`/`Canvas` e `Simular`, `Salvar rascunho` e `Publicar` na barra do topo (emenda: `cadastros-fluxo-visual`, `675d6df`); `Publicar` desligado enquanto inválido | C42, C83, C107, C111 |
-| Canvas | botão flutuante `Adicionar etapa` no lugar da paleta em fileira (arrastar da lista de destinos segue valendo); `+` no meio de cada ligação; barra da etapa; `Organizar`; `Início` chamado "Chamado aberto" nunca coberto; nós da esquerda para a direita (emenda: `cadastros-fluxo-visual`, `675d6df`, que substitui o arranjo do AD-042) | C84, C85, C96, C108, C109, C110 |
+| Canvas | botão flutuante `Adicionar etapa` no lugar da paleta em fileira (arrastar da lista de destinos segue valendo); `+` no meio de cada ligação; barra da etapa; `Organizar`; `Início` nunca coberto pelas etapas; nós da esquerda para a direita (emenda: `cadastros-fluxo-visual`, `675d6df`, que substitui o arranjo do AD-042) | C84, C85, C96, C108, C109, C110 |
 | Canvas | nó marcado `Vai por aqui` ou `Pulada: {motivo}` depois de simular | C95 |
 | Canvas, cadeia inválida | frase de erro acima do canvas e os dois botões desligados | C88 |
 | Edição do fluxo, abaixo de 768 px | só a Lista e a frase do canvas | C93 |

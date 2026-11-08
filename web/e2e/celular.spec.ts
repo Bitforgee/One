@@ -96,6 +96,7 @@ test.describe('S1 celular', () => {
     // cadastros-fluxo-visual (AC 1, AC 2): o cabeçalho do cadastro traz o botão com o nome do objeto, abaixo do seletor
     const novo = await caixa(page.getByRole('button', { name: /^Nov[oa] / }))
     expect(novo.y).toBeGreaterThan(seletor.y)
+    expect(novo.y - (seletor.y + seletor.height)).toBeLessThanOrEqual(120) // logo abaixo: só o título e a frase do cadastro entre os dois
     expect(novo.y + novo.height).toBeLessThanOrEqual(844)
     expect(novo.height).toBeGreaterThanOrEqual(36)
   })
