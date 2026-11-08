@@ -299,52 +299,52 @@ Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "etapa do flux
 
 ### S6 - o gestor monta o fluxo arrastando e soltando (P2) · ~12 arquivos · ~110 KB · ~28k
 
-**C83** - A edição oferece `Lista` e `Canvas` do mesmo rascunho, e alternar entre as duas mantém uma etapa adicionada e não salva (AC 70)
+**C83** - [x] A edição oferece `Lista` e `Canvas` do mesmo rascunho, e alternar entre as duas mantém uma etapa adicionada e não salva (AC 70)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "alternar mantém a edição"`
 
-**C84** - O canvas mostra o nó `Início` e um nó por etapa ligados em ordem, cada um com ícone do tipo, o rótulo fixo e ` (48 h)` quando há prazo (AC 71)
+**C84** - [x] O canvas mostra o nó `Início` e um nó por etapa ligados em ordem, cada um com ícone do tipo, o rótulo fixo e ` (48 h)` quando há prazo (AC 71)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "nós em ordem com rótulo e prazo"`
 
-**C85** - Arrastar `Coordenação do curso` da paleta e soltá-lo no canvas adiciona um nó sem ligação na posição do soltar (AC 72)
+**C85** - [x] Arrastar `Coordenação do curso` da paleta e soltá-lo no canvas adiciona um nó sem ligação na posição do soltar (AC 72)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "arrastar tipo da paleta"`
 
-**C86** - A regra de ligação aceita só saída de nó sem saída para nó sem entrada, e recusa autoligação, segunda saída, segunda entrada e ciclo (5 casos) (AC 73)
+**C86** - [x] A regra de ligação aceita só saída de nó sem saída para nó sem entrada, e recusa autoligação, segunda saída, segunda entrada e ciclo (5 casos) (AC 73)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "regra de ligação"`
 
-**C87** - Ligar o `Início` a um nó, e esse nó a outro, no navegador, forma a cadeia em ordem e recusa uma segunda saída do `Início` (AC 73)
+**C87** - [x] Ligar o `Início` a um nó, e esse nó a outro, no navegador, forma a cadeia em ordem e recusa uma segunda saída do `Início` (AC 73)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "ligar nós em cadeia"`
 
-**C88** - Um nó fora da cadeia, e um sexto nó, são marcados e desligam `Salvar rascunho` e `Publicar` com a frase `Ligue todas as etapas ao Início, em uma única cadeia, com até 5 etapas.` (AC 74)
+**C88** - [x] Um nó fora da cadeia, e um sexto nó, são marcados e desligam `Salvar rascunho` e `Publicar` com a frase `Ligue todas as etapas ao Início, em uma única cadeia, com até 5 etapas.` (AC 74)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "cadeia inválida"`
 
-**C89** - `Salvar rascunho` envia as etapas na ordem do caminho com `x` e `y` de cada nó, e reabrir o rascunho coloca cada nó onde estava (AC 75)
+**C89** - [x] `Salvar rascunho` envia as etapas na ordem do caminho com `x` e `y` de cada nó, e reabrir o rascunho coloca cada nó onde estava (AC 75)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "salvar envia ordem e posição"`
 
-**C90** - Remover um nó com setor ou prazo pede confirmação antes, e confirmar remove o nó e as ligações dele sem religar os vizinhos (AC 76)
+**C90** - [x] Remover um nó com setor ou prazo pede confirmação antes, e confirmar remove o nó e as ligações dele sem religar os vizinhos (AC 76)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "remover nó pede confirmação"`
 
-**C91** - No navegador, `Tab` chega a cada nó do canvas e as setas movem o nó selecionado (AC 77)
+**C91** - [x] No navegador, `Tab` chega a cada nó do canvas e as setas movem o nó selecionado (AC 77)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "teclado no canvas"`
 
-**C92** - A Lista faz o que o canvas faz: adicionar uma etapa, remover, subir, descer, escolher o destino e definir o prazo, cada um com um botão ou campo nomeado (AC 78)
+**C92** - [x] A Lista faz o que o canvas faz: adicionar uma etapa, remover, subir, descer, escolher o destino e definir o prazo, cada um com um botão ou campo nomeado (AC 78)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "lista tem todas as operações do canvas"`
 
-**C93** - Abaixo de 768 px o editor mostra só a Lista e a frase `O canvas está disponível em telas maiores.`; a partir de 768 px mostra as duas visões (AC 79)
+**C93** - [x] Abaixo de 768 px o editor mostra só a Lista e a frase `O canvas está disponível em telas maiores.`; a partir de 768 px mostra as duas visões (AC 79)
 Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/fluxos.spec.ts -g "celular só com a lista"`
 
-**C94** - A biblioteca do canvas só é importada por `web/src/administracao/`, só por `import()` dinâmico, e o pacote de entrada do build não contém o código dela (AC 80, door 10)
+**C94** - [x] A biblioteca do canvas só é importada por `web/src/administracao/`, só por `import()` dinâmico, e o pacote de entrada do build não contém o código dela (AC 80, door 10)
 Proof: `cd web && npx vitest run src/test/estrutura.test.ts -t "canvas carregado só sob demanda"`
 Proof: `npm --prefix web run build && node web/scripts/entrada-sem-canvas.mjs`
 
-**C95** - Simular com o canvas aberto marca cada nó com `Vai por aqui` ou `Pulada: {motivo}` conforme a resposta da API (AC 81)
+**C95** - [x] Simular com o canvas aberto marca cada nó com `Vai por aqui` ou `Pulada: {motivo}` conforme a resposta da API (AC 81)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "simulação marca os nós"`
 
-**C96** - O canvas sem etapas mostra só o `Início` e a frase `Arraste um destino para começar.`, e se a biblioteca falha ao carregar, o editor mostra a Lista com o aviso `Não foi possível abrir o canvas. Use a lista.` (Observable)
+**C96** - [x] O canvas sem etapas mostra só o `Início` e a frase `Arraste um destino para começar.`, e se a biblioteca falha ao carregar, o editor mostra a Lista com o aviso `Não foi possível abrir o canvas. Use a lista.` (Observable)
 Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "canvas vazio e falha de carga"`
 
 ### Barreiras e doors · arquivos de configuração e testes · ~20 KB · ~5k
 
-**C97** - `web/package.json` fixa `@xyflow/react` na versão exata `12.12.1`, sem `^` nem `~` (door 10)
+**C97** - [x] `web/package.json` fixa `@xyflow/react` na versão exata `12.12.1`, sem `^` nem `~` (door 10)
 Proof: `node -e "process.exit(require('./web/package.json').dependencies['@xyflow/react']==='12.12.1'?0:1)"`
 
 **C98** - [x] O tipo de destino é uma lista fechada no código, e o que cada tipo enxerga e se exige aceite vem do tipo: `SETOR` e `COORDENACAO_CURSO` veem tudo e não pedem aceite, `LIDERANCA_SEMESTRE` vê o resumo restrito e pede aceite; nenhuma coluna nem campo de entrada guarda isso (door 3)

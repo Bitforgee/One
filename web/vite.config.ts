@@ -32,7 +32,7 @@ export default defineConfig({
         // só arquivos estáticos; nada de /api/* em cache
         globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
         // só o subconjunto latino das fontes; o aluno não usa os outros alfabetos
-        globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*'],
+        globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*', '**/Canvas-*'], // e o pacote do canvas: só chega a quem abre o editor (fluxos-atendimento door 10)
       },
     }),
   ],

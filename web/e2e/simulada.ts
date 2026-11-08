@@ -81,6 +81,7 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
     if (['/api/admin/cursos', '/api/admin/fluxos', '/api/admin/respostas-prontas'].includes(caminho)) return json(200, [])
     if (caminho.startsWith('/api/admin/fluxos/')) return json(200, { numero: 1, etapas: [] })
     if (caminho === '/api/chamados/ONE-123/subir') return json(200, chamadoSimulado())
+    if (/^\/api\/conversas\/\d+\/destino$/.test(caminho)) return json(200, { lideranca: false })
     if (caminho === '/api/admin/categorias') return json(200, [{ id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true }])
     if (caminho === '/api/admin/artigos')
 {

@@ -6,7 +6,7 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle }
 import { useConsulta } from './ui/use-mobile'
 import { XIcon } from 'lucide-react'
 
-type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; children: ReactNode }
+type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; children: ReactNode }
 
 // Os dois botões do rodapé: "Cancelar" e a ação que envia o formulário.
 function Botoes({ fechar, pendente, botao, desabilitado, cheios }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado'> & { botao: string; cheios?: boolean }) {
@@ -25,7 +25,7 @@ function Botoes({ fechar, pendente, botao, desabilitado, cheios }: Pick<Props, '
 
 // Diálogo de edição: o formulário, o Alert de erro da gravação e o botão com Spinner.
 // Abaixo de 768 px é uma tela inteira (Sheet de baixo): cabeçalho com o título e o X de 44 px, corpo que rola e rodapé fixo (AC 29).
-export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, children }: Props) {
+export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, children }: Props) {
   const celular = useConsulta('(max-width: 767px)')
   const enviar = (e: FormEvent) => {
     e.preventDefault()
@@ -57,7 +57,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
     )
   return (
     <Dialog open={aberto} onOpenChange={aoMudar}>
-      <DialogContent aria-describedby={undefined} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${largo ? 'sm:max-w-5xl' : ''}`}>
         <form className="contents" onSubmit={enviar}>
           <DialogHeader>
             <DialogTitle>{titulo}</DialogTitle>

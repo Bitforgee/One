@@ -124,12 +124,33 @@ beforeEach(() => {
   globalThis.recusarConexao = false
 })
 
-// o jsdom não tem ResizeObserver; o use-stick-to-bottom (Conversation) usa
+// o jsdom não tem ResizeObserver; o use-stick-to-bottom (Conversation) e o React Flow (canvas) usam.
+// Ao observar, avisa o tamanho do alvo uma vez, como o navegador: é assim que o React Flow mede os nós (reactflow.dev/learn/advanced-use/testing).
 globalThis.ResizeObserver ??= class {
-  observe() {}
+  constructor(private aviso: ResizeObserverCallback) {}
+  observe(alvo: Element) {
+    const caixa = { x: 0, y: 0, width: 100, height: 40, top: 0, right: 100, bottom: 40, left: 0, toJSON: () => ({}) }
+    this.aviso([{ target: alvo, contentRect: caixa, borderBoxSize: [{ inlineSize: 100, blockSize: 40 }], contentBoxSize: [{ inlineSize: 100, blockSize: 40 }], devicePixelContentBoxSize: [] } as unknown as ResizeObserverEntry], this as unknown as ResizeObserver)
+  }
   unobserve() {}
   disconnect() {}
 }
+
+// nem DOMMatrixReadOnly, que o React Flow lê para saber a escala do painel; sem transformação a escala é 1
+globalThis.DOMMatrixReadOnly ??= class {
+  m22 = 1
+  constructor(transformacao?: string) {
+    const escala = transformacao?.match(/scale\(([\d.]+)\)/)?.[1]
+    if (escala !== undefined) this.m22 = Number(escala)
+  }
+} as unknown as typeof DOMMatrixReadOnly
+
+// e o tamanho dos elementos: o React Flow só mostra o nó depois de medi-lo
+Object.defineProperties(HTMLElement.prototype, {
+  offsetHeight: { configurable: true, get: () => 40 },
+  offsetWidth: { configurable: true, get: () => 100 },
+})
+;(SVGElement.prototype as SVGGraphicsElement).getBBox ??= () => ({ x: 0, y: 0, width: 0, height: 0 }) as DOMRect
 
 // nem matchMedia; a gaveta (Vaul) consulta ao abrir. Sem media query, nenhuma consulta casa
 window.matchMedia ??= (media: string) =>

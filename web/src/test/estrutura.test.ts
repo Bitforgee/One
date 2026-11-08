@@ -59,3 +59,22 @@ it('estrutura em fatias', () => {
   expect(arquivos.filter((a) => /(?:function|const)\s+cn\b/.test(texto(a)))).toEqual(['ui/utils.ts'])
   expect(arquivos.filter((a) => pasta(a) !== 'ui' && SoDaUi.test(texto(a)))).toEqual([])
 })
+
+// fluxos-atendimento C94 (door 10): a biblioteca do canvas só entra em web/src/administracao/, e o arquivo que a importa só chega ao navegador por import() dinâmico.
+// A outra metade, o pacote de entrada do build sem o código dela, é o web/scripts/entrada-sem-canvas.mjs.
+it('canvas carregado só sob demanda', () => {
+  const biblioteca = /(?:from|import)\s*['"]@xyflow\/react[^'"]*['"]/
+  const codigo = arquivos.filter((a) => !/\.test\.tsx?$/.test(a))
+  const usam = codigo.filter((a) => biblioteca.test(texto(a)))
+  expect(usam.length).toBeGreaterThan(0)
+  for (const a of usam) expect(pasta(a), a).toBe('administracao')
+
+  const modulo = (a: string) => a.replace(/^.*\//, '').replace(/\.tsx?$/, '')
+  const importam = (a: string) => codigo.filter((o) => new RegExp(`from ['"]\\.{1,2}/(?:administracao/)?${modulo(a)}['"]`).test(texto(o)))
+  // só outro arquivo que também usa a biblioteca pode importá-lo de forma estática
+  for (const a of usam) expect(importam(a).filter((o) => !usam.includes(o)), a).toEqual([])
+  // a porta de entrada do canvas, a que nenhum outro desse grupo importa, é aberta por um import() dinâmico de fora dele
+  const portas = usam.filter((a) => importam(a).length === 0)
+  expect(portas.length).toBeGreaterThan(0)
+  for (const a of portas) expect(codigo.some((o) => !usam.includes(o) && texto(o).includes(`import('./${modulo(a)}')`)), a).toBe(true)
+})

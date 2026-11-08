@@ -1,169 +1,123 @@
-import { useMutation } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
 import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
-import { Marca } from '../Marca'
-import { Opcoes } from '../Opcoes'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { NativeSelect } from '../ui/native-select'
-import { abrangenciaDoFluxo, Destinos, SemestresDe1a12, type Categoria, type Curso, type Destino, type Etapa, type Fluxo, type Setor } from './comum'
+import { Alert } from '../ui/alert'
+import { Spinner } from '../ui/spinner'
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
+import { useConsulta } from '../ui/use-mobile'
+import { abrangenciaDoFluxo, type Categoria, type Curso, type Fluxo, type Setor } from './comum'
+import { caminho, cadeiaValida, deEtapas, etapasParaApi, FraseDaCadeia, fixarPosicoes, type Grafo } from './grafo'
+import { ListaDeEtapas } from './ListaDeEtapas'
+import { Simulador, type Simulacao } from './Simulador'
 
-const MaximoDeEtapas = 5
+// A biblioteca do canvas só chega ao navegador quando a visão Canvas abre (AC 80, door 10): é o único import() dela.
+export const Carga = { canvas: () => import('./Canvas') }
 
-// A etapa como o formulário a guarda: texto nos campos de número e no setor; a posição só viaja, para o canvas.
-type EtapaEdicao = { destino: Destino; setorId: string; prazoHoras: string; x: number | null; y: number | null }
+type Visao = 'lista' | 'canvas'
 
-const daApi = (e: Etapa): EtapaEdicao => ({ destino: e.destino, setorId: e.setorId === null ? '' : String(e.setorId), prazoHoras: e.prazoHoras === null ? '' : String(e.prazoHoras), x: e.x, y: e.y })
-const paraApi = (e: EtapaEdicao) => ({
-  destino: e.destino,
-  setorId: e.destino === 'SETOR' && e.setorId !== '' ? Number(e.setorId) : null,
-  prazoHoras: e.prazoHoras === '' ? null : Number(e.prazoHoras),
-  x: e.x,
-  y: e.y,
-})
-const NovaEtapa: EtapaEdicao = { destino: 'SETOR', setorId: '', prazoHoras: '', x: null, y: null }
-
-type Linha = { n: number; total: number; etapa: EtapaEdicao; setores: Setor[]; mudar: (parcial: Partial<EtapaEdicao>) => void; mover: (delta: number) => void; remover: () => void }
-
-// Uma etapa da lista: destino, setor (só na etapa de setor), prazo e os botões de mover e remover, todos nomeados pelo número da etapa.
-function LinhaDaEtapa({ n, total, etapa, setores, mudar, mover, remover }: Linha) {
-  return (
-    <fieldset className="flex flex-col gap-2 rounded-md border p-3">
-      <legend className="px-1 text-sm font-medium">Etapa {n}</legend>
-      <NativeSelect aria-label={`Destino da etapa ${n}`} className="w-full" value={etapa.destino} onChange={(e) => mudar({ destino: e.target.value as Destino })}>
-        {Destinos.map(([valor, rotulo]) => (
-          <option key={valor} value={valor}>
-            {rotulo}
-          </option>
-        ))}
-      </NativeSelect>
-      {etapa.destino === 'SETOR' && (
-        <NativeSelect aria-label={`Setor da etapa ${n}`} className="w-full" value={etapa.setorId} onChange={(e) => mudar({ setorId: e.target.value })}>
-          <Opcoes vazio="Escolha o setor" itens={setores.filter((s) => s.ativo)} />
-        </NativeSelect>
-      )}
-      <Input type="number" min={1} max={720} inputMode="numeric" placeholder="Prazo em horas (opcional)" aria-label={`Prazo da etapa ${n} (horas)`} value={etapa.prazoHoras} onChange={(e) => mudar({ prazoHoras: e.target.value })} />
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" size="icon" aria-label={`Mover etapa ${n} para cima`} disabled={n === 1} onClick={() => mover(-1)}>
-          <ArrowUp aria-hidden="true" />
-        </Button>
-        <Button type="button" variant="outline" size="icon" aria-label={`Mover etapa ${n} para baixo`} disabled={n === total} onClick={() => mover(1)}>
-          <ArrowDown aria-hidden="true" />
-        </Button>
-        <Button type="button" variant="outline" size="icon" aria-label={`Remover etapa ${n}`} onClick={remover}>
-          <Trash2 aria-hidden="true" />
-        </Button>
-      </div>
-    </fieldset>
-  )
+// Se o pacote do canvas não carrega, o editor segue com a lista e avisa (Observable).
+class FalhaDoCanvas extends Component<{ fallback: ReactNode; children: ReactNode }, { falhou: boolean }> {
+  state = { falhou: false }
+  static getDerivedStateFromError() {
+    return { falhou: true }
+  }
+  render() {
+    return this.state.falhou ? this.props.fallback : this.props.children
+  }
 }
 
-type Simulacao = {
-  etapas: { ordem: number; destino: Destino; setor: string | null; situacao: string; motivo: string | null }[]
-  inicial: string
-  escolhido: { id: number; cursoId: number | null; semestre: number | null } | null
-}
-
-function ResultadoDaSimulacao({ resultado }: { resultado: Simulacao }) {
-  return (
-    <div className="flex flex-col gap-1 text-sm">
-      <ol className="m-0 ps-5">
-        {resultado.etapas.map((e) => (
-          <li key={e.ordem}>
-            {Destinos.find(([d]) => d === e.destino)![1]}: {e.setor ?? `Pulada: ${e.motivo}`}
-          </li>
-        ))}
-      </ol>
-      <p className="m-0">O chamado abre em {resultado.inicial}.</p>
-      {!resultado.escolhido && <p className="m-0 text-muted-foreground">Nenhum fluxo publicado vale para este aluno.</p>}
-    </div>
-  )
-}
-
-type PropsDoSimulador = { fluxo: Fluxo; cursos: Curso[]; versao: 'RASCUNHO' | 'VIGENTE' | null }
-
-// Simula o caminho de um aluno com o curso, o semestre e o aceite escolhidos, sem gravar nada.
-function Simulador({ fluxo, cursos, versao }: PropsDoSimulador) {
-  const [cursoId, setCursoId] = useState('')
-  const [semestre, setSemestre] = useState('')
-  const [aceita, setAceita] = useState(false)
-  const simular = useMutation({
-    mutationFn: () => api<Simulacao>(`/api/admin/fluxos/${fluxo.id}/simular`, { versao, cursoId: Number(cursoId), semestre: Number(semestre), aceitaLideranca: aceita }),
+// "Vai por aqui" ou "Pulada: motivo" em cada nó do caminho, conforme a resposta da simulação (AC 81).
+function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
+  const marcas: Record<string, string> = {}
+  if (!simulacao) return marcas
+  caminho(g).forEach((no, i) => {
+    const etapa = simulacao.etapas.find((e) => e.ordem === i + 1)
+    if (etapa) marcas[no.id] = etapa.situacao === 'RESOLVIDA' ? 'Vai por aqui' : `Pulada: ${etapa.motivo}`
   })
+  return marcas
+}
+
+type PropsDoAlternador = { visao: Visao; mudar: (v: Visao) => void }
+
+// Lista e Canvas são duas telas do mesmo rascunho; abaixo de 768 px só a Lista existe (AC 79).
+function Alternador({ visao, mudar }: PropsDoAlternador) {
   return (
-    <section className="flex flex-col gap-2" aria-label="Simulação">
-      <h3 className="m-0 text-base font-semibold">Simular um aluno</h3>
-      <NativeSelect aria-label="Curso do aluno" className="w-full" value={cursoId} onChange={(e) => setCursoId(e.target.value)}>
-        <Opcoes vazio="Escolha o curso" itens={cursos} />
-      </NativeSelect>
-      <NativeSelect aria-label="Semestre do aluno" className="w-full" value={semestre} onChange={(e) => setSemestre(e.target.value)}>
-        <option value="">Escolha o semestre</option>
-        {SemestresDe1a12.map((n) => (
-          <option key={n} value={n}>
-            {n}º semestre
-          </option>
-        ))}
-      </NativeSelect>
-      <Marca id="simula-aceite" rotulo="O aluno aceita a liderança do semestre" marcado={aceita} mudar={setAceita} />
-      <BotaoAcao type="button" variant="outline" className="self-start" pendente={simular.isPending} disabled={!versao || !cursoId || !semestre} onClick={() => simular.mutate()}>
-        Simular
-      </BotaoAcao>
-      <ErroDe erro={simular.error} />
-      {simular.data && <ResultadoDaSimulacao resultado={simular.data} />}
-    </section>
+    <Tabs value={visao} onValueChange={(v) => mudar(v as Visao)} className="gap-2">
+      <TabsList>
+        <TabsTrigger value="lista">Lista</TabsTrigger>
+        <TabsTrigger value="canvas">Canvas</TabsTrigger>
+      </TabsList>
+    </Tabs>
   )
 }
 
 type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; fechar: () => void; recarregar: () => Promise<unknown> }
 
-// A janela de edição do fluxo: a lista de etapas do rascunho, o simulador, e as ações Salvar rascunho, Publicar e Descartar.
-// Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API).
+// A janela de edição do fluxo: o rascunho em lista ou no canvas, o simulador, e as ações Salvar rascunho, Publicar e Descartar.
+// Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API) e a cadeia está inteira.
 export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, recarregar }: Props) {
-  const [etapas, setEtapas] = useState<EtapaEdicao[]>(() => (fluxo.rascunho ?? fluxo.vigente)?.etapas.map(daApi) ?? [])
+  const [grafo, setGrafo] = useState<Grafo>(() => deEtapas((fluxo.rascunho ?? fluxo.vigente)?.etapas ?? []))
+  const [visao, setVisao] = useState<Visao>('lista')
+  const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
+  const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
-  const caminho = `/api/admin/fluxos/${fluxo.id}`
+  const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
+  const CanvasCarregado = useMemo(() => lazy(() => Carga.canvas()), [])
+  const valida = cadeiaValida(grafo)
+  const noCanvas = visao === 'canvas' && !estreito
 
-  function alterar(f: (lista: EtapaEdicao[]) => EtapaEdicao[]) {
-    setEtapas(f)
+  function editar(f: (g: Grafo) => Grafo) {
+    setGrafo(f)
     setSalvo(false)
     setAlterado(true)
+    setSimulacao(undefined)
   }
-  const mudar = (i: number, parcial: Partial<EtapaEdicao>) => alterar((l) => l.map((e, j) => (j === i ? { ...e, ...parcial } : e)))
-  const mover = (i: number, delta: number) =>
-    alterar((l) => {
-      const nova = [...l]
-      ;[nova[i], nova[i + delta]] = [nova[i + delta], nova[i]]
-      return nova
-    })
+  const mudarVisao = (v: Visao) => {
+    if (v === 'canvas') setGrafo(fixarPosicoes) // o que o canvas desenha é o que a API recebe
+    setVisao(v)
+  }
 
   const salvar = () =>
-    acao.mutate({ chamar: () => api(`${caminho}/rascunho`, { etapas: etapas.map(paraApi) }, 'PUT'), aviso: 'Rascunho salvo.', depois: () => { setSalvo(true); setAlterado(false) } })
-  const publicar = () => acao.mutate({ chamar: () => api(`${caminho}/publicar`, {}), aviso: 'Fluxo publicado.', depois: fechar })
-  const descartar = () => acao.mutate({ chamar: () => api(`${caminho}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: fechar })
+    acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, { etapas: etapasParaApi(grafo) }, 'PUT'), aviso: 'Rascunho salvo.', depois: () => { setSalvo(true); setAlterado(false) } })
+  const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: fechar })
+  const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: fechar })
   const versao = salvo ? 'RASCUNHO' : !alterado && fluxo.vigente ? 'VIGENTE' : null
+  const lista = <ListaDeEtapas grafo={grafo} setores={setores} editar={editar} />
 
   return (
-    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" alerta={<ErroDe erro={acao.error} />}>
+    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} largo={noCanvas} alerta={<ErroDe erro={acao.error} />}>
       <p className="m-0 text-sm text-muted-foreground">
         {categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · {abrangenciaDoFluxo(fluxo, cursos)}
       </p>
-      {etapas.length === 0 && <p className="m-0 text-sm text-muted-foreground">Sem etapas ainda.</p>}
-      {etapas.map((etapa, i) => (
-        <LinhaDaEtapa key={i} n={i + 1} total={etapas.length} etapa={etapa} setores={setores} mudar={(p) => mudar(i, p)} mover={(d) => mover(i, d)} remover={() => alterar((l) => l.filter((_, j) => j !== i))} />
-      ))}
-      <Button type="button" variant="outline" className="self-start" disabled={etapas.length >= MaximoDeEtapas} onClick={() => alterar((l) => [...l, NovaEtapa])}>
-        <Plus aria-hidden="true" />
-        Adicionar etapa
-      </Button>
-      <Simulador fluxo={fluxo} cursos={cursos} versao={versao} />
+      {estreito ? <p className="m-0 text-sm text-muted-foreground">O canvas está disponível em telas maiores.</p> : <Alternador visao={visao} mudar={mudarVisao} />}
+      {!valida && (
+        <p role="alert" className="m-0 text-sm text-destructive">
+          {FraseDaCadeia}
+        </p>
+      )}
+      {noCanvas ? (
+        <FalhaDoCanvas
+          fallback={
+            <>
+              <Alert variant="destructive">Não foi possível abrir o canvas. Use a lista.</Alert>
+              {lista}
+            </>
+          }
+        >
+          <Suspense fallback={<Spinner />}>
+            <CanvasCarregado grafo={grafo} setores={setores} marcas={marcasDaSimulacao(grafo, simulacao)} editar={editar} />
+          </Suspense>
+        </FalhaDoCanvas>
+      ) : (
+        lista
+      )}
+      <Simulador fluxo={fluxo} cursos={cursos} versao={versao} resultado={simulacao} aoSimular={setSimulacao} />
       <div className="flex flex-wrap gap-2">
-        <BotaoAcao type="button" pendente={false} disabled={!salvo || acao.isPending} onClick={publicar}>
+        <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || acao.isPending} onClick={publicar}>
           Publicar
         </BotaoAcao>
         <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!fluxo.rascunho || acao.isPending} onClick={descartar}>
