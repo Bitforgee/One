@@ -7,6 +7,8 @@ Plan: `.specs/features/pastas-padrao-dotnet/plan.md`
 
 **Emenda de 08/11, aprovada pelo usuário** depois da verificação rodada 1 (FAIL): `web/e2e/identidade.spec.ts` e `web/src/test/interface.test.ts` ainda liam `../api/wwwroot`, e o primeiro falhava. O usuário escolheu "Corrigir e emendar" e "AD-040 + glossário + comentários". O C11 foi reescrito (antes: "nenhum arquivo em `web/src` muda"); C15 e C16 são novos. Os outros checks não mudaram.
 
+**Emenda 2, de 08/11, aprovada pelo usuário** depois da verificação rodada 2 (FAIL): o AD-019 também escreve `api/` e tinha ficado fora. O usuário escolheu "Emendar e corrigir". O C16 passa de 4 para 5 ADs (antes: "AD-005, AD-017, AD-018, AD-024" e a contagem `= 4`).
+
 **Como as provas rodam.** No Git Bash, na raiz `D:\one-system`. `BASE=0fd86f1` é a `main` de onde a branch saiu: nenhum `.cs` mudou entre ela e o commit que congela este arquivo. API: `docker compose up -d postgres mailpit minio` e uma execução de `dotnet test` por vez. Um filtro que não seleciona teste sai com 0 (L-002): conferir a contagem no relatório. Mutação suspensa (AD-025).
 
 ## Checks
@@ -67,16 +69,16 @@ Proof: `grep -E '^\| AD-040 \|' .specs/STATE.md | grep 'One.Api/' | grep 'One.Ap
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests"`
 Proof: `test "$(git grep -c 'Assert\.' HEAD -- One.Api.Tests | awk -F: '{s+=$NF} END {print s}')" = 2280`
 
-**C16** - [x] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
+**C16** - [ ] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-019, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
 Proof: `! git grep -nE '(^|[^A-Za-z./])api/' -- .specs/GLOSSARIO.md web/src/aparencia.tsx web/src/test/estrutura.test.ts One.Api.Tests/ArquiteturaTests.cs`
-Proof: `test "$(grep -E '^\| AD-0(05|17|18|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 4`
+Proof: `test "$(grep -E '^\| AD-0(05|17|18|19|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 5`
 
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
 | --- | --- | --- |
 | lugares que guardam a pasta (14) | `One.slnx` C2 · `ProjectReference` do teste C3 · `vite.config.ts` C5 · `Dockerfile` C6 · `.gitignore` C9 · `.dockerignore` C9 · `ArquiteturaTests` C14 · `PlataformaTests` C4 · `ProvedorTests` C4 · `RetratoTests` C4 · `preparar.ts` C10 · `tts.ts` C10 · `interface.test.ts` C15 · `identidade.spec.ts` C15 | - |
-| textos vivos com a pasta (6) | `GLOSSARIO.md` C16 · `aparencia.tsx` C16 · `estrutura.test.ts` C16 · `ArquiteturaTests.cs` C16 · ADs ativos (AD-005, AD-017, AD-018, AD-024) C16 · `AGENTS.md` C12 | - |
+| textos vivos com a pasta (6) | `GLOSSARIO.md` C16 · `aparencia.tsx` C16 · `estrutura.test.ts` C16 · `ArquiteturaTests.cs` C16 · ADs ativos (AD-005, AD-017, AD-018, AD-019, AD-024) C16 · `AGENTS.md` C12 | - |
 | montagens da API (3) | `dotnet run`/build local C3 · `WebApplicationFactory` dos testes C4 · imagem Docker C6 | - |
 | doors do Landing (2) | layout das pastas C1, C2 · AD-040 C13 | - |
 | documentos com comando ou regra (2) | `AGENTS.md` C12 · `STATE.md` C13 | - |

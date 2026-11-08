@@ -30,7 +30,7 @@ caminhos.
 7. `ArquiteturaTests` (exists), `PlataformaTests` (exists), `ProvedorTests` (exists) e `RetratoTests` (exists) - os testes que montam caminho leem as pastas novas
 8. `web/apresentacao/preparar.ts` e `tts.ts` (exist) - `cwd` e `--project` apontam para `One.Api`
 9. `web/src/test/interface.test.ts` (exists) e `web/e2e/identidade.spec.ts` (exists) - os testes do `web/` que olham a saída do build leem `../One.Api/wwwroot/assets` (achados na verificação rodada 1)
-10. out: `AGENTS.md` (comandos e regras), `.specs/GLOSSARIO.md` e os comentários que citavam a pasta, e `.specs/STATE.md` (AD-040 substitui os caminhos `api/` escritos nos ADs ativos: AD-005, AD-017, AD-018, AD-024)
+10. out: `AGENTS.md` (comandos e regras), `.specs/GLOSSARIO.md` e os comentários que citavam a pasta, e `.specs/STATE.md` (AD-040 substitui os caminhos `api/` escritos nos ADs ativos: AD-005, AD-017, AD-018, AD-019, AD-024)
 
 ## Impact
 
