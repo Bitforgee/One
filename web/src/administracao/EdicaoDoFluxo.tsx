@@ -10,7 +10,7 @@ import { useConsulta } from '../ui/use-mobile'
 import { abrangenciaDoFluxo, type Categoria, type Curso, type Fluxo, type Setor } from './comum'
 import { caminho, cadeiaValida, deEtapas, etapasParaApi, FraseDaCadeia, fixarPosicoes, type Grafo } from './grafo'
 import { ListaDeEtapas } from './ListaDeEtapas'
-import { Simulador, type Simulacao } from './Simulador'
+import { BotaoSimular, Simulador, useSimulador, type Simulacao } from './Simulador'
 
 // A biblioteca do canvas só chega ao navegador quando a visão Canvas abre (AC 80, door 10): é o único import() dela.
 export const Carga = { canvas: () => import('./Canvas') }
@@ -92,24 +92,9 @@ function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, mudarVisao, 
   )
 }
 
-type PropsDosBotoes = { podePublicar: boolean; podeDescartar: boolean; publicar: () => void; descartar: () => void }
-
-function BotoesDoFluxo({ podePublicar, podeDescartar, publicar, descartar }: PropsDosBotoes) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <BotaoAcao type="button" pendente={false} disabled={!podePublicar} onClick={publicar}>
-        Publicar
-      </BotaoAcao>
-      <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!podeDescartar} onClick={descartar}>
-        Descartar rascunho
-      </BotaoAcao>
-    </div>
-  )
-}
-
 type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; fechar: () => void; recarregar: () => Promise<unknown> }
 
-// A janela de edição do fluxo: o rascunho em lista ou no canvas, o simulador, e as ações Salvar rascunho, Publicar e Descartar.
+// A janela de edição do fluxo: o rascunho em lista ou no canvas, o simulador, e a barra Simular, Publicar, Cancelar e Salvar rascunho; Descartar fica no topo.
 // Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API) e a cadeia está inteira.
 export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, recarregar }: Props) {
   const [grafo, setGrafo] = useState<Grafo>(() => deEtapas((fluxo.rascunho ?? fluxo.vigente)?.etapas ?? []))
@@ -121,6 +106,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, reca
   const acao = useGravacao(recarregar)
   const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
   const valida = cadeiaValida(grafo)
+  const simulador = useSimulador({ fluxo, versao: versaoParaSimular(salvo, alterado, fluxo), aoSimular: setSimulacao })
 
   function editar(f: (g: Grafo) => Grafo) {
     setGrafo(f)
@@ -138,14 +124,27 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, reca
   const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: fechar })
   const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: fechar })
 
+  const barra = (
+    <>
+      <BotaoSimular s={simulador} />
+      <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || acao.isPending} onClick={publicar}>
+        Publicar
+      </BotaoAcao>
+    </>
+  )
+
   return (
-    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} largo={visao === 'canvas' && !estreito} alerta={<ErroDe erro={acao.error} />}>
-      <p className="m-0 text-sm text-muted-foreground">
-        {categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · {abrangenciaDoFluxo(fluxo, cursos)}
-      </p>
+    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} largo={visao === 'canvas' && !estreito} acoes={barra} alerta={<ErroDe erro={acao.error} />}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="m-0 text-sm text-muted-foreground">
+          {categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · {abrangenciaDoFluxo(fluxo, cursos)}
+        </p>
+        <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!fluxo.rascunho || acao.isPending} onClick={descartar}>
+          Descartar rascunho
+        </BotaoAcao>
+      </div>
       <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} mudarVisao={mudarVisao} estreito={estreito} />
-      <Simulador fluxo={fluxo} cursos={cursos} versao={versaoParaSimular(salvo, alterado, fluxo)} resultado={simulacao} aoSimular={setSimulacao} />
-      <BotoesDoFluxo podePublicar={salvo && valida && !acao.isPending} podeDescartar={!!fluxo.rascunho && !acao.isPending} publicar={publicar} descartar={descartar} />
+      <Simulador s={simulador} cursos={cursos} resultado={simulacao} />
     </Editor>
   )
 }

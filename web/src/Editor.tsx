@@ -6,13 +6,14 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle }
 import { useConsulta } from './ui/use-mobile'
 import { XIcon } from 'lucide-react'
 
-type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; children: ReactNode }
+type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; acoes?: ReactNode; children: ReactNode }
 
 // Os dois botões do rodapé: "Cancelar" e a ação que envia o formulário.
-function Botoes({ fechar, pendente, botao, desabilitado, cheios }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado'> & { botao: string; cheios?: boolean }) {
+function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado' | 'acoes'> & { botao: string; cheios?: boolean }) {
   const c = cheios ? 'flex-1' : undefined
   return (
     <>
+      {acoes}
       <Button type="button" variant="outline" className={c} onClick={fechar}>
         Cancelar
       </Button>
@@ -25,7 +26,7 @@ function Botoes({ fechar, pendente, botao, desabilitado, cheios }: Pick<Props, '
 
 // Diálogo de edição: o formulário, o Alert de erro da gravação e o botão com Spinner.
 // Abaixo de 768 px é uma tela inteira (Sheet de baixo): cabeçalho com o título e o X de 44 px, corpo que rola e rodapé fixo (AC 29).
-export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, children }: Props) {
+export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, acoes, children }: Props) {
   const celular = useConsulta('(max-width: 767px)')
   const enviar = (e: FormEvent) => {
     e.preventDefault()
@@ -48,8 +49,8 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
               {children}
               {alerta}
             </div>
-            <SheetFooter className="mt-0 shrink-0 flex-row border-t pb-[calc(1rem+env(safe-area-inset-bottom))]">
-              <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} cheios />
+            <SheetFooter className="mt-0 shrink-0 flex-row flex-wrap border-t pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} cheios />
             </SheetFooter>
           </form>
         </SheetContent>
@@ -64,8 +65,8 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
           </DialogHeader>
           {children}
           {alerta}
-          <DialogFooter>
-            <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} />
+          <DialogFooter className="flex-wrap">
+            <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} />
           </DialogFooter>
         </form>
       </DialogContent>

@@ -28,7 +28,7 @@ async function abrirEditor(page: Page) {
 async function abrirCanvas(page: Page) {
   const dialogo = await abrirEditor(page)
   await dialogo.getByRole('tab', { name: 'Canvas' }).click()
-  await expect(page.getByLabel('Início')).toBeVisible()
+  await expect(page.getByLabel('Início', { exact: true })).toBeVisible()
   return dialogo
 }
 
@@ -76,7 +76,7 @@ test.describe('canvas dos fluxos', () => {
     await abrirCanvas(page)
     await page.getByRole('button', { name: 'Liderança do semestre' }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 200, y: 60 } })
     await page.getByRole('button', { name: 'Coordenação do curso' }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 200, y: 260 } })
-    const inicio = page.getByLabel('Início')
+    const inicio = page.getByLabel('Início', { exact: true })
     const primeiro = page.getByLabel('Etapa 1: Liderança do semestre')
     const segundo = page.getByLabel('Etapa 2: Coordenação do curso')
     await expect(segundo).toBeVisible()
@@ -139,6 +139,23 @@ test.describe('canvas dos fluxos', () => {
     await expect(page.locator('.react-flow')).toHaveCount(0)
   })
 
+  // fluxos-atendimento ## Screens: Simular e Publicar na mesma barra, os quatro botões à vista (extra)
+  test('arranjo da barra de ações: Simular e Publicar na mesma barra a 1440x900', async ({ page }) => {
+    await fluxos(page, { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO')] })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    const editor = await abrirEditor(page)
+
+    const caixas: Record<string, { x: number; y: number; width: number; height: number }> = {}
+    for (const nome of ['Simular', 'Publicar', 'Salvar rascunho', 'Cancelar']) caixas[nome] = (await editor.getByRole('button', { name: nome, exact: true }).boundingBox())!
+    expect(Math.abs(caixas['Simular'].y - caixas['Publicar'].y)).toBeLessThanOrEqual(1)
+    expect(Math.abs(caixas['Simular'].height - caixas['Publicar'].height)).toBeLessThanOrEqual(1)
+    for (const [nome, c] of Object.entries(caixas)) {
+      expect(c.x, nome).toBeGreaterThanOrEqual(0)
+      expect(c.y, nome).toBeGreaterThanOrEqual(0)
+      expect(c.x + c.width, nome).toBeLessThanOrEqual(1440)
+      expect(c.y + c.height, nome).toBeLessThanOrEqual(900)
+    }
+  })
   test('celular só com a lista: a partir de 768 px as duas visões', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('COORDENACAO_CURSO')] })
     await page.setViewportSize({ width: 768, height: 900 })

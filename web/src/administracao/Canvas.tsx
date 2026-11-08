@@ -73,7 +73,31 @@ function desenhar(g: Grafo, setores: Setor[], marcas: Record<string, string>): N
   return [inicio, ...etapas]
 }
 
-const ligacoesComoArestas = (g: Grafo): Edge[] => g.ligacoes.map((l) => ({ id: `${l.de}>${l.para}`, source: l.de, target: l.para, type: 'smoothstep' }))
+// O rótulo acessível de uma ligação usa os rótulos fixos dos nós, nunca os ids internos.
+function ligacoesComoArestas(g: Grafo, setores: Setor[]): Edge[] {
+  const rotulo = (id: string) => {
+    const no = g.nos.find((n) => n.id === id)
+    return no ? rotuloDaEtapa(comoEtapa(no), setores) : 'Início'
+  }
+  return g.ligacoes.map((l) => ({ id: `${l.de}>${l.para}`, source: l.de, target: l.para, type: 'smoothstep', ariaLabel: `Ligação de ${rotulo(l.de)} para ${rotulo(l.para)}` }))
+}
+
+const Direcoes: Record<string, string> = { left: 'para a esquerda', right: 'para a direita', up: 'para cima', down: 'para baixo' }
+
+// Os textos de acessibilidade que a biblioteca escreve em inglês, em português do Brasil.
+const TextosDoCanvas = {
+  'node.a11yDescription.default': 'Pressione Enter ou espaço para selecionar a etapa. Pressione Esc para cancelar.',
+  'node.a11yDescription.keyboardDisabled': 'Pressione Enter ou espaço para selecionar a etapa e use as setas para movê-la. Pressione Esc para cancelar.',
+  'node.a11yDescription.ariaLiveMessage': ({ direction, x, y }: { direction: string; x: number; y: number }) => `Etapa movida ${Direcoes[direction] ?? direction}. Nova posição, x: ${x}, y: ${y}`,
+  'edge.a11yDescription.default': 'Pressione Enter ou espaço para selecionar a ligação. Depois, pressione Delete para removê-la ou Esc para cancelar.',
+  'controls.ariaLabel': 'Controles do canvas',
+  'controls.zoomIn.ariaLabel': 'Aproximar',
+  'controls.zoomOut.ariaLabel': 'Afastar',
+  'controls.fitView.ariaLabel': 'Enquadrar o fluxo',
+  'controls.interactive.ariaLabel': 'Alternar interatividade',
+  'minimap.ariaLabel': 'Minimapa',
+  'handle.ariaLabel': 'Ponto de ligação',
+}
 
 // A paleta com os três tipos de destino: arrastar para o canvas solta um nó; o botão põe a etapa no fim da cadeia, para quem não arrasta.
 function Paleta({ adicionar }: { adicionar: (destino: Destino) => void }) {
@@ -163,7 +187,7 @@ export type CanvasProps = {
 function Corpo({ grafo, setores, marcas, editar }: CanvasProps) {
   const { screenToFlowPosition } = useReactFlow()
   const desenhados = useMemo(() => desenhar(grafo, setores, marcas), [grafo, setores, marcas])
-  const arestas = useMemo(() => ligacoesComoArestas(grafo), [grafo])
+  const arestas = useMemo(() => ligacoesComoArestas(grafo, setores), [grafo, setores])
   const ref = useRef<Node[]>([])
   const [nodes, setNodes] = useState<Node[]>([])
   const [removendo, setRemovendo] = useState<string>()
@@ -220,6 +244,7 @@ function Corpo({ grafo, setores, marcas, editar }: CanvasProps) {
             onBeforeDelete={async ({ edges }) => ({ nodes: [], edges })}
             onDrop={aoLargar}
             onDragOver={(e) => e.preventDefault()}
+            ariaLabelConfig={TextosDoCanvas}
             nodesFocusable
             edgesFocusable
             fitView

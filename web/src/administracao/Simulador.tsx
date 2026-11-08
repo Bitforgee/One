@@ -30,10 +30,11 @@ function ResultadoDaSimulacao({ resultado }: { resultado: Simulacao }) {
   )
 }
 
-type Props = { fluxo: Fluxo; cursos: Curso[]; versao: 'RASCUNHO' | 'VIGENTE' | null; resultado?: Simulacao; aoSimular: (r: Simulacao) => void }
+type Props = { fluxo: Fluxo; cursos: Curso[]; versao: 'RASCUNHO' | 'VIGENTE' | null; aoSimular: (r: Simulacao) => void }
 
-// Simula o caminho de um aluno com o curso, o semestre e o aceite escolhidos, sem gravar nada. O resultado fica com quem edita, para o canvas marcar os nós (AC 81).
-export function Simulador({ fluxo, cursos, versao, resultado, aoSimular }: Props) {
+// O aluno que se simula (curso, semestre e aceite) e a chamada que simula sem gravar nada. O botão Simular fica na barra de ações
+// do editor e os campos na seção "Simular um aluno"; o resultado fica com quem edita, para o canvas marcar os nós (AC 81).
+export function useSimulador({ fluxo, versao, aoSimular }: Pick<Props, 'fluxo' | 'versao' | 'aoSimular'>) {
   const [cursoId, setCursoId] = useState('')
   const [semestre, setSemestre] = useState('')
   const [aceita, setAceita] = useState(false)
@@ -41,13 +42,27 @@ export function Simulador({ fluxo, cursos, versao, resultado, aoSimular }: Props
     mutationFn: () => api<Simulacao>(`/api/admin/fluxos/${fluxo.id}/simular`, { versao, cursoId: Number(cursoId), semestre: Number(semestre), aceitaLideranca: aceita }),
     onSuccess: aoSimular,
   })
+  return { cursoId, setCursoId, semestre, setSemestre, aceita, setAceita, simular, pode: !!versao && !!cursoId && !!semestre }
+}
+
+export type EstadoDoSimulador = ReturnType<typeof useSimulador>
+
+export function BotaoSimular({ s }: { s: EstadoDoSimulador }) {
+  return (
+    <BotaoAcao type="button" variant="outline" pendente={s.simular.isPending} disabled={!s.pode} onClick={() => s.simular.mutate()}>
+      Simular
+    </BotaoAcao>
+  )
+}
+
+export function Simulador({ s, cursos, resultado }: { s: EstadoDoSimulador; cursos: Curso[]; resultado?: Simulacao }) {
   return (
     <section className="flex flex-col gap-2" aria-label="Simulação">
       <h3 className="m-0 text-base font-semibold">Simular um aluno</h3>
-      <NativeSelect aria-label="Curso do aluno" className="w-full" value={cursoId} onChange={(e) => setCursoId(e.target.value)}>
+      <NativeSelect aria-label="Curso do aluno" className="w-full" value={s.cursoId} onChange={(e) => s.setCursoId(e.target.value)}>
         <Opcoes vazio="Escolha o curso" itens={cursos} />
       </NativeSelect>
-      <NativeSelect aria-label="Semestre do aluno" className="w-full" value={semestre} onChange={(e) => setSemestre(e.target.value)}>
+      <NativeSelect aria-label="Semestre do aluno" className="w-full" value={s.semestre} onChange={(e) => s.setSemestre(e.target.value)}>
         <option value="">Escolha o semestre</option>
         {SemestresDe1a12.map((n) => (
           <option key={n} value={n}>
@@ -55,11 +70,8 @@ export function Simulador({ fluxo, cursos, versao, resultado, aoSimular }: Props
           </option>
         ))}
       </NativeSelect>
-      <Marca id="simula-aceite" rotulo="O aluno aceita a liderança do semestre" marcado={aceita} mudar={setAceita} />
-      <BotaoAcao type="button" variant="outline" className="self-start" pendente={simular.isPending} disabled={!versao || !cursoId || !semestre} onClick={() => simular.mutate()}>
-        Simular
-      </BotaoAcao>
-      <ErroDe erro={simular.error} />
+      <Marca id="simula-aceite" rotulo="O aluno aceita a liderança do semestre" marcado={s.aceita} mudar={s.setAceita} />
+      <ErroDe erro={s.simular.error} />
       {resultado && <ResultadoDaSimulacao resultado={resultado} />}
     </section>
   )

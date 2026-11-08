@@ -107,6 +107,26 @@ describe('canvas', () => {
     await waitFor(() => expect(document.querySelectorAll('.react-flow__edge')).toHaveLength(2))
   })
 
+  // textos acessíveis do canvas em pt-BR, sem ids internos
+  it('textos acessíveis em português, sem ids internos', async () => {
+    cadastros()
+    await abrirNoCanvas('Boletos')
+    await waitFor(() => expect(document.querySelectorAll('.react-flow__edge')).toHaveLength(2))
+
+    const textos = [document.body.textContent ?? '']
+    document.querySelectorAll('[aria-label],[aria-description],[title]').forEach((e) => textos.push(e.getAttribute('aria-label') ?? '', e.getAttribute('aria-description') ?? '', e.getAttribute('title') ?? ''))
+    const tudo = textos.join('\n')
+    for (const proibido of ['Control Panel', 'Zoom In', 'Zoom Out', 'Fit View', 'Edge from', 'Press enter']) expect(tudo).not.toContain(proibido)
+    expect(tudo).not.toMatch(/\binicio\b/)
+    expect(tudo).not.toMatch(/\bno-\d+\b/)
+
+    expect(screen.getByLabelText('Ligação de Início para Liderança do semestre')).toBeInTheDocument()
+    expect(screen.getByLabelText('Ligação de Liderança do semestre para Coordenação do curso (48 h)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Aproximar')).toBeInTheDocument()
+    expect(screen.getByLabelText('Afastar')).toBeInTheDocument()
+    expect(screen.getByLabelText('Enquadrar o fluxo')).toBeInTheDocument()
+  })
+
   // C86 (AC 73)
   it('regra de ligação', () => {
     const ligacoes: Ligacao[] = [
