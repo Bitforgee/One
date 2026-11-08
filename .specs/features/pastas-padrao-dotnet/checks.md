@@ -46,11 +46,11 @@ Proof: `git check-ignore -q One.Api/wwwroot/index.html && grep -qx 'One.Api/wwwr
 **C10** - [x] Os scripts de `web/apresentacao` rodam o comando da API na pasta `One.Api` e não citam mais a pasta `api` (Flow, hop 8)
 Proof: `grep -q "'One.Api'" web/apresentacao/preparar.ts && grep -q "'One.Api'" web/apresentacao/tts.ts && ! grep -nE "Raiz, 'api'" web/apresentacao/preparar.ts web/apresentacao/tts.ts`
 
-**C11** - [ ] Em `web/src` mudam só 3 arquivos, `aparencia.tsx`, `test/estrutura.test.ts` e `test/interface.test.ts`, e toda linha mudada cita a pasta (`api/` antes, `One.Api/` depois); nenhuma linha de lógica muda, então os gates `crapper` e `dryer` do AD-018 não têm o que medir de novo (Impact, emenda)
+**C11** - [x] Em `web/src` mudam só 3 arquivos, `aparencia.tsx`, `test/estrutura.test.ts` e `test/interface.test.ts`, e toda linha mudada cita a pasta (`api/` antes, `One.Api/` depois); nenhuma linha de lógica muda, então os gates `crapper` e `dryer` do AD-018 não têm o que medir de novo (Impact, emenda)
 Proof: `test "$(git diff --name-only $BASE HEAD -- web/src | sort | tr '\n' ' ')" = "web/src/aparencia.tsx web/src/test/estrutura.test.ts web/src/test/interface.test.ts "`
 Proof: `test -z "$(git diff -U0 $BASE HEAD -- web/src | grep -E '^[-+][^-+]' | grep -vE 'api/|One\.Api/')"`
 
-**C15** - [ ] Os dois testes do `web/` que olham a saída do build leem `One.Api/wwwroot/assets` e passam: o Vitest "sem biblioteca de gráfico" com a pasta gerada, e o e2e "fontes latin no precache" contra a imagem da 8080; nenhum arquivo em `web/` cita mais `../api/` (Flow, hop 9, emenda)
+**C15** - [x] Os dois testes do `web/` que olham a saída do build leem `One.Api/wwwroot/assets` e passam: o Vitest "sem biblioteca de gráfico" com a pasta gerada, e o e2e "fontes latin no precache" contra a imagem da 8080; nenhum arquivo em `web/` cita mais `../api/` (Flow, hop 9, emenda)
 Proof: `grep -q "'../One.Api/wwwroot/assets'" web/src/test/interface.test.ts && grep -q '/../One.Api/wwwroot/assets' web/e2e/identidade.spec.ts && ! git grep -n '\.\./api/' -- web`
 Proof: `npm --prefix web run build && test -d One.Api/wwwroot/assets && cd web && npx vitest run src/test/interface.test.ts -t "sem biblioteca de gráfico"`
 Proof: `docker compose up -d --build api && cd web && npx playwright test e2e/identidade.spec.ts -g "fontes latin no precache"`
@@ -67,7 +67,7 @@ Proof: `grep -E '^\| AD-040 \|' .specs/STATE.md | grep 'One.Api/' | grep 'One.Ap
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests"`
 Proof: `test "$(git grep -c 'Assert\.' HEAD -- One.Api.Tests | awk -F: '{s+=$NF} END {print s}')" = 2280`
 
-**C16** - [ ] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
+**C16** - [x] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
 Proof: `! git grep -nE '(^|[^A-Za-z./])api/' -- .specs/GLOSSARIO.md web/src/aparencia.tsx web/src/test/estrutura.test.ts One.Api.Tests/ArquiteturaTests.cs`
 Proof: `test "$(grep -E '^\| AD-0(05|17|18|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 4`
 
@@ -106,3 +106,6 @@ Sem linhas novas: o `AGENTS.md` (`## Testes`) já diz o nível de cada camada, e
 - **Boundary:** C1-C14 closed at `c7e3fdd`; base `0fd86f1`, checks congelados em `a91776f`. `dotnet test api.Tests` em `0fd86f1`: 581 de 581; `dotnet test One.Api.Tests` em `cb2ce84`: 581 de 581. Build, web build, EF sem mudança pendente e a imagem na 8080 (`200`) saem 0
 - **Settled mid-build:** nada; nenhuma asserção mudou além do caminho literal (2280 `Assert.` antes e depois)
 - **Abandoned:** nada. O `git mv` levou junto `bin/` e `obj/` (não rastreados), então não sobra pasta `api/` local; isso importa porque um teste que ainda apontasse para `api/` com só `bin/obj` lá dentro enumeraria zero `.cs` e passaria vazio
+- **Boundary (rodada 1 → correção):** C11, C15 e C16 fechados em `a245ae6`; emenda dos checks em `8774026`. Vitest "sem biblioteca de gráfico" 1 de 1 com `One.Api/wwwroot/assets` gerada; e2e "fontes latin no precache" 1 de 1 contra a imagem refeita; `ArquiteturaTests` 60 de 60; build 0 erros
+- **Settled mid-build:** depois da rodada 1 o usuário aprovou "Corrigir e emendar" e "AD-040 + glossário + comentários", e pediu para corrigir o plano sobre o par: o merge entra depois do que a outra pessoa já tem pronto, e ela faz rebase logo em seguida (Impact e Assumptions do plano, `## Handoff` do `STATE.md`)
+- **Abandoned:** nada. Causa da lacuna: a varredura de caminhos do autor cortou a saída em 40 linhas (`head -40`) e não mostrou `web/e2e` nem `web/src/test`
