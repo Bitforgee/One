@@ -1,8 +1,9 @@
 # One: roadmap
 
-- **Data:** 04/11/2026, fim do dia (verificados no `main`: anexos na conversa, aparência por instituição, proteção contra
-  prompt injection, tela de instituições para operadores e a revisão de UI/UX. Próximo: a Etapa 5, que depende dos
-  dados da Univag, e o ensaio com a IA real)
+- **Data:** 07/11/2026 (desde 05/11: `push-com-marca` verificado, `identidade-visual` e `estrutura-visual` fechadas
+  com risco aceito, `historico-frases` construído com a verificação em FAIL na rodada 1, plano do `lider-semestre`
+  escrito sem aprovação, vídeo de apresentação gerado e `AGENTS.md` para o trabalho em dupla. Próximo: decidir
+  `historico-frases` e `lider-semestre`, criar o remoto do grupo e a Etapa 5, que depende dos dados da Univag)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -19,7 +20,11 @@
   - `.specs/features/protecao-injecao/`: proteção contra prompt injection (04/11), 9 checks;
   - `.specs/features/instituicoes-plataforma/`: tela de instituições para o papel `OPERADOR` (04/11), 28 critérios, 38 checks;
   - `.specs/features/revisao-ux/`: pesquisa, auditoria, plano e 73 checks da revisão de UI/UX (04/11);
-  - `.specs/STATE.md`: decisões AD-001 a AD-033;
+  - `.specs/features/push-com-marca/`, `identidade-visual/`, `estrutura-visual/`: aviso com a marca e o visual (05/11);
+  - `.specs/features/historico-frases/`: autor certo em cada frase do Histórico (05/11), 11 checks;
+  - `.specs/features/lider-semestre/plan.md`: líder de semestre entre o assistente e a coordenação (05/11), só o plano;
+  - `.specs/STATE.md`: decisões AD-001 a AD-038;
+  - `AGENTS.md`: instruções para qualquer agente de IA no repositório (fluxo SDD, arquitetura, testes, colaboração);
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
   multi-instituição para a Fase 7 e mostrava o artigo ao aluno, duas coisas que mudaram.
@@ -44,7 +49,7 @@ A Univag é o primeiro cliente.
 | 20/11/2026 (qui) | Aplicação para a banca | todos os slices P1 funcionando de ponta a ponta, hospedados, com os dados da Univag |
 | 27/11/2026 (sex) | Entrega final | P2 que couber, documento ABNT atualizado, relatório de verificação |
 
-## Onde estamos (04/11/2026)
+## Onde estamos (07/11/2026)
 
 O código do MVP inteiro (P1, P2 e P3) e o RAG ficaram prontos bem antes das datas. O que falta
 para a banca deixou de ser código: a verificação do RAG fechar, dados reais, chave da OpenAI,
@@ -54,9 +59,13 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 360 commits em `main`, só nesta máquina. Desde 04/11 o trabalho é feito direto na `main` (pedido do usuário); a branch `visual-sem-cara-de-ia` foi incorporada por avanço rápido |
-| Testes | Em 05/11: API 577, web (Vitest) 524, arranjo com a API simulada 199, e2e real contra o contêiner 235 (arranjo e e2e na rodada 4 da estrutura, antes do último teste acrescentado). O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`). `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` às vezes trava quando a suíte roda em paralelo e passa sozinho em 3 s: investigar |
-| Repositório remoto do grupo | Não criado: `main` existe só nesta máquina |
+| Código | 365 commits em `main`, só nesta máquina. De 04/11 a 07/11 o trabalho foi direto na `main`; a partir de 07/11 o projeto é feito em dupla, cada pessoa com o seu agente de IA, e cada feature vai numa branch `feature/<slug>` ou `fix/<slug>` com PR revisado pela outra pessoa (`AGENTS.md`, `923e1f8`) |
+| Trabalho em dupla com IA (`AGENTS.md`) | **Commitado em 07/11** (`923e1f8`). Lido por Claude Code, opencode, Codex e outros agentes. Traz: o fluxo SDD (plano aprovado por humano → checks com prova → build → verificador independente) descrito sem exigir a skill `tlc-spec-lean`, que fica opcional; as regras de arquitetura da API e do web, já testadas em `ArquiteturaTests` e `estrutura.test.ts`; como os testes rodam; branch + PR, numeração de AD e conflito de migration entre as duas pessoas; limites (segredos, LGPD, push e merge só com ok). Build, `dotnet test` e Vitest conferidos ao escrever; e2e, `crapper`, `dryer` e `dotnet ef migrations add` não |
+| Histórico com o autor certo (`historico-frases`) | 11 checks; correção em `e565c50` (05/11): a resposta do aluno passa a ser "respondeu à equipe" e assumir passa a ser "assumiu a solicitação", decidido pelo id do autor e não pelo nome. **Verificação independente em FAIL na rodada 1**: os 11 checks passam e as 5 falhas injetadas foram pegas, mas depois de renomear um atendente o Histórico ainda escreve uma frase falsa ("Nome Corrigido atribuiu a Pessoa ..."), caso que o plano prometia e nenhum check cobre. Não é regressão (a redação antiga caía no mesmo ramo). **Espera decisão do usuário**: ampliar o plano com esse caso ou fechar com risco aceito |
+| Líder de semestre (`lider-semestre`) | **Só o plano, escrito em 05/11 e não aprovado nem commitado.** A dúvida de categorias escolhidas pelo admin vai primeiro à liderança do curso e semestre do aluno, se ele aceitar; o líder vê título, resumo e mensagens depois da transferência (sem transcrição, fontes nem matrícula) e encaminha à coordenação; 48 h sem resposta volta à coordenação. Reusa setor, fila, tempo real e encaminhar. Perguntas abertas: é pedido real da instituição ou ideia para a banca (decide se entra antes do congelamento de 17/11)? A Univag aceita estudante atendendo estudante, e com qual termo de confidencialidade (bloqueia o uso real)? |
+| Vídeo de apresentação (`web/apresentacao/`) | **Gerado em 03/11**: o Playwright grava o app com cursor, legenda e selo do papel, uma voz sintetizada narra cada passo e o `ffmpeg` monta MP4 + `.srt` (`apresentacao-one.mp4`, entregue na pasta 0 Inbox do Drive). O `preparar.ts` cria uma instituição limpa pelos fluxos reais antes de cada tomada. **A pasta ainda não está no git** |
+| Testes | Em 07/11, conferidos ao escrever o `AGENTS.md`: API 581 e web (Vitest) 525, todos verdes; build sem erro. Em 05/11: API 577, web (Vitest) 524, arranjo com a API simulada 199, e2e real contra o contêiner 235 (arranjo e e2e na rodada 4 da estrutura, antes do último teste acrescentado). O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`). `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` às vezes trava quando a suíte roda em paralelo e passa sozinho em 3 s: investigar |
+| Repositório remoto do grupo | Não criado: `main` existe só nesta máquina. **Agora é pré-requisito** do trabalho em dupla, porque o fluxo de PR do `AGENTS.md` depende dele |
 | Chave da OpenAI no `.env` | **Colocada.** Em 04/11 uma chamada real ao `gpt-6-luna` com imagem e PDF respondeu 200 (`provedor_aceita_anexos.py`, C20 de `anexos-assistente`). O ensaio de ponta a ponta da Etapa 5 continua por fazer |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
@@ -137,8 +146,9 @@ hospedagem e ensaio.
 - [x] `git init` em `D:\one-system`.
 - [ ] Criar o repositório remoto do grupo e enviar `main` (o `git push` espera o OK do grupo).
 - [x] Conta da OpenAI criada (substitui a conta DeepSeek, que não é mais necessária).
-- [ ] Colocar a chave da OpenAI no `.env` da raiz (`LLM_CHAVE_API=...`; o arquivo é ignorado pelo
-      git) e garantir crédito. Sem ela, o assistente só diz "não encontrei".
+- [x] Colocar a chave da OpenAI no `.env` da raiz (`LLM_CHAVE_API=...`; o arquivo é ignorado pelo
+      git). A chamada real respondeu 200 em 04/11; o crédito continua a conferir antes do ensaio.
+- [x] `AGENTS.md` com o fluxo SDD e as convenções, para o trabalho em dupla com IA (07/11, `923e1f8`).
 - [ ] Pedir à coordenação da Univag os setores, os atendentes e o texto dos primeiros 10 a 30
       artigos (pergunta 6). **É o item de prazo mais longo.**
 
@@ -426,29 +436,32 @@ Decisão do usuário em 02/11/2026 (AD-020): o `web/` troca o Bootstrap por esta
 dentro das 6 fatias do AD-017. Planejar com `tlc-spec-lean` perfil `ui`, e a migração não pode
 mudar nenhum teste de comportamento.
 
-| Categoria | Biblioteca | Onde entra no One | Observação |
-| --- | --- | --- | --- |
-| Componentes UI | [shadcn/ui](https://ui.shadcn.com) | todas as telas | substitui o `react-bootstrap` |
-| Estilização | [Tailwind CSS](https://tailwindcss.com) | todas as telas | substitui o CSS do Bootstrap |
-| Ícones | [Lucide React](https://lucide.dev) | todas as telas | substitui o `bootstrap-icons` |
-| Componentes acessíveis | [Radix UI](https://www.radix-ui.com) | base do shadcn/ui | vem junto, não é escolha à parte |
-| Animações | [Motion](https://motion.dev) | chat e transições | só onde ajuda a entender o estado |
-| Navegação mobile | [Vaul](https://vaul.emilkowal.ski) (drawer) | menu e ações em 360 px | |
-| Gráficos | [Recharts](https://recharts.org) | indicadores | |
-| Tabelas responsivas | [TanStack Table](https://tanstack.com/table) | filas de chamados, cadastros, usuários | |
-| Formulários | [React Hook Form](https://react-hook-form.com) | login, cadastros, artigos | |
-| Validação | [Zod](https://zod.dev) | formulários | a API continua sendo a fonte da validação (Problem Details); o Zod só antecipa o erro na tela |
-| Notificações visuais | [Sonner](https://sonner.emilkowal.ski) | resultado das ações | |
-| Calendário | [React DayPicker](https://daypicker.dev) | período dos indicadores | só se houver campo de data |
-| Editor de texto | [Tiptap](https://tiptap.dev) | edição de artigo | o texto do artigo é a fonte da conferência literal de trechos (AD-012): o editor não pode gravar marcação que mude o texto conferido |
-| Upload de arquivos | [React Dropzone](https://react-dropzone.js.org) | anexos e documentos | a API continua conferindo tipo e tamanho |
-| Chat | [AI Elements](https://ui.shadcn.com/docs/ai-elements) | Assistente | foi feito para o `useChat` do Vercel AI SDK. No One a resposta passa pela API, que confere os trechos (AD-012), então entram só os componentes visuais, sem AI SDK no navegador |
-| Fontes | [Inter](https://fonts.google.com/specimen/Inter) | todas as telas | |
-| Temas claro/escuro | [next-themes](https://github.com/pacocoursey/next-themes) | todas as telas | é pensado para Next.js; no Vite o shadcn/ui documenta um `ThemeProvider` próprio, que é o que entra |
-| PWA / Service Worker | [Vite PWA](https://vite-pwa-org.netlify.app) | app instalável | já em uso |
-| Cache e sincronização | [TanStack Query](https://tanstack.com/query) | chamadas à API | substitui o `useAcao` e as buscas manuais |
-| Armazenamento offline | [Dexie.js](https://dexie.org) | a decidir no plano | guardar conversas e chamados no aparelho é questão de LGPD, e o assistente precisa de rede; só dado não sensível |
-| Listas virtualizadas | [TanStack Virtual](https://tanstack.com/virtual) | listas longas | só se uma lista real passar de algumas centenas de itens |
+A coluna "Em 07/11" diz o que está de fato no `web/package.json` e importado em `web/src/` nessa data.
+
+| Categoria | Biblioteca | Onde entra no One | Observação | Em 07/11 |
+| --- | --- | --- | --- | --- |
+| Componentes UI | [shadcn/ui](https://ui.shadcn.com) | todas as telas | substitui o `react-bootstrap` | **em uso**, `new-york`, copiado em `web/src/ui/`; Bootstrap removido |
+| Estilização | [Tailwind CSS](https://tailwindcss.com) | todas as telas | substitui o CSS do Bootstrap | **em uso**, v4 com `@tailwindcss/vite`; tokens em `web/src/index.css` |
+| Ícones | [Lucide React](https://lucide.dev) | todas as telas | substitui o `bootstrap-icons` | **em uso** |
+| Componentes acessíveis | [Radix UI](https://www.radix-ui.com) | base do shadcn/ui | vem junto, não é escolha à parte | **em uso**, pacote único `radix-ui`, importado só em `web/src/ui/` |
+| Animações | [Motion](https://motion.dev) | chat e transições | só onde ajuda a entender o estado | **em uso**, em 2 lugares (`motion/react`) |
+| Navegação mobile | [Vaul](https://vaul.emilkowal.ski) (drawer) | menu e ações em 360 px | | **removido** em `layout-painel` (03/11): a gaveta é o `Sheet` do shadcn; teste garante que `vaul` não volta |
+| Gráficos | [Recharts](https://recharts.org) | indicadores | | **removido** em `estrutura-visual` (05/11): rankings viraram barras em HTML na própria tabela |
+| Tabelas responsivas | [TanStack Table](https://tanstack.com/table) | filas de chamados, cadastros, usuários | | **em uso** só em Indicadores; as outras tabelas usam o `table` do shadcn direto |
+| Formulários | [React Hook Form](https://react-hook-form.com) | login, cadastros, artigos | | **em uso** em 1 tela, com `@hookform/resolvers` |
+| Validação | [Zod](https://zod.dev) | formulários | a API continua sendo a fonte da validação (Problem Details); o Zod só antecipa o erro na tela | **em uso** em 1 tela |
+| Notificações visuais | [Sonner](https://sonner.emilkowal.ski) | resultado das ações | | **em uso** |
+| Calendário | [React DayPicker](https://daypicker.dev) | período dos indicadores | só se houver campo de data | **em uso** no período dos Indicadores |
+| Editor de texto | [Tiptap](https://tiptap.dev) | edição de artigo | o texto do artigo é a fonte da conferência literal de trechos (AD-012): o editor não pode gravar marcação que mude o texto conferido | **em uso**, só documento, parágrafo e texto |
+| Upload de arquivos | [React Dropzone](https://react-dropzone.js.org) | anexos e documentos | a API continua conferindo tipo e tamanho | **em uso** (`CampoArquivo.tsx`) |
+| Chat | [AI Elements](https://ui.shadcn.com/docs/ai-elements) | Assistente | foi feito para o `useChat` do Vercel AI SDK. No One a resposta passa pela API, que confere os trechos (AD-012), então entram só os componentes visuais, sem AI SDK no navegador | **em uso**: `conversation.tsx` e `message.tsx` em `web/src/ui/`, com `use-stick-to-bottom` |
+| Fontes | [Inter](https://fonts.google.com/specimen/Inter) | todas as telas | | **trocada** em `identidade-visual` (AD-034, 05/11): Public Sans para texto e controles e Source Serif 4 para títulos de conteúdo, via `@fontsource-variable`, só o subconjunto latino no cache do PWA |
+| Temas claro/escuro | [next-themes](https://github.com/pacocoursey/next-themes) | todas as telas | é pensado para Next.js; no Vite o shadcn/ui documenta um `ThemeProvider` próprio, que é o que entra | **não instalado**: `web/src/ui/theme-provider.tsx` próprio, com Claro, Escuro, Preto e Sistema (AD-027) |
+| PWA / Service Worker | [Vite PWA](https://vite-pwa-org.netlify.app) | app instalável | já em uso | **em uso**, `injectManifest` com `sw.ts` próprio (Workbox) para o Web Push |
+| Cache e sincronização | [TanStack Query](https://tanstack.com/query) | chamadas à API | substitui o `useAcao` e as buscas manuais | **em uso** |
+| Tempo real | [SignalR](https://learn.microsoft.com/aspnet/core/signalr) (`@microsoft/signalr`) | fila e detalhe do chamado | não estava na lista de 02/11 | **em uso** desde `tempo-real-signalr` (03/11) |
+| Armazenamento offline | [Dexie.js](https://dexie.org) | a decidir no plano | guardar conversas e chamados no aparelho é questão de LGPD, e o assistente precisa de rede; só dado não sensível | **não instalado**: nenhum plano pediu |
+| Listas virtualizadas | [TanStack Virtual](https://tanstack.com/virtual) | listas longas | só se uma lista real passar de algumas centenas de itens | **não instalado**: nenhuma lista chegou a esse tamanho |
 
 ## Decisões e bloqueios
 
@@ -512,7 +525,8 @@ as suítes, o e2e e as falhas injetadas à mão pelo Verifier.
 | A base interna vaza para o aluno | AC 40 com teste na API do aluno; fontes só para atendente e administrador |
 | Dados de uma instituição aparecem em outra | filtro global (door 16) e teste com duas instituições nas 27 rotas com id |
 | O código ficou pronto, mas sem dados reais nem IA real | a Etapa 5 inteira é sobre isso; a carga de exemplo é o plano B |
-| O repositório existe só numa máquina | criar o remoto do grupo e enviar `main` |
+| O repositório existe só numa máquina | criar o remoto do grupo e enviar `main`; desde 07/11 também bloqueia o trabalho em dupla |
+| Duas pessoas com dois agentes mexendo no mesmo código | `AGENTS.md`: uma feature por branch e por pasta `.specs/features/<slug>/`, PR revisado, verificador independente, regras de AD e de migration para conflitos |
 | Não ter artigos reais da Univag a tempo | pedir em 03/11; plano B: o grupo escreve 10 artigos a partir do Quadro 6 |
 | Internet ou API de IA fora do ar na banca | "não encontrei" com transferência continua funcionando; ensaiar sem rede |
 | Aluno preso no robô | "Falar com atendente" sempre visível, inclusive antes da primeira mensagem |
