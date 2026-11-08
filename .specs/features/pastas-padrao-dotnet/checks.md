@@ -69,7 +69,7 @@ Proof: `grep -E '^\| AD-040 \|' .specs/STATE.md | grep 'One.Api/' | grep 'One.Ap
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests"`
 Proof: `test "$(git grep -c 'Assert\.' HEAD -- One.Api.Tests | awk -F: '{s+=$NF} END {print s}')" = 2280`
 
-**C16** - [ ] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-019, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
+**C16** - [x] Os textos vivos que citavam a pasta passam a `One.Api/`: o `.specs/GLOSSARIO.md` e os comentários de `aparencia.tsx`, `estrutura.test.ts` e `ArquiteturaTests.cs` não citam mais `api/` como pasta; e os ADs ativos que escrevem `api/` (AD-005, AD-017, AD-018, AD-019, AD-024) dizem no status que esses caminhos foram substituídos pelo AD-040 (emenda)
 Proof: `! git grep -nE '(^|[^A-Za-z./])api/' -- .specs/GLOSSARIO.md web/src/aparencia.tsx web/src/test/estrutura.test.ts One.Api.Tests/ArquiteturaTests.cs`
 Proof: `test "$(grep -E '^\| AD-0(05|17|18|19|24) \|' .specs/STATE.md | grep -c 'superseded by AD-040')" = 5`
 
@@ -111,3 +111,6 @@ Sem linhas novas: o `AGENTS.md` (`## Testes`) já diz o nível de cada camada, e
 - **Boundary (rodada 1 → correção):** C11, C15 e C16 fechados em `a245ae6`; emenda dos checks em `8774026`. Vitest "sem biblioteca de gráfico" 1 de 1 com `One.Api/wwwroot/assets` gerada; e2e "fontes latin no precache" 1 de 1 contra a imagem refeita; `ArquiteturaTests` 60 de 60; build 0 erros
 - **Settled mid-build:** depois da rodada 1 o usuário aprovou "Corrigir e emendar" e "AD-040 + glossário + comentários", e pediu para corrigir o plano sobre o par: o merge entra depois do que a outra pessoa já tem pronto, e ela faz rebase logo em seguida (Impact e Assumptions do plano, `## Handoff` do `STATE.md`)
 - **Abandoned:** nada. Causa da lacuna: a varredura de caminhos do autor cortou a saída em 40 linhas (`head -40`) e não mostrou `web/e2e` nem `web/src/test`
+- **Boundary (rodada 2 → correção):** C16 fechado em `6ee5348` com 5 ADs; nenhum outro AD ativo escreve `api/` como pasta sem a marca (AD-032 e AD-033 citam rotas `/api/...`)
+- **Settled mid-build:** o usuário aprovou a emenda 2 ("Emendar e corrigir") e pediu que, com PASS, a feature entre direto na `main` com push, sem PR, como exceção
+- **Abandoned:** nada. A lacuna 2 da rodada 2 (o Vitest de `interface.test.ts` passa vazio com caminho errado, por causa do `existsSync ? : []`) fica como está: a prova por grep do C15 mata essa falha, e endurecer o teste quebraria o Vitest sem build
