@@ -16,6 +16,7 @@ public static class AcoesChamado
         EncaminharChamado.Mapear(api);
         ReclassificarChamado.Mapear(api);
         MarcarDuplicado.Mapear(api);
+        SubirChamado.Mapear(api);
     }
 
     public static IResult? Texto(string? texto, string campo, string mensagem) =>

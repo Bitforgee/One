@@ -219,4 +219,63 @@ public class ChamadoDominioTests
 
         Assert.Equal("O prazo de 10 dias para rejeitar a resolução terminou.", ChamadoResolvido().Rejeitar(Ator, "x", [], true, "Ana", 10, Antes.AddDays(10).AddTicks(1))?.Motivo);
     }
+
+    static Chamado NoFluxo() => Chamado.Abrir("ONE-1", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes, versaoFluxoId: 5, etapaOrdem: 1);
+
+    // fluxos-atendimento C44 e C45: subir move à etapa seguinte, solta o responsável, deixa ABERTO, guarda o motivo em nota e não soma em Encaminhamentos
+    [Fact]
+    public void Subir_move_a_etapa_registra_SUBIDA_e_nao_soma_encaminhamento()
+    {
+        var c = NoFluxo();
+        c.Assumir(Ator, null, "Ana", Antes);
+        var eventosAntes = c.Eventos.Count;
+
+        c.Subir(Ator, "Líderes", "Coordenação", 21, 2, "A coordenação resolve", "Ana", Agora);
+
+        Assert.Equal((Aberto, 21L, (int?)2, 0), (c.Estado, c.SetorId, c.EtapaOrdem, c.Encaminhamentos));
+        Assert.Equal(((long?)5, (DateTime?)Agora, (long?)null), (c.VersaoFluxoId, c.EtapaDesde, c.ResponsavelId));
+        Assert.Equal([("NOTA", (string?)null, (string?)null, (string?)null), ("SUBIDA", "Líderes", "Coordenação", "A coordenação resolve"), ("ATRIBUICAO", "Ana", null, null), ("TRANSICAO", EmAtendimento, Aberto, null)],
+            c.Eventos.Skip(eventosAntes).Select(e => (e.Tipo, e.De, e.Para, e.Detalhe)));
+        var nota = Assert.Single(c.Mensagens);
+        Assert.Equal(("NOTA", "A coordenação resolve"), (nota.Tipo, nota.Texto));
+    }
+
+    // C43 (domínio): a subida do Agendador não tem autor nem nota, e o detalhe diz o prazo
+    [Fact]
+    public void Subir_pelo_prazo_nao_tem_autor_nem_nota()
+    {
+        var c = NoFluxo();
+
+        c.Subir(null, "Líderes", "Coordenação", 21, 2, "Sem resposta em 48 horas", null, Agora);
+
+        Assert.Empty(c.Mensagens);
+        var subida = Assert.Single(c.Eventos, e => e.Tipo == "SUBIDA");
+        Assert.Equal((null, "Líderes", "Coordenação", "Sem resposta em 48 horas"), (subida.AtorId, subida.De, subida.Para, subida.Detalhe));
+        Assert.Equal((Aberto, (int?)2, 0), (c.Estado, c.EtapaOrdem, c.Encaminhamentos));
+    }
+
+    // C47 (domínio): só ABERTO, EM_ATENDIMENTO e AGUARDANDO_ALUNO sobem
+    [Fact]
+    public void Subir_so_nos_estados_abertos()
+    {
+        var aguardando = Aguardando();
+        aguardando.Subir(Ator, "A", "B", 21, 2, "x", "Ana", Agora);
+        Assert.Equal(Aberto, aguardando.Estado);
+        Assert.Throws<InvalidOperationException>(() => ChamadoResolvido().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
+        Assert.Throws<InvalidOperationException>(() => ChamadoFechado().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
+    }
+
+    // C57 (domínio): encaminhar à mão tira o chamado do fluxo; a abertura sem etapa também fica fora
+    [Fact]
+    public void Encaminhar_sai_do_fluxo_e_abrir_sem_etapa_fica_fora()
+    {
+        var c = NoFluxo();
+        Assert.Equal(((long?)5, (int?)1, (DateTime?)Antes), (c.VersaoFluxoId, c.EtapaOrdem, c.EtapaDesde));
+
+        c.Encaminhar(Ator, 21, "A", "B", "melhor com eles", null, Agora);
+
+        Assert.Equal((null, null, 1), (c.EtapaOrdem, c.EtapaDesde, c.Encaminhamentos));
+        var fora = Chamado.Abrir("ONE-2", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes, versaoFluxoId: 5, etapaOrdem: null);
+        Assert.Equal((null, null, null), (fora.VersaoFluxoId, fora.EtapaOrdem, fora.EtapaDesde));
+    }
 }

@@ -33,7 +33,7 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         await db.Setores.IgnoreQueryFilters().CountAsync(),
         await db.Cursos.IgnoreQueryFilters().CountAsync(),
         await db.Categorias.IgnoreQueryFilters().CountAsync(),
-        await db.Regras.IgnoreQueryFilters().CountAsync(),
+        await db.Fluxos.IgnoreQueryFilters().CountAsync(),
         await db.Artigos.IgnoreQueryFilters().CountAsync(),
         await db.VersoesArtigo.IgnoreQueryFilters().CountAsync(),
         await db.Tokens.IgnoreQueryFilters().CountAsync(),
@@ -156,10 +156,12 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             var curso = await db.Cursos.SingleAsync();
             Assert.Equal((await db.Setores.SingleAsync(s => s.Nome == "Coordenação ADS")).Id, curso.SetorCoordenacaoId);
             Assert.Equal(3, await db.Categorias.CountAsync());
-            var regras = await db.Regras.ToListAsync();
-            Assert.Equal(2, regras.Count);
-            Assert.Contains(regras, r => r.Destino == "SETOR" && r.SetorId != null);
-            Assert.Contains(regras, r => r.Destino == "COORDENACAO_CURSO" && r.SetorId == null);
+            var fluxos = await db.Fluxos.Include(x => x.Versoes).ThenInclude(v => v.Etapas).ToListAsync();
+            Assert.Equal(2, fluxos.Count);
+            Assert.All(fluxos, x => Assert.Equal((null, null, 1, 1), (x.CursoId, x.Semestre, x.Vigente!.Numero, x.Vigente.Etapas.Count)));
+            var etapas = fluxos.Select(x => x.Vigente!.Etapas.Single()).ToList();
+            Assert.Contains(etapas, e => e.Destino == "SETOR" && e.SetorId != null);
+            Assert.Contains(etapas, e => e.Destino == "COORDENACAO_CURSO" && e.SetorId == null);
             var artigos = await db.Artigos.Include(a => a.Versoes).ToListAsync();
             Assert.Equal(3, artigos.Count);
             Assert.All(artigos, a => Assert.Equal(EstadosArtigo.Ativo, a.Estado));
@@ -167,6 +169,22 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         });
     }
 
+    // fluxos-atendimento C10: a carga segue gerando regras na saída, mas agora cada uma é um fluxo para todos os cursos
+    [Fact]
+    public async Task Carga_continua_com_a_mesma_saida()
+    {
+        var slug = Semente.NovoSlug();
+        await Rodar(Criar(slug));
+
+        var (codigo, saida, erro) = await Rodar("carga", "--slug", slug, "--arquivo", Arquivo(Carga()));
+
+        Assert.Equal((0, ""), (codigo, erro));
+        foreach (var linha in new[] { "setores: 2", "cursos: 1", "categorias: 2", "regras: 2", "artigos: 3" })
+            Assert.Contains(linha, saida);
+        var i = await f.Db(null, db => db.Instituicoes.SingleAsync(x => x.Slug == slug));
+        Assert.Equal(2, await f.Db(i.Id, db => db.VersoesFluxo.CountAsync(v => v.PublicadaEm != null)));
+        Assert.Equal(2, await f.Db(i.Id, db => db.EtapasFluxo.CountAsync()));
+    }
     // Test policy, entrada que não decide: cada recusa do arquivo de carga sai com 1, o caminho e nada gravado
     [Fact]
     public async Task Carga_cada_recusa_sai_1()

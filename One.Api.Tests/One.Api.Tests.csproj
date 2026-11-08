@@ -34,6 +34,7 @@
     <Using Include="One.Api.Dados.Cadastros" />
     <Using Include="One.Api.Dados.Emails" />
     <Using Include="One.Api.Dados.Push" />
+    <Using Include="One.Api.Dados.Fluxos" />
   </ItemGroup>
 
 </Project>

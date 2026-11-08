@@ -17,7 +17,19 @@ uma vez no código, num grupo de constantes de `One.Api/Dados/Entidades.cs`; cad
 | `ANEXO` | tipo de evento | um arquivo foi anexado a uma mensagem (`detalhe` guarda o nome) |
 | `ENCAMINHAMENTO` | tipo de evento | o chamado foi para outro setor (`de` e `para` guardam os nomes dos setores) |
 | `RECLASSIFICACAO` | tipo de evento | a categoria do chamado mudou (`de` e `para` guardam os nomes) |
+| `SUBIDA` | tipo de evento | o chamado subiu à etapa seguinte do próprio fluxo, por um atendente ou pelo prazo da etapa (`de` e `para` guardam os nomes dos setores e `detalhe` o motivo ou `Sem resposta em N horas`); não conta como encaminhamento |
 
+## Fluxos de atendimento (`Fluxo`, `VersaoFluxo`, `EtapaFluxo`)
+
+| Termo | Grupo | Significado |
+| --- | --- | --- |
+| `Fluxo` | fluxo de atendimento | a cadeia de etapas de uma categoria e de uma abrangência, com versões; substitui a antiga regra por categoria. A transferência usa o fluxo publicado mais específico da categoria: curso e semestre da matrícula, depois só o curso, depois todos os cursos. Sem fluxo publicado, o chamado vai para a Triagem |
+| `Abrangência` | fluxo de atendimento | o par curso e semestre de um fluxo, ambos vazios quando vale para todos os cursos; semestre só existe com curso, e não muda depois que o fluxo é criado |
+| `Etapa` | fluxo de atendimento | uma posição da cadeia (de 1 a 5) com um tipo de destino, um prazo opcional em horas e a posição no canvas; a versão publicada nunca muda, e o chamado guarda a versão, a etapa e o instante em que entrou nela |
+| `Subir` | fluxo de atendimento | passar o chamado à etapa seguinte do próprio fluxo, pelo botão da equipe ou pelo prazo da etapa; grava o evento `SUBIDA` e não soma em `encaminhamentos`, para o caminho previsto não contar como roteamento errado |
+| `SETOR` | tipo de destino | a etapa aponta para um setor fixo e ativo da instituição; se o setor for desativado depois, a etapa não resolve |
+| `COORDENACAO_CURSO` | tipo de destino | a etapa resolve para o setor de coordenação do curso da matrícula do chamado; sem coordenação a etapa não resolve |
+| `LIDERANCA_SEMESTRE` | tipo de destino | a etapa resolve para a liderança do curso e do semestre da matrícula; só pode ser a primeira etapa e nunca a última, e sem liderança disponível a etapa não resolve |
 ## Tipos de mensagem do chamado (`TiposMensagem`, coluna `mensagem_chamado.tipo`)
 
 | Valor gravado | Grupo | Significado |

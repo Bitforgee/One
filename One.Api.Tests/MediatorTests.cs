@@ -20,13 +20,13 @@ public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotSame(um.ServiceProvider.GetRequiredService<AcessoChamado>(), outro.ServiceProvider.GetRequiredService<AcessoChamado>());
     }
 
-    // C29: o AgirNoChamado roda nas 9 ações e em nenhuma outra mensagem
+    // C29: o AgirNoChamado roda nas 10 ações e em nenhuma outra mensagem
     [Fact]
-    public void AgirNoChamado_so_nas_9_acoes()
+    public void AgirNoChamado_so_nas_10_acoes()
     {
         using var escopo = f.Services.CreateScope();
         var mensagens = ArquiteturaTests.Mensagens();
-        Assert.Equal(74, mensagens.Count);
+        Assert.Equal(78, mensagens.Count);
         var (acoes, outras) = (0, 0);
         foreach (var (mensagem, resposta) in mensagens)
         {
@@ -42,6 +42,6 @@ public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
                 Assert.True(behaviors.Count == 0, $"{mensagem.Name}: {behaviors.Count} behaviors");
             }
         }
-        Assert.Equal((9, 65), (acoes, outras));
+        Assert.Equal((10, 68), (acoes, outras));
     }
 }

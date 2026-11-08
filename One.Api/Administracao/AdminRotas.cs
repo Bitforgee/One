@@ -17,7 +17,7 @@ public static class AdminRotas
         UsuarioRotas.Mapear(admin);
         ImportacaoRotas.Mapear(admin);
         CadastroRotas.Mapear(admin);
-        RegraRotas.Mapear(admin);
+        FluxoRotas.Mapear(admin);
         ArtigoRotas.MapearAdmin(admin);
         DocumentoRotas.MapearAdmin(admin);
         Instituicoes.AparenciaRotas.MapearAdmin(admin);

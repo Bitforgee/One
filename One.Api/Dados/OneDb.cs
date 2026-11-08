@@ -16,7 +16,9 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<Curso> Cursos => Set<Curso>();
     public DbSet<Matricula> Matriculas => Set<Matricula>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
-    public DbSet<RegraRoteamento> Regras => Set<RegraRoteamento>();
+    public DbSet<Fluxo> Fluxos => Set<Fluxo>();
+    public DbSet<VersaoFluxo> VersoesFluxo => Set<VersaoFluxo>();
+    public DbSet<EtapaFluxo> EtapasFluxo => Set<EtapaFluxo>();
     public DbSet<Artigo> Artigos => Set<Artigo>();
     public DbSet<VersaoArtigo> VersoesArtigo => Set<VersaoArtigo>();
     public DbSet<TokenAcesso> Tokens => Set<TokenAcesso>();
@@ -78,11 +80,35 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.Property(x => x.Numero).HasMaxLength(20);
             e.HasIndex(x => new { x.InstituicaoId, x.Numero }).IsUnique();
         });
-        mb.Entity<RegraRoteamento>(e =>
+        mb.Entity<Fluxo>(e =>
         {
             e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
-            e.HasIndex(x => x.CategoriaId).IsUnique();
+            e.HasOne<Curso>().WithMany().HasForeignKey(x => x.CursoId);
+            e.HasMany(x => x.Versoes).WithOne().HasForeignKey(v => v.FluxoId);
+            e.HasIndex(x => new { x.InstituicaoId, x.CategoriaId, x.CursoId, x.Semestre }).IsUnique().AreNullsDistinct(false).HasDatabaseName("ux_fluxo_abrangencia");
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint("ck_fluxo_semestre_com_curso", "semestre IS NULL OR curso_id IS NOT NULL");
+                t.HasCheckConstraint("ck_fluxo_semestre", "semestre BETWEEN 1 AND 12");
+            });
+        });
+        mb.Entity<VersaoFluxo>(e =>
+        {
+            e.HasMany(x => x.Etapas).WithOne().HasForeignKey(x => x.VersaoFluxoId);
+            e.HasIndex(x => new { x.FluxoId, x.Numero }).IsUnique();
+            e.HasIndex(x => x.FluxoId).IsUnique().HasFilter("publicada_em IS NULL").HasDatabaseName("ux_versao_rascunho");
+            e.Property(x => x.PublicadaEm).IsConcurrencyToken(); // publicar só vale se ninguém publicou antes (AC 26)
+        });
+        mb.Entity<EtapaFluxo>(e =>
+        {
             e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
+            e.HasIndex(x => new { x.VersaoFluxoId, x.Ordem }).IsUnique();
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint("ck_etapa_fluxo_ordem", "ordem BETWEEN 1 AND 5");
+                t.HasCheckConstraint("ck_etapa_fluxo_prazo", "prazo_horas IS NULL OR prazo_horas BETWEEN 1 AND 720");
+                t.HasCheckConstraint("ck_etapa_fluxo_posicao", "(pos_x IS NULL) = (pos_y IS NULL)");
+            });
         });
         mb.Entity<Artigo>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
         mb.Entity<Artigo>().HasMany(a => a.Versoes).WithOne(v => v.Artigo).HasForeignKey(v => v.ArtigoId);
@@ -136,6 +162,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.ResponsavelId);
             e.HasOne<Matricula>().WithMany().HasForeignKey(x => x.MatriculaId);
             e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
+            e.HasOne<VersaoFluxo>().WithMany().HasForeignKey(x => x.VersaoFluxoId);
             e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
             e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaOriginalId);
             e.Property(x => x.Titulo).HasMaxLength(120);

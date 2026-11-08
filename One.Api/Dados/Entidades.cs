@@ -54,6 +54,16 @@ public static class TiposEvento
     public const string Anexo = "ANEXO";
     public const string Encaminhamento = "ENCAMINHAMENTO";
     public const string Reclassificacao = "RECLASSIFICACAO";
+    public const string Subida = "SUBIDA";
+}
+
+public static class DestinosEtapa
+{
+    public const string Setor = "SETOR";
+    public const string CoordenacaoCurso = "COORDENACAO_CURSO";
+    public const string LiderancaSemestre = "LIDERANCA_SEMESTRE";
+
+    public static readonly string[] Todos = [Setor, CoordenacaoCurso, LiderancaSemestre];
 }
 
 public static class TiposMensagem

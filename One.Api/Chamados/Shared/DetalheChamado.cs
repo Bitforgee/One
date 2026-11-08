@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Conhecimento;
 using One.Api.Dados;
+using One.Api.Dados.Fluxos;
 
 namespace One.Api.Chamados.Shared;
 
@@ -11,8 +12,10 @@ public sealed record DetalheChamado(
     string? Responsavel, DateTime CriadoEm, DateTime? ResolvidoEm, DetalheChamado.DaMatricula Matricula, string? Solicitante, string? Resumo,
     string? OrigemCategoria, IReadOnlyList<object> Transcricao, IReadOnlyList<DetalheChamado.DaMensagem> Mensagens,
     IReadOnlyList<DetalheChamado.DoEvento>? Eventos, IEnumerable<string> Acoes, IReadOnlyList<DetalheChamado.Destino>? Setores,
-    IReadOnlyList<DetalheChamado.Destino>? Categorias)
+    IReadOnlyList<DetalheChamado.Destino>? Categorias, DetalheChamado.DoFluxo? Fluxo)
 {
+    public sealed record DoFluxo(int Versao, int Etapa, int Total, string Destino, string Abrangencia);
+
     public sealed record DaMatricula(string Numero, string Curso, int Semestre);
 
     public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DoAnexo>? Anexos);
@@ -32,6 +35,8 @@ public sealed record DetalheChamado(
     {
         public static readonly DaEquipe Nada = new(null, null, null, [], null, null, null);
     }
+
+    record LinhaDoFluxo(int Versao, long? CursoId, int? Semestre);
 
     record LinhaDaTranscricao(long Id, string Autor, string Texto, DateTime CriadaEm, List<CitacaoArtigo> Citacoes, IReadOnlyList<DoAnexo>? Anexos = null);
 
@@ -58,9 +63,30 @@ public sealed record DetalheChamado(
             [.. transcricao.Select(m => equipe
                 ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id), m.Anexos)
                 : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))],
-            await DasMensagens(db, c, equipe, nomes), daEquipe.Eventos, PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId),
-            daEquipe.Setores, daEquipe.Categorias);
+            await DasMensagens(db, c, equipe, nomes), daEquipe.Eventos, await AcoesDoChamado(db, c, papel, usuarioId),
+            daEquipe.Setores, daEquipe.Categorias, await DoFluxoDoChamado(db, c, equipe));
     }
+
+    // subir só aparece para a equipe e enquanto há uma etapa seguinte (AC 41).
+    static async Task<List<string>> AcoesDoChamado(OneDb db, Chamado c, string papel, long usuarioId)
+    {
+        var acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId).ToList();
+        if (!await ResolverFluxo.TemEtapaSeguinte(db, c)) acoes.Remove("subir");
+        return acoes;
+    }
+
+    static async Task<DoFluxo?> DoFluxoDoChamado(OneDb db, Chamado c, bool equipe)
+    {
+        if (!equipe || c.VersaoFluxoId is not { } versaoId || c.EtapaOrdem is not { } ordem) return null;
+        var versao = await db.VersoesFluxo.Where(v => v.Id == versaoId)
+            .Join(db.Fluxos, v => v.FluxoId, f => f.Id, (v, f) => new LinhaDoFluxo(v.Numero, f.CursoId, f.Semestre)).SingleAsync();
+        var curso = versao.CursoId is { } cursoId ? await db.Cursos.Where(x => x.Id == cursoId).Select(x => x.Nome).SingleAsync() : null;
+        var destino = await db.EtapasFluxo.Where(e => e.VersaoFluxoId == versaoId && e.Ordem == ordem).Select(e => e.Destino).SingleAsync();
+        return new DoFluxo(versao.Versao, ordem, await db.EtapasFluxo.CountAsync(e => e.VersaoFluxoId == versaoId), destino, Abrangencia(curso, versao.Semestre));
+    }
+
+    public static string Abrangencia(string? curso, int? semestre) =>
+        curso is null ? "Todos os cursos" : semestre is null ? curso : $"{curso}, {semestre}º semestre";
 
     // Só as linhas do aluno levam `anexos` (a lista pode ser vazia); as do assistente ficam sem o campo.
     static async Task<List<LinhaDaTranscricao>> ComAnexos(OneDb db, Chamado c, List<LinhaDaTranscricao> transcricao)

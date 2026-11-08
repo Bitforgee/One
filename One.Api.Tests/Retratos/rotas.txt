@@ -26,6 +26,7 @@ POST /api/chamados/{numero}/cancelar anonimo=False autorizacao=True limite=-
 POST /api/chamados/{numero}/encaminhar anonimo=False autorizacao=True limite=-
 POST /api/chamados/{numero}/reclassificar anonimo=False autorizacao=True limite=-
 POST /api/chamados/{numero}/duplicado anonimo=False autorizacao=True limite=-
+POST /api/chamados/{numero}/subir anonimo=False autorizacao=True limite=-
 GET /api/respostas-prontas anonimo=False autorizacao=True limite=-
 GET /api/anexos/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/artigos/versoes/{id:long} anonimo=False autorizacao=True limite=-
@@ -50,9 +51,12 @@ PUT /api/admin/cursos/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/admin/respostas-prontas anonimo=False autorizacao=True limite=-
 POST /api/admin/respostas-prontas anonimo=False autorizacao=True limite=-
 PUT /api/admin/respostas-prontas/{id:long} anonimo=False autorizacao=True limite=-
-GET /api/admin/regras anonimo=False autorizacao=True limite=-
-POST /api/admin/regras anonimo=False autorizacao=True limite=-
-PUT /api/admin/regras/{id:long} anonimo=False autorizacao=True limite=-
+GET /api/admin/fluxos anonimo=False autorizacao=True limite=-
+POST /api/admin/fluxos anonimo=False autorizacao=True limite=-
+PUT /api/admin/fluxos/{id:long}/rascunho anonimo=False autorizacao=True limite=-
+DELETE /api/admin/fluxos/{id:long}/rascunho anonimo=False autorizacao=True limite=-
+POST /api/admin/fluxos/{id:long}/publicar anonimo=False autorizacao=True limite=-
+POST /api/admin/fluxos/{id:long}/simular anonimo=False autorizacao=True limite=-
 GET /api/admin/artigos anonimo=False autorizacao=True limite=-
 POST /api/admin/artigos anonimo=False autorizacao=True limite=-
 PUT /api/admin/artigos/{id:long} anonimo=False autorizacao=True limite=-

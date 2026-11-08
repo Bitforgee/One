@@ -315,7 +315,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var op = await UmOperador();
         var alvo = await f.Instituicao();
-        Task<int[]> Contagens() => f.Db(alvo.Id, async db => new[] { await db.Setores.CountAsync(), await db.Categorias.CountAsync(), await db.Regras.CountAsync(), await db.Artigos.CountAsync() });
+        Task<int[]> Contagens() => f.Db(alvo.Id, async db => new[] { await db.Setores.CountAsync(), await db.Categorias.CountAsync(), await db.Fluxos.CountAsync(), await db.Artigos.CountAsync() });
         var antes = await Contagens();
         const string regraSemCategoria = "{\"setores\":[{\"nome\":\"S\"}],\"regras\":[{\"categoria\":\"Nenhuma\",\"coordenacaoDoCurso\":true}]}";
 

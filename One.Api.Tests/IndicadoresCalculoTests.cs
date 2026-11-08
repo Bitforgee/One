@@ -32,6 +32,27 @@ public class IndicadoresCalculoTests
         Assert.Equal(6, r.TempoResolucaoHoras);
     }
 
+    // fluxos-atendimento C59 (door 8): subir não soma em Encaminhamentos, então o caminho previsto "líder, depois coordenação" conta como roteado certo; encaminhar, não
+    [Fact]
+    public void Subida_nao_derruba_o_roteamento_correto()
+    {
+        var subiu = One.Api.Dados.Chamados.Chamado.Abrir("ONE-1", 1, 100, 3, 4, "Duvida", null, CatSecretaria, "IA", Triagem, Base, versaoFluxoId: 5, etapaOrdem: 1);
+        subiu.Assumir(Atendente, null, "Ana", Base.AddHours(1));
+        subiu.Subir(Atendente, "Líderes", "Coordenação", Financeiro, 2, "A coordenação resolve", "Ana", Base.AddHours(2));
+        subiu.Resolver(Atendente, "Beto", "Resolvido pela coordenação.", Base.AddHours(3));
+        var encaminhado = One.Api.Dados.Chamados.Chamado.Abrir("ONE-2", 2, 101, 3, 4, "Duvida", null, CatSecretaria, "IA", Triagem, Base);
+        encaminhado.Encaminhar(Atendente, Financeiro, "Triagem", "Financeiro", "Não é daqui", null, Base.AddHours(2));
+        encaminhado.Resolver(Atendente, "Beto", "Resolvido pelo financeiro.", Base.AddHours(3));
+
+        double? Roteamento(One.Api.Dados.Chamados.Chamado c) => CalculoIndicadores.Calcular(
+            new Massa([new ChamadoLido(0, Base, c.Estado, c.MotivoFechamento, c.Reaberturas, c.Encaminhamentos, c.CategoriaOriginalId, c.SetorId, c.SolicitanteId)], [.. c.Eventos], [], [], [], Categorias),
+            Dia, Dia, Cuiaba, null).RoteamentoCorreto;
+
+        Assert.Equal((Resolvido, 0), (subiu.Estado, subiu.Encaminhamentos));
+        Assert.Equal(1.0, Roteamento(subiu));
+        Assert.Equal(0.0, Roteamento(encaminhado));
+    }
+
     // A massa de IndicadoresTests.Quatorze_indicadores_batem_com_a_conta, já lida do banco como a rota lê: a função dá os mesmos 14 números.
     [Fact]
     public void Os_14_iguais_aos_da_rota()

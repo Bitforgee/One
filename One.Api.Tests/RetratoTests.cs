@@ -30,20 +30,20 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 
     // C3
     [Fact]
-    public void Tabela_de_rotas_igual_a_da_base()
+    public void Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano()
     {
         var endpoints = Endpoints(f);
         var viva = endpoints.Select(Linha).ToList();
         File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "rotas.viva.txt"), viva); // para comparar à mão quando falhar
 
-        Assert.Equal(79, viva.Count);
+        Assert.Equal(83, viva.Count);
         // os fallbacks têm a ordem int.MaxValue; o do MapFallbackToFile atende GET e HEAD
         var fallbacks = endpoints.Where(e => e.Order == int.MaxValue).Select(e => e.RoutePattern.RawText).ToList();
         Assert.Equal(["/api/{**resto}", "{*path:nonfile}"], fallbacks);
-        Assert.Equal(76, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
+        Assert.Equal(80, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
         Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"],
             endpoints.Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is not null).Select(e => e.RoutePattern.RawText));
-        Assert.Equal(77, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
+        Assert.Equal(81, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
         string[] Com(string politica) => [.. endpoints.Where(e => e.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == politica).Select(e => e.RoutePattern.RawText!)];
         Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso"], Com("auth"));
         Assert.Equal(["/api/conversas", "/api/conversas/{id:long}/mensagens", "/api/atendimento-direto"], Com("mensagens"));
@@ -53,7 +53,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 
     // C5
     [Fact]
-    public async Task Admin_403_com_detail_nas_29_rotas()
+    public async Task Admin_403_com_detail_em_toda_rota_admin()
     {
         var i = await f.Instituicao();
         var setor = await f.Db(i.Id, db => db.Setores.SingleAsync());
@@ -61,7 +61,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var rotas = Endpoints(f).Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(33, rotas.Count);
+        Assert.Equal(36, rotas.Count);
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)
@@ -226,9 +226,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
             admin.PostAsJsonAsync("/api/admin/respostas-prontas", new { setorId = triagem.Id, titulo = "Boleto", texto = "Use o Portal do Aluno." })));
         await R("PUT", "/api/admin/respostas-prontas/{id}", "admin", 200,
             admin.PutAsJsonAsync($"/api/admin/respostas-prontas/{pronta}", new { setorId = triagem.Id, titulo = "Segunda via do boleto", texto = "Use o Portal do Aluno, menu Financeiro." }));
-        await R("GET", "/api/admin/regras", "admin", 200, admin.GetAsync("/api/admin/regras"));
-        var regra = Id(await R("POST", "/api/admin/regras", "admin", 201, admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = categoria, destino = "SETOR", setorId = financeiro })));
-        await R("PUT", "/api/admin/regras/{id}", "admin", 200, admin.PutAsJsonAsync($"/api/admin/regras/{regra}", new { categoriaId = categoria, destino = "COORDENACAO_CURSO" }));
 
         // Administração: usuários (4) e importação (1)
         await R("GET", "/api/admin/usuarios", "admin", 200, admin.GetAsync("/api/admin/usuarios"));
@@ -305,7 +302,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "sucessos.vivos.txt"), vivos); // para comparar à mão quando falhar
 
         var gravados = File.ReadAllLines(Retrato("sucessos.txt"));
-        Assert.Equal(59, gravados.Length);
+        Assert.Equal(56, gravados.Length);
         Assert.Equal(gravados.Select(Normalizar), vivos);
     }
 

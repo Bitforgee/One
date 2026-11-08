@@ -100,12 +100,25 @@ public static class SementeAtendimento
         return new Atendente(u, await f.Entrar(i, u));
     }
 
-    public static Task<RegraRoteamento> Regra(this OneFactory f, Instituicao i, Categoria c, Setor? setor) =>
+    // A antiga regra por categoria: um fluxo para todos os cursos, publicado, de uma etapa (setor fixo, ou a coordenação do curso sem setor).
+    public static Task<Fluxo> Regra(this OneFactory f, Instituicao i, Categoria c, Setor? setor) =>
+        f.Fluxo(i, c, null, null, setor is null ? Etapa(DestinosEtapa.CoordenacaoCurso) : Etapa(DestinosEtapa.Setor, setor.Id));
+
+    public static EtapaFluxo.Dados Etapa(string destino, long? setorId = null, int? prazoHoras = null, double? x = null, double? y = null) =>
+        new(destino, setorId, prazoHoras, x, y);
+
+    // Fluxo gravado direto no banco; publicar false deixa só o rascunho.
+    public static Task<Fluxo> Fluxo(this OneFactory f, Instituicao i, Categoria c, long? cursoId, int? semestre, params EtapaFluxo.Dados[] etapas) =>
+        f.Fluxo(i, c, cursoId, semestre, true, etapas);
+
+    public static Task<Fluxo> Fluxo(this OneFactory f, Instituicao i, Categoria c, long? cursoId, int? semestre, bool publicar, params EtapaFluxo.Dados[] etapas) =>
         f.Db(i.Id, async db =>
         {
-            var r = new RegraRoteamento { CategoriaId = c.Id, Destino = setor is null ? "COORDENACAO_CURSO" : "SETOR", SetorId = setor?.Id };
-            db.Regras.Add(r);
+            var fluxo = One.Api.Dados.Fluxos.Fluxo.Criar(c.Id, cursoId, semestre);
+            fluxo.SalvarRascunho(etapas);
+            if (publicar) fluxo.Publicar(f.Relogio.GetUtcNow().UtcDateTime);
+            db.Fluxos.Add(fluxo);
             await db.SaveChangesAsync();
-            return r;
+            return fluxo;
         });
 }

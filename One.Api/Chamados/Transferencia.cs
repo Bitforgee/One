@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Conhecimento;
 using One.Api.Dados;
+using One.Api.Dados.Fluxos;
 
 namespace One.Api.Chamados;
 
@@ -41,30 +42,18 @@ public static class Transferencia
 
         var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
         var resumo = assistente.Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
-        var setorId = await Setor(db, categoria, matricula);
+        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, false);
         conversa.Desfecho = Desfechos.Transferida;
         conversa.DesfechoEm = agora;
 
         var numero = await db.Database
             .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")
             .ToListAsync();
-        var chamado = Chamado.Abrir($"ONE-{numero.Single()}", conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre, titulo, resumo, categoria.Id, origem, setorId, agora);
+        var chamado = Chamado.Abrir($"ONE-{numero.Single()}", conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre, titulo, resumo, categoria.Id, origem, rota.SetorId, agora, rota.Fluxo?.Vigente?.Id, rota.Passo?.Etapa.Ordem);
         db.Chamados.Add(chamado);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         return chamado;
-    }
-
-    static async Task<long> Setor(OneDb db, Categoria categoria, Matricula matricula)
-    {
-        var regra = categoria.Padrao ? null : await db.Regras.FirstOrDefaultAsync(r => r.CategoriaId == categoria.Id);
-        var setor = regra?.Destino switch
-        {
-            "SETOR" => regra.SetorId,
-            "COORDENACAO_CURSO" => await db.Cursos.Where(c => c.Id == matricula.CursoId).Select(c => c.SetorCoordenacaoId).SingleAsync(),
-            _ => null,
-        };
-        return setor ?? await db.Setores.Where(s => s.Triagem).Select(s => s.Id).SingleAsync();
     }
 
     static string Cortar(string texto, int max) => texto.Length <= max ? texto : texto[..max];

@@ -59,7 +59,29 @@ public class CargaValidacaoTests
         Assert.Empty(erros);
         Assert.Equal(["Financeiro", "Triagem"], plano.Setores.Keys.Order());
         Assert.Equal(["Medicina"], plano.Cursos.Select(c => c.Nome));
-        Assert.Equal("COORDENACAO_CURSO", Assert.Single(plano.Regras).Regra.Destino);
+        Assert.Equal("COORDENACAO_CURSO", Assert.Single(plano.Regras).Destino);
         Assert.Equal("Boletos", Assert.Single(plano.Artigos).Categoria.Nome);
+    }
+
+    // fluxos-atendimento C10: cada regra da carga vira um fluxo de uma etapa; o plano guarda o destino e o setor dela
+    [Fact]
+    public void Regra_da_carga_vira_fluxo_de_uma_etapa()
+    {
+        var (erros, plano) = CargaValidacao.Validar(Arquivo(setores: [new("Financeiro")], categorias: [new("Matrícula"), new("Notas")],
+            regras: [new("Matrícula", "Financeiro", false), new("Notas", null, true)]), Existentes());
+
+        Assert.Empty(erros);
+        Assert.Equal(2, plano.Regras.Count);
+        Assert.Equal((DestinosEtapa.Setor, "Matrícula", "Financeiro"), (plano.Regras[0].Destino, plano.Regras[0].Categoria.Nome, plano.Regras[0].Setor!.Nome));
+        Assert.Equal((DestinosEtapa.CoordenacaoCurso, "Notas", null), (plano.Regras[1].Destino, plano.Regras[1].Categoria.Nome, plano.Regras[1].Setor?.Nome));
+    }
+
+    // fluxos-atendimento C11: a categoria que já tem fluxo para todos os cursos recusa a regra, com o erro de sempre
+    [Fact]
+    public void Categoria_com_fluxo_ja_tem_regra()
+    {
+        var erros = Erros(Arquivo(regras: [new("Boletos", "Triagem", false)]));
+
+        Assert.Equal(["regras[0].categoria: \"Boletos\" já tem regra"], erros);
     }
 }

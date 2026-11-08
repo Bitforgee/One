@@ -35,21 +35,24 @@ public class Chamado : IDaInstituicao
     public DateTime? FechadoEm { get; private set; }
     public DateTime? AguardandoDesde { get; private set; }
     public DateTime? LembreteEm { get; private set; }
+    public long? VersaoFluxoId { get; private set; }
+    public int? EtapaOrdem { get; private set; }
+    public DateTime? EtapaDesde { get; private set; }
     public string? NumeroOriginal { get; private set; }
     public uint Xmin { get; private set; }
     public IReadOnlyCollection<MensagemChamado> Mensagens => _mensagens;
     public IReadOnlyCollection<EventoChamado> Eventos => _eventos;
 
-    readonly record struct Ato(long AtorId, DateTime Agora);
+    readonly record struct Ato(long? AtorId, DateTime Agora);
 
     public static Chamado Abrir(string numero, long conversaId, long solicitanteId, long matriculaId, int semestre, string titulo,
-        string? resumo, long categoriaId, string origemCategoria, long setorId, DateTime agora)
+        string? resumo, long categoriaId, string origemCategoria, long setorId, DateTime agora, long? versaoFluxoId = null, int? etapaOrdem = null)
     {
         var c = new Chamado
         {
             Numero = numero, ConversaId = conversaId, SolicitanteId = solicitanteId, MatriculaId = matriculaId, Semestre = semestre,
             Titulo = titulo, Resumo = resumo, CategoriaId = categoriaId, CategoriaOriginalId = categoriaId, OrigemCategoria = origemCategoria,
-            SetorId = setorId, CriadoEm = agora,
+            SetorId = setorId, CriadoEm = agora, VersaoFluxoId = etapaOrdem is null ? null : versaoFluxoId, EtapaOrdem = etapaOrdem, EtapaDesde = etapaOrdem is null ? null : agora,
         };
         c._eventos.Add(new EventoChamado { Tipo = TiposEvento.Criacao, Para = c.Estado, CriadoEm = agora });
         return c;
@@ -132,6 +135,23 @@ public class Chamado : IDaInstituicao
         Mudar(Aberto, ato);
         SetorId = setorId;
         Encaminhamentos++;
+        EtapaOrdem = null;
+        EtapaDesde = null;
+    }
+
+    // Passa o chamado à etapa seguinte do próprio fluxo. Não é encaminhamento: Encaminhamentos não muda (RoteamentoCorreto).
+    // torId nulo é a subida do Agendador, que não escreve nota.
+    public void Subir(long? atorId, string nomeSetorAtual, string nomeSetorNovo, long setorId, int etapaOrdem, string detalhe, string? nomeResponsavel, DateTime agora)
+    {
+        Exigir(Abertos);
+        var ato = new Ato(atorId, agora);
+        if (atorId is not null) Mensagem(TiposMensagem.Nota, detalhe, ato);
+        Evento(TiposEvento.Subida, ato, nomeSetorAtual, nomeSetorNovo, detalhe);
+        Atribuir(null, nomeResponsavel, null, ato);
+        Mudar(Aberto, ato);
+        SetorId = setorId;
+        EtapaOrdem = etapaOrdem;
+        EtapaDesde = agora;
     }
 
     public void Reclassificar(long atorId, long categoriaId, string nomeAtual, string nomeNova, DateTime agora)

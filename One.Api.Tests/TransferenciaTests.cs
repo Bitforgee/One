@@ -52,6 +52,26 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(chamadasAntes, f.Llm.Corpos.Count);
     }
 
+    // fluxos-atendimento C9: o atendimento direto usa a categoria padrão, então nunca segue fluxo: abre na triagem, sem as três colunas
+    [Fact]
+    public async Task Atendimento_direto_sem_fluxo_na_triagem()
+    {
+        var aluno = await f.AlunoLogado();
+        var i = aluno.Instituicao;
+        var padrao = await f.Db(i.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
+        var financeiro = await f.Setor(i, "Financeiro");
+        await f.Fluxo(i, padrao, null, null, SementeAtendimento.Etapa(DestinosEtapa.Setor, financeiro.Id));
+        await f.Fluxo(i, await f.Categoria(i, "Boleto"), null, null, SementeAtendimento.Etapa(DestinosEtapa.LiderancaSemestre), SementeAtendimento.Etapa(DestinosEtapa.Setor, financeiro.Id));
+
+        var r = await aluno.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "Preciso de ajuda" });
+
+        Assert.Equal(HttpStatusCode.Created, r.StatusCode);
+        var j = await r.Json();
+        Assert.Equal("Triagem", j.GetProperty("setor").GetString());
+        var chamado = await f.Db(i.Id, db => db.Chamados.SingleAsync(c => c.Numero == j.GetProperty("numero").GetString()));
+        Assert.Equal((null, null, null), (chamado.VersaoFluxoId, chamado.EtapaOrdem, chamado.EtapaDesde));
+        Assert.Equal(await f.Db(i.Id, db => db.Setores.Where(s => s.Triagem).Select(s => s.Id).SingleAsync()), chamado.SetorId);
+    }
     [Fact]
     public async Task Atendimento_direto_descricao_invalida_400()
     {

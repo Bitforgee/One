@@ -9,7 +9,7 @@ public static class CargaInicial
 {
     public static async Task<Existentes> Existentes(OneDb db) =>
         new(await db.Setores.ToDictionaryAsync(s => s.Nome), await db.Categorias.ToDictionaryAsync(c => c.Nome),
-            (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet(), await db.Regras.Select(r => r.CategoriaId).ToListAsync());
+            (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet(), await db.Fluxos.Where(f => f.CursoId == null && f.Semestre == null).Select(f => f.CategoriaId).ToListAsync());
 
     public static async Task<(int, int)> Gravar(OneDb db, ArquivoCarga arq, Existentes existentes, Plano plano, DateTime agora)
     {
@@ -22,11 +22,12 @@ public static class CargaInicial
         foreach (var (c, i) in (arq.Cursos ?? []).Select((c, i) => (c, i)))
             plano.Cursos[i].SetorCoordenacaoId = c.Coordenacao is null ? null : plano.Setores[c.Coordenacao].Id;
         db.Cursos.AddRange(plano.Cursos);
-        foreach (var (regra, categoria, setor) in plano.Regras)
+        foreach (var (destino, categoria, setor) in plano.Regras)
         {
-            regra.CategoriaId = categoria.Id;
-            regra.SetorId = setor?.Id;
-            db.Regras.Add(regra);
+            var fluxo = Fluxo.Criar(categoria.Id, null, null);
+            fluxo.SalvarRascunho([new EtapaFluxo.Dados(destino, setor?.Id, null, null, null)]);
+            fluxo.Publicar(agora);
+            db.Fluxos.Add(fluxo);
         }
         foreach (var (a, categoria) in plano.Artigos)
         {

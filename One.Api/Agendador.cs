@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Chamados;
@@ -5,6 +6,7 @@ using One.Api.Instituicoes;
 using Pgvector;
 using Lib.Net.Http.WebPush;
 using One.Api.Dados;
+using One.Api.Dados.Fluxos;
 using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api;
@@ -52,8 +54,22 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(c => new Item("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limiteLembrete && c.AguardandoDesde > limiteResolver)
             .Select(c => new Item("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
+        itens.AddRange(await VenceuOPrazo(db, db.Chamados.IgnoreQueryFilters(), agora).Select(c => new Item("subir", c.Id, c.InstituicaoId)).ToListAsync());
         return itens;
     }
+
+    // Chamado aberto ou em atendimento cuja etapa tem prazo vencido e que a equipe não respondeu em público desde que entrou nela (AC 42, AC 45, AC 46).
+    static IQueryable<Chamado> VenceuOPrazo(OneDb db, IQueryable<Chamado> chamados, DateTime agora) =>
+        chamados.Where(EmFluxoEAberto).Where(PrazoDaEtapaVencido(db, agora)).Where(SemRespostaDaEquipe(db));
+
+    static readonly Expression<Func<Chamado, bool>> EmFluxoEAberto = c => (c.Estado == Aberto || c.Estado == EmAtendimento) && c.EtapaOrdem != null;
+
+    static Expression<Func<Chamado, bool>> PrazoDaEtapaVencido(OneDb db, DateTime agora) => c =>
+        db.EtapasFluxo.IgnoreQueryFilters().Any(e => e.VersaoFluxoId == c.VersaoFluxoId && e.Ordem == c.EtapaOrdem && e.PrazoHoras != null
+            && c.EtapaDesde!.Value.AddHours(e.PrazoHoras.Value) <= agora);
+
+    static Expression<Func<Chamado, bool>> SemRespostaDaEquipe(OneDb db) => c =>
+        !db.MensagensChamado.IgnoreQueryFilters().Any(m => m.ChamadoId == c.Id && m.Tipo == TiposMensagem.Publica && m.AutorId != null && m.AutorId != c.SolicitanteId && m.CriadaEm >= c.EtapaDesde);
 
     async Task<List<Item>> LerFilas(OneDb db, DateTime agora)
     {
@@ -100,6 +116,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             case "chamado": await FecharResolvido(db, item.Id, agora); break;
             case "lembrete": await Lembrar(db, item.Id, agora); break;
             case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
+            case "subir": await SubirPorPrazo(db, item.Id, agora); break;
             case "email": await Enviar(db, sp.GetRequiredService<Email>(), item.Id, agora); break;
             case "push": await EnviarPush(db, sp.GetRequiredService<IEnviadorPush>(), item.Id, agora, parar); break;
         }
@@ -187,6 +204,18 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await Avisos.Resolvido(db, cfg, prazos, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, TextoSemResposta, agora);
         await db.SaveChangesAsync();
         await tx.CommitAsync();
+    }
+
+    async Task SubirPorPrazo(OneDb db, long id, DateTime agora)
+    {
+        var chamado = await VenceuOPrazo(db, db.Chamados, agora).SingleOrDefaultAsync(c => c.Id == id);
+        if (chamado is null || await ResolverFluxo.Seguinte(db, chamado) is not { } passo) return;
+        var horas = await db.EtapasFluxo.Where(e => e.VersaoFluxoId == chamado.VersaoFluxoId && e.Ordem == chamado.EtapaOrdem).Select(e => e.PrazoHoras).SingleAsync();
+        var nomes = await db.Setores.Where(s => s.Id == chamado.SetorId || s.Id == passo.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
+        chamado.Subir(null, nomes[chamado.SetorId], nomes[passo.SetorId], passo.SetorId, passo.Etapa.Ordem, $"Sem resposta em {horas} horas", await AcoesChamado.NomeDoResponsavel(db, chamado), agora);
+        try { await db.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException) { return; } // outra execução, ou um atendente, subiu o chamado antes (AC 44)
+        log.LogInformation("Chamado {ChamadoId} subiu para a etapa {Etapa} por prazo (instituição {InstituicaoId})", id, passo.Etapa.Ordem, db.InstituicaoAtual);
     }
 
     async Task Enviar(OneDb db, Email email, long id, DateTime agora)

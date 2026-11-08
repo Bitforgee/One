@@ -125,7 +125,7 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         {
             ("/api/admin/setores/999999", "Item não encontrado."), ("/api/admin/categorias/999999", "Item não encontrado."),
             ("/api/admin/cursos/999999", "Item não encontrado."), ("/api/admin/respostas-prontas/999999", "Item não encontrado."),
-            ("/api/admin/regras/999999", "Item não encontrado."), ("/api/admin/usuarios/999999", "Item não encontrado."),
+            ("/api/admin/fluxos/999999/rascunho", "Item não encontrado."), ("/api/admin/usuarios/999999", "Item não encontrado."),
             ("/api/admin/artigos/999999", "Artigo não encontrado."),
         })
         {
@@ -306,8 +306,8 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         var curso = await Criar("/api/admin/cursos", new { nome = "Direito" });
         var resposta = await Criar("/api/admin/respostas-prontas", new { setorId = triagem.Id, titulo = "Boleto", texto = "Use o portal." });
         var (c1, c2) = (await Criar("/api/admin/categorias", new { nome = "Boleto" }), await Criar("/api/admin/categorias", new { nome = "Matrícula" }));
-        var regra = await Criar("/api/admin/regras", new { categoriaId = c1, destino = "COORDENACAO_CURSO" });
-        await Criar("/api/admin/regras", new { categoriaId = c2, destino = "COORDENACAO_CURSO" });
+        var fluxo = await Criar("/api/admin/fluxos", new { categoriaId = c1 });
+        await Criar("/api/admin/fluxos", new { categoriaId = c2 });
 
         foreach (var (metodo, rota, corpo, campo) in new (string, string, object, string)[]
         {
@@ -319,9 +319,9 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
             ("PUT", $"/api/admin/respostas-prontas/{resposta}", new { setorId = 999999, titulo = "", texto = "x" }, "setorId"),
             ("POST", "/api/admin/respostas-prontas", new { setorId = triagem.Id, titulo = "", texto = "" }, "titulo"),
             ("PUT", $"/api/admin/respostas-prontas/{resposta}", new { setorId = triagem.Id, titulo = "", texto = "" }, "titulo"),
-            ("POST", "/api/admin/regras", new { categoriaId = padrao.Id, destino = "X" }, "categoriaId"),
-            ("PUT", $"/api/admin/regras/{regra}", new { categoriaId = padrao.Id, destino = "X" }, "categoriaId"),
-            ("PUT", $"/api/admin/regras/{regra}", new { categoriaId = c2, destino = "X" }, "destino"),
+            ("POST", "/api/admin/fluxos", new { categoriaId = padrao.Id }, "categoriaId"),
+            ("PUT", $"/api/admin/fluxos/{fluxo}/rascunho", new { etapas = new object[] { } }, "etapas"),
+            ("PUT", $"/api/admin/fluxos/{fluxo}/rascunho", new { etapas = new[] { new { destino = "X" } } }, "destino"),
         })
             await Recusa400(await Enviar(admin, metodo, rota, corpo), campo, $"{metodo} {rota} {campo}");
 

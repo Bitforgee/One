@@ -39,7 +39,7 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(33, rotas.Count); // RAG C35: mais as 4 de documentos; aparencia-instituicao: mais as 4 de aparência
+        Assert.Equal(36, rotas.Count); // fluxos-atendimento: menos as 3 de regras, mais as 6 de fluxos; RAG C35: mais as 4 de documentos; aparencia-instituicao: mais as 4 de aparência
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)
@@ -406,40 +406,36 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("ux_setor_triagem", e.ConstraintName);
     }
 
+    // A antiga regra única por categoria: agora um fluxo por categoria e abrangência (AC 16); a mesma categoria aceita outra abrangência.
     [Fact]
     public async Task Regra_unica_por_categoria()
     {
         var (i, admin) = await Admin.Criar(f);
         var categoria = await f.Categoria(i, "Boleto");
-        var financeiro = await f.Setor(i, "Financeiro");
+        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
 
-        var primeira = await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = categoria.Id, destino = "SETOR", setorId = financeiro.Id });
-        var segunda = await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = categoria.Id, destino = "COORDENACAO_CURSO" });
+        var primeira = await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id });
+        var segunda = await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id });
+        var doCurso = await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id, cursoId = curso.Id });
 
         Assert.Equal(HttpStatusCode.Created, primeira.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, segunda.StatusCode);
-        var regra = await f.Db(i.Id, db => db.Regras.SingleAsync(r => r.CategoriaId == categoria.Id));
-        Assert.Equal(("COORDENACAO_CURSO", (long?)null), (regra.Destino, regra.SetorId));
-
-        // PUT da regra de outra categoria apontando para uma que já tem regra: 409 com a mensagem própria
-        var outra = await f.Categoria(i, "Notas");
-        var idOutra = (await (await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = outra.Id, destino = "COORDENACAO_CURSO" })).Json()).GetProperty("id").GetInt64();
-        var conflito = await admin.PutAsJsonAsync($"/api/admin/regras/{idOutra}", new { categoriaId = categoria.Id, destino = "COORDENACAO_CURSO" });
-        Assert.Equal(HttpStatusCode.Conflict, conflito.StatusCode);
-        Assert.Equal("Esta categoria já tem uma regra.", (await conflito.Json()).GetProperty("detail").GetString());
-        Assert.Equal(outra.Id, await f.Db(i.Id, db => db.Regras.Where(r => r.Id == idOutra).Select(r => r.CategoriaId).SingleAsync()));
+        Assert.Equal(HttpStatusCode.Conflict, segunda.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, doCurso.StatusCode);
+        Assert.Equal(2, await f.Db(i.Id, db => db.Fluxos.CountAsync(x => x.CategoriaId == categoria.Id)));
     }
 
+    // A antiga regra de setor fixo sem setor: a etapa SETOR sem setorId é recusada no rascunho (AC 20) e nada é gravado.
     [Fact]
     public async Task Regra_setor_fixo_sem_setor_400()
     {
         var (i, admin) = await Admin.Criar(f);
         var categoria = await f.Categoria(i, "Boleto");
+        var id = (await (await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id })).Json()).GetProperty("id").GetInt64();
 
-        var r = await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = categoria.Id, destino = "SETOR" });
+        var r = await admin.PutAsJsonAsync($"/api/admin/fluxos/{id}/rascunho", new { etapas = new[] { new { destino = "SETOR" } } });
 
         Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
-        Assert.Equal(0, await f.Db(i.Id, db => db.Regras.CountAsync()));
+        Assert.Equal(0, await f.Db(i.Id, db => db.VersoesFluxo.CountAsync()));
     }
 
     [Fact]
@@ -450,7 +446,7 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         var curso = await f.Db(i.Id, db => db.Cursos.SingleAsync());
         var notas = await f.Categoria(i, "Notas");
         var coordAds = (await (await admin.PostAsJsonAsync("/api/admin/setores", new { nome = "Coordenação ADS" })).Json()).GetProperty("id").GetInt64();
-        await admin.PostAsJsonAsync("/api/admin/regras", new { categoriaId = notas.Id, destino = "COORDENACAO_CURSO" });
+        await f.Regra(i, notas, null);
 
         var r = await admin.PutAsJsonAsync($"/api/admin/cursos/{curso.Id}", new { nome = curso.Nome, setorCoordenacaoId = coordAds });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
@@ -478,10 +474,10 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
             ("cursos", "nome", new { nome = "" }),
             ("cursos", "nome", new { nome = new string('c', 201) }),
             ("cursos", "setorCoordenacaoId", new { nome = "Direito", setorCoordenacaoId = 999999 }),
-            ("regras", "categoriaId", new { categoriaId = 999999, destino = "COORDENACAO_CURSO" }),
-            ("regras", "categoriaId", new { categoriaId = padrao.Id, destino = "COORDENACAO_CURSO" }),
-            ("regras", "destino", new { categoriaId = categoria.Id, destino = "QUALQUER" }),
-            ("regras", "setorId", new { categoriaId = categoria.Id, destino = "SETOR", setorId = 999999 }),
+            ("fluxos", "categoriaId", new { categoriaId = 999999 }),
+            ("fluxos", "categoriaId", new { categoriaId = padrao.Id }),
+            ("fluxos", "semestre", new { categoriaId = categoria.Id, semestre = 3 }),
+            ("fluxos", "cursoId", new { categoriaId = categoria.Id, cursoId = 999999 }),
             ("respostas-prontas", "setorId", new { setorId = 999999, titulo = "Boleto", texto = "x" }),
             ("respostas-prontas", "titulo", new { setorId = setor.Id, titulo = " ", texto = "x" }),
             ("respostas-prontas", "titulo", new { setorId = setor.Id, titulo = new string('t', 201), texto = "x" }),
@@ -494,7 +490,7 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(r.StatusCode == HttpStatusCode.BadRequest, $"{rota}.{campo}: {(int)r.StatusCode}");
             Assert.True((await r.Json()).GetProperty("errors").TryGetProperty(campo, out _), $"{rota}.{campo}");
         }
-        Assert.Equal(0, await f.Db(i.Id, db => db.Regras.CountAsync()));
+        Assert.Equal(0, await f.Db(i.Id, db => db.Fluxos.CountAsync()));
         Assert.Equal(0, await f.Db(i.Id, db => db.RespostasProntas.CountAsync()));
         Assert.Equal(0, await f.Db(i.Id, db => db.Cursos.CountAsync()));
         Assert.Equal(["Financeiro", "Triagem"], await f.Db(i.Id, db => db.Setores.OrderBy(x => x.Nome).Select(x => x.Nome).ToListAsync()));
@@ -528,7 +524,6 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
             ("setores", new { nome = "Secretaria" }, new { nome = "Secretaria Acadêmica" }, "nome", "Secretaria Acadêmica"),
             ("categorias", new { nome = "Notas" }, new { nome = "Notas e frequência" }, "nome", "Notas e frequência"),
             ("cursos", new { nome = "Direito" }, new { nome = "Direito", setorCoordenacaoId = setor.Id }, "setorCoordenacaoId", setor.Id.ToString()),
-            ("regras", new { categoriaId = categoria.Id, destino = "COORDENACAO_CURSO" }, new { categoriaId = categoria.Id, destino = "SETOR", setorId = setor.Id }, "destino", "SETOR"),
             ("respostas-prontas", new { setorId = setor.Id, titulo = "Boleto", texto = "Segue o boleto." }, new { setorId = setor.Id, titulo = "Boleto", texto = "Segue o boleto atualizado." }, "texto", "Segue o boleto atualizado."),
         };
         foreach (var (rota, novo, alterado, campo, valor) in cadastros)

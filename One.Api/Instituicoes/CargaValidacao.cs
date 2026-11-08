@@ -11,7 +11,7 @@ public record ArtigoCarga(string? Titulo, List<string>? Perguntas, string? Categ
 
 public record Existentes(Dictionary<string, Setor> Setores, Dictionary<string, Categoria> Categorias, HashSet<string> Cursos, List<long> CategoriasComRegra);
 
-public record RegraPlanejada(RegraRoteamento Regra, Categoria Categoria, Setor? Setor);
+public record RegraPlanejada(string Destino, Categoria Categoria, Setor? Setor);
 public record ArtigoPlanejado(ArtigoCarga Artigo, Categoria Categoria);
 
 public record Plano(Dictionary<string, Setor> Setores, Dictionary<string, Categoria> Categorias, List<Curso> Cursos, List<RegraPlanejada> Regras, List<ArtigoPlanejado> Artigos);
@@ -62,7 +62,7 @@ public static class CargaValidacao
         {
             if (r.Categoria is null || !categorias.TryGetValue(r.Categoria, out var categoria)) { erros.Add($"regras[{i}].categoria: categoria \"{r.Categoria}\" não existe"); continue; }
             if (comRegra.Contains(categoria.Id) || regras.Any(x => x.Categoria == categoria)) erros.Add($"regras[{i}].categoria: \"{r.Categoria}\" já tem regra");
-            regras.Add(new RegraPlanejada(new RegraRoteamento { Destino = r.CoordenacaoDoCurso ? "COORDENACAO_CURSO" : "SETOR" }, categoria, Destino(r, i, setores, erros)));
+            regras.Add(new RegraPlanejada(r.CoordenacaoDoCurso ? DestinosEtapa.CoordenacaoCurso : DestinosEtapa.Setor, categoria, Destino(r, i, setores, erros)));
         }
         return regras;
     }

@@ -23,6 +23,7 @@ public static class PermissoesChamado
         [("encaminhar", Atendente)] = Abertos,
         [("reclassificar", Atendente)] = NaoFechados,
         [("duplicado", Atendente)] = Abertos,
+        [("subir", Atendente)] = Abertos,
     };
 
     public static string[]? Estados(string acao, string papel) => Permitidas.GetValueOrDefault((acao, papel));

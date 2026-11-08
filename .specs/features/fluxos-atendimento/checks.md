@@ -39,50 +39,50 @@ Uma edição fora da lista, forçada por um AC, é permitida só se trocar local
 
 ### S1 - o fluxo substitui a regra sem mudar o comportamento (P1) · ~14 arquivos · ~190 KB · ~48k
 
-**C1** - A migration converte cada `regra_roteamento` num fluxo para todos os cursos (`curso_id` e `semestre` nulos) com a versão 1 publicada e uma etapa de ordem 1 com o mesmo `destino` e `setor_id`; duas regras (`SETOR` no setor 2 e `COORDENACAO_CURSO`) viram dois fluxos (AC 1, door 4)
+**C1** - [x] A migration converte cada `regra_roteamento` num fluxo para todos os cursos (`curso_id` e `semestre` nulos) com a versão 1 publicada e uma etapa de ordem 1 com o mesmo `destino` e `setor_id`; duas regras (`SETOR` no setor 2 e `COORDENACAO_CURSO`) viram dois fluxos (AC 1, door 4)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoMigracaoTests.Regra_vira_fluxo_de_todos_os_cursos_com_uma_etapa"`
 
-**C2** - Depois da migration, os chamados existentes ficam com `versao_fluxo_id`, `etapa_ordem` e `etapa_desde` nulos, e a tabela `regra_roteamento` não existe (AC 2, door 4)
+**C2** - [x] Depois da migration, os chamados existentes ficam com `versao_fluxo_id`, `etapa_ordem` e `etapa_desde` nulos, e a tabela `regra_roteamento` não existe (AC 2, door 4)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoMigracaoTests.Chamados_antigos_ficam_fora_de_fluxo_e_a_tabela_some"`
 
-**C3** - Com os fluxos publicados de todos os cursos, de ADS e de ADS no 3º semestre, um aluno de ADS 3º usa o do semestre, um de ADS 5º usa o do curso e um de Direito usa o de todos os cursos (AC 3)
+**C3** - [x] Com os fluxos publicados de todos os cursos, de ADS e de ADS no 3º semestre, um aluno de ADS 3º usa o do semestre, um de ADS 5º usa o do curso e um de Direito usa o de todos os cursos (AC 3)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Fluxo_mais_especifico_vence"`
 
-**C4** - O chamado aberto por um fluxo grava `versao_fluxo_id` da versão publicada, `etapa_ordem` 1 e `etapa_desde` igual ao relógio falso (AC 3)
+**C4** - [x] O chamado aberto por um fluxo grava `versao_fluxo_id` da versão publicada, `etapa_ordem` 1 e `etapa_desde` igual ao relógio falso (AC 3)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Chamado_guarda_versao_etapa_e_entrada"`
 
-**C5** - Um fluxo mais específico que só tem rascunho é ignorado, e o chamado usa o fluxo menos específico (AC 4)
+**C5** - [x] Um fluxo mais específico que só tem rascunho é ignorado, e o chamado usa o fluxo menos específico (AC 4)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Fluxo_so_com_rascunho_e_ignorado"`
 
-**C6** - Sem fluxo publicado na categoria, e na categoria padrão, o chamado abre na Triagem com as três colunas nulas (AC 5)
+**C6** - [x] Sem fluxo publicado na categoria, e na categoria padrão, o chamado abre na Triagem com as três colunas nulas (AC 5)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Sem_fluxo_publicado_vai_para_a_triagem"`
 
-**C7** - Uma etapa `COORDENACAO_CURSO` abre o chamado no `SetorCoordenacaoId` do curso da matrícula escolhida pelo aluno (AC 6)
+**C7** - [x] Uma etapa `COORDENACAO_CURSO` abre o chamado no `SetorCoordenacaoId` do curso da matrícula escolhida pelo aluno (AC 6)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Coordenacao_do_curso_da_matricula"`
 
-**C8** - Se a etapa não resolve (curso sem coordenação), o chamado abre na etapa seguinte que resolve; se nenhuma resolve, abre na Triagem com `etapa_ordem` nulo (AC 7)
+**C8** - [x] Se a etapa não resolve (curso sem coordenação), o chamado abre na etapa seguinte que resolve; se nenhuma resolve, abre na Triagem com `etapa_ordem` nulo (AC 7)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRoteamentoTests.Etapa_que_nao_resolve_passa_para_a_seguinte"`
 
-**C9** - `POST /api/atendimento-direto` abre o chamado na Triagem, sem fluxo e sem liderança (AC 8)
+**C9** - [x] `POST /api/atendimento-direto` abre o chamado na Triagem, sem fluxo e sem liderança (AC 8)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~TransferenciaTests.Atendimento_direto_sem_fluxo_na_triagem"`
 
-**C10** - A carga JSON com `regras` cria um fluxo para todos os cursos por regra, com a versão 1 publicada e uma etapa, e responde as mesmas contagens de antes (AC 9)
+**C10** - [x] A carga JSON com `regras` cria um fluxo para todos os cursos por regra, com a versão 1 publicada e uma etapa, e responde as mesmas contagens de antes (AC 9)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~CargaValidacaoTests.Regra_da_carga_vira_fluxo_de_uma_etapa"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~InstituicaoComandoTests.Carga_continua_com_a_mesma_saida"`
 
-**C11** - A carga JSON que repete uma categoria que já tem fluxo para todos os cursos é recusada com o erro `regras[i].categoria: "X" já tem regra` (AC 10)
+**C11** - [x] A carga JSON que repete uma categoria que já tem fluxo para todos os cursos é recusada com o erro `regras[i].categoria: "X" já tem regra` (AC 10)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~CargaValidacaoTests.Categoria_com_fluxo_ja_tem_regra"`
 
-**C12** - A tabela de rotas não tem `GET`, `POST` nem `PUT` em `/api/admin/regras` (AC 11)
+**C12** - [x] A tabela de rotas não tem `GET`, `POST` nem `PUT` em `/api/admin/regras` (AC 11)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano"`
 
-**C13** - O banco impõe o modelo do fluxo: `UNIQUE NULLS NOT DISTINCT (instituicao_id, categoria_id, curso_id, semestre)`, `CHECK` de semestre com curso e de 1 a 12, `UNIQUE (fluxo_id, numero)`, índice parcial `ux_versao_rascunho`, `UNIQUE (versao_fluxo_id, ordem)`, `CHECK` de ordem de 1 a 5, de prazo de 1 a 720 e de `pos_x`/`pos_y` juntos (door 1)
+**C13** - [x] O banco impõe o modelo do fluxo: `UNIQUE NULLS NOT DISTINCT (instituicao_id, categoria_id, curso_id, semestre)`, `CHECK` de semestre com curso e de 1 a 12, `UNIQUE (fluxo_id, numero)`, índice parcial `ux_versao_rascunho`, `UNIQUE (versao_fluxo_id, ordem)`, `CHECK` de ordem de 1 a 5, de prazo de 1 a 720 e de `pos_x`/`pos_y` juntos (door 1)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoModeloTests.Constraints_e_indices_da_door_1"`
 
-**C14** - O banco impõe as colunas do chamado (`versao_fluxo_id`, `etapa_ordem`, `etapa_desde`, todas anuláveis) e do setor: `CHECK ((curso_id IS NULL) = (semestre IS NULL))`, `CHECK (semestre BETWEEN 1 AND 12)` e o índice `ux_setor_lideranca` parcial em `ativo` (door 2, door 5)
+**C14** - [x] O banco impõe as colunas do chamado (`versao_fluxo_id`, `etapa_ordem`, `etapa_desde`, todas anuláveis) e do setor: `CHECK ((curso_id IS NULL) = (semestre IS NULL))`, `CHECK (semestre BETWEEN 1 AND 12)` e o índice `ux_setor_lideranca` parcial em `ativo` (door 2, door 5)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoModeloTests.Colunas_do_chamado_e_do_setor"`
 
-**C15** - `ResolverFluxo.Escolher` devolve, para as 8 combinações de existência do fluxo de curso e semestre, do curso e de todos os cursos (com e sem versão publicada em cada), o mais específico publicado, ou nenhum (AC 3, AC 4, door 9)
+**C15** - [x] `ResolverFluxo.Escolher` devolve, para as 8 combinações de existência do fluxo de curso e semestre, do curso e de todos os cursos (com e sem versão publicada em cada), o mais específico publicado, ou nenhum (AC 3, AC 4, door 9)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Escolhe_o_fluxo_mais_especifico"`
 
 **C16** - `ResolverFluxo.Etapa` devolve o setor ou a falta dele para cada tipo de destino (3) cruzado com setor fixo ativo ou inativo, curso com ou sem coordenação, e liderança disponível ou não (AC 6, AC 7)
@@ -90,75 +90,75 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests
 
 ### S2 - o gestor cria o fluxo, define a abrangência, simula e publica (P1) · ~12 arquivos · ~140 KB · ~35k
 
-**C17** - `POST /api/admin/fluxos` cria um fluxo sem versões e responde `201` com `categoriaId`, `cursoId` e `semestre` para as três abrangências: só categoria, categoria e curso, categoria, curso e semestre 3 (AC 12)
+**C17** - [x] `POST /api/admin/fluxos` cria um fluxo sem versões e responde `201` com `categoriaId`, `cursoId` e `semestre` para as três abrangências: só categoria, categoria e curso, categoria, curso e semestre 3 (AC 12)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Cria_fluxo_nas_tres_abrangencias"`
 
-**C18** - `semestre` sem `cursoId` responde `400` com o campo `semestre`; `semestre` 0 e 13 respondem `400` em `semestre`, e 1 e 12 respondem `201` (AC 13, AC 14)
+**C18** - [x] `semestre` sem `cursoId` responde `400` com o campo `semestre`; `semestre` 0 e 13 respondem `400` em `semestre`, e 1 e 12 respondem `201` (AC 13, AC 14)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Semestre_so_com_curso_e_de_1_a_12"`
 
-**C19** - `cursoId` inexistente ou de outra instituição responde `400` com o campo `cursoId` (AC 14)
+**C19** - [x] `cursoId` inexistente ou de outra instituição responde `400` com o campo `cursoId` (AC 14)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Curso_de_outra_instituicao_400"`
 
-**C20** - A categoria padrão e uma categoria inexistente respondem `400` com o campo `categoriaId` (AC 15)
+**C20** - [x] A categoria padrão e uma categoria inexistente respondem `400` com o campo `categoriaId` (AC 15)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Categoria_padrao_ou_inexistente_400"`
 
-**C21** - Um segundo fluxo com a mesma categoria, curso e semestre responde `409`, e duas criações simultâneas dão um `201` e um `409` (AC 16)
+**C21** - [x] Um segundo fluxo com a mesma categoria, curso e semestre responde `409`, e duas criações simultâneas dão um `201` e um `409` (AC 16)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Abrangencia_repetida_409"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Criacao_simultanea_uma_so"`
 
-**C22** - `PUT /api/admin/fluxos/{id}/rascunho` com 3 etapas responde `200`, e um segundo `PUT` com 2 etapas deixa só as 2 (AC 17)
+**C22** - [x] `PUT /api/admin/fluxos/{id}/rascunho` com 3 etapas responde `200`, e um segundo `PUT` com 2 etapas deixa só as 2 (AC 17)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Rascunho_e_substituido_inteiro"`
 
-**C23** - O rascunho com 0 e com 6 etapas responde `400` no campo `etapas`, e com 1 e com 5 responde `200` (AC 18)
+**C23** - [x] O rascunho com 0 e com 6 etapas responde `400` no campo `etapas`, e com 1 e com 5 responde `200` (AC 18)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Etapas_de_1_a_5"`
 
-**C24** - Um `destino` fora de `SETOR`, `COORDENACAO_CURSO` e `LIDERANCA_SEMESTRE` responde `400` no campo `destino` (AC 19)
+**C24** - [x] Um `destino` fora de `SETOR`, `COORDENACAO_CURSO` e `LIDERANCA_SEMESTRE` responde `400` no campo `destino` (AC 19)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Destino_desconhecido_400"`
 
-**C25** - Uma etapa `SETOR` sem `setorId`, com setor inexistente, de outra instituição ou inativo responde `400` no campo `setorId` (AC 20)
+**C25** - [x] Uma etapa `SETOR` sem `setorId`, com setor inexistente, de outra instituição ou inativo responde `400` no campo `setorId` (AC 20)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Setor_da_etapa_invalido_400"`
 
-**C26** - Uma etapa `COORDENACAO_CURSO` ou `LIDERANCA_SEMESTRE` com `setorId` responde `400` no campo `setorId` (AC 21)
+**C26** - [x] Uma etapa `COORDENACAO_CURSO` ou `LIDERANCA_SEMESTRE` com `setorId` responde `400` no campo `setorId` (AC 21)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Setor_so_na_etapa_de_setor"`
 
-**C27** - `prazoHoras` 0 e 721 respondem `400` em `prazoHoras`, 1 e 720 respondem `200`, e `prazoHoras` na última etapa responde `400` (AC 22)
+**C27** - [x] `prazoHoras` 0 e 721 respondem `400` em `prazoHoras`, 1 e 720 respondem `200`, e `prazoHoras` na última etapa responde `400` (AC 22)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Prazo_de_1_a_720_e_nunca_na_ultima"`
 
-**C28** - `LIDERANCA_SEMESTRE` como segunda etapa e como única etapa respondem `400` em `destino`, e como primeira de duas responde `200` (AC 23, door 6)
+**C28** - [x] `LIDERANCA_SEMESTRE` como segunda etapa e como única etapa respondem `400` em `destino`, e como primeira de duas responde `200` (AC 23, door 6)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Lideranca_so_na_primeira_e_nunca_a_ultima"`
 
-**C29** - Uma etapa com `x` e sem `y` responde `400` em `etapas`; com os dois, grava e devolve os dois valores no `GET` (AC 24, AC 75)
+**C29** - [x] Uma etapa com `x` e sem `y` responde `400` em `etapas`; com os dois, grava e devolve os dois valores no `GET` (AC 24, AC 75)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Posicao_x_y_juntas_e_devolvidas"`
 
-**C30** - Publicar cria a versão 1 e remove o rascunho; depois de editar de novo e publicar, cria a versão 2; as duas respondem `201` (AC 25)
+**C30** - [x] Publicar cria a versão 1 e remove o rascunho; depois de editar de novo e publicar, cria a versão 2; as duas respondem `201` (AC 25)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Publicar_numera_e_remove_o_rascunho"`
 
-**C31** - Publicar sem rascunho responde `409`; publicar duas vezes ao mesmo tempo dá um `201` e um `409` (AC 26)
+**C31** - [x] Publicar sem rascunho responde `409`; publicar duas vezes ao mesmo tempo dá um `201` e um `409` (AC 26)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Publicar_sem_rascunho_409"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Publicacao_simultanea_uma_so"`
 
-**C32** - Depois de publicar a versão 2, a versão 1 continua com as mesmas etapas e um chamado aberto pela versão 1 continua apontando para ela, com `etapa_ordem` igual (AC 27)
+**C32** - [x] Depois de publicar a versão 2, a versão 1 continua com as mesmas etapas e um chamado aberto pela versão 1 continua apontando para ela, com `etapa_ordem` igual (AC 27)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Versao_antiga_e_chamado_nao_mudam"`
 
-**C33** - `DELETE /api/admin/fluxos/{id}/rascunho` responde `204` e mantém as versões publicadas; sem rascunho responde `404` (AC 28)
+**C33** - [x] `DELETE /api/admin/fluxos/{id}/rascunho` responde `204` e mantém as versões publicadas; sem rascunho responde `404` (AC 28)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Descartar_rascunho"`
 
-**C34** - `POST /simular` para curso 4 e semestre 3 devolve cada etapa com `ordem`, `destino`, `setor` e `situacao`, `inicial` e `escolhido`, e as tabelas `chamado`, `fluxo`, `versao_fluxo` e `etapa_fluxo` ficam com a mesma contagem de linhas (AC 29)
+**C34** - [x] `POST /simular` para curso 4 e semestre 3 devolve cada etapa com `ordem`, `destino`, `setor` e `situacao`, `inicial` e `escolhido`, e as tabelas `chamado`, `fluxo`, `versao_fluxo` e `etapa_fluxo` ficam com a mesma contagem de linhas (AC 29)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSimulacaoTests.Simula_sem_gravar"`
 
-**C35** - Uma etapa que não resolve vem com `situacao: NAO_RESOLVIDA` e o motivo escrito: `Curso sem coordenação` ou `Sem liderança disponível` (AC 29)
+**C35** - [x] Uma etapa que não resolve vem com `situacao: NAO_RESOLVIDA` e o motivo escrito: `Curso sem coordenação` ou `Sem liderança disponível` (AC 29)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSimulacaoTests.Etapa_nao_resolvida_com_motivo"`
 
-**C36** - Para 6 alunos diferentes, o `inicial` da simulação da versão vigente é o setor em que a transferência real abre o chamado do mesmo aluno (AC 30)
+**C36** - [x] Para 6 alunos diferentes, o `inicial` da simulação da versão vigente é o setor em que a transferência real abre o chamado do mesmo aluno (AC 30)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSimulacaoTests.Simulacao_igual_a_transferencia_real"`
 
-**C37** - A simulação e a transferência só chamam `ResolverFluxo`, e nenhum outro arquivo decide o setor por tipo de destino (AC 30)
+**C37** - [x] A simulação e a transferência só chamam `ResolverFluxo`, e nenhum outro arquivo decide o setor por tipo de destino (AC 30)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Setor_so_pelo_ResolverFluxo"`
 
-**C38** - `POST /simular` com `semestre` 0 ou 13, ou `cursoId` inexistente, responde `400`; `PUT`, `DELETE`, `publicar` e `simular` de um fluxo que não existe, ou que é de outra instituição, respondem `404` (Surface)
+**C38** - [x] `POST /simular` com `semestre` 0 ou 13, ou `cursoId` inexistente, responde `400`; `PUT`, `DELETE`, `publicar` e `simular` de um fluxo que não existe, ou que é de outra instituição, respondem `404` (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Simular_400_e_id_desconhecido_404"`
 
-**C39** - `GET /api/admin/fluxos` responde `200` com `id`, `categoriaId`, `cursoId`, `semestre`, `vigente` e `rascunho`, cada versão com `numero` e `etapas`, e só os fluxos da instituição do admin (Surface)
+**C39** - [x] `GET /api/admin/fluxos` responde `200` com `id`, `categoriaId`, `cursoId`, `semestre`, `vigente` e `rascunho`, cada versão com `numero` e `etapas`, e só os fluxos da instituição do admin (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoAdminTests.Lista_so_da_instituicao"`
 
 **C40** - Na aba Fluxos, uma linha mostra o nome da categoria e, em `Detalhe`, a abrangência e a cadeia: `Todos os cursos · Setor Financeiro` e `ADS, 3º semestre · Liderança do semestre → Coordenação do curso (48 h)` (AC 31)
@@ -175,52 +175,52 @@ Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "estado va
 
 ### S3 - o chamado sobe de etapa (P1) · ~12 arquivos · ~170 KB · ~43k
 
-**C44** - `POST /api/chamados/{numero}/subir` com `motivo` num chamado `EM_ATENDIMENTO` da etapa 1 de 2 o move ao setor da etapa 2, grava `etapa_ordem` 2 e `etapa_desde` igual ao relógio, tira o responsável e deixa `ABERTO` (AC 35)
+**C44** - [x] `POST /api/chamados/{numero}/subir` com `motivo` num chamado `EM_ATENDIMENTO` da etapa 1 de 2 o move ao setor da etapa 2, grava `etapa_ordem` 2 e `etapa_desde` igual ao relógio, tira o responsável e deixa `ABERTO` (AC 35)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Sobe_para_a_etapa_seguinte"`
 
-**C45** - Ao subir, o histórico ganha um evento `SUBIDA` com os nomes dos setores em `de` e `para`, o motivo vira nota interna e `Encaminhamentos` continua 0 (AC 36, door 8)
+**C45** - [x] Ao subir, o histórico ganha um evento `SUBIDA` com os nomes dos setores em `de` e `para`, o motivo vira nota interna e `Encaminhamentos` continua 0 (AC 36, door 8)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Subida_nao_e_encaminhamento"`
 
-**C46** - `subir` responde `409` num chamado fora de fluxo, na última etapa, e quando nenhuma etapa seguinte resolve (AC 37)
+**C46** - [x] `subir` responde `409` num chamado fora de fluxo, na última etapa, e quando nenhuma etapa seguinte resolve (AC 37)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Sem_proxima_etapa_409"`
 
-**C47** - `subir` responde `200` em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`, e `409` em `RESOLVIDO` e `FECHADO` (AC 38)
+**C47** - [x] `subir` responde `200` em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`, e `409` em `RESOLVIDO` e `FECHADO` (AC 38)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Subir_por_estado"`
 
-**C48** - `subir` com `motivo` vazio ou só de espaços responde `400` no campo `motivo` (AC 39)
+**C48** - [x] `subir` com `motivo` vazio ou só de espaços responde `400` no campo `motivo` (AC 39)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Motivo_obrigatorio_400"`
 
-**C49** - O aluno que chama `subir` recebe `403`, e um atendente de outro setor recebe `404` (AC 40)
+**C49** - [x] O aluno que chama `subir` recebe `403`, e um atendente de outro setor recebe `404` (AC 40)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Aluno_403_e_outro_setor_404"`
 
-**C50** - `acoes` do detalhe traz `subir` para o atendente enquanto há etapa seguinte, e não traz na última etapa, fora de fluxo, em `RESOLVIDO` e para o aluno (AC 41)
+**C50** - [x] `acoes` do detalhe traz `subir` para o atendente enquanto há etapa seguinte, e não traz na última etapa, fora de fluxo, em `RESOLVIDO` e para o aluno (AC 41)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Acao_subir_so_com_etapa_seguinte"`
 
-**C51** - Com `prazoHoras` 48 e o relógio 48 horas depois de `etapa_desde`, o Agendador move o chamado `ABERTO` ou `EM_ATENDIMENTO` sem mensagem pública da equipe à etapa seguinte; com 47 horas, não move (AC 42)
+**C51** - [x] Com `prazoHoras` 48 e o relógio 48 horas depois de `etapa_desde`, o Agendador move o chamado `ABERTO` ou `EM_ATENDIMENTO` sem mensagem pública da equipe à etapa seguinte; com 47 horas, não move (AC 42)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Sobe_no_prazo_e_nao_antes"`
 
-**C52** - A subida do Agendador grava `SUBIDA` sem autor com o detalhe `Sem resposta em 48 horas` (e `Sem resposta em 12 horas` numa etapa de 12), tira o responsável e deixa `ABERTO` (AC 43)
+**C52** - [x] A subida do Agendador grava `SUBIDA` sem autor com o detalhe `Sem resposta em 48 horas` (e `Sem resposta em 12 horas` numa etapa de 12), tira o responsável e deixa `ABERTO` (AC 43)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Subida_do_agendador_registra_o_prazo_da_etapa"`
 
-**C53** - Duas execuções do Agendador, e o Agendador junto com um atendente, sobem o chamado uma vez só, com `etapa_ordem` aumentando de 1 para 2 e não para 3 (AC 44)
+**C53** - [x] Duas execuções do Agendador, e o Agendador junto com um atendente, sobem o chamado uma vez só, com `etapa_ordem` aumentando de 1 para 2 e não para 3 (AC 44)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Duas_subidas_simultaneas_uma_so"`
 
-**C54** - Uma mensagem pública da equipe depois de `etapa_desde` impede a subida do Agendador; uma enviada antes de `etapa_desde` não impede (AC 45)
+**C54** - [x] Uma mensagem pública da equipe depois de `etapa_desde` impede a subida do Agendador; uma enviada antes de `etapa_desde` não impede (AC 45)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Resposta_da_equipe_na_etapa_segura_o_chamado"`
 
-**C55** - O Agendador não move um chamado `AGUARDANDO_ALUNO` vencido (AC 46)
+**C55** - [x] O Agendador não move um chamado `AGUARDANDO_ALUNO` vencido (AC 46)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoPrazoTests.Aguardando_aluno_nao_sobe"`
 
 **C56** - O Histórico escreve `Ana subiu o chamado de Líderes para Coordenação` com autor e `O chamado subiu de Líderes para Coordenação. Sem resposta em 48 horas` sem autor (AC 47)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "frase da subida"`
 
-**C57** - `encaminhar` manual deixa `etapa_ordem` e `etapa_desde` nulos, e o Agendador não move mais o chamado (AC 48)
+**C57** - [x] `encaminhar` manual deixa `etapa_ordem` e `etapa_desde` nulos, e o Agendador não move mais o chamado (AC 48)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoSubirTests.Encaminhar_manual_sai_do_fluxo"`
 
 **C58** - No Detalhe, o botão `Subir` aparece quando `acoes` tem `subir`, abre o diálogo que pede o motivo e envia `POST /subir` com `{ motivo }` (Observable)
 Proof: `cd web && npx vitest run src/chamados/acoes.test.tsx -t "subir pede o motivo"`
 
-**C59** - Um chamado que subiu da liderança à coordenação e foi resolvido conta como roteado corretamente em `RoteamentoCorreto` (Impact, door 8)
+**C59** - [x] Um chamado que subiu da liderança à coordenação e foi resolvido conta como roteado corretamente em `RoteamentoCorreto` (Impact, door 8)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IndicadoresCalculoTests.Subida_nao_derruba_o_roteamento_correto"`
 
 **C60** - `PermissoesChamado` tem `subir` só para `ATENDENTE` e `LIDER`, em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`, e a regra de arquitetura acusa 10 tipos de ação e 11 nomes em `PermissoesChamado` (Impact, door 7)
@@ -288,10 +288,10 @@ Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "detalhe do l�
 
 ### S5 - o gestor vê por que o chamado caiu ali (P2) · ~5 arquivos · ~40 KB · ~10k
 
-**C80** - Para a equipe, o detalhe de um chamado de fluxo traz `fluxo` com `versao`, `etapa`, `total`, `destino` e `abrangencia` (`Todos os cursos`, `ADS` ou `ADS, 3º semestre`) (AC 67)
+**C80** - [x] Para a equipe, o detalhe de um chamado de fluxo traz `fluxo` com `versao`, `etapa`, `total`, `destino` e `abrangencia` (`Todos os cursos`, `ADS` ou `ADS, 3º semestre`) (AC 67)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRastroTests.Detalhe_traz_fluxo_e_abrangencia"`
 
-**C81** - O detalhe de um chamado fora de fluxo traz `fluxo: null` (AC 68)
+**C81** - [x] O detalhe de um chamado fora de fluxo traz `fluxo: null` (AC 68)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoRastroTests.Fora_de_fluxo_traz_null"`
 
 **C82** - A coluna lateral escreve `Etapa 1 de 2 · ADS, 3º semestre` com `fluxo`, e não escreve a linha quando `fluxo` é null (AC 69)
@@ -351,7 +351,7 @@ Proof: `node -e "process.exit(require('./web/package.json').dependencies['@xyflo
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Visao_e_aceite_vem_do_tipo"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Visao_e_aceite_fora_do_banco_e_da_entrada"`
 
-**C99** - O modelo do EF Core não tem mudança pendente em relação à migration nova, as entidades novas têm `instituicao_id` e filtro, e o domínio do fluxo não referencia ASP.NET Core nem Mediator (door 1, AD-008, AD-024)
+**C99** - [x] O modelo do EF Core não tem mudança pendente em relação à migration nova, as entidades novas têm `instituicao_id` e filtro, e o domínio do fluxo não referencia ASP.NET Core nem Mediator (door 1, AD-008, AD-024)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Modelo_sem_mudanca_pendente"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dominio_sem_AspNetCore_Mediator_nem_fatias"`

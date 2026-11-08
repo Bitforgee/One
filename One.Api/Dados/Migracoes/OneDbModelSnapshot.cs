@@ -196,48 +196,6 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("curso");
                 });
 
-            modelBuilder.Entity("One.Api.Dados.Cadastros.RegraRoteamento", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("CategoriaId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("categoria_id");
-
-                    b.Property<string>("Destino")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("destino");
-
-                    b.Property<long>("InstituicaoId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("instituicao_id");
-
-                    b.Property<long?>("SetorId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("setor_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_regra_roteamento");
-
-                    b.HasIndex("CategoriaId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_regra_roteamento_categoria_id");
-
-                    b.HasIndex("InstituicaoId")
-                        .HasDatabaseName("ix_regra_roteamento_instituicao_id");
-
-                    b.HasIndex("SetorId")
-                        .HasDatabaseName("ix_regra_roteamento_setor_id");
-
-                    b.ToTable("regra_roteamento");
-                });
-
             modelBuilder.Entity("One.Api.Dados.Cadastros.RespostaPronta", b =>
                 {
                     b.Property<long>("Id")
@@ -414,6 +372,14 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("text")
                         .HasColumnName("estado");
 
+                    b.Property<DateTime?>("EtapaDesde")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("etapa_desde");
+
+                    b.Property<int?>("EtapaOrdem")
+                        .HasColumnType("integer")
+                        .HasColumnName("etapa_ordem");
+
                     b.Property<DateTime?>("FechadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fechado_em");
@@ -484,6 +450,10 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("character varying(120)")
                         .HasColumnName("titulo");
 
+                    b.Property<long?>("VersaoFluxoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("versao_fluxo_id");
+
                     b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -514,6 +484,9 @@ namespace One.Api.Dados.Migracoes
 
                     b.HasIndex("SolicitanteId")
                         .HasDatabaseName("ix_chamado_solicitante_id");
+
+                    b.HasIndex("VersaoFluxoId")
+                        .HasDatabaseName("ix_chamado_versao_fluxo_id");
 
                     b.HasIndex("InstituicaoId", "Numero")
                         .IsUnique()
@@ -1005,6 +978,163 @@ namespace One.Api.Dados.Migracoes
                         .HasDatabaseName("ix_email_saida_instituicao_id");
 
                     b.ToTable("email_saida");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.EtapaFluxo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Destino")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("destino");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<int>("Ordem")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordem");
+
+                    b.Property<double?>("PosX")
+                        .HasColumnType("double precision")
+                        .HasColumnName("pos_x");
+
+                    b.Property<double?>("PosY")
+                        .HasColumnType("double precision")
+                        .HasColumnName("pos_y");
+
+                    b.Property<int?>("PrazoHoras")
+                        .HasColumnType("integer")
+                        .HasColumnName("prazo_horas");
+
+                    b.Property<long?>("SetorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("setor_id");
+
+                    b.Property<long>("VersaoFluxoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("versao_fluxo_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_etapa_fluxo");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_etapa_fluxo_instituicao_id");
+
+                    b.HasIndex("SetorId")
+                        .HasDatabaseName("ix_etapa_fluxo_setor_id");
+
+                    b.HasIndex("VersaoFluxoId", "Ordem")
+                        .IsUnique()
+                        .HasDatabaseName("ix_etapa_fluxo_versao_fluxo_id_ordem");
+
+                    b.ToTable("etapa_fluxo", t =>
+                        {
+                            t.HasCheckConstraint("ck_etapa_fluxo_ordem", "ordem BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("ck_etapa_fluxo_posicao", "(pos_x IS NULL) = (pos_y IS NULL)");
+
+                            t.HasCheckConstraint("ck_etapa_fluxo_prazo", "prazo_horas IS NULL OR prazo_horas BETWEEN 1 AND 720");
+                        });
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.Fluxo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CategoriaId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<long?>("CursoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("curso_id");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<int?>("Semestre")
+                        .HasColumnType("integer")
+                        .HasColumnName("semestre");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fluxo");
+
+                    b.HasIndex("CategoriaId")
+                        .HasDatabaseName("ix_fluxo_categoria_id");
+
+                    b.HasIndex("CursoId")
+                        .HasDatabaseName("ix_fluxo_curso_id");
+
+                    b.HasIndex("InstituicaoId", "CategoriaId", "CursoId", "Semestre")
+                        .IsUnique()
+                        .HasDatabaseName("ux_fluxo_abrangencia");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("InstituicaoId", "CategoriaId", "CursoId", "Semestre"), false);
+
+                    b.ToTable("fluxo", t =>
+                        {
+                            t.HasCheckConstraint("ck_fluxo_semestre", "semestre BETWEEN 1 AND 12");
+
+                            t.HasCheckConstraint("ck_fluxo_semestre_com_curso", "semestre IS NULL OR curso_id IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.VersaoFluxo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("FluxoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("fluxo_id");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero");
+
+                    b.Property<DateTime?>("PublicadaEm")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("publicada_em");
+
+                    b.HasKey("Id")
+                        .HasName("pk_versao_fluxo");
+
+                    b.HasIndex("FluxoId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_versao_rascunho")
+                        .HasFilter("publicada_em IS NULL");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_versao_fluxo_instituicao_id");
+
+                    b.HasIndex("FluxoId", "Numero")
+                        .IsUnique()
+                        .HasDatabaseName("ix_versao_fluxo_fluxo_id_numero");
+
+                    b.ToTable("versao_fluxo");
                 });
 
             modelBuilder.Entity("One.Api.Dados.ImagemInstituicao", b =>
@@ -1608,28 +1738,6 @@ namespace One.Api.Dados.Migracoes
                         .HasConstraintName("fk_curso_setores_setor_coordenacao_id");
                 });
 
-            modelBuilder.Entity("One.Api.Dados.Cadastros.RegraRoteamento", b =>
-                {
-                    b.HasOne("One.Api.Dados.Cadastros.Categoria", null)
-                        .WithMany()
-                        .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_regra_roteamento_categoria_categoria_id");
-
-                    b.HasOne("One.Api.Dados.Instituicao", null)
-                        .WithMany()
-                        .HasForeignKey("InstituicaoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_regra_roteamento_instituicao_instituicao_id");
-
-                    b.HasOne("One.Api.Dados.Cadastros.Setor", null)
-                        .WithMany()
-                        .HasForeignKey("SetorId")
-                        .HasConstraintName("fk_regra_roteamento_setores_setor_id");
-                });
-
             modelBuilder.Entity("One.Api.Dados.Cadastros.RespostaPronta", b =>
                 {
                     b.HasOne("One.Api.Dados.Instituicao", null)
@@ -1729,6 +1837,11 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_chamado_usuarios_solicitante_id");
+
+                    b.HasOne("One.Api.Dados.Fluxos.VersaoFluxo", null)
+                        .WithMany()
+                        .HasForeignKey("VersaoFluxoId")
+                        .HasConstraintName("fk_chamado_versoes_fluxo_versao_fluxo_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Chamados.EventoChamado", b =>
@@ -1897,6 +2010,67 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_email_saida_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.EtapaFluxo", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_etapa_fluxo_instituicoes_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Cadastros.Setor", null)
+                        .WithMany()
+                        .HasForeignKey("SetorId")
+                        .HasConstraintName("fk_etapa_fluxo_setores_setor_id");
+
+                    b.HasOne("One.Api.Dados.Fluxos.VersaoFluxo", null)
+                        .WithMany("Etapas")
+                        .HasForeignKey("VersaoFluxoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_etapa_fluxo_versoes_fluxo_versao_fluxo_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.Fluxo", b =>
+                {
+                    b.HasOne("One.Api.Dados.Cadastros.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_fluxo_categoria_categoria_id");
+
+                    b.HasOne("One.Api.Dados.Cadastros.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .HasConstraintName("fk_fluxo_curso_curso_id");
+
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fluxo_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.VersaoFluxo", b =>
+                {
+                    b.HasOne("One.Api.Dados.Fluxos.Fluxo", null)
+                        .WithMany("Versoes")
+                        .HasForeignKey("FluxoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_versao_fluxo_fluxo_fluxo_id");
+
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_versao_fluxo_instituicao_instituicao_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.ImagemInstituicao", b =>
@@ -2100,6 +2274,16 @@ namespace One.Api.Dados.Migracoes
             modelBuilder.Entity("One.Api.Dados.Documentos.Documento", b =>
                 {
                     b.Navigation("Versoes");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.Fluxo", b =>
+                {
+                    b.Navigation("Versoes");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Fluxos.VersaoFluxo", b =>
+                {
+                    b.Navigation("Etapas");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Usuarios.Usuario", b =>

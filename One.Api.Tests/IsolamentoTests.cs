@@ -75,7 +75,7 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
             .Concat(await db.Cursos.Select(x => x.Nome).ToListAsync()).Concat(await db.RespostasProntas.Select(x => x.Titulo).ToListAsync()).ToList());
         Assert.DoesNotContain("Invadido", nomes);
         Assert.True((await f.Db(univag.Id, db => db.Usuarios.SingleAsync(u => u.Id == alunoUnivag.Usuario.Id))).Ativo);
-        Assert.Equal("SETOR", (await f.Db(univag.Id, db => db.Regras.SingleAsync())).Destino);
+        Assert.Equal("SETOR", (await f.Db(univag.Id, db => db.EtapasFluxo.SingleAsync())).Destino);
         var artigoDepois = await f.Db(univag.Id, db => db.Artigos.Include(x => x.Versoes).SingleAsync(x => x.Id == artigo.Id));
         Assert.Equal(("ATIVO", 1), (artigoDepois.Estado, artigoDepois.Versoes.Count));
     }
