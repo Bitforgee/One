@@ -494,5 +494,5 @@ Estimativa por slice, em bytes dos arquivos que cada um lê ou altera, divididos
 
 A estimativa passa de 150k. Corte proposto, em sequência e só no verde: lote 1 = S1 + S2 + S3 + S5 (~116k); lote 2 = S6 + S4 (~54k). S4 vai por último porque depende da resposta da Univag à pergunta 1.
 
-- Mechanism: decisão do usuário pendente (handoff em dois lotes, ou um construtor com compactação)
-- Base: a gravar quando `plan.md` e este arquivo forem commitados
+- Mechanism: **handoff em dois lotes sequenciais, só no verde, construídos por subagentes** (decisão do usuário em 08/11: "use subagentes para construir"). Lote 1 = S1 + S2 + S3 + S5; lote 2 = S6 + S4. O C60 (papel `LIDER`), o C98, o C100 a C102 (campos `cursoId`/`semestre` do setor) e o C105 só fecham no lote 2; os demais fecham no lote 1. Verificador: subagente novo, depois do último commit, sobre `<base>..HEAD` com todos os checks
+- Base: `e1320eb` (commit que congela `plan.md` e este arquivo), na branch `feature/fluxos-atendimento`
