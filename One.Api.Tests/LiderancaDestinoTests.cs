@@ -74,6 +74,12 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await outro.Cliente.GetAsync($"/api/conversas/{conversa}/destino")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await t.ClienteAluno.GetAsync("/api/conversas/999999/destino")).StatusCode);
 
+        // POST /transferir: matrícula que não é do aluno 400 (campo matriculaId); conversa de outro aluno 404
+        var recusada = await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { matriculaId = matriculaDoOutro });
+        Assert.Equal(HttpStatusCode.BadRequest, recusada.StatusCode);
+        Assert.True((await recusada.Json()).GetProperty("errors").TryGetProperty("matriculaId", out _));
+        Assert.Equal(HttpStatusCode.NotFound, (await outro.Cliente.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);
+
         Assert.Equal(HttpStatusCode.Created, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.GetAsync($"/api/conversas/{conversa}/destino")).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { aceitaLideranca = true })).StatusCode);

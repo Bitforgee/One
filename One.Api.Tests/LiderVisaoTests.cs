@@ -27,6 +27,9 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, d.GetProperty("transcricao").GetArrayLength());
         Assert.Equal(JsonValueKind.Null, d.GetProperty("matricula").GetProperty("numero").ValueKind);
         Assert.Equal(JsonValueKind.Null, d.GetProperty("categorias").ValueKind);
+        // o líder não reclassifica nem encaminha (AC 61), então não recebe as listas de destino; a origem da categoria vem do que a IA citou, que é da equipe
+        Assert.Equal(JsonValueKind.Null, d.GetProperty("setores").ValueKind);
+        Assert.Equal(JsonValueKind.Null, d.GetProperty("origemCategoria").ValueKind);
         Assert.Equal(t.Aluno.Usuario.Nome, d.GetProperty("solicitante").GetString());
         Assert.Equal("Dúvida sobre a nota da prova.", d.GetProperty("resumo").GetString());
         Assert.Equal(("ADS", 3), (d.GetProperty("matricula").GetProperty("curso").GetString(), d.GetProperty("matricula").GetProperty("semestre").GetInt32()));
@@ -44,6 +47,21 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         // a coordenação, que vê tudo, ainda vê a transcrição
         var aluno = await t.Detalhe(t.ClienteAluno, numero);
         Assert.Equal(1, aluno.GetProperty("transcricao").EnumerateArray().Count(m => m.GetProperty("texto").GetString() == "preciso de ajuda com a nota"));
+    }
+
+    // Impact do plano: a lista `setores` do detalhe deixa de oferecer lideranças à equipe comum
+    [Fact]
+    public async Task Setores_do_detalhe_da_equipe_nao_oferecem_lideranca()
+    {
+        var t = await Turma.Criar(f);
+        var financeiro = await f.Setor(t.I, "Financeiro");
+        var numero = await t.Transferir(new { aceitaLideranca = false }); // vai à coordenação, vista pela equipe comum
+
+        var d = await t.Detalhe(t.Coord.Cliente, numero);
+
+        var ofertados = d.GetProperty("setores").EnumerateArray().Select(s => s.GetProperty("id").GetInt64()).ToList();
+        Assert.Contains(financeiro.Id, ofertados); // a lista existe e traz os setores comuns
+        Assert.DoesNotContain(t.Lideranca!.Id, ofertados);
     }
 
     // C74
