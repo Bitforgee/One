@@ -265,6 +265,22 @@ public class ChamadoDominioTests
         Assert.Throws<InvalidOperationException>(() => ChamadoFechado().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
     }
 
+    // base-fluxos C13: reclassificar tira o chamado da etapa e o deixa no setor onde está
+    [Fact]
+    public void Reclassificar_em_fluxo_sai_da_etapa()
+    {
+        var c = NoFluxo();
+        c.Subir(Ator, "A", "B", 21, 2, "x", null, Antes);
+        var (setor, eventos) = (c.SetorId, c.Eventos.Count);
+
+        c.Reclassificar(Ator, 11, "Boleto", "Matrícula", Agora);
+
+        Assert.Equal((11L, (int?)null, (DateTime?)null), (c.CategoriaId, c.EtapaOrdem, c.EtapaDesde));
+        Assert.Equal((setor, (long?)5), (c.SetorId, c.VersaoFluxoId));
+        var novos = c.Eventos.Skip(eventos).ToList();
+        Assert.Equal([("RECLASSIFICACAO", "Boleto", "Matrícula")], novos.Select(e => (e.Tipo, e.De, e.Para)));
+    }
+
     // C57 (domínio): encaminhar à mão tira o chamado do fluxo; a abertura sem etapa também fica fora
     [Fact]
     public void Encaminhar_sai_do_fluxo_e_abrir_sem_etapa_fica_fora()

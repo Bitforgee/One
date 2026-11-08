@@ -159,6 +159,9 @@ public class Chamado : IDaInstituicao
         Exigir(NaoFechados);
         Evento(TiposEvento.Reclassificacao, new Ato(atorId, agora), nomeAtual, nomeNova);
         CategoriaId = categoriaId;
+        // A cadeia era a da categoria antiga: o chamado fica no setor onde está e sai do fluxo, como no encaminhamento manual.
+        EtapaOrdem = null;
+        EtapaDesde = null;
     }
 
     public void MarcarDuplicado(long atorId, string numeroOriginal, DateTime agora)
