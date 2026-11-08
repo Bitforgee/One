@@ -39,6 +39,12 @@ function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
   return marcas
 }
 
+// O que dá para simular: o rascunho salvo, ou a versão vigente enquanto nada mudou; com edição pendente, nada.
+function versaoParaSimular(salvo: boolean, alterado: boolean, fluxo: Fluxo) {
+  if (salvo) return 'RASCUNHO'
+  return !alterado && fluxo.vigente ? 'VIGENTE' : null
+}
+
 type PropsDoAlternador = { visao: Visao; mudar: (v: Visao) => void }
 
 // Lista e Canvas são duas telas do mesmo rascunho; abaixo de 768 px só a Lista existe (AC 79).
@@ -50,6 +56,54 @@ function Alternador({ visao, mudar }: PropsDoAlternador) {
         <TabsTrigger value="canvas">Canvas</TabsTrigger>
       </TabsList>
     </Tabs>
+  )
+}
+
+type PropsDaArea = { grafo: Grafo; setores: Setor[]; simulacao?: Simulacao; editar: (f: (g: Grafo) => Grafo) => void; visao: Visao; mudarVisao: (v: Visao) => void; estreito: boolean }
+
+// O alternador, o aviso da cadeia e a visão escolhida do mesmo rascunho: a lista, ou o canvas carregado sob demanda.
+function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, mudarVisao, estreito }: PropsDaArea) {
+  const CanvasCarregado = useMemo(() => lazy(() => Carga.canvas()), [])
+  const lista = <ListaDeEtapas grafo={grafo} setores={setores} editar={editar} />
+  const canvas = (
+    <FalhaDoCanvas
+      fallback={
+        <>
+          <Alert variant="destructive">Não foi possível abrir o canvas. Use a lista.</Alert>
+          {lista}
+        </>
+      }
+    >
+      <Suspense fallback={<Spinner />}>
+        <CanvasCarregado grafo={grafo} setores={setores} marcas={marcasDaSimulacao(grafo, simulacao)} editar={editar} />
+      </Suspense>
+    </FalhaDoCanvas>
+  )
+  return (
+    <>
+      {estreito ? <p className="m-0 text-sm text-muted-foreground">O canvas está disponível em telas maiores.</p> : <Alternador visao={visao} mudar={mudarVisao} />}
+      {!cadeiaValida(grafo) && (
+        <p role="alert" className="m-0 text-sm text-destructive">
+          {FraseDaCadeia}
+        </p>
+      )}
+      {visao === 'canvas' && !estreito ? canvas : lista}
+    </>
+  )
+}
+
+type PropsDosBotoes = { podePublicar: boolean; podeDescartar: boolean; publicar: () => void; descartar: () => void }
+
+function BotoesDoFluxo({ podePublicar, podeDescartar, publicar, descartar }: PropsDosBotoes) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <BotaoAcao type="button" pendente={false} disabled={!podePublicar} onClick={publicar}>
+        Publicar
+      </BotaoAcao>
+      <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!podeDescartar} onClick={descartar}>
+        Descartar rascunho
+      </BotaoAcao>
+    </div>
   )
 }
 
@@ -66,9 +120,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, reca
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
   const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
-  const CanvasCarregado = useMemo(() => lazy(() => Carga.canvas()), [])
   const valida = cadeiaValida(grafo)
-  const noCanvas = visao === 'canvas' && !estreito
 
   function editar(f: (g: Grafo) => Grafo) {
     setGrafo(f)
@@ -85,45 +137,15 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, reca
     acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, { etapas: etapasParaApi(grafo) }, 'PUT'), aviso: 'Rascunho salvo.', depois: () => { setSalvo(true); setAlterado(false) } })
   const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: fechar })
   const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: fechar })
-  const versao = salvo ? 'RASCUNHO' : !alterado && fluxo.vigente ? 'VIGENTE' : null
-  const lista = <ListaDeEtapas grafo={grafo} setores={setores} editar={editar} />
 
   return (
-    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} largo={noCanvas} alerta={<ErroDe erro={acao.error} />}>
+    <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} largo={visao === 'canvas' && !estreito} alerta={<ErroDe erro={acao.error} />}>
       <p className="m-0 text-sm text-muted-foreground">
         {categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · {abrangenciaDoFluxo(fluxo, cursos)}
       </p>
-      {estreito ? <p className="m-0 text-sm text-muted-foreground">O canvas está disponível em telas maiores.</p> : <Alternador visao={visao} mudar={mudarVisao} />}
-      {!valida && (
-        <p role="alert" className="m-0 text-sm text-destructive">
-          {FraseDaCadeia}
-        </p>
-      )}
-      {noCanvas ? (
-        <FalhaDoCanvas
-          fallback={
-            <>
-              <Alert variant="destructive">Não foi possível abrir o canvas. Use a lista.</Alert>
-              {lista}
-            </>
-          }
-        >
-          <Suspense fallback={<Spinner />}>
-            <CanvasCarregado grafo={grafo} setores={setores} marcas={marcasDaSimulacao(grafo, simulacao)} editar={editar} />
-          </Suspense>
-        </FalhaDoCanvas>
-      ) : (
-        lista
-      )}
-      <Simulador fluxo={fluxo} cursos={cursos} versao={versao} resultado={simulacao} aoSimular={setSimulacao} />
-      <div className="flex flex-wrap gap-2">
-        <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || acao.isPending} onClick={publicar}>
-          Publicar
-        </BotaoAcao>
-        <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!fluxo.rascunho || acao.isPending} onClick={descartar}>
-          Descartar rascunho
-        </BotaoAcao>
-      </div>
+      <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} mudarVisao={mudarVisao} estreito={estreito} />
+      <Simulador fluxo={fluxo} cursos={cursos} versao={versaoParaSimular(salvo, alterado, fluxo)} resultado={simulacao} aoSimular={setSimulacao} />
+      <BotoesDoFluxo podePublicar={salvo && valida && !acao.isPending} podeDescartar={!!fluxo.rascunho && !acao.isPending} publicar={publicar} descartar={descartar} />
     </Editor>
   )
 }

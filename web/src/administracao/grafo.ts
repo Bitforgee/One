@@ -54,18 +54,22 @@ export function nosInvalidos(g: Grafo): Set<string> {
   return new Set([...g.nos.filter((n) => !lista.includes(n)), ...lista.slice(MaximoDeEtapas)].map((n) => n.id))
 }
 
+// Ligar `de` a `para` fecharia um ciclo quando seguir as saídas a partir de `para` chega em `de`.
+function fechaCiclo(ligacoes: Ligacao[], de: string, para: string): boolean {
+  const vistos = new Set<string>()
+  for (let atual = ligacoes.find((l) => l.de === para)?.para; atual && !vistos.has(atual); atual = ligacoes.find((l) => l.de === atual)?.para) {
+    if (atual === de) return true
+    vistos.add(atual)
+  }
+  return false
+}
+
 // A regra de ligação (AC 73): só de um nó sem saída para um nó sem entrada, nunca em si mesmo nem fechando um ciclo.
 export function podeLigar(ligacoes: Ligacao[], de: string, para: string): boolean {
   if (de === para || para === Inicio) return false
   if (ligacoes.some((l) => l.de === de) || ligacoes.some((l) => l.para === para)) return false
-  const vistos = new Set<string>()
-  for (let atual = ligacoes.find((l) => l.de === para)?.para; atual && !vistos.has(atual); atual = ligacoes.find((l) => l.de === atual)?.para) {
-    if (atual === de) return false
-    vistos.add(atual)
-  }
-  return true
+  return !fechaCiclo(ligacoes, de, para)
 }
-
 export const ligar = (g: Grafo, de: string, para: string): Grafo => (podeLigar(g.ligacoes, de, para) ? { ...g, ligacoes: [...g.ligacoes, { de, para }] } : g)
 
 export const desligar = (g: Grafo, de: string, para: string): Grafo => ({ ...g, ligacoes: g.ligacoes.filter((l) => l.de !== de || l.para !== para) })
