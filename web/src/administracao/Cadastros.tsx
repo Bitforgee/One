@@ -15,7 +15,7 @@ import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Textarea } from '../ui/textarea'
-import { abrangenciaDoFluxo, cadeiaDoFluxo, SemestresDe1a12, type Categoria, type Curso, type Fluxo, type Pronta, type Setor } from './comum'
+import { abrangenciaDoFluxo, cadeiaDoFluxo, semLideranca, SemestresDe1a12, type Categoria, type Curso, type Fluxo, type Pronta, type Setor } from './comum'
 import { EdicaoDoFluxo } from './EdicaoDoFluxo'
 
 type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; fluxos: Fluxo[]; prontas: Pronta[] }
@@ -28,7 +28,7 @@ const CamposComErro = ['nome', 'titulo', 'texto', 'setorId', 'categoriaId', 'set
 const Titulos: Record<Aba, string> = { setores: 'Setores', categorias: 'Categorias', cursos: 'Cursos', fluxos: 'Fluxos', prontas: 'Respostas prontas' }
 const Rotas: Record<Aba, string> = { setores: 'setores', categorias: 'categorias', cursos: 'cursos', fluxos: 'fluxos', prontas: 'respostas-prontas' }
 const Novos: Record<Aba, Ficha> = {
-  setores: { nome: '', triagem: false, ativo: true },
+  setores: { nome: '', triagem: false, ativo: true, lideranca: false, cursoId: '', semestre: '' },
   categorias: { nome: '', ativa: true },
   cursos: { nome: '', setorCoordenacaoId: '' },
   fluxos: { categoriaId: '', abrangencia: 'TODOS', cursoId: '', semestre: '' },
@@ -38,7 +38,8 @@ const ficha = (x: object): Ficha => Object.fromEntries(Object.entries(x).map(([k
 const num = (v: string | number) => (v === '' ? null : Number(v))
 
 const Corpos: Record<Aba, (r: Ficha) => unknown> = {
-  setores: (r) => ({ nome: r.nome, triagem: r.triagem, ativo: r.ativo }),
+  // curso e semestre da liderança só vão na criação (AC 53); o setor editado não tem a marca `lideranca`
+  setores: (r) => ({ nome: r.nome, triagem: r.triagem, ativo: r.ativo, ...(r.lideranca ? { cursoId: num(r.cursoId), semestre: num(r.semestre) } : {}) }),
   categorias: (r) => ({ nome: r.nome, ativa: r.ativa }),
   cursos: (r) => ({ nome: r.nome, setorCoordenacaoId: num(r.setorCoordenacaoId) }),
   fluxos: (r) => ({ categoriaId: num(r.categoriaId), cursoId: r.abrangencia === 'TODOS' ? null : num(r.cursoId), semestre: r.abrangencia === 'SEMESTRE' ? num(r.semestre) : null }),
@@ -52,7 +53,7 @@ function linhas(dados: Listas): Record<Aba, (x: any) => [string, string]> {
     return nomes.has(id!) ? nomes.get(id!)! : '—'
   }
   return {
-    setores: (s: Setor) => [s.nome, [s.triagem && 'triagem', !s.ativo && 'inativo'].filter(Boolean).join(' · ')],
+    setores: (s: Setor) => [s.nome, [s.triagem && 'triagem', s.cursoId && `liderança de ${abrangenciaDoFluxo({ cursoId: s.cursoId, semestre: s.semestre ?? null }, dados.cursos)}`, !s.ativo && 'inativo'].filter(Boolean).join(' · ')],
     categorias: (c: Categoria) => [c.nome, [c.padrao && 'padrão', !c.ativa && 'inativa'].filter(Boolean).join(' · ')],
     cursos: (c: Curso) => [c.nome, `coordenação: ${nome(dados.setores, c.setorCoordenacaoId)}`],
     fluxos: (f: Fluxo) => [nome(dados.categorias, f.categoriaId), `${abrangenciaDoFluxo(f, dados.cursos)} · ${cadeiaDoFluxo(f.vigente, dados.setores)}`],
@@ -122,14 +123,47 @@ function NomeEMarcas({ c, marcas }: { c: Campos; marcas: [id: string, rotulo: st
   )
 }
 
+// Na criação, a marca "Liderança de semestre" pede o curso e o semestre; na edição os dois só se leem (AC 53).
+function TurmaDaLideranca(c: Campos) {
+  const { editando } = c
+  if (editando.id) {
+    return editando.cursoId ? (
+      <p className="m-0 text-sm text-muted-foreground">{`Liderança de semestre: ${abrangenciaDoFluxo({ cursoId: editando.cursoId, semestre: editando.semestre }, c.dados?.cursos ?? [])}`}</p>
+    ) : null
+  }
+  return (
+    <>
+      <Marca id="cad-lideranca" rotulo="Liderança de semestre" marcado={editando.lideranca} mudar={(v) => c.setEditando((f) => f && { ...f, lideranca: v })} />
+      {editando.lideranca && (
+        <>
+          <Escolha c={c} id="cad-lideranca-curso" rotulo="Curso" chave="cursoId" vazio="Escolha o curso" itens={c.dados?.cursos} />
+          <Rotulado id="cad-lideranca-semestre" rotulo="Semestre" erro={c.erros.semestre}>
+            <NativeSelect id="cad-lideranca-semestre" className="w-full" {...campo(c, 'semestre', 'cad-lideranca-semestre')}>
+              <option value="">Escolha o semestre</option>
+              {SemestresDe1a12.map((n) => (
+                <option key={n} value={n}>
+                  {n}º semestre
+                </option>
+              ))}
+            </NativeSelect>
+          </Rotulado>
+        </>
+      )}
+    </>
+  )
+}
+
 const CamposDeSetor = (c: Campos) => (
-  <NomeEMarcas
-    c={c}
-    marcas={[
-      ['cad-triagem', 'Setor de triagem (exatamente um na instituição)', 'triagem'],
-      ['cad-ativo', 'Ativo', 'ativo'],
-    ]}
-  />
+  <>
+    <NomeEMarcas
+      c={c}
+      marcas={[
+        ['cad-triagem', 'Setor de triagem (exatamente um na instituição)', 'triagem'],
+        ['cad-ativo', 'Ativo', 'ativo'],
+      ]}
+    />
+    <TurmaDaLideranca {...c} />
+  </>
 )
 
 const CamposDeCategoria = (c: Campos) => <NomeEMarcas c={c} marcas={[['cad-ativa', 'Ativa', 'ativa']]} />
@@ -148,7 +182,7 @@ function Escolha({ c, id, rotulo, chave, vazio, itens }: { c: Campos; id: string
 const CamposDeCurso = (c: Campos) => (
   <>
     <CampoNome {...c} />
-    <Escolha c={c} id="cad-coordenacao" rotulo="Setor de coordenação" chave="setorCoordenacaoId" vazio="Sem coordenação (vai para a triagem)" itens={c.dados?.setores} />
+    <Escolha c={c} id="cad-coordenacao" rotulo="Setor de coordenação" chave="setorCoordenacaoId" vazio="Sem coordenação (vai para a triagem)" itens={c.dados?.setores.filter(semLideranca)} />
   </>
 )
 
@@ -260,7 +294,7 @@ export function Cadastros() {
       </Tabs>
 
       {dados && fluxoAberto && dados.fluxos.some((f) => f.id === fluxoAberto) && (
-        <EdicaoDoFluxo key={fluxoAberto} fluxo={dados.fluxos.find((f) => f.id === fluxoAberto)!} categorias={dados.categorias} cursos={dados.cursos} setores={dados.setores} fechar={() => setFluxoAberto(undefined)} recarregar={recarregar} />
+        <EdicaoDoFluxo key={fluxoAberto} fluxo={dados.fluxos.find((f) => f.id === fluxoAberto)!} categorias={dados.categorias} cursos={dados.cursos} setores={dados.setores.filter(semLideranca)} fechar={() => setFluxoAberto(undefined)} recarregar={recarregar} />
       )}
       <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}

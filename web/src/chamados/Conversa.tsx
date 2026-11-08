@@ -22,7 +22,8 @@ export function Cabecalho({ c }: { c: Chamado }) {
         <section className="flex flex-col gap-2 text-sm">
           <h2 className="m-0 text-base font-semibold">Dados do aluno</h2>
           <div>
-            {c.solicitante} · matrícula {c.matricula.numero} · {c.matricula.curso} · {c.matricula.semestre}º semestre
+            {c.solicitante}
+            {c.matricula.numero && ` · matrícula ${c.matricula.numero}`} · {c.matricula.curso} · {c.matricula.semestre}º semestre
           </div>
         </section>
       )}
@@ -61,7 +62,9 @@ function FonteCitada({ f }: { f: Fonte }) {
   )
 }
 
+// A liderança não recebe a conversa (transcricao: []): sem ela o bloco inteiro some, com o título.
 export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
+  if (c.transcricao.length === 0) return null
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-semibold">Conversa com o assistente</h2>

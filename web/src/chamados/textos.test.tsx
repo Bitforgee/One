@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Chamado } from '../chamado'
+import { frase, type Chamado } from '../chamado'
 import { formatarData } from '../datas'
 import { estados } from '../test/textos'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
@@ -183,6 +185,19 @@ describe('textos', () => {
   it('textos Minhas solicitações', async () => {
     const itens = ['ABERTO', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO', 'RESOLVIDO', 'FECHADO'].map((e, i) => item(i + 1, e))
     await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente', 'aberto há 3 dias', 'A equipe vai responder', 'Responda para continuar', 'Resolvida', 'Encerrada', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
+  })
+
+  // fluxos-atendimento C102: cada tipo de evento do glossário (os que o banco grava) tem frase própria, nunca a saída crua
+  it('todo tipo de evento tem frase', () => {
+    const glossario = readFileSync(path.resolve(process.cwd(), '../.specs/GLOSSARIO.md'), 'utf8')
+    const tipos = [...glossario.matchAll(/^\| `([A-Z_]+)` \| tipo de evento \|/gm)].map((m) => m[1])
+    expect(tipos).toContain('SUBIDA')
+    expect(tipos.length).toBeGreaterThanOrEqual(10)
+    for (const tipo of tipos) {
+      const texto = frase({ tipo, ator: 'Ana', doAluno: false, de: 'A', para: 'B', detalhe: null, criadoEm: '2026-11-02T12:00:00Z' })
+      expect(texto, tipo).not.toBe(`Ana · ${tipo}`)
+      expect(texto, tipo).toMatch(/^Ana /)
+    }
   })
 
   it('textos Fila', async () => {

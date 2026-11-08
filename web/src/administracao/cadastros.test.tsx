@@ -181,4 +181,50 @@ describe('cadastros', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
   })
+
+  // fluxos-atendimento S4 (AC 49, AC 53, AC 54): a liderança de semestre é um setor com curso e semestre, que só se escolhem na criação
+  it('liderança de semestre: curso e semestre na criação, só leitura na edição', async () => {
+    const lideranca = { id: 10, nome: 'Líderes ADS 3º', triagem: false, ativo: true, cursoId: 4, semestre: 3 }
+    listas.setores.push(lideranca)
+    try {
+      const chamadas = cadastros({ 'POST /api/admin/setores': () => [201, {}], 'PUT /api/admin/setores/10': () => [200, {}] })
+      await screen.findByText('Líderes ADS 3º')
+      expect(linhas('Setores').at(-1)).toEqual(['Líderes ADS 3º', 'liderança de ADS, 3º semestre'])
+
+      await userEvent.click(screen.getByRole('button', { name: 'Novo' }))
+      let d = within(await screen.findByRole('dialog'))
+      expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
+      await userEvent.type(d.getByLabelText('Nome'), 'Líderes Direito 1º')
+      await userEvent.click(d.getByLabelText('Liderança de semestre'))
+      await userEvent.selectOptions(d.getByLabelText('Curso'), '5')
+      await userEvent.selectOptions(d.getByLabelText('Semestre'), '1')
+      await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+      await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/setores', { nome: 'Líderes Direito 1º', triagem: false, ativo: true, cursoId: 5, semestre: 1 }]]))
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      await userEvent.click(screen.getByText('Líderes ADS 3º'))
+      d = within(await screen.findByRole('dialog'))
+      expect(d.getByText('Liderança de semestre: ADS, 3º semestre')).toBeInTheDocument()
+      expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
+      expect(d.queryByLabelText('Liderança de semestre')).not.toBeInTheDocument()
+      await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+      await waitFor(() => expect(gravadas(chamadas)[1]).toEqual(['PUT', '/api/admin/setores/10', { nome: 'Líderes ADS 3º', triagem: false, ativo: true }]))
+    } finally {
+      listas.setores.pop()
+    }
+  })
+
+  // AC 54: nenhuma lista de destino oferece a liderança
+  it('listas de destino sem lideranças', async () => {
+    listas.setores.push({ id: 10, nome: 'Líderes ADS 3º', triagem: false, ativo: true, cursoId: 4, semestre: 3 })
+    try {
+      cadastros()
+      await aba('Cursos')
+      await userEvent.click(await screen.findByText('Direito'))
+      const opcoes = within(within(await screen.findByRole('dialog')).getByLabelText('Setor de coordenação')).getAllByRole('option').map((o) => o.textContent)
+      expect(opcoes).toEqual(['Sem coordenação (vai para a triagem)', 'Triagem', 'Financeiro', 'Antigo'])
+    } finally {
+      listas.setores.pop()
+    }
+  })
 })

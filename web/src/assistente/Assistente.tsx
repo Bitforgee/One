@@ -30,6 +30,8 @@ const AvisoExterno =
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.'
 const AvisoResposta = 'Resposta gerada por IA com base nas orientações da instituição.'
 const LimiteDoAluno = 10
+const AvisoLideranca =
+  'Sua dúvida vai primeiro para a liderança do seu semestre, formada por estudantes da sua turma. A liderança vê seu nome, curso, semestre e um resumo da dúvida. A conversa com o assistente e os anexos dela não são mostrados.'
 
 // No limite de mensagens, depois de um sem_base ou de um "Não", o atendente vira o botão principal.
 function situacao(mensagens: Mensagem[], explicar: boolean) {
@@ -58,6 +60,20 @@ function corpoDaMensagem(mensagem: string, arquivos: File[]) {
 function perguntar(conversaId: number | undefined, mensagem: string, arquivos: File[]) {
   const url = conversaId === undefined ? '/api/conversas' : `/api/conversas/${conversaId}/mensagens`
   return api<{ conversaId?: number; resposta: Resposta }>(url, corpoDaMensagem(mensagem, arquivos))
+}
+
+// A prévia do destino: se a transferência passaria primeiro pela liderança. Só depois de a matrícula estar escolhida, e de novo ao trocá-la;
+// se a leitura falha, o diálogo é o de hoje e nada de aceite vai na transferência (AC 58).
+function useLideranca(aberto: boolean, conversaId: number | undefined, ativas: Matricula[], matriculaId: string) {
+  const escolhendo = ativas.length > 1
+  const { data } = useQuery({
+    queryKey: ['destino', conversaId, escolhendo ? matriculaId : ''],
+    queryFn: () => api<{ lideranca: boolean }>(`/api/conversas/${conversaId}/destino${escolhendo ? `?matriculaId=${matriculaId}` : ''}`),
+    enabled: aberto && conversaId !== undefined && (!escolhendo || matriculaId !== ''),
+    retry: false,
+    gcTime: 0,
+  })
+  return data?.lideranca === true
 }
 
 type Envio = { mensagem: string; reenvio?: boolean }
@@ -94,8 +110,9 @@ async function anexosDaUltima(conversaId: number): Promise<Anexo[]> {
 }
 
 // Com conversa, transfere a conversa; sem ela, abre o atendimento direto com a descrição.
-function transferir(conversaId: number | undefined, descricao: string, matriculaId: number | undefined) {
-  const escolha = { matriculaId }
+// aceitaLideranca só vai quando o aluno aceita (AC 59); ausente, a transferência pula a liderança.
+function transferir(conversaId: number | undefined, descricao: string, matriculaId: number | undefined, aceitaLideranca?: true) {
+  const escolha = { matriculaId, aceitaLideranca }
   return conversaId === undefined
     ? api<Transferencia>('/api/atendimento-direto', { descricao, ...escolha })
     : api<Transferencia>(`/api/conversas/${conversaId}/transferir`, escolha)
@@ -321,6 +338,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
 
 type ModalProps = {
   confirmar?: Confirmar
+  lideranca: boolean
   fechar: () => void
   emConversa: boolean
   descricao: string
@@ -329,13 +347,13 @@ type ModalProps = {
   matriculaId: string
   setMatriculaId: (id: string) => void
   pronto: boolean
-  confirmarAcao: () => void
+  confirmarAcao: (aceitaLideranca?: true) => void
 }
 
-function PedidoAoAtendente({ emConversa, descricao, setDescricao, ativas, matriculaId, setMatriculaId }: Omit<ModalProps, 'confirmar' | 'fechar' | 'pronto' | 'confirmarAcao'>) {
+function PedidoAoAtendente({ emConversa, lideranca, descricao, setDescricao, ativas, matriculaId, setMatriculaId }: Omit<ModalProps, 'confirmar' | 'fechar' | 'pronto' | 'confirmarAcao'>) {
   return (
     <div className="flex flex-col gap-3">
-      <p>Sua conversa será enviada a um atendente da instituição, que responde por aqui.</p>
+      <p>{lideranca ? AvisoLideranca : 'Sua conversa será enviada a um atendente da instituição, que responde por aqui.'}</p>
       {!emConversa && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="descricao">Descreva seu pedido</Label>
@@ -359,6 +377,7 @@ function PedidoAoAtendente({ emConversa, descricao, setDescricao, ativas, matric
 
 function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: ModalProps) {
   const encerrar = confirmar === 'encerrar'
+  const aLideranca = !encerrar && pedido.lideranca
   return (
     <Dialog open={!!confirmar} onOpenChange={fechar}>
       <DialogContent aria-describedby={undefined}>
@@ -370,8 +389,13 @@ function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: Mo
           <Button variant="outline" onClick={fechar}>
             Cancelar
           </Button>
-          <Button onClick={confirmarAcao} disabled={!pronto}>
-            Confirmar
+          {aLideranca && (
+            <Button variant="outline" onClick={() => confirmarAcao()} disabled={!pronto}>
+              Prefiro a coordenação
+            </Button>
+          )}
+          <Button onClick={() => confirmarAcao(aLideranca ? true : undefined)} disabled={!pronto}>
+            {aLideranca ? 'Enviar à liderança' : 'Confirmar'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -422,6 +446,7 @@ export function Assistente() {
   const [avaliada, setAvaliada] = useState<boolean>() // só conta depois de uma resposta, e cada envio a zera
   const [explicar, setExplicar] = useState(false)
   const [confirmar, setConfirmar] = useState<Confirmar>()
+  const lideranca = useLideranca(confirmar === 'atendente', conversaId, ativas, matriculaId)
   const anexos = useAnexos()
   const envio = useMutation({
     mutationFn: (pedido: Envio) =>
@@ -454,14 +479,14 @@ export function Assistente() {
     })
   }
 
-  function confirmarAcao() {
+  function confirmarAcao(aceitaLideranca?: true) {
     const qual = confirmar
     setConfirmar(undefined)
     acao.mutate(async () => {
       if (qual === 'encerrar') setDesfecho((await api<{ desfecho: string }>(`/api/conversas/${conversaId}/encerrar`, {})).desfecho)
       else {
         // AC 66: com mais de uma matrícula ativa, o aluno escolhe qual
-        setTransferido(await transferir(conversaId, descricao, ativas.length > 1 ? Number(matriculaId) : undefined))
+        setTransferido(await transferir(conversaId, descricao, ativas.length > 1 ? Number(matriculaId) : undefined, aceitaLideranca))
         setDesfecho('TRANSFERIDA')
       }
     })
@@ -505,6 +530,7 @@ export function Assistente() {
       <Erro erro={acao.error} />
       <Confirmacao
         confirmar={confirmar}
+        lideranca={lideranca}
         fechar={() => setConfirmar(undefined)}
         emConversa={emConversa}
         descricao={descricao}

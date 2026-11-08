@@ -256,10 +256,10 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoT
 **C69** - [x] `GET /destino` responde `400` com matrícula que não é do aluno, `404` com conversa de outro aluno e `409` com conversa já transferida (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Destino_400_404_409"`
 
-**C70** - Com `lideranca: true` o diálogo mostra o aviso literal do AC 57 e os botões `Cancelar`, `Prefiro a coordenação` e `Enviar à liderança` (AC 57)
+**C70** - [x] Com `lideranca: true` o diálogo mostra o aviso literal do AC 57 e os botões `Cancelar`, `Prefiro a coordenação` e `Enviar à liderança` (AC 57)
 Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "aviso da liderança"`
 
-**C71** - Se `GET /destino` falha, o diálogo mostra o aviso de hoje e `POST /transferir` vai sem `aceitaLideranca`; `Prefiro a coordenação` também envia sem o campo (AC 58)
+**C71** - [x] Se `GET /destino` falha, o diálogo mostra o aviso de hoje e `POST /transferir` vai sem `aceitaLideranca`; `Prefiro a coordenação` também envia sem o campo (AC 58)
 Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "prévia que falha"`
 
 **C72** - [x] `POST /transferir` com `aceitaLideranca: true` abre o chamado na liderança; com `false` e sem o campo abre na coordenação do curso, pulando a etapa de liderança (AC 59)
@@ -283,7 +283,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.S
 **C78** - [x] Uma liderança da instituição A nunca recebe chamado da instituição B, mesmo com o mesmo curso e semestre (AC 66)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IsolamentoTests.Lideranca_de_outra_instituicao_nunca_recebe"`
 
-**C79** - Na tela do líder, o bloco `Conversa com o assistente` e o número de matrícula não aparecem (AC 60)
+**C79** - [x] Na tela do líder, o bloco `Conversa com o assistente` e o número de matrícula não aparecem (AC 60)
 Proof: `cd web && npx vitest run src/chamados/chamado.test.tsx -t "detalhe do líder"`
 
 ### S5 - o gestor vê por que o chamado caiu ali (P2) · ~5 arquivos · ~40 KB · ~10k
@@ -364,7 +364,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Admi
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base"`
 Proof: `pwsh -c "$a = git show <base>:One.Api.Tests/Retratos/sucessos.txt | Where-Object { $_ -notmatch 'regras' }; $b = (Get-Content One.Api.Tests/Retratos/sucessos.txt) -replace ',\"fluxo\":(null|\{[^}]*\})','' -replace ',\"cursoId\":(null|\d+),\"semestre\":(null|\d+)','' | Where-Object { $_ -notmatch 'regras' }; if (Compare-Object $a $b) { exit 1 }"`
 
-**C102** - O `GLOSSARIO.md` lista `Fluxo`, `Abrangência`, `Etapa`, `Liderança`, `Subir` e o evento `SUBIDA`, e o aviso do Histórico não deixa tipo de evento sem frase (Impact)
+**C102** - [x] O `GLOSSARIO.md` lista `Fluxo`, `Abrangência`, `Etapa`, `Liderança`, `Subir` e o evento `SUBIDA`, e o aviso do Histórico não deixa tipo de evento sem frase (Impact)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Glossario_lista_os_termos"`
 Proof: `cd web && npx vitest run src/chamados/textos.test.tsx -t "todo tipo de evento tem frase"`
 

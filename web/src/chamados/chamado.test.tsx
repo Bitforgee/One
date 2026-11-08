@@ -296,6 +296,25 @@ describe('chamado', () => {
     await screen.findByText('Histórico')
     expect(screen.queryByText(/^Etapa \d+ de \d+/)).not.toBeInTheDocument()
   })
+  // fluxos-atendimento C79 (AC 60): a liderança recebe transcricao [] e matricula.numero null
+  it('detalhe do líder sem a conversa nem o número de matrícula', async () => {
+    api({
+      'GET /api/auth/me': () => [200, equipe],
+      'GET /api/chamados/ONE-1': () =>
+        [200, daEquipe({ transcricao: [], matricula: { numero: null, curso: 'ADS', semestre: 3 }, categorias: null, setores: null, acoes: ['responder', 'nota', 'assumir', 'resolver', 'subir'], fluxo: { versao: 1, etapa: 1, total: 2, destino: 'LIDERANCA_SEMESTRE', abrangencia: 'ADS, 3º semestre' } })],
+    })
+    abrir('/univag/chamados/ONE-1')
+
+    expect(await screen.findByText('Ana · ADS · 3º semestre')).toBeInTheDocument()
+    expect(screen.queryByText('Conversa com o assistente')).not.toBeInTheDocument()
+    expect(screen.queryByText(/matrícula/)).not.toBeInTheDocument()
+    expect(screen.getByText('Resumo gerado por IA')).toBeInTheDocument()
+    expect(screen.getByText('Etapa 1 de 2 · ADS, 3º semestre')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Subir' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Encaminhar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reclassificar' })).not.toBeInTheDocument()
+  })
+
   // historico-legivel C3 (AC 3)
   it('detalhe no fim da frase', async () => {
     expect(

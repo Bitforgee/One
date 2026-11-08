@@ -22,7 +22,7 @@ const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas
 const Cadastros = [
   'Cadastros', 'Novo', 'Detalhe', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
   'triagem', 'inativo', 'padrão', 'inativa', 'coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', '→', '·', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
-  'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
+  'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Liderança de semestre', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
   'Etapa 1', 'Setor fixo', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'O aluno aceita a liderança do semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho',
   'Cancelar', 'Salvar', 'Cadastro salvo.',

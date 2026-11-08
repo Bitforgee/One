@@ -25,7 +25,7 @@ export type Chamado = {
   responsavel: string | null
   criadoEm: string
   resolvidoEm: string | null
-  matricula: { numero: string; curso: string; semestre: number }
+  matricula: { numero: string | null; curso: string; semestre: number } // numero é null para a liderança (AC 60)
   solicitante: string | null
   resumo: string | null
   origemCategoria: string | null
