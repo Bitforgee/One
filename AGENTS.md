@@ -57,6 +57,8 @@ PLAN (plan.md, humano aprova) → CHECKS (checks.md, obrigações com prova) →
    roda a prova de cada check em `<base>..HEAD`, injeta ao menos uma falha à mão por área testada para ver se
    algum teste a pega, e escreve PASS/FAIL por check com a saída do comando. Feito = todos os checks com PASS.
 
+- **Modelos por fase** (decisão do usuário, nov/2026): planejar (Plan e Checks) com o **Opus 5.5**; construir
+  (Build) com o **Sonnet 5.5**. Troque o modelo ao mudar de fase. O Verify roda em agente novo, sem o contexto de quem construiu.
 - Mudança de até ~3 arquivos e sem decisão difícil de desfazer: só `checks.md` com um parágrafo `## Intent`, sem `plan.md`.
 - Fica fora do SDD só o que não muda comportamento: typo, docs, formatação, versão de dependência sem efeito.
 - Nunca enfraqueça uma asserção, apague ou pule um teste para a suíte passar.
