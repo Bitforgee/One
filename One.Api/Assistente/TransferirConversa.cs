@@ -7,7 +7,7 @@ namespace One.Api.Assistente;
 
 public sealed record TransferirConversa(long Id, TransferirConversa.Entrada? Corpo, Usuario Usuario, Instituicao Instituicao) : IRequest<IResult>
 {
-    public sealed record Entrada(long? MatriculaId);
+    public sealed record Entrada(long? MatriculaId, bool? AceitaLideranca);
 
     public sealed record Resposta(string Numero, string Estado, string Setor);
 
@@ -24,7 +24,7 @@ public sealed class TransferirConversaHandler(OneDb db, TimeProvider relogio) : 
         if (conversa.Desfecho is not null) return JaEncerrada();
         var matricula = await Transferencia.Matricula(db, conversa.AlunoId, m.Corpo?.MatriculaId);
         if (matricula is null) return Transferencia.MatriculaInvalida();
-        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, relogio.GetUtcNow().UtcDateTime),
+        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, relogio.GetUtcNow().UtcDateTime, m.Corpo?.AceitaLideranca == true),
             (numero, estado, setor) => new TransferirConversa.Resposta(numero, estado, setor));
     }
 }

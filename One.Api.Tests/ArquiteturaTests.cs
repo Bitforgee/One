@@ -247,6 +247,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (tipo, literais) in LiteraisGravados)
             foreach (var literal in literais)
                 Assert.True(linhas.Any(l => l.Contains($"`{literal}`") && l.Contains(grupos[tipo]) && Significado(l).Length >= 10), $"{literal} ({grupos[tipo]})");
+        // fluxos-atendimento C102: os termos novos do domínio, cada um com significado
+        foreach (var termo in new[] { "Fluxo", "Abrangência", "Etapa", "Liderança", "Subir", "SUBIDA" })
+            Assert.True(linhas.Any(l => l.TrimStart('|', ' ').StartsWith($"`{termo}`") && Significado(l).Length >= 10), termo);
         foreach (var (prazo, chave, padrao) in new[]
         {
             ("abandono", "Prazos:AbandonoMinutos", "30 min"), ("confirmação", "Prazos:ConfirmacaoDias", "7 dias"), ("rejeição", "Prazos:ConfirmacaoDias", "7 dias"),
@@ -370,8 +373,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Um_arquivo_por_caso_de_uso()
     {
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(78, mensagens.Count);
-        var porFatia = new Dictionary<string, int> { ["Acesso"] = 6, ["Assistente"] = 8, ["Chamados"] = 17, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 23, ["Instituicoes"] = 12 };
+        Assert.Equal(79, mensagens.Count);
+        var porFatia = new Dictionary<string, int> { ["Acesso"] = 6, ["Assistente"] = 9, ["Chamados"] = 17, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 23, ["Instituicoes"] = 12 };
         foreach (var (fatia, n) in porFatia)
             Assert.True(mensagens.Count(t => t.Namespace == $"One.Api.{fatia}") == n, $"{fatia}: {mensagens.Count(t => t.Namespace == $"One.Api.{fatia}")}, esperado {n}");
         var declaraMensagem = new Regex(@"\b(class|record|struct)\s+\w+[^{;]*?:\s*[^{;]*?(\bIRequest<|\bIAcaoChamado\b)");
@@ -394,7 +397,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto)
             .Select(t => (handler: t, contrato: Fechado(t, typeof(Mediator.IRequestHandler<,>)))).Where(x => x.contrato is not null).ToList();
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(78, handlers.Count);
+        Assert.Equal(79, handlers.Count);
         Assert.Equal(mensagens.Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))),
             handlers.Select(h => h.contrato!.GetGenericArguments()[0]).Order(Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName))));
         foreach (var (handler, contrato) in handlers)
@@ -414,7 +417,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(x => x.maps.Count > 0).ToDictionary(x => x.arquivo, x => x.maps);
         var casos = Mensagens().Select(m => Relativo(ArquivoDo(m.mensagem))).ToHashSet();
 
-        Assert.Equal(81, porArquivo.Values.Sum(m => m.Count));
+        Assert.Equal(82, porArquivo.Values.Sum(m => m.Count));
         foreach (var caso in casos)
             Assert.True(porArquivo.GetValueOrDefault(caso)?.Count == 1, $"{caso}: {porArquivo.GetValueOrDefault(caso)?.Count ?? 0} Map*");
         Assert.Equal([".MapFallback(", ".MapFallbackToFile("], porArquivo["Program.cs"].Order());
@@ -444,7 +447,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (mensagem, _) in Mensagens())
             Assert.All(mensagem.GetProperties(), p => Assert.DoesNotContain(p.PropertyType, proibidos));
         var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => Fechado(t, typeof(Mediator.IRequestHandler<,>)) is not null).ToList();
-        Assert.Equal(78, handlers.Count);
+        Assert.Equal(79, handlers.Count);
         foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
             foreach (var c in t.GetConstructors())
                 Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
@@ -665,6 +668,23 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
                 : p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null)]);
         var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
         Assert.Equal(["assumir", "cancelar", "confirmar", "duplicado", "encaminhar", "nota", "reclassificar", "rejeitar", "resolver", "responder", "subir"], nomes.Order());
+        // C60: os 11 nomes estão em PermissoesChamado, e a liderança fica só com cinco deles
+        Assert.All(nomes, n => Assert.True(new[] { "ALUNO", "ATENDENTE", "LIDER" }.Any(p => One.Api.Chamados.PermissoesChamado.Estados(n, p) is not null), n));
+        Assert.Equal(["assumir", "nota", "resolver", "responder", "subir"], nomes.Where(n => One.Api.Chamados.PermissoesChamado.Estados(n, "LIDER") is not null).Order());
+    }
+
+    // fluxos-atendimento C98 (door 3): visão e aceite saem do tipo de destino, nunca de coluna do banco nem de campo de entrada do gestor
+    [Fact]
+    public async Task Visao_e_aceite_fora_do_banco_e_da_entrada()
+    {
+        Assert.Equal(["COORDENACAO_CURSO", "LIDERANCA_SEMESTRE", "SETOR"], DestinosEtapa.Todos.Order(StringComparer.Ordinal));
+        var proibido = new Regex("visao|aceit|exige|restrit", RegexOptions.IgnoreCase);
+        var colunas = await f.Db(null, db => Task.FromResult(new[] { typeof(One.Api.Dados.Fluxos.Fluxo), typeof(One.Api.Dados.Fluxos.VersaoFluxo), typeof(One.Api.Dados.Fluxos.EtapaFluxo) }
+            .SelectMany(e => db.Model.FindEntityType(e)!.GetProperties().Select(p => p.Name)).ToList()));
+        Assert.NotEmpty(colunas);
+        Assert.DoesNotContain(colunas, proibido.IsMatch);
+        foreach (var entrada in new[] { typeof(One.Api.Administracao.SalvarRascunho.EtapaEntrada), typeof(One.Api.Administracao.SalvarRascunho.Entrada), typeof(One.Api.Administracao.CriarFluxo.Entrada) })
+            Assert.DoesNotContain(entrada.GetProperties(), p => proibido.IsMatch(p.Name));
     }
 
     // fluxos-atendimento C37 (AC 30): o setor de cada tipo de destino é decidido só no ResolverFluxo; a transferência, a subida (rota e Agendador) e o simulador o chamam
@@ -695,11 +715,11 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var esperado = new Dictionary<string, int>
         {
             ["Agendador.cs"] = 1, ["Assistente/Assistente.cs"] = 8, ["Assistente/Embeddings.cs"] = 1,
-            ["Conhecimento/Fontes.cs"] = 4, ["Indicadores/ConsultarIndicadores.cs"] = 2, ["Dados/OneDb.cs"] = 14,
+            ["Conhecimento/Fontes.cs"] = 4, ["Indicadores/ConsultarIndicadores.cs"] = 2, ["Dados/OneDb.cs"] = 15,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
-        Assert.Equal(30, achados.Values.Sum());
+        Assert.Equal(31, achados.Values.Sum());
         foreach (var arquivo in esperado.Keys.Except(["Indicadores/ConsultarIndicadores.cs"]))
             Assert.DoesNotMatch(@"\b(Typed)?Results\.", CodigoDe(arquivo.Split('/')));
         var indicadores = CodigoDe("Indicadores", "ConsultarIndicadores.cs");
@@ -758,7 +778,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] ComRespostaAninhada =
     [
         "Login", "PrimeiroAcesso", "Eu", "VerInstituicao", "NovaConversa", "NovaMensagem", "VerConversa", "AvaliarConversa", "TransferirConversa",
-        "AtendimentoDireto", "EncerrarConversa", "SimularFluxo", "ListarChamados", "RespostasProntasDoSetor", "VerVersaoArtigo", "ImportarMatriculas", "VerChavePush", "VerAparencia", "AlterarAparencia", "EnviarImagemInstituicao", "ManifestoInstituicao",
+        "AtendimentoDireto", "EncerrarConversa", "SimularFluxo", "VerDestino", "ListarChamados", "RespostasProntasDoSetor", "VerVersaoArtigo", "ImportarMatriculas", "VerChavePush", "VerAparencia", "AlterarAparencia", "EnviarImagemInstituicao", "ManifestoInstituicao",
         "ListarInstituicoes", "CriarInstituicao", "ImportarCargaInstituicao", "DesativarInstituicao", "ReativarInstituicao", "ReenviarAcesso",
     ];
 
@@ -788,9 +808,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Resposta_por_caso_de_uso()
     {
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
-        Assert.Equal(78, mensagens.Count);
+        Assert.Equal(79, mensagens.Count);
         var comJson = mensagens.Where(m => !SemCorpoJson.Contains(m.Name)).ToList();
-        Assert.Equal(68, comJson.Count);
+        Assert.Equal(69, comJson.Count);
 
         var aninhadas = TiposDaApi().Where(t => t.IsNested && t.Name == "Resposta" && mensagens.Contains(t.DeclaringType!)).Select(t => t.DeclaringType!.Name).Order().ToList();
         Assert.Equal(ComRespostaAninhada.Order(), aninhadas);
@@ -886,7 +906,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(m => m is not System.Reflection.ConstructorInfo && !(m is System.Reflection.MethodInfo { IsSpecialName: true })).Select(m => m.Name).Order()];
 
         var permissoes = typeof(One.Api.Chamados.PermissoesChamado);
-        Assert.Equal(["Acoes", "Aluno", "Atendente", "Estados"], Publicos(permissoes));
+        Assert.Equal(["Acoes", "Aluno", "Atendente", "Estados", "Lider"], Publicos(permissoes));
         Assert.Equal(typeof(string[]), permissoes.GetMethod("Estados")!.ReturnType);
         Assert.Equal([typeof(string), typeof(string)], permissoes.GetMethod("Estados")!.GetParameters().Select(p => p.ParameterType));
         Assert.Equal(typeof(IEnumerable<string>), permissoes.GetMethod("Acoes")!.ReturnType);

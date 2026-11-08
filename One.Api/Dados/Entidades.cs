@@ -64,6 +64,11 @@ public static class DestinosEtapa
     public const string LiderancaSemestre = "LIDERANCA_SEMESTRE";
 
     public static readonly string[] Todos = [Setor, CoordenacaoCurso, LiderancaSemestre];
+
+    // Visão e aceite saem do tipo, nunca de coluna nem de campo de entrada (door 3).
+    public static bool ExigeAceite(string destino) => destino == LiderancaSemestre;
+
+    public static bool VeTudo(string destino) => destino != LiderancaSemestre;
 }
 
 public static class TiposMensagem

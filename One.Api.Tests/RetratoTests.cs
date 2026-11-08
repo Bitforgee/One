@@ -36,14 +36,14 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var viva = endpoints.Select(Linha).ToList();
         File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "rotas.viva.txt"), viva); // para comparar à mão quando falhar
 
-        Assert.Equal(83, viva.Count);
+        Assert.Equal(84, viva.Count);
         // os fallbacks têm a ordem int.MaxValue; o do MapFallbackToFile atende GET e HEAD
         var fallbacks = endpoints.Where(e => e.Order == int.MaxValue).Select(e => e.RoutePattern.RawText).ToList();
         Assert.Equal(["/api/{**resto}", "{*path:nonfile}"], fallbacks);
-        Assert.Equal(80, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
+        Assert.Equal(81, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
         Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"],
             endpoints.Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is not null).Select(e => e.RoutePattern.RawText));
-        Assert.Equal(81, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
+        Assert.Equal(82, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
         string[] Com(string politica) => [.. endpoints.Where(e => e.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == politica).Select(e => e.RoutePattern.RawText!)];
         Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso"], Com("auth"));
         Assert.Equal(["/api/conversas", "/api/conversas/{id:long}/mensagens", "/api/atendimento-direto"], Com("mensagens"));

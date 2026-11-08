@@ -90,6 +90,7 @@ public static class ConversaRotas
         BaixarAnexoConversa.Mapear(api);
         AvaliarConversa.Mapear(api);
         TransferirConversa.Mapear(api);
+        VerDestino.Mapear(api);
         AtendimentoDireto.Mapear(api);
         EncerrarConversa.Mapear(api);
     }

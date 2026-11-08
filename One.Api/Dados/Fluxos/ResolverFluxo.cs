@@ -41,7 +41,7 @@ public static class ResolverFluxo
     public static Resolucao Situacao(EtapaFluxo etapa, Contexto contexto, bool aceitaLideranca)
     {
         var resolucao = Etapa(etapa, contexto);
-        return etapa.Destino == DestinosEtapa.LiderancaSemestre && resolucao.Resolvida && !aceitaLideranca ? new Resolucao(null, SemAceite) : resolucao;
+        return DestinosEtapa.ExigeAceite(etapa.Destino) && resolucao.Resolvida && !aceitaLideranca ? new Resolucao(null, SemAceite) : resolucao;
     }
 
     // A primeira etapa depois de `depoisDe` que resolve.
@@ -52,11 +52,18 @@ public static class ResolverFluxo
             .Select(x => new Passo(x.Etapa, x.Resolucao.SetorId!.Value))
             .FirstOrDefault();
 
-    public static async Task<Contexto> CarregarContexto(OneDb db, long cursoId)
+    // A liderança do curso e semestre só está disponível com o setor ativo e ao menos um atendente ativo que não seja o aluno (AC 55).
+    public static async Task<long?> Lideranca(OneDb db, long cursoId, int semestre, long alunoId) =>
+        await db.Setores
+            .Where(s => s.CursoId == cursoId && s.Semestre == semestre && s.Ativo
+                && db.AtendenteSetores.Any(a => a.SetorId == s.Id && a.UsuarioId != alunoId && db.Usuarios.Any(u => u.Id == a.UsuarioId && u.Ativo)))
+            .Select(s => (long?)s.Id).FirstOrDefaultAsync();
+
+    public static async Task<Contexto> CarregarContexto(OneDb db, long cursoId, int? semestre = null, long alunoId = 0)
     {
         var setores = await db.Setores.ToDictionaryAsync(s => s.Id);
         var coordenacao = await db.Cursos.Where(c => c.Id == cursoId).Select(c => c.SetorCoordenacaoId).SingleOrDefaultAsync();
-        return new Contexto(setores, coordenacao, null);
+        return new Contexto(setores, coordenacao, semestre is { } s ? await Lideranca(db, cursoId, s, alunoId) : null);
     }
 
     public static Task<List<Fluxo>> Candidatos(OneDb db, long categoriaId, long cursoId) =>
@@ -65,7 +72,7 @@ public static class ResolverFluxo
 
     public static async Task<Rota> Rotear(OneDb db, Categoria categoria, Matricula matricula, bool aceitaLideranca)
     {
-        var contexto = await CarregarContexto(db, matricula.CursoId);
+        var contexto = await CarregarContexto(db, matricula.CursoId, matricula.Semestre, matricula.UsuarioId);
         var triagem = contexto.Setores.Values.Single(s => s.Triagem).Id;
         if (categoria.Padrao) return new Rota(null, null, triagem);
         var fluxo = Escolher(await Candidatos(db, categoria.Id, matricula.CursoId), matricula.CursoId, matricula.Semestre);

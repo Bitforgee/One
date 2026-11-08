@@ -1,4 +1,5 @@
 using Npgsql;
+using One.Api.Dados;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
@@ -87,6 +88,8 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public async Task Colunas_do_chamado_e_do_setor()
     {
+        var i = await f.Instituicao();
+        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         await using var con = await Abrir();
         await using var cmd = new NpgsqlCommand("""
             SELECT column_name || '.' || data_type || '.' || is_nullable FROM information_schema.columns
@@ -97,5 +100,49 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         while (await r.ReadAsync()) colunas.Add(r.GetString(0));
 
         Assert.Equal(["etapa_desde.timestamp with time zone.YES", "etapa_ordem.integer.YES", "versao_fluxo_id.bigint.YES"], colunas);
+        await using var segunda = await Abrir();
+        await ColunasEConstraintsDoSetor(segunda);
+        await SetorRecusadoPeloBanco(segunda, i, curso.Id);
+    }
+
+    static async Task SetorRecusadoPeloBanco(NpgsqlConnection con, Instituicao i, long cursoId)
+    {
+        string Setor(string nome, string curso, string semestre, string ativo = "true") =>
+            $"INSERT INTO setor (instituicao_id, nome, triagem, ativo, curso_id, semestre) VALUES ({i.Id}, '{nome}', false, {ativo}, {curso}, {semestre})";
+        Assert.Equal("ck_setor_curso_e_semestre", await Violou(con, Setor("so curso", $"{cursoId}", "NULL")));
+        Assert.Equal("ck_setor_curso_e_semestre", await Violou(con, Setor("so semestre", "NULL", "3")));
+        Assert.Equal("ck_setor_semestre", await Violou(con, Setor("semestre 0", $"{cursoId}", "0")));
+        Assert.Equal("ck_setor_semestre", await Violou(con, Setor("semestre 13", $"{cursoId}", "13")));
+        Assert.Null(await Violou(con, Setor("semestre 1", $"{cursoId}", "1")));
+        Assert.Null(await Violou(con, Setor("semestre 12", $"{cursoId}", "12")));
+        // uma liderança ativa por curso e semestre; a inativa não conta
+        Assert.Equal("ux_setor_lideranca", await Violou(con, Setor("outra do 1", $"{cursoId}", "1")));
+        Assert.Null(await Violou(con, Setor("inativa do 1", $"{cursoId}", "1", "false")));
+        Assert.Null(await Violou(con, Setor("sem turma a", "NULL", "NULL")));
+        Assert.Null(await Violou(con, Setor("sem turma b", "NULL", "NULL")));
+    }
+
+    // C14, metade do setor (door 5): curso e semestre anuláveis, os dois checks e o índice parcial da liderança ativa.
+    static async Task ColunasEConstraintsDoSetor(NpgsqlConnection con)
+    {
+        var colunas = await Lista(con, "SELECT column_name || '.' || data_type || '.' || is_nullable FROM information_schema.columns WHERE table_name = 'setor' AND column_name IN ('curso_id', 'semestre') ORDER BY 1");
+        Assert.Equal(["curso_id.bigint.YES", "semestre.integer.YES"], colunas);
+
+        var checks = await Lista(con, "SELECT conname || ':' || pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'setor'::regclass AND contype = 'c' ORDER BY 1");
+        Assert.Equal(["ck_setor_curso_e_semestre:CHECK (((curso_id IS NULL) = (semestre IS NULL)))", "ck_setor_semestre:CHECK (((semestre >= 1) AND (semestre <= 12)))"], checks);
+
+        var indice = await Lista(con, "SELECT indexdef FROM pg_indexes WHERE indexname = 'ux_setor_lideranca'");
+        var definicao = Assert.Single(indice);
+        Assert.Contains("UNIQUE INDEX ux_setor_lideranca ON public.setor USING btree (instituicao_id, curso_id, semestre)", definicao);
+        Assert.Contains("WHERE ((curso_id IS NOT NULL) AND ativo)", definicao);
+    }
+
+    static async Task<List<string>> Lista(NpgsqlConnection con, string sql)
+    {
+        await using var cmd = new NpgsqlCommand(sql, con);
+        await using var r = await cmd.ExecuteReaderAsync();
+        var linhas = new List<string>();
+        while (await r.ReadAsync()) linhas.Add(r.GetString(0));
+        return linhas;
     }
 }

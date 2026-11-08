@@ -16,7 +16,7 @@ public sealed record DetalheChamado(
 {
     public sealed record DoFluxo(int Versao, int Etapa, int Total, string Destino, string Abrangencia);
 
-    public sealed record DaMatricula(string Numero, string Curso, int Semestre);
+    public sealed record DaMatricula(string? Numero, string Curso, int Semestre);
 
     public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DoAnexo>? Anexos);
 
@@ -45,26 +45,39 @@ public sealed record DetalheChamado(
     public static async Task<DetalheChamado> Montar(OneDb db, long usuarioId, Chamado c, string papel)
     {
         var equipe = papel == PermissoesChamado.Atendente;
-        var matricula = await db.Matriculas.Where(m => m.Id == c.MatriculaId).Select(m => new DaMatricula(m.Numero, m.Curso!.Nome, c.Semestre)).SingleAsync();
+        var lider = papel == PermissoesChamado.Lider;
+        var vemDaEquipe = equipe || lider;
+        var matricula = await DaMatriculaDoChamado(db, c, lider);
         var nomes = await db.Usuarios.Where(x => x.Id == c.SolicitanteId || x.Id == c.ResponsavelId
                 || db.MensagensChamado.Any(m => m.ChamadoId == c.Id && m.AutorId == x.Id) || db.EventosChamado.Any(e => e.ChamadoId == c.Id && e.AtorId == x.Id))
             .ToDictionaryAsync(x => x.Id, x => x.Nome);
-        var transcricao = await db.MensagensConversa.Where(m => m.ConversaId == c.ConversaId).OrderBy(m => m.Id)
-            .Select(m => new LinhaDaTranscricao(m.Id, m.Autor, m.Texto, m.CriadaEm, m.Citacoes)).ToListAsync();
-        if (equipe) transcricao = await ComAnexos(db, c, transcricao);
-        var daEquipe = equipe ? await Equipe(db, c, nomes, transcricao) : DaEquipe.Nada;
+        var transcricao = lider ? new List<LinhaDaTranscricao>() : await CarregarTranscricao(db, c, equipe);
+        var daEquipe = vemDaEquipe ? await Equipe(db, c, nomes, transcricao, equipe) : DaEquipe.Nada;
 
         return new DetalheChamado(
             c.Numero, c.Titulo, c.Estado, c.MotivoFechamento, c.NumeroOriginal, c.SetorId,
             await db.Setores.Where(s => s.Id == c.SetorId).Select(s => s.Nome).SingleAsync(),
             await db.Categorias.Where(x => x.Id == c.CategoriaId).Select(x => x.Nome).SingleAsync(),
             c.ResponsavelId is { } r ? nomes[r] : null, c.CriadoEm, c.ResolvidoEm, matricula,
-            daEquipe.Solicitante, daEquipe.Resumo, daEquipe.OrigemCategoria,
-            [.. transcricao.Select(m => equipe
-                ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id), m.Anexos)
-                : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))],
-            await DasMensagens(db, c, equipe, nomes), daEquipe.Eventos, await AcoesDoChamado(db, c, papel, usuarioId),
-            daEquipe.Setores, daEquipe.Categorias, await DoFluxoDoChamado(db, c, equipe));
+            daEquipe.Solicitante, daEquipe.Resumo, daEquipe.OrigemCategoria, LinhasDaTranscricao(transcricao, equipe, daEquipe),
+            await DasMensagens(db, c, vemDaEquipe, nomes), daEquipe.Eventos, await AcoesDoChamado(db, c, papel, usuarioId),
+            daEquipe.Setores, daEquipe.Categorias, await DoFluxoDoChamado(db, c, vemDaEquipe));
+    }
+
+    static IReadOnlyList<object> LinhasDaTranscricao(List<LinhaDaTranscricao> transcricao, bool equipe, DaEquipe daEquipe) =>
+        [.. transcricao.Select(m => equipe
+            ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id), m.Anexos)
+            : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))];
+
+    // O líder vê o curso e o semestre, nunca o número da matrícula (AC 60).
+    static Task<DaMatricula> DaMatriculaDoChamado(OneDb db, Chamado c, bool semNumero) =>
+        db.Matriculas.Where(m => m.Id == c.MatriculaId).Select(m => new DaMatricula(semNumero ? null : m.Numero, m.Curso!.Nome, c.Semestre)).SingleAsync();
+
+    static async Task<List<LinhaDaTranscricao>> CarregarTranscricao(OneDb db, Chamado c, bool equipe)
+    {
+        var transcricao = await db.MensagensConversa.Where(m => m.ConversaId == c.ConversaId).OrderBy(m => m.Id)
+            .Select(m => new LinhaDaTranscricao(m.Id, m.Autor, m.Texto, m.CriadaEm, m.Citacoes)).ToListAsync();
+        return equipe ? await ComAnexos(db, c, transcricao) : transcricao;
     }
 
     // subir só aparece para a equipe e enquanto há uma etapa seguinte (AC 41).
@@ -106,13 +119,15 @@ public sealed record DetalheChamado(
             [.. anexos[m.Id].Select(x => new DoAnexo(x.Id, x.Nome, x.Tipo, x.Tamanho))]))];
     }
 
-    static async Task<DaEquipe> Equipe(OneDb db, Chamado c, Dictionary<long, string> nomes, List<LinhaDaTranscricao> transcricao)
+    static async Task<DaEquipe> Equipe(OneDb db, Chamado c, Dictionary<long, string> nomes, List<LinhaDaTranscricao> transcricao, bool completa)
     {
-        var fonte = await Fontes.Citadas(db, transcricao.SelectMany(m => m.Citacoes).ToList());
-        var fontes = transcricao.Where(m => m.Citacoes.Count > 0).ToDictionary(m => m.Id, m => m.Citacoes.Select(fonte));
         var eventos = (await db.EventosChamado.Where(e => e.ChamadoId == c.Id).OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
             .Select(e => new DoEvento(e.Tipo, e.AtorId is { } a ? nomes[a] : "Sistema", e.AtorId == c.SolicitanteId, e.De, e.Para, e.Detalhe, e.CriadoEm)).ToList();
-        var setores = await db.Setores.Where(s => s.Ativo && s.Id != c.SetorId).OrderBy(s => s.Nome).Select(s => new Destino(s.Id, s.Nome)).ToListAsync();
+        // A liderança recebe o resumo e o histórico, sem fontes, origem da categoria, setores nem categorias (door 7).
+        if (!completa) return new DaEquipe(nomes[c.SolicitanteId], c.Resumo, null, [], eventos, null, null);
+        var fonte = await Fontes.Citadas(db, transcricao.SelectMany(m => m.Citacoes).ToList());
+        var fontes = transcricao.Where(m => m.Citacoes.Count > 0).ToDictionary(m => m.Id, m => m.Citacoes.Select(fonte));
+        var setores = await db.Setores.Where(s => s.Ativo && s.CursoId == null && s.Id != c.SetorId).OrderBy(s => s.Nome).Select(s => new Destino(s.Id, s.Nome)).ToListAsync();
         var categorias = await db.Categorias.Where(x => x.Ativa).OrderBy(x => x.Nome).Select(x => new Destino(x.Id, x.Nome)).ToListAsync();
         return new DaEquipe(nomes[c.SolicitanteId], c.Resumo, c.OrigemCategoria, fontes, eventos, setores, categorias);
     }

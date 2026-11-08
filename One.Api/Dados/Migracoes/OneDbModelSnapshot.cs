@@ -249,6 +249,10 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("boolean")
                         .HasColumnName("ativo");
 
+                    b.Property<long?>("CursoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("curso_id");
+
                     b.Property<long>("InstituicaoId")
                         .HasColumnType("bigint")
                         .HasColumnName("instituicao_id");
@@ -258,12 +262,19 @@ namespace One.Api.Dados.Migracoes
                         .HasColumnType("text")
                         .HasColumnName("nome");
 
+                    b.Property<int?>("Semestre")
+                        .HasColumnType("integer")
+                        .HasColumnName("semestre");
+
                     b.Property<bool>("Triagem")
                         .HasColumnType("boolean")
                         .HasColumnName("triagem");
 
                     b.HasKey("Id")
                         .HasName("pk_setor");
+
+                    b.HasIndex("CursoId")
+                        .HasDatabaseName("ix_setor_curso_id");
 
                     b.HasIndex("InstituicaoId")
                         .IsUnique()
@@ -274,7 +285,17 @@ namespace One.Api.Dados.Migracoes
                         .IsUnique()
                         .HasDatabaseName("ix_setor_instituicao_id_nome");
 
-                    b.ToTable("setor");
+                    b.HasIndex("InstituicaoId", "CursoId", "Semestre")
+                        .IsUnique()
+                        .HasDatabaseName("ux_setor_lideranca")
+                        .HasFilter("curso_id IS NOT NULL AND ativo");
+
+                    b.ToTable("setor", t =>
+                        {
+                            t.HasCheckConstraint("ck_setor_curso_e_semestre", "(curso_id IS NULL) = (semestre IS NULL)");
+
+                            t.HasCheckConstraint("ck_setor_semestre", "semestre BETWEEN 1 AND 12");
+                        });
                 });
 
             modelBuilder.Entity("One.Api.Dados.Chamados.Anexo", b =>
@@ -1757,6 +1778,11 @@ namespace One.Api.Dados.Migracoes
 
             modelBuilder.Entity("One.Api.Dados.Cadastros.Setor", b =>
                 {
+                    b.HasOne("One.Api.Dados.Cadastros.Curso", null)
+                        .WithMany()
+                        .HasForeignKey("CursoId")
+                        .HasConstraintName("fk_setor_curso_curso_id");
+
                     b.HasOne("One.Api.Dados.Instituicao", null)
                         .WithMany()
                         .HasForeignKey("InstituicaoId")

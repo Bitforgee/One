@@ -34,7 +34,7 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
         if (await Validar(i, fluxo) is { } erro) return erro;
 
         var versao = i.Versao == SimularFluxo.Rascunho ? fluxo.Rascunho! : fluxo.Vigente!;
-        var contexto = await ResolverFluxo.CarregarContexto(db, i.CursoId!.Value);
+        var contexto = await ResolverFluxo.CarregarContexto(db, i.CursoId!.Value, i.Semestre);
         var aceita = i.AceitaLideranca == true;
         var etapas = versao.Etapas.OrderBy(e => e.Ordem).Select(e => Etapa(e, contexto, aceita)).ToList();
         var primeira = ResolverFluxo.Proximo(versao.Etapas, 0, contexto, aceita);

@@ -54,7 +54,7 @@ public sealed class SalvarRascunhoHandler(OneDb db) : IRequestHandler<SalvarRasc
         if (fluxo is null) return AdminRotas.NaoEncontrado();
         var etapas = m.Corpo.Etapas;
         var pedidos = (etapas ?? []).Where(e => e.Destino == DestinosEtapa.Setor && e.SetorId is not null).Select(e => e.SetorId!.Value).ToList();
-        var ativos = (await db.Setores.Where(s => s.Ativo && pedidos.Contains(s.Id)).Select(s => s.Id).ToListAsync()).ToHashSet();
+        var ativos = (await db.Setores.Where(s => s.Ativo && s.CursoId == null && pedidos.Contains(s.Id)).Select(s => s.Id).ToListAsync()).ToHashSet();
         if (SalvarRascunho.Validar(etapas, ativos) is { } erro) return erro;
         fluxo.SalvarRascunho(etapas!.Select(e => new EtapaFluxo.Dados(e.Destino!, e.SetorId, e.PrazoHoras, e.X, e.Y)));
         await db.SaveChangesAsync();

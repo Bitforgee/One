@@ -85,7 +85,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoModeloTests.
 **C15** - [x] `ResolverFluxo.Escolher` devolve, para as 8 combinações de existência do fluxo de curso e semestre, do curso e de todos os cursos (com e sem versão publicada em cada), o mais específico publicado, ou nenhum (AC 3, AC 4, door 9)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Escolhe_o_fluxo_mais_especifico"`
 
-**C16** - `ResolverFluxo.Etapa` devolve o setor ou a falta dele para cada tipo de destino (3) cruzado com setor fixo ativo ou inativo, curso com ou sem coordenação, e liderança disponível ou não (AC 6, AC 7)
+**C16** - [x] `ResolverFluxo.Etapa` devolve o setor ou a falta dele para cada tipo de destino (3) cruzado com setor fixo ativo ou inativo, curso com ou sem coordenação, e liderança disponível ou não (AC 6, AC 7)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Resolve_cada_tipo_de_destino"`
 
 ### S2 - o gestor cria o fluxo, define a abrangência, simula e publica (P1) · ~12 arquivos · ~140 KB · ~35k
@@ -223,37 +223,37 @@ Proof: `cd web && npx vitest run src/chamados/acoes.test.tsx -t "subir pede o mo
 **C59** - [x] Um chamado que subiu da liderança à coordenação e foi resolvido conta como roteado corretamente em `RoteamentoCorreto` (Impact, door 8)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IndicadoresCalculoTests.Subida_nao_derruba_o_roteamento_correto"`
 
-**C60** - `PermissoesChamado` tem `subir` só para `ATENDENTE` e `LIDER`, em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`, e a regra de arquitetura acusa 10 tipos de ação e 11 nomes em `PermissoesChamado` (Impact, door 7)
+**C60** - [x] `PermissoesChamado` tem `subir` só para `ATENDENTE` e `LIDER`, em `ABERTO`, `EM_ATENDIMENTO` e `AGUARDANDO_ALUNO`, e a regra de arquitetura acusa 10 tipos de ação e 11 nomes em `PermissoesChamado` (Impact, door 7)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~PermissoesChamadoTests.Subir_so_para_atendente_e_lider"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dez_acoes_do_chamado"`
 
 ### S4 - a liderança é avisada, vê só o necessário e sobe (P2) · ~12 arquivos · ~120 KB · ~30k
 
-**C61** - `POST /api/admin/setores` com `cursoId` e `semestre` responde `201` com os dois, e `GET /api/admin/setores` os devolve (AC 49)
+**C61** - [x] `POST /api/admin/setores` com `cursoId` e `semestre` responde `201` com os dois, e `GET /api/admin/setores` os devolve (AC 49)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Cria_lideranca_com_curso_e_semestre"`
 
-**C62** - Só `cursoId` ou só `semestre` responde `400` no campo `semestre` (AC 50)
+**C62** - [x] Só `cursoId` ou só `semestre` responde `400` no campo `semestre` (AC 50)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Curso_e_semestre_juntos"`
 
-**C63** - `semestre` 0 e 13, `cursoId` de outra instituição e `triagem: true` com curso respondem `400` em `semestre`, `cursoId` e `triagem`, e `semestre` 1 e 12 respondem `201` (AC 51)
+**C63** - [x] `semestre` 0 e 13, `cursoId` de outra instituição e `triagem: true` com curso respondem `400` em `semestre`, `cursoId` e `triagem`, e `semestre` 1 e 12 respondem `201` (AC 51)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Bordas_e_triagem_400"`
 
-**C64** - Uma segunda liderança ativa do mesmo curso e semestre responde `409` ao criar e ao reativar (AC 52)
+**C64** - [x] Uma segunda liderança ativa do mesmo curso e semestre responde `409` ao criar e ao reativar (AC 52)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Uma_lideranca_ativa_por_turma_409"`
 
-**C65** - `PUT /api/admin/setores/{id}` com outro `cursoId` e `semestre` no corpo mantém os valores gravados (AC 53)
+**C65** - [x] `PUT /api/admin/setores/{id}` com outro `cursoId` e `semestre` no corpo mantém os valores gravados (AC 53)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Atualizar_nao_muda_a_turma"`
 
-**C66** - Uma etapa `SETOR`, a coordenação de um curso e o `encaminhar` apontando para uma liderança respondem `400` em `setorId` ou `setorCoordenacaoId` (AC 54, AC 64)
+**C66** - [x] Uma etapa `SETOR`, a coordenação de um curso e o `encaminhar` apontando para uma liderança respondem `400` em `setorId` ou `setorCoordenacaoId` (AC 54, AC 64)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaSetorTests.Ninguem_aponta_para_lideranca"`
 
-**C67** - A liderança é disponível só com o setor ativo e pelo menos um atendente ativo que não é o aluno; setor inativo, sem atendente e com o próprio aluno como único atendente são indisponíveis (AC 55)
+**C67** - [x] A liderança é disponível só com o setor ativo e pelo menos um atendente ativo que não é o aluno; setor inativo, sem atendente e com o próprio aluno como único atendente são indisponíveis (AC 55)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Disponibilidade_da_lideranca"`
 
-**C68** - `GET /destino` responde `lideranca: true` quando o fluxo começa por `LIDERANCA_SEMESTRE` e há liderança disponível, `false` nos outros casos, e não grava nenhuma linha (AC 56)
+**C68** - [x] `GET /destino` responde `lideranca: true` quando o fluxo começa por `LIDERANCA_SEMESTRE` e há liderança disponível, `false` nos outros casos, e não grava nenhuma linha (AC 56)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Destino_informa_sem_gravar"`
 
-**C69** - `GET /destino` responde `400` com matrícula que não é do aluno, `404` com conversa de outro aluno e `409` com conversa já transferida (Surface)
+**C69** - [x] `GET /destino` responde `400` com matrícula que não é do aluno, `404` com conversa de outro aluno e `409` com conversa já transferida (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Destino_400_404_409"`
 
 **C70** - Com `lideranca: true` o diálogo mostra o aviso literal do AC 57 e os botões `Cancelar`, `Prefiro a coordenação` e `Enviar à liderança` (AC 57)
@@ -262,25 +262,25 @@ Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "aviso da 
 **C71** - Se `GET /destino` falha, o diálogo mostra o aviso de hoje e `POST /transferir` vai sem `aceitaLideranca`; `Prefiro a coordenação` também envia sem o campo (AC 58)
 Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "prévia que falha"`
 
-**C72** - `POST /transferir` com `aceitaLideranca: true` abre o chamado na liderança; com `false` e sem o campo abre na coordenação do curso, pulando a etapa de liderança (AC 59)
+**C72** - [x] `POST /transferir` com `aceitaLideranca: true` abre o chamado na liderança; com `false` e sem o campo abre na coordenação do curso, pulando a etapa de liderança (AC 59)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Aceite_decide_se_vai_ao_lider"`
 
-**C73** - Para o líder, o detalhe traz `transcricao: []`, `matricula.numero: null` e `categorias: null`, e traz `solicitante`, `resumo`, `matricula.curso`, `matricula.semestre`, `mensagens`, `eventos` e `fluxo` (AC 60)
+**C73** - [x] Para o líder, o detalhe traz `transcricao: []`, `matricula.numero: null` e `categorias: null`, e traz `solicitante`, `resumo`, `matricula.curso`, `matricula.semestre`, `mensagens`, `eventos` e `fluxo` (AC 60)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Detalhe_do_lider_sem_transcricao_nem_matricula"`
 
-**C74** - O líder que chama `reclassificar`, `duplicado` ou `encaminhar` recebe `403` (AC 61)
+**C74** - [x] O líder que chama `reclassificar`, `duplicado` ou `encaminhar` recebe `403` (AC 61)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Lider_nao_reclassifica_nem_encaminha"`
 
-**C75** - `GET /api/conversas/anexos/{id}` de um anexo da conversa de um chamado da liderança responde `404` ao líder (AC 62)
+**C75** - [x] `GET /api/conversas/anexos/{id}` de um anexo da conversa de um chamado da liderança responde `404` ao líder (AC 62)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Anexo_da_conversa_404_para_o_lider"`
 
-**C76** - Depois de subir, o líder recebe `404` no mesmo chamado (AC 63)
+**C76** - [x] Depois de subir, o líder recebe `404` no mesmo chamado (AC 63)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Lider_perde_o_chamado_ao_subir"`
 
-**C77** - Quem é o solicitante e também atendente do setor do chamado recebe a visão `ALUNO` (AC 65)
+**C77** - [x] Quem é o solicitante e também atendente do setor do chamado recebe a visão `ALUNO` (AC 65)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Solicitante_atendente_ve_como_aluno"`
 
-**C78** - Uma liderança da instituição A nunca recebe chamado da instituição B, mesmo com o mesmo curso e semestre (AC 66)
+**C78** - [x] Uma liderança da instituição A nunca recebe chamado da instituição B, mesmo com o mesmo curso e semestre (AC 66)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~IsolamentoTests.Lideranca_de_outra_instituicao_nunca_recebe"`
 
 **C79** - Na tela do líder, o bloco `Conversa com o assistente` e o número de matrícula não aparecem (AC 60)
@@ -347,7 +347,7 @@ Proof: `cd web && npx vitest run src/administracao/canvas.test.tsx -t "canvas va
 **C97** - `web/package.json` fixa `@xyflow/react` na versão exata `12.12.1`, sem `^` nem `~` (door 10)
 Proof: `node -e "process.exit(require('./web/package.json').dependencies['@xyflow/react']==='12.12.1'?0:1)"`
 
-**C98** - O tipo de destino é uma lista fechada no código, e o que cada tipo enxerga e se exige aceite vem do tipo: `SETOR` e `COORDENACAO_CURSO` veem tudo e não pedem aceite, `LIDERANCA_SEMESTRE` vê o resumo restrito e pede aceite; nenhuma coluna nem campo de entrada guarda isso (door 3)
+**C98** - [x] O tipo de destino é uma lista fechada no código, e o que cada tipo enxerga e se exige aceite vem do tipo: `SETOR` e `COORDENACAO_CURSO` veem tudo e não pedem aceite, `LIDERANCA_SEMESTRE` vê o resumo restrito e pede aceite; nenhuma coluna nem campo de entrada guarda isso (door 3)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~FluxoDominioTests.Visao_e_aceite_vem_do_tipo"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Visao_e_aceite_fora_do_banco_e_da_entrada"`
 
@@ -356,11 +356,11 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dominio_sem_AspNetCore_Mediator_nem_fatias"`
 
-**C100** - O retrato de rotas e de erros: a tabela de rotas é a da base sem as 3 de regras e com as 11 da `Surface`, e toda rota `/api/admin` da tabela responde `403` com `detail` a quem não é admin (AC 11)
+**C100** - [x] O retrato de rotas e de erros: a tabela de rotas é a da base sem as 3 de regras e com as 11 da `Surface`, e toda rota `/api/admin` da tabela responde `403` com `detail` a quem não é admin (AC 11)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Admin_403_com_detail_em_toda_rota_admin"`
 
-**C101** - O retrato de sucessos só ganha `fluxo` no detalhe e `cursoId`/`semestre` no setor, e perde só as linhas de `regras`; tirar esses campos deixa o arquivo igual ao de `<base>` (Impact)
+**C101** - [x] O retrato de sucessos só ganha `fluxo` no detalhe e `cursoId`/`semestre` no setor, e perde só as linhas de `regras`; tirar esses campos deixa o arquivo igual ao de `<base>` (Impact)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base"`
 Proof: `pwsh -c "$a = git show <base>:One.Api.Tests/Retratos/sucessos.txt | Where-Object { $_ -notmatch 'regras' }; $b = (Get-Content One.Api.Tests/Retratos/sucessos.txt) -replace ',\"fluxo\":(null|\{[^}]*\})','' -replace ',\"cursoId\":(null|\d+),\"semestre\":(null|\d+)','' | Where-Object { $_ -notmatch 'regras' }; if (Compare-Object $a $b) { exit 1 }"`
 

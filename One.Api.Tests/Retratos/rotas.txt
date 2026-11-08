@@ -13,6 +13,7 @@ GET /api/conversas/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/conversas/anexos/{id:long} anonimo=False autorizacao=True limite=-
 POST /api/conversas/{id:long}/avaliacao anonimo=False autorizacao=True limite=-
 POST /api/conversas/{id:long}/transferir anonimo=False autorizacao=True limite=-
+GET /api/conversas/{id:long}/destino anonimo=False autorizacao=True limite=-
 POST /api/atendimento-direto anonimo=False autorizacao=True limite=mensagens
 POST /api/conversas/{id:long}/encerrar anonimo=False autorizacao=True limite=-
 GET /api/chamados anonimo=False autorizacao=True limite=-

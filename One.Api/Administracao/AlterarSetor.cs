@@ -6,6 +6,7 @@ namespace One.Api.Administracao;
 
 public sealed record AlterarSetor(long Id, AlterarSetor.Entrada Corpo) : IRequest<IResult>
 {
+    // Sem curso e semestre: a turma de uma liderança não muda depois de criada (AC 53).
     public sealed record Entrada(string? Nome, bool? Triagem, bool? Ativo);
 
     public static void Mapear(RouteGroupBuilder g) =>
@@ -16,7 +17,7 @@ public sealed class AlterarSetorHandler(OneDb db) : IRequestHandler<AlterarSetor
 {
     public async ValueTask<IResult> Handle(AlterarSetor m, CancellationToken ct)
     {
-        var e = m.Corpo;
-        return await CadastroRotas.Alterar<Setor, SetorResposta>(db, m.Id, a => CriarSetor.Validar(db, e.Nome, e.Triagem, a), s => CriarSetor.Aplicar(s, e.Nome, e.Triagem, e.Ativo), SetorResposta.De);
+        var e = new CriarSetor.Entrada(m.Corpo.Nome, m.Corpo.Triagem, m.Corpo.Ativo);
+        return await CadastroRotas.Alterar<Setor, SetorResposta>(db, m.Id, a => CriarSetor.Validar(db, e, a), s => CriarSetor.Aplicar(s, e), SetorResposta.De);
     }
 }

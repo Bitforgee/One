@@ -6,6 +6,7 @@ public static class PermissoesChamado
 {
     public const string Aluno = "ALUNO";
     public const string Atendente = "ATENDENTE";
+    public const string Lider = "LIDER";
 
     static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
     static readonly string[] NaoFechados = [.. Abertos, Resolvido];
@@ -24,6 +25,11 @@ public static class PermissoesChamado
         [("reclassificar", Atendente)] = NaoFechados,
         [("duplicado", Atendente)] = Abertos,
         [("subir", Atendente)] = Abertos,
+        [("responder", Lider)] = Abertos,
+        [("nota", Lider)] = NaoFechados,
+        [("assumir", Lider)] = Abertos,
+        [("resolver", Lider)] = Abertos,
+        [("subir", Lider)] = Abertos,
     };
 
     public static string[]? Estados(string acao, string papel) => Permitidas.GetValueOrDefault((acao, papel));

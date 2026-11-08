@@ -133,4 +133,30 @@ public class FluxoDominioTests
         Assert.NotNull(fluxo.Publicar(Agora));
         Assert.Equal(1, fluxo.Vigente!.Numero);
     }
+
+    // C98 (door 3): o que cada tipo enxerga e se pede aceite vem do tipo, sem coluna nem entrada
+    [Theory]
+    [InlineData(DestinosEtapa.Setor, true, false)]
+    [InlineData(DestinosEtapa.CoordenacaoCurso, true, false)]
+    [InlineData(DestinosEtapa.LiderancaSemestre, false, true)]
+    public void Visao_e_aceite_vem_do_tipo(string destino, bool veTudo, bool pedeAceite)
+    {
+        Assert.Equal(veTudo, DestinosEtapa.VeTudo(destino));
+        Assert.Equal(pedeAceite, DestinosEtapa.ExigeAceite(destino));
+
+        // o aceite decide na resolução: só a liderança some sem ele, e as outras resolvem como sempre
+        var etapa = Etapa(destino, destino == DestinosEtapa.Setor ? 1 : null);
+        var resolucao = Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), aceitaLideranca: false);
+        Assert.Equal(!pedeAceite, resolucao.Resolvida);
+        Assert.Equal(pedeAceite ? SemAceite : null, resolucao.Motivo);
+        Assert.True(Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), aceitaLideranca: true).Resolvida);
+    }
+
+    [Fact]
+    public void Todo_tipo_de_destino_tem_visao_definida()
+    {
+        Assert.Equal(3, DestinosEtapa.Todos.Length);
+        Assert.Single(DestinosEtapa.Todos, d => DestinosEtapa.ExigeAceite(d));
+        Assert.Single(DestinosEtapa.Todos, d => !DestinosEtapa.VeTudo(d));
+    }
 }

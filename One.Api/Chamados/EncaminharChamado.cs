@@ -18,7 +18,7 @@ public sealed record EncaminharChamado(string Numero, EncaminharChamado.Entrada 
     public async ValueTask<IResult?> Validar(AcessoChamado a, OneDb db)
     {
         if (string.IsNullOrWhiteSpace(Corpo.Motivo) || Corpo.Motivo.Length > 4000) return Problemas.Invalido("Explique o motivo do encaminhamento.", "motivo");
-        if (Corpo.SetorId == a.Chamado.SetorId || !await db.Setores.AnyAsync(s => s.Id == Corpo.SetorId && s.Ativo))
+        if (Corpo.SetorId == a.Chamado.SetorId || !await db.Setores.AnyAsync(s => s.Id == Corpo.SetorId && s.Ativo && s.CursoId == null))
             return Problemas.Invalido("Escolha outro setor ativo.", "setorId");
         return null;
     }

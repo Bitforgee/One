@@ -166,4 +166,21 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         });
         Assert.Equal(univag.Id, nova.InstituicaoId);
     }
+
+    // fluxos-atendimento C78 (AC 66): a liderança de uma instituição nunca recebe chamado de outra, mesmo com o mesmo curso e semestre
+    [Fact]
+    public async Task Lideranca_de_outra_instituicao_nunca_recebe()
+    {
+        var a = await Turma.Criar(f);
+        var b = await Turma.Criar(f, comLider: false);
+        await f.Db(b.I.Id, db => db.Setores.Where(s => s.Id == b.Lideranca!.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativo, false)));
+
+        var numero = await b.Transferir(new { aceitaLideranca = true });
+
+        var chamado = await b.Ler(numero);
+        Assert.Equal((b.Coordenacao.Id, 2), (chamado.SetorId, chamado.EtapaOrdem));
+        Assert.Equal(HttpStatusCode.NotFound, (await a.Lider!.Cliente.GetAsync($"/api/chamados/{numero}")).StatusCode);
+        Assert.False((await b.Destino(await b.Conversa())).GetProperty("lideranca").GetBoolean());
+        Assert.Equal(0, await f.Db(a.I.Id, db => db.Chamados.CountAsync()));
+    }
 }

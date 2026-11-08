@@ -22,27 +22,30 @@ public static class Transferencia
     public static IResult MatriculaInvalida() =>
         Problemas.Invalido("Escolha uma das suas matrículas ativas.", "matriculaId");
 
-    public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora)
+    static List<MensagemConversa> DoAssistente(Conversa conversa) =>
+        [.. conversa.Mensagens.Where(m => m.Autor == Assistente.Assistente.Autor).OrderByDescending(m => m.Id)];
+
+    // A categoria da dúvida: a sugerida pela IA, senão a do último artigo citado, senão a padrão.
+    public static async Task<(Categoria Categoria, string Origem)> EscolherCategoria(OneDb db, Conversa conversa)
+    {
+        var assistente = DoAssistente(conversa);
+        var categoriasAtivas = await db.Categorias.Where(c => c.Ativa).ToListAsync();
+        var sugerida = assistente.Select(m => m.CategoriaIdSugerida).FirstOrDefault(id => id is not null && categoriasAtivas.Any(c => c.Id == id));
+        if (sugerida is not null) return (await db.Categorias.SingleAsync(c => c.Id == sugerida), OrigemIa);
+        if (assistente.FirstOrDefault(m => m.Citacoes.Count > 0) is not { } citou) return (categoriasAtivas.Single(c => c.Padrao), OrigemPadrao);
+        var ultima = citou.Citacoes.OrderBy(c => c.Id).Last();
+        var categoriaId = await db.CategoriasCitadas().Where(x => x.CitacaoId == ultima.Id).Select(x => x.CategoriaId).SingleAsync();
+        return (await db.Categorias.SingleAsync(c => c.Id == categoriaId), OrigemArtigo);
+    }
+
+    public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora, bool aceitaLideranca = false)
     {
         await using var tx = await db.Database.BeginTransactionAsync();
         if (conversa.Id == 0) await db.SaveChangesAsync();
-        var assistente = conversa.Mensagens.Where(m => m.Autor == Assistente.Assistente.Autor).OrderByDescending(m => m.Id).ToList();
-        var categoriasAtivas = await db.Categorias.Where(c => c.Ativa).ToListAsync();
-
-        var (categoriaId, origem) = (default(long?), OrigemPadrao);
-        var sugerida = assistente.Select(m => m.CategoriaIdSugerida).FirstOrDefault(id => id is not null && categoriasAtivas.Any(c => c.Id == id));
-        if (sugerida is not null) (categoriaId, origem) = (sugerida, OrigemIa);
-        else if (assistente.FirstOrDefault(m => m.Citacoes.Count > 0) is { } citou)
-        {
-            var ultima = citou.Citacoes.OrderBy(c => c.Id).Last();
-            categoriaId = await db.CategoriasCitadas().Where(x => x.CitacaoId == ultima.Id).Select(x => x.CategoriaId).SingleAsync();
-            origem = OrigemArtigo;
-        }
-        var categoria = categoriaId is null ? categoriasAtivas.Single(c => c.Padrao) : await db.Categorias.SingleAsync(c => c.Id == categoriaId);
-
+        var (categoria, origem) = await EscolherCategoria(db, conversa);
         var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
-        var resumo = assistente.Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
-        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, false);
+        var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
+        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, aceitaLideranca);
         conversa.Desfecho = Desfechos.Transferida;
         conversa.DesfechoEm = agora;
 
