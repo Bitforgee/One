@@ -90,7 +90,7 @@ export function AplicaAparencia() {
   return null
 }
 
-// Contraste da cor contra o branco, pela mesma regra de api/Instituicoes/ContrasteDaCor.cs (WCAG 2.x, door 8).
+// Contraste da cor contra o branco, pela mesma regra de One.Api/Instituicoes/ContrasteDaCor.cs (WCAG 2.x, door 8).
 export function contraste(hex: string) {
   const canal = (i: number) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255

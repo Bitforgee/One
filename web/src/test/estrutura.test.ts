@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-// C35 (door 3): o web/ em fatias verticais; lê o código-fonte como texto, como o ArquiteturaTests do api/.
+// C35 (door 3): o web/ em fatias verticais; lê o código-fonte como texto, como o ArquiteturaTests do One.Api/.
 // Sem parâmetro de tipo: o cache de módulos do Vitest só deixa de guardar o arquivo que traz o texto "import.meta.glob(".
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 const arquivos = Object.keys(fontes).map((c) => c.replace('/src/', ''))

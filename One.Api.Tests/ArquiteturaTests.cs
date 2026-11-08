@@ -120,7 +120,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(colunas, c => c.tipo == "timestamp with time zone");
     }
 
-    // refatoracao-solid: regras de texto sobre o código de api/, sem bin, obj nem Dados/Migracoes.
+    // refatoracao-solid: regras de texto sobre o código de One.Api/, sem bin, obj nem Dados/Migracoes.
     static string Api => Path.Combine(Raiz(), "One.Api");
 
     static IEnumerable<string> CodigoApi()
@@ -253,7 +253,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(linhas.Any(l => l.Contains($"prazo de {prazo}") && l.Contains($"`{chave}`") && l.Contains(padrao) && Significado(l).Length >= 10), prazo);
     }
 
-    // C6: door 2, a barreira de complexidade 10 no build do api/
+    // C6: door 2, a barreira de complexidade 10 no build do One.Api/
     [Fact]
     public void Barreira_de_complexidade_configurada()
     {
@@ -984,7 +984,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // arquivos-minio C20: door 4, o bucket é append-only e nenhum código do api/ apaga objeto
+    // arquivos-minio C20: door 4, o bucket é append-only e nenhum código do One.Api/ apaga objeto
     static readonly Regex ChamaDelete = new(@"\bDeleteObjects?(Async)?\b");
 
     [Fact]
@@ -1082,7 +1082,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(program.IndexOf("Servicos(builder.Services)", StringComparison.Ordinal) < program.IndexOf("InstituicaoComando.Executar", StringComparison.Ordinal));
     }
 
-    // web-push C17: door 6, cada chave Push:* é lida num só lugar do api/
+    // web-push C17: door 6, cada chave Push:* é lida num só lugar do One.Api/
     [Fact]
     public void Push_configuracao_lida_em_um_lugar()
     {
