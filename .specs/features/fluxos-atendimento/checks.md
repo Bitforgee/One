@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/fluxos-atendimento/plan.md`
 
-96 checks em 6 slices · 10 one-way doors · 2 perguntas abertas, das quais 1 bloqueia o go-live (plano aprovado pelo usuário em 08/11: "aprovo pode continuar")
+106 checks em 6 slices · 10 one-way doors · 2 perguntas abertas, das quais 1 bloqueia o go-live (plano aprovado pelo usuário em 08/11: "aprovo pode continuar")
 
 **Como as provas rodam.** Todos os comandos rodam na raiz `D:\one-system`, salvo `cd web &&`. `<base>` é o commit que congela `plan.md` e este `checks.md`, gravado em `## Handoff`.
 
@@ -167,7 +167,7 @@ Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "lista com
 **C41** - [x] Ao criar, o formulário pede a categoria e oferece a abrangência como três opções: `Todos os cursos`, `Um curso` e `Um semestre de um curso`, e só então mostra o curso e o semestre (AC 32)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "criar pede categoria e abrangência"`
 
-**C42** - [x] Na edição, `Simular` pede curso, semestre e aceite; `Publicar` fica desligado enquanto a API devolve erro de validação do rascunho e liga quando o rascunho passa (AC 33)
+**C42** - [x] Na edição, `Simular` pede curso e semestre; `Publicar` fica desligado enquanto a API devolve erro de validação do rascunho e liga quando o rascunho passa (AC 33; emenda AD-042, sem aceite)
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "simular e publicar"`
 
 **C43** - [x] Sem nenhum fluxo, a aba mostra `Sem fluxo, os chamados vão para a Triagem.` e o botão `Novo` (AC 34)
@@ -256,14 +256,14 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoT
 **C69** - [x] `GET /destino` responde `400` com matrícula que não é do aluno, `404` com conversa de outro aluno e `409` com conversa já transferida (Surface)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Destino_400_404_409"`
 
-**C70** - [x] Com `lideranca: true` o diálogo mostra o aviso literal do AC 57 e os botões `Cancelar`, `Prefiro a coordenação` e `Enviar à liderança` (AC 57)
+**C70** - [x] Com `lideranca: true` o diálogo mostra o aviso literal do AC 57 e só os botões `Cancelar` e `Enviar à liderança`; não existe `Prefiro a coordenação` (AC 57; emenda AD-042)
 Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "aviso da liderança"`
 
-**C71** - [x] Se `GET /destino` falha, o diálogo mostra o aviso de hoje e `POST /transferir` vai sem `aceitaLideranca`; `Prefiro a coordenação` também envia sem o campo (AC 58)
-Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "prévia que falha"`
+**C71** - [x] Se `GET /destino` falha, o envio fica seguro: o diálogo não manda a conversa ao colega sem o aviso e `POST /transferir` não leva `aceitaLideranca` (AC 58; emenda AD-042)
+Proof: `cd web && npx vitest run src/assistente/lideranca.test.tsx -t "prévia que falha segura o envio"`
 
-**C72** - [x] `POST /transferir` com `aceitaLideranca: true` abre o chamado na liderança; com `false` e sem o campo abre na coordenação do curso, pulando a etapa de liderança (AC 59)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Aceite_decide_se_vai_ao_lider"`
+**C72** - [x] `POST /transferir` não aceita `aceitaLideranca`: quem decide é o fluxo, e o chamado abre na liderança quando o fluxo manda e há liderança disponível, e na coordenação quando não há (AC 59; emenda AD-042)
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderancaDestinoTests.Fluxo_decide_e_o_aluno_nao_escolhe"`
 
 **C73** - [x] Para o líder, o detalhe traz `transcricao: []`, `matricula.numero: null` e `categorias: null`, e traz `solicitante`, `resumo`, `matricula.curso`, `matricula.semestre`, `mensagens`, `eventos` e `fluxo` (AC 60)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~LiderVisaoTests.Detalhe_do_lider_sem_transcricao_nem_matricula"`
@@ -356,7 +356,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Toda_entidade_tem_instituicao_e_filtro"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dominio_sem_AspNetCore_Mediator_nem_fatias"`
 
-**C100** - [x] O retrato de rotas e de erros: a tabela de rotas é a da base sem as 3 de regras e com as 11 da `Surface`, e toda rota `/api/admin` da tabela responde `403` com `detail` a quem não é admin (AC 11)
+**C100** - [x] O retrato de rotas e de erros: a tabela de rotas é a da base sem as 3 de regras e com as 8 rotas novas da `Surface` (emenda de 08/11: eram 11 no texto), e toda rota `/api/admin` da tabela responde `403` com `detail` a quem não é admin (AC 11)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Admin_403_com_detail_em_toda_rota_admin"`
 
@@ -378,11 +378,12 @@ Proof: `npm --prefix web run build`
 Proof: `npm --prefix web run coverage && cd web && crapper --use-existing-coverage -s src --threshold 9.99`
 Proof: `cd web && dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts`
 
-**C105** - [x] O fluxo real de ponta a ponta: o admin cria na tela o fluxo "Liderança do semestre → Coordenação do curso (48 h)" para ADS 3º semestre, simula, publica; o aluno transfere aceitando; o líder vê o chamado sem transcrição e sobe; a coordenação o recebe (AC 3, AC 29, AC 35, AC 59, AC 60)
+**C105** - [x] O fluxo real de ponta a ponta: o admin cria na tela o fluxo "Liderança do semestre (48 h) → Coordenação do curso" para ADS 3º semestre (o prazo fica na liderança: o AC 22 recusa prazo na última etapa), simula, publica; o aluno transfere e o fluxo o leva à liderança (AD-042, sem aceite); o líder vê o chamado sem transcrição e sobe; a coordenação o recebe (AC 3, AC 29, AC 35, AC 59, AC 60)
 Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/fluxos-real.spec.ts`
 
-**C106** - A e2e inteira com a API simulada continua verde com as 7 edições da lista de asserções existentes (todas listadas nesta cabeça)
-Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/anexos.spec.ts e2e/aparencia.spec.ts e2e/arranjo.spec.ts e2e/casca.spec.ts e2e/celular.spec.ts e2e/identidade.spec.ts e2e/instituicoes.spec.ts e2e/plataforma.spec.ts e2e/push.spec.ts e2e/ux.spec.ts e2e/fluxos.spec.ts`
+**C106** - A e2e simulada continua verde com as 7 edições da lista de asserções existentes (todas listadas nesta cabeça); `anexos.spec.ts` e `plataforma.spec.ts` são e2e reais e saem deste comando (emenda de 08/11, rodada 1 do Verificador)
+Proof: `cd web && E2E_URL=http://localhost:5199 npx playwright test e2e/aparencia.spec.ts e2e/arranjo.spec.ts e2e/casca.spec.ts e2e/celular.spec.ts e2e/identidade.spec.ts e2e/instituicoes.spec.ts e2e/push.spec.ts e2e/ux.spec.ts e2e/fluxos.spec.ts`
+Proof: `cd web && E2E_URL=http://localhost:8089 npx playwright test e2e/anexos.spec.ts e2e/plataforma.spec.ts` (imagem própria do `HEAD`, como no C105)
 
 ## Screens
 
