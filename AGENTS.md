@@ -108,11 +108,11 @@ budget: 150k
 - Web: Vitest + jsdom + Testing Library (`web/src/test/setup.ts`). E2E em `web/e2e/`; `*-real.spec.ts` usa a API de verdade.
 - Nunca chame a API real de IA nem envie e-mail real em teste.
 
-## Colaboração (duas pessoas, cada uma com seu agente)
-- Uma feature = uma pasta `.specs/features/<slug>/` = uma branch `feature/<slug>` ou `fix/<slug>`, criada a partir da `main` atualizada.
-- Tudo entra na `main` por PR revisado pela outra pessoa. O PR leva `plan.md`, `checks.md` e `verification.md`.
+## Colaboração (duas pessoas, cada uma com seu agente; AD-043)
+- Uma feature = uma pasta `.specs/features/<slug>/`. Commits direto na `main`, sem branch por feature e sem PR (AD-043, supersede o AD-039 nesse ponto); `git pull` antes de começar.
+- A feature leva `plan.md`, `checks.md` e `verification.md` na própria pasta; o Verify independente é a única revisão.
 - Novo `AD-NNN`: pegue o próximo número depois de atualizar a `main`; se colidir no merge, renumere o seu.
-- Conflito no `OneDbModelSnapshot.cs`: rebase, apague a sua migration e gere de novo. Nunca edite o snapshot à mão.
+- Conflito no `OneDbModelSnapshot.cs`: `git pull --rebase`, apague a sua migration e gere de novo. Nunca edite o snapshot à mão.
 - Antes de começar uma feature, confira no `## Handoff` do `STATE.md` se ninguém está nela.
 
 ## Convenções
