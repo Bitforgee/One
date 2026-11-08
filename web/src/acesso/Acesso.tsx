@@ -17,7 +17,7 @@ import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
 
 // Só o que a tela já exigia (campo preenchido); o resto, quem decide é a API (AC 39, AC 40).
-const obrigatorio = z.string().min(1)
+const obrigatorio = z.string().min(1, 'Preencha este campo.')
 
 // Área de acesso: uma coluna de até 384 px no centro da janela (estados de carga e erro).
 export function Centro({ children }: { children: ReactNode }) {
@@ -125,6 +125,7 @@ type Props<T extends FieldValues> = { f: UseFormReturn<T>; nome: Path<T>; rotulo
 function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }: Props<T>) {
   const [visivel, setVisivel] = useState(false)
   const senha = type === 'password'
+  const erro = f.formState.errors[nome]?.message as string | undefined
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={nome}>{rotulo}</Label>
@@ -142,6 +143,11 @@ function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }:
           </button>
         )}
       </div>
+      {erro && (
+        <p id={`-erro`} className="text-sm text-destructive">
+          {erro}
+        </p>
+      )}
       {dica && (
         <p id={`${nome}-dica`} className="text-sm text-muted-foreground">
           {dica}
