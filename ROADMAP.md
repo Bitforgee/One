@@ -2,8 +2,8 @@
 
 - **Data:** 07/11/2026 (desde 05/11: `push-com-marca` verificado, `identidade-visual` e `estrutura-visual` fechadas
   com risco aceito, `historico-frases` construído com a verificação em FAIL na rodada 1, plano do `lider-semestre`
-  escrito sem aprovação, vídeo de apresentação gerado e `AGENTS.md` para o trabalho em dupla. Próximo: decidir
-  `historico-frases` e `lider-semestre`, criar o remoto do grupo e a Etapa 5, que depende dos dados da Univag)
+  escrito sem aprovação, vídeo de apresentação gerado, `AGENTS.md` para o trabalho em dupla e o código no GitHub. Próximo: decidir
+  `historico-frases` e `lider-semestre` e a Etapa 5, que depende dos dados da Univag)
 - **Base:**
   - `.specs/features/mvp-one/plan.md`: o que entra no MVP, slices S1 a S13;
   - `.specs/features/mvp-one/checks.md`: os 195 critérios com prova e as decisões tomadas no build (`## Handoff`);
@@ -23,7 +23,7 @@
   - `.specs/features/push-com-marca/`, `identidade-visual/`, `estrutura-visual/`: aviso com a marca e o visual (05/11);
   - `.specs/features/historico-frases/`: autor certo em cada frase do Histórico (05/11), 11 checks;
   - `.specs/features/lider-semestre/plan.md`: líder de semestre entre o assistente e a coordenação (05/11), só o plano;
-  - `.specs/STATE.md`: decisões AD-001 a AD-038;
+  - `.specs/STATE.md`: decisões AD-001 a AD-039;
   - `AGENTS.md`: instruções para qualquer agente de IA no repositório (fluxo SDD, arquitetura, testes, colaboração);
   - `.specs/features/mvp-one/glpi-referencia.md`: o que foi aproveitado do GLPI.
 - **Substitui:** `D:\One\One\roadmap.md` (23/09/2026). Aquele roadmap ainda deixava
@@ -59,13 +59,13 @@ hospedagem e ensaio.
 | --- | --- |
 | MVP (`mvp-one`) | 195 checks provados; verificação independente **aprovada** em 02/11 (rodada 9) |
 | RAG (`rag`) | 46 checks provados; verificação independente **aprovada** em 02/11 (rodada 3). As rodadas 1 e 2 reprovaram só por testes faltando, fechados em `a92daae` e `00d439c` |
-| Código | 365 commits em `main`, só nesta máquina. De 04/11 a 07/11 o trabalho foi direto na `main`; a partir de 07/11 o projeto é feito em dupla, cada pessoa com o seu agente de IA, e cada feature vai numa branch `feature/<slug>` ou `fix/<slug>` com PR revisado pela outra pessoa (`AGENTS.md`, `923e1f8`) |
+| Código | No GitHub desde 07/11: https://github.com/Bitforgee/One (público), `main` enviada em `9c06306`. De 04/11 a 07/11 o trabalho foi direto na `main`; a partir de 07/11 o projeto é feito em dupla, cada pessoa com o seu agente de IA, e cada feature vai numa branch `feature/<slug>` ou `fix/<slug>` com PR revisado pela outra pessoa (`AGENTS.md`, `923e1f8`) |
 | Trabalho em dupla com IA (`AGENTS.md`) | **Commitado em 07/11** (`923e1f8`). Lido por Claude Code, opencode, Codex e outros agentes. Traz: o fluxo SDD (plano aprovado por humano → checks com prova → build → verificador independente) descrito sem exigir a skill `tlc-spec-lean`, que fica opcional; as regras de arquitetura da API e do web, já testadas em `ArquiteturaTests` e `estrutura.test.ts`; como os testes rodam; branch + PR, numeração de AD e conflito de migration entre as duas pessoas; limites (segredos, LGPD, push e merge só com ok). Build, `dotnet test` e Vitest conferidos ao escrever; e2e, `crapper`, `dryer` e `dotnet ef migrations add` não |
 | Histórico com o autor certo (`historico-frases`) | 11 checks; correção em `e565c50` (05/11): a resposta do aluno passa a ser "respondeu à equipe" e assumir passa a ser "assumiu a solicitação", decidido pelo id do autor e não pelo nome. **Verificação independente em FAIL na rodada 1**: os 11 checks passam e as 5 falhas injetadas foram pegas, mas depois de renomear um atendente o Histórico ainda escreve uma frase falsa ("Nome Corrigido atribuiu a Pessoa ..."), caso que o plano prometia e nenhum check cobre. Não é regressão (a redação antiga caía no mesmo ramo). **Espera decisão do usuário**: ampliar o plano com esse caso ou fechar com risco aceito |
 | Líder de semestre (`lider-semestre`) | **Só o plano, escrito em 05/11 e ainda não aprovado** (commitado em 07/11, `f81db77`). A dúvida de categorias escolhidas pelo admin vai primeiro à liderança do curso e semestre do aluno, se ele aceitar; o líder vê título, resumo e mensagens depois da transferência (sem transcrição, fontes nem matrícula) e encaminha à coordenação; 48 h sem resposta volta à coordenação. Reusa setor, fila, tempo real e encaminhar. Perguntas abertas: é pedido real da instituição ou ideia para a banca (decide se entra antes do congelamento de 17/11)? A Univag aceita estudante atendendo estudante, e com qual termo de confidencialidade (bloqueia o uso real)? |
 | Vídeo de apresentação (`web/apresentacao/`) | **Gerado em 03/11**: o Playwright grava o app com cursor, legenda e selo do papel, uma voz sintetizada narra cada passo e o `ffmpeg` monta MP4 + `.srt` (`apresentacao-one.mp4`, entregue na pasta 0 Inbox do Drive). O `preparar.ts` cria uma instituição limpa pelos fluxos reais antes de cada tomada. Script no git desde 07/11 (`3116b8f`); vídeo, dados e saída continuam fora |
 | Testes | Em 07/11, conferidos ao escrever o `AGENTS.md`: API 581 e web (Vitest) 525, todos verdes; build sem erro. Em 05/11: API 577, web (Vitest) 524, arranjo com a API simulada 199, e2e real contra o contêiner 235 (arranjo e e2e na rodada 4 da estrutura, antes do último teste acrescentado). O teste `BuscaTests.Lotes_de_100_gravam_vetores`, que quebrava em qualquer data depois de 03/11 por misturar o relógio real com o falso, foi corrigido (`8ff5772`). `PushAgendadorTests.Subscricao_movida_de_instituicao_nao_recebe_item_antigo` às vezes trava quando a suíte roda em paralelo e passa sozinho em 3 s: investigar |
-| Repositório remoto do grupo | Não criado: `main` existe só nesta máquina. **Agora é pré-requisito** do trabalho em dupla, porque o fluxo de PR do `AGENTS.md` depende dele |
+| Repositório remoto do grupo | **Criado em 07/11**: https://github.com/Bitforgee/One, público, com os 370 commits da `main`. Antes do envio o histórico foi varrido: nenhuma chave real, só os valores de desenvolvimento do `docker-compose.yml`; o `.env` nunca entrou no git. Falta proteger a `main` no GitHub (exigir PR), o que só o dono do repositório faz |
 | Chave da OpenAI no `.env` | **Colocada.** Em 04/11 uma chamada real ao `gpt-6-luna` com imagem e PDF respondeu 200 (`provedor_aceita_anexos.py`, C20 de `anexos-assistente`). O ensaio de ponta a ponta da Etapa 5 continua por fazer |
 | Refatoração (`refatoracao-solid`) | 39 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por um teste faltando (aviso de versão atualizada do documento citado), fechado em `f18ad08`. API 268 testes, web 99, e2e 11; CA1502 de 18 métodos para 0; pior CRAP do `web/` de 120,9 para 9,0; 282 mutantes mortos |
 | Vertical slice completa (`vertical-slice-completa`) | 31 checks provados; verificação independente **aprovada** em 02/11 (rodada 2). A rodada 1 reprovou só por uma ordem de recusa sem teste (transferir: 409 antes de 400), fechada em `45fba58`. 58 casos de uso, um arquivo cada, com `Mediator` 3.0.2 |
@@ -144,7 +144,7 @@ hospedagem e ensaio.
 - [x] Aprovar `plan.md`.
 - [x] Escrever `checks.md` (skill `tlc-spec-lean`).
 - [x] `git init` em `D:\one-system`.
-- [ ] Criar o repositório remoto do grupo e enviar `main` (o `git push` espera o OK do grupo).
+- [x] Criar o repositório remoto do grupo e enviar `main`: https://github.com/Bitforgee/One (07/11).
 - [x] Conta da OpenAI criada (substitui a conta DeepSeek, que não é mais necessária).
 - [x] Colocar a chave da OpenAI no `.env` da raiz (`LLM_CHAVE_API=...`; o arquivo é ignorado pelo
       git). A chamada real respondeu 200 em 04/11; o crédito continua a conferir antes do ensaio.
@@ -525,7 +525,8 @@ as suítes, o e2e e as falhas injetadas à mão pelo Verifier.
 | A base interna vaza para o aluno | AC 40 com teste na API do aluno; fontes só para atendente e administrador |
 | Dados de uma instituição aparecem em outra | filtro global (door 16) e teste com duas instituições nas 27 rotas com id |
 | O código ficou pronto, mas sem dados reais nem IA real | a Etapa 5 inteira é sobre isso; a carga de exemplo é o plano B |
-| O repositório existe só numa máquina | criar o remoto do grupo e enviar `main`; desde 07/11 também bloqueia o trabalho em dupla |
+| O repositório existe só numa máquina | **resolvido** em 07/11: código em https://github.com/Bitforgee/One |
+| O repositório é público | nenhum segredo no histórico (varrido em 07/11); `.env` e user secrets continuam fora do git; dados reais da Univag nunca entram em teste, commit ou PR (`AGENTS.md`) |
 | Duas pessoas com dois agentes mexendo no mesmo código | `AGENTS.md`: uma feature por branch e por pasta `.specs/features/<slug>/`, PR revisado, verificador independente, regras de AD e de migration para conflitos |
 | Não ter artigos reais da Univag a tempo | pedir em 03/11; plano B: o grupo escreve 10 artigos a partir do Quadro 6 |
 | Internet ou API de IA fora do ar na banca | "não encontrei" com transferência continua funcionando; ensaiar sem rede |
