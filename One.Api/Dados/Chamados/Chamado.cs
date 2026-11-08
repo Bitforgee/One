@@ -140,7 +140,7 @@ public class Chamado : IDaInstituicao
     }
 
     // Passa o chamado à etapa seguinte do próprio fluxo. Não é encaminhamento: Encaminhamentos não muda (RoteamentoCorreto).
-    // torId nulo é a subida do Agendador, que não escreve nota.
+    // atorId nulo é a subida do Agendador (prazo da etapa vencido): não há quem assine, então não se escreve a nota.
     public void Subir(long? atorId, string nomeSetorAtual, string nomeSetorNovo, long setorId, int etapaOrdem, string detalhe, string? nomeResponsavel, DateTime agora)
     {
         Exigir(Abertos);
