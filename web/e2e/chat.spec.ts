@@ -64,7 +64,6 @@ test.describe('compositor do aluno', () => {
   // C4
   test('selos dentro da caixa', async ({ page }) => {
     await assistente(page, 1280)
-    const antes = await caixa(page.getByRole('button', { name: 'Falar com atendente' }))
     await page.locator('input[type=file]').setInputFiles({ name: 'boleto.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
     const selo = await caixa(page.getByRole('button', { name: 'Remover boleto.pdf' }))
     const c = await caixa(compositor(page))
@@ -73,8 +72,6 @@ test.describe('compositor do aluno', () => {
     expect(selo.y + selo.height).toBeLessThanOrEqual(campo.y + 1)
     const ajuda = await caixa(page.getByText('PDF ou foto, até 10 MB'))
     expect(ajuda.y).toBeGreaterThanOrEqual(c.y + c.height - 1)
-    const depois = await caixa(page.getByRole('button', { name: 'Falar com atendente' }))
-    perto(depois.y, antes.y, 1, 'Falar com atendente não se move')
   })
 
   // C5
@@ -140,7 +137,7 @@ test.describe('linha do tempo do chamado', () => {
 
   // C19
   test('ações visíveis ao rolar', async ({ page }) => {
-    await chamado(page, 1280)
+    await chamado(page, 1440)
     await rolar(page, 600)
     await assentar(page)
     const cartao = page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })

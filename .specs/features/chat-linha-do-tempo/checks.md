@@ -22,7 +22,7 @@ Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- chat.s
 **C3** - Com um texto de 10 linhas no campo (altura 208 px, `max-h-52`), a base do clipe e a base do "Enviar" ficam a no máximo 2 px da base do campo (AC 3)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- chat.spec.ts -g "campo alto"`
 
-**C4** - Com 1 arquivo escolhido, o selo "Remover <nome>" fica dentro da caixa e acima do campo, a ajuda "PDF ou foto, até 10 MB" fica abaixo da caixa, e o y de "Falar com atendente" não muda em relação ao estado sem arquivo (diferença ≤ 1 px) (AC 4)
+**C4** - Com 1 arquivo escolhido, o selo "Remover <nome>" fica dentro da caixa e acima do campo, a ajuda "PDF ou foto, até 10 MB" fica abaixo da caixa (AC 4; emenda de 08/11 aprovada pelo usuário: saiu "e o y de Falar com atendente não muda", porque a caixa fica ancorada no fim da tela e o selo a faz crescer para cima) (AC 4)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- chat.spec.ts -g "selos dentro da caixa"`
 
 **C5** - Em 360 px, `scrollWidth` do documento é igual a `clientWidth`, e "Falar com atendente" e "Encerrar" têm 44 px de altura ou mais (AC 5)
@@ -71,7 +71,7 @@ Proof: `cd web && npx vitest run src/chamados/linhaDoTempo.test.tsx -t "conversa
 **C18** - Em 1280×800, com 40 itens, depois de rolar a página 600 px, o formulário de resposta (campo `Responder` e botão "Enviar") está inteiro dentro da janela (AC 17)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- chat.spec.ts -g "resposta colada ao fim"`
 
-**C19** - Nas mesmas condições de C18, o cartão "Ações" e o botão "Assumir" continuam inteiros dentro da janela (AC 18)
+**C19** - Em 1440×800 (duas colunas; emenda de 08/11 aprovada pelo usuário: era 1280 px, onde o detalhe tem uma coluna), com 40 itens e depois de rolar 600 px, o cartão "Ações" e o botão "Assumir" continuam inteiros dentro da janela (AC 18)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- chat.spec.ts -g "ações visíveis ao rolar"`
 
 **C20** - Com 40 itens, "Ir para o mais recente" existe e, ao clicar, a última `li` fica inteira dentro da janela; com 2 itens o botão não existe (AC 19)
@@ -103,9 +103,10 @@ Proof: `cd web; dryer -s src/acesso -s src/assistente -s src/chamados -s src/con
 | filtro Eventos (2) | marcado C8, C13 · desmarcado C13 | - |
 | estados da sequência (3) | vazia C12 · com itens C8 · com ação nova C15 | - |
 | partes coladas ao rolar em 1024 px ou mais (2) | resposta C18 · cartão de ações C19 | - |
-| larguras do chamado (3) | 1280 C18, C19, C20 · 390 C21 · 1024 ou mais C8 (layout em jsdom) | - |
+| larguras do chamado (3) | 1280 C18, C20 · 1440 C19 · 390 C21 · 1024 ou mais C8 (layout em jsdom) | - |
 | critérios do plano (20) | AC 1 C1 · AC 2 C2 · AC 3 C3 · AC 4 C4 · AC 5 C5 · AC 6 C6 · AC 7 C7 · AC 8 C8, C16 · AC 9 C9 · AC 10 C10 · AC 11 C11 · AC 12 C12 · AC 13 C13 · AC 14 C14 · AC 15 C15 · AC 16 C17 · AC 17 C18 · AC 18 C19 · AC 19 C20 · AC 20 C21 | - |
 
+- Emendas de 08/11 (usuário: "realize as recomendações"): C4 sem a parte do botão parado; C19 medido em 1440 px.
 - Afirmam arranjo medido em navegador real: C1 a C6, C18 a C21, todos com `boundingBox()` ou `getComputedStyle`
 - Afirmam texto e ordem em jsdom: C7 a C17; C9 e C16 também checam classes
 - Nenhuma rota nova (`## Surface` é `None`), então não há linha de status

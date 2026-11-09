@@ -57,7 +57,7 @@ No Assistente, o clipe, o campo, o "Enviar" e os dois botões de ação ficam al
 1. WHEN a aluna abre o Assistente em 768 px ou mais THEN the system SHALL desenhar o compositor como uma caixa com borda, da largura da coluna de mensagens (`max-w-3xl`), com o clipe de anexo dentro dela, à esquerda, e o "Enviar" dentro dela, à direita
 2. The system SHALL alinhar a borda esquerda de "Falar com atendente" à borda esquerda da caixa do compositor, com diferença de no máximo 1 px, e a direita de "Enviar" à borda direita da caixa, com diferença de no máximo 1 px, em 768, 1280 e 1872 px
 3. WHEN o campo cresce com o texto até 208 px (`max-h-52`) THEN the system SHALL manter o clipe e o "Enviar" encostados na borda de baixo da caixa, com diferença de no máximo 2 px entre a base de cada um e a base do campo
-4. WHEN a aluna anexa um arquivo THEN the system SHALL mostrar os selos dentro da caixa, acima do campo, e a ajuda "PDF ou foto, até 10 MB" abaixo da caixa, sem empurrar os botões de ação
+4. WHEN a aluna anexa um arquivo THEN the system SHALL mostrar os selos dentro da caixa, acima do campo, e a ajuda "PDF ou foto, até 10 MB" abaixo da caixa
 5. WHILE a tela tem menos de 768 px the system SHALL manter a caixa em toda a largura, sem rolagem horizontal, com "Falar com atendente" e "Encerrar" quebrando de linha se faltar espaço, cada um com 44 px de altura mínima
 6. WHEN o Assistente está sem conversa em 1024 px ou mais THEN the system SHALL manter a caixa do compositor colada ao fim da tela, com as perguntas sugeridas acima dela
 7. IF a aluna chega ao limite de 10 mensagens THEN the system SHALL esconder a caixa do compositor e manter só os botões de ação, como hoje
@@ -89,7 +89,7 @@ O atendente responde e age sem rolar a página inteira.
 
 16. WHEN o chamado tem conversa com o assistente THEN the system SHALL mostrar "Conversa com o assistente · n mensagens" recolhida, e abri-la mostra os mesmos balões de hoje, com as fontes citadas
 17. WHILE a janela tem 1024 px ou mais, the system SHALL manter o formulário de resposta (`Responder`) visível no fim da área de rolagem, colado à borda de baixo da coluna principal, enquanto o atendente rola a linha do tempo
-18. WHILE a janela tem 1024 px ou mais, the system SHALL manter o cartão de ações (Assumir, Encaminhar, Resolver) visível na coluna da direita enquanto a linha do tempo rola, como já faz
+18. WHILE o detalhe está em duas colunas (a partir de 1328 px de janela com a barra aberta), the system SHALL manter o cartão de ações (Assumir, Encaminhar, Resolver) visível na coluna da direita enquanto a linha do tempo rola, como já faz
 19. WHEN a equipe abre um chamado com mais de uma tela de itens THEN the system SHALL oferecer o botão "Ir para o mais recente", que rola a lista até o último item
 20. WHILE a janela tem menos de 1024 px the system SHALL manter a barra fixa de ações atual, e o formulário de resposta fica no fluxo, sem `sticky`
 
