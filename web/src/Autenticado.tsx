@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, Building2, ChartColumn, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, Building2, ChartColumn, CircleAlert, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
@@ -8,6 +8,7 @@ import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem,
 import { AvisosPush } from './AvisosPush'
 import { telaInicial, useSair, type Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
+import { Alert } from './ui/alert'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
@@ -309,7 +310,30 @@ function useBarra() {
   }
 }
 
-const semSessao = (erro: Error | null) => erro instanceof ErroApi
+const semSessao = (erro: Error | null) => erro instanceof ErroApi && erro.status === 401
+
+const textoDaSessao = (status: number) => {
+  if (status === 403) return 'Você não tem permissão para esta ação.'
+  if (status === 429) return 'Muitas tentativas. Aguarde um minuto e tente de novo.'
+  return 'O serviço está indisponível no momento.'
+}
+
+function ErroDaSessao({ erro, tentar }: { erro: Error; tentar: () => void }) {
+  if (!(erro instanceof ErroApi) || (erro.status !== 403 && erro.status !== 429 && erro.status < 500)) return <ErroDe erro={erro} oque="sua sessão" tentar={tentar} />
+  return (
+    <Alert variant="destructive">
+      <CircleAlert aria-hidden="true" />
+      <div className="flex flex-col items-start gap-2">
+        <p className="m-0">Não foi possível carregar sua sessão. {textoDaSessao(erro.status)}</p>
+        {erro.status !== 403 && (
+          <Button variant="outline" size="sm" onClick={tentar}>
+            Tentar de novo
+          </Button>
+        )}
+      </div>
+    </Alert>
+  )
+}
 
 function desvio({ me, erro, slug, pathname }: { me?: Me; erro: Error | null; slug?: string; pathname: string }) {
   if (semSessao(erro)) return `/${slug}`
@@ -334,7 +358,7 @@ export function Autenticado() {
   if (error)
     return (
       <div className="mx-auto flex min-h-svh max-w-sm items-center p-6">
-        <ErroDe erro={error} oque="sua sessão" tentar={() => void refetch()} />
+        <ErroDaSessao erro={error} tentar={() => void refetch()} />
       </div>
     )
   if (!me)

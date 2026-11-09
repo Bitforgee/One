@@ -289,7 +289,9 @@ describe('acesso', () => {
 
     const falha = api({ ...instituicao, 'GET /api/auth/me': () => [500, { status: 500, detail: 'Erro.' }] })
     const primeira = abrir('/univag/assistente')
-    expect(await screen.findByLabelText('CPF')).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível carregar sua sessão. O serviço está indisponível no momento.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('CPF')).not.toBeInTheDocument()
     expect(leiturasDoMe(falha)).toBe(1)
     primeira.unmount()
 
