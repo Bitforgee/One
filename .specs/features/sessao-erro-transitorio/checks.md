@@ -1,0 +1,39 @@
+# Checks: sessao-erro-transitorio
+
+## Intent
+Quando `GET /api/auth/me` falha com um status diferente de 401, o web hoje manda para o Login (`semSessao = erro instanceof ErroApi`, `web/src/Autenticado.tsx:311`), e uma falha transitória do servidor parece um logout. Passa a valer o AD-049: só o 401 vai para o Login; 403 mostra "Não foi possível carregar sua sessão. Você não tem permissão para esta ação." sem botão; 429 mostra "Não foi possível carregar sua sessão. Muitas tentativas. Aguarde um minuto e tente de novo." com "Tentar de novo"; 500, 502, 503 e 504 mostram "Não foi possível carregar sua sessão. O serviço está indisponível no momento." com "Tentar de novo"; a falha de rede segue como hoje. A sessão é lida uma vez, sem nova tentativa automática, e de novo só no clique em "Tentar de novo"; a URL e o slug da instituição ficam; a casca e toda requisição protegida esperam um `/me` válido. Os textos ficam fixos no web (um proxy pode responder com corpo vazio ou HTML). Emenda o C20 de `interface-nova` e substitui a porta L3 de `mobile-m0`. Sem mudança na API, no schema ou no contrato.
+
+Arquivos: `web/src/Autenticado.tsx` (único de produto), `web/src/chamados/sessao.test.tsx`, `web/src/acesso/acesso.test.tsx`. Não mudam `web/src/api.ts`, `web/src/ErroDe.tsx`, `web/src/App.tsx`, `One.Api/` e `One.Api.Tests/`.
+
+Fora do escopo (limitação conhecida): um 5xx com corpo HTML de proxy faz o `JSON.parse` de `web/src/api.ts:20` lançar antes do `ErroApi` e segue mostrando o bloco de rede.
+
+`<base>`: o commit da `main` imediatamente antes do primeiro commit desta feature (em 09/11/2026, `51cd8e5`). Provas de Vitest rodam em `web/` (`npx vitest run <arquivo> -t "<nome>"`); provas com `comm` e `<(...)` rodam no Git Bash, na raiz do repositório.
+
+## Checks
+
+| # | Afirmação | Prova |
+|---|---|---|
+| C1 | `/me` 401, aberto em `/univag/solicitacoes`: aparece o campo "CPF" e o `fetch` de `/api/auth/me` é chamado exatamente 1 vez | `npx vitest run src/chamados/sessao.test.tsx -t "401 vai para o login"` (teste existente; ganha só a asserção da contagem) |
+| C2 | Tabela `status do /me`, uma linha por status, aberta em `/univag/solicitacoes`: 403 (ProblemDetails) mostra o texto do 403 do Intent e nenhum botão "Tentar de novo"; 429 (ProblemDetails) mostra o texto do 429 e o botão "Tentar de novo"; 500 (ProblemDetails), 502, 503 e 504 (corpo vazio) mostram o texto de indisponibilidade e o botão "Tentar de novo". Em toda linha: nenhum campo "CPF" e nenhum botão "Entrar" | `npx vitest run src/chamados/sessao.test.tsx -t "status do /me"` (novo, `it.each` com as 6 linhas) |
+| C3 | Em toda linha do C2: o `fetch` de `/api/auth/me` é chamado exatamente 1 vez, e segue 1 depois de disparar `focus` e `visibilitychange` na janela; nenhuma chamada a outra URL além de `/api/auth/me` e `/api/instituicoes/univag`; o botão "Alternar barra lateral" não existe (a casca protegida não aparece). Falha transitória controlada: `/me` responde 503 na 1ª chamada e 200 nas seguintes; depois que o texto de indisponibilidade aparece, esperar 1500 ms reais e disparar `focus` e `visibilitychange`: a contagem segue 1, o texto segue visível e o título "Minhas solicitações" não existe | `npx vitest run src/chamados/sessao.test.tsx -t "status do /me"` + `npx vitest run src/chamados/sessao.test.tsx -t "falha transitória sem nova tentativa"` (novo) |
+| C4 | Recuperação: com 429 e com 503 na 1ª chamada e 200 na 2ª, antes do clique a contagem é 1; no clique em "Tentar de novo" aparece o título "Minhas solicitações" (mesma rota), o texto de erro some, não aparece "CPF" e o `/me` foi chamado exatamente 2 vezes. Com a rede caída na 1ª chamada, o teste existente continua provando o mesmo | `npx vitest run src/chamados/sessao.test.tsx -t "recupera a sessão"` (novo, linhas 429 e 503) + `npx vitest run src/chamados/sessao.test.tsx -t "tentar de novo repete a leitura da sessão"` (existente) |
+| C5 | Preservação em `sessao.test.tsx`: os testes `sem rede mostra a conexão e não vai para o login`, `401 vai para o login` e `tentar de novo repete a leitura da sessão` seguem com o mesmo nome e passam; toda linha `expect(` da `<base>` segue no arquivo, idêntica (multiconjunto: nenhuma removida nem reescrita); as linhas novas só acrescentam asserções | `npx vitest run src/chamados/sessao.test.tsx -t "sem rede mostra a conexão e não vai para o login"` + os 2 nomes do C1 e do C4, cada um exit 0; `comm -23 <(git show <base>:web/src/chamados/sessao.test.tsx \| grep -E '^\s*expect\(' \| sort) <(grep -E '^\s*expect\(' web/src/chamados/sessao.test.tsx \| sort)` não imprime nada |
+| C6 | C20 emendado (`interface-nova`, AD-049) em `acesso.test.tsx`: no teste `QueryClient por montagem sem nova tentativa nem releitura no foco`, a única linha `expect(` da `<base>` que deixa o arquivo é `expect(await screen.findByLabelText('CPF')).toBeInTheDocument()` desse teste, e no lugar dela o teste afirma o texto de indisponibilidade, o botão "Tentar de novo" e a ausência do campo "CPF"; `leiturasDoMe(falha)` segue `1` e as asserções de foco, `visibilitychange` e da segunda montagem seguem idênticas | `npx vitest run src/acesso/acesso.test.tsx -t "QueryClient por montagem sem nova tentativa nem releitura no foco"` exit 0; `comm -23 <(git show <base>:web/src/acesso/acesso.test.tsx \| grep -E '^\s*expect\(' \| sort) <(grep -E '^\s*expect\(' web/src/acesso/acesso.test.tsx \| sort)` imprime exatamente essa linha, uma vez; `git diff <base>..HEAD -- web/src/acesso/acesso.test.tsx` mostra as mudanças só dentro desse teste |
+| C7 | Escopo: `git diff --name-only <base>..HEAD` lista só `web/src/Autenticado.tsx`, `web/src/chamados/sessao.test.tsx`, `web/src/acesso/acesso.test.tsx`, `.specs/features/sessao-erro-transitorio/checks.md`, `.specs/features/sessao-erro-transitorio/verification.md`, `.specs/features/interface-nova/checks.md` e `.specs/STATE.md`; a API não muda | `git diff --name-only <base>..HEAD`; `git diff --quiet <base> HEAD -- One.Api One.Api.Tests` exit 0 |
+| C8 | Gates, todos obrigatórios e cada um com comando, exit code e contagem no relatório: as provas focadas de C1 a C6 saem 0; `npm --prefix web run build` sai 0; a suíte inteira `npm --prefix web test` sai 0 com 0 falhas; `dryer` sem candidato a 0.8 e `crapper --use-existing-coverage -s src --threshold 9.99` saindo 0 sobre a cobertura de `npm --prefix web run coverage`, dentro de `web/` (AD-018). Gate que falhou, ficou bloqueado ou não rodou aparece no relatório com esse nome e deixa o C8 em FAIL ou NOT RUN, nunca PASS. `mutator` não roda (AD-025) | os comandos acima, com `rtk bypass` |
+
+## Verify
+Um agente novo, sem o contexto de quem construiu (`/one-verify sessao-erro-transitorio <base>`), roda cada prova e, num worktree fora do repositório (L-014), injeta à mão cada falha abaixo, roda a prova indicada e registra se ela falhou:
+
+| Falha | Mutação | Prova que deve falhar |
+|---|---|---|
+| F1 | `semSessao` volta a `erro instanceof ErroApi` | C2 (todas as linhas), C6 |
+| F2 | `semSessao` vale para `status === 401 \|\| status === 403` | C2, linha 403 |
+| F3 | o 429 mostra o texto de indisponibilidade | C2, linha 429 |
+| F4a | `retry: true` no `QueryClient` de `web/src/App.tsx` | C3, falha transitória |
+| F4b | `refetchInterval: 1000` na consulta `['me']` de `web/src/Autenticado.tsx` | C3, falha transitória (contagem 2 depois de 1500 ms) |
+| F4c | `refetchOnWindowFocus: true` na consulta `['me']` | C3 (contagem 2 depois do `focus`) |
+| F5 | a casca é desenhada também com erro no `/me` | C3 (botão "Alternar barra lateral" e chamadas protegidas) |
+| F6 | "Tentar de novo" deixa de chamar `refetch` | C4 |
+
+Feito = todos os checks com PASS e todas as falhas pegas. Uma falha não pega, uma prova que não rodou ou um gate bloqueado deixa o veredito FAIL; fechar sem PASS exige AD de risco aceito do dono do projeto.
