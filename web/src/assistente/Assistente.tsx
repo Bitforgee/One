@@ -307,26 +307,29 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
       </div>
       {!noLimite && (
         <form onSubmit={enviar} className="flex flex-col gap-1">
-          <Selos anexos={anexos} />
-          <Label htmlFor="mensagem" className="sr-only">
-            Mensagem
-          </Label>
-          <div className="flex items-end gap-1.5">
-            <BotaoAnexar anexos={anexos} />
-            <Textarea
-              id="mensagem"
-              rows={1}
-              maxLength={1000}
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              onKeyDown={(e) => enviarComEnter(e, vazio)}
-              placeholder="Escreva sua dúvida"
-              className="max-h-52 min-h-11 flex-1 resize-none py-2"
-            />
-            <Button type="submit" className="h-11 shrink-0" disabled={vazio}>
-              {pendente && <Spinner />}
-              Enviar
-            </Button>
+          {/* uma caixa só: selos, clipe, campo e "Enviar" dentro dela; os botões de ação e a ajuda ficam fora, na mesma borda */}
+          <div data-testid="compositor" className="flex flex-col overflow-hidden rounded-sm border border-input bg-background focus-within:border-ring">
+            <Selos anexos={anexos} />
+            <Label htmlFor="mensagem" className="sr-only">
+              Mensagem
+            </Label>
+            <div className="flex items-end">
+              <BotaoAnexar anexos={anexos} />
+              <Textarea
+                id="mensagem"
+                rows={1}
+                maxLength={1000}
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                onKeyDown={(e) => enviarComEnter(e, vazio)}
+                placeholder="Escreva sua dúvida"
+                className="max-h-52 min-h-11 flex-1 resize-none border-0 px-1 py-2.5"
+              />
+              <Button type="submit" className="h-11 shrink-0" disabled={vazio}>
+                {pendente && <Spinner />}
+                Enviar
+              </Button>
+            </div>
           </div>
           {(anexos.foco || anexos.escolhidos.length > 0) && <p className="m-0 px-3 text-xs text-muted-foreground">{AjudaDosAnexos}</p>}
         </form>

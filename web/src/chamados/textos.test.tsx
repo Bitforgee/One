@@ -23,7 +23,7 @@ const Detalhe = [
   'Dados do aluno',
   'Resumo gerado por IA',
   'Ações',
-  'Conversa com o assistente',
+  'Conversa com o assistente · 2 mensagens',
   '“mínima de 300 horas”',
   'Abrir o PDF (versão 2)',
   'Este documento foi atualizado depois desta resposta.',
@@ -51,7 +51,7 @@ const Detalhe = [
   'Marcar',
   'Não resolveu? Explique o motivo',
   'Rejeitar resolução',
-  'Histórico',
+  'Eventos',
   'Encaminhar para outro setor?',
   'O chamado volta para a fila do setor escolhido, sem responsável. O motivo fica como nota interna.',
   'Setor',
@@ -125,6 +125,7 @@ describe('textos', () => {
     // equipe com todas as ações, as fontes atualizadas, a nota interna com anexo e as prontas
     montada = detalhe(daEquipe, undefined, { 'GET /api/respostas-prontas?setorId=5': () => [200, [{ id: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]] })
     await screen.findByLabelText('Resposta pronta')
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     expect(screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')).toHaveAttribute('placeholder', 'ONE-123')
     t.conferir(tela(), [...ValoresDaEquipe, 'Boleto pronto'])
 

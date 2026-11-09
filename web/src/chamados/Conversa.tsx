@@ -1,9 +1,12 @@
-import { BookText, FileText } from 'lucide-react'
+import { BookText, ChevronRight, FileText } from 'lucide-react'
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { Balao, Quebravel } from '../Balao'
 import { frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { LinkDeAnexo } from '../LinkDeAnexo'
 import { Links, separarLinks } from '../LinksDaResposta'
+import { Marca } from '../Marca'
+import { Button } from '../ui/button'
 import { responsavel, SeloDoChamado } from './Chamados'
 
 export function Cabecalho({ c }: { c: Chamado }) {
@@ -63,22 +66,34 @@ function FonteCitada({ f }: { f: Fonte }) {
 }
 
 // A liderança não recebe a conversa (transcricao: []): sem ela o bloco inteiro some, com o título.
+// Recolhida por padrão: a conversa longa com o assistente não empurra o atendimento para baixo.
 export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
+  const [aberta, setAberta] = useState(false)
   if (c.transcricao.length === 0) return null
+  const n = c.transcricao.length
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="font-semibold">Conversa com o assistente</h2>
-      {c.transcricao.map((m, i) => {
-        // como no chat do aluno: os links do assistente viram botões abaixo do texto (AC 46)
-        const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
-        return (
-          <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.criadaEm} fuso={fuso}>
-            {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
-            {links.length > 0 && <Links links={links} />}
-            {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
-          </Balao>
-        )
-      })}
+      <h2 className="m-0">
+        <button type="button" aria-expanded={aberta} aria-controls="transcricao" onClick={() => setAberta((a) => !a)} className="flex min-h-11 w-full items-center gap-2 rounded-xs text-start font-semibold hover:bg-accent">
+          <ChevronRight aria-hidden="true" className={`size-4 shrink-0 transition-transform ${aberta ? 'rotate-90' : ''}`} />
+          {`Conversa com o assistente · ${n} ${n === 1 ? 'mensagem' : 'mensagens'}`}
+        </button>
+      </h2>
+      {aberta && (
+        <div id="transcricao" className="flex flex-col gap-2">
+          {c.transcricao.map((m, i) => {
+            // como no chat do aluno: os links do assistente viram botões abaixo do texto (AC 46)
+            const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
+            return (
+              <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.criadaEm} fuso={fuso}>
+                {m.anexos?.map((x) => <LinkDeAnexo key={x.id} href={`/api/conversas/anexos/${x.id}`} nome={x.nome} tamanho={x.tamanho} />)}
+                {links.length > 0 && <Links links={links} />}
+                {m.fontes?.map((f) => <FonteCitada key={`${f.tipo}-${f.versaoArtigoId}-${f.versaoDocumentoId}`} f={f} />)}
+              </Balao>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }
@@ -91,29 +106,56 @@ function Mensagem({ m, fuso }: { m: MensagemChamado; fuso: string }) {
   )
 }
 
-export function Mensagens({ mensagens, fuso }: { mensagens: MensagemChamado[]; fuso: string }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h2 className="font-semibold">Atendimento</h2>
-      {mensagens.length === 0 && <p className="mb-0 text-sm text-muted-foreground">Nenhuma resposta ainda.</p>}
-      {mensagens.map((m) => (
-        <Mensagem key={m.id} m={m} fuso={fuso} />
-      ))}
-    </section>
-  )
+type Item = { chave: string; em: string; evento?: Evento; mensagem?: MensagemChamado }
+
+// Mensagens e eventos numa só sequência, do mais antigo ao mais novo; no mesmo instante o evento vem antes da mensagem.
+function sequencia(mensagens: MensagemChamado[], eventos: Evento[] | null, comEventos: boolean): Item[] {
+  const itens: Item[] = mensagens.map((m) => ({ chave: `m${m.id}`, em: m.criadaEm, mensagem: m }))
+  if (comEventos) eventos?.forEach((e, i) => itens.push({ chave: `e${i}`, em: e.criadoEm, evento: e }))
+  return itens.sort((a, b) => Date.parse(a.em) - Date.parse(b.em) || Number(!!b.evento) - Number(!!a.evento))
 }
 
-export function Historico({ eventos, fuso }: { eventos: Evento[] | null; fuso: string }) {
-  if (!eventos) return null
+// "Ir para o mais recente" só aparece quando a sequência passa de uma tela.
+function useMaisQueUmaTela(lista: RefObject<HTMLOListElement | null>, n: number) {
+  const [longa, setLonga] = useState(false)
+  useLayoutEffect(() => {
+    const medir = () => setLonga((lista.current?.offsetHeight ?? 0) > window.innerHeight)
+    medir()
+    window.addEventListener('resize', medir)
+    return () => window.removeEventListener('resize', medir)
+  }, [lista, n])
+  return longa
+}
+
+export function LinhaDoTempo({ mensagens, eventos, fuso }: { mensagens: MensagemChamado[]; eventos: Evento[] | null; fuso: string }) {
+  const [comEventos, setComEventos] = useState(true)
+  const lista = useRef<HTMLOListElement>(null)
+  const itens = sequencia(mensagens, eventos, comEventos)
+  const longa = useMaisQueUmaTela(lista, itens.length)
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="m-0 text-base font-semibold">Histórico</h2>
-      <ol className="mb-0 divide-y ps-0 text-sm" data-testid="eventos">
-        {eventos.map((e, i) => (
-          <li key={i} className="py-1 break-words">
-            <span className="text-muted-foreground">{formatarData(e.criadoEm, fuso)}</span> · {frase(e)}
-          </li>
-        ))}
+    <section className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
+      <h2 className="font-semibold">Atendimento</h2>
+      <div className="flex flex-wrap items-center justify-end gap-x-4">
+        {eventos && <Marca id="eventos" rotulo="Eventos" marcado={comEventos} mudar={setComEventos} />}
+        {longa && (
+          <Button type="button" size="sm" variant="outline" onClick={() => lista.current?.lastElementChild?.scrollIntoView({ block: 'end' })}>
+            Ir para o mais recente
+          </Button>
+        )}
+      </div>
+      {itens.length === 0 && <p className="col-span-2 mb-0 text-sm text-muted-foreground">Nenhuma resposta ainda.</p>}
+      <ol ref={lista} className="col-span-2 m-0 flex list-none flex-col gap-2 p-0" data-testid="linha-do-tempo">
+        {itens.map((i) =>
+          i.evento ? (
+            <li key={i.chave} className="scroll-mb-[52dvh] py-1 text-center text-xs break-words text-muted-foreground">
+              <time dateTime={i.evento.criadoEm} className="text-muted-foreground">{formatarData(i.evento.criadoEm, fuso)}</time> · {frase(i.evento)}
+            </li>
+          ) : (
+            <li key={i.chave} className="flex scroll-mb-[52dvh] flex-col">
+              <Mensagem m={i.mensagem!} fuso={fuso} />
+            </li>
+          ),
+        )}
       </ol>
     </section>
   )

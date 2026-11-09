@@ -65,10 +65,11 @@ describe('chamado', () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/chamados/ONE-1')
 
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     expect(await screen.findByText('O boleto fica no portal.')).toBeInTheDocument()
     expect(screen.queryByText('Resumo gerado por IA')).not.toBeInTheDocument()
     expect(screen.queryByText('Histórico')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('eventos')).not.toBeInTheDocument() // historico-legivel C7: nem a lista
+    expect(within(screen.getByTestId('linha-do-tempo')).queryAllByRole('listitem')).toHaveLength(0) // historico-legivel C7: nenhum evento na sequência do aluno
     expect(screen.getByRole('button', { name: 'Cancelar solicitação' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Resolver' })).not.toBeInTheDocument()
   })
@@ -90,6 +91,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     const antiga = (await screen.findByText('Resposta antiga.')).closest('.is-user, .is-assistant') as HTMLElement
     const nova = screen.getByText('Resposta nova.').closest('.is-user, .is-assistant') as HTMLElement
     expect(within(antiga).getByText('Boleto (versão 1)')).toBeInTheDocument()
@@ -115,6 +117,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     const balao = (await screen.findByText('esse boleto está certo?')).closest('.is-user, .is-assistant') as HTMLElement
     expect(within(balao).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
       ['boleto.png', '/api/conversas/anexos/41'],
@@ -148,6 +151,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     const resposta = (await screen.findByText('O estágio exige 300 horas.')).closest('.is-user, .is-assistant') as HTMLElement
     const doc = within(resposta).getByText('Regulamento de estágio').closest('div.border-t') as HTMLElement
     expect(within(doc).getByRole('img', { name: 'Documento' })).toHaveClass('lucide-file-text')
@@ -173,6 +177,7 @@ describe('chamado', () => {
       ],
     })
     abrir('/univag/chamados/ONE-1')
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     const resposta = (await screen.findByText('Veja o portal.')).closest('.is-user, .is-assistant') as HTMLElement
     const citacao = resposta.querySelector('blockquote')!
     expect(citacao.textContent).toBe(`“${Trecho}”`)
@@ -206,6 +211,7 @@ describe('chamado', () => {
       'GET /api/chamados/ONE-1': () => [
         200,
         daEquipe({
+          mensagens: [],
           eventos: [
             evento('CRIACAO', 'Sistema', '2026-11-02T03:30:00Z', null, 'ABERTO'),
             evento('ATRIBUICAO', 'Carla', '2026-11-02T12:00:00Z', null, 'Carla'),
@@ -216,7 +222,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    const lis = within(await screen.findByTestId('eventos')).getAllByRole('listitem')
+    const lis = within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem')
     // America/Cuiaba é UTC-4: 03:30Z ainda é dia 1º
     expect(lis.map((li) => li.textContent)).toEqual([
       '01/11/2026 23:30 · Sistema abriu a solicitação',
@@ -229,9 +235,9 @@ describe('chamado', () => {
   // historico-legivel: monta o detalhe da equipe com estes eventos e devolve o texto de cada item do Histórico
   async function historico(eventos: { tipo: string; ator?: string; doAluno?: boolean; de?: string | null; para?: string | null; detalhe?: string | null }[]) {
     const completos = eventos.map((e) => ({ ator: 'Carla', doAluno: false, de: null, para: null, detalhe: null, criadoEm: '2026-11-02T12:00:00Z', ...e }))
-    api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe({ eventos: completos })] })
+    api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe({ mensagens: [], eventos: completos })] })
     abrir('/univag/chamados/ONE-1')
-    return within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
+    return within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
   }
 
   // historico-legivel C1, C2 (AC 1, AC 2): as 10 linhas de ## Screens (11 casos)
@@ -293,7 +299,7 @@ describe('chamado', () => {
     aberta.unmount()
 
     abrir('/univag/chamados/ONE-2')
-    await screen.findByText('Histórico')
+    await screen.findByText('Atendimento')
     expect(screen.queryByText(/^Etapa \d+ de \d+/)).not.toBeInTheDocument()
   })
   // fluxos-atendimento C79 (AC 60): a liderança recebe transcricao [] e matricula.numero null

@@ -157,6 +157,7 @@ describe('conversa do chamado', () => {
         ],
       }),
     )
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     expect((await screen.findByText('quantas horas?')).closest('.is-user, .is-assistant')).toHaveClass('ms-auto')
     const resposta = screen.getByText('São 300 horas.').closest('.is-user, .is-assistant') as HTMLElement
     expect(resposta).toHaveClass('me-auto')
@@ -166,8 +167,8 @@ describe('conversa do chamado', () => {
   // historico-legivel C2 (AC 2): substitui "histórico só mostra a seta quando o evento tem origem ou destino" (formato cru)
   it('estado nulo no histórico sai como travessão', async () => {
     const evento = (tipo: string, de: string | null, para: string | null) => ({ tipo, ator: 'Carla', doAluno: false, de, para, detalhe: null, criadoEm: '2026-11-02T12:00:00Z' })
-    detalhe(chamado({ eventos: [evento('NOTA', null, null), evento('TRANSICAO', 'EM_ATENDIMENTO', null)] }))
-    const itens = within(await screen.findByTestId('eventos')).getAllByRole('listitem').map((li) => li.textContent)
+    detalhe(chamado({ mensagens: [], eventos: [evento('NOTA', null, null), evento('TRANSICAO', 'EM_ATENDIMENTO', null)] }))
+    const itens = within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem').map((li) => li.textContent)
     expect(itens).toEqual(['02/11/2026 08:00 · Carla escreveu uma nota interna', '02/11/2026 08:00 · Carla mudou o estado de Em atendimento para —'])
   })
 })

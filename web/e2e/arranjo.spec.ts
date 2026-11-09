@@ -167,13 +167,10 @@ test.describe('Detalhe do chamado', () => {
   test('detalhe em duas colunas', async ({ page }) => {
     await abrirDetalhe(page, 1440)
     const acoes = await caixa(cartaoAcoes(page))
-    const historico = await caixa(page.locator('section').filter({ has: page.getByRole('heading', { name: 'Histórico' }) }))
     const titulo = await caixa(page.getByRole('heading', { level: 2 }).first())
     const resposta = await caixa(page.getByLabel('Responder'))
     expect(Math.abs(acoes.width - 320)).toBeLessThanOrEqual(1)
-    expect(Math.abs(historico.width - 320)).toBeLessThanOrEqual(1)
     expect(acoes.x).toBeGreaterThanOrEqual(Math.max(titulo.x + titulo.width, resposta.x + resposta.width) - 1)
-    expect(historico.y).toBeGreaterThanOrEqual(acoes.y + acoes.height - 1)
     await expect(cartaoAcoes(page).getByRole('button', { name: 'Assumir' })).toBeVisible()
   })
 
@@ -186,7 +183,6 @@ test.describe('Detalhe do chamado', () => {
         page.getByRole('heading', { name: 'Atendimento' }),
         page.getByLabel('Responder'),
         ...(largura < 1024 ? [] : [cartaoAcoes(page)]), // abaixo de 1024 px as ações vão para o Sheet (AC 8)
-        page.getByRole('heading', { name: 'Histórico' }),
       ]
       const ys = []
       for (const t of topos) ys.push((await caixa(t)).y)
@@ -198,6 +194,7 @@ test.describe('Detalhe do chamado', () => {
     await simularApi(page)
     await page.goto('/univag/chamados/ONE-123')
     await page.getByText('Resumo gerado por IA').waitFor()
+    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click() // a conversa vem recolhida (chat-linha-do-tempo C17)
 
     const titulo = await caixa(page.getByRole('heading', { level: 1 }))
     expect(titulo.x).toBeGreaterThanOrEqual(0)
@@ -541,6 +538,7 @@ test.describe('arranjo restante', () => {
     await simularApi(page)
     await page.goto('/univag/chamados/ONE-123')
     await page.getByText('Resumo gerado por IA').waitFor()
+    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click() // a conversa vem recolhida (chat-linha-do-tempo C17)
     const equipe = page.getByText('Resumo gerado por IA', { exact: true }).locator('..') // o bloco tingido do resumo, já sem ser cartão (AC 17)
     expect(await equipe.count()).toBe(1)
     const conversa = await caixa(page.locator('.is-user').first())
@@ -735,6 +733,7 @@ test.describe('redesign institucional', () => {
     await simularApi(page)
     await page.goto('/univag/chamados/ONE-123')
     await page.getByText('Resumo gerado por IA').waitFor()
+    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click() // a conversa vem recolhida (chat-linha-do-tempo C17)
     expect(await page.locator('.is-user .whitespace-pre-wrap').first().evaluate((e) => getComputedStyle(e).lineHeight), 'leading-relaxed').toBe('26px')
     await page.getByRole('button', { name: 'Tema' }).click()
     const popover = page.locator('[data-slot=popover-content]')

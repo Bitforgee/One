@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { Spinner } from '../ui/spinner'
 import { Textarea } from '../ui/textarea'
 import { Carregando } from './Chamados'
-import { Cabecalho, Historico, Mensagens, Transcricao } from './Conversa'
+import { Cabecalho, LinhaDoTempo, Transcricao } from './Conversa'
 
 type Executar = (caminho: string, corpo: unknown, depois?: () => void) => void
 type Acoes = { pode: (acao: string) => boolean; executar: Executar; pendente: boolean }
@@ -111,7 +111,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   }
 
   return (
-    <form onSubmit={responder} className="flex flex-col gap-2 rounded-md bg-muted p-4 form-resposta">
+    <form onSubmit={responder} className="flex flex-col gap-2 rounded-md bg-muted p-4 form-resposta lg:sticky lg:bottom-0 lg:z-10 lg:max-h-[50dvh] lg:overflow-y-auto">
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
       <Textarea id="resposta" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
@@ -409,7 +409,7 @@ function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChama
 // Só o aluno, dono do chamado, tem as ações no fim da página.
 const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('confirmar') || pode('rejeitar') || pode('cancelar'))
 
-// A coluna da equipe: o erro da ação, o cartão (ou a barra e o Sheet) de ações e o histórico.
+// A coluna da equipe: a etapa, o erro da ação e o cartão (ou a barra e o Sheet) de ações; o histórico vive na linha do tempo.
 function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-8 @5xl/main:sticky @5xl/main:top-4 @5xl/main:-m-1 @5xl/main:max-h-[calc(100dvh-2rem)] @5xl/main:self-start @5xl/main:overflow-y-auto @5xl/main:p-1">
@@ -422,7 +422,6 @@ function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: 
       <CaixaDeAcoes barra={barra} folha={folha} setFolha={setFolha} erro={erro} tem={tem}>
         {painel}
       </CaixaDeAcoes>
-      <Historico eventos={c.eventos} fuso={fuso} />
     </div>
   )
 }
@@ -462,7 +461,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
       <div className="flex min-w-0 flex-col gap-8">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
-        <Mensagens mensagens={c.mensagens} fuso={fuso} />
+        <LinhaDoTempo mensagens={c.mensagens} eventos={c.eventos} fuso={fuso} />
         {decisao && acoesDoAluno}
         <Responder c={c} equipe={equipe} {...acoes} />
         {!decisao && acoesDoAluno}

@@ -184,6 +184,7 @@ describe('conversa com o assistente vista pela equipe', () => {
     })
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, c] })
     abrir('/univag/chamados/ONE-1')
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     const link = await screen.findByRole('link', { name: /portal\.univag\.edu\.br\/financeiro\/boletos\/segunda-via/ })
     expect(link).toHaveAttribute('href', url)
     expect(link.closest('[data-slot=button]')).not.toBeNull()

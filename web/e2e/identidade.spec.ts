@@ -681,7 +681,9 @@ test('perguntas em linhas de 48 px com ícone e seta', async ({ page }) => {
       await em(page, largura, '/univag/assistente', esperaAssistente, { aparencia })
       const rotulo = `${largura} ${aparencia === semAparencia ? 'sem' : 'com'} aparência`
       const linhas = perguntas.map((p) => page.getByRole('button', { name: p, exact: true }))
-      const caixas = []
+      // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
+    await page.evaluate(() => window.scrollTo(0, 1e6))
+    const caixas = []
       for (const l of linhas) {
         await expect(l, `${rotulo}: linha`).toHaveCount(1)
         caixas.push(await caixa(l))
@@ -913,26 +915,14 @@ const respostaForm = (p: Page) => p.locator('form:has(#resposta)')
 const blocoDe = (p: Page, titulo: string) => p.getByRole('heading', { level: 2, name: titulo, exact: true }).locator('..')
 
 // C33
-test('Dados do aluno e Histórico sem caixa e com título', async ({ page }) => {
+test('Dados do aluno sem caixa e com título', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/chamados/ONE-123', esperaDetalhe)
-    for (const titulo of ['Dados do aluno', 'Histórico']) {
+    for (const titulo of ['Dados do aluno']) {
       const h = page.getByRole('heading', { level: 2, name: titulo, exact: true })
       await expect(h, `${largura}: ${titulo}`).toHaveCount(1)
       perto((await caixa(h)).y, (await caixa(blocoDe(page, titulo))).y, `${largura}: ${titulo} no topo do bloco`)
     }
-    const historico = blocoDe(page, 'Histórico')
-    expect(await historico.evaluate((e) => e.closest('[data-slot=card]') === null), `${largura}: Histórico fora de cartão`).toBe(true)
-    const cadeia = await cadeiaAteAColuna(historico)
-    expect(cadeia.length, `${largura}: cadeia do Histórico`).toBeGreaterThan(0)
-    for (const c of cadeia) {
-      expect(c.bordas, `${largura}: sem borda`).toEqual([0, 0, 0, 0])
-      expect(c.transparente, `${largura}: sem fundo`).toBe(true)
-    }
-    const anterior = largura >= 1024 ? page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) }) : respostaForm(page)
-    await expect(anterior, `${largura}: bloco anterior`).toHaveCount(1)
-    const [h, a] = [await caixa(historico), await caixa(anterior)]
-    perto(h.y - (a.y + a.height), 32, `${largura}: 32 px depois do bloco anterior`)
   }
 })
 
@@ -957,8 +947,10 @@ test('detalhe sem caixa e com fundo tingido só no que pede ação', async ({ pa
       expect(transparente, `${largura}: ${nome} com fundo`).toBe(false)
       expect(await page.evaluate((c) => window.__ux.pintar(['#fff', c]), fundo), `${largura}: ${nome} tingido`).not.toEqual(fundoDaPagina)
     }
+    // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
+    await page.evaluate(() => window.scrollTo(0, 1e6))
     const caixas = []
-    for (const b of [dados, resumo, blocoDe(page, 'Conversa com o assistente'), blocoDe(page, 'Atendimento'), respostaForm(page)]) {
+    for (const b of [dados, resumo, page.getByRole('heading', { level: 2, name: /^Conversa com o assistente/ }).locator('..'), blocoDe(page, 'Atendimento'), respostaForm(page)]) {
       await expect(b).toHaveCount(1)
       caixas.push(await caixa(b))
     }
@@ -1041,6 +1033,8 @@ test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
     const nomes = ['cpf', 'nome', 'email', 'matricula', 'curso', 'semestre', 'situacao']
     const textos = planilha.locator('text')
     await expect(textos).toHaveText(nomes)
+    // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
+    await page.evaluate(() => window.scrollTo(0, 1e6))
     const caixas = []
     for (const [i, nome] of nomes.entries()) {
       await expect(textos.nth(i), `${largura}: ${nome}`).toBeVisible()
