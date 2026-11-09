@@ -33,21 +33,18 @@ const LimiteDoAluno = 10
 const AvisoLideranca =
   'Sua dúvida vai primeiro para a liderança do seu semestre, formada por estudantes da sua turma. A liderança vê seu nome, curso, semestre e um resumo da dúvida. A conversa com o assistente e os anexos dela não são mostrados.'
 
-// No limite de mensagens, depois de um sem_base ou de um "Não", o atendente vira o botão principal.
 function situacao(mensagens: Mensagem[], explicar: boolean) {
   const ultima = mensagens.at(-1)
   const noLimite = mensagens.filter((m) => m.autor === 'ALUNO').length >= LimiteDoAluno
   return { ultima: ultima?.tipo, noLimite, destaque: explicar || ultima?.tipo === 'sem_base' || noLimite }
 }
 
-// Sem conversa, o aluno descreve o pedido; com mais de uma matrícula ativa, escolhe qual (AC 66).
 function podeConfirmar(confirmar: Confirmar | undefined, conversaId: number | undefined, descricao: string, ativas: number, matriculaId: string) {
   if (confirmar === 'encerrar') return true
   const pedido = conversaId !== undefined || (descricao.trim().length > 0 && descricao.length <= 2000)
   return pedido && (ativas <= 1 || matriculaId !== '')
 }
 
-// Com arquivos a mensagem vai em multipart ("mensagem" e "anexos"); sem eles, em JSON como sempre.
 function corpoDaMensagem(mensagem: string, arquivos: File[]) {
   if (arquivos.length === 0) return { mensagem }
   const form = new FormData()
@@ -56,14 +53,11 @@ function corpoDaMensagem(mensagem: string, arquivos: File[]) {
   return form
 }
 
-// A primeira mensagem abre a conversa; as seguintes vão para ela.
 function perguntar(conversaId: number | undefined, mensagem: string, arquivos: File[]) {
   const url = conversaId === undefined ? '/api/conversas' : `/api/conversas/${conversaId}/mensagens`
   return api<{ conversaId?: number; resposta: Resposta }>(url, corpoDaMensagem(mensagem, arquivos))
 }
 
-// A prévia do destino: se o fluxo da instituição leva a dúvida primeiro à liderança. Só depois de a matrícula estar escolhida, e de novo ao trocá-la.
-// Quem decide é o fluxo, nunca o aluno; se a leitura falha, o envio espera: nenhum dado vai a um colega sem o aviso.
 function useLideranca(aberto: boolean, conversaId: number | undefined, ativas: Matricula[], matriculaId: string) {
   const escolhendo = ativas.length > 1
   const { data, isError } = useQuery({
@@ -79,9 +73,6 @@ function useLideranca(aberto: boolean, conversaId: number | undefined, ativas: M
 type Envio = { mensagem: string; reenvio?: boolean }
 type Efeitos = { adicionar: (novas: Mensagem[]) => void; abrirConversa: (id: number) => void; limparTexto: () => void; zerarAvaliacao: () => void; enviou: () => void }
 
-// Sem arquivos o balão do aluno entra antes da resposta (e fica, se a API falhar). Com arquivos, só depois do sucesso:
-// o texto e os selos ficam onde estão para o aluno tentar de novo, e os links precisam dos ids que a API gravou.
-// No reenvio de um envio sem arquivos o balão do aluno já está na conversa: não entra de novo.
 async function enviarMensagem({ mensagem, reenvio }: Envio, arquivos: File[], conversaId: number | undefined, efeitos: Efeitos) {
   const agora = () => new Date().toISOString()
   if (arquivos.length === 0) {
@@ -99,7 +90,6 @@ async function enviarMensagem({ mensagem, reenvio }: Envio, arquivos: File[], co
   }
 }
 
-// A resposta do envio não traz os ids dos anexos: eles vêm da conversa, na última mensagem do aluno.
 async function anexosDaUltima(conversaId: number): Promise<Anexo[]> {
   try {
     const { mensagens } = await api<{ mensagens: { autor: string; anexos: Anexo[] }[] }>(`/api/conversas/${conversaId}`)
@@ -109,7 +99,6 @@ async function anexosDaUltima(conversaId: number): Promise<Anexo[]> {
   }
 }
 
-// Com conversa, transfere a conversa; sem ela, abre o atendimento direto com a descrição.
 function transferir(conversaId: number | undefined, descricao: string, matriculaId: number | undefined) {
   const escolha = { matriculaId }
   return conversaId === undefined
@@ -120,10 +109,8 @@ function transferir(conversaId: number | undefined, descricao: string, matricula
 function Conversa({ mensagens, fuso, digitando, foto, depois }: { mensagens: Mensagem[]; fuso: string; digitando: boolean; foto?: { src: string; alt: string }; depois: ReactNode }) {
   return (
     <Conversation className="overflow-y-visible">
-      {/* sem a calha de rolagem que o use-stick-to-bottom reserva: o log cresce com a página, e os balões encostam nas bordas */}
       <ConversationContent className="gap-2 px-0 py-2" scrollClassName="[scrollbar-gutter:auto]!">
         {mensagens.map((m, i) => {
-          // no assistente os links viram botões abaixo do texto; a mensagem do aluno fica como ele escreveu
           const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
           return (
             <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.em} fuso={fuso} foto={m.autor === 'ASSISTENTE' ? foto : undefined}>
@@ -147,7 +134,6 @@ function Conversa({ mensagens, fuso, digitando, foto, depois }: { mensagens: Men
 
 type Seguimento = { ultima?: Tipo; desfecho: string | null; explicar: boolean; transferir: () => void }
 
-// Depois da última resposta: o convite para explicar melhor (até a transferência) e a confirmação da transferência.
 function Seguimento({ ultima, desfecho, explicar, transferir }: Seguimento) {
   return (
     <>
@@ -161,10 +147,8 @@ function Seguimento({ ultima, desfecho, explicar, transferir }: Seguimento) {
   )
 }
 
-// A avaliação só vale para uma resposta ainda não avaliada, sem desfecho e sem erro de envio.
 const avaliavel = (ultima: Tipo | undefined, avaliada: boolean | undefined, desfecho: string | null, erro: Error | null) => ultima === 'resposta' && !avaliada && !desfecho && !erro
 
-// "Isso resolveu?" logo abaixo da última resposta, no fluxo da conversa.
 function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void; pendente: boolean }) {
   return (
     <div className="flex items-center gap-2">
@@ -179,7 +163,6 @@ function Avaliacao({ avaliar, pendente }: { avaliar: (resolveu: boolean) => void
   )
 }
 
-// A foto do assistente (AC 41), com o nome como `alt`; sem foto, nada.
 const fotoDoAssistente = (slug: string | undefined, ap: InstituicaoPublica) =>
   slug && ap.imagens.assistente ? { src: urlDaImagem(slug, 'assistente', ap.imagens.assistente), alt: ap.assistente.nome ?? 'Assistente' } : undefined
 
@@ -187,7 +170,6 @@ const FraseBase = 'Respostas com base nas normas da instituição.'
 const PerguntasPadrao = ['Como emito o boleto do semestre?', 'Posso abonar falta com atestado?']
 const EmAberto = ['ABERTO', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO']
 
-// A solicitação do aluno ainda em andamento (a mais recente), antes das perguntas; se a leitura falha, não há linha nem alerta (identidade-visual AC 10).
 function SolicitacaoEmAberto() {
   const { slug } = useParams()
   const { data } = useQuery({ queryKey: ['/api/chamados?escopo=meus'], queryFn: () => api<{ numero: string; estado: string; criadoEm: string }[]>('/api/chamados?escopo=meus') })
@@ -201,7 +183,6 @@ function SolicitacaoEmAberto() {
   )
 }
 
-// As perguntas sugeridas: linhas de 48 px com divisória, o ícone à esquerda e a seta à direita.
 function Perguntas({ perguntas, perguntar, pendente }: { perguntas: string[]; perguntar: (p: string) => void; pendente: boolean }) {
   return (
     <ul className="m-0 flex w-full list-none flex-col p-0">
@@ -218,7 +199,6 @@ function Perguntas({ perguntas, perguntar, pendente }: { perguntas: string[]; pe
   )
 }
 
-// Sem conversa: o título da instituição, a frase, quem é o assistente, a solicitação em aberto e as perguntas para começar.
 function BoasVindas({ ap, foto, perguntar, pendente }: { ap: InstituicaoPublica; foto?: { src: string; alt: string }; perguntar: (p: string) => void; pendente: boolean }) {
   const perguntas = ap.assistente.perguntas.length ? ap.assistente.perguntas : PerguntasPadrao
   return (
@@ -235,7 +215,6 @@ function BoasVindas({ ap, foto, perguntar, pendente }: { ap: InstituicaoPublica;
   )
 }
 
-// Depois da transferência: o bloco com o número, o setor e para onde a resposta chega; as respostas públicas do atendente aparecem abaixo, relidas a cada 15 s.
 function Transferido({ transferido, fuso, contato }: { transferido: Transferencia; fuso: string; contato: InstituicaoPublica['contato'] }) {
   const { slug } = useParams()
   const { chamado } = useChamado(transferido.numero)
@@ -265,7 +244,6 @@ function Transferido({ transferido, fuso, contato }: { transferido: Transferenci
   )
 }
 
-// Enter envia e Shift+Enter quebra a linha; durante a composição de acentos (IME) o Enter é do teclado
 function enviarComEnter(e: KeyboardEvent<HTMLTextAreaElement>, vazio: boolean) {
   if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
   e.preventDefault()
@@ -284,10 +262,8 @@ type EntradaProps = {
   anexos: Anexos
 }
 
-// "Falar com atendente" e "Encerrar" ficam na mesma linha, acima do campo; o campo cresce com o texto e o "Enviar" vem escrito.
 function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConversa, confirmar, anexos }: EntradaProps) {
   const vazio = pendente || !texto.trim()
-  // type="button": dentro do form, o padrão "submit" enviaria a mensagem
   const atendente = (
     <Button type="button" size="sm" variant={destaque ? 'default' : 'outline'} onClick={() => confirmar('atendente')}>
       <Hand aria-hidden="true" />
@@ -307,7 +283,6 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
       </div>
       {!noLimite && (
         <form onSubmit={enviar} className="flex flex-col gap-1">
-          {/* uma caixa só: selos, clipe, campo e "Enviar" dentro dela; os botões de ação e a ajuda ficam fora, na mesma borda */}
           <div data-testid="compositor" className="flex flex-col overflow-hidden rounded-sm border border-input bg-background focus-within:border-ring">
             <Selos anexos={anexos} />
             <Label htmlFor="mensagem" className="sr-only">
@@ -421,7 +396,6 @@ function Erro({ erro }: { erro: Error | null }) {
   )
 }
 
-// O erro do envio fica no lugar da resposta, com o botão que reenvia a mesma mensagem.
 function FalhaDoEnvio({ erro, reenviar }: { erro: Error; reenviar: () => void }) {
   return (
     <Alert variant="destructive">
@@ -491,7 +465,6 @@ export function Assistente() {
     acao.mutate(async () => {
       if (qual === 'encerrar') setDesfecho((await api<{ desfecho: string }>(`/api/conversas/${conversaId}/encerrar`, {})).desfecho)
       else {
-        // AC 66: com mais de uma matrícula ativa, o aluno escolhe qual
         setTransferido(await transferir(conversaId, descricao, ativas.length > 1 ? Number(matriculaId) : undefined))
         setDesfecho('TRANSFERIDA')
       }
@@ -504,7 +477,6 @@ export function Assistente() {
   }
 
   return (
-    // a tela tem pelo menos a altura da janela (menos o cabeçalho de 49 px e o recuo de cima do main), para o compositor ficar no fundo mesmo sem conversa
     <div className="mx-auto -mb-4 flex min-h-[calc(100svh-49px-1rem-var(--barra,0px))] w-full max-w-3xl flex-col md:-mb-6 md:min-h-[calc(100svh-49px-1.5rem)]">
       <p className="my-2 flex gap-2 text-xs text-muted-foreground">
         <ShieldAlert aria-hidden="true" className="size-3.5 shrink-0" />

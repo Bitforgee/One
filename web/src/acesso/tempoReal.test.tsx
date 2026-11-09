@@ -9,7 +9,6 @@ async function entrar() {
   await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 }
 
-// tempo-real-signalr C42 (AC 24): a conexão acompanha a sessão; a conexão é a falsa do setup.ts.
 describe('tempo real: sessão', () => {
   it('sair encerra a conexão e entrar abre uma nova', async () => {
     api({

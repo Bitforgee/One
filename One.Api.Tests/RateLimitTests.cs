@@ -5,7 +5,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// Cada teste usa um host próprio com os limites reais, para uma janela não contaminar a outra.
 public class RateLimitTests : IAsyncLifetime
 {
     readonly OneFactoryComLimites f = new();

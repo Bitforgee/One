@@ -19,7 +19,6 @@ public sealed record EnviarImagemInstituicao(string Tipo, IFormCollection Form) 
 
     public static long Limite(string tipo) => tipo == TiposDeImagem.Login ? 3 * UmMb : UmMb;
 
-    // Largura e altura vêm do chunk IHDR, logo depois da assinatura de 8 bytes (big-endian, offsets 16 e 20).
     public static bool IconeAceito(byte[] png)
     {
         if (png.Length < 24) return false;
@@ -43,7 +42,6 @@ public sealed class EnviarImagemInstituicaoHandler(OneDb db, Armazenamento armaz
         if (lido is null) return recusa!;
         if (icone && !EnviarImagemInstituicao.IconeAceito(lido.Bytes)) return Problemas.Invalido(EnviarImagemInstituicao.IconeInvalido, "arquivo");
 
-        // o objeto só é gravado depois de toda recusa; com o MinIO fora, o 503 sai daqui e a linha fica como estava
         var chave = Armazenamento.NovaChave(db.InstituicaoAtual!.Value, "aparencia");
         await armazenamento.Gravar(chave, lido.Bytes);
         var imagem = await db.ImagensInstituicao.FirstOrDefaultAsync(x => x.Tipo == tipo, ct);

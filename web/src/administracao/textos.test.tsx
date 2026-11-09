@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, escolher, me, type Rota } from '../test/util'
 
-// Linhas 13, 14 e 15 de ## Screens (Usuários, Matrículas, Cadastros); nomes, CPF, números e arquivos vêm do fixture.
 const Usuarios = [
   'Usuários', 'Novo', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.',
   'Novo usuário', 'Editar usuário', 'Nome', 'E-mail', 'Papéis', 'Setores do atendente', 'Senha temporária (opcional)',
@@ -50,7 +49,6 @@ describe('textos', () => {
     const fixture = ['Carla', 'Bia', 'Davi', ...Fixture, '000.000.000-01', '000.000.000-02', '000.000.000-03', 'carla@univag.edu.br', 'bia@univag.edu.br', 'davi@univag.edu.br']
     const leituras = (usuarios: unknown[]) => ({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, usuarios], 'GET /api/admin/setores': () => [200, setores] }) as Record<string, Rota>
 
-    // carregando: só os 3 esqueletos
     api({ ...leituras([]), 'GET /api/admin/usuarios': () => new Promise(() => {}) })
     let montada = abrir('/univag/usuarios')
     await screen.findByRole('main')
@@ -58,14 +56,12 @@ describe('textos', () => {
     t.conferir(tela())
     montada.unmount()
 
-    // vazia
     api(leituras([]))
     montada = abrir('/univag/usuarios')
     await screen.findByText('Cadastre a equipe ou importe as matrículas.')
     t.conferir(tela())
     montada.unmount()
 
-    // lista com um desativado e os 3 papéis
     api({
       ...leituras([usuario(1, 'Carla', ['ATENDENTE', 'ADMINISTRADOR'], true, [2]), usuario(2, 'Bia', ['ALUNO'], false), usuario(3, 'Davi', ['ALUNO'], true)]),
       'PUT /api/admin/usuarios/1': () => [200, {}],
@@ -75,7 +71,6 @@ describe('textos', () => {
     await screen.findByText('Carla')
     t.conferir(tela(), fixture)
 
-    // "Editar usuário" com setores, e o toast
     await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Carla' }))
     t.conferir(await screen.findByRole('menu'), fixture)
     await userEvent.click(screen.getByRole('menuitem', { name: 'Editar' }))
@@ -85,12 +80,10 @@ describe('textos', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Usuário salvo.'))
     t.conferir(avisos())
 
-    // "Novo usuário"
     await userEvent.click(within(tela()).getByRole('button', { name: /Novo/ }))
     t.conferir(await screen.findByRole('dialog'), fixture)
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
-    // "Desativar {nome}?" e o toast
     await escolher('Davi', 'Desativar')
     t.conferir(await screen.findByRole('dialog'), ['Davi'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }))
@@ -111,21 +104,17 @@ describe('textos', () => {
     })
     abrir('/univag/matriculas')
 
-    // inicial
     await screen.findByLabelText('Arquivo CSV')
     t.conferir(tela(), ['1', '2', '3'])
 
-    // confirmação "Importar {arquivo}?"
     await userEvent.upload(screen.getByLabelText('Arquivo CSV'), new File(['cpf;nome'], 'alunos.csv', { type: 'text/csv' }))
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     t.conferir(await screen.findByRole('dialog'), ['alunos.csv'])
 
-    // erros por linha
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Importar' }))
     await screen.findByText('Linha 3', { exact: false })
     t.conferir(tela(), ['1', '2', 'alunos.csv', 'Há linhas inválidas.', '3', 'CPF inválido'])
 
-    // concluída
     falha = false
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
@@ -153,7 +142,6 @@ describe('textos', () => {
     const leituras = (vazias: boolean) =>
       Object.fromEntries(Object.entries(listas).map(([k, v]) => [`GET /api/admin/${k}`, (() => [200, vazias ? [] : v]) as Rota]))
 
-    // vazia, em cada aba
     api({ 'GET /api/auth/me': () => [200, admin], ...leituras(true) })
     let montada = abrir('/univag/cadastros')
     await screen.findByText('Nenhum item cadastrado.')
@@ -164,7 +152,6 @@ describe('textos', () => {
     t.conferir(tela())
     montada.unmount()
 
-    // as 5 abas com lista, e os diálogos "Novo" e "Editar" de cada uma
     api({
       'GET /api/auth/me': () => [200, admin],
       ...leituras(false),
@@ -179,7 +166,6 @@ describe('textos', () => {
 
       await userEvent.click(within(within(screen.getByRole('tabpanel', { name: titulo })).getByRole('table')).getAllByRole('button')[0])
       if (titulo === 'Fluxos') {
-        // o editor de fluxo é uma página da casca (região), não um diálogo
         const editor = await screen.findByRole('region', { name: 'Editar: Fluxos' })
         t.conferir(editor, Fixture)
         await userEvent.click(within(editor).getByRole('button', { name: 'Mais' }))

@@ -5,10 +5,8 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// vertical-slice-completa: o registro do Mediator no app do teste (door 2 e door 5).
 public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C9: um mediator e um AcessoChamado por escopo de requisição
     [Fact]
     public void Um_mediator_por_escopo()
     {
@@ -20,7 +18,6 @@ public class MediatorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotSame(um.ServiceProvider.GetRequiredService<AcessoChamado>(), outro.ServiceProvider.GetRequiredService<AcessoChamado>());
     }
 
-    // C29: o AgirNoChamado roda nas 10 ações e em nenhuma outra mensagem
     [Fact]
     public void AgirNoChamado_so_nas_10_acoes()
     {

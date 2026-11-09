@@ -1,6 +1,5 @@
 namespace One.Api.Dados.Conversas;
 
-// Arquivo que o aluno anexou a uma mensagem da conversa com o assistente. Append-only, como o Anexo do chamado.
 public class AnexoConversa : IDaInstituicao
 {
     public long Id { get; init; }

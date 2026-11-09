@@ -2,10 +2,8 @@ import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import * as ilustracoes from '.'
 
-// aparencia-instituicao C47 (AC 44): a ilustração é SVG inline e só usa currentColor e os tokens da marca; identidade-visual AC 19 deixou só a Planilha.
 const Nomes: Record<string, string> = { Planilha: 'planilha' }
 const Permitidos = ['currentColor', 'none', 'var(--primary)', 'var(--primary-subtle)']
-// as funções de cor e os nomes entram em pedaços para este arquivo não se acusar no teste de cores literais de interface.test.ts
 const CorLiteral = new RegExp(['#[0-9a-fA-F]{3,8}', '\\b(?:' + ['ok' + 'lch', 'rg' + 'b', 'hs' + 'l'].join('|') + ')a?\\('].join('|'))
 
 describe('ilustrações', () => {

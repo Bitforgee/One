@@ -1,7 +1,5 @@
 import { expect, test, type APIRequestContext, type APIResponse, type Page } from '@playwright/test'
 
-// revisao-ux C63: e2e real, sem simulada.ts. Contra E2E_URL (a imagem própria da feature, porta 8087) e o Mailpit do compose.
-// A instituição `e2e` tem um administrador (123.456.789-09 / admin@e2e.one) criado por `dotnet One.Api.dll instituicao criar`.
 const slug = process.env.E2E_INSTITUICAO ?? 'e2e'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@e2e.one'
@@ -19,9 +17,7 @@ function cpfValido(semente: number) {
   return d.join('')
 }
 
-// O limitador "auth" da API é de 5 por minuto por IP (L-066): este spec usa 4 (primeiro acesso e login do administrador, do aluno e o login do aluno na tela) e, no 429, espera a janela.
 test.describe.configure({ timeout: 240_000 })
-// Os instantes das chamadas de autenticação do spec: antes de cada uma (e do login pela tela), espera haver folga na janela de 62 s.
 const instantes: number[] = []
 const dormir = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 async function folga(reserva = 0) {
@@ -38,7 +34,6 @@ async function limitado(chamar: () => Promise<APIResponse>) {
   throw new Error('o limitador de autenticação não liberou')
 }
 
-// O login pela tela: se o limitador (compartilhado com os outros specs reais do mesmo IP, L-066) recusar, espera a janela e tenta de novo.
 async function entrarPelaTela(page: Page, cpf: string, senha: string, destino: RegExp) {
   for (let tentativa = 0; tentativa < 3; tentativa++) {
     await folga(2)
@@ -83,7 +78,6 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
   const alunoCpf = cpfValido(rodada)
   const alunoEmail = `aluno.${rodada}@e2e.one`
 
-  // o administrador (uma só vez) cadastra o curso e a matrícula do aluno, que cria o usuário dele
   const admin = await playwright.request.newContext({ baseURL })
   const entrarAdmin = () => limitado(() => admin.post('/api/auth/login', { data: { instituicao: slug, cpf: adminCpf, senha: senhaAdmin } }))
   if ((await entrarAdmin()).status() !== 200) {
@@ -98,27 +92,23 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
   const importado = await admin.post('/api/admin/matriculas/importacao', { multipart: { arquivo: { name: 'm.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })
   expect(importado.status(), await importado.text()).toBe(200)
 
-  // o aluno define a senha pelo link do e-mail e entra pela tela, a 390x844: o único login do navegador
   const contexto = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } })
   const page = await contexto.newPage()
   await primeiroAcesso(page.request, alunoCpf, alunoEmail, senhaAluno)
   await entrarPelaTela(page, alunoCpf, senhaAluno, new RegExp(`/${slug}/assistente$`))
 
-  // 1. cai no Assistente, com a aba marcada
   const barra = page.getByRole('navigation', { name: 'Navegação' })
   await expect(page).toHaveURL(new RegExp(`/${slug}/assistente$`))
   await expect(barra.getByRole('link')).toHaveText(['Assistente', 'Solicitações', 'Conta'])
   await expect(barra.getByRole('link', { name: 'Assistente' })).toHaveAttribute('aria-current', 'page')
   await expect(barra.locator('[aria-current=page]')).toHaveCount(1)
 
-  // 2. Solicitações
   await barra.getByRole('link', { name: 'Solicitações' }).click()
   await expect(page).toHaveURL(new RegExp(`/${slug}/solicitacoes$`))
   await expect(page.getByRole('heading', { level: 1, name: 'Minhas solicitações' })).toBeVisible()
   await expect(barra.getByRole('link', { name: 'Solicitações' })).toHaveAttribute('aria-current', 'page')
   await expect(barra.locator('[aria-current=page]')).toHaveCount(1)
 
-  // 3. Conta: nome, CPF mascarado e as linhas (sem chave de push nem contato nesta imagem, então sem "Avisos" nem "Contato")
   await barra.getByRole('link', { name: 'Conta' }).click()
   await expect(page).toHaveURL(new RegExp(`/${slug}/conta$`))
   await expect(barra.getByRole('link', { name: 'Conta' })).toHaveAttribute('aria-current', 'page')
@@ -130,7 +120,6 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
   await expect(linhas.nth(1)).toContainText('Trocar senha')
   await expect(linhas.nth(2)).toContainText('Sair')
 
-  // 4. Sair volta ao Login, e o /me seguinte responde 401
   await linhas.nth(2).click()
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
   expect((await page.request.get('/api/auth/me')).status()).toBe(401)
@@ -139,14 +128,12 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
   await admin.dispose()
 })
 
-// C64: o atendente resolve um chamado no celular com 6 cliques e 1 só abertura de Sheet (P15)
 test('atendente assume, responde e resolve no celular', async ({ browser, playwright, baseURL }) => {
   test.setTimeout(480_000) // 6 chamadas de autenticação com o limitador de 5 por minuto (L-066): pelo menos 2 esperas de janela
   const rodada = Date.now()
   const [alunoCpf, atendenteCpf] = [cpfValido(rodada), cpfValido(rodada + 7)]
   const [alunoEmail, atendenteEmail] = [`aluno.${rodada}@e2e.one`, `atendente.${rodada}@e2e.one`]
 
-  // o administrador cadastra o curso, a matrícula do aluno e o atendente do setor de triagem
   const admin = await playwright.request.newContext({ baseURL })
   const entrarAdmin = () => limitado(() => admin.post('/api/auth/login', { data: { instituicao: slug, cpf: adminCpf, senha: senhaAdmin } }))
   if ((await entrarAdmin()).status() !== 200) {
@@ -165,7 +152,6 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
   const criado = await admin.post('/api/admin/usuarios', { data: { cpf: atendenteCpf, nome: `Atendente E2E ${rodada}`, email: atendenteEmail, papeis: ['ATENDENTE'], setores: [triagem.id] } })
   expect(criado.status(), await criado.text()).toBe(201)
 
-  // o aluno abre o chamado pela API (sem tela)
   const aluno = await playwright.request.newContext({ baseURL })
   await primeiroAcesso(aluno, alunoCpf, alunoEmail, senhaAluno)
   expect((await limitado(() => aluno.post('/api/auth/login', { data: { instituicao: slug, cpf: alunoCpf, senha: senhaAluno } }))).status()).toBe(200)
@@ -173,7 +159,6 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
   expect(aberto.status(), await aberto.text()).toBe(201)
   const numero = (await aberto.json()).numero as string
 
-  // o atendente define a senha e entra pela tela, a 390x844: o único login do navegador
   const contexto = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } })
   const page = await contexto.newPage()
   await page.addInitScript(() => {
@@ -191,19 +176,15 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
     cliques.push(nome)
     await alvo.click()
   }
-  // 1. a linha da Fila
   await clicar('linha da Fila', page.getByRole('main').getByRole('listitem').filter({ hasText: numero }))
   await expect(page).toHaveURL(new RegExp(`/chamados/${numero}$`))
-  // 2. Assumir
   await clicar('Assumir')
   await expect(page.getByRole('button', { name: 'Responder', exact: true }).first()).toBeVisible()
-  // 3. Responder (rola e foca o campo); 4. Enviar, com a resposta digitada
   await clicar('Responder')
   await expect(page.locator('#resposta')).toBeFocused()
   await page.locator('#resposta').fill('Segue a segunda via do boleto em anexo ao seu e-mail.')
   await clicar('Enviar')
   await expect(page.getByText('Segue a segunda via do boleto em anexo ao seu e-mail.')).toBeVisible()
-  // 5. Mais (a única abertura da folha); 6. Resolver, com a resolução digitada
   await clicar('Mais')
   const folha = page.getByRole('dialog', { name: 'Mais ações' })
   await folha.getByLabel('Resolução').fill('Segunda via emitida e enviada.')

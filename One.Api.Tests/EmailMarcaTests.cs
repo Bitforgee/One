@@ -7,7 +7,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// aparencia-instituicao S7: o e-mail em duas partes, com a marca da instituição (C51 a C53).
 public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string Corpo = "Olá, Ana & <script>alert(1)</script>.\n\nAbra o link: http://localhost:8080/x?a=1&b=2\n";
@@ -34,7 +33,6 @@ public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
         return para;
     }
 
-    // o SMTP leva o texto com CRLF (RFC 5322); fora isso a parte é o Corpo
     static string Texto(JsonElement msg) => msg.GetProperty("Text").GetString()!.Replace("\r\n", "\n");
 
     static async Task<string> Bruto(JsonElement msg) => await Mailpit.GetStringAsync($"/api/v1/message/{msg.GetProperty("ID").GetString()}/raw");
@@ -52,7 +50,6 @@ public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("<", msg.GetProperty("HTML").GetString());
         Assert.NotNull(await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Destinatario == para).Select(e => e.EnviadoEm).SingleAsync()));
 
-        // o e-mail de primeiro acesso também leva a marca
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null);
         await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
         var acesso = (await PrimeiroAcessoTests.EmailNoMailpit(u.Email))!.Value;

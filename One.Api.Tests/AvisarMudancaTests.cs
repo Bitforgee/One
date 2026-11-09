@@ -14,7 +14,6 @@ namespace One.Api.Tests;
 
 public record Envio(string Grupo, string Metodo, object?[] Argumentos);
 
-// IHubContext que só grava o que o interceptador manda (tempo-real-signalr S2, camada do interceptador).
 public sealed class HubGravador : IHubContext<TempoRealHub>
 {
     public List<Envio> Envios { get; } = [];
@@ -97,11 +96,9 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
         var b = await Balcao.Criar(f);
         f.Hub.Tirar();
 
-        // Chamado criado
         var numero = await b.Chamado();
         Igual(Par(b.Instituicao.Id, numero, b.Triagem.Id), f.Hub.Tirar());
 
-        // Chamado alterado
         await f.Db(b.Instituicao.Id, async db =>
         {
             (await Carregar(db, numero)).Assumir(b.A.Usuario.Id, null, "Atendente", Agora);
@@ -109,7 +106,6 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
         });
         Igual(Par(b.Instituicao.Id, numero, b.Triagem.Id), f.Hub.Tirar());
 
-        // MensagemChamado nova e EventoChamado novo: a entidade só traz o ChamadoId
         var id = (await b.Ler(numero)).Id;
         await f.Db(b.Instituicao.Id, async db =>
         {
@@ -201,7 +197,6 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
         var numero = await b.Chamado();
         f.Hub.Tirar();
 
-        // dois contextos leem o mesmo chamado; o segundo grava sobre uma versão que já mudou
         using var escopo1 = f.Services.CreateScope();
         using var escopo2 = f.Services.CreateScope();
         var (db1, db2) = (escopo1.ServiceProvider.GetRequiredService<OneDb>(), escopo2.ServiceProvider.GetRequiredService<OneDb>());

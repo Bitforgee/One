@@ -16,7 +16,6 @@ const documento = (id: number, titulo: string, indexacao: string, paginas: numbe
 })
 
 describe('documentos', () => {
-  // RAG C34
   it('tela Documentos lista, vazio e confirma arquivar', async () => {
     let lista: unknown[] = []
     const chamadas = api({
@@ -51,7 +50,6 @@ describe('documentos', () => {
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url)).toEqual(['/api/admin/documentos/1/arquivar'])
   })
 
-  // RAG C39
   it('artigos mostram a indexação', async () => {
     const artigo = (id: number, titulo: string, estado: string, indexacao: string | null) => ({
       id, estado, indexacao, categoriaId: 3, categoria: 'Estágio', visivelDe: null, visivelAte: null,
@@ -72,7 +70,6 @@ describe('documentos', () => {
     for (const rotulo of ['Indexado', 'Indexando', 'Falhou']) expect(within(rascunho).queryByText(rotulo)).not.toBeInTheDocument()
   })
 
-  // layout-painel C25 (AC 25): ativo -> Nova versão e Arquivar (destrutivo); arquivado -> sem botão
   it('ações de documento no menu', async () => {
     api({
       'GET /api/auth/me': () => [200, admin],
@@ -85,7 +82,6 @@ describe('documentos', () => {
     expect(screen.queryByRole('button', { name: 'Ações de Guardado' })).not.toBeInTheDocument()
   })
 
-  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
   it('ações de linha mostram o Spinner enquanto gravam', async () => {
     let responder!: () => void
     api({

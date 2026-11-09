@@ -2,8 +2,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, readdirSync } from 'node:fs'
 import { chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, varrer } from './simulada'
 
-// identidade-visual, lote 1 (S1 e S2): fontes, raios e login medidos no Chromium com a API simulada.
-// Medidas por boundingBox() e getComputedStyle, em px CSS, tolerância de 1 px. A fonte é lida depois de document.fonts.ready.
 test.use({ serviceWorkers: 'block' })
 
 const Sans = '"Public Sans Variable"'
@@ -19,7 +17,6 @@ const estilo = (l: Locator, ...props: string[]) => l.evaluate((e, ps) => ps.map(
 const sobre = (a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }) =>
   a.x < b.x + b.width - 1 && a.x + a.width > b.x + 1 && a.y < b.y + b.height - 1 && a.y + a.height > b.y + 1
 
-// A coluna do acesso: o menor elemento que contém o nome da instituição e o formulário
 const coluna = (page: Page) =>
   page.locator('form').first().evaluateHandle((f) => {
     let n: Element = f
@@ -31,7 +28,6 @@ const colunaCaixa = async (page: Page) => {
   return (await h.evaluate((e) => e.getBoundingClientRect().toJSON())) as { x: number; y: number; width: number; height: number }
 }
 
-// ---------- S1: fontes ----------
 
 test('Public Sans e Source Serif 4 carregadas e nenhuma Inter', async ({ page, baseURL }) => {
   const urls: string[] = []
@@ -55,7 +51,6 @@ test('Public Sans e Source Serif 4 carregadas e nenhuma Inter', async ({ page, b
   expect(urls.filter((u) => new URL(u).origin !== new URL(baseURL!).origin), 'só a origem do app').toEqual([])
 })
 
-// Telas da varredura em que os tipos de C3 aparecem; os menus abertos entram na própria varredura
 test('texto e controles em Public Sans', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -116,8 +111,6 @@ test('texto e controles em Public Sans', async ({ page }) => {
   for (const [tipo, n] of Object.entries(achados)) expect(n, `ao menos 1 elemento de ${tipo}`).toBeGreaterThan(0)
 })
 
-// C4: a varredura inteira mais o Assistente sem conversa. Serifa só em h1 ou h2 de conteúdo, no número principal de Indicadores e, na prévia da Aparência,
-// no nome e no título das boas-vindas (as cópias pequenas dos dois)
 test('serifa só em títulos de 20 px ou mais', async ({ page }) => {
   test.setTimeout(300_000)
   const serifas: Record<string, number> = {}
@@ -153,7 +146,6 @@ test('serifa só em títulos de 20 px ou mais', async ({ page }) => {
   for (const nome of ['Login', 'Assistente sem conversa', 'Indicadores', 'Detalhe do chamado', 'Raiz']) expect(serifas[nome], `serifa em ${nome}`).toBeGreaterThan(0)
 })
 
-// ---------- S1: raios ----------
 
 const quatro = (l: Locator) => l.evaluate((e) => ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius'].map((p) => parseFloat(getComputedStyle(e)[p as 'borderTopLeftRadius'])))
 
@@ -185,7 +177,6 @@ test('raio pelo papel do componente', async ({ page }) => {
     await espera(page)
   }
 
-  // campo (4 px)
   await em(1440, '/univag', (p) => p.getByLabel('CPF').waitFor())
   todos('Input CPF', await quatro(page.getByLabel('CPF')), 4)
   await em(1440, '/univag/assistente', (p) => p.getByLabel('Mensagem').waitFor())
@@ -193,7 +184,6 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(390, '/univag/cadastros', (p) => p.getByText('Coordenação de Análise e Des').first().waitFor())
   todos('NativeSelect de Cadastros', await quatro(page.locator('[data-slot=native-select]').first()), 4)
 
-  // linha de lista (4 px) e linhas sem raio (0)
   await em(1440, '/univag/artigos', (p) => p.getByText('ARQUIVADO').first().waitFor())
   await page.getByRole('button', { name: /^Ações de / }).first().click()
   await page.getByRole('menu').waitFor()
@@ -206,7 +196,6 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(390, '/univag/solicitacoes', (p) => p.getByText('ONE-123').waitFor())
   todos('linha de Minhas solicitações', await quatro(page.getByRole('main').getByRole('listitem').first()), 0)
 
-  // botão (6 px)
   await em(1440, '/univag', (p) => p.getByLabel('CPF').waitFor())
   todos('"Entrar"', await quatro(page.getByRole('button', { name: 'Entrar' })), 6)
   await em(1440, '/univag/indicadores', (p) => p.getByText('Indicador principal').waitFor())
@@ -219,14 +208,12 @@ test('raio pelo papel do componente', async ({ page }) => {
   todos('botão de link da resposta', await quatro(page.getByRole('link', { name: 'portal.univag.edu.br/financeiro/boletos/segunda-via' })), 6)
   todos('"Enviar"', await quatro(page.getByRole('button', { name: /Enviar/ })), 6) // estrutura-visual AC 14: o Enviar escrito é um botão de 6 px
 
-  // pílula
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
   todos('"Tema" na barra', await quatro(page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Tema' })), 4) // estrutura-visual AC 8: a linha Tema do rodapé
   await pilula('selo "Aguardando aluno"', page.locator('[data-slot=badge]').filter({ hasText: 'Aguardando aluno' }).first())
   await em(1440, '/univag/matriculas', (p) => p.getByRole('heading', { level: 2 }).first().waitFor())
   await pilula('número "1" dos passos', page.locator('h2[id^=passo-] > span').first())
 
-  // painel (12 px)
   await em(1440, '/univag/chamados/ONE-123', (p) => p.getByText('Resumo gerado por IA').waitFor())
   todos('cartão "Ações"', await quatro(page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })), 12)
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
@@ -238,7 +225,6 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(390, '/univag/conta', (p) => p.getByText('***.456.789-**').waitFor())
   todos('lista agrupada da Conta', await quatro(page.getByRole('main').locator('ul').first()), 12)
 
-  // Dialog, Sheet, menu (16 px)
   await em(1280, '/univag/chamados/ONE-123', (p) => p.getByText('Resumo gerado por IA').waitFor())
   await page.getByRole('button', { name: 'Encaminhar' }).first().click()
   todos('Dialog "Encaminhar para outro setor?"', await quatro(page.getByRole('dialog', { name: 'Encaminhar para outro setor?' })), 16)
@@ -251,7 +237,6 @@ test('raio pelo papel do componente', async ({ page }) => {
   expect(medidas.length).toBe(23)
 })
 
-// C6, a parte do lote 1: as telas da varredura inteira; o lote 2 reafirma depois de Assistente, Indicadores e do detalhe mudarem
 test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -286,7 +271,6 @@ test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) =
         })
         expect(r.proibidas, `${nome} a ${largura}: pílula fora da lista`).toEqual([])
         expect(r.fora, `${nome} a ${largura}: botão que não mede 6 px`).toEqual([])
-        // Minhas solicitações não tem [data-slot=button] (o Tema é popover-trigger): a contagem de botões é a da varredura inteira
         botoes += r.botoes
         pilulas += r.pilulas
       },
@@ -297,7 +281,6 @@ test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) =
   expect(botoes, 'ao menos 1 botão').toBeGreaterThan(0)
 })
 
-// ---------- S1: PWA ----------
 
 test.describe('PWA', () => {
   test.use({ serviceWorkers: 'allow' })
@@ -329,9 +312,7 @@ test.describe('PWA', () => {
   })
 })
 
-// ---------- S2: login ----------
 
-// C9: as 24 combinações (3 telas x 4 larguras x sem e com aparência sem foto)
 test('login sem foto em coluna única de até 400 px', async ({ page }) => {
   test.setTimeout(120_000)
   let casos = 0
@@ -373,7 +354,6 @@ test('login sem foto em coluna única de até 400 px', async ({ page }) => {
   expect(casos).toBe(24)
 })
 
-// C10
 test('login sem foto: logo, nome, textos, formulário e itens nessa ordem', async ({ page }) => {
   const casos = [
     { rotulo: 'semAparencia', aparencia: semAparencia, marca: (p: Page) => p.getByText('CG', { exact: true }), titulo: 'Atendimento ao estudante', frase: 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', itens: ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar'] },
@@ -395,7 +375,6 @@ test('login sem foto: logo, nome, textos, formulário e itens nessa ordem', asyn
       const lista = page.locator('ul').filter({ has: page.locator('li') })
       await expect(lista.locator('li'), `${rotulo}: itens`).toHaveCount(3)
       for (const [i, item] of caso.itens.entries()) await expect(lista.locator('li').nth(i)).toHaveText(item)
-      // o texto de apoio é o elemento imediatamente antes do rótulo "CPF" no DOM (o campo que o contém)
       expect(await page.getByText('CPF', { exact: true }).evaluate((e) => e.parentElement!.previousElementSibling?.textContent), `${rotulo}: apoio logo antes do rótulo CPF`).toBe('Entre com seu CPF e sua senha.')
       const ordem = [
         marca,
@@ -419,7 +398,6 @@ test('login sem foto: logo, nome, textos, formulário e itens nessa ordem', asyn
     }
 })
 
-// C11
 test('login sem foto: nome em serifa de 28 px, textos secundários e fundo tingido', async ({ page }) => {
   await instalar(page)
   const pintada = (l: Locator) => l.evaluate((e) => window.__ux.pintar(['#fff', getComputedStyle(e).color]))
@@ -470,7 +448,6 @@ test('login sem foto: nome em serifa de 28 px, textos secundários e fundo tingi
     }
 })
 
-// C12
 test('Primeiro acesso e Criar senha na mesma coluna', async ({ page }) => {
   for (const largura of [390, 1440])
     for (const [caminho, tela, campo, botao] of [['/univag/primeiro-acesso', 'Primeiro acesso', 'CPF', 'Enviar link'], ['/univag/definir-senha?token=t', 'Criar senha', 'Nova senha', 'Salvar senha']] as const) {
@@ -507,7 +484,6 @@ test('Primeiro acesso e Criar senha na mesma coluna', async ({ page }) => {
     }
 })
 
-// C13
 test('login com foto: a foto na coluna direita inteira, sem texto nem gradiente', async ({ page }) => {
   for (const largura of [1024, 1440])
     for (const caminho of Entradas) {
@@ -546,7 +522,6 @@ test('login com foto: a foto na coluna direita inteira, sem texto nem gradiente'
     }
 })
 
-// C14
 test('login com foto abaixo de 1024: faixa de 160 px acima do formulário', async ({ page }) => {
   for (const largura of [390, 1023])
     for (const caminho of Entradas) {
@@ -582,7 +557,6 @@ test('login com foto abaixo de 1024: faixa de 160 px acima do formulário', asyn
     }
 })
 
-// C16 (a parte do Chromium)
 test('raiz com One em serifa', async ({ page }) => {
   for (const largura of [360, 1280]) {
     await page.setViewportSize({ width: largura, height: 740 })
@@ -592,7 +566,6 @@ test('raiz com One em serifa', async ({ page }) => {
     await page.evaluate(() => document.fonts.ready)
     expect(await familia(titulo), `${largura}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
     for (const l of [titulo, page.getByText('Dúvidas, solicitações e respostas da sua instituição em um só lugar.', { exact: true }), page.getByText('Abra o endereço da sua instituição, por exemplo /univag.', { exact: true })]) {
-      // o centro do texto, não da caixa: o Range do nó de texto
       const c = await l.evaluate((e) => {
         const r = document.createRange()
         r.selectNodeContents(e)
@@ -604,7 +577,6 @@ test('raiz com One em serifa', async ({ page }) => {
   }
 })
 
-// ---------- lote 2 (S3, S4 e S5): telas autenticadas ----------
 
 type Opcoes = { aparencia?: object; papeis?: string[]; rotas?: (p: Page) => Promise<unknown>; altura?: number }
 async function em(page: Page, largura: number, caminho: string, espera: (p: Page) => Promise<unknown>, { aparencia = comAparencia, papeis, rotas, altura = 900 }: Opcoes = {}) {
@@ -621,11 +593,9 @@ const Boasvindas = 'Oi! Posso ajudar com boletos e matrícula.'
 const Perguntas = comAparencia.assistente.perguntas
 const esperaAssistente = (p: Page) => p.getByLabel('Mensagem').waitFor()
 
-// C18
 test('título das boas-vindas em serifa de 24 px à esquerda', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/assistente', esperaAssistente)
-    // o `main` do app tem a barra do topo (o h1 "Assistente") dentro dele: o primeiro cabeçalho do conteúdo é o do contêiner `@container/main`
     const titulo = page.locator('[class*="container/main"]').getByRole('heading').first()
     await expect(titulo, `${largura}: primeiro cabeçalho`).toHaveText('Atendimento ao estudante · Univag')
     expect(await familia(titulo), `${largura}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
@@ -640,7 +610,6 @@ test('título das boas-vindas em serifa de 24 px à esquerda', async ({ page }) 
   }
 })
 
-// C19 (a parte do Chromium)
 test('foto de 32 px ao lado do nome do assistente', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/assistente', esperaAssistente)
@@ -658,7 +627,6 @@ test('foto de 32 px ao lado do nome do assistente', async ({ page }) => {
   }
 })
 
-// C21
 test('solicitação em aberto com borda na cor de ação antes das perguntas', async ({ page }) => {
   await instalar(page)
   for (const largura of [390, 1440]) {
@@ -674,14 +642,12 @@ test('solicitação em aberto com borda na cor de ação antes das perguntas', a
   }
 })
 
-// C22
 test('perguntas em linhas de 48 px com ícone e seta', async ({ page }) => {
   for (const largura of [390, 1440])
     for (const [aparencia, perguntas] of [[comAparencia, Perguntas], [semAparencia, ['Como emito o boleto do semestre?', 'Posso abonar falta com atestado?']]] as const) {
       await em(page, largura, '/univag/assistente', esperaAssistente, { aparencia })
       const rotulo = `${largura} ${aparencia === semAparencia ? 'sem' : 'com'} aparência`
       const linhas = perguntas.map((p) => page.getByRole('button', { name: p, exact: true }))
-      // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
     await page.evaluate(() => window.scrollTo(0, 1e6))
     const caixas = []
       for (const l of linhas) {
@@ -711,7 +677,6 @@ test('perguntas em linhas de 48 px com ícone e seta', async ({ page }) => {
     }
 })
 
-// ---------- S4: Indicadores ----------
 
 const corpoIndicadores = (principal: number) => ({
   semDados: false, alunosAtivos: 1234, conversas: 5678, taxaAutoatendimento: 0.6543, taxaEscalonamento: 0.2, taxaAbandono: 0.1457, taxaPerguntasSemArtigo: 0.12,
@@ -719,7 +684,6 @@ const corpoIndicadores = (principal: number) => ({
   principaisCategorias: { porConversas: [{ categoria: 'Financeiro > Boletos e mensalidades', total: 1000 }], porChamados: [{ categoria: 'Acadêmico > Notas e frequência', total: 300 }] },
   indicadorPrincipal: principal,
 })
-// o relógio em 5/11/2026: o período é 01/11 a 05/11 e o anterior, 27/10 a 31/10
 const comPrincipal = async (p: Page) => {
   await p.clock.setFixedTime(new Date('2026-11-05T13:00:00Z'))
   await p.route('**/api/indicadores*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoIndicadores(new URL(r.request().url()).searchParams.get('de') === '2026-10-27' ? 0.67 : 0.712)) }))
@@ -728,7 +692,6 @@ const esperaIndicadores = (p: Page) => p.getByText('71,2%', { exact: true }).wai
 const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta']
 const Lista = ['Alunos ativos', 'Conversas', 'Escalonamento', 'Abandono', 'Perguntas sem artigo', 'Chamados resolvidos', 'Tempo de resolução', 'Roteamento correto', 'Reabertura']
 
-// Funções que rodam no navegador: o elemento com o texto próprio dado (dentro do main), o que o contém até o main e as caixas
 type Cadeia = { tag: string; card: boolean; bordas: number[]; transparente: boolean }
 type Caixa = { x: number; y: number; width: number; height: number }
 const noMain = `
@@ -754,7 +717,6 @@ const faixaDe = (page: Page) =>
     return { main: larguraDoMain(), itens: itens.map((i) => ({ caixa: caixa(i), bordas: [getComputedStyle(i).borderRightWidth, getComputedStyle(i).borderLeftWidth].map(parseFloat), cadeia: cadeia(i) })) };
   })()`) as Promise<{ main: number; itens: { caixa: Caixa; bordas: number[]; cadeia: Cadeia[] }[] }>
 
-// C27
 test('Indicador principal em serifa de 40 px com a variação ao lado', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
@@ -777,7 +739,6 @@ test('Indicador principal em serifa de 40 px com a variação ao lado', async ({
   }
 })
 
-// C28
 test('3 destaques em faixa de 3 colunas sem caixa', async ({ page }) => {
   for (const [largura, main, colunas] of [[1072, 768, 3], [1440, 1136, 3], [1071, 767, 1], [390, 0, 1]] as const) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
@@ -820,7 +781,6 @@ const listaDe = (page: Page) =>
     };
   })()`) as Promise<Linhas>
 
-// C29
 test('9 métricas em lista de rótulo e valor sem caixa', async ({ page }) => {
   for (const [largura, main, colunas] of [[1072, 768, 2], [1440, 1136, 2], [1071, 767, 1], [390, 0, 1]] as const) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
@@ -849,7 +809,6 @@ test('9 métricas em lista de rótulo e valor sem caixa', async ({ page }) => {
   }
 })
 
-// C30, estrutura-visual door 4: o ranking é uma tabela com barras, e continua sem cartão e com o título acima
 test('gráficos sem cartão com o título', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
@@ -870,7 +829,6 @@ test('gráficos sem cartão com o título', async ({ page }) => {
   }
 })
 
-// ---------- S5: menos caixas e estados vazios com ícone ----------
 
 const semBordaNemFundo = (l: Locator) =>
   l.evaluate((e) => {
@@ -880,7 +838,6 @@ const semBordaNemFundo = (l: Locator) =>
 const esperaAparencia = (p: Page) => p.getByLabel('Cor principal').waitFor()
 const esperaDetalhe = (p: Page) => p.getByText('Resumo gerado por IA').waitFor()
 
-// C32 (emendado por aparencia-enxuta: as 4 seções viraram 5 abas; cada painel segue sem caixa)
 test('painéis da Aparência sem caixa', async ({ page }) => {
   await em(page, 1440, '/univag/aparencia', esperaAparencia)
   const abas = ['Marca', 'App instalado', 'Login', 'Assistente', 'Contato']
@@ -895,7 +852,6 @@ test('painéis da Aparência sem caixa', async ({ page }) => {
   }
 })
 
-// A coluna do detalhe é o filho da grade que contém o bloco; a cadeia vai do bloco até ela (exclusive)
 const cadeiaAteAColuna = (bloco: Locator) =>
   bloco.evaluate((e) => {
     const cadeia: { bordas: number[]; transparente: boolean; card: boolean }[] = []
@@ -910,7 +866,6 @@ const cadeiaAteAColuna = (bloco: Locator) =>
 const respostaForm = (p: Page) => p.locator('form:has(#resposta)')
 const blocoDe = (p: Page, titulo: string) => p.getByRole('heading', { level: 2, name: titulo, exact: true }).locator('..')
 
-// C33
 test('Dados do aluno sem caixa e com título', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/chamados/ONE-123', esperaDetalhe)
@@ -922,7 +877,6 @@ test('Dados do aluno sem caixa e com título', async ({ page }) => {
   }
 })
 
-// C34
 test('detalhe sem caixa e com fundo tingido só no que pede ação', async ({ page }) => {
   await instalar(page)
   for (const largura of [390, 1440]) {
@@ -943,7 +897,6 @@ test('detalhe sem caixa e com fundo tingido só no que pede ação', async ({ pa
       expect(transparente, `${largura}: ${nome} com fundo`).toBe(false)
       expect(await page.evaluate((c) => window.__ux.pintar(['#fff', c]), fundo), `${largura}: ${nome} tingido`).not.toEqual(fundoDaPagina)
     }
-    // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
     await page.evaluate(() => window.scrollTo(0, 1e6))
     const caixas = []
     for (const b of [dados, resumo, page.getByRole('heading', { level: 2, name: /^Conversa com o assistente/ }).locator('..'), blocoDe(page, 'Atendimento'), respostaForm(page)]) {
@@ -975,7 +928,6 @@ const Vazios: Vazio[] = [
   { nome: 'Indicadores sem dados', caminho: '/univag/indicadores', frase: 'Sem atendimentos neste período.', rotas: (p) => vazio(p, '**/api/indicadores*', { ...corpoIndicadores(0), semDados: true, indicadorPrincipal: null }) },
 ]
 
-// C36
 test('vazio com ícone de 28 px centrado', async ({ page }) => {
   test.setTimeout(120_000)
   await instalar(page)
@@ -1017,7 +969,6 @@ test('vazio com ícone de 28 px centrado', async ({ page }) => {
   expect(medidas).toBe(16)
 })
 
-// C38
 test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/matriculas', (p) => p.getByRole('heading', { level: 2 }).first().waitFor())
@@ -1029,7 +980,6 @@ test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
     const nomes = ['cpf', 'nome', 'email', 'matricula', 'curso', 'semestre', 'situacao']
     const textos = planilha.locator('text')
     await expect(textos).toHaveText(nomes)
-    // o formulário de resposta fica colado ao fim da janela (chat-linha-do-tempo C18): o espaço de 32 px vale no fim da rolagem, onde ele volta ao seu lugar
     await page.evaluate(() => window.scrollTo(0, 1e6))
     const caixas = []
     for (const [i, nome] of nomes.entries()) {
@@ -1043,7 +993,6 @@ test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
   }
 })
 
-// C39 (a parte do Chromium; emendado por aparencia-enxuta: a prévia mostra o bloco da aba, o login na Marca e o assistente na aba Assistente)
 test('prévia com serifa e perguntas em linhas', async ({ page }) => {
   await em(page, 1440, '/univag/aparencia', esperaAparencia)
   const previa = page.getByRole('region', { name: 'Prévia' })
@@ -1064,7 +1013,6 @@ test('prévia com serifa e perguntas em linhas', async ({ page }) => {
   expect(await previa.evaluate((e) => [e, ...e.querySelectorAll('*')].filter((n) => getComputedStyle(n).backgroundImage.includes('gradient')).length), 'sem gradiente na prévia').toBe(0)
 })
 
-// ---------- rodada 1 do Verifier (C47 a C53) ----------
 
 const Temas = ['light', 'dark', 'black'] as const
 const Marcas = [null, '#8a1538'] as const
@@ -1078,7 +1026,6 @@ const contraste = (x: number[], y: number[]) => {
 }
 const emTema = (page: Page, tema: string) => page.addInitScript((t) => localStorage.setItem('one-tema', t), tema)
 
-// C47
 test('foco das perguntas com 3:1 nos três temas', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -1114,7 +1061,6 @@ test('foco das perguntas com 3:1 nos três temas', async ({ page }) => {
   expect(medidas).toBe(12)
 })
 
-// C48
 test('borda do campo Responder com 3:1', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -1124,7 +1070,6 @@ test('borda do campo Responder com 3:1', async ({ page }) => {
       for (const papeis of [['ALUNO'], ['ATENDENTE', 'ADMINISTRADOR']])
         for (const largura of [390, 1280]) {
           await emTema(page, tema)
-          // a tela do aluno é a que o chamado sem `eventos` desenha (`equipe = eventos !== null`)
           const aluno = papeis[0] === 'ALUNO'
           const rotas = aluno ? (p: Page) => p.route('**/api/chamados/ONE-123', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...chamadoSimulado(), eventos: null, mensagens: [] }) })) : undefined
           await em(page, largura, '/univag/chamados/ONE-123', (p) => p.locator('#resposta').waitFor(), { aparencia: { ...comAparencia, cor: marca }, papeis, rotas })
@@ -1138,7 +1083,6 @@ test('borda do campo Responder com 3:1', async ({ page }) => {
   expect(medidas).toBe(24)
 })
 
-// C54 e C56: a tela da equipe com o select de respostas prontas
 const abrirFormComProntas = (page: Page, largura: number, marca: string | undefined) =>
   em(page, largura, '/univag/chamados/ONE-123', (p) => p.getByLabel('Resposta pronta').waitFor(), {
     aparencia: { ...comAparencia, cor: marca },
@@ -1149,7 +1093,6 @@ const abrirFormComProntas = (page: Page, largura: number, marca: string | undefi
   })
 const corDoToken = (page: Page, token: string) => page.evaluate((v) => { const t = document.createElement('i'); t.style.borderTop = `1px solid var(${v})`; document.body.append(t); const c = getComputedStyle(t).borderTopColor; t.remove(); return c }, token)
 
-// C54
 test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -1164,7 +1107,6 @@ test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }
         const [form, select, campo] = [page.locator('form:has(#resposta)'), page.getByLabel('Resposta pronta'), page.locator('#resposta')]
         const [borda, fundo] = (await select.evaluate((e) => { const f = e.closest('form')!; return [window.__ux.pintar([...window.__ux.pilha(f), getComputedStyle(e).borderTopColor]), window.__ux.pintar(window.__ux.pilha(f))] })) as number[][]
         expect(contraste(borda, fundo), `${rotulo}: borda do select`).toBeGreaterThanOrEqual(3)
-        // um campo comum fora do form, com as mesmas classes do Responder
         await campo.evaluate((e) => { const i = Object.assign(document.createElement('input'), { id: 'comum', className: e.className }); document.querySelector('main')!.append(i) })
         const comum = page.locator('#comum')
         const repouso = await cor(campo)
@@ -1185,7 +1127,6 @@ test('campos do form da resposta com foco, erro e borda de 3:1', async ({ page }
   expect(medidas).toBe(12)
 })
 
-// C56
 test('select da resposta com foco e erro, e Responder com Nota interna', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -1198,7 +1139,6 @@ test('select da resposta com foco e erro, e Responder com Nota interna', async (
         await emTema(page, tema)
         await abrirFormComProntas(page, largura, marca)
         const select = page.getByLabel('Resposta pronta')
-        // um select comum fora do form, com as mesmas classes
         await select.evaluate((e) => { const s = Object.assign(document.createElement('select'), { id: 'comum', className: e.className }); document.querySelector('main')!.append(s) })
         const comum = page.locator('#comum')
         const repouso = await cor(select)
@@ -1219,7 +1159,6 @@ test('select da resposta com foco e erro, e Responder com Nota interna', async (
   expect(medidas).toBe(12)
 })
 
-// C57: mede no navegador contra o token no body, para valer qualquer que seja a escrita da regra
 test('borda do form igual ao token no escuro e no preto', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -1242,7 +1181,6 @@ test('borda do form igual ao token no escuro e no preto', async ({ page }) => {
   expect(medidas).toBe(24)
 })
 
-// C51
 test('nome do assistente entre a frase e a solicitação', async ({ page }) => {
   await instalar(page)
   for (const largura of [390, 1440]) {
@@ -1256,7 +1194,6 @@ test('nome do assistente entre a frase e a solicitação', async ({ page }) => {
   }
 })
 
-// C52
 test('variação abaixo do número a 360', async ({ page }) => {
   for (const [anterior, texto] of [[0.67, '▲ 4,2 pts'], [0.712, '= sem variação']] as const) {
     await em(page, 360, '/univag/indicadores', esperaIndicadores, {
@@ -1274,7 +1211,6 @@ test('variação abaixo do número a 360', async ({ page }) => {
   }
 })
 
-// C53 (a parte do Chromium)
 test.describe('PWA sem outros alfabetos', () => {
   test.use({ serviceWorkers: 'allow' })
   test('precache sem subconjuntos de outros alfabetos', async ({ page }) => {

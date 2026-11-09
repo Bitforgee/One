@@ -10,7 +10,6 @@ public class Instituicao
     public DateTime CriadaEm { get; set; }
     public long UltimoNumeroChamado { get; set; }
 
-    // Aparência (door 1): todos opcionais; nulo é o padrão do One.
     public string? NomeCurto { get; set; }
     public string? Cor { get; set; }
     public string? LoginTitulo { get; set; }

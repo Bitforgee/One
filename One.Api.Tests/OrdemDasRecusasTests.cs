@@ -7,8 +7,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// vertical-slice-completa: a posição de cada recusa em relação a 404, 403, 400 e 409, sempre com o corpo inválido,
-// para que trocar duas posições mude o status.
 public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static async Task<string?> Detail(HttpResponseMessage r) => (await r.Json()).GetProperty("detail").GetString();
@@ -16,7 +14,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
     Task<(int mensagens, string? desfecho)> Conversa(Instituicao i, long id) =>
         f.Db(i.Id, async db => (await db.MensagensConversa.CountAsync(m => m.ConversaId == id), (await db.Conversas.SingleAsync(c => c.Id == id)).Desfecho));
 
-    // C15
     [Fact]
     public async Task Conversa_alheia_404_mesmo_com_corpo_invalido()
     {
@@ -34,7 +31,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Conversa(c.Instituicao, id));
     }
 
-    // C16
     [Fact]
     public async Task Sem_matricula_ativa_403_mesmo_com_corpo_invalido()
     {
@@ -55,7 +51,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await f.Db(i.Id, db => db.Conversas.CountAsync()));
     }
 
-    // C17
     [Fact]
     public async Task Conversa_encerrada_400_antes_de_409()
     {
@@ -75,7 +70,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C17 (verificação rodada 1, F13): transferir recusa a conversa encerrada (409) antes da matrícula inválida (400)
     [Fact]
     public async Task Transferir_conversa_encerrada_409_antes_de_400()
     {
@@ -91,7 +85,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(chamados, await f.Db(c.Instituicao.Id, db => db.Chamados.CountAsync()));
     }
 
-    // C17 (verificação rodada 1): nos 4 cadastros, o campo inválido (400) vem antes do nome/título repetido (409)
     [Fact]
     public async Task Cadastro_400_antes_de_409()
     {
@@ -116,7 +109,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C18
     [Fact]
     public async Task Id_inexistente_404_mesmo_com_corpo_invalido()
     {
@@ -139,7 +131,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Documento não encontrado.", await Detail(versao));
     }
 
-    // Os corpos inválidos de C25, por ação; /assumir e /confirmar não têm corpo.
     static HttpRequestMessage Invalido(string acao, string numero)
     {
         var rota = $"/api/chamados/{numero}/{(acao is "responder" or "nota" ? "mensagens" : acao)}";
@@ -171,7 +162,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         };
     }
 
-    // C25
     [Fact]
     public async Task Acao_invisivel_404_mesmo_com_corpo_invalido()
     {
@@ -190,7 +180,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         await conferir();
     }
 
-    // C26
     [Fact]
     public async Task Acao_por_papel_errado_403_mesmo_com_corpo_invalido()
     {
@@ -212,7 +201,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         await conferir();
     }
 
-    // C27
     [Fact]
     public async Task Acao_com_corpo_invalido_em_estado_errado_400()
     {
@@ -232,8 +220,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // dominio-e-contratos C8 a C12 (L-023): cada linha com dois motivos de recusa ao mesmo tempo; o status e o campo dizem qual
-    // vem primeiro na base.
     static async Task Recusa400(HttpResponseMessage r, string campo, string linha, string? mensagem = null)
     {
         var corpo = await r.Content.ReadAsStringAsync();
@@ -252,7 +238,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
     static Task<HttpResponseMessage> Enviar(HttpClient c, string metodo, string rota, object corpo) =>
         metodo == "POST" ? c.PostAsJsonAsync(rota, corpo) : c.PutAsJsonAsync(rota, corpo);
 
-    // C8
     [Fact]
     public async Task Cadeia_do_acesso_e_da_conversa()
     {
@@ -290,7 +275,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(chamados, await f.Db(i.Id, db => db.Chamados.CountAsync()));
     }
 
-    // C9
     [Fact]
     public async Task Cadeia_dos_cadastros()
     {
@@ -329,7 +313,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
             "Informe o nome da categoria.");
     }
 
-    // C10
     [Fact]
     public async Task Cadeia_do_usuario()
     {
@@ -358,7 +341,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C11
     [Fact]
     public async Task Cadeia_do_conhecimento()
     {
@@ -397,7 +379,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(versoes, await f.Db(i.Id, db => db.VersoesDocumento.CountAsync(v => v.DocumentoId == documento)));
     }
 
-    // C12
     [Fact]
     public async Task Cadeia_das_acoes_do_chamado()
     {
@@ -423,7 +404,6 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         await conferir();
     }
 
-    // arquivos-minio C5 (L-023): a recusa do corpo do anexo vem antes do 409 do estado, e gravar no bucket não muda a ordem
     [Fact]
     public async Task Anexo_invalido_em_chamado_fechado_recusa_400_antes_do_409()
     {

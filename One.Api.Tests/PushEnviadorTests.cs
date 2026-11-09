@@ -39,7 +39,6 @@ public class PushEnviadorTests : IClassFixture<OneFactoryEnviadorReal>
         return (new EnviadorPush(servicos.BuildServiceProvider().GetRequiredService<IHttpClientFactory>(), cfg), rede);
     }
 
-    // uma subscrição de navegador de teste: chave pública P-256 não comprimida e segredo de autenticação de 16 bytes
     static (string p256dh, string auth) Navegador()
     {
         using var ec = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);

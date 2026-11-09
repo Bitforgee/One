@@ -8,7 +8,6 @@ export type Etapa = { destino: Destino; setorId: number | null; prazoHoras: numb
 export type VersaoDoFluxo = { numero: number; etapas: Etapa[] }
 export type Fluxo = Id & { categoriaId: number; cursoId: number | null; semestre: number | null; vigente: VersaoDoFluxo | null; rascunho: VersaoDoFluxo | null }
 
-// Os rótulos fixos (fluxos-atendimento ## Checks): o tipo de destino na lista, no simulador e no Detalhe.
 export const Destinos: [Destino, string][] = [
   ['SETOR', 'Setor fixo'],
   ['COORDENACAO_CURSO', 'Coordenação do curso'],
@@ -16,7 +15,6 @@ export const Destinos: [Destino, string][] = [
 ]
 export const SemestresDe1a12 = Array.from({ length: 12 }, (_, i) => i + 1)
 
-// `Setor {nome}`, `Coordenação do curso` ou `Liderança do semestre`, com ` ({N} h)` quando a etapa tem prazo.
 export function rotuloDaEtapa(e: Etapa, setores: Setor[]) {
   const base = e.destino === 'SETOR' ? `Setor ${setores.find((s) => s.id === e.setorId)?.nome ?? '—'}` : Destinos.find(([d]) => d === e.destino)![1]
   return e.prazoHoras ? `${base} (${e.prazoHoras} h)` : base
@@ -24,7 +22,6 @@ export function rotuloDaEtapa(e: Etapa, setores: Setor[]) {
 
 export const cadeiaDoFluxo = (v: VersaoDoFluxo | null, setores: Setor[]) => (v ? v.etapas.map((e) => rotuloDaEtapa(e, setores)).join(' → ') : 'sem versão publicada')
 
-// `Todos os cursos`, `{curso}` ou `{curso}, {N}º semestre`.
 export function abrangenciaDoFluxo(f: Pick<Fluxo, 'cursoId' | 'semestre'>, cursos: Curso[]) {
   if (f.cursoId === null) return 'Todos os cursos'
   const curso = cursos.find((c) => c.id === f.cursoId)?.nome ?? '—'
@@ -32,5 +29,4 @@ export function abrangenciaDoFluxo(f: Pick<Fluxo, 'cursoId' | 'semestre'>, curso
 }export type Pronta = Id & { setorId: number; titulo: string; texto: string }
 export type Usuario = Id & { cpf: string; nome: string; email: string; ativo: boolean; deveTrocarSenha: boolean; papeis: string[]; setores: number[] }
 
-// 12345678909 -> 123.456.789-09; o que não tem 11 dígitos fica como veio.
 export const cpfFormatado = (cpf: string) => (/^\d{11}$/.test(cpf) ? cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4') : cpf)

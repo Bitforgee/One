@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { iniciais } from '../aparencia'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
-// aparencia-instituicao S3 (AC 23 a AC 27, AC 21 na tela). As cores entram em pedaços: interface.test.ts proíbe cor literal em src/.
 const hex = (digitos: string) => '#' + digitos
 const Cor = hex('8a1538')
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -39,7 +38,6 @@ afterEach(() => {
 })
 
 describe('tela Aparência', () => {
-  // C23 (AC 23, door 7)
   it('link Aparência só para administrador', async () => {
     for (const [papel, ve] of [['ALUNO', false], ['ATENDENTE', false], ['ADMINISTRADOR', true]] as const) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
@@ -58,7 +56,6 @@ describe('tela Aparência', () => {
     }
   })
 
-  // C24 (AC 24)
   it('prévia muda antes de salvar', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -66,8 +63,6 @@ describe('tela Aparência', () => {
     const previa = within(screen.getByRole('region', { name: 'Prévia' }))
     const entrar = previa.getByRole('button', { name: 'Entrar' })
     expect(entrar.closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${Cor}`)
-    // a cor pintada (C71): o jsdom não resolve var() nem compila o Tailwind, então a cascata de index.css
-    // (`.previa-marca { --primary: var(--marca-previa) }`) e o `bg-primary` do botão são resolvidos aqui, em texto
     const regra = readFileSync('src/index.css', 'utf8').match(/\.previa-marca \{\s*--primary: var\(--marca-previa\);\s*\}/)
     expect(regra).not.toBeNull()
     const marca = (entrar.closest('.previa-marca') as HTMLElement).style.getPropertyValue('--marca-previa')
@@ -94,7 +89,6 @@ describe('tela Aparência', () => {
     expect(previa.getByText('Vagner, assistente virtual')).toBeInTheDocument()
   })
 
-  // C25 (AC 25)
   it('salvar mostra Aparência salva e aplica sem recarregar', async () => {
     let salva: object = instituicao()
     const chamadas = rotas({
@@ -118,7 +112,6 @@ describe('tela Aparência', () => {
     expect(chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/instituicoes/univag').length).toBeGreaterThan(1) // a consulta foi invalidada e relida
   })
 
-  // C26 (AC 26)
   it('erro da API aparece e o formulário fica', async () => {
     rotas({ 'PUT /api/admin/aparencia': () => [400, { status: 400, detail: 'Escolha uma cor mais escura.', errors: { cor: ['Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.'] } }] })
     const { unmount } = abrir('/univag/aparencia')
@@ -154,7 +147,6 @@ describe('tela Aparência', () => {
     }
   })
 
-  // C27 (AC 27, door 8)
   it('contraste ao lado da cor e Salvar desabilitado', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -172,7 +164,6 @@ describe('tela Aparência', () => {
     }
   })
 
-  // C29 (AC 21, Observable)
   it('remover imagem pede confirmação', async () => {
     let logo: number | null = 3
     const chamadas = rotas({
@@ -193,7 +184,6 @@ describe('tela Aparência', () => {
     expect(chamadas.filter((c) => c.metodo === 'DELETE').map((c) => c.url)).toEqual(['/api/admin/aparencia/imagens/logo'])
   })
 
-  // C50 (AC 37): abaixo de 1024 px a prévia sai da página e abre pelo "Ver prévia"
   it('a prévia abre pelo Ver prévia abaixo de 1024', async () => {
     vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 1023px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
     try {
@@ -210,7 +200,6 @@ describe('tela Aparência', () => {
     }
   })
 
-  // C70 (AC 15, AC 21)
   it('as 4 imagens com miniatura, enviar e remover', async () => {
     const tipos = [['logo', 'Logo', 'Marca'], ['icone', 'Ícone do app', 'App instalado'], ['login', 'Imagem do login', 'Login'], ['assistente', 'Foto do assistente', 'Assistente']] as const
     for (const [tipo, rotulo, aba] of tipos) {
@@ -226,7 +215,6 @@ describe('tela Aparência', () => {
       await ir(aba)
       expect(await screen.findByRole('img', { name: `Miniatura: ${rotulo}` }), tipo).toHaveAttribute('src', `/api/instituicoes/univag/imagens/${tipo}?v=7`)
       expect(screen.getByRole('button', { name: `Enviar imagem: ${rotulo}` })).toBeInTheDocument()
-      // sem versão nos outros 3 tipos: nem miniatura nem "Remover"
       expect(screen.getAllByRole('button', { name: /^Remover imagem:/ }), tipo).toHaveLength(1)
       expect(document.querySelectorAll('img[alt^="Miniatura:"]'), tipo).toHaveLength(1)
 
@@ -242,7 +230,6 @@ describe('tela Aparência', () => {
     }
   })
 
-  // C71 (AC 24)
   it('iniciais da prévia iguais às do login', async () => {
     for (const nome of ['Centro Universitário de Várzea Grande', 'Faculdade Demo']) {
       const sigla = (raiz: ParentNode) => raiz.querySelector('span.bg-primary[aria-hidden=true]')!.textContent

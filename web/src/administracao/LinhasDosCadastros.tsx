@@ -20,13 +20,11 @@ const Selos = ({ itens }: { itens: [texto: string, variante: Variante][] }) =>
     </span>
   )
 
-// O estado do fluxo em uma palavra: a versão no ar, um rascunho em edição, ou nada ainda.
 export function estadoDoFluxo(f: Pick<Fluxo, 'vigente' | 'rascunho'>) {
   if (f.vigente) return `Publicado v${f.vigente.numero}`
   return f.rascunho ? 'Rascunho' : 'Sem versão'
 }
 
-// A cadeia desenhada em mini-etapas: o ícone do destino e o nome, ligados por setas.
 export function MiniCadeia({ versao, setores }: { versao: VersaoDoFluxo | null; setores: Setor[] }) {
   if (!versao || versao.etapas.length === 0) return <span className="text-muted-foreground">Sem etapas</span>
   return (
@@ -65,7 +63,6 @@ function selosDoSetor(s: Setor, dados: Listas): [string, Variante][] {
   return [...(s.triagem ? ([['Triagem', 'outline']] as [string, Variante][]) : []), ...lideranca, ...(s.ativo ? [] : ([['Inativo', 'secondary']] as [string, Variante][]))]
 }
 
-// Linha da lista de cada aba: o nome e, ao lado, o que distingue o registro.
 export function linhas(dados: Listas): Record<Aba, (x: any) => Linha> {
   return {
     setores: (s: Setor) => [s.nome, <Selos itens={selosDoSetor(s, dados)} />],

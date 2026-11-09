@@ -34,7 +34,6 @@ describe('links da resposta', () => {
     expect(a.textContent).toBe('a.edu.br/boletos')
     expect(corpo.textContent).not.toContain('https://')
 
-    // um link no meio e outro no fim: o do meio fica na frase, o do fim vira botão
     cleanup()
     const dois = separarLinks('Veja https://a.edu.br/boletos primeiro. Depois acesse https://b.edu.br/pagar')
     expect(dois).toEqual({ texto: 'Veja https://a.edu.br/boletos primeiro. Depois acesse:', links: ['https://b.edu.br/pagar'] })

@@ -6,7 +6,6 @@ using static One.Api.Assistente.ConversaRotas;
 
 namespace One.Api.Assistente;
 
-// Informa, sem gravar, se a transferência desta conversa passaria primeiro pela liderança do semestre (door 6).
 public sealed record VerDestino(long Id, long? MatriculaId, Usuario Usuario) : IRequest<IResult>
 {
     public sealed record Resposta(bool Lideranca);

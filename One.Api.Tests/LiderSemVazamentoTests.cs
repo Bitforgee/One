@@ -7,7 +7,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// base-fluxos S1 (C1 a C6, F1): quem tem ATENDENTE só em setores de liderança de turma é líder, não equipe: não lê artigo, documento nem indicadores.
 public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string Periodo = "de=2026-11-01&ate=2026-11-08";
@@ -33,7 +32,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
 
     static async Task<string> Detalhe(HttpResponseMessage r) => (await r.Json()).GetProperty("detail").GetString()!;
 
-    // C1
     [Fact]
     public async Task Lider_nao_le_versao_de_artigo()
     {
@@ -45,7 +43,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Versão de artigo não encontrada.", await Detalhe(r));
     }
 
-    // C2
     [Fact]
     public async Task Lider_nao_baixa_versao_de_documento()
     {
@@ -57,7 +54,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Documento não encontrado.", await Detalhe(r));
     }
 
-    // C3
     [Fact]
     public async Task Lider_nao_consulta_indicadores()
     {
@@ -69,7 +65,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Os indicadores não estão disponíveis para a liderança de turma.", await Detalhe(r));
     }
 
-    // C4: 4 perfis nas 3 rotas
     [Fact]
     public async Task Quem_nao_e_so_lider_segue_como_hoje()
     {
@@ -92,7 +87,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C5
     [Fact]
     public async Task Lider_entra_na_fila_do_proprio_setor()
     {
@@ -108,7 +102,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([$"Sonda:{daLideranca}"], (await c.Quieto()).ToList());
     }
 
-    // C25: a regra direto, um caso por linha
     [Fact]
     public async Task So_lideranca_por_caso()
     {
@@ -135,7 +128,6 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(esperado == await f.Db(m.I.Id, async db => await db.SoLideranca(await db.Usuarios.Include(u => u.Papeis).SingleAsync(u => u.Id == id))), nome);
     }
 
-    // C6
     [Fact]
     public async Task Lider_segue_vendo_a_fila_da_turma()
     {

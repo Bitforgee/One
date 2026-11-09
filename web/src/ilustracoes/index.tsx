@@ -1,5 +1,3 @@
-// A única ilustração que sobrou (identidade-visual door 4): a linha de cabeçalho de uma planilha, para o guia de Matrículas.
-// Só formas e texto, pintados com currentColor e os tokens da marca. Decorativa: o passo já diz as colunas em texto.
 const Colunas = ['cpf', 'nome', 'email', 'matricula', 'curso', 'semestre', 'situacao']
 const Larguras = [44, 52, 60, 88, 60, 84, 84]
 

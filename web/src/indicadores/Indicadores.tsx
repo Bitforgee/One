@@ -60,7 +60,6 @@ const Colunas: ColumnDef<Linha>[] = [
   { accessorKey: 'total', header: 'Total' },
 ]
 
-// O ranking em tabela de 2 colunas (door 16): a categoria inteira com a barra embaixo, proporcional ao maior total, e o total à direita; vazio, uma linha só com o traço.
 function TabelaRanking({ linhas }: { linhas: Linha[] }) {
   const tabela = useReactTable({ data: linhas, columns: Colunas, getCoreRowModel: getCoreRowModel() })
   const maior = Math.max(...linhas.map((l) => l.total))
@@ -109,7 +108,6 @@ export function Ranking({ titulo, linhas }: { titulo: string; linhas: Linha[] })
   )
 }
 
-// O principal ocupa a maior área; os outros 3 destaques ficam numa faixa; os rodapés dizem o que o número mede.
 const Rodapes: Record<string, string> = {
   'Indicador principal': 'Resolvidas sem reabertura, sobre as conversas com desfecho.',
   'Chamados abertos agora': 'Chamados não fechados neste momento.',
@@ -118,7 +116,6 @@ const Rodapes: Record<string, string> = {
 }
 const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta']
 
-// A variação em pontos percentuais contra o período anterior (P5): 1 casa, "pt" abaixo de 2,0 e "pts" de 2,0 em diante.
 export function variacao(atual: number, anterior: number) {
   const pontos = Math.round((atual - anterior) * 1000) / 10
   if (pontos === 0) return '= sem variação'
@@ -144,7 +141,6 @@ function Principal({ valor, variacaoDe }: { valor: string; variacaoDe?: string }
   )
 }
 
-// Os 13 indicadores: o principal, a faixa de 3, as outras 9 em lista e os rankings que a API manda; as colunas seguem a largura do main (door 5).
 function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string }) {
   const rankings = [
     ['Categorias por conversas', dados.principaisCategorias.porConversas],
@@ -186,7 +182,6 @@ function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string
   )
 }
 
-// O período anterior de mesmo número de dias, terminando na véspera de `de` (identidade-visual AC 12).
 export function periodoAnterior(de: string, ate: string) {
   if (!de || !ate) return null // campo vazio: sem período anterior, e nenhum pedido com NaN na URL
   const [d, a] = [de, ate].map((v) => v.split('-').map(Number))
@@ -195,7 +190,6 @@ export function periodoAnterior(de: string, ate: string) {
   return dias < 1 ? null : { de: antes(dias), ate: antes(1) }
 }
 
-// A variação do principal contra o período anterior; a falha da consulta, a falta de dados e o número ainda provisório só a tiram (AC 13).
 function useVariacao(consulta: { de: string; ate: string }, atual: Indicadores | undefined, provisorio: boolean) {
   const antes = periodoAnterior(consulta.de, consulta.ate)
   const { data: anterior } = useQuery({
@@ -207,12 +201,10 @@ function useVariacao(consulta: { de: string; ate: string }, atual: Indicadores |
   return !provisorio && a != null && b != null ? variacao(a, b) : undefined
 }
 
-// S11: os 14 indicadores do Quadro 12, por período, no fuso da instituição.
 export function Indicadores() {
   const hoje = new Date()
   const [de, setDe] = useState(dia(new Date(hoje.getFullYear(), hoje.getMonth(), 1)))
   const [ate, setAte] = useState(dia(hoje))
-  // cada "Consultar" é uma consulta nova, mesmo com o período igual; os cartões anteriores ficam até a resposta
   const [consulta, setConsulta] = useState({ de, ate, vez: 0 })
   const { data: dados, error, isFetching, isPlaceholderData, refetch } = useQuery({
     queryKey: ['indicadores', consulta],

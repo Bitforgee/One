@@ -6,12 +6,10 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento C67 a C69 e C72 (door 6, emenda 1): quem decide se o chamado passa pela liderança é o fluxo; o aluno é avisado antes e nunca escolhe.
 public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<bool> Prevista(Turma t) => (await t.Destino(await t.Conversa())).GetProperty("lideranca").GetBoolean();
 
-    // C67: setor ativo e ao menos um atendente ativo que não é o aluno
     [Fact]
     public async Task Disponibilidade_da_lideranca()
     {
@@ -23,18 +21,15 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(soOAluno.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = soOAluno.Aluno.Usuario.Id, SetorId = soOAluno.Lideranca!.Id }); await db.SaveChangesAsync(); });
         Assert.False(await Prevista(soOAluno));
 
-        // um atendente desativado também não conta
         var inativo = await Turma.Criar(f);
         await f.Db(inativo.I.Id, db => db.Usuarios.Where(u => u.Id == inativo.Lider!.Usuario.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.Ativo, false)));
         Assert.False(await Prevista(inativo));
 
-        // com o aluno e um colega atendendo, a liderança segue disponível
         var comColega = await Turma.Criar(f);
         await f.Db(comColega.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = comColega.Aluno.Usuario.Id, SetorId = comColega.Lideranca!.Id }); await db.SaveChangesAsync(); });
         Assert.True(await Prevista(comColega));
     }
 
-    // C68
     [Fact]
     public async Task Destino_informa_sem_gravar()
     {
@@ -50,7 +45,6 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(chamadosAntes, await f.Db(t.I.Id, db => db.Chamados.CountAsync()));
         Assert.Null(await f.Db(t.I.Id, db => db.Conversas.Where(c => c.Id == conversa).Select(c => c.Desfecho).SingleAsync()));
 
-        // fluxo que não começa pela liderança, categoria sem fluxo e a matrícula escolhida
         var semLideranca = await Turma.Criar(f);
         var coordenacao = await f.Categoria(semLideranca.I, "Coordenação");
         await f.Fluxo(semLideranca.I, coordenacao, semLideranca.Curso.Id, Turma.Semestre, SementeAtendimento.Etapa(DestinosEtapa.CoordenacaoCurso));
@@ -61,7 +55,6 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True((await t.Destino(conversa, matriculaId: matricula)).GetProperty("lideranca").GetBoolean());
     }
 
-    // C69
     [Fact]
     public async Task Destino_400_404_409()
     {
@@ -74,7 +67,6 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await outro.Cliente.GetAsync($"/api/conversas/{conversa}/destino")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await t.ClienteAluno.GetAsync("/api/conversas/999999/destino")).StatusCode);
 
-        // POST /transferir: matrícula que não é do aluno 400 (campo matriculaId); conversa de outro aluno 404
         var recusada = await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { matriculaId = matriculaDoOutro });
         Assert.Equal(HttpStatusCode.BadRequest, recusada.StatusCode);
         Assert.True((await recusada.Json()).GetProperty("errors").TryGetProperty("matriculaId", out _));
@@ -85,20 +77,17 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Conflict, (await t.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/transferir", new { })).StatusCode);
     }
 
-    // C72
     [Fact]
     public async Task Fluxo_decide_e_o_aluno_nao_escolhe()
     {
         var t = await Turma.Criar(f);
 
-        // o corpo antigo, com a recusa, é ignorado: o aluno não consegue pular a liderança
         var recusou = await t.Ler(await t.Transferir(new { aceitaLideranca = false }));
         var omitiu = await t.Ler(await t.Transferir(new { }));
 
         foreach (var chamado in new[] { recusou, omitiu }) Assert.Equal((t.Lideranca!.Id, 1), (chamado.SetorId, chamado.EtapaOrdem));
     }
 
-    // AC 8: sem conversa a resumir, o atendimento direto nunca abre na liderança
     [Fact]
     public async Task Atendimento_direto_nao_passa_pela_lideranca()
     {
@@ -111,7 +100,6 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotEqual(t.Lideranca!.Id, chamado.SetorId);
     }
 
-    // AC 7: sem liderança disponível, o fluxo segue para a coordenação
     [Fact]
     public async Task Sem_lideranca_disponivel_vai_a_coordenacao()
     {

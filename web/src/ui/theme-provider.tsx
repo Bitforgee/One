@@ -45,7 +45,6 @@ export function ThemeProvider({
       return
     }
 
-    // Preto é o Escuro com o fundo preto por cima: o dark: do Tailwind continua valendo (door 1)
     root.classList.add(...(theme === "black" ? ["dark", "black"] : [theme]))
   }, [theme])
 

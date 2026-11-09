@@ -10,7 +10,6 @@ public sealed record RemoverImagemInstituicao(string Tipo) : IRequest<IResult>
         g.MapDelete("/aparencia/imagens/{tipo}", (string tipo, IMediator m) => m.Send(new RemoverImagemInstituicao(tipo)));
 }
 
-// Só marca a remoção: a linha, a versão e o objeto ficam no bucket versionado (AD-021).
 public sealed class RemoverImagemInstituicaoHandler(OneDb db) : IRequestHandler<RemoverImagemInstituicao, IResult>
 {
     public async ValueTask<IResult> Handle(RemoverImagemInstituicao m, CancellationToken ct)

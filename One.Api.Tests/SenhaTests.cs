@@ -57,7 +57,6 @@ public class SenhaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, u.Cpf, Semente.Senha)).StatusCode);
     }
 
-    // refatoracao-solid C18: 7 e 129 recusadas, 8 e 128 aceitas, na troca de senha e no cadastro de usuário
     [Fact]
     public async Task Limites_7_8_128_129()
     {

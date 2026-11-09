@@ -148,7 +148,6 @@ public class Program
         Instituicoes.PlataformaRotas.Mapear(api);
         api.MapHub<TempoRealHub>("/tempo-real").Add(b =>
         {
-            // o negotiate só atende POST; o endpoint do WebSocket também atende o long polling (GET, POST, DELETE) e fica sem restrição
             if (b is RouteEndpointBuilder { RoutePattern.RawText: { } t } && t.EndsWith("/negotiate", StringComparison.Ordinal)) b.Metadata.Add(new HttpMethodMetadata(["POST"]));
         });
 

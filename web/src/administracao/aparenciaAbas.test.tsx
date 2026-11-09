@@ -6,7 +6,6 @@ import { App } from '../App'
 import { contraste } from '../aparencia'
 import { api, instituicao, me, type Rota } from '../test/util'
 
-// aparencia-enxuta C1 a C19. As cores entram em pedaços: interface.test.ts proíbe cor literal em src/.
 const hex = (digitos: string) => '#' + digitos
 const Cor = hex('8a1538')
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -17,7 +16,6 @@ const aparencia = (parcial: Record<string, unknown> = {}) => {
 const arquivo = (nome: string) => new File(['x'], nome, { type: 'image/png' })
 const Abas = ['Marca', 'App instalado', 'Login', 'Assistente', 'Contato']
 
-// cada aba com os rótulos que ela mostra; os de imagem são o "Arquivo: ..." de cada campo de imagem
 const Rotulos: Record<string, string[]> = {
   Marca: ['Cor principal', 'Arquivo: Logo'],
   'App instalado': ['Nome do app', 'Arquivo: Ícone do app'],
@@ -34,7 +32,6 @@ const rotas = (extra: Record<string, Rota> = {}, atual: object = aparencia(), pu
     ...extra,
   })
 
-// como `abrir`, mas devolve o roteador para ler o endereço e voltar no histórico
 function abrir(caminho: string) {
   const roteador = createMemoryRouter([{ path: '*', element: <App /> }], { initialEntries: [caminho] })
   return { roteador, ...render(<RouterProvider router={roteador} />) }
@@ -58,7 +55,6 @@ afterEach(() => {
 })
 
 describe('Aparência em abas', () => {
-  // C1 (AC 1)
   it('cinco abas com Marca ativa', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -68,7 +64,6 @@ describe('Aparência em abas', () => {
     expect(screen.queryByLabelText('Título do login')).not.toBeInTheDocument()
   })
 
-  // C2 (AC 2)
   it('campos de cada aba', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -83,7 +78,6 @@ describe('Aparência em abas', () => {
     }
   })
 
-  // C3 (AC 3)
   it('troca de aba mantém o digitado', async () => {
     rotas()
     const { roteador } = abrir('/univag/aparencia')
@@ -105,7 +99,6 @@ describe('Aparência em abas', () => {
     expect(screen.getByLabelText('Nome do assistente')).toHaveValue('Ana')
   })
 
-  // C4 (AC 4)
   it('aba desconhecida abre Marca', async () => {
     rotas()
     const a = abrir('/univag/aparencia?aba=xyz')
@@ -117,7 +110,6 @@ describe('Aparência em abas', () => {
     expect(ativa()).toBe('Login')
   })
 
-  // C5 (AC 5)
   it('barra de salvar mostra o estado', async () => {
     let salva: object = aparencia()
     rotas({
@@ -143,7 +135,6 @@ describe('Aparência em abas', () => {
     expect(salvar()).toBeDisabled()
   })
 
-  // C6 (AC 6)
   it('descartar volta ao salvo sem chamar a API', async () => {
     const chamadas = rotas()
     abrir('/univag/aparencia')
@@ -161,7 +152,6 @@ describe('Aparência em abas', () => {
     expect(chamadas.filter((c) => c.metodo !== 'GET')).toEqual([])
   })
 
-  // C7 (AC 7)
   it('sair sem salvar', async () => {
     rotas()
     const { roteador, unmount } = abrir('/univag/aparencia')
@@ -188,7 +178,6 @@ describe('Aparência em abas', () => {
     await waitFor(() => expect(roteador.state.location.pathname).toBe('/univag/cadastros'))
     unmount()
 
-    // sem alteração: sai direto, sem diálogo, e o navegador não pergunta
     const limpa = abrir('/univag/aparencia')
     await screen.findByLabelText('Cor principal')
     expect(aviso()).toBe(false)
@@ -197,7 +186,6 @@ describe('Aparência em abas', () => {
     expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()
   })
 
-  // C8 (AC 8)
   it('erro marca a aba e ativa a primeira', async () => {
     rotas({
       'PUT /api/admin/aparencia': () => [400, { status: 400, detail: 'Dados inválidos.', errors: { 'contato.email': ['Informe um e-mail válido.'], nomeCurto: ['O nome do app passa de 12 letras.'] } }],
@@ -244,7 +232,6 @@ describe('Aparência em abas', () => {
     }
   })
 
-  // C10 (AC 10)
   it('prévia por aba', async () => {
     rotas({}, aparencia({ nomeCurto: 'Univag', contato: { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: 'atendimento@univag.edu.br' } }))
     abrir('/univag/aparencia')
@@ -280,7 +267,6 @@ describe('Aparência em abas', () => {
 })
 
 describe('App instalado', () => {
-  // C11 (AC 11)
   it('nome do app com contador', async () => {
     rotas()
     abrir('/univag/aparencia?aba=app')
@@ -294,7 +280,6 @@ describe('App instalado', () => {
     expect(screen.getByText('6/12')).not.toHaveClass('text-destructive')
   })
 
-  // C12 (AC 12)
   it('dicas do ícone e nota de atualização', async () => {
     rotas()
     abrir('/univag/aparencia?aba=app')
@@ -303,13 +288,11 @@ describe('App instalado', () => {
     expect(screen.getByText('Quem já instalou o app pode levar um tempo para ver o nome e o ícone novos.')).toBeInTheDocument()
   })
 
-  // C13 (AC 13)
   it('tela inicial e janela do computador', async () => {
     const barra = () => within(screen.getByRole('region', { name: 'Janela do computador' }))
     const tela = () => within(screen.getByRole('region', { name: 'Tela inicial' }))
     const icones = () => [tela(), barra()].map((r) => r.getByTestId('icone-do-app').getAttribute('src'))
 
-    // salvo: o ícone da versão 3, o nome cortado em 12 caracteres e a barra na cor
     rotas({}, aparencia({ nomeCurto: 'Universidade Federal', cor: Cor, imagens: { logo: null, icone: 3, login: null, assistente: null } }))
     abrir('/univag/aparencia?aba=app')
     await screen.findByLabelText('Nome do app')
@@ -319,7 +302,6 @@ describe('App instalado', () => {
     expect(barra().getByText('Univag')).toBeInTheDocument()
     expect(barra().getByTestId('barra-do-app')).toHaveStyle({ backgroundColor: Cor })
 
-    // escolhido e não salvo: o blob; e a cor digitada na Marca pinta a barra
     await userEvent.upload(screen.getByLabelText('Arquivo: Ícone do app'), arquivo('icone.png'))
     expect(icones()).toEqual(['blob:imagem-nova', 'blob:imagem-nova'])
     await ir('Marca')
@@ -336,7 +318,6 @@ describe('App instalado', () => {
     expect(tela.getByTestId('icone-do-app')).toHaveAttribute('src', '/icons/icon-192.png')
   })
 
-  // C14 (AC 14)
   it('prévia do app muda antes de salvar', async () => {
     const chamadas = rotas()
     abrir('/univag/aparencia?aba=app')
@@ -349,7 +330,6 @@ describe('App instalado', () => {
     expect(chamadas.filter((c) => c.metodo !== 'GET')).toEqual([])
   })
 
-  // C16 (AC 16)
   it('salvar troca meta e título', async () => {
     let publica = instituicao()
     let salva: object = aparencia()
@@ -373,7 +353,6 @@ describe('App instalado', () => {
 describe('Cores prontas', () => {
   const Nomes = ['Azul One', 'Verde', 'Vinho', 'Roxo', 'Laranja', 'Grafite', 'Petróleo', 'Marrom']
 
-  // C17 (AC 17)
   it('oito cores prontas com contraste', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -386,7 +365,6 @@ describe('Cores prontas', () => {
     }
   })
 
-  // C18 (AC 18)
   it('escolher amostra preenche e marca', async () => {
     rotas()
     abrir('/univag/aparencia')
@@ -402,7 +380,6 @@ describe('Cores prontas', () => {
     expect(grupo.getAllByRole('radio').map((r) => r.getAttribute('aria-checked'))).toEqual(Array(8).fill('false'))
   })
 
-  // C19 (AC 19)
   it('cor sem contraste bloqueia o Salvar', async () => {
     rotas()
     abrir('/univag/aparencia')

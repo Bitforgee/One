@@ -31,8 +31,6 @@ function ResultadoDaSimulacao({ resultado }: { resultado: Simulacao }) {
 
 type Props = { fluxo: Fluxo; cursos: Curso[]; versao: 'RASCUNHO' | 'VIGENTE' | null; aoSimular: (r: Simulacao) => void }
 
-// O aluno que se simula (curso e semestre) e a chamada que simula sem gravar nada. O botão Simular fica na barra de ações
-// do editor e os campos na seção "Simular um aluno"; o resultado fica com quem edita, para o canvas marcar os nós (AC 81).
 export function useSimulador({ fluxo, versao, aoSimular }: Pick<Props, 'fluxo' | 'versao' | 'aoSimular'>) {
   const [cursoId, setCursoId] = useState('')
   const [semestre, setSemestre] = useState('')

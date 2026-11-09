@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { chamadoSimulado, simularApi } from './simulada'
 
-// chat-linha-do-tempo: arranjo do compositor do aluno e da linha do tempo do chamado, medido com boundingBox() (px CSS).
 test.use({ serviceWorkers: 'block' })
 
 const caixa = async (l: Locator) => (await l.boundingBox())!
@@ -19,7 +18,6 @@ async function assistente(page: Page, largura: number, altura = 800) {
 const compositor = (page: Page) => page.getByTestId('compositor')
 
 test.describe('compositor do aluno', () => {
-  // C1
   test('compositor numa caixa', async ({ page }) => {
     for (const largura of [768, 1280, 1872]) {
       await assistente(page, largura)
@@ -35,7 +33,6 @@ test.describe('compositor do aluno', () => {
     }
   })
 
-  // C2
   test('bordas alinhadas', async ({ page }) => {
     for (const largura of [768, 1280, 1872]) {
       await assistente(page, largura)
@@ -47,7 +44,6 @@ test.describe('compositor do aluno', () => {
     }
   })
 
-  // C3
   test('campo alto', async ({ page }) => {
     await assistente(page, 1280)
     await page.getByLabel('Mensagem').fill(Array.from({ length: 10 }, (_, i) => `linha ${i + 1}`).join('\n'))
@@ -61,7 +57,6 @@ test.describe('compositor do aluno', () => {
     }
   })
 
-  // C4
   test('selos dentro da caixa', async ({ page }) => {
     await assistente(page, 1280)
     await page.locator('input[type=file]').setInputFiles({ name: 'boleto.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })
@@ -74,7 +69,6 @@ test.describe('compositor do aluno', () => {
     expect(ajuda.y).toBeGreaterThanOrEqual(c.y + c.height - 1)
   })
 
-  // C5
   test('360 px sem rolagem lateral', async ({ page }) => {
     await assistente(page, 360, 740)
     await page.getByLabel('Mensagem').fill('preciso do boleto')
@@ -84,7 +78,6 @@ test.describe('compositor do aluno', () => {
     for (const nome of ['Falar com atendente', 'Encerrar']) expect((await caixa(page.getByRole('button', { name: nome }))).height, nome).toBeGreaterThanOrEqual(44)
   })
 
-  // C6
   test('caixa no fim da tela vazia', async ({ page }) => {
     await assistente(page, 1280, 800)
     const c = await caixa(compositor(page))
@@ -94,7 +87,6 @@ test.describe('compositor do aluno', () => {
   })
 })
 
-// 40 itens: 20 mensagens e 20 eventos, de hora em hora
 function chamadoLongo() {
   const base = Date.parse('2026-11-02T12:00:00Z')
   const hora = (n: number) => new Date(base + n * 3_600_000).toISOString()
@@ -116,7 +108,6 @@ async function chamado(page: Page, largura: number, itens: 'longo' | 'curto' = '
   await assentar(page)
 }
 
-// a janela é quem rola: o main cresce com o conteúdo
 const rolar = (page: Page, y: number) => page.evaluate((alvo) => window.scrollTo(0, alvo), y)
 const dentro = async (l: Locator, altura = 800) => {
   const b = await caixa(l)
@@ -124,7 +115,6 @@ const dentro = async (l: Locator, altura = 800) => {
 }
 
 test.describe('linha do tempo do chamado', () => {
-  // C18
   test('resposta colada ao fim', async ({ page }) => {
     await chamado(page, 1280)
     await rolar(page, 600)
@@ -135,7 +125,6 @@ test.describe('linha do tempo do chamado', () => {
     expect(await dentro(campo.getByRole('button', { name: 'Enviar' })), 'Enviar na janela').toBe(true)
   })
 
-  // C19
   test('ações visíveis ao rolar', async ({ page }) => {
     await chamado(page, 1440)
     await rolar(page, 600)
@@ -145,7 +134,6 @@ test.describe('linha do tempo do chamado', () => {
     expect(await dentro(page.getByRole('button', { name: 'Assumir' })), 'Assumir na janela').toBe(true)
   })
 
-  // C20
   test('ir para o mais recente', async ({ page }) => {
     await chamado(page, 1280)
     await page.getByRole('button', { name: 'Ir para o mais recente' }).click()
@@ -160,7 +148,6 @@ test.describe('linha do tempo do chamado', () => {
     await expect(page.getByRole('button', { name: 'Ir para o mais recente' })).toHaveCount(0)
   })
 
-  // C21
   test('celular mantém a barra', async ({ page }) => {
     await chamado(page, 390)
     const barra = page.getByRole('button', { name: 'Assumir' }).locator('xpath=..')

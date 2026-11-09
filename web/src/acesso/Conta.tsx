@@ -12,7 +12,6 @@ import { useTheme } from '../ui/theme-provider'
 const NomesDeTema = { light: 'Claro', dark: 'Escuro', black: 'Preto', system: 'Sistema' }
 const Linha = 'flex h-[52px] w-full items-center gap-3 px-4 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none'
 
-// Uma linha tocável de 52 px: ícone, rótulo e, à direita, o valor atual ou a seta.
 function Conteudo({ Icone, rotulo, valor }: { Icone: ComponentType<{ className?: string }>; rotulo: string; valor?: ReactNode }) {
   return (
     <>
@@ -23,7 +22,6 @@ function Conteudo({ Icone, rotulo, valor }: { Icone: ComponentType<{ className?:
   )
 }
 
-// Tela Conta do aluno no celular (door 1): nome e CPF mascarado, depois as linhas de tema, avisos, contato, senha e sair.
 export function Conta() {
   const { me } = useSessao()
   const { slug } = useParams()

@@ -3,16 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from './api'
 import { useChamadoAberto, useEstadoDaConexao } from './tempo-real'
 
-// RAG: a fonte citada é um artigo ou um documento (PDF) da instituição; só a equipe recebe
 export type Fonte = { tipo: 'ARTIGO' | 'DOCUMENTO'; versaoArtigoId: number | null; versaoDocumentoId: number | null; titulo: string; numero: number; trechos: string[]; atualizado: boolean }
 export type Anexo = { id: number; nome: string; tipo: string; tamanho: number }
 export type MensagemChamado = { id: number; tipo: 'PUBLICA' | 'NOTA'; texto: string; autor: string; doAluno: boolean; criadaEm: string; anexos?: Anexo[] }
 export type Evento = { tipo: string; ator: string; doAluno: boolean; de: string | null; para: string | null; detalhe: string | null; criadoEm: string }
 
-// Por que o chamado caiu ali: a versão do fluxo, a etapa atual, o total, o tipo de destino e a abrangência (só a equipe recebe).
 export type DoFluxo = { versao: number; etapa: number; total: number; destino: string; abrangencia: string }
 
-// Resposta de GET /api/chamados/{numero}; resumo, fontes e eventos só vêm para a equipe.
 export type Chamado = {
   numero: string
   titulo: string
@@ -46,14 +43,12 @@ export const Estados: Record<string, string> = {
   FECHADO: 'Fechado',
 }
 
-// Frase de cada evento do Histórico (historico-legivel ## Screens); tipo desconhecido sai cru para nunca esconder um evento.
 const estado = (v: string | null) => (v === null ? '—' : (Estados[v] ?? v))
 function atribuicao(e: Evento) {
   if (!e.para) return `${e.ator} tirou ${e.de} da responsabilidade`
   if (e.para !== e.ator) return `${e.ator} atribuiu a ${e.para}`
   return e.de ? `${e.ator} assumiu a solicitação no lugar de ${e.de}` : `${e.ator} assumiu a solicitação`
 }
-// Sem autor (o prazo da etapa venceu), a frase já leva o detalhe; com autor, o motivo vai ao fim como nos outros eventos.
 const semAutor = (e: Evento) => e.tipo === 'SUBIDA' && e.ator === 'Sistema'
 function subida(e: Evento) {
   if (!semAutor(e)) return `${e.ator} subiu o chamado de ${e.de} para ${e.para}`
@@ -80,7 +75,6 @@ export function frase(e: Evento) {
 export const IntervaloAtualizacao = 15_000
 export const IntervaloComConexao = 60_000
 
-// Lê o chamado e o relê enquanto a tela está aberta: a cada 15 s sem a conexão do tempo real (door 18), a cada 60 s com ela, só como rede de segurança.
 export function useChamado(numero?: string) {
   const cliente = useQueryClient()
   const chave = ['chamado', numero]

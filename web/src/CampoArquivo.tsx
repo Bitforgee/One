@@ -2,7 +2,6 @@ import { Paperclip } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { Label } from './ui/label'
 
-// Área do Dropzone em volta do campo de arquivo nativo, que continua achado pelo rótulo (door 11).
 export function CampoArquivo({ id, rotulo, accept, multiple, arquivos, setArquivos }: {
   id: string; rotulo: string; accept: string; multiple?: boolean; arquivos: File[]; setArquivos: (a: File[]) => void
 }) {

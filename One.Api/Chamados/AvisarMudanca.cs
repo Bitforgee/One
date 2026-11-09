@@ -8,9 +8,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// Door 4: depois de cada gravação confirmada que toca Chamado, MensagemChamado ou EventoChamado, avisa o grupo do chamado e as filas dos setores.
-// Com transação explícita o envio espera o commit.
-// shortcut: só os SaveChangesAsync avisam (a API não usa o síncrono), acrescentar o par síncrono se um dia usar.
 public sealed class AvisarMudanca(IHubContext<TempoRealHub> hub, ILogger<AvisarMudanca> log) : SaveChangesInterceptor, IDbTransactionInterceptor
 {
     record Aviso(long ChamadoId, long InstituicaoId, string Numero, long SetorId, long? SetorAntigoId);
@@ -39,7 +36,6 @@ public sealed class AvisarMudanca(IHubContext<TempoRealHub> hub, ILogger<AvisarM
         _ => null,
     };
 
-    // A chave estrangeira do filho só está preenchida depois da gravação, por isso o Toque guarda a leitura dela.
 
     public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
     {

@@ -19,13 +19,11 @@ public sealed record AlterarAparencia(AlterarAparencia.Entrada Corpo) : IRequest
 
     static string[] Lista(IReadOnlyList<string>? l) => [.. (l ?? []).Select(Limpo).OfType<string>()];
 
-    // Texto vazio ou só com espaços volta ao padrão (nulo); lista idem.
     public static Entrada Normalizar(Entrada e) => new(Limpo(e.NomeCurto), Limpo(e.Cor),
         new(Limpo(e.Login?.Titulo), Limpo(e.Login?.Frase), Lista(e.Login?.Itens)),
         new(Limpo(e.Assistente?.Nome), Limpo(e.Assistente?.BoasVindas), Lista(e.Assistente?.Perguntas)),
         new(Limpo(e.Contato?.Horario), Limpo(e.Contato?.Telefone), Limpo(e.Contato?.Email)));
 
-    // O campo do erro é o caminho do JSON em camelCase ("login.titulo"); o texto traz o limite.
     public static IResult? Validar(Entrada e)
     {
         if (e.Cor is not null && !ContrasteDaCor.Aceita(e.Cor)) return Problemas.Invalido(ContrasteDaCor.Recusa, "cor");

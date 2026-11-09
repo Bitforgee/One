@@ -25,7 +25,6 @@ const Padrao: Aparencia = {
 }
 const mesclar = <T extends object>(base: T, parte?: Partial<T>): T => ({ ...base, ...parte })
 
-// A API manda tudo; as telas e os testes antigos podem mandar só `nome`, e o que falta vira o padrão.
 export function normalizar(d: Partial<InstituicaoPublica> & { nome: string }): InstituicaoPublica {
   return {
     ...Padrao,
@@ -39,12 +38,10 @@ export function normalizar(d: Partial<InstituicaoPublica> & { nome: string }): I
 
 export const urlDaImagem = (slug: string, tipo: keyof Imagens, versao: number) => `/api/instituicoes/${slug}/imagens/${tipo}?v=${versao}`
 
-// A única leitura de GET /api/instituicoes/{slug}: o login, a casca e a tela Aparência partilham esta consulta.
 export function useInstituicao(slug?: string) {
   return useQuery({ queryKey: ['instituicao', slug], queryFn: () => api<InstituicaoPublica>(`/api/instituicoes/${slug}`), select: normalizar, enabled: !!slug, staleTime: 60_000 })
 }
 
-// O valor do <head> como veio do index.html, guardado no próprio elemento, para voltar a ele sem cor, ícone ou slug.
 function ponto(seletor: string, tag: 'link' | 'meta', atributos: Record<string, string>, atributo: 'href' | 'content', valor: string | null) {
   let el = document.head.querySelector<HTMLElement>(seletor)
   if (!el) {
@@ -78,12 +75,10 @@ function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined) {
   ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', slug && d ? (d.nomeCurto ?? d.nome) : null) // o iPhone lê o nome daqui
 }
 
-// A aparência da instituição, ou o padrão (só com o nome) enquanto a consulta não chegou.
 export function useAparencia(slug?: string, nome = '') {
   return useInstituicao(slug).data ?? normalizar({ nome })
 }
 
-// O ponto único que põe a instituição no <html> e no <head> (door 7 do plano): cor, título, ícones e manifesto.
 export function AplicaAparencia() {
   const slug = useMatch('/:slug/*')?.params.slug
   const { data } = useInstituicao(slug)
@@ -91,7 +86,6 @@ export function AplicaAparencia() {
   return null
 }
 
-// Contraste da cor contra o branco, pela mesma regra de One.Api/Instituicoes/ContrasteDaCor.cs (WCAG 2.x, door 8).
 export function contraste(hex: string) {
   const canal = (i: number) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255
@@ -102,13 +96,11 @@ export function contraste(hex: string) {
 export const CorValida = /^#[0-9a-fA-F]{6}$/
 export const MinimoDeContraste = 4.5
 
-// Primeira letra da primeira e da última palavra (AC 6): "Ana Beatriz Souza" -> "AS".
 export function iniciais(nome: string) {
   const partes = nome.trim().split(/\s+/).filter(Boolean)
   return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase()
 }
 
-// O ícone da instituição, ou as iniciais num quadrado bg-primary (AC 33).
 export function Sigla({ slug, nome, icone, className = 'size-8' }: { slug?: string; nome: string; icone: number | null; className?: string }) {
   if (slug && icone) return <img src={urlDaImagem(slug, 'icone', icone)} alt="" className={`${className} shrink-0 rounded-sm object-cover`} />
   return (
@@ -120,7 +112,6 @@ export function Sigla({ slug, nome, icone, className = 'size-8' }: { slug?: stri
 
 export const temContato = (c: Aparencia['contato']) => !!(c.horario || c.telefone || c.email)
 
-// Os campos de contato preenchidos: horário em texto, telefone e e-mail como links (AC 42, AC 43).
 export function Contato({ contato }: { contato: Aparencia['contato'] }) {
   return (
     <div className="flex flex-col gap-1 text-sm">
@@ -139,7 +130,6 @@ export function Contato({ contato }: { contato: Aparencia['contato'] }) {
   )
 }
 
-// O diálogo "Contato do atendimento" (AC 43): o item Contato do menu e a linha da Conta abrem o mesmo.
 export function DialogoDeContato({ contato, aberto, aoMudar }: { contato: Aparencia['contato']; aberto: boolean; aoMudar: (aberto: boolean) => void }) {
   return (
     <Dialog open={aberto} onOpenChange={aoMudar}>

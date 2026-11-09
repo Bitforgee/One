@@ -139,8 +139,6 @@ public class Chamado : IDaInstituicao
         EtapaDesde = null;
     }
 
-    // Passa o chamado à etapa seguinte do próprio fluxo. Não é encaminhamento: Encaminhamentos não muda (RoteamentoCorreto).
-    // atorId nulo é a subida do Agendador (prazo da etapa vencido): não há quem assine, então não se escreve a nota.
     public void Subir(long? atorId, string nomeSetorAtual, string nomeSetorNovo, long setorId, int etapaOrdem, string detalhe, string? nomeResponsavel, DateTime agora)
     {
         Exigir(Abertos);
@@ -159,7 +157,6 @@ public class Chamado : IDaInstituicao
         Exigir(NaoFechados);
         Evento(TiposEvento.Reclassificacao, new Ato(atorId, agora), nomeAtual, nomeNova);
         CategoriaId = categoriaId;
-        // A cadeia era a da categoria antiga: o chamado fica no setor onde está e sai do fluxo, como no encaminhamento manual.
         EtapaOrdem = null;
         EtapaDesde = null;
     }

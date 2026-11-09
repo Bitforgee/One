@@ -7,7 +7,6 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento S1 (C3 a C8): a transferência escolhe o fluxo publicado mais específico e abre o chamado na primeira etapa que resolve.
 public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     record Mundo(Instituicao I, Curso Ads, Curso Direito, Categoria Duvida, Setor Financeiro, Setor Secretaria, Setor Biblioteca, Setor Triagem);
@@ -27,7 +26,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
             await f.Db(i.Id, db => db.Setores.SingleAsync(s => s.Triagem)));
     }
 
-    // Aluno com uma matrícula ativa no curso e semestre pedidos (a matrícula padrão da semente é movida).
     async Task<Aluno> AlunoDe(Mundo m, Curso curso, int semestre)
     {
         var aluno = await f.AlunoLogado(m.I);
@@ -48,7 +46,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
 
     Task<Chamado> Ler(Mundo m, string numero) => f.Db(m.I.Id, db => db.Chamados.SingleAsync(c => c.Numero == numero));
 
-    // C3
     [Fact]
     public async Task Fluxo_mais_especifico_vence()
     {
@@ -62,7 +59,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Financeiro", (await Transferir(await AlunoDe(m, m.Direito, 3), m.Duvida)).Setor);
     }
 
-    // C4
     [Fact]
     public async Task Chamado_guarda_versao_etapa_e_entrada()
     {
@@ -78,7 +74,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((versao.Id, 1, f.Relogio.GetUtcNow().UtcDateTime), (chamado.VersaoFluxoId, chamado.EtapaOrdem, chamado.EtapaDesde));
     }
 
-    // C5
     [Fact]
     public async Task Fluxo_so_com_rascunho_e_ignorado()
     {
@@ -93,7 +88,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(dosCursos.Id, (await Ler(m, numero)).VersaoFluxoId);
     }
 
-    // C6
     [Fact]
     public async Task Sem_fluxo_publicado_vai_para_a_triagem()
     {
@@ -101,7 +95,7 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var padrao = await f.Db(m.I.Id, db => db.Categorias.SingleAsync(c => c.Padrao));
         var comRascunho = await f.Categoria(m.I, "Só rascunho");
         await f.Fluxo(m.I, comRascunho, null, null, false, Etapa(DestinosEtapa.Setor, m.Financeiro.Id));
-        await f.Fluxo(m.I, padrao, null, null, Etapa(DestinosEtapa.Setor, m.Financeiro.Id)); // a categoria padrão nunca segue fluxo
+        await f.Fluxo(m.I, padrao, null, null, Etapa(DestinosEtapa.Setor, m.Financeiro.Id));
         var aluno = await AlunoDe(m, m.Ads, 3);
 
         foreach (var categoria in new[] { m.Duvida, comRascunho, padrao })
@@ -113,7 +107,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C7
     [Fact]
     public async Task Coordenacao_do_curso_da_matricula()
     {
@@ -140,7 +133,6 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(1, (await Ler(m, numero)).EtapaOrdem);
     }
 
-    // C8
     [Fact]
     public async Task Etapa_que_nao_resolve_passa_para_a_seguinte()
     {
@@ -148,7 +140,7 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Fluxo(m.I, m.Duvida, m.Ads.Id, null, Etapa(DestinosEtapa.CoordenacaoCurso), Etapa(DestinosEtapa.Setor, m.Secretaria.Id));
         var soCoordenacao = await f.Categoria(m.I, "Só coordenação");
         await f.Fluxo(m.I, soCoordenacao, m.Ads.Id, null, Etapa(DestinosEtapa.CoordenacaoCurso));
-        var aluno = await AlunoDe(m, m.Ads, 3); // o curso não tem coordenação
+        var aluno = await AlunoDe(m, m.Ads, 3);
 
         var (numero, setor) = await Transferir(aluno, m.Duvida);
         var (numeroSemSaida, setorSemSaida) = await Transferir(aluno, soCoordenacao);

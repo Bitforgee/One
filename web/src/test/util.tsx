@@ -9,10 +9,8 @@ import type { Chamado } from '../chamado'
 export type Rota = (corpo: any) => [number, unknown] | Promise<[number, unknown]>
 export type Chamada = { metodo: string; url: string; corpo: any }
 
-// A prévia do destino (GET /destino) que o diálogo de transferência lê: sem rota dita no teste, o fluxo não passa pela liderança.
 const previaPadrao = (metodo: string, url: string): Rota | undefined => (metodo === 'GET' && /^\/api\/conversas\/\d+\/destino/.test(url) ? () => [200, { lideranca: false }] : undefined)
 
-// Troca o fetch por um mapa "MÉTODO /caminho" -> [status, corpo]; devolve as chamadas feitas.
 export function api(rotas: Record<string, Rota>) {
   const chamadas: Chamada[] = []
   vi.stubGlobal(
@@ -49,7 +47,6 @@ export function me(parcial: Partial<Me> = {}): Me {
   }
 }
 
-// O que GET /api/instituicoes/univag devolve sem aparência definida (aparencia-instituicao AC 28); `parcial` sobrescreve.
 export function instituicao(parcial: Record<string, unknown> = {}) {
   return {
     nome: 'Univag',
@@ -63,7 +60,6 @@ export function instituicao(parcial: Record<string, unknown> = {}) {
   }
 }
 
-// Chamado como o aluno o recebe; a equipe recebe também resumo, fontes e eventos.
 export function chamado(parcial: Partial<Chamado> = {}): Chamado {
   return {
     numero: 'ONE-1',
@@ -90,13 +86,11 @@ export function chamado(parcial: Partial<Chamado> = {}): Chamado {
   }
 }
 
-// Abre o menu "Ações de <nome>" da linha e escolhe o item (layout-painel door 4).
 export async function escolher(nome: string, item: string) {
   await userEvent.click(await screen.findByRole('button', { name: `Ações de ${nome}` }))
   await userEvent.click(await screen.findByRole('menuitem', { name: item }))
 }
 
-// Os itens do menu "Ações de <nome>", na ordem, deixando o menu fechado; sem o botão, lista vazia.
 export async function acoesDe(nome: string) {
   const botao = screen.queryByRole('button', { name: `Ações de ${nome}` })
   if (!botao) return []
@@ -106,10 +100,8 @@ export async function acoesDe(nome: string) {
   return itens
 }
 
-// Os títulos de coluna da tabela, na ordem; "" é a coluna sem texto (a do menu).
 export const cabecalhos = (tabela = screen.getByRole('table')) => within(tabela).getAllByRole('columnheader').map((h) => h.textContent)
 
-// Lista vazia: uma linha só no corpo, com uma célula que ocupa todas as colunas e o texto de vazio (layout-painel AC 24).
 export function esperaLinhaVazia(texto: string, colunas: number, tabela = screen.getByRole('table')) {
   const corpo = within(tabela).getAllByRole('row').slice(1)
   expect(corpo).toHaveLength(1)

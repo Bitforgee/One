@@ -3,7 +3,6 @@ import { simularApi } from './simulada'
 
 const Ativar = 'Ativar avisos neste aparelho'
 
-// A chave da API é simulada: o push real não chega ao Playwright.
 async function comChave(page: Page, status: number, papeis = ['ALUNO']) {
   await simularApi(page, papeis)
   await page.route('**/api/push/chave', (rota) =>
@@ -26,7 +25,6 @@ test('sw.js na raiz traz os tratadores de push', async ({ page, request }) => {
 
 test('botão de avisos aparece com a chave e não pede permissão ao carregar', async ({ page }) => {
   await comChave(page, 200)
-  // o Chromium headless informa Notification.permission "denied" mesmo sem decisão; a Permissions API traz o estado real ("prompt" = default)
   await page.addInitScript(() => {
     const w = window as unknown as { pedidos: number }
     w.pedidos = 0
@@ -49,7 +47,6 @@ test('sem a chave o botão de avisos não existe', async ({ page }) => {
 
 test('push desligado não deixa erro no console', async ({ page }) => {
   await comChave(page, 204, ['ALUNO', 'ATENDENTE'])
-  // o tempo real (SignalR) não faz parte do push: a negociação responde 200 sem transporte
   await page.route('**/api/tempo-real/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ negotiateVersion: 1, connectionId: 'x', connectionToken: 'x', availableTransports: [] }) }))
   const erros: string[] = []
   const falhas: string[] = []
@@ -84,7 +81,6 @@ test('barra com o botão de avisos sem sobreposição', async ({ page }) => {
   }
 })
 
-// layout-painel C8: o botão de avisos é um ícone no cabeçalho, à esquerda de Tema na mesma linha, com a barra aberta, recolhida e no celular
 test('avisos no cabeçalho', async ({ page }) => {
   await comChave(page, 200)
   for (const [largura, estado] of [[360, 'aberta'], [1280, 'aberta'], [1280, 'recolhida']] as const) {
@@ -96,7 +92,6 @@ test('avisos no cabeçalho', async ({ page }) => {
     const avisos = cabecalho.getByRole('button', { name: Ativar })
     await expect(avisos, `${largura} px ${estado}`).toBeVisible()
     const a = (await avisos.boundingBox())!
-    // estrutura-visual AC 8: sem Tema no topo, os avisos ficam na ponta direita
     await expect(cabecalho.getByRole('button', { name: 'Tema' }), `${largura} px ${estado}: sem Tema`).toHaveCount(0)
     const c = (await cabecalho.boundingBox())!
     expect(c.x + c.width - (a.x + a.width), `${largura} px ${estado}: avisos na ponta direita`).toBeLessThanOrEqual(25)

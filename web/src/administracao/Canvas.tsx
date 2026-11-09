@@ -11,7 +11,6 @@ import { TiposDeLigacao, type DadosDaLigacao } from './LigacaoComMais'
 import { TiposDeNo, type DadosDaEtapa } from './NosDoCanvas'
 import { PainelDoNo } from './PainelDoNo'
 
-// As cores, os raios e a fonte do canvas vêm dos tokens do index.css: a biblioteca só recebe `var(--token)`.
 const Tokens = {
   '--xy-background-color-default': 'var(--muted)',
   '--xy-background-pattern-dots-color-default': 'color-mix(in oklch, var(--foreground) 22%, transparent)',
@@ -29,14 +28,12 @@ const Tokens = {
   '--xy-attribution-background-color-default': 'var(--card)',
 } as CSSProperties
 
-// Os nós e as ligações do rascunho como a biblioteca os desenha: o Início fixo e um nó por etapa, cada um em seu x e y.
 function desenhar(g: Grafo, setores: Setor[], marcas: Record<string, string>, pedirRemocao: (id: string) => void): Node[] {
   const invalidos = nosInvalidos(g)
   const inicio: Node = { id: Inicio, type: 'inicio', position: { x: 0, y: posicaoPadrao(0).y }, data: {}, draggable: false, deletable: false, ariaLabel: 'Início' }
   const etapas = ordenados(g).map<Node>((n, i) => {
     const rotulo = rotuloDaEtapa(comoEtapa(n), setores)
     const padrao = posicaoPadrao(i)
-    // o prazo vira um chip no cartão; o rótulo acessível continua inteiro
     const titulo = rotuloDaEtapa({ ...comoEtapa(n), prazoHoras: null }, setores)
     const dados: DadosDaEtapa = { titulo, prazo: n.prazoHoras === '' ? null : Number(n.prazoHoras), destino: n.destino, posicao: i + 1, marca: marcas[n.id], invalido: invalidos.has(n.id), remover: () => pedirRemocao(n.id) }
     return { id: n.id, type: 'etapa', position: { x: n.x ?? padrao.x, y: n.y ?? padrao.y }, data: dados, deletable: false, ariaLabel: `Etapa ${i + 1}: ${rotulo}` }
@@ -44,7 +41,6 @@ function desenhar(g: Grafo, setores: Setor[], marcas: Record<string, string>, pe
   return [inicio, ...etapas]
 }
 
-// O rótulo acessível de uma ligação usa os rótulos fixos dos nós, nunca os ids internos.
 function ligacoesComoArestas(g: Grafo, setores: Setor[], inserir: (de: string, para: string, destino: Destino) => void): Edge[] {
   const rotulo = (id: string) => {
     const no = g.nos.find((n) => n.id === id)
@@ -64,7 +60,6 @@ function ligacoesComoArestas(g: Grafo, setores: Setor[], inserir: (de: string, p
 
 const Direcoes: Record<string, string> = { left: 'para a esquerda', right: 'para a direita', up: 'para cima', down: 'para baixo' }
 
-// Os textos de acessibilidade que a biblioteca escreve em inglês, em português do Brasil.
 const TextosDoCanvas = {
   'node.a11yDescription.default': 'Pressione Enter ou espaço para selecionar a etapa. Pressione Esc para cancelar.',
   'node.a11yDescription.keyboardDisabled': 'Pressione Enter ou espaço para selecionar a etapa e use as setas para movê-la. Pressione Esc para cancelar.',
@@ -108,7 +103,6 @@ export type CanvasProps = {
   lateral?: ReactNode // a coluna da direita, sob o painel da etapa (o simulador)
 }
 
-// O ref guarda a função mais nova sem trocar a identidade que os nós e as ligações recebem (trocar refaria o desenho a cada render).
 function useEstavel<A extends unknown[]>(f: (...a: A) => void) {
   const ref = useRef(f)
   ref.current = f
@@ -132,24 +126,20 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   const reenquadrar = useRef(false)
   const [nodes, setNodes] = useState<Node[]>([])
   const cheia = caminho(grafo).length >= MaximoDeEtapas
-  // o zoom nunca passa de 100%: um fluxo curto não vira letreiro
   const enquadrar = useCallback(() => {
     if (largura > 0) setViewport(getViewportForBounds(limites(grafo, !cheia), largura, altura, 0.4, 1, 0.2))
   }, [setViewport, largura, altura, grafo, cheia])
   const atual = grafo.nos.find((n) => n.id === nodes.find((n) => n.selected && n.id !== Inicio)?.id)
 
-  // O rascunho manda no conteúdo; o que a biblioteca mediu e o que está selecionado ficam como estavam.
   useEffect(() => {
     ref.current = desenhados.map((d) => ({ ...d, measured: ref.current.find((a) => a.id === d.id)?.measured, selected: ref.current.find((a) => a.id === d.id)?.selected }))
     setNodes(ref.current)
-    // a etapa posta pelo "+" ou pelo menu pode cair fora da tela: o desenho se enquadra de novo depois de medir
     if (reenquadrar.current) {
       reenquadrar.current = false
       setTimeout(enquadrar, 60)
     }
   }, [desenhados, enquadrar])
 
-  // abrir ou fechar o painel muda a largura do canvas: o desenho se enquadra de novo
   const comPainel = !!atual
   useEffect(() => {
     const t = setTimeout(enquadrar, 80)
@@ -159,7 +149,6 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   function aoMudarNos(mudancas: NodeChange[]) {
     ref.current = applyNodeChanges(mudancas, ref.current)
     setNodes(ref.current)
-    // a posição só entra no rascunho quando o arrasto ou a seta termina
     const prontas = mudancas.filter((m) => m.type === 'position' && m.dragging === false).map((m) => ref.current.find((n) => n.id === (m as { id: string }).id)!)
     if (prontas.length > 0) editar((g) => prontas.reduce((acc, n) => mudar(acc, n.id, { x: Math.round(n.position.x), y: Math.round(n.position.y) }), g))
   }
@@ -242,7 +231,6 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   )
 }
 
-// O editor de arrastar e soltar do mesmo rascunho da lista. Só é carregado quando a visão Canvas abre (door 10).
 export default function Canvas(props: CanvasProps) {
   return (
     <ReactFlowProvider>

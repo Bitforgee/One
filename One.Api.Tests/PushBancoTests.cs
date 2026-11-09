@@ -46,7 +46,7 @@ public class PushBancoTests(OneFactory f) : IClassFixture<OneFactory>
             await db.SaveChangesAsync();
         });
 
-        await using (var con = new NpgsqlConnection(f.ConnectionString)) // SQL direto: a cascata é do banco, não do rastreamento do EF
+        await using (var con = new NpgsqlConnection(f.ConnectionString))
         {
             await con.OpenAsync();
             await new NpgsqlCommand($"DELETE FROM subscricao_push WHERE id = {s.Id}", con).ExecuteNonQueryAsync();

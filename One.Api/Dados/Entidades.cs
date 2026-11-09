@@ -65,7 +65,6 @@ public static class DestinosEtapa
 
     public static readonly string[] Todos = [Setor, CoordenacaoCurso, LiderancaSemestre];
 
-    // Visão e ciência saem do tipo, nunca de coluna nem de campo de entrada (door 3). Ciência: o aluno é avisado antes de enviar; o fluxo decide, o aluno não escolhe.
     public static bool PedeCiencia(string destino) => destino == LiderancaSemestre;
 
     public static bool VeTudo(string destino) => destino != LiderancaSemestre;

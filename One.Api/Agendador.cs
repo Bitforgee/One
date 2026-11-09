@@ -58,7 +58,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         return itens;
     }
 
-    // Chamado aberto ou em atendimento cuja etapa tem prazo vencido e que a equipe não respondeu em público desde que entrou nela (AC 42, AC 45, AC 46).
     static IQueryable<Chamado> VenceuOPrazo(OneDb db, IQueryable<Chamado> chamados, DateTime agora) =>
         chamados.Where(EmFluxoEAberto).Where(PrazoDaEtapaVencido(db, agora)).Where(SemRespostaDaEquipe(db));
 
@@ -77,7 +76,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
             .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
-        // a subscrição movida para outra instituição (door 2) deixa de receber o item antigo
         itens.AddRange(await db.PushesSaida.IgnoreQueryFilters().Where(p => p.EnviadoEm == null && p.Tentativas < MaxTentativas && p.ProximaTentativa <= agora
                 && db.SubscricoesPush.IgnoreQueryFilters().Any(s => s.Id == p.SubscricaoId && s.InstituicaoId == p.InstituicaoId))
             .Select(p => new Item("push", p.Id, p.InstituicaoId)).ToListAsync());
@@ -214,7 +212,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         var nomes = await db.Setores.Where(s => s.Id == chamado.SetorId || s.Id == passo.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
         chamado.Subir(null, nomes[chamado.SetorId], nomes[passo.SetorId], passo.SetorId, passo.Etapa.Ordem, $"Sem resposta em {horas} horas", await AcoesChamado.NomeDoResponsavel(db, chamado), agora);
         try { await db.SaveChangesAsync(); }
-        catch (DbUpdateConcurrencyException) { return; } // outra execução, ou um atendente, subiu o chamado antes (AC 44)
+        catch (DbUpdateConcurrencyException) { return; }
         log.LogInformation("Chamado {ChamadoId} subiu para a etapa {Etapa} por prazo (instituição {InstituicaoId})", id, passo.Etapa.Ordem, db.InstituicaoAtual);
     }
 

@@ -117,7 +117,7 @@ budget: 150k
 
 ## Convenções
 - C#: nullable habilitado, async até o fim (sem `.Result`/`.Wait()`), `sealed record` para mensagens e DTOs.
-- Código, identificadores e testes em português; comentário só para o porquê que o código não mostra.
+- Código, identificadores e testes em português; sem comentários no código (decisão de 09/11/2026, feature `remover-comentarios`); o porquê vai no plano ou num AD do `STATE.md`.
 - Commits (Conventional Commits, em inglês, como o histórico): `<tipo>(<escopo>): <resumo>`. Tipos: feat, fix,
   refactor, test, docs, chore. Ex.: `fix(chamados): name the real author in the ticket history`.
 

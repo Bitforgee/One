@@ -2,7 +2,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests;
 
-// dominio-e-contratos C30, C32 e C33: o Documento decide o próprio estado e o número das versões, sem banco e sem HTTP.
 public class DocumentoDominioTests
 {
     static readonly DateTime Agora = new(2026, 11, 2, 12, 0, 0, DateTimeKind.Utc);

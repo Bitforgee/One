@@ -16,7 +16,6 @@ import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
 import { useConsulta } from './ui/use-mobile'
 
-// Links por grupo (barra-lateral-grupos AC 1), nesta ordem; o grupo sem link para o papel some.
 const Menu = [
   { grupo: 'Atendimento', papeis: ['ALUNO'], caminho: 'assistente', rotulo: 'Assistente', Icone: MessageCircle },
   { grupo: 'Atendimento', papeis: ['ALUNO'], caminho: 'solicitacoes', rotulo: 'Minhas solicitações', Icone: ListChecks },
@@ -43,7 +42,6 @@ const Temas: ['light' | 'dark' | 'black' | 'system', string, typeof Sun][] = [
   ['system', 'Sistema', Monitor],
 ]
 
-// As 4 escolhas de tema; a atual leva aria-pressed (revisao-ux AC 10). O ThemeProvider grava a escolha em one-tema.
 export function OpcoesDeTema({ aoEscolher }: { aoEscolher: () => void }) {
   const { theme, setTheme } = useTheme()
   return (
@@ -67,7 +65,6 @@ export function OpcoesDeTema({ aoEscolher }: { aoEscolher: () => void }) {
   )
 }
 
-// A linha "Tema" do rodapé da barra mostra o ícone do tema atual, o mesmo da opção no menu.
 function Tema() {
   const { theme } = useTheme()
   const { isMobile } = useSidebar()
@@ -90,7 +87,6 @@ function Tema() {
   )
 }
 
-// Título do cabeçalho (layout-painel door 3): o número em chamados/:numero, "Trocar senha", ou o rótulo do link de Menu ativo.
 export function tituloDaRota(pathname: string, numero?: string) {
   const caminho = pathname.split('/')[2]
   if (numero) return numero
@@ -99,7 +95,6 @@ export function tituloDaRota(pathname: string, numero?: string) {
   return Menu.find((m) => m.caminho === caminho)?.rotulo ?? ''
 }
 
-// O primeiro de papeis nesta ordem (AC 10).
 const Papeis = [
   ['ADMINISTRADOR', 'Administrador'],
   ['ATENDENTE', 'Atendente'],
@@ -108,7 +103,6 @@ const Papeis = [
 const papelDe = (papeis: string[]) => Papeis.find(([p]) => papeis.includes(p))?.[1]
 
 function Link({ item: { caminho, rotulo, Icone }, slug }: { item: Item; slug?: string }) {
-  // o ativo vem do useMatch e a classe é texto: o Slot do Tooltip transformaria a classe-função do NavLink em texto
   const ativo = !!useMatch({ path: `/${slug}/${caminho}`, end: false })
   const { setOpenMobile } = useSidebar()
   return (
@@ -123,7 +117,6 @@ function Link({ item: { caminho, rotulo, Icone }, slug }: { item: Item; slug?: s
   )
 }
 
-// Um grupo com título (role="group" nomeado pelo título, AD-028 AC 3); recolhida, o título sai da vista.
 function Grupo({ nome, itens, slug }: { nome: string; itens: Item[]; slug?: string }) {
   const id = useId()
   return (
@@ -140,7 +133,6 @@ function Grupo({ nome, itens, slug }: { nome: string; itens: Item[]; slug?: stri
   )
 }
 
-// Nome e papel em texto no botão (as iniciais só com a barra recolhida); o menu leva o nome, o papel e "Sair" (AC 10).
 function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
   const { isMobile, state } = useSidebar()
   const dados = (
@@ -178,7 +170,6 @@ function MenuUsuario({ me, sair }: { me: Me; sair: () => void }) {
   )
 }
 
-// O item "Contato" do rodapé (AC 43): abre um diálogo com horário, telefone e e-mail da instituição.
 function ContatoDoMenu({ contato }: { contato: InstituicaoPublica['contato'] }) {
   const [aberto, setAberto] = useState(false)
   return (
@@ -192,7 +183,6 @@ function ContatoDoMenu({ contato }: { contato: InstituicaoPublica['contato'] }) 
   )
 }
 
-// O logo quando a barra está aberta; o ícone (ou as iniciais) quando recolhida e sempre que não há logo.
 function CabecalhoDaBarra({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
   const logo = ap.imagens.logo
   return (
@@ -238,8 +228,6 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
   )
 }
 
-// Cabeçalho do inset: o único h1 da tela e, para o aluno, os avisos. Abaixo de 768 px, quem não é aluno abre o menu por aqui.
-// Com a barra de abas (aluno no celular) o topo fica com a sigla, o título e os avisos.
 function Topo({ titulo, aluno, abas, slug, icone, nome }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string }) {
   const { isMobile, toggleSidebar } = useSidebar()
   return (
@@ -264,11 +252,8 @@ const Abas = [
   { caminho: 'solicitacoes', rotulo: 'Solicitações', Icone: ListChecks },
   { caminho: 'conta', rotulo: 'Conta', Icone: CircleUser },
 ]
-// A altura da barra de abas mais a área segura: o que o conteúdo reserva no fim (door 1).
 const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))' // os links, a borda de cima e a área segura
 
-// Barra de abas do aluno no celular (door 1): 3 colunas iguais, ícone sobre o rótulo; o destino ativo usa a cor de ação.
-// O detalhe de um chamado conta como Solicitações.
 function BarraDeAbas({ slug }: { slug?: string }) {
   const { pathname } = useLocation()
   return (
@@ -291,7 +276,6 @@ function BarraDeAbas({ slug }: { slug?: string }) {
   )
 }
 
-// O primeiro foco da tela (AC 8): leva o foco ao main sem mudar o endereço.
 function PularParaOConteudo() {
   return (
     <a
@@ -307,14 +291,12 @@ function PularParaOConteudo() {
   )
 }
 
-// Rotas de cada papel (AC 9): o que não está aqui (chamados/:numero, trocar-senha) a API responde.
 const Rotas = [...Menu.map(({ caminho, papeis }) => [caminho, papeis] as const), ['conta', ['ALUNO']] as const]
 const rotaPermitida = (papeis: string[], caminho: string) => {
   const rota = Rotas.find(([c]) => c === caminho)
   return !rota || rota[1].some((p) => papeis.includes(p))
 }
 
-// Aberta ou recolhida, gravada em one-barra (door 2): ausente ou outro valor = aberta.
 function useBarra() {
   const [aberta, setAberta] = useState(() => localStorage.getItem('one-barra') !== 'recolhida')
   return {
@@ -326,8 +308,6 @@ function useBarra() {
   }
 }
 
-// Para onde a sessão manda quem abriu esta rota: o login, a instituição certa, a troca de senha ou a tela do papel (AC 9); nada = fica.
-// Só uma resposta da API diz que não há sessão; rede caída (o fetch falha sem resposta) não manda ninguém ao login (mobile-m0).
 const semSessao = (erro: Error | null) => erro instanceof ErroApi
 
 function desvio({ me, erro, slug, pathname }: { me?: Me; erro: Error | null; slug?: string; pathname: string }) {
@@ -365,7 +345,6 @@ export function Autenticado() {
   return <Casca me={me} slug={slug} ap={instituicao ?? normalizar({ nome: me.instituicao.nome })} />
 }
 
-// A casca: barra lateral (ou, para o aluno no celular, a barra de abas), cabeçalho e a área de conteúdo.
 function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
   const { numero } = useParams()
   const { pathname } = useLocation()
@@ -377,7 +356,6 @@ function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
   const abas = celular && me.papeis.length === 1 && me.papeis[0] === 'ALUNO' // door 1: só quem tem apenas o papel ALUNO
 
-  // O main é o SidebarInset; o contêiner de largura (door 5) leva os recuos, para as consultas medirem só a área útil.
   return (
     <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={abas ? ({ '--barra': AlturaDaBarra } as CSSProperties) : undefined}>
       <PularParaOConteudo />

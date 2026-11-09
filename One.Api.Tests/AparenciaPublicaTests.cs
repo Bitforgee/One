@@ -6,7 +6,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// aparencia-instituicao S4: a aparência e as imagens, sem sessão (C30 a C32).
 public class AparenciaPublicaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<(Instituicao, HttpClient)> Admin(Instituicao? i = null)

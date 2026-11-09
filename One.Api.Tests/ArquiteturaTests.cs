@@ -61,7 +61,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var t in TabelasDaInstituicao)
             Assert.Contains(colunas, c => c.tabela == t && c.coluna == "instituicao_id" && c.tipo == "bigint" && !c.nula);
 
-        // o filtro funciona: a sessão de outra instituição não enxerga a linha
         var univag = await f.Instituicao();
         var demo = await f.Instituicao();
         Assert.Empty(await f.Db(demo.Id, db => db.Setores.Where(s => s.InstituicaoId == univag.Id).ToListAsync()));
@@ -85,7 +84,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var raiz = Raiz();
         var compose = File.ReadAllText(Path.Combine(raiz, "docker-compose.yml"));
-        Assert.Matches(new Regex(@"^\s+image:\s*pgvector/pgvector:0\.8\.7-pg18-trixie\s*$", RegexOptions.Multiline), compose); // RAG, doors R2 e R8
+        Assert.Matches(new Regex(@"^\s+image:\s*pgvector/pgvector:0\.8\.7-pg18-trixie\s*$", RegexOptions.Multiline), compose);
         Assert.Matches(new Regex(@"^\s+image:\s*axllent/mailpit\s*$", RegexOptions.Multiline), compose);
 
         var solucao = File.ReadAllText(Path.Combine(raiz, "One.slnx"));
@@ -120,7 +119,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(colunas, c => c.tipo == "timestamp with time zone");
     }
 
-    // refatoracao-solid: regras de texto sobre o código de One.Api/, sem bin, obj nem Dados/Migracoes.
     static string Api => Path.Combine(Raiz(), "One.Api");
 
     static IEnumerable<string> CodigoApi()
@@ -132,7 +130,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static string Relativo(string p) => Path.GetRelativePath(Api, p).Replace('\\', '/');
 
-    // Código sem os comentários de linha; o // de uma URL (precedido de ":") fica.
     static string SemComentarios(string p) => Regex.Replace(File.ReadAllText(p), @"(?m)(?<![:""/])//.*$", "");
 
     static List<string> ArquivosQue(Regex padrao, IEnumerable<string>? arquivos = null) =>
@@ -146,7 +143,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         [typeof(MotivosFechamento)] = ["CONFIRMADO", "CANCELADO", "DUPLICADO", "FECHADO_AUTOMATICAMENTE"],
     };
 
-    // C12
     [Fact]
     public void Literais_gravados_so_nas_constantes()
     {
@@ -160,7 +156,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(["Dados/Entidades.cs"], ArquivosQue(new Regex($"\"{literal}\"")));
     }
 
-    // C13
     [Fact]
     public void Ultima_versao_em_um_arquivo()
     {
@@ -169,7 +164,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.StartsWith("Conhecimento/", arquivos[0]);
     }
 
-    // C14
     [Fact]
     public void Artigo_ou_documento_em_um_arquivo()
     {
@@ -180,14 +174,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.StartsWith("Conhecimento/", arquivos[0]);
     }
 
-    // C15
     [Fact]
     public void Configuracao_lida_em_um_lugar()
     {
         int Leituras(string chave) => CodigoApi().Sum(p => Regex.Matches(File.ReadAllText(p), Regex.Escape($"\"{chave}\"")).Count);
         foreach (var chave in new[] { "Llm:BaseUrl", "Llm:ChaveApi", "App:UrlBase" })
             Assert.True(Leituras(chave) == 1, $"{chave} lida {Leituras(chave)} vezes");
-        // o registro do cliente "llm" passa um método nomeado; as duas chaves são lidas dentro dele
         var program = File.ReadAllText(Path.Combine(Api, "Program.cs"));
         var metodo = Regex.Match(program, @"AddHttpClient\(""llm"", (\w+)\)").Groups[1].Value;
         Assert.NotEqual("", metodo);
@@ -196,12 +188,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("\"Llm:ChaveApi\"", registro);
     }
 
-    // C17
     [Fact]
     public void Assinatura_de_arquivo_em_um_lugar() =>
         Assert.Single(ArquivosQue(new Regex(@"0x25,\s*0x50,\s*0x44,\s*0x46")));
 
-    // C18
     [Fact]
     public void Limites_de_senha_em_um_lugar()
     {
@@ -213,7 +203,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(ArquivosQue(new Regex(@"Length:\s*>=\s*8\b")));
     }
 
-    // C27: as regras puras são testadas sem subir o PostgreSQL nem o host HTTP
     [Fact]
     public void Testes_de_regra_sem_banco()
     {
@@ -226,12 +215,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C19
     [Fact]
     public void Sem_DateTime_Now() =>
         Assert.Empty(ArquivosQue(new Regex(@"DateTime\.(UtcNow|Now)\b")));
 
-    // C20
     [Fact]
     public void Glossario_lista_os_termos()
     {
@@ -247,7 +234,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var (tipo, literais) in LiteraisGravados)
             foreach (var literal in literais)
                 Assert.True(linhas.Any(l => l.Contains($"`{literal}`") && l.Contains(grupos[tipo]) && Significado(l).Length >= 10), $"{literal} ({grupos[tipo]})");
-        // fluxos-atendimento C102: os termos novos do domínio, cada um com significado
         foreach (var termo in new[] { "Fluxo", "Abrangência", "Etapa", "Liderança", "Subir", "SUBIDA" })
             Assert.True(linhas.Any(l => l.TrimStart('|', ' ').StartsWith($"`{termo}`") && Significado(l).Length >= 10), termo);
         foreach (var (prazo, chave, padrao) in new[]
@@ -258,7 +244,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(linhas.Any(l => l.Contains($"prazo de {prazo}") && l.Contains($"`{chave}`") && l.Contains(padrao) && Significado(l).Length >= 10), prazo);
     }
 
-    // C6: door 2, a barreira de complexidade 10 no build do One.Api/
     [Fact]
     public void Barreira_de_complexidade_configurada()
     {
@@ -273,12 +258,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static IEnumerable<string> DaPasta(string pasta) => Directory.EnumerateFiles(Path.Combine(Api, pasta), "*.cs", SearchOption.AllDirectories);
 
-    // C28
     [Fact]
     public void Chamados_nao_consulta_versoes() =>
         Assert.Empty(ArquivosQue(new Regex(@"\bVersoes(Artigo|Documento)\b"), DaPasta("Chamados")));
 
-    // C29: door 3, as 7 fatias e o compartilhado (Dados e os arquivos da raiz)
     [Fact]
     public void Fatias_do_api()
     {
@@ -290,7 +273,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
-    // C30
     [Fact]
     public void Namespace_igual_a_pasta()
     {
@@ -303,7 +285,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C31: door 3, uma fatia só usa outra pelos pares desta lista, e a lista não tem par que o código não usa
     static readonly (string de, string para)[] ReferenciasEntreFatias =
     [
         ("Acesso", "Instituicoes"), ("Administracao", "Acesso"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
@@ -328,7 +309,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(ReferenciasEntreFatias.Order(), usadas.Order());
     }
 
-    // C32: a rota de importação de matrículas (POST /api/admin/matriculas/importacao) mora num arquivo que não mapeia outra
     [Fact]
     public void Importacao_em_arquivo_proprio()
     {
@@ -336,7 +316,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Single(Regex.Matches(SemComentarios(arquivo), @"\.Map\w*\("));
     }
 
-    // vertical-slice-completa C7: door 1, o Mediator 3.0.2 sem MediatR, com CA1502 e MSG0005 como erro
     [Fact]
     public void Mediator_referenciado()
     {
@@ -359,7 +338,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static Type? Fechado(Type t, Type aberto) =>
         t.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == aberto);
 
-    // vertical-slice-completa: as mensagens do mediator (Mediator.IRequest<T>, direto ou por IAcaoChamado) e o T de cada uma
     public static List<(Type mensagem, Type resposta)> Mensagens() =>
         typeof(Program).Assembly.GetTypes().Where(Concreto)
             .Select(t => (t, Fechado(t, typeof(Mediator.IRequest<>))))
@@ -368,7 +346,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static string ArquivoDo(Type t) => Path.Combine(Api, t.Namespace!["One.Api.".Length..], t.Name + ".cs");
 
-    // C11: door 3, um arquivo por caso de uso, com a mensagem e o Mapear, numa das 7 fatias
     [Fact]
     public void Um_arquivo_por_caso_de_uso()
     {
@@ -390,7 +367,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C12: door 3, um handler por mensagem, no mesmo arquivo
     [Fact]
     public void Um_handler_por_mensagem_no_mesmo_arquivo()
     {
@@ -408,7 +384,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C13: um Map* por caso de uso; fora deles só o logout e os 2 fallbacks do Program
     [Fact]
     public void Map_so_nos_casos_de_uso()
     {
@@ -426,7 +401,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Matches(new Regex(@"\.MapPost\(""/auth/logout"""), SemComentarios(Path.Combine(Api, resto)));
     }
 
-    // C14: o que fica fora do mediator não o referencia
     [Fact]
     public void Fora_do_mediator()
     {
@@ -439,7 +413,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C19: door 6, mensagem e handler não dependem do HttpContext
     [Fact]
     public void Handler_sem_HttpContext()
     {
@@ -456,7 +429,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(ArquivosQue(new Regex("IHttpContextAccessor")));
     }
 
-    // C23: door 5, a permissão das ações é decidida só no AgirNoChamado
     [Fact]
     public void Permissao_so_no_AgirNoChamado()
     {
@@ -472,7 +444,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("class AgirNoChamado<", SemComentarios(arquivo));
     }
 
-    // dominio-e-contratos C19 e C29: door 3, o agregado não tem construtor público nem setter público além de InstituicaoId, e expõe os filhos só em leitura
     static bool Init(System.Reflection.PropertyInfo p) =>
         p.SetMethod!.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(System.Runtime.CompilerServices.IsExternalInit));
 
@@ -494,7 +465,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static void SemPersistenciaNoArquivo(string arquivo) =>
         Assert.DoesNotMatch(@"OneDb|DbSet|IQueryable|Microsoft\.EntityFrameworkCore", SemComentarios(Path.Combine(Api, "Dados", arquivo)));
 
-    // C19
     [Fact]
     public void Chamado_fechado()
     {
@@ -505,7 +475,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         SemPersistenciaNoArquivo("Chamados/Chamado.cs");
     }
 
-    // C20: fora de Dados e do Agendador ninguém cria mensagem nem evento; as 24 linhas gravadas estão em RetratoTests.Gravacoes_do_chamado_iguais_as_da_base
     [Fact]
     public void Chamado_muda_so_pelos_metodos()
     {
@@ -514,7 +483,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(ArquivosQue(new Regex(@"new\s+(EventoChamado|MensagemChamado)\b|\b(EventosChamado|MensagensChamado)\.Add"), fora));
     }
 
-    // C29
     [Fact]
     public void Artigo_e_documento_fechados()
     {
@@ -543,7 +511,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly Regex TipoDeTopo = new(@"(?m)^(?:public |internal )?(?:static |sealed |abstract |partial )*(?:class|record|struct|interface|enum)\s+(\w+)");
 
-    // C34: door 5, um tipo por arquivo, na pasta do agregado
     [Fact]
     public async Task Uma_entidade_por_arquivo_por_agregado()
     {
@@ -583,7 +550,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         t.HasElementType ? Desembrulhar(t.GetElementType()!)
         : t.IsGenericType ? t.GetGenericArguments().SelectMany(Desembrulhar).Append(t.GetGenericTypeDefinition()) : [t];
 
-    // C35: door 7, o domínio não depende de ASP.NET Core, de Mediator nem de uma fatia (texto e reflexão)
     [Fact]
     public void Dominio_sem_AspNetCore_Mediator_nem_fatias()
     {
@@ -607,7 +573,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             }
     }
 
-    // C36: os testes das transições não usam banco nem HTTP, e cada método público das entidades aparece neles
     [Fact]
     public void Testes_de_dominio_sem_banco()
     {
@@ -631,7 +596,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C37: door 6, nenhuma migração por causa da mudança de pasta e de forma
     [Fact]
     public async Task Modelo_sem_mudanca_pendente()
     {
@@ -640,7 +604,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.DoesNotContain("migrationBuilder.", SemComentarios(migracao));
     }
 
-    // C38: door 7, os dois projetos de sempre e nenhum repositório sobre o EF
     [Fact]
     public void Dois_projetos_sem_repositorio()
     {
@@ -652,7 +615,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain(typeof(Program).Assembly.GetTypes(), t => t.Name.Contains("Repositor"));
     }
 
-    // C24: as 10 ações do chamado e os 11 nomes de ação de PermissoesChamado
     [Fact]
     public void Dez_acoes_do_chamado()
     {
@@ -660,7 +622,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(10, acoes.Count);
         Assert.All(acoes, t => Assert.True(File.Exists(Path.Combine(Api, "Chamados", t.Name + ".cs")) && t.Namespace == "One.Api.Chamados", t.Name));
 
-        // cada ação construída com valores neutros; o formulário de /mensagens uma vez com tipo PUBLICA e uma com NOTA
         object Construir(Type t, string tipo) =>
             Assert.Single(t.GetConstructors()).Invoke([.. Assert.Single(t.GetConstructors()).GetParameters().Select(p =>
                 p.ParameterType == typeof(IFormCollection) ? new FormCollection(new() { ["tipo"] = tipo })
@@ -668,12 +629,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
                 : p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null)]);
         var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
         Assert.Equal(["assumir", "cancelar", "confirmar", "duplicado", "encaminhar", "nota", "reclassificar", "rejeitar", "resolver", "responder", "subir"], nomes.Order());
-        // C60: os 11 nomes estão em PermissoesChamado, e a liderança fica só com cinco deles
         Assert.All(nomes, n => Assert.True(new[] { "ALUNO", "ATENDENTE", "LIDER" }.Any(p => One.Api.Chamados.PermissoesChamado.Estados(n, p) is not null), n));
         Assert.Equal(["assumir", "nota", "resolver", "responder", "subir"], nomes.Where(n => One.Api.Chamados.PermissoesChamado.Estados(n, "LIDER") is not null).Order());
     }
 
-    // fluxos-atendimento C98 (door 3): visão e ciência saem do tipo de destino, nunca de coluna do banco nem de campo de entrada do gestor
     [Fact]
     public async Task Visao_e_ciencia_fora_do_banco_e_da_entrada()
     {
@@ -687,11 +646,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.DoesNotContain(entrada.GetProperties(), p => proibido.IsMatch(p.Name));
     }
 
-    // fluxos-atendimento C37 (AC 30): o setor de cada tipo de destino é decidido só no ResolverFluxo; a transferência, a subida (rota e Agendador) e o simulador o chamam
     [Fact]
     public void Setor_so_pelo_ResolverFluxo()
     {
-        // quem compara o destino de uma etapa: o ResolverFluxo (decide) e a validação do rascunho (só confere a forma)
         Assert.Equal(["Administracao/SalvarRascunho.cs", "Dados/Fluxos/ResolverFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
         foreach (var usa in new[] { "Chamados/Transferencia.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Agendador.cs" })
         {
@@ -700,14 +657,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.DoesNotMatch(@"SetorCoordenacaoId|DestinosEtapa\.", codigo);
         }
     }
-    // ---- dominio-e-contratos S2: contratos nomeados ----
 
     static readonly System.Reflection.BindingFlags Declarados = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
         | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly;
 
     static string CodigoDe(params string[] relativo) => SemComentarios(Path.Combine([Api, .. relativo]));
 
-    // C13: objeto anônimo só nos 6 arquivos que o enunciado lista, e nenhum deles monta resposta HTTP (menos o de indicadores)
     [Fact]
     public void Objetos_anonimos_so_fora_das_respostas()
     {
@@ -739,7 +694,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static IEnumerable<Type> TiposDaApi() => typeof(Program).Assembly.GetTypes()
         .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && !t.Name.Contains('<'));
 
-    // C14: door 1, o corpo JSON liga num Entrada aninhado na mensagem, um por caso de uso (29)
     [Fact]
     public void Entrada_por_caso_de_uso()
     {
@@ -762,7 +716,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(34, comCorpo.Count);
         var porNome = Comparer<Type>.Create((a, b) => string.CompareOrdinal(a.FullName, b.FullName));
         Assert.Equal(entradas.Order(porNome), comCorpo.Select(x => x.corpo!.RequestType!).Order(porNome));
-        // o Entrada de cada rota é o da mensagem cujo Mapear registra aquela rota (verbo e caminho no arquivo do caso)
         foreach (var (e, corpo) in comCorpo)
         {
             var mensagem = corpo!.RequestType!.DeclaringType!;
@@ -785,7 +738,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] AsDezAcoes =
         ["ResponderChamado", "AssumirChamado", "ResolverChamado", "ConfirmarChamado", "RejeitarChamado", "CancelarChamado", "EncaminharChamado", "ReclassificarChamado", "MarcarDuplicado", "SubirChamado"];
 
-    // (fatia, record de Shared, os casos de uso que o citam)
     static readonly (string fatia, string record, string[] casos)[] OsNoveShared =
     [
         ("Chamados", "DetalheChamado", ["VerChamado", .. AsDezAcoes]),
@@ -799,11 +751,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         ("Administracao", "RespostaProntaResposta", ["ListarRespostasProntas", "CriarRespostaPronta", "AlterarRespostaPronta"]),
     ];
 
-    // o texto onde o caso de uso cita a própria resposta: o arquivo dele ou, nas 9 ações, o do AgirNoChamado que as embrulha
     static string TextoDoCaso(Type mensagem) =>
         SemComentarios(typeof(One.Api.Chamados.IAcaoChamado).IsAssignableFrom(mensagem) ? Path.Combine(Api, "Chamados", "AgirNoChamado.cs") : ArquivoDo(mensagem));
 
-    // C15: door 2, de onde vem o corpo JSON de cada uma das 54 mensagens que respondem com JSON
     [Fact]
     public void Resposta_por_caso_de_uso()
     {
@@ -836,7 +786,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(comJson.Count, ComRespostaAninhada.Length + doShared.Count + 1);
         Assert.All(SemCorpoJson, n => Assert.DoesNotContain(n, aninhadas.Concat(doShared.Keys)));
 
-        // exatamente 9 arquivos em pastas Shared, cada um com 1 record de topo do nome do arquivo e o namespace da fatia
         var shared = CodigoApi().Where(p => Path.GetRelativePath(Api, p).Split(Path.DirectorySeparatorChar).Contains("Shared")).ToList();
         Assert.Equal(9, shared.Count);
         foreach (var arquivo in shared)
@@ -852,7 +801,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(OsNoveShared.Select(x => x.record).Order(), shared.Select(Path.GetFileNameWithoutExtension).Order());
     }
 
-    // C16: cada record de Shared tem 3 ou mais usos, todos na fatia dele, e o nome não aparece em outra fatia
     [Fact]
     public void Shared_com_tres_usos_na_fatia()
     {
@@ -867,7 +815,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C17: door 1, nenhum campo, propriedade, parâmetro ou retorno tipado object (nem genérico com object); a transcrição é a única exceção
     static bool ComObject(Type t) =>
         t == typeof(object) || (t.HasElementType && ComObject(t.GetElementType()!)) || (t.IsGenericType && t.GetGenericArguments().Any(ComObject));
 
@@ -886,7 +833,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && t.FullName != "One.Api.Assistente.Assistente"
                 && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false) && !t.Name.Contains('<'));
         var com = tipos.SelectMany(Assinaturas).Where(x => ComObject(x.tipo)).ToList();
-        // a exceção: a transcrição do detalhe (propriedade, parâmetro do construtor e do Deconstruct), onde o item da equipe e o do aluno são records nomeados
         var restante = com.Where(x => !(x.onde.StartsWith(detalhe.FullName + ".") && x.onde.Contains("Transcricao") && (x.tipo == itens || x.tipo.GetElementType() == itens))).ToList();
         Assert.Empty(restante);
         Assert.Equal(itens, detalhe.GetProperty("Transcricao")!.PropertyType);
@@ -898,7 +844,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["Autor", "Texto", "CriadaEm"], aluno.GetProperties().Select(p => p.Name));
     }
 
-    // C26: door 4, o pipeline do chamado tem a forma da base; só o DetalheChamado.Montar e a Recusa são do domínio-e-contratos
     [Fact]
     public void Pipeline_do_chamado_com_a_forma_da_base()
     {
@@ -949,7 +894,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["Chamados/AgirNoChamado.cs"], chamam);
     }
 
-    // arquivos-minio C2: door 1, o banco guarda chave, hash e tamanho e nenhum byte
     [Fact]
     public async Task Anexo_e_VersaoDocumento_nao_guardam_bytes()
     {
@@ -977,7 +921,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // arquivos-minio C6: door 2, o cliente S3 e as quatro chaves de configuração
     [Fact]
     public void Cliente_S3_configurado_como_a_door_2()
     {
@@ -993,7 +936,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
                 Assert.Contains($"\"Armazenamento:{chave}\"", codigo);
     }
 
-    // arquivos-minio C9: o objeto baixado é sempre o da chave que veio da linha do OneDb
     [Fact]
     public void Baixar_so_com_chave_de_coluna_do_banco()
     {
@@ -1003,11 +945,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));
             Assert.Matches(@"\.Baixar\(\w+\.Chave\)", codigo);
-            Assert.Matches(@"new \w+\([^;]*x\.Chave", codigo); // o membro Chave sai do Select sobre o OneDb
+            Assert.Matches(@"new \w+\([^;]*x\.Chave", codigo);
         }
     }
 
-    // arquivos-minio C11: o download entrega o fluxo do bucket, sem array inteiro
     [Fact]
     public void Download_em_streaming_sem_array_inteiro()
     {
@@ -1020,7 +961,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // arquivos-minio C20: door 4, o bucket é append-only e nenhum código do One.Api/ apaga objeto
     static readonly Regex ChamaDelete = new(@"\bDeleteObjects?(Async)?\b");
 
     [Fact]
@@ -1035,7 +975,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Regra_de_delete_pega_cada_chamada(string nome) =>
         Assert.Matches(ChamaDelete, $"await s3.{nome}(new Req());");
 
-    // arquivos-minio C28: o termo novo entra no glossário
     [Fact]
     public void Glossario_tem_armazenamento()
     {
@@ -1043,7 +982,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(linhas, l => l.Trim().Trim('|').Split('|')[^1].Trim().Length >= 10);
     }
 
-    // arquivos-minio C29: door 5, o serviço minio fixado por digest e a api esperando por ele
     [Fact]
     public void Compose_com_minio_por_digest()
     {
@@ -1065,7 +1003,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Directory.EnumerateFiles(Path.Combine(Raiz(), "One.Api"), "*.cs", SearchOption.AllDirectories)
             .Where(a => !a.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !a.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"));
 
-    // tempo-real-signalr C15: o contrato do hub (door 1); nada em fluxo, a resposta da IA vai inteira (AD-012)
     [Fact]
     public void Contrato_do_hub()
     {
@@ -1079,7 +1016,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["/api/tempo-real", "/api/tempo-real/negotiate"], hub.Select(e => e.RoutePattern.RawText).Order());
     }
 
-    // tempo-real-signalr C16: os nomes dos grupos num arquivo só, com a instituição vinda do usuário relido
     [Fact]
     public void Grupos_num_so_lugar()
     {
@@ -1092,7 +1028,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotMatch(@"(?i)public async Task \w+\([^)]*instituicao", hub);
     }
 
-    // tempo-real-signalr C31: o único envio por IHubContext fica no interceptador e só leva os dois nomes (door 1, door 4)
     [Fact]
     public void Hub_so_envia_ChamadoMudou_e_FilaMudou()
     {
@@ -1102,7 +1037,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["ChamadoMudou", "FilaMudou"], nomes);
     }
 
-    // tempo-real-signalr C32: AddSignalR, MapHub e o registro do aviso só no Program, que o host real, o comando e o OneFactory usam (door 4)
     [Fact]
     public void Aviso_registrado_so_no_Program()
     {
@@ -1118,7 +1052,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(program.IndexOf("Servicos(builder.Services)", StringComparison.Ordinal) < program.IndexOf("InstituicaoComando.Executar", StringComparison.Ordinal));
     }
 
-    // web-push C17: door 6, cada chave Push:* é lida num só lugar do One.Api/
     [Fact]
     public void Push_configuracao_lida_em_um_lugar()
     {
@@ -1130,7 +1063,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // web-push C18: door 6, o compose repassa as três variáveis e nenhum arquivo versionado leva a chave privada
     [Fact]
     public void Push_chaves_fora_do_git()
     {
@@ -1146,7 +1078,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(File.ReadAllLines(Path.Combine(Raiz(), ".gitignore")).Select(l => l.Trim()), l => l == ".env");
     }
 
-    // web-push C19
     [Fact]
     public void Glossario_lista_subscricao_e_push_saida()
     {
@@ -1155,7 +1086,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Contains(linhas, l => l.Contains($"`{termo}`") && l.Trim().Trim('|').Split('|')[^1].Trim().Length >= 10);
     }
 
-    // web-push C24: door 1, Lib.Net.Http.WebPush 3.3.1 (troca de 03/11/2026) e nenhuma outra biblioteca de push
     [Fact]
     public void Pacote_webpush_fixo()
     {

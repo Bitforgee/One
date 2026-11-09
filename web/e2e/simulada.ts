@@ -1,12 +1,10 @@
 import type { Page } from '@playwright/test'
 
-// layout-painel C13: textos sem espaço que só quebram pelo CSS (título de 120 caracteres, e-mail de 60)
 const TituloLongo = 'Boleto'.repeat(20)
 const EmailLongo = 'e'.repeat(46) + '@univag.edu.br'
 
 const longo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
 
-// O chamado ONE-123 como a equipe o recebe; `estado` deixa o teste do Sheet ver a troca.
 export const chamadoSimulado = (estado = 'EM_ATENDIMENTO') => ({
   numero: 'ONE-123', titulo: longo, estado, motivoFechamento: null, setor: 'Coordenação de Análise e Desenvolvimento de Sistemas',
   categoria: 'Financeiro > Boletos e mensalidades', responsavel: 'Carla Regina de Souza', criadoEm: '2026-11-02T12:00:00Z', resolvidoEm: null,
@@ -22,7 +20,6 @@ export const chamadoSimulado = (estado = 'EM_ATENDIMENTO') => ({
   acoes: ['responder', 'nota', 'resolver', 'assumir', 'confirmar', 'encaminhar', 'cancelar', 'reclassificar'],
 })
 
-// A aparência de GET /api/instituicoes/univag sem nada definido e com tudo definido (aparencia-instituicao AC 28).
 export const semAparencia = {
   nomeCurto: null, cor: null, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, boasVindas: null, perguntas: [] },
   contato: { horario: null, telefone: null, email: null }, imagens: { logo: null, icone: null, login: null, assistente: null },
@@ -32,18 +29,13 @@ export const comAparencia = {
   assistente: { nome: 'Vagner', boasVindas: 'Oi! Posso ajudar com boletos e matrícula.', perguntas: ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?'] },
   contato: { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: 'atendimento@univag.edu.br' }, imagens: { logo: 3, icone: 2, login: 1, assistente: 4 },
 }
-// um PNG de 1 x 1 para as rotas de imagem
 const Png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAwS2OUAAAAABJRU5ErkJggg==', 'base64')
 
-// instituicoes-plataforma: o que GET /api/plataforma/instituicoes devolve (uma ativa com nome longo e uma desativada)
 export const InstituicoesSimuladas = [
   { slug: 'univag', nome: 'Centro Universitário de Várzea Grande', fuso: 'America/Cuiaba', ativa: true, criadaEm: '2026-11-02T12:00:00Z', administradores: 2 },
   { slug: 'faculdade-antiga', nome: 'Faculdade Antiga', fuso: 'America/Sao_Paulo', ativa: false, criadaEm: '2026-09-15T12:00:00Z', administradores: 0 },
 ]
 
-// API simulada: o teste mede só o layout de cada tela.
-// `aparencia` é o que GET /api/instituicoes/univag e GET /api/admin/aparencia devolvem ao lado do nome.
-// Com `extremos`, Fila, Artigos, Documentos e Usuários ganham uma linha com os textos longos de C13.
 export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false, aparencia: object = semAparencia) {
   const mais = <T,>(linhas: T[], extra: T) => (extremos ? [...linhas, extra] : linhas)
   await page.route('**/api/**', (rota) => {
@@ -108,7 +100,6 @@ export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'AD
   })
 }
 
-// As telas de C13 e do teste de 360 px, cada uma com o que esperar até estar desenhada.
 export const Telas: [string, string, (p: Page) => Promise<void>][] = [
   ['Login', '/univag', async (p) => void (await p.getByLabel('CPF').waitFor())],
   [
@@ -148,14 +139,12 @@ export const Telas: [string, string, (p: Page) => Promise<void>][] = [
   ['Documentos', '/univag/documentos', async (p) => void (await p.getByText('Regulamento do estágio supervisionado obrigatório dos cursos de graduação').waitFor())],
 ]
 
-// ---------- cor pintada (revisao-ux, movida de ux.spec.ts para identidade.spec.ts usar) ----------
 declare global {
   interface Window {
     __ux: { pintar: (pilha: string[]) => number[]; pilha: (el: Element) => string[] }
   }
 }
 
-// As duas funções do navegador: pintar uma pilha de cores (a primeira é o fundo) e achar a pilha de fundo de um elemento até o fundo opaco mais próximo.
 export async function instalar(page: Page) {
   await page.addInitScript(() => {
     const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!
@@ -184,7 +173,6 @@ export async function instalar(page: Page) {
   })
 }
 
-// A cor de um elemento de referência pintado com var(--token), em sRGB de 8 bits
 export async function referencia(page: Page, token: string) {
   return page.evaluate((t) => {
     const ref = document.createElement('div')
@@ -196,14 +184,12 @@ export async function referencia(page: Page, token: string) {
   }, token)
 }
 
-// ---------- varredura das telas (ux.spec.ts e identidade.spec.ts) ----------
 export async function abrirTela(page: Page, nome: string) {
   const [, caminho, esperar] = Telas.find(([n]) => n === nome)!
   await page.goto(caminho)
   await esperar(page)
 }
 
-// As telas de C55 a C57: `Telas`, Conta e Instituições (P16)
 export async function varrer(page: Page, aoAbrir: (nome: string) => Promise<void>, aparencia: object = semAparencia) {
   const telas: [string, () => Promise<void>][] = [
     ...Telas.map(([nome]) => [nome, () => abrirTela(page, nome)] as [string, () => Promise<void>]),

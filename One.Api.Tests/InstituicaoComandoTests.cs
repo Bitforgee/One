@@ -169,7 +169,6 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         });
     }
 
-    // fluxos-atendimento C10: a carga segue gerando regras na saída, mas agora cada uma é um fluxo para todos os cursos
     [Fact]
     public async Task Carga_continua_com_a_mesma_saida()
     {
@@ -185,7 +184,6 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(2, await f.Db(i.Id, db => db.VersoesFluxo.CountAsync(v => v.PublicadaEm != null)));
         Assert.Equal(2, await f.Db(i.Id, db => db.EtapasFluxo.CountAsync()));
     }
-    // Test policy, entrada que não decide: cada recusa do arquivo de carga sai com 1, o caminho e nada gravado
     [Fact]
     public async Task Carga_cada_recusa_sai_1()
     {
@@ -237,7 +235,6 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("não encontrado", semArquivo.erro);
         Assert.Equal(antes, await Contagens());
 
-        // a categoria já tem regra gravada no banco por uma carga anterior
         var categoria = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
         File.WriteAllText(categoria, "{\"categorias\":[{\"nome\":\"Boleto\"}],\"regras\":[{\"categoria\":\"Boleto\",\"coordenacaoDoCurso\":true}]}");
         Assert.Equal(0, (await Rodar("carga", "--slug", slug, "--arquivo", categoria)).codigo);
@@ -250,7 +247,6 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("já tem regra", repetida.erro);
         Assert.Equal(depois, await Contagens());
 
-        // curso e categoria que já existem na instituição (door 20: contra o arquivo e o que já existe)
         var comCurso = Path.Combine(Path.GetTempPath(), $"carga-{Guid.NewGuid():N}.json");
         File.WriteAllText(comCurso, "{\"cursos\":[{\"nome\":\"Direito\"}]}");
         Assert.Equal(0, (await Rodar("carga", "--slug", slug, "--arquivo", comCurso)).codigo);
@@ -270,7 +266,6 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
         }
         Assert.Equal(antesDosRepetidos, await Contagens());
 
-        // subcomando desconhecido ou ausente: uso e código 1
         foreach (var args in new[] { new[] { "apagar" }, Array.Empty<string>() })
         {
             var (codigo, _, erro) = await Rodar(args);

@@ -6,8 +6,6 @@ import { Badge } from '../ui/badge'
 export type Indexacao = 'PENDENTE' | 'INDEXADO' | 'FALHOU'
 export type Categoria = { id: number; nome: string; ativa: boolean }
 
-// RAG: o assistente só busca o que já tem embedding; o agendador indexa em segundo plano.
-// A indexação é um ícone com nome e dica iguais ao valor, ao lado do título; só a situação é selo (AC 33).
 const Indexacoes = { PENDENTE: ['Indexando', Clock, 'text-muted-foreground'], INDEXADO: ['Indexado', CircleCheck, 'text-success'], FALHOU: ['Falhou', CircleAlert, 'text-destructive'] } as const
 export function IconeIndexacao({ valor }: { valor: Indexacao | null }) {
   if (!valor) return null
@@ -25,7 +23,6 @@ export function SeloEstado({ estado }: { estado: keyof typeof Estados }) {
   return <Badge className={cor}>{rotulo}</Badge>
 }
 
-// Lê a lista da tela e as categorias ativas; quem grava manda reler.
 export function useCatalogo<T>(url: string) {
   const { dados, erro, recarregar } = useLeituras<{ itens: T[]; categorias: Categoria[] }>({ itens: url, categorias: '/api/admin/categorias' })
   return { itens: dados?.itens, categorias: dados?.categorias.filter((c) => c.ativa) ?? [], erro, recarregar }

@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
-// revisao-ux S2 (door 1): a barra de abas do aluno no celular e a tela Conta.
 const celular = () =>
   vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
 
@@ -13,7 +12,6 @@ const Chave = 'BAEC'
 const Contato = { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: null }
 const aluno = { 'GET /api/auth/me': () => [200, me()] as [number, unknown], 'GET /api/instituicoes/univag': () => [200, instituicao()] as [number, unknown] }
 
-// O navegador com push (service worker, PushManager e Notification) e a chave do servidor; `push` falso liga só a API.
 function comPush(chave = 200) {
   const inscricao = { endpoint: 'https://push.teste/abc', unsubscribe: vi.fn(async () => true), toJSON: () => ({ endpoint: 'https://push.teste/abc', keys: { p256dh: 'P', auth: 'A' } }) }
   Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null, subscribe: async () => inscricao } }) } })
@@ -29,7 +27,6 @@ afterEach(() => {
 })
 
 describe('barra de abas do aluno', () => {
-  // C12 (AC 11)
   it.each([
     ['assistente', 0],
     ['solicitacoes', 1],
@@ -52,7 +49,6 @@ describe('barra de abas do aluno', () => {
 describe('Conta', () => {
   const linhas = () => screen.getAllByRole('listitem').map((li) => li.textContent)
 
-  // C17 (AC 13, P3)
   it.each([
     ['com push e contato', { push: 200, contato: Contato }, ['Tema', 'Avisos no celular', 'Contato do atendimento', 'Trocar senha', 'Sair']],
     ['sem push', { push: 204, contato: Contato }, ['Tema', 'Contato do atendimento', 'Trocar senha', 'Sair']],
@@ -70,7 +66,6 @@ describe('Conta', () => {
     expect(linhas()).toHaveLength(esperadas.length)
   })
 
-  // C18 (AC 13): cada linha age; o aviso chama a mesma inscrição do botão de avisos (POST /api/push/subscricao)
   describe('linhas da Conta agem', () => {
     it('Tema abre a escolha e Escuro grava one-tema', async () => {
       celular()
@@ -123,7 +118,6 @@ describe('Conta', () => {
 })
 
 describe('operador', () => {
-  // C70 (AC 9)
   it.each(['fila', 'assistente', 'solicitacoes', 'indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia', 'conta'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['OPERADOR'] })] })
     const Local = () => <output data-testid="local">{useLocation().pathname}</output>

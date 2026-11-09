@@ -28,7 +28,6 @@ public sealed class AtivarPushHandler(OneDb db, IConfiguration cfg, TimeProvider
 
         var agora = relogio.GetUtcNow().UtcDateTime;
         await using var tx = await db.Database.BeginTransactionAsync(ct);
-        // o endpoint é único no banco inteiro (door 2): a linha de outra instituição não passa pelo filtro global, então vem para esta por SQL
         await db.Database.ExecuteSqlAsync($"UPDATE subscricao_push SET instituicao_id = {u.InstituicaoId} WHERE endpoint = {endpoint} AND instituicao_id <> {u.InstituicaoId}", ct);
         var s = await db.SubscricoesPush.SingleOrDefaultAsync(x => x.Endpoint == endpoint, ct);
         if (s is null) db.SubscricoesPush.Add(SubscricaoPush.Registrar(u.Id, u.InstituicaoId, endpoint, p256dh, auth, agora));

@@ -5,12 +5,11 @@ using Amazon.S3.Model;
 
 namespace One.Api;
 
-// O único código que fala com o MinIO (API S3). Nunca apaga objeto: o bucket é versionado e as chaves são novas a cada gravação.
 public sealed class ArmazenamentoIndisponivel(Exception causa) : Exception("Armazenamento de arquivos indisponível.", causa);
 
 public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? handler = null)
 {
-    readonly HttpClient http = new(handler ?? new HttpClientHandler()); // handler: só os testes passam um, para contar leituras
+    readonly HttpClient http = new(handler ?? new HttpClientHandler());
     string Bucket => bucket;
 
     public async Task Preparar()
@@ -38,7 +37,6 @@ public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? hand
         return (chave, Hash(bytes));
     }
 
-    // Quem precisa recusar por estado antes de gravar sorteia a chave com NovaChave, deixa o domínio decidir e só então grava.
     public async Task Gravar(string chave, byte[] bytes)
     {
         using var corpo = new MemoryStream(bytes);
@@ -46,27 +44,24 @@ public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? hand
         catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException) { throw new ArmazenamentoIndisponivel(e); }
     }
 
-    // O ResponseStream do SDK passa por um MD5Stream que aloca ~1,4 vezes o tamanho do objeto (medido: 14,5 MB para 10 MiB). A URL
-    // assinada é só interna: a API a abre com HttpClient e repassa o fluxo, e o navegador nunca vê a URL.
     public async Task<Stream> Baixar(string chave)
     {
         var url = s3.GetPreSignedURL(new GetPreSignedUrlRequest
         {
             BucketName = Bucket,
             Key = chave,
-            Expires = TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(1), // relógio real: o MinIO confere a assinatura com o dele
+            Expires = TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(1),
             Protocol = new Uri(s3.Config.ServiceURL).Scheme == "https" ? Protocol.HTTPS : Protocol.HTTP,
         });
         try
         {
             var resposta = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-            resposta.EnsureSuccessStatusCode(); // objeto ausente: 404 do MinIO vira 503, nunca 200 vazio
+            resposta.EnsureSuccessStatusCode();
             return await resposta.Content.ReadAsStreamAsync();
         }
         catch (HttpRequestException e) { throw new ArmazenamentoIndisponivel(e); }
     }
 
-    // Results.Stream não deduz o tamanho de um fluxo que não anda para trás: o Content-Length vem da linha do banco.
     public static IResult ComTamanho(IResult resultado, long tamanho) => new ResultadoComTamanho(resultado, tamanho);
 
     sealed class ResultadoComTamanho(IResult resultado, long tamanho) : IResult

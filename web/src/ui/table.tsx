@@ -3,7 +3,6 @@
 import * as React from "react"
 import { cn } from "@/ui/utils"
 
-// Dentro da Tabela abaixo de 768 px não há <table>: linhas e células saem como div, e a linha é um item de lista.
 export const Cartoes = React.createContext(false)
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {

@@ -29,7 +29,6 @@ async function enviar(texto = 'esse boleto está certo?') {
 }
 
 describe('anexos na conversa com o assistente', () => {
-  // anexos-assistente C28 (AC 21)
   it('botão Anexar arquivo abre o seletor de PDF, JPG e PNG', async () => {
     assistente()
     await screen.findByLabelText('Mensagem')
@@ -42,14 +41,12 @@ describe('anexos na conversa com o assistente', () => {
 
     expect(abriu).toHaveBeenCalledTimes(1)
     expect(anexar().closest('form')).not.toBeNull()
-    // mesma linha: o botão e o campo "Mensagem" dividem o contêiner flex de linha
     const linha = anexar().parentElement!
     expect(linha).toContainElement(screen.getByLabelText('Mensagem'))
     expect(linha).toHaveClass('flex')
     expect(linha).not.toHaveClass('flex-col')
   })
 
-  // C29 (AC 22)
   it('selos dos arquivos escolhidos e remover', async () => {
     assistente()
     await escolher('boleto.png', 'comprovante.pdf')
@@ -64,7 +61,6 @@ describe('anexos na conversa com o assistente', () => {
     expect(screen.queryByRole('button', { name: 'Remover boleto.png' })).not.toBeInTheDocument()
   })
 
-  // C30 (AC 23)
   it('Anexar arquivo desabilitado com 3 anexos na conversa', async () => {
     assistente({
       'POST /api/conversas': responde,
@@ -77,7 +73,6 @@ describe('anexos na conversa com o assistente', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Remover c.png' }))
     expect(anexar()).toBeEnabled()
 
-    // 2 já enviados e 1 escolhido
     await enviar()
     await screen.findByText('É do semestre atual?')
     expect(anexar()).toBeEnabled()
@@ -85,7 +80,6 @@ describe('anexos na conversa com o assistente', () => {
     expect(anexar()).toBeDisabled()
   })
 
-  // C31 (AC 24)
   it('envio com anexos vai em FormData e o balão mostra os links', async () => {
     const chamadas = assistente({
       'POST /api/conversas': responde,
@@ -116,7 +110,6 @@ describe('anexos na conversa com o assistente', () => {
     expect(chamadas.filter((c) => c.metodo === 'POST')).toHaveLength(1)
   })
 
-  // C32 (AC 24)
   it('sem anexo o envio continua em JSON', async () => {
     const chamadas = assistente({ 'POST /api/conversas': responde })
     await enviar('preciso do boleto')
@@ -126,7 +119,6 @@ describe('anexos na conversa com o assistente', () => {
     expect(chamadas.some((c) => c.url === '/api/conversas/7')).toBe(false)
   })
 
-  // C33 (AC 25)
   it('erro da API mantém texto e selos', async () => {
     for (const [status, detail] of [
       [400, 'A conversa aceita até 3 anexos.'],
@@ -146,7 +138,6 @@ describe('anexos na conversa com o assistente', () => {
     }
   })
 
-  // C34 (AC 26)
   it('texto de ajuda dos anexos', async () => {
     assistente()
     const campo = await screen.findByLabelText('Mensagem')
@@ -154,7 +145,6 @@ describe('anexos na conversa com o assistente', () => {
     await escolher('foto.png')
     const ajuda = await screen.findByText(Ajuda)
     expect(ajuda).toBeVisible()
-    // abaixo do campo: vem depois dele no documento
     expect(campo.compareDocumentPosition(ajuda) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

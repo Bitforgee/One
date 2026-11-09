@@ -22,7 +22,6 @@ describe('administração', () => {
     expect(screen.getByText('Linha 3').parentElement).toHaveTextContent('Linha 3CPF inválido')
   })
 
-  // layout-painel C21 (AC 21): Usuários, as 5 abas de Cadastros e os erros de Matrículas
   it('colunas das tabelas de administração', async () => {
     const vazias = Object.fromEntries(['categorias', 'cursos', 'fluxos', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []] as [number, unknown]]))
     api({
@@ -52,7 +51,6 @@ describe('administração', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
-  // layout-painel C24 (AC 24): Usuários e uma aba de Cadastros
   it('lista vazia numa linha', async () => {
     api({
       'GET /api/auth/me': () => [200, admin],
@@ -159,7 +157,6 @@ describe('administração', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível concluir a requisição.')
   })
 
-  // C84 (AC 61, door 16)
   it('tabela de erros com Linha e Motivo', async () => {
     api({
       'GET /api/auth/me': () => [200, admin],
@@ -173,7 +170,6 @@ describe('administração', () => {
     expect(within(screen.getByText('Linha 3').closest('ul')!).getAllByRole('listitem').map((l) => l.textContent)).toEqual(['Linha 3CPF inválido', 'Linha 7Semestre inválido'])
   })
 
-  // C85 (door 11)
   it('soltar CSV em Arquivo CSV importa o arquivo', async () => {
     const chamadas = api({ 'GET /api/auth/me': () => [200, admin], 'POST /api/admin/matriculas/importacao': () => [200, { criados: 1, atualizados: 0 }] })
     abrir('/univag/matriculas')

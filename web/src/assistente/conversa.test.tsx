@@ -54,7 +54,6 @@ describe('conversa com o assistente', () => {
     await screen.findByText('É do semestre atual?')
     await enviar('sim')
     await screen.findByText('Está no portal.')
-    // a avaliação segue a última resposta, não a primeira
     expect(screen.getByText('Isso resolveu?')).toBeInTheDocument()
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => [c.url, c.corpo])).toEqual([
       ['/api/conversas', { mensagem: 'boleto' }],
@@ -222,13 +221,11 @@ describe('conversa com o assistente', () => {
     }
   })
 
-  // redesign-institucional (S3): o texto do balão e onde ele pode quebrar
   const balao = (texto: string, props: { doAluno?: boolean; autor?: string; nota?: boolean } = {}) => {
     const { container } = render(<Balao doAluno={false} {...props} texto={texto} em="2026-11-03T12:00:00Z" fuso="America/Cuiaba" />)
     return container.querySelector('.whitespace-pre-wrap') as HTMLElement
   }
 
-  // C15 (AC 15, door 4)
   it('quebra depois de / ? & = #', () => {
     const Link = 'https://portal.univag.edu.br/a/b?x=1&y=2#topo fim'
     const conteudo = balao(Link)
@@ -238,7 +235,6 @@ describe('conversa com o assistente', () => {
     expect(balao('sem separador').querySelectorAll('wbr')).toHaveLength(0)
   })
 
-  // C18 (AC 18)
   it('cantos do balão', () => {
     const caixa = (el: HTMLElement) => el.closest('.is-user, .is-assistant')!
     expect(caixa(balao('a', { doAluno: true }))).toHaveClass('rounded-2xl', 'rounded-br-sm')
@@ -248,7 +244,6 @@ describe('conversa com o assistente', () => {
     expect(caixa(balao('d', { doAluno: true }))).not.toHaveClass('rounded-bl-sm')
   })
 
-  // C19 (AC 19, AD-012)
   it('balão sem HTML', () => {
     const Texto = '<b>x</b> & <img src=x>'
     const conteudo = balao(Texto)
@@ -257,7 +252,6 @@ describe('conversa com o assistente', () => {
     for (const no of conteudo.childNodes) expect(no.nodeType === Node.TEXT_NODE || no.nodeName === 'WBR', no.nodeName).toBe(true)
   })
 
-  // só os links do fim viram botões e a frase termina em dois-pontos; o do meio fica no texto
   it.each([
     ['Gere a segunda via no portal: https://portal.edu.br/boletos.', 'Gere a segunda via no portal:', ['https://portal.edu.br/boletos']],
     ['Veja (https://a.edu.br/x) e https://b.edu.br, ou https://a.edu.br/x!', 'Veja (https://a.edu.br/x) e https://b.edu.br, ou:', ['https://a.edu.br/x']],

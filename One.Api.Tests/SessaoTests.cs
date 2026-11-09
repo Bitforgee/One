@@ -14,7 +14,6 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Publicas = ["/api/instituicoes/{slug}", "/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"];
     static readonly string[] LivresDaTroca = ["/api/auth/login", "/api/auth/logout", "/api/auth/me", "/api/auth/senha"];
 
-    // Todas as rotas /api registradas, lidas do próprio app: rota nova entra no teste sem editar a lista.
     List<(string metodo, string padrao)> Rotas() =>
         f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/") && !e.RoutePattern.RawText.Contains("{**"))
@@ -31,7 +30,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.Equal(75, privadas.Count); // RAG C37: mais as 5 de documentos; tempo-real-signalr: mais o negotiate e o WebSocket do hub (sem método declarado, o upgrade é GET)
+        Assert.Equal(75, privadas.Count);
 
         foreach (var (metodo, padrao) in privadas)
         {

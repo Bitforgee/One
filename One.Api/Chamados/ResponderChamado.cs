@@ -40,7 +40,6 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenam
     {
         var c = a.Chamado;
         if (m.Tipo == TiposMensagem.Nota) { c.Anotar(a.Usuario.Id, m.Texto, a.Agora); return Results.Empty; }
-        // As chaves são sorteadas já, mas os objetos só são gravados depois que o domínio aceita a ação: um 409 não deixa objeto órfão.
         var lidos = new List<Arquivos.Lido>();
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)

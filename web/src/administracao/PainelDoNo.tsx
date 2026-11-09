@@ -16,7 +16,6 @@ const Explicacoes = {
   LIDERANCA_SEMESTRE: 'O chamado vai para a liderança da turma do aluno. Ela vê o resumo da dúvida, nunca a conversa.',
 }
 
-// Os dados da etapa selecionada, ao lado do canvas: o desenho mostra a cadeia, e estes campos completam a etapa sem esconder o desenho.
 export function PainelDoNo({ no, setores, mudar, remover, fechar }: Props) {
   const Icone = Icones[no.destino]
   return (

@@ -300,7 +300,6 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
         var mensagens = await f.Db(c.Instituicao.Id, db => db.MensagensConversa.Include(m => m.Citacoes)
             .Where(m => m.ConversaId == id && m.Autor == "ASSISTENTE").OrderBy(m => m.Id).ToListAsync());
         var versaoBoleto = await f.Db(c.Instituicao.Id, db => db.VersoesArtigo.SingleAsync(v => v.ArtigoId == c.Boleto.Id));
-        // RAG, door R5: a citação nova grava o trecho de fonte; a versão citada é a do trecho
         var versaoDoTrecho = await f.Db(c.Instituicao.Id, db => db.TrechosFonte.ToDictionaryAsync(t => t.Id, t => t.VersaoArtigoId));
 
         var exibida = mensagens[0];
@@ -319,7 +318,6 @@ public class AssistenteTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("sem_base", rebaixada.TipoFinal);
         Assert.Empty(rebaixada.Citacoes);
 
-        // sem possibilidade de alteração: o banco recusa UPDATE e DELETE
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db(c.Instituicao.Id, db => db.MensagensConversa.Where(m => m.Id == exibida.Id).ExecuteUpdateAsync(s => s.SetProperty(m => m.Texto, "outro"))));
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db(c.Instituicao.Id, db => db.Citacoes.Where(m => m.Id == citacao.Id).ExecuteDeleteAsync()));
     }

@@ -10,7 +10,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;
 
-// Cliente .NET do SignalR contra o host de teste (WebSocket pelo TestServer), com o cookie de um usuário.
 public static class TempoRealCliente
 {
     public static async Task<string> Cookie(this OneFactory f, Instituicao i, Usuario u, string senha = Semente.Senha)
@@ -47,7 +46,6 @@ public static class TempoRealCliente
         return c;
     }
 
-    // Sonda: um aviso qualquer mandado pelo IHubContext ao grupo; só chega a quem está no grupo.
     public static async Task Sonda(this OneFactory f, string grupo) =>
         await f.Services.GetRequiredService<IHubContext<TempoRealHub>>().Clients.Group(grupo).SendAsync("Sonda", grupo);
 
@@ -55,7 +53,6 @@ public static class TempoRealCliente
         f.Db(i.Id, db => db.Usuarios.Where(x => x.Id == u.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativo, false)));
 }
 
-// Conexão aberta que guarda o que o servidor mandar (ChamadoMudou, FilaMudou e a Sonda dos testes).
 public sealed class Conectado : IAsyncDisposable
 {
     public HubConnection Conexao { get; }
@@ -69,7 +66,6 @@ public sealed class Conectado : IAsyncDisposable
         con.On<string>("Sonda", g => Recebidos.Enqueue("Sonda:" + g));
     }
 
-    // Faz, no instante do aviso, a leitura que a tela faria; o resultado vai para Leituras.
     public Func<string, Task<string>>? AoReceber { get; set; }
     public ConcurrentQueue<string> Leituras { get; } = new();
 
@@ -84,7 +80,6 @@ public sealed class Conectado : IAsyncDisposable
         Leituras.Clear();
     }
 
-    // Espera até o evento (texto exato, como "FilaMudou" ou "ChamadoMudou:ONE-1") chegar; devolve se chegou.
     public async Task<bool> Receber(string evento, TimeSpan? limite = null)
     {
         var fim = DateTime.UtcNow + (limite ?? TimeSpan.FromSeconds(5));
@@ -96,7 +91,6 @@ public sealed class Conectado : IAsyncDisposable
     public Task Sair(string numero) => Conexao.InvokeAsync("SairDoChamado", numero);
     public Task EntrarNaFila() => Conexao.InvokeAsync("EntrarNaFila");
 
-    // O cliente recebe "An unexpected error occurred invoking 'X' on the server. HubException: <texto>"; devolve só o texto do HubException.
     public async Task<string> Recusa(Func<Task> acao)
     {
         var m = (await Assert.ThrowsAsync<HubException>(acao)).Message;
@@ -104,7 +98,6 @@ public sealed class Conectado : IAsyncDisposable
         return m[(m.IndexOf(marca, StringComparison.Ordinal) + marca.Length)..];
     }
 
-    // O servidor entrega em ordem; um "marcador" mandado depois prova que o que viria antes já chegou.
     public async Task<List<string>> Esperar(int quantos, TimeSpan? limite = null)
     {
         var fim = DateTime.UtcNow + (limite ?? TimeSpan.FromSeconds(5));
@@ -112,7 +105,6 @@ public sealed class Conectado : IAsyncDisposable
         return [.. Recebidos];
     }
 
-    // Para provar ausência: espera um instante curto e devolve o que chegou.
     public async Task<List<string>> Quieto()
     {
         await Task.Delay(400);

@@ -4,7 +4,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento C13 e C14 (doors 1 e 2): o banco impõe o modelo, provado por inserções que ele recusa com o nome da regra.
 public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<NpgsqlConnection> Abrir()
@@ -20,7 +19,6 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         return (long)(await cmd.ExecuteScalarAsync())!;
     }
 
-    // O nome da regra que o banco violou, ou null quando a linha entrou.
     static async Task<string?> Violou(NpgsqlConnection con, string sql)
     {
         try
@@ -35,7 +33,6 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C13
     [Fact]
     public async Task Constraints_e_indices_da_door_1()
     {
@@ -45,20 +42,17 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         await using var con = await Abrir();
         string Fluxo(string cursoId, string semestre) => $"INSERT INTO fluxo (instituicao_id, categoria_id, curso_id, semestre) VALUES ({i.Id}, {categoria.Id}, {cursoId}, {semestre})";
 
-        // UNIQUE NULLS NOT DISTINCT: dois fluxos para todos os cursos da mesma categoria colidem, e curso e semestre distintos não
         var todos = await Inserir(con, Fluxo("NULL", "NULL"));
         Assert.Equal("ux_fluxo_abrangencia", await Violou(con, Fluxo("NULL", "NULL")));
         Assert.Null(await Violou(con, Fluxo($"{curso.Id}", "NULL")));
         Assert.Null(await Violou(con, Fluxo($"{curso.Id}", "3")));
         Assert.Equal("ux_fluxo_abrangencia", await Violou(con, Fluxo($"{curso.Id}", "3")));
-        // semestre só com curso, e de 1 a 12
         Assert.Equal("ck_fluxo_semestre_com_curso", await Violou(con, Fluxo("NULL", "3")));
         Assert.Equal("ck_fluxo_semestre", await Violou(con, Fluxo($"{curso.Id}", "13")));
         Assert.Equal("ck_fluxo_semestre", await Violou(con, Fluxo($"{curso.Id}", "0")));
         Assert.Null(await Violou(con, Fluxo($"{curso.Id}", "12")));
         Assert.Null(await Violou(con, Fluxo($"{curso.Id}", "1")));
 
-        // versões: número único por fluxo e no máximo um rascunho
         string Versao(long fluxo, int numero, bool publicada) =>
             $"INSERT INTO versao_fluxo (instituicao_id, fluxo_id, numero, publicada_em) VALUES ({i.Id}, {fluxo}, {numero}, {(publicada ? "now()" : "NULL")})";
         var v1 = await Inserir(con, Versao(todos, 1, true) + "");
@@ -67,7 +61,6 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("ux_versao_rascunho", await Violou(con, Versao(todos, 3, false)));
         Assert.Null(await Violou(con, Versao(todos, 3, true)));
 
-        // etapas: ordem única por versão, de 1 a 5, prazo de 1 a 720 e posição inteira
         string Etapa(int ordem, string prazo = "NULL", string x = "NULL", string y = "NULL") =>
             $"INSERT INTO etapa_fluxo (instituicao_id, versao_fluxo_id, ordem, destino, prazo_horas, pos_x, pos_y) VALUES ({i.Id}, {v1}, {ordem}, 'COORDENACAO_CURSO', {prazo}, {x}, {y})";
         Assert.Null(await Violou(con, Etapa(1)));
@@ -84,7 +77,6 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Null(await Violou(con, Etapa(4, x: "10", y: "20")));
     }
 
-    // C14 (a parte do chamado; a do setor com curso e semestre é da liderança)
     [Fact]
     public async Task Colunas_do_chamado_e_do_setor()
     {
@@ -115,14 +107,12 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("ck_setor_semestre", await Violou(con, Setor("semestre 13", $"{cursoId}", "13")));
         Assert.Null(await Violou(con, Setor("semestre 1", $"{cursoId}", "1")));
         Assert.Null(await Violou(con, Setor("semestre 12", $"{cursoId}", "12")));
-        // uma liderança ativa por curso e semestre; a inativa não conta
         Assert.Equal("ux_setor_lideranca", await Violou(con, Setor("outra do 1", $"{cursoId}", "1")));
         Assert.Null(await Violou(con, Setor("inativa do 1", $"{cursoId}", "1", "false")));
         Assert.Null(await Violou(con, Setor("sem turma a", "NULL", "NULL")));
         Assert.Null(await Violou(con, Setor("sem turma b", "NULL", "NULL")));
     }
 
-    // C14, metade do setor (door 5): curso e semestre anuláveis, os dois checks e o índice parcial da liderança ativa.
     static async Task ColunasEConstraintsDoSetor(NpgsqlConnection con)
     {
         var colunas = await Lista(con, "SELECT column_name || '.' || data_type || '.' || is_nullable FROM information_schema.columns WHERE table_name = 'setor' AND column_name IN ('curso_id', 'semestre') ORDER BY 1");

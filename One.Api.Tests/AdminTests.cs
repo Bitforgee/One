@@ -28,7 +28,6 @@ public static class Admin
 
 public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C137: lê as 25 rotas /api/admin/* do próprio app.
     [Fact]
     public async Task Sem_papel_admin_403()
     {
@@ -39,7 +38,7 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(36, rotas.Count); // fluxos-atendimento: menos as 3 de regras, mais as 6 de fluxos; RAG C35: mais as 4 de documentos; aparencia-instituicao: mais as 4 de aparência
+        Assert.Equal(36, rotas.Count);
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)
@@ -51,7 +50,6 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["Triagem"], await f.Db(i.Id, db => db.Setores.Select(s => s.Nome).ToListAsync()));
     }
 
-    // refatoracao-solid C33: criar um atendente com 2 setores e editar papéis e setores gravam com um SaveChanges cada
     [Fact]
     public async Task Usuario_grava_uma_vez()
     {
@@ -129,7 +127,6 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, async db => { db.Cursos.Add(new Curso { Nome = "ADS" }); await db.SaveChangesAsync(); });
         var dono = await f.Usuario(i, [Papeis.Aluno], matricula: "2000000099");
         var valida = $"{Semente.NovoCpf()};Ana;ana@aluno.com;2000000001;ADS;3;ATIVA";
-        // sem o arquivo no formulário
         var semArquivo = await admin.PostAsync("/api/admin/matriculas/importacao", new MultipartFormDataContent { { new StringContent("x"), "outro" } });
         Assert.Equal(HttpStatusCode.BadRequest, semArquivo.StatusCode);
         Assert.True((await semArquivo.Json()).GetProperty("errors").TryGetProperty("arquivo", out _));
@@ -160,7 +157,6 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(3, erro.GetProperty("linha").GetInt32());
             Assert.Contains(motivo, erro.GetProperty("motivo").GetString());
         }
-        // duas linhas do mesmo arquivo que conflitam entre si: a segunda é recusada
         var conflitos = new (string linhas, string motivo)[]
         {
             ($"{Semente.NovoCpf()};Bia;bia@aluno.com;2000000005;ADS;3;ATIVA\n{Semente.NovoCpf()};Caio;caio@aluno.com;2000000005;ADS;3;ATIVA", "matrícula já ligada a outro CPF"),
@@ -175,7 +171,6 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Contains(motivo, erro.GetProperty("motivo").GetString());
         }
 
-        // cabeçalho errado ou arquivo vazio: erro na linha 1
         foreach (var arquivo in new[] { $"cpf;nome;email\n{valida}\n", "" })
         {
             var r = await admin.Importar(arquivo);
@@ -188,7 +183,6 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["2000000099"], await f.Db(i.Id, db => db.Matriculas.Select(m => m.Numero).ToListAsync()));
         Assert.Equal(dono.Id, await f.Db(i.Id, db => db.Matriculas.Select(m => m.UsuarioId).SingleAsync()));
 
-        // no limite: nome com 200 e matrícula com 20 caracteres entram
         var limite = await admin.Importar($"{Cabecalho}\n{Semente.NovoCpf()};{new string('n', 200)};limite@aluno.com;{new string('2', 20)};ADS;3;ATIVA\n");
         Assert.Equal(HttpStatusCode.OK, limite.StatusCode);
         Assert.Equal(1, (await limite.Json()).GetProperty("criados").GetInt32());
@@ -266,7 +260,6 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
     }
 
-    // Test policy, entrada que não decide: cada recusa do cadastro de usuário
     [Fact]
     public async Task Campos_invalidos_400()
     {
@@ -296,7 +289,6 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
             new { cpf, nome = "X", email = "x@x.com", papeis = new[] { Papeis.Atendente }, setores = new[] { triagem.Id }, senhaTemporaria = new string('s', 128) })).StatusCode);
     }
 
-    // C10
     [Fact]
     public async Task Cpf_ou_email_repetido_409()
     {
@@ -309,7 +301,6 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(existente.Cpf, papeis: [Papeis.Administrador]))).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(Semente.NovoCpf(), existente.Email, [Papeis.Administrador]))).StatusCode);
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
-        // AC 8: o mesmo CPF e e-mail de outra instituição são aceitos
         Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(deOutra.Cpf, deOutra.Email, [Papeis.Administrador]))).StatusCode);
     }
 
@@ -406,7 +397,6 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("ux_setor_triagem", e.ConstraintName);
     }
 
-    // A antiga regra única por categoria: agora um fluxo por categoria e abrangência (AC 16); a mesma categoria aceita outra abrangência.
     [Fact]
     public async Task Regra_unica_por_categoria()
     {
@@ -424,7 +414,6 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(2, await f.Db(i.Id, db => db.Fluxos.CountAsync(x => x.CategoriaId == categoria.Id)));
     }
 
-    // A antiga regra de setor fixo sem setor: a etapa SETOR sem setorId é recusada no rascunho (AC 20) e nada é gravado.
     [Fact]
     public async Task Regra_setor_fixo_sem_setor_400()
     {
@@ -457,7 +446,6 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Coordenação ADS", transferido.GetProperty("setor").GetString());
     }
 
-    // Test policy, entrada que não decide: cada recusa dos cadastros de curso, regra e resposta pronta
     [Fact]
     public async Task Recusas_dos_cadastros_400()
     {

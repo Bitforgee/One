@@ -9,10 +9,8 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento S3 (C44 a C50 e C57): o atendente sobe o chamado à etapa seguinte do próprio fluxo, pela rota HTTP.
 public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C44
     [Fact]
     public async Task Sobe_para_a_etapa_seguinte()
     {
@@ -30,7 +28,6 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((c.Coordenacao.Id, 2, f.Relogio.GetUtcNow().UtcDateTime, null, Aberto), (chamado.SetorId, chamado.EtapaOrdem, chamado.EtapaDesde, chamado.ResponsavelId, chamado.Estado));
     }
 
-    // C45
     [Fact]
     public async Task Subida_nao_e_encaminhamento()
     {
@@ -47,28 +44,23 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain(await c.Eventos(numero), e => e.Tipo == "ENCAMINHAMENTO");
         var nota = await f.Db(c.I.Id, db => db.MensagensChamado.SingleAsync(m => m.ChamadoId == chamado.Id));
         Assert.Equal(("NOTA", "Pede a coordenação"), (nota.Tipo, nota.Texto));
-        // a nota é interna: o aluno não a vê
         Assert.Empty((await c.Detalhe(c.Aluno.Cliente, numero)).GetProperty("mensagens").EnumerateArray());
     }
 
-    // C46
     [Fact]
     public async Task Sem_proxima_etapa_409()
     {
         var c = await Cadeia.Criar(f);
-        // fora de fluxo: atendimento direto, na triagem
         var triagem = await f.Db(c.I.Id, db => db.Setores.SingleAsync(s => s.Triagem));
         var daTriagem = await f.Atendente(c.I, triagem);
         var direto = await c.Direto();
         Assert.Equal(HttpStatusCode.Conflict, (await c.Subir(daTriagem.Cliente, direto)).StatusCode);
 
-        // última etapa: depois de subir uma vez, a coordenação não tem etapa seguinte
         var numero = await c.Transferir();
         Assert.Equal(HttpStatusCode.OK, (await c.Subir(c.A.Cliente, numero)).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await c.Subir(c.B.Cliente, numero)).StatusCode);
         Assert.Equal(2, (await c.Ler(numero)).EtapaOrdem);
 
-        // nenhuma etapa seguinte resolve: o curso do aluno não tem coordenação
         var cursoSemCoordenacao = await Cadeia.Criar(f);
         var outraCategoria = await f.Categoria(cursoSemCoordenacao.I, "Só coordenação");
         await f.Fluxo(cursoSemCoordenacao.I, outraCategoria, null, null, Etapa(DestinosEtapa.Setor, cursoSemCoordenacao.Lideres.Id), Etapa(DestinosEtapa.CoordenacaoCurso));
@@ -92,7 +84,6 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         return numero;
     }
 
-    // C47
     [Fact]
     public async Task Subir_por_estado()
     {
@@ -115,7 +106,6 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C48
     [Fact]
     public async Task Motivo_obrigatorio_400()
     {
@@ -133,7 +123,6 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((c.Lideres.Id, 1), ((await c.Ler(numero)).SetorId, (await c.Ler(numero)).EtapaOrdem));
     }
 
-    // C49
     [Fact]
     public async Task Aluno_403_e_outro_setor_404()
     {
@@ -141,14 +130,13 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         var numero = await c.Transferir();
 
         Assert.Equal(HttpStatusCode.Forbidden, (await c.Subir(c.Aluno.Cliente, numero)).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await c.Subir(c.C.Cliente, numero)).StatusCode); // atendente de outro setor
-        Assert.Equal(HttpStatusCode.NotFound, (await c.Subir(c.B.Cliente, numero)).StatusCode); // atendente da etapa seguinte, ainda sem o chamado
+        Assert.Equal(HttpStatusCode.NotFound, (await c.Subir(c.C.Cliente, numero)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await c.Subir(c.B.Cliente, numero)).StatusCode);
         Assert.Equal((c.Lideres.Id, 1), ((await c.Ler(numero)).SetorId, (await c.Ler(numero)).EtapaOrdem));
     }
 
     static List<string> Acoes(JsonElement detalhe) => [.. detalhe.GetProperty("acoes").EnumerateArray().Select(a => a.GetString()!)];
 
-    // C50
     [Fact]
     public async Task Acao_subir_so_com_etapa_seguinte()
     {
@@ -158,17 +146,16 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain("subir", Acoes(await c.Detalhe(c.Aluno.Cliente, numero)));
 
         await c.Subir(c.A.Cliente, numero);
-        Assert.DoesNotContain("subir", Acoes(await c.Detalhe(c.B.Cliente, numero))); // última etapa
+        Assert.DoesNotContain("subir", Acoes(await c.Detalhe(c.B.Cliente, numero)));
 
         var triagem = await f.Db(c.I.Id, db => db.Setores.SingleAsync(s => s.Triagem));
         var daTriagem = await f.Atendente(c.I, triagem);
-        Assert.DoesNotContain("subir", Acoes(await c.Detalhe(daTriagem.Cliente, await c.Direto()))); // fora de fluxo
+        Assert.DoesNotContain("subir", Acoes(await c.Detalhe(daTriagem.Cliente, await c.Direto())));
 
         var resolvido = await NoEstado(c, Resolvido);
         Assert.DoesNotContain("subir", Acoes(await c.Detalhe(c.A.Cliente, resolvido)));
     }
 
-    // C57
     [Fact]
     public async Task Encaminhar_manual_sai_do_fluxo()
     {
@@ -180,7 +167,6 @@ public class FluxoSubirTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         var chamado = await c.Ler(numero);
         Assert.Equal((null, null, c.Secretaria.Id, 1), (chamado.EtapaOrdem, chamado.EtapaDesde, chamado.SetorId, chamado.Encaminhamentos));
-        // sem etapa, o prazo da etapa antiga não move mais o chamado; um chamado de controle que ficou na etapa 1 sobe
         var controle = await c.Transferir();
         await c.EntrouNaEtapaHa(controle, TimeSpan.FromHours(48));
 

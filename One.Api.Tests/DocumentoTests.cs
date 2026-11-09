@@ -16,7 +16,6 @@ namespace One.Api.Tests;
 
 public static class Pdfs
 {
-    // PDF com uma página por texto; um texto vazio vira uma página sem texto. A fonte padrão do PdfPig não escreve todo acento, então os textos são ASCII.
     public static byte[] Criar(params string[] paginas)
     {
         var b = new PdfDocumentBuilder();
@@ -29,7 +28,6 @@ public static class Pdfs
         return b.Build();
     }
 
-    // Completa até o tamanho exato com um comentário depois do fim e repete o startxref, como numa atualização incremental.
     public static byte[] ComTamanho(byte[] pdf, int tamanho)
     {
         var texto = Encoding.Latin1.GetString(pdf);
@@ -60,7 +58,6 @@ public static class Pdfs
     }
 }
 
-// RAG C27: a divisão do texto do documento, na própria camada.
 public class DivisaoTests
 {
     [Fact]
@@ -69,28 +66,24 @@ public class DivisaoTests
         Assert.Single(DocumentoRotas.Dividir(new string('a', 1500)));
         Assert.Equal(2, DocumentoRotas.Dividir(new string('a', 1501)).Count);
 
-        // sem parágrafo nem frase: corta no limite e repete os últimos 200
         var corrido = string.Concat(Enumerable.Range(0, 400).Select(i => (char)('a' + i % 26)));
-        corrido = string.Concat(Enumerable.Repeat(corrido, 8)); // 3200 caracteres
+        corrido = string.Concat(Enumerable.Repeat(corrido, 8));
         var t = DocumentoRotas.Dividir(corrido);
         Assert.All(t, x => Assert.True(x.Length <= 1500));
         Assert.Equal(1500, t[0].Length);
         for (var i = 1; i < t.Count; i++) Assert.StartsWith(t[i - 1][^200..], t[i]);
 
-        // com parágrafo antes do limite: corta no fim do parágrafo
         var paragrafos = new string('p', 900) + "\n\n" + new string('q', 900);
         var p = DocumentoRotas.Dividir(paragrafos);
         Assert.Equal(new string('p', 900) + "\n\n", p[0]);
         Assert.StartsWith(p[0][^200..], p[1]);
 
-        // sem parágrafo, com frase antes do limite: corta no fim da frase
         var frases = new string('f', 1000) + ". " + new string('g', 900);
         var f = DocumentoRotas.Dividir(frases);
         Assert.Equal(new string('f', 1000) + ".", f[0]);
         Assert.StartsWith(f[0][^200..], f[1]);
         Assert.EndsWith(new string('g', 900), f[^1]);
 
-        // parágrafo ou frase dentro dos primeiros 200 caracteres não serve de corte (o trecho seguinte voltaria para antes do começo)
         Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + "\n\n" + new string('b', 1600))[0].Length);
         Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + ". " + new string('b', 1600))[0].Length);
     }
@@ -123,7 +116,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
     static object Cita(long trecho, string texto, string trechoCopiado) =>
         new { tipo = "resposta", texto, fonteIds = new[] { trecho }, trechos = new[] { new { fonteId = trecho, texto = trechoCopiado } } };
 
-    // C26
     [Fact]
     public async Task Subir_pdf_201()
     {
@@ -142,7 +134,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotEmpty(trechos);
         Assert.All(trechos, t => Assert.Null(t.Embedding));
 
-        // mesma transação: se gravar um trecho falha, nem o documento nem a versão ficam
         Task<(int, int, int)> Linhas() => f.Db(m.I.Id, async db => (await db.Documentos.CountAsync(), await db.VersoesDocumento.CountAsync(), await db.TrechosFonte.CountAsync()));
         await f.Db(m.I.Id, db => db.Database.ExecuteSqlRawAsync("""
             CREATE FUNCTION falha_de_teste() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -162,7 +153,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C28
     [Fact]
     public async Task Recusas_do_upload()
     {
@@ -205,13 +195,10 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
         Assert.Equal(antes, await f.Db(m.I.Id, async db => (await db.Documentos.CountAsync(), await db.VersoesDocumento.CountAsync(), await db.TrechosFonte.CountAsync())));
 
-        // exatamente 20 MB é aceito
         Assert.Equal(HttpStatusCode.Created, (await m.Admin.Subir("No limite", m.Categoria, Pdfs.ComTamanho(valido, 20 * 1024 * 1024))).StatusCode);
-        // título com exatamente 200 caracteres é aceito
         Assert.Equal(HttpStatusCode.Created, (await m.Admin.Subir(new string('t', 200), m.Categoria, valido)).StatusCode);
     }
 
-    // C29
     [Fact]
     public async Task Nova_versao()
     {
@@ -232,7 +219,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(buscados.Intersect(await TrechosDaVersao(m.I, id, 1)));
     }
 
-    // C30
     [Fact]
     public async Task Arquivar()
     {
@@ -259,7 +245,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await m.Admin.NovaVersao(999999, Pdfs.Criar(Estagio))).StatusCode);
     }
 
-    // Conversa transferida cuja resposta cita um trecho de documento e o trecho de um artigo.
     async Task<(Mundo m, Aluno aluno, Atendente atendente, string numero, long versao, byte[] pdf)> Transferido()
     {
         var m = await Criar();
@@ -284,7 +269,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         return (m, aluno, atendente, numero, versao, pdf);
     }
 
-    // C31
     [Fact]
     public async Task Fonte_documento_no_detalhe()
     {
@@ -308,7 +292,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // refatoracao-solid C28: o aviso "versão atualizada" do detalhe vale para documento como para artigo
     [Fact]
     public async Task Documento_citado_com_versao_nova_avisa_a_equipe()
     {
@@ -324,16 +307,13 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(await Atualizado());
     }
 
-    // C33
     [Fact]
     public async Task Categoria_do_documento_no_chamado()
     {
         var (m, _, _, numero, _, _) = await Transferido();
-        // em Transferido a última citação é a do artigo (categoria "Bolsas"), citado depois do documento
         var ch = await f.Db(m.I.Id, async db => { var c = await db.Chamados.SingleAsync(x => x.Numero == numero); return (c.OrigemCategoria, await db.Categorias.Where(k => k.Id == c.CategoriaId).Select(k => k.Nome).SingleAsync()); });
         Assert.Equal(("ARTIGO", "Bolsas"), ch);
 
-        // só o documento citado: categoria do documento
         var aluno = await f.AlunoLogado(m.I);
         var id = await f.Db(m.I.Id, db => db.Documentos.Select(d => d.Id).SingleAsync());
         var trecho = (await TrechosDaVersao(m.I, id, 1)).Single();
@@ -344,7 +324,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("ARTIGO", "Estágio"), doDocumento);
     }
 
-    // C36
     [Fact]
     public async Task Documento_de_outra_instituicao_404()
     {
@@ -360,7 +339,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("ATIVO", 1), (d.Estado, d.Versoes.Count));
     }
 
-    // C38
     [Fact]
     public async Task Listar_200()
     {
@@ -378,14 +356,12 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
             (reg.GetProperty("categoria").GetString(), reg.GetProperty("estado").GetString(), reg.GetProperty("versao").GetProperty("nomeArquivo").GetString(),
              reg.GetProperty("versao").GetProperty("paginas").GetInt32(), reg.GetProperty("indexacao").GetString()));
 
-        // o calendário desiste depois de 5 tentativas; o regulamento é indexado pelo agendador
         await f.Db(m.I.Id, db => db.TrechosFonte.Where(t => t.VersaoDocumento!.Documento!.Titulo == "Calendário acadêmico").ExecuteUpdateAsync(s => s.SetProperty(t => t.Tentativas, 5)));
         await Agendador.Executar();
         var depois = (await (await m.Admin.GetAsync("/api/admin/documentos")).Json()).EnumerateArray().Select(d => d.GetProperty("indexacao").GetString());
         Assert.Equal(["FALHOU", "INDEXADO"], depois);
     }
 
-    // C44
     [Fact]
     public async Task Erros_em_problem_json()
     {
@@ -412,7 +388,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C45
     [Fact]
     public async Task Detalhe_com_documento_segue_visibilidade()
     {
@@ -424,7 +399,6 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// RAG C32: nada do documento chega ao aluno.
 public class SigiloRagTests(OneFactory f) : IClassFixture<OneFactory>
 {
     [Fact]

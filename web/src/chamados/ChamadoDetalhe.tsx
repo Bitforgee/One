@@ -26,7 +26,6 @@ type Executar = (caminho: string, corpo: unknown, depois?: () => void) => void
 type Acoes = { pode: (acao: string) => boolean; executar: Executar; pendente: boolean }
 type Pronta = { id: number; titulo: string; texto: string }
 
-// Cada botão de ação tem no mínimo 44 px de altura (## Screens linha 9); pendente mostra o Spinner e desabilita.
 function BotaoAcao({ pendente, children, className, ...props }: ComponentProps<typeof Button> & { pendente: boolean }) {
   return (
     <Button {...props} className={`h-11 ${className ?? ''}`} disabled={pendente || props.disabled}>
@@ -36,7 +35,6 @@ function BotaoAcao({ pendente, children, className, ...props }: ComponentProps<t
   )
 }
 
-// AC 147: respostas prontas do setor do chamado, só para a equipe; uma falha deixa a lista vazia
 function useProntas(setorId?: number) {
   const { data } = useQuery({
     queryKey: ['prontas', setorId],
@@ -48,7 +46,6 @@ function useProntas(setorId?: number) {
 
 type Equipe = { equipe: boolean; nota: boolean }
 
-// Só a equipe recebe prontas: o aluno nunca as busca.
 function SelecaoPronta({ nota, prontas, setTexto }: { nota: boolean; prontas: Pronta[]; setTexto: (t: string) => void }) {
   if (nota || prontas.length === 0) return null
   return (
@@ -79,7 +76,6 @@ function MarcasDaEquipe({ equipe, nota, pode, setNota, aguardaAluno, setAguardaA
 const rotuloResposta = (c: Chamado, equipe: boolean) => (c.estado === 'RESOLVIDO' && !equipe ? 'Responder (reabre a solicitação)' : 'Responder')
 const semEnvio = (texto: string, nota: boolean, podeResponder: boolean) => !texto.trim() || (!nota && !podeResponder)
 
-// Nota interna não leva anexo nem marca aguardando aluno.
 function corpoDaResposta(texto: string, nota: boolean, aguardaAluno: boolean, arquivos: File[]) {
   const f = new FormData()
   f.set('tipo', nota ? 'NOTA' : 'PUBLICA')
@@ -89,7 +85,6 @@ function corpoDaResposta(texto: string, nota: boolean, aguardaAluno: boolean, ar
   return f
 }
 
-// Fica montado mesmo sem permissão para responder: o texto digitado e a busca das prontas não dependem disso.
 function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado; equipe: boolean }) {
   const [texto, setTexto] = useState('')
   const [nota, setNota] = useState(false)
@@ -156,7 +151,6 @@ function BotoesDeAcao({ pode, executar, pendente, abrir, semAssumir }: Acoes & {
   )
 }
 
-// Formulário de uma ação do chamado; só aparece quando a API devolve a ação entre as permitidas.
 function FormDeAcao({ visivel, enviar, children }: { visivel: boolean; enviar: () => void; children: ReactNode }) {
   if (!visivel) return null
   return (
@@ -245,25 +239,21 @@ const ACOES = ['assumir', 'confirmar', 'encaminhar', 'subir', 'cancelar', 'resol
 
 const AlertaDaAcao = ({ erro }: { erro: Error | null }) => erro && <Alert variant="destructive">{erro.message}</Alert>
 
-// A ação principal do estado, na barra do celular da equipe (AC 24): "Assumir" em ABERTO; "Responder" em EM_ATENDIMENTO e AGUARDANDO_ALUNO.
 function principalDoEstado(c: Chamado, pode: Acoes['pode']) {
   if (c.estado === 'ABERTO' && pode('assumir')) return 'Assumir'
   if (['EM_ATENDIMENTO', 'AGUARDANDO_ALUNO'].includes(c.estado) && pode('responder')) return 'Responder'
   return undefined
 }
 
-// A ação principal e a existência de outras ações para o "Mais"; só a equipe tem a barra.
 function acoesDaBarra(c: Chamado, pode: Acoes['pode'], equipe: boolean) {
   const principal = equipe ? principalDoEstado(c, pode) : undefined
   const temMais = equipe && ACOES.some((a) => pode(a) && !(a === 'assumir' && principal === 'Assumir'))
   return { principal, temMais }
 }
 
-// A grade do detalhe: duas colunas só para a equipe, e o espaço da barra fixa no fim.
 const gradeDoDetalhe = (equipe: boolean, barra: boolean) =>
   `mx-auto grid max-w-3xl gap-8 ${equipe ? '@5xl/main:max-w-none @5xl/main:grid-cols-[minmax(0,1fr)_320px]' : ''} ${barra ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`
 
-// "Responder" da barra rola até o campo e o foca; o foco não rola de novo.
 function irParaResposta() {
   const campo = document.getElementById('resposta')
   campo?.scrollIntoView({ block: 'center' })
@@ -289,7 +279,6 @@ function BarraDoChamado({ principal, executar, pendente, abrirMais, temMais }: B
   )
 }
 
-// O cartão de ações da equipe; abaixo de 1024 px (AC 8) vira a barra fixa com a ação principal e "Mais", que abre as outras num Sheet.
 function CaixaDeAcoes({ barra, folha, setFolha, erro, tem, children }: { barra?: Barra; folha: boolean; setFolha: (aberta: boolean) => void; erro: ReactNode; tem: boolean; children: ReactNode }) {
   if (!tem) return null
   if (!barra)
@@ -323,7 +312,6 @@ type Pedido = { caminho: string; corpo: unknown; depois?: () => void }
 type Modal = 'encaminhar' | 'cancelar' | 'subir'
 type Motivo = { motivo: string; setMotivo: (m: string) => void }
 
-// O que foi digitado nos formulários vive em `Detalhe`: a folha "Mais" desmonta ao fechar e o texto não se perde (AC 44).
 function useCamposDaAcao() {
   const [resolucao, setResolucao] = useState('')
   const [categoriaId, setCategoriaId] = useState('')
@@ -332,7 +320,6 @@ function useCamposDaAcao() {
 }
 type CamposDaAcao = ReturnType<typeof useCamposDaAcao>
 
-// Os formulários e botões das ações do chamado (o cartão a 1024 px, o Sheet "Mais" ou a página do aluno).
 function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo, campos }: { c: Chamado; acoes: Acoes; abrir: (m: Modal) => void; semAssumir: boolean; campos: CamposDaAcao } & Motivo) {
   const { pode, executar, pendente } = acoes
   const { resolucao, setResolucao, categoriaId, setCategoriaId, original, setOriginal } = campos
@@ -357,7 +344,6 @@ function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo, campos 
   )
 }
 
-// Os diálogos de confirmação de encaminhar e cancelar.
 function Dialogos({ c, modal, fechar, executar, motivo, setMotivo }: { c: Chamado; modal?: Modal; fechar: () => void; executar: Executar } & Motivo) {
   const [setorId, setSetorId] = useState('')
   return (
@@ -388,7 +374,6 @@ function Dialogos({ c, modal, fechar, executar, motivo, setMotivo }: { c: Chamad
   )
 }
 
-// Toda ação devolve o chamado atualizado; num conflito (409) a tela relê o chamado e mostra o detail.
 function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChamado: (c: Chamado) => void) {
   return useMutation({
     mutationFn: async ({ caminho, corpo }: Pedido) => {
@@ -406,10 +391,8 @@ function useMutacaoDoChamado(c: Chamado, carregar: () => Promise<void>, setChama
   })
 }
 
-// Só o aluno, dono do chamado, tem as ações no fim da página.
 const doAluno = (pode: Acoes['pode'], equipe: boolean) => !equipe && (pode('confirmar') || pode('rejeitar') || pode('cancelar'))
 
-// A coluna da equipe: a etapa, o erro da ação e o cartão (ou a barra e o Sheet) de ações; o histórico vive na linha do tempo.
 function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: { c: Chamado; fuso: string; erro: ReactNode; folha: boolean; setFolha: (aberta: boolean) => void; barra?: Barra; tem: boolean; painel: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-8 @5xl/main:sticky @5xl/main:top-4 @5xl/main:-m-1 @5xl/main:max-h-[calc(100dvh-2rem)] @5xl/main:self-start @5xl/main:overflow-y-auto @5xl/main:p-1">
@@ -438,7 +421,6 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const executar: Executar = (caminho, corpo, depois) => acao.mutate({ caminho, corpo, depois })
   const pendente = acao.isPending
   const acoes = { pode, executar, pendente }
-  // só a ação feita na folha a fecha: a resposta de uma ação da barra não fecha a folha que o atendente abriu depois dela
   const dentroDaFolha: Executar = (caminho, corpo, depois) => executar(caminho, corpo, () => { setFolha(false); depois?.() })
   const erro = <AlertaDaAcao erro={acao.error} />
   const abrir = (m: Modal) => {
@@ -448,7 +430,6 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
   const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
   const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
-  // o aluno decide (confirmar ou rejeitar) antes do formulário que reabre a solicitação (mobile-m0 AC 3)
   const decisao = !equipe && pode('confirmar')
   const acoesDoAluno = doAluno(pode, equipe) && (
     <div className="flex flex-col gap-4">

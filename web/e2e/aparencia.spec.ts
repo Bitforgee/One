@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { comAparencia, semAparencia, simularApi } from './simulada'
 
-// aparencia-instituicao S3, S4 e S6 medidos no Chromium com boundingBox() e getComputedStyle: px CSS, tolerância de 1 px (checks.md).
 test.use({ serviceWorkers: 'block' })
 
 const Cor = '#8a1538'
@@ -25,14 +24,12 @@ test.describe('S3 tela Aparência', () => {
     expect(await previa.evaluate((e) => getComputedStyle(e).position)).toBe('sticky')
     await expect(page.getByRole('button', { name: 'Ocultar prévia' })).toBeHidden()
 
-    // as abas na ordem, e a barra com "Salvar" depois delas
     const ys = async (ls: Locator[]) => Promise.all(ls.map(async (l) => (await caixa(l)).y))
     const abas = await form.getByRole('tab').allTextContents()
     expect(abas).toEqual(['Marca', 'App instalado', 'Login', 'Assistente', 'Contato'])
     const ordem = await ys([form.getByRole('tab', { name: 'Marca' }), form.getByLabel('Cor principal'), form.getByRole('button', { name: 'Salvar' })])
     expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
 
-    // abaixo de 1024 px (AC 37): o formulário vem primeiro, e a prévia só abre pelo "Ver prévia", numa folha
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(previa).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Ver prévia' })).toBeVisible()
@@ -41,7 +38,6 @@ test.describe('S3 tela Aparência', () => {
     await expect(folha.getByRole('button', { name: 'Entrar' })).toBeVisible()
   })
 
-  // aparencia-enxuta C9 (AC 9): a 360 px as abas rolam na horizontal, têm 44 px de altura e a página não rola
   test('abas a 360 px', async ({ page }) => {
     await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
     await page.setViewportSize({ width: 360, height: 740 })
@@ -56,7 +52,6 @@ test.describe('S3 tela Aparência', () => {
     expect(doc, 'sem rolagem horizontal').toBe(janela)
   })
 
-  // aparencia-enxuta C10 (AC 10): a 1280 px a prévia fica ao lado do formulário
   test('prévia ao lado a 1280 px', async ({ page }) => {
     await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
     await page.setViewportSize({ width: 1280, height: 800 })
@@ -70,7 +65,6 @@ test.describe('S3 tela Aparência', () => {
 })
 
 test.describe('S4 marca da instituição', () => {
-  // referências pintadas na própria página: o computado de cada tema tem de ser o mesmo da referência
   async function fundoDoBotao(page: Page, referencia: string) {
     return page.evaluate((ref) => {
       const el = document.createElement('div')
@@ -127,7 +121,6 @@ test.describe('S4 marca da instituição', () => {
     perto(fb.width, 720, 'coluna direita largura')
     expect(await foto.evaluate((e) => getComputedStyle(e).objectFit)).toBe('cover')
     await expect(foto).toHaveAttribute('alt', '')
-    // os textos ficam na coluna do formulário, nunca sobre a foto
     for (const texto of ['Fale com a Univag', 'Aqui você resolve tudo sobre a sua vida acadêmica.', 'Boletos', 'Matrícula', 'Documentos']) {
       const alvo = page.getByText(texto, { exact: true })
       await expect(alvo).toBeVisible()
@@ -145,7 +138,6 @@ test.describe('S4 marca da instituição', () => {
   })
 })
 
-// S9: arranjos de ## Screens (C65 a C69)
 const noIcone = (page: Page) => page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
 
 test.describe('S9 arranjos das telas', () => {

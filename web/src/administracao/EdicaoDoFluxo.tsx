@@ -19,12 +19,10 @@ import { ListaDeEtapas } from './ListaDeEtapas'
 import { estadoDoFluxo } from './LinhasDosCadastros'
 import { BotaoSimular, Simulador, useSimulador, type EstadoDoSimulador, type Simulacao } from './Simulador'
 
-// A biblioteca do canvas só chega ao navegador quando a visão Canvas abre (AC 80, door 10): é o único import() dela.
 export const Carga = { canvas: () => import('./Canvas') }
 
 type Visao = 'lista' | 'canvas'
 
-// Se o pacote do canvas não carrega, o editor segue com a lista e avisa (Observable).
 class FalhaDoCanvas extends Component<{ fallback: ReactNode; children: ReactNode }, { falhou: boolean }> {
   state = { falhou: false }
   static getDerivedStateFromError() {
@@ -35,7 +33,6 @@ class FalhaDoCanvas extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
-// "Vai por aqui" ou "Pulada: motivo" em cada nó do caminho, conforme a resposta da simulação (AC 81).
 function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
   const marcas: Record<string, string> = {}
   if (!simulacao) return marcas
@@ -46,7 +43,6 @@ function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
   return marcas
 }
 
-// O que dá para simular: o rascunho salvo, ou a versão vigente enquanto nada mudou; com edição pendente, nada.
 function versaoParaSimular(salvo: boolean, alterado: boolean, fluxo: Fluxo) {
   if (salvo) return 'RASCUNHO'
   return !alterado && fluxo.vigente ? 'VIGENTE' : null
@@ -54,7 +50,6 @@ function versaoParaSimular(salvo: boolean, alterado: boolean, fluxo: Fluxo) {
 
 type PropsDoAlternador = { visao: Visao; mudar: (v: Visao) => void }
 
-// Lista e Canvas são duas telas do mesmo rascunho; abaixo de 768 px só a Lista existe (AC 79).
 function Alternador({ visao, mudar }: PropsDoAlternador) {
   return (
     <Tabs value={visao} onValueChange={(v) => mudar(v as Visao)} className="gap-2">
@@ -68,8 +63,6 @@ function Alternador({ visao, mudar }: PropsDoAlternador) {
 
 type PropsDaArea = { grafo: Grafo; setores: Setor[]; simulacao?: Simulacao; editar: (f: (g: Grafo) => Grafo) => void; visao: Visao; estreito: boolean; simulador: ReactNode }
 
-// O aviso da cadeia e a visão escolhida do mesmo rascunho: a lista, ou o canvas carregado sob demanda.
-// No canvas o simulador fica na coluna da direita; na lista, embaixo das etapas.
 function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, estreito, simulador }: PropsDaArea) {
   const CanvasCarregado = useMemo(() => lazy(() => Carga.canvas()), [])
   const lista = (
@@ -105,7 +98,6 @@ function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, estreito, si
   )
 }
 
-// O menu "Mais" da barra: o que apaga fica fora do caminho.
 function MaisAcoes({ podeDescartar, descartar }: { podeDescartar: boolean; descartar: () => void }) {
   return (
     <DropdownMenu>
@@ -127,7 +119,6 @@ const rotuloDoEstado = (alterado: boolean, salvo: boolean, fluxo: Fluxo) => (alt
 
 type PropsDaTrilha = { contexto: string; lista: string; fluxos: string }
 
-// Cadastros › Fluxos › Boletos · ADS, 3º semestre: a trilha leva de volta à lista (com alterações não salvas, o useBlocker da página pergunta).
 function Trilha({ contexto, lista, fluxos }: PropsDaTrilha) {
   return (
     <nav aria-label="Trilha">
@@ -166,7 +157,6 @@ type PropsDoTopo = {
   descartar: () => void
 }
 
-// A barra do editor, abaixo da trilha: o estado do fluxo, as duas visões e as ações. Quebra em mais de uma linha no celular.
 function BarraDoEditor(p: PropsDoTopo) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -189,7 +179,6 @@ function BarraDoEditor(p: PropsDoTopo) {
   )
 }
 
-// "Sair sem salvar?": o que foi editado e não salvo se perde.
 function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar: () => void; sair: () => void }) {
   return (
     <Dialog open={aberto} onOpenChange={(a) => !a && continuar()}>
@@ -211,7 +200,6 @@ function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar
   )
 }
 
-// Ctrl+S (⌘+S) salva o rascunho como o botão e impede a janela de salvar a página; o corpo roda a cada tecla com o estado atual.
 function useAtalhoDeSalvar(salvar: () => unknown) {
   const atual = useRef(salvar)
   atual.current = salvar
@@ -228,8 +216,6 @@ function useAtalhoDeSalvar(salvar: () => unknown) {
 
 type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; recarregar: () => Promise<unknown> }
 
-// A página de edição do fluxo, dentro da casca: a trilha, a barra (estado, Lista e Canvas, Simular, Salvar rascunho, Publicar e o menu Mais com Descartar),
-// o rascunho em lista ou no canvas e o painel lateral. Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API) e a cadeia está inteira.
 export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }: Props) {
   const { slug } = useParams()
   const navegar = useNavigate()
@@ -241,7 +227,6 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
   const ignorarSaida = useRef(false) // Descartar e Publicar saem de propósito, sem perguntar
-  // qualquer saída da página com alterações não salvas (trilha, Voltar, barra lateral, Voltar do navegador) pergunta antes
   const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && !ignorarSaida.current && currentLocation.pathname !== nextLocation.pathname)
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
@@ -282,7 +267,6 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
       Publicar
     </BotaoAcao>
   )
-  // no canvas o editor tem a altura da janela (menos o cabeçalho da casca) e o desenho enche o que sobra
   const altura = noCanvas ? 'lg:h-[calc(100dvh-49px-1.5rem)] lg:-mb-6 lg:pb-3' : ''
   return (
     <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${altura}`}>

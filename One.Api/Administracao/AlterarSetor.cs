@@ -6,7 +6,6 @@ namespace One.Api.Administracao;
 
 public sealed record AlterarSetor(long Id, AlterarSetor.Entrada Corpo) : IRequest<IResult>
 {
-    // Sem curso e semestre: a turma de uma liderança não muda depois de criada (AC 53).
     public sealed record Entrada(string? Nome, bool? Triagem, bool? Ativo);
 
     public static void Mapear(RouteGroupBuilder g) =>

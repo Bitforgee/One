@@ -1,7 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { simularApi } from './simulada'
 
-// editor-fluxo-integrado: o editor de fluxo é uma página da casca, medida com boundingBox() (px CSS).
 test.use({ serviceWorkers: 'block' })
 
 const categoria = 'Financeiro > Boletos e mensalidades'
@@ -36,7 +35,6 @@ async function noCanvas(page: Page, largura: number, altura = 900) {
 }
 
 test.describe('editor de fluxo na casca', () => {
-  // C1
   test('endereço do editor', async ({ page }) => {
     await preparar(page, 1440)
     await page.goto('/univag/cadastros')
@@ -48,7 +46,6 @@ test.describe('editor de fluxo na casca', () => {
     await expect(page.locator('[data-sidebar=sidebar]').first()).toBeVisible()
   })
 
-  // C3
   test('recarregar mantém o editor', async ({ page }) => {
     await abrirEditor(page, 1440)
     await page.reload()
@@ -57,7 +54,6 @@ test.describe('editor de fluxo na casca', () => {
     await expect(editor(page).getByLabel('Destino da etapa 2')).toHaveValue('COORDENACAO_CURSO')
   })
 
-  // C5
   test('voltar do navegador', async ({ page }) => {
     await preparar(page, 1440)
     await page.goto('/univag/cadastros')
@@ -71,7 +67,6 @@ test.describe('editor de fluxo na casca', () => {
     expect(url.pathname + url.search).toBe('/univag/cadastros?aba=fluxos')
   })
 
-  // C23
   test('voltar do navegador com alterações', async ({ page }) => {
     await preparar(page, 1440)
     await page.goto('/univag/cadastros')
@@ -87,7 +82,6 @@ test.describe('editor de fluxo na casca', () => {
     expect(new URL(page.url()).pathname).toBe('/univag/cadastros/fluxos/7')
     await expect(editor(page).getByLabel('Destino da etapa 3')).toBeVisible()
 
-    // sem alterações o Voltar do navegador sai direto (depois de descartar a etapa nova)
     await page.goBack()
     await page.getByRole('dialog', { name: 'Sair sem salvar?' }).getByRole('button', { name: 'Sair sem salvar' }).click()
     await expect(editor(page)).toHaveCount(0)
@@ -98,10 +92,8 @@ test.describe('editor de fluxo na casca', () => {
     await expect(editor(page)).toHaveCount(0)
   })
 
-  // C24 (cadeia inválida; os outros casos estão no Vitest)
   test('Ctrl+S com cadeia inválida', async ({ page }) => {
     await noCanvas(page, 1440)
-    // a rota da gravação vem depois de simularApi: a última registrada vale primeiro
     let gravacoes = 0
     await page.route('**/api/admin/fluxos/7/rascunho', (r) => {
       gravacoes++
@@ -112,11 +104,9 @@ test.describe('editor de fluxo na casca', () => {
       document.body.dispatchEvent(ev)
       return ev.defaultPrevented
     })
-    // controle: com a cadeia válida o atalho grava uma vez
     expect(await atalho()).toBe(true)
     await expect.poll(() => gravacoes).toBe(1)
 
-    // um nó solto fora da cadeia: arrastar do menu "Adicionar etapa" até o canvas
     await page.getByRole('button', { name: 'Adicionar etapa', exact: true }).click()
     await page.getByRole('button', { name: /^Coordenação do curso/ }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 500, y: 300 } })
     await page.keyboard.press('Escape')
@@ -126,7 +116,6 @@ test.describe('editor de fluxo na casca', () => {
     await page.waitForTimeout(300)
     expect(gravacoes, 'nada é enviado com a cadeia inválida').toBe(1)
   })
-  // C12
   test('canvas ocupa a página', async ({ page }) => {
     for (const [largura, altura] of [[1440, 900], [1280, 800]]) {
       await noCanvas(page, largura, altura)
@@ -141,7 +130,6 @@ test.describe('editor de fluxo na casca', () => {
     }
   })
 
-  // C13
   test('painel lateral troca', async ({ page }) => {
     await noCanvas(page, 1440)
     const simular = page.getByRole('heading', { name: 'Simular um aluno' })
@@ -156,7 +144,6 @@ test.describe('editor de fluxo na casca', () => {
     expect(painel.y + painel.height).toBeLessThanOrEqual(900)
   })
 
-  // C14
   test('barra em uma linha', async ({ page }) => {
     await abrirEditor(page, 1440)
     const e = editor(page)
@@ -167,14 +154,12 @@ test.describe('editor de fluxo na casca', () => {
       centros.push(b.y + b.height / 2)
     }
     expect(Math.max(...centros) - Math.min(...centros), JSON.stringify(centros)).toBeLessThanOrEqual(2)
-    // da esquerda para a direita: Voltar, estado, visões, Simular, Salvar rascunho, Publicar, Mais
     const xs: number[] = []
     for (const c of controles) xs.push((await caixa(c)).x)
     expect(xs, JSON.stringify(xs)).toEqual([...xs].sort((a, b) => a - b))
     await expect(e.getByRole('button', { name: 'Cancelar' })).toHaveCount(0)
   })
 
-  // C15
   test('lista na largura de leitura', async ({ page }) => {
     await abrirEditor(page, 1440)
     const e = editor(page)
@@ -187,7 +172,6 @@ test.describe('editor de fluxo na casca', () => {
 })
 
 test.describe('editor de fluxo no celular', () => {
-  // C16
   test('celular em página', async ({ page }) => {
     await abrirEditor(page, 390, 844)
     const e = editor(page)
@@ -198,7 +182,6 @@ test.describe('editor de fluxo no celular', () => {
     for (const nome of ['Voltar', 'Simular', 'Salvar rascunho', 'Publicar', 'Mais']) expect((await caixa(e.getByRole('button', { name: nome }))).height, nome).toBeGreaterThanOrEqual(43.9)
   })
 
-  // C17
   test('celular sem rolagem lateral', async ({ page }) => {
     await abrirEditor(page, 390, 844)
     expect(await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])).toEqual([390, 390])

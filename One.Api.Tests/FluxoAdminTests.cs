@@ -7,7 +7,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento S2 (C17 a C33, C38 e C39): o gestor cria o fluxo, edita o rascunho, publica e descarta, pela rota HTTP.
 public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
 {
     record Mundo(Instituicao I, HttpClient Admin, Categoria Duvida, Setor Financeiro, Setor Secretaria, Curso Ads);
@@ -43,7 +42,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         return lista.EnumerateArray().Single(x => x.GetProperty("id").GetInt64() == id);
     }
 
-    // C17
     [Fact]
     public async Task Cria_fluxo_nas_tres_abrangencias()
     {
@@ -69,7 +67,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await f.Db(m.I.Id, db => db.VersoesFluxo.CountAsync()));
     }
 
-    // C18
     [Fact]
     public async Task Semestre_so_com_curso_e_de_1_a_12()
     {
@@ -83,7 +80,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(2, await f.Db(m.I.Id, db => db.Fluxos.CountAsync()));
     }
 
-    // C19
     [Fact]
     public async Task Curso_de_outra_instituicao_400()
     {
@@ -96,7 +92,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await f.Db(m.I.Id, db => db.Fluxos.CountAsync()));
     }
 
-    // C20
     [Fact]
     public async Task Categoria_padrao_ou_inexistente_400()
     {
@@ -107,7 +102,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         await Recusa400(await m.Admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = 999999 }), "categoriaId", "categoria inexistente");
     }
 
-    // C21
     [Fact]
     public async Task Abrangencia_repetida_409()
     {
@@ -134,7 +128,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(1, await f.Db(m.I.Id, db => db.Fluxos.CountAsync()));
     }
 
-    // C22
     [Fact]
     public async Task Rascunho_e_substituido_inteiro()
     {
@@ -154,7 +147,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(1, await f.Db(m.I.Id, db => db.VersoesFluxo.CountAsync()));
     }
 
-    // C23
     [Fact]
     public async Task Etapas_de_1_a_5()
     {
@@ -169,7 +161,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(5, await f.Db(m.I.Id, db => db.EtapasFluxo.CountAsync()));
     }
 
-    // C24
     [Fact]
     public async Task Destino_desconhecido_400()
     {
@@ -182,7 +173,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await f.Db(m.I.Id, db => db.VersoesFluxo.CountAsync()));
     }
 
-    // C25
     [Fact]
     public async Task Setor_da_etapa_invalido_400()
     {
@@ -200,7 +190,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, (await Salvar(m.Admin, id, E("SETOR", m.Financeiro.Id), coordenacao)).StatusCode);
     }
 
-    // C26
     [Fact]
     public async Task Setor_so_na_etapa_de_setor()
     {
@@ -211,7 +200,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         await Recusa400(await Salvar(m.Admin, id, E("LIDERANCA_SEMESTRE", m.Financeiro.Id), E("COORDENACAO_CURSO")), "setorId", "liderança com setor");
     }
 
-    // C27
     [Fact]
     public async Task Prazo_de_1_a_720_e_nunca_na_ultima()
     {
@@ -227,7 +215,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         await Recusa400(await Salvar(m.Admin, id, E("SETOR", m.Financeiro.Id), E("COORDENACAO_CURSO", prazoHoras: 24)), "prazoHoras", "prazo na última etapa");
     }
 
-    // C28
     [Fact]
     public async Task Lideranca_so_na_primeira_e_nunca_a_ultima()
     {
@@ -241,7 +228,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, (await Salvar(m.Admin, id, lideranca, E("COORDENACAO_CURSO"))).StatusCode);
     }
 
-    // C29
     [Fact]
     public async Task Posicao_x_y_juntas_e_devolvidas()
     {
@@ -258,7 +244,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([(120.5, -40.0), (360.0, 0.0)], rascunho.Select(e => (e.GetProperty("x").GetDouble(), e.GetProperty("y").GetDouble())));
     }
 
-    // C30
     [Fact]
     public async Task Publicar_numera_e_remove_o_rascunho()
     {
@@ -282,7 +267,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(2, depoisDeV2.GetProperty("vigente").GetProperty("numero").GetInt32());
     }
 
-    // C31
     [Fact]
     public async Task Publicar_sem_rascunho_409()
     {
@@ -308,7 +292,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(1, await f.Db(m.I.Id, db => db.VersoesFluxo.CountAsync(v => v.PublicadaEm != null)));
     }
 
-    // C32
     [Fact]
     public async Task Versao_antiga_e_chamado_nao_mudam()
     {
@@ -332,7 +315,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((antes.SetorId, antes.EtapaDesde), (depois.SetorId, depois.EtapaDesde));
     }
 
-    // C33
     [Fact]
     public async Task Descartar_rascunho()
     {
@@ -354,7 +336,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await m.Admin.DeleteAsync($"/api/admin/fluxos/{id}/rascunho")).StatusCode);
     }
 
-    // C38
     [Fact]
     public async Task Simular_400_e_id_desconhecido_404()
     {
@@ -381,7 +362,6 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C39
     [Fact]
     public async Task Lista_so_da_instituicao()
     {

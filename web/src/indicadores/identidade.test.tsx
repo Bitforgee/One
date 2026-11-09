@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 import { periodoAnterior } from './Indicadores'
 
-// identidade-visual S4 (AC 12, AC 13, AC 18): a comparação com o período anterior; o arranjo é do Playwright (e2e/identidade.spec.ts).
 const base = {
   semDados: false, alunosAtivos: 12, conversas: 5, taxaAutoatendimento: 0.5, taxaEscalonamento: 0.2, taxaAbandono: 0.1, taxaPerguntasSemArtigo: 0.1,
   chamadosAbertos: 4, chamadosResolvidos: 2, tempoPrimeiraRespostaHoras: 1.5, tempoResolucaoHoras: 3, roteamentoCorreto: 0.5, taxaReabertura: 0.1,
@@ -29,7 +28,6 @@ describe('indicadores com período anterior', () => {
   const abrirCom = (atual: object, anterior: Rota | undefined, extra: Record<string, Rota> = {}) =>
     api({ 'GET /api/auth/me': () => [200, admin], [Atual]: () => [200, atual], ...(anterior ? { [Anterior]: anterior } : {}), ...extra })
 
-  // C23 (AC 12)
   it('período anterior de mesmo tamanho', async () => {
     const consulta = async (de: string, ate: string) => {
       await userEvent.clear(screen.getByLabelText('De'))
@@ -55,7 +53,6 @@ describe('indicadores com período anterior', () => {
     }
   })
 
-  // C24 (AC 12)
   it('variação contra o período anterior', async () => {
     const casos: [number, string][] = [[0.67, '▲ 4,2 pts'], [0.722, '▼ 1,0 pt'], [0.712, '= sem variação']]
     for (const [anterior, texto] of casos) {
@@ -68,7 +65,6 @@ describe('indicadores com período anterior', () => {
     }
   })
 
-  // C25 (AC 13)
   it('sem variação quando o anterior falha ou não tem dados', async () => {
     const casos: [string, Rota][] = [
       ['500', () => [500, { status: 500, detail: 'Falha.' }]],
@@ -85,13 +81,11 @@ describe('indicadores com período anterior', () => {
       expect(screen.queryByRole('alert'), rotulo).not.toBeInTheDocument()
       unmount()
     }
-    // controle: com o anterior em 0,670 a variação aparece
     abrirCom(com(0.712), () => [200, com(0.67)])
     abrir('/univag/indicadores')
     expect(await screen.findByText('▲ 4,2 pts')).toBeInTheDocument()
   })
 
-  // C26 (AC 12, P5)
   it('arredondamento e plural da variação', async () => {
     const casos: [number, string][] = [[0.7121, '= sem variação'], [0.6933, '▲ 1,9 pt'], [0.6923, '▲ 2,0 pts']]
     for (const [anterior, texto] of casos) {
@@ -102,7 +96,6 @@ describe('indicadores com período anterior', () => {
     }
   })
 
-  // C49 (AC 12, AC 13)
   it('sem variação enquanto uma resposta está atrasada', async () => {
     const adiada = () => {
       let solta!: () => void
@@ -134,7 +127,6 @@ describe('indicadores com período anterior', () => {
     }
   })
 
-  // C50 (AC 13)
   it('semDados com número no anterior esconde a variação', async () => {
     abrirCom(com(0.712), () => [200, com(0.67, { semDados: true })])
     const { unmount } = abrir('/univag/indicadores')
@@ -148,7 +140,6 @@ describe('indicadores com período anterior', () => {
     expect(await screen.findByText('▲ 4,2 pts')).toBeInTheDocument()
   })
 
-  // C53 (AC 12)
   it('data vazia não consulta o período anterior', async () => {
     expect(periodoAnterior('', '2026-11-05')).toBeNull()
     expect(periodoAnterior('2026-11-01', '')).toBeNull()
@@ -162,7 +153,6 @@ describe('indicadores com período anterior', () => {
     expect(leituras(chamadas)).toHaveLength(3)
   })
 
-  // C35 (AC 18)
   it('Indicadores sem dados com ícone', async () => {
     abrirCom(com(null, { semDados: true }), undefined)
     abrir('/univag/indicadores')

@@ -37,7 +37,6 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(AguardandoAluno, (await b.Ler(numero)).Estado);
     }
 
-    // AC 120 nos prazos de AGUARDANDO_ALUNO: o aluno responde entre a leitura e a gravação do agendador
     [Fact]
     public async Task Resposta_do_aluno_antes_preserva_prazos_aguardando()
     {
@@ -186,7 +185,7 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
         await Ativo("Rematrícula 2026/1", null, hoje.AddDays(-1));
         await Ativo("Rematrícula 2026/2", hoje, null);
         await Ativo("Rematrícula 2027/1", hoje.AddDays(1), null);
-        await Agendador.Executar(); // RAG: indexa os trechos dos artigos ativados
+        await Agendador.Executar();
 
         await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "rematrícula" });
 

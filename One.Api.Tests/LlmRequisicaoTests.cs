@@ -38,7 +38,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Categoria(c.Instituicao, "Categoria ativa");
         await f.Categoria(c.Instituicao, "Categoria desativada", ativa: false);
 
-        // conversa com 11 mensagens; a 12ª sai pela API
         var conversaId = await f.Db(c.Instituicao.Id, async db =>
         {
             var conversa = new Conversa { AlunoId = u.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
@@ -50,7 +49,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         });
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{conversaId}/mensagens", new { mensagem = "mensagem-12" });
 
-        // RAG C5: regras, trechos buscados (id, título, texto e links do artigo de origem), categorias ativas e as últimas 10 mensagens
         var corpo = f.Llm.Corpos[^1];
         foreach (var proibido in new[] { u.Nome, u.Cpf, matricula.Numero, matricula.Curso!.Nome, "outra instituição", "rascunho", "arquivado", "Categoria desativada" })
             Assert.DoesNotContain(proibido, corpo);
@@ -74,7 +72,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         var pedido = f.Llm.Pedidos[^1];
         Assert.Equal(HttpMethod.Post, pedido.Method);
         Assert.Equal("https://llm.teste/v1/chat/completions", pedido.RequestUri!.ToString());
-        // RAG C1 (door R1): corpo do Chat Completions da OpenAI
         var corpo = f.Llm.UltimoCorpo;
         Assert.Equal("gpt-6-luna", corpo.GetProperty("model").GetString());
         Assert.Equal("json_object", corpo.GetProperty("response_format").GetProperty("type").GetString());
@@ -87,7 +84,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(4, m.Count);
         Assert.Equal(["system", "system", "system", "user"], m.Select(x => x.GetProperty("role").GetString()));
         Assert.Contains("Responda só com o que está nas fontes", m[0].GetProperty("content").GetString());
-        // a tela tira o link do texto e mostra um botão: o link vem no fim da frase, depois de dois-pontos
         Assert.Contains("Escreva cada link no fim da frase, depois de dois-pontos", m[0].GetProperty("content").GetString());
         Assert.StartsWith("Fontes", m[1].GetProperty("content").GetString());
         Assert.Contains(Cenario.RespostaBoleto, m[1].GetProperty("content").GetString());
@@ -95,7 +91,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("onde tiro o boleto?", m[3].GetProperty("content").GetString());
     }
 
-    // refatoracao-solid C16: o cliente "llm" registrado uma vez dá a URL base e a chave também aos embeddings
     [Fact]
     public async Task Embeddings_usam_a_url_base()
     {
@@ -110,7 +105,6 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Bearer chave-teste", f.Llm.Pedidos[^1].Headers.Authorization?.ToString());
     }
 
-    // anexos-assistente: a forma da porta 3 no corpo enviado ao provedor
     static MultipartFormDataContent Anexando(string mensagem, params (string nome, byte[] bytes)[] arquivos)
     {
         var form = new MultipartFormDataContent { { new StringContent(mensagem), "mensagem" } };
@@ -163,11 +157,9 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         var c = await Cenario.Criar(f);
         var id = (await (await c.Cliente.PostAsync("/api/conversas", Anexando("olha", ("a.png", Balcao.Arquivo(Balcao.Png, 150))))).Json()).GetProperty("conversaId").GetInt64();
 
-        // turnos 2 a 5: no 5º o histórico tem 9 mensagens e o anexo ainda cabe
         for (var n = 2; n <= 5; n++) await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = $"turno {n}" });
         Assert.True(TemAnexo(f.Llm.UltimoCorpo));
 
-        // no 6º o histórico tem 11 mensagens e a primeira sai da janela
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "turno 6" });
         Assert.False(TemAnexo(f.Llm.UltimoCorpo));
         Assert.DoesNotContain("image_url", f.Llm.Corpos[^1]);

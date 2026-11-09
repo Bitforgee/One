@@ -9,7 +9,6 @@ import { App } from './App'
 
 registerSW({ immediate: true })
 
-// Roteador de dados com uma rota só: o App segue com os seus <Routes>, e useBlocker (editor de fluxo) vale para qualquer saída.
 const roteador = createBrowserRouter([{ path: '*', element: <App /> }])
 
 createRoot(document.getElementById('root')!).render(

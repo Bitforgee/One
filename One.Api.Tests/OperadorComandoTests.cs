@@ -5,7 +5,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// instituicoes-plataforma S1: o papel OPERADOR só passa pelo comando `instituicao operador` (door 1).
 public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<(int codigo, string saida, string erro)> Rodar(params string[] args)
@@ -63,7 +62,6 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await LinhasOperador(u.Id));
         Assert.Equal([Papeis.Administrador], await f.Db(i.Id, db => db.UsuarioPapeis.Where(p => p.UsuarioId == u.Id).Select(p => p.Papel).ToListAsync()));
 
-        // a flag pode vir antes dos pares
         var (daNovo, _, _) = await Rodar("operador", "--remover", "--slug", i.Slug, "--cpf", u.Cpf);
         Assert.Equal(0, daNovo);
     }
@@ -81,7 +79,7 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
         var casos = new[]
         {
             new[] { "operador", "--slug", "nao-existe", "--cpf", inativo.Cpf },
-            new[] { "operador", "--slug", i.Slug, "--cpf", deOutra.Cpf }, // CPF sem usuário nesta instituição
+            new[] { "operador", "--slug", i.Slug, "--cpf", deOutra.Cpf },
             new[] { "operador", "--slug", i.Slug, "--cpf", inativo.Cpf },
         };
         foreach (var args in casos)

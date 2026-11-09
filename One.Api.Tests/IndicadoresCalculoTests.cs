@@ -4,10 +4,9 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid C22 e C23: os 14 indicadores calculados sobre dados em memória, sem banco e sem HTTP.
 public class IndicadoresCalculoTests
 {
-    static readonly DateTime Base = new(2026, 11, 10, 12, 0, 0, DateTimeKind.Utc); // 10/11 08:00 em Cuiabá
+    static readonly DateTime Base = new(2026, 11, 10, 12, 0, 0, DateTimeKind.Utc);
     static readonly DateOnly Dia = new(2026, 11, 10);
     static readonly TimeZoneInfo Cuiaba = TimeZoneInfo.FindSystemTimeZoneById("America/Cuiaba");
     const long Atendente = 900, CatFinanceiro = 1, CatSecretaria = 2, Triagem = 10, Financeiro = 11;
@@ -32,7 +31,6 @@ public class IndicadoresCalculoTests
         Assert.Equal(6, r.TempoResolucaoHoras);
     }
 
-    // fluxos-atendimento C59 (door 8): subir não soma em Encaminhamentos, então o caminho previsto "líder, depois coordenação" conta como roteado certo; encaminhar, não
     [Fact]
     public void Subida_nao_derruba_o_roteamento_correto()
     {
@@ -53,7 +51,6 @@ public class IndicadoresCalculoTests
         Assert.Equal(0.0, Roteamento(encaminhado));
     }
 
-    // A massa de IndicadoresTests.Quatorze_indicadores_batem_com_a_conta, já lida do banco como a rota lê: a função dá os mesmos 14 números.
     [Fact]
     public void Os_14_iguais_aos_da_rota()
     {

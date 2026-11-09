@@ -8,7 +8,6 @@ namespace One.Api.Tests;
 
 public class CpfTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C44: respostas fora de /api/admin/*.
     [Fact]
     public async Task Respostas_fora_do_admin_mascaram_cpf()
     {

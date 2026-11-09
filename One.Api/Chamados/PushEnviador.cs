@@ -7,7 +7,6 @@ namespace One.Api.Chamados;
 
 public interface IEnviadorPush
 {
-    // Falha com PushServiceClientException (StatusCode do serviço de push) ou outra exceção; quem chama decide repetir ou apagar a subscrição.
     Task Enviar(string endpoint, string p256dh, string auth, string payload, CancellationToken ct);
 }
 
@@ -21,15 +20,12 @@ public sealed class EnviadorPush(IHttpClientFactory http, IConfiguration cfg) : 
         inscricao.SetKey(PushEncryptionKeyName.P256DH, p256dh);
         inscricao.SetKey(PushEncryptionKeyName.Auth, auth);
         using var vapid = new VapidAuthentication(c.ChavePublica, c.ChavePrivada) { Subject = c.Assunto };
-        // RFC 8291 (aes128gcm) e RFC 8292 (Authorization: vapid t=,k=)
         await cliente.RequestPushMessageDeliveryAsync(inscricao, new PushMessage(payload), vapid, VapidAuthenticationScheme.Vapid, ct);
     }
 }
 
-// door 4: o JSON que o service worker lê; sem nome, e-mail, CPF, texto nem assunto do chamado (push-com-marca: título e ícone da instituição, texto pelo estado)
 public sealed record PayloadPush(string Titulo, string Corpo, string Url, string Icone)
 {
-    // acentos legíveis em vez de escapes unicode; o JSON é o mesmo
     static readonly JsonSerializerOptions Json = new(JsonSerializerOptions.Web) { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     public const string IconePadrao = "/icons/icon-192.png";
 

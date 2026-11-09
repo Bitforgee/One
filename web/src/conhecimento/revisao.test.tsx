@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, me } from '../test/util'
 
-// revisao-ux S5 (C44, C46): um selo de situação, a indexação em ícone e o "Novo" do topo.
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const categorias = [{ id: 3, nome: 'Acadêmico', ativa: true }]
 const artigo = (titulo: string, estado: string, indexacao: string | null) => ({
@@ -21,7 +20,6 @@ const selos = (linha: HTMLElement) => [...linha.querySelectorAll('[data-slot=bad
 const Valores: Record<string, string> = { Indexado: 'INDEXADO', Indexando: 'PENDENTE', Falhou: 'FALHOU' }
 
 describe('um selo de situação e a indexação em ícone', () => {
-  // C44 (AC 33, P11)
   it.each([
     ['ATIVO', 'Ativo'],
     ['RASCUNHO', 'Rascunho'],
@@ -62,7 +60,6 @@ describe('um selo de situação e a indexação em ícone', () => {
 })
 
 describe('Novo some com a lista vazia', () => {
-  // C46 (Screens: Artigos)
   it('Novo some com a lista vazia: vazia', async () => {
     tela('artigos', [])
     abrir('/univag/artigos')

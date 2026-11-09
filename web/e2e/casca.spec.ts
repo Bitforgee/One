@@ -1,8 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { comAparencia, instalar, referencia, simularApi } from './simulada'
 
-// estrutura-visual: a casca (foco, barra, topo, caixa de envio, tabela e ranking) medida no Chromium com a API simulada.
-// A referência de cada valor é o token pintado no body (L-095), nunca um clone com as classes do elemento medido.
 test.use({ serviceWorkers: 'block' })
 
 const Temas = ['light', 'dark', 'black'] as const
@@ -20,7 +18,6 @@ const contraste = (x: number[], y: number[]) => {
 const rotuloMarca = (m: string | null) => m ?? 'sem cor'
 
 type Opcoes = { marca?: string | null; papeis?: string[]; tema?: string; altura?: number; rotas?: (p: Page) => Promise<void> }
-// Abre a tela com a API simulada; o tema vai no localStorage antes de a página carregar, a marca vem da aparência da instituição.
 async function abrir(page: Page, largura: number, caminho: string, espera: (p: Page) => Promise<unknown>, { marca = null, papeis, tema = 'light', altura = 900, rotas }: Opcoes = {}) {
   await page.unroute('**/api/**').catch(() => {})
   await simularApi(page, papeis, false, { ...comAparencia, cor: marca })
@@ -42,7 +39,6 @@ const esperaAssistente = (p: Page) => p.getByLabel('Mensagem').waitFor()
 const esperaIndicadores = (p: Page) => p.getByText('Indicador principal').waitFor()
 const esperaFila = (p: Page) => p.getByText('ONE-123').waitFor()
 
-// O que o foco desenha no elemento ativo: o contorno, o fundo opaco do pai e a cor do contorno composta sobre ele.
 const lerFoco = (page: Page) =>
   page.evaluate(() => {
     const e = document.activeElement as HTMLElement
@@ -61,13 +57,11 @@ const lerFoco = (page: Page) =>
     }
   })
 
-// Tab até o elemento ser o ativo (no máximo 80 paradas)
 async function tabAte(page: Page, alvo: Locator) {
   for (let i = 0; i < 80 && !(await alvo.evaluate((e) => e === document.activeElement)); i++) await page.keyboard.press('Tab')
   await expect(alvo).toBeFocused()
 }
 
-// C1
 test('foco de 2 px com 3:1 nas 4 telas', async ({ page }) => {
   test.setTimeout(900_000)
   await instalar(page)
@@ -93,7 +87,6 @@ test('foco de 2 px com 3:1 nas 4 telas', async ({ page }) => {
   expect(telas).toBe(36)
 })
 
-// C2
 test('foco com cores forçadas', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -114,7 +107,6 @@ test('foco com cores forçadas', async ({ page }) => {
     telas++
   }
   expect(telas).toBe(4)
-  // a linha de pergunta do Assistente
   await abrir(page, 1280, '/univag/assistente', esperaAssistente)
   const linha = page.getByRole('button', { name: comAparencia.assistente.perguntas[0], exact: true })
   await expect(linha).toHaveCount(1)
@@ -124,7 +116,6 @@ test('foco com cores forçadas', async ({ page }) => {
   expect(f.largura).toBeGreaterThanOrEqual(2)
 })
 
-// C3
 test('foco sem auréola no botão e no campo', async ({ page }) => {
   await instalar(page)
   await abrir(page, 1280, '/univag/indicadores', esperaIndicadores)
@@ -145,7 +136,6 @@ test('foco sem auréola no botão e no campo', async ({ page }) => {
   expect(medidas).toBe(2)
 })
 
-// C4
 test('ring sem cor e com marca', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -159,7 +149,6 @@ test('ring sem cor e com marca', async ({ page }) => {
       const rotulo = `${tema} ${rotuloMarca(marca)}`
       if (!marca) {
         semCor[tema] = ring
-        // o claro sem cor é o cinza novo; o escuro e o preto sem cor ficam como estavam
         expect(ring, `${rotulo}: ring sem cor`).toEqual(await pintado(tema === 'light' ? 'oklch(0.5 0 0)' : 'oklch(0.556 0 0)'))
       } else {
         expect(ring, `${rotulo}: ring com marca difere do valor sem cor`).not.toEqual(semCor[tema])
@@ -170,7 +159,6 @@ test('ring sem cor e com marca', async ({ page }) => {
   expect(medidas).toBe(6)
 })
 
-// C5
 const Anexos: [string, string, string[], (p: Page) => Promise<void>][] = [
   [
     'Instituições',
@@ -216,7 +204,6 @@ test('borda da área de anexos com 3:1', async ({ page }) => {
   expect(medidas).toBe(24)
 })
 
-// C6: a caixa do contorno (a caixa do controle + deslocamento + espessura) cabe no retângulo de cada ancestral que corta
 const foraDoCorte = (e: Element) => {
   const s = getComputedStyle(e)
   const r = e.getBoundingClientRect()
@@ -236,7 +223,6 @@ const foraDoCorte = (e: Element) => {
 
 test('foco não cortado por overflow', async ({ page }) => {
   await instalar(page)
-  // a linha de pergunta do Assistente: o contorno vai para dentro
   await abrir(page, 1280, '/univag/assistente', esperaAssistente)
   const pergunta = page.getByRole('button', { name: comAparencia.assistente.perguntas[0], exact: true })
   await expect(pergunta).toHaveCount(1)
@@ -245,7 +231,6 @@ test('foco não cortado por overflow', async ({ page }) => {
   const rPergunta = await pergunta.evaluate(foraDoCorte, undefined)
   expect(rPergunta.fora, 'pergunta').toEqual([])
 
-  // um link da barra e o link da primeira coluna da Fila
   await abrir(page, 1280, '/univag/fila', esperaFila)
   const link = page.locator('[data-sidebar=content]').getByRole('link', { name: 'Indicadores' })
   const primeira = page.getByRole('link', { name: 'ONE-123' })
@@ -257,7 +242,6 @@ test('foco não cortado por overflow', async ({ page }) => {
     const r = await alvo.evaluate(foraDoCorte, undefined)
     expect(r.cortes, 'o alvo tem um ancestral que corta').toBeGreaterThanOrEqual(1)
     expect(r.fora).toEqual([])
-    // controle: com o contorno 40 px para fora, a medida acusa o corte
     await alvo.evaluate((e) => (e.style.outlineOffset = '40px'))
     expect((await alvo.evaluate(foraDoCorte, undefined)).fora.length, 'controle: o contorno de fora é cortado').toBeGreaterThan(0)
     await alvo.evaluate((e) => (e.style.outlineOffset = ''))
@@ -266,7 +250,6 @@ test('foco não cortado por overflow', async ({ page }) => {
   expect(medidos).toBe(2)
 })
 
-// C7
 test('barra tingida pela marca', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -281,14 +264,12 @@ test('barra tingida pela marca', async ({ page }) => {
       expect(contraste(texto, fundo), `${tema} ${rotuloMarca(marca)}: texto da barra`).toBeGreaterThanOrEqual(4.5)
       medidas++
     }
-    // no Preto a barra é #000 com as 3 marcas (AD-027); no claro e no escuro, as marcas se distinguem
     if (tema === 'black') for (const m of Marcas) expect(por[rotuloMarca(m)]['--sidebar'], `preto ${rotuloMarca(m)}: barra #000`).toEqual([0, 0, 0])
     else for (const t of Tokens) expect(por['#8a1538'][t], `${tema}: ${t} difere entre as marcas`).not.toEqual(por['#0b6e4f'][t])
   }
   expect(medidas).toBe(9)
 })
 
-// C8
 test('item ativo com barra de 3 px', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -301,7 +282,6 @@ test('item ativo com barra de 3 px', async ({ page }) => {
       await expect(ativos, 'um só link ativo').toHaveCount(1)
       await expect(inativo).toHaveCount(1)
       const [primario, fundoBarra, texto] = [await referencia(page, '--sidebar-primary'), await referencia(page, '--sidebar'), await referencia(page, '--sidebar-foreground')]
-      // a barra: uma borda esquerda no elemento ou no ::before (nunca um fundo: some em cores forçadas), a cor pintada sobre o fundo da barra
       const ler = (l: Locator) =>
         l.evaluate((e) => {
           const s = getComputedStyle(e)
@@ -338,7 +318,6 @@ test('item ativo com barra de 3 px', async ({ page }) => {
   expect(medidas).toBe(9)
 })
 
-// Uma ausência precisa de controle: o seletor acha o elemento quando ele existe (L-082)
 async function achaQuandoExiste(host: Locator, seletor: string, tag = 'div') {
   return host.evaluate(
     (h, [sel, t]) => {
@@ -356,11 +335,9 @@ async function achaQuandoExiste(host: Locator, seletor: string, tag = 'div') {
   )
 }
 
-// C9
 test('Tema no rodapé da barra e fora do topo', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
-  // 1440: atendente
   await abrir(page, 1440, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
   await expect(page.locator('header').getByRole('button', { name: 'Tema' }), 'topo a 1440').toHaveCount(0)
   const tema = page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Tema' })
@@ -369,12 +346,10 @@ test('Tema no rodapé da barra e fora do topo', async ({ page }) => {
   for (const opcao of ['Claro', 'Escuro', 'Preto']) await expect(page.getByRole('button', { name: opcao, exact: true }), opcao).toHaveCount(1)
   await page.getByRole('button', { name: 'Escuro', exact: true }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
-  // 390: atendente, o Tema está na gaveta e não no topo
   await abrir(page, 390, '/univag/fila', async (p) => void (await p.locator('header').getByRole('heading', { name: 'Fila' }).waitFor()), { papeis: ['ATENDENTE'] })
   await expect(page.locator('header').getByRole('button', { name: 'Tema' }), 'topo do atendente a 390').toHaveCount(0)
   await page.locator('header').getByRole('button', { name: 'Alternar barra lateral' }).click()
   await expect(page.getByRole('dialog').getByRole('button', { name: 'Tema' }), 'Tema na gaveta').toHaveCount(1)
-  // 390: aluno, sem Tema no topo e com a escolha na aba Conta
   await abrir(page, 390, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
   await expect(page.locator('header').getByRole('button', { name: 'Tema' }), 'topo do aluno a 390').toHaveCount(0)
   await page.getByRole('link', { name: 'Conta' }).click()
@@ -383,7 +358,6 @@ test('Tema no rodapé da barra e fora do topo', async ({ page }) => {
   await expect(page.locator('html')).toHaveClass(/dark/)
 })
 
-// C10
 test('usuário em texto com a barra aberta', async ({ page }) => {
   await instalar(page)
   await abrir(page, 1440, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
@@ -397,7 +371,6 @@ test('usuário em texto com a barra aberta', async ({ page }) => {
   await expect(page.getByRole('menuitem', { name: 'Sair' })).toHaveCount(1)
 })
 
-// C11
 test('iniciais só com a barra recolhida', async ({ page }) => {
   await instalar(page)
   await abrir(page, 1440, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
@@ -416,7 +389,6 @@ test('iniciais só com a barra recolhida', async ({ page }) => {
   await expect(iniciais, 'reaberta').toHaveCount(0)
 })
 
-// C12
 test('topo opaco e sem separador', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -441,7 +413,6 @@ test('topo opaco e sem separador', async ({ page }) => {
   expect(medidas).toBe(9)
 })
 
-// C13
 test('recolher no rodapé a partir de 768', async ({ page }) => {
   await instalar(page)
   let medidas = 0
@@ -465,7 +436,6 @@ test('recolher no rodapé a partir de 768', async ({ page }) => {
   expect(medidas).toBe(2)
 })
 
-// C14
 test('menu no topo abaixo de 768 para quem não é aluno', async ({ page }) => {
   await instalar(page)
   let medidas = 0
@@ -480,7 +450,6 @@ test('menu no topo abaixo de 768 para quem não é aluno', async ({ page }) => {
     await expect(gaveta.getByText('Ana', { exact: true }), `${largura}: usuário`).toHaveCount(1)
     medidas++
   }
-  // controle: o aluno a 390 px tem a barra de abas e nenhum botão de menu
   await abrir(page, 390, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
   await expect(page.locator('header')).toHaveCount(1)
   await expect(page.locator('header button:has(svg.lucide-menu)'), 'aluno sem menu').toHaveCount(0)
@@ -489,7 +458,6 @@ test('menu no topo abaixo de 768 para quem não é aluno', async ({ page }) => {
 
 const sobreY = (a: { y: number; height: number }, b: { y: number; height: number }) => a.y < b.y + b.height - 1 && a.y + a.height > b.y + 1
 
-// C15
 test('caixa de envio em uma linha', async ({ page }) => {
   test.setTimeout(240_000)
   let medidas = 0
@@ -516,7 +484,6 @@ test('caixa de envio em uma linha', async ({ page }) => {
   expect(medidas).toBe(3)
 })
 
-// C16
 test('borda da caixa de envio com 3:1', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -539,11 +506,9 @@ test('borda da caixa de envio com 3:1', async ({ page }) => {
   expect(medidas).toBe(12)
 })
 
-// C17
 test('Encerrar junto de Falar com atendente', async ({ page }) => {
   await abrir(page, 1280, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
   const [atendente, encerrar, campo] = [page.getByRole('button', { name: 'Falar com atendente' }), page.getByRole('button', { name: 'Encerrar', exact: true }), page.getByLabel('Mensagem')]
-  // controle: sem conversa, só o atendente
   await expect(atendente).toHaveCount(1)
   await expect(encerrar, 'sem conversa').toHaveCount(0)
   await campo.fill('preciso do boleto do semestre, onde encontro a segunda via?')
@@ -555,7 +520,6 @@ test('Encerrar junto de Falar com atendente', async ({ page }) => {
   expect(Math.max(a.y + a.height, e.y + e.height), 'acima do campo').toBeLessThanOrEqual(c.y + 1)
 })
 
-// C18
 test('Enter envia e campo vazio desabilita', async ({ page }) => {
   const envios: string[] = []
   page.on('request', (r) => {
@@ -578,7 +542,6 @@ test('Enter envia e campo vazio desabilita', async ({ page }) => {
   expect(envios, 'Enter envia 1 vez').toHaveLength(1)
 })
 
-// C19
 test('tabela sem caixa e cabeçalho sem fundo', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -623,7 +586,6 @@ test('tabela sem caixa e cabeçalho sem fundo', async ({ page }) => {
   expect(medidas).toBe(6)
 })
 
-// C21
 test('barras do ranking na cor calma e sem Recharts', async ({ page }) => {
   test.setTimeout(300_000)
   await instalar(page)
@@ -665,7 +627,6 @@ test('barras do ranking na cor calma e sem Recharts', async ({ page }) => {
   expect(medidas).toBe(12)
 })
 
-// C23
 test('categoria longa inteira nas 5 larguras', async ({ page }) => {
   test.setTimeout(240_000)
   const comEspacos = 'Acadêmico > Secretaria > Declarações e históricos escolares!' // 60 caracteres
@@ -709,7 +670,6 @@ test('categoria longa inteira nas 5 larguras', async ({ page }) => {
   expect(medidas).toBe(20)
 })
 
-// C31: o total de cada linha do ranking fica numa linha só, e a categoria de 60 caracteres continua inteira
 test('total do ranking em uma linha', async ({ page }) => {
   test.setTimeout(240_000)
   const longa = 'Acadêmico > Secretaria > Declarações e históricos escolares!'
@@ -750,7 +710,6 @@ test('total do ranking em uma linha', async ({ page }) => {
   expect(medidas).toBe(40)
 })
 
-// C32: em cores forçadas o `background` some; a barra do item ativo é uma borda e continua visível
 test('item ativo visível com cores forçadas', async ({ page }) => {
   await instalar(page)
   await page.emulateMedia({ forcedColors: 'active' })
@@ -776,7 +735,6 @@ test('item ativo visível com cores forçadas', async ({ page }) => {
   expect(await ler(inativo), 'controle: o inativo não tem a borda').toEqual([])
 })
 
-// C33: o foco inteiro nos cartões do celular, na primeira coluna da Fila e no Fechar do diálogo
 test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -787,7 +745,6 @@ test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page 
     await expect(link, `${rota}: 1 link no cartão`).toHaveCount(1)
     await tabAte(page, link)
     const r = await link.evaluate(foraDoCorte, undefined)
-    // o corte das 2 linhas (line-clamp) fica dentro do link, não em ancestral dele; o controle põe um corte no pai para a medida acusar
     expect(await link.locator('*').evaluateAll((es) => es.filter((e) => getComputedStyle(e).overflowY !== 'visible').length), `${rota}: 1 line-clamp dentro do link`).toBe(1)
     expect(r.fora, `${rota}: contorno inteiro`).toEqual([])
     await link.evaluate((e) => {
@@ -801,7 +758,6 @@ test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page 
     })
     medidas++
   }
-  // 1280: o contorno do link da primeira coluna cerca o texto, sem cruzar as letras
   await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
   const primeira = page.getByRole('link', { name: 'ONE-123' })
   await expect(primeira).toHaveCount(1)
@@ -821,7 +777,6 @@ test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page 
   expect((await caixas('-4px')).dentro, 'controle: um contorno que entra no texto é acusado').toBe(false)
   expect((await primeira.evaluate(foraDoCorte, undefined)).fora, 'e continua inteiro no contêiner').toEqual([])
   medidas++
-  // o Fechar do diálogo de Contato, aberto pelo teclado, nos 3 temas e sem cor
   for (const tema of Temas) {
     await abrir(page, 1280, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'], tema })
     const contato = page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Contato' })
@@ -841,7 +796,6 @@ test('foco inteiro nos cartões, na primeira coluna e no Fechar', async ({ page 
   expect(medidas).toBe(6)
 })
 
-// C34
 test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) => {
   await instalar(page)
   await abrir(page, 1440, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
@@ -854,7 +808,6 @@ test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) =>
   }
   expect(ys, 'Contato, Tema, usuário, recolher: de cima para baixo').toEqual([...ys].sort((a, b) => a - b))
   expect(new Set(ys).size, 'posições distintas').toBe(4)
-  // recolhida, com ponteiro grosso
   const contexto = await browser.newContext({ hasTouch: true, viewport: { width: 1024, height: 768 }, serviceWorkers: 'block' })
   const p = await contexto.newPage()
   await instalar(p)
@@ -870,7 +823,6 @@ test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) =>
   await contexto.close()
 })
 
-// C35
 test('Enviar da altura do campo', async ({ page }) => {
   test.setTimeout(90_000) // 2 páginas, sob máquina carregada
   let medidas = 0
@@ -892,7 +844,6 @@ test('Enviar da altura do campo', async ({ page }) => {
   expect(medidas).toBe(2)
 })
 
-// C36: o corte das 2 linhas mede 2 × line-height, sem folga vertical, e o alto da 3ª linha não aparece
 test('corte de 2 linhas sem o alto da terceira', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)
@@ -936,7 +887,6 @@ test('corte de 2 linhas sem o alto da terceira', async ({ page }) => {
   expect(medidas).toBe(4)
 })
 
-// C37: com a coluna estreita, a barra fica embaixo do rótulo
 test('barra do ranking embaixo do rótulo no estreito', async ({ page }) => {
   const ranking = [
     { categoria: 'Acadêmico > Secretaria > Declarações e históricos escolares!', total: 1000 },
@@ -975,7 +925,6 @@ test('barra do ranking embaixo do rótulo no estreito', async ({ page }) => {
   expect(medidas).toBe(8)
 })
 
-// C38: dicas nos ícones do rodapé, só com a barra recolhida; a linha do usuário não tem dica
 test('dica nos ícones do rodapé com a barra recolhida, sem dica no usuário', async ({ page }) => {
   await instalar(page)
   for (const estado of ['recolhida', 'aberta']) {
@@ -1010,7 +959,6 @@ test('dica nos ícones do rodapé com a barra recolhida, sem dica no usuário', 
   }
 })
 
-// C38: página nova, sem passar antes por outro ícone: o que abre por foco ao fechar o menu apareceria aqui
 test('sem dica presa depois de clicar fora do menu do usuário', async ({ page }) => {
   await instalar(page)
   await page.addInitScript(() => localStorage.setItem('one-barra', 'recolhida'))
@@ -1029,7 +977,6 @@ test('sem dica presa depois de clicar fora do menu do usuário', async ({ page }
   }
 })
 
-// C40: no celular, o link cobre número e título e abre o chamado com 1 entrada no histórico
 test('link do cartão abre o chamado com 1 entrada no histórico', async ({ page }) => {
   await instalar(page)
   await abrir(page, 390, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
@@ -1044,7 +991,6 @@ test('link do cartão abre o chamado com 1 entrada no histórico', async ({ page
   await page.waitForURL('**/univag/fila')
 })
 
-// C41: na gaveta, com foco na linha do usuário, um Esc fecha
 test('Esc fecha a gaveta em 1 toque a partir do usuário', async ({ page }) => {
   await instalar(page)
   await abrir(page, 390, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
@@ -1058,7 +1004,6 @@ test('Esc fecha a gaveta em 1 toque a partir do usuário', async ({ page }) => {
   await expect(gaveta, '1 Esc fecha').toHaveCount(0)
 })
 
-// C39: o Fechar da gaveta, com foco, tem opacidade 1 e contorno de 3:1 nos 3 temas
 test('foco inteiro no Fechar da gaveta', async ({ page }) => {
   test.setTimeout(240_000)
   await instalar(page)

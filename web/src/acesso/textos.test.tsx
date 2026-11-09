@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
-// Linha 0 de ## Screens (casca); "Alternar barra lateral" é só nome acessível; "Tema" é a linha do rodapé da barra (estrutura-visual AC 8), conferidos por papel.
 const Papeis = ['Administrador', 'Atendente', 'Aluno'] // layout-painel: o papel no botão do usuário (novo)
 const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Sair', 'Tema', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
 const Instituicao = 'Univag' // nome da instituição do fixture
@@ -14,14 +13,12 @@ describe('textos', () => {
   it('textos cabeçalho', async () => {
     const tela = estados(Cabecalho)
 
-    // carregando: só o status "Carregando", sem texto visível
     api({ 'GET /api/auth/me': () => new Promise(() => {}) })
     const carregando = abrir('/univag/trocar-senha')
     expect(await screen.findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
     tela.conferir(carregando.container)
     carregando.unmount()
 
-    // barra e cabeçalho da tela (o título "Trocar senha" é o h1 do cabeçalho), por papel
     for (const papel of ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR']) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
@@ -33,7 +30,6 @@ describe('textos', () => {
       unmount()
     }
 
-    // painel lateral aberto no celular, com os links dos 3 papéis
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })] })
     window.innerWidth = 500
     abrir('/univag/trocar-senha')
@@ -42,7 +38,6 @@ describe('textos', () => {
     await userEvent.keyboard('{Escape}')
     window.innerWidth = 1024
 
-    // controle de tema aberto: "Claro", "Escuro", "Preto" e "Sistema"
     await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
     tela.conferir(document.querySelector('[data-slot=popover-content]') as HTMLElement)
 
@@ -50,9 +45,7 @@ describe('textos', () => {
   })
 })
 
-// Linhas 1 a 5 de ## Screens; o `detail` e a mensagem da API vêm do fixture
 const Recusa = [422, { status: 422, title: 'Dados inválidos', detail: 'Dados recusados pela API.' }] as [number, unknown]
-// login-institucional: o painel institucional (novo) das 3 telas de entrada
 const Painel = ['Atendimento ao estudante', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 const Instituicoes = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univag' }] as [number, unknown] }
 
@@ -67,7 +60,6 @@ describe('textos das telas de acesso', () => {
 
   it('textos Login', async () => {
     const t = estados(['Entre com seu CPF e sua senha.', 'CPF', 'Senha', 'Entrar', 'Primeiro acesso ou esqueci minha senha', 'Instituição não encontrada.', ...Painel])
-    // carregando: só o status "Carregando"
     api({ 'GET /api/instituicoes/univag': () => new Promise(() => {}) })
     let montada = abrir('/univag')
     expect(await screen.findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
@@ -116,7 +108,6 @@ describe('textos das telas de acesso', () => {
     t.todos()
   })
 
-  // login-institucional C26: o estado de erro de cada formulário mostra só os textos de hoje e o detail da API
   it('textos dos erros de Primeiro acesso e Criar senha', async () => {
     for (const [caminho, rota, campo, botao, literais] of [
       ['/univag/primeiro-acesso', 'POST /api/auth/primeiro-acesso', 'CPF', 'Enviar link', ['Primeiro acesso', 'CPF', 'Enviaremos um link para criar a senha no e-mail registrado na instituição.', 'Enviar link', 'Voltar para o login', ...Painel]],

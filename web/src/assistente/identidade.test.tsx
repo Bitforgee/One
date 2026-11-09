@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
-// identidade-visual S3 (AC 8 a AC 11): o assistente sem conversa; o arranjo é do Playwright (e2e/identidade.spec.ts).
 const Frase = 'Respostas com base nas normas da instituição.'
 const Oi = 'Oi! Posso ajudar com boletos e matrícula.'
 const Nome = 'Centro Universitário de Várzea Grande'
@@ -10,7 +9,6 @@ const rotas = (inst: object, extra: Record<string, Rota> = {}) => api({ 'GET /ap
 const pausa = () => new Promise((r) => setTimeout(r, 30))
 
 describe('boas-vindas do assistente', () => {
-  // C17 (AC 8)
   it('boas-vindas institucional sem Olá Eu sou', async () => {
     const casos: [Record<string, unknown>, string, string][] = [
       [{ nomeCurto: 'Univag', assistente: { nome: null, boasVindas: Oi, perguntas: [] } }, 'Atendimento ao estudante · Univag', Oi],
@@ -30,7 +28,6 @@ describe('boas-vindas do assistente', () => {
     }
   })
 
-  // C19 (AC 9)
   it('assistente virtual com e sem foto', async () => {
     const foto = '/api/instituicoes/univag/imagens/assistente?v=4'
     const casos: [Record<string, unknown>, string, boolean][] = [
@@ -48,7 +45,6 @@ describe('boas-vindas do assistente', () => {
     }
   })
 
-  // C20 (AC 10, P14)
   it('solicitação em aberto antes das perguntas', async () => {
     const item = (numero: string, estado: string, criadoEm = '2026-11-02T12:00:00Z') => ({ numero, titulo: 'preciso do boleto', estado, criadoEm })
     const casos: [string, () => ReturnType<Rota>, [string, string, string] | null][] = [
@@ -71,7 +67,6 @@ describe('boas-vindas do assistente', () => {
         expect(link).toHaveTextContent(esperado[1])
         expect(link).toHaveTextContent(esperado[2])
         expect(screen.getAllByRole('link', { name: /Sua solicitação/ }), rotulo).toHaveLength(1)
-        // vem antes da primeira pergunta no DOM
         const pergunta = screen.getByRole('button', { name: 'Como emito o boleto do semestre?' })
         expect(link.compareDocumentPosition(pergunta) & Node.DOCUMENT_POSITION_FOLLOWING, rotulo).toBeTruthy()
       } else {
@@ -85,7 +80,6 @@ describe('boas-vindas do assistente', () => {
     }
   })
 
-  // C22 (AC 11)
   it('perguntas com MessageCircleQuestion e ChevronRight', async () => {
     rotas(instituicao())
     abrir('/univag/assistente')

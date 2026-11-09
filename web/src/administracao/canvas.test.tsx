@@ -52,19 +52,16 @@ const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => ch
 const noDeEtapa = (n: number, rotulo: string) => screen.getByLabelText(`Etapa ${n}: ${rotulo}`)
 const posicao = (no: HTMLElement) => no.style.transform
 
-// selecionar pelo teclado (Enter no nó focado), como quem usa o canvas sem o mouse; o clique do user-event não traz a janela que o d3-drag lê
 async function selecionar(no: HTMLElement) {
   act(() => no.focus())
   await userEvent.keyboard('{Enter}')
 }
 
-// escolher um destino no menu do botão Adicionar etapa, como quem clica
 async function pelaMenu(destino: string) {
   await userEvent.click(screen.getByRole('button', { name: 'Adicionar etapa' }))
   await userEvent.click(await screen.findByRole('button', { name: new RegExp(`^${destino}`) }))
 }
 
-// largar um tipo da paleta no canvas, como o navegador faz (o arrastar de verdade é do Playwright)
 function largar(destino: string, x = 300, y = 150) {
   fireEvent.drop(document.querySelector('.react-flow')!, { clientX: x, clientY: y, dataTransfer: { getData: () => destino } })
 }
@@ -74,7 +71,6 @@ describe('canvas', () => {
     vi.restoreAllMocks()
   })
 
-  // fluxos-atendimento C83 (AC 70)
   it('alternar mantém a edição', async () => {
     cadastros()
     const dialogo = await abrirFluxo('Boletos')
@@ -86,7 +82,6 @@ describe('canvas', () => {
     expect(await screen.findByLabelText('Etapa 3: Setor —')).toBeInTheDocument()
     expect(screen.queryByText('Etapa 3')).not.toBeInTheDocument() // a lista some enquanto o canvas está aberto
 
-    // uma etapa posta pela paleta, sem salvar, também está na lista
     await pelaMenu('Liderança do semestre')
     await screen.findByLabelText('Etapa 4: Liderança do semestre')
     await userEvent.click(dialogo.getByRole('tab', { name: 'Lista' }))
@@ -94,7 +89,6 @@ describe('canvas', () => {
     expect(dialogo.getByLabelText('Destino da etapa 4')).toHaveValue('LIDERANCA_SEMESTRE')
   })
 
-  // C84 (AC 71)
   it('nós em ordem com rótulo e prazo', async () => {
     cadastros()
     await abrirNoCanvas('Boletos')
@@ -105,17 +99,13 @@ describe('canvas', () => {
     expect(within(segundo).getByText('Coordenação do curso')).toBeInTheDocument()
     expect(within(segundo).getByText('48 h')).toBeInTheDocument() // o prazo é um chip, e o nome acessível segue inteiro
     expect(primeiro.compareDocumentPosition(segundo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    // cada nó leva o ícone do tipo
     expect(primeiro.querySelector('svg.lucide-users')).not.toBeNull()
     expect(segundo.querySelector('svg.lucide-graduation-cap')).not.toBeNull()
-    // da esquerda para a direita: Início, 1 e 2
     const x = (no: HTMLElement) => Number(/translate\((-?[\d.]+)px/.exec(posicao(no))![1])
     expect([x(screen.getByLabelText('Início')), x(primeiro), x(segundo)].every((v, i, l) => i === 0 || v > l[i - 1])).toBe(true)
-    // ligados em ordem
     await waitFor(() => expect(document.querySelectorAll('.react-flow__edge')).toHaveLength(2))
   })
 
-  // textos acessíveis do canvas em pt-BR, sem ids internos
   it('textos acessíveis em português, sem ids internos', async () => {
     cadastros()
     await abrirNoCanvas('Boletos')
@@ -135,7 +125,6 @@ describe('canvas', () => {
     expect(screen.getByLabelText('Enquadrar o fluxo')).toBeInTheDocument()
   })
 
-  // C86 (AC 73)
   it('regra de ligação', () => {
     const ligacoes: Ligacao[] = [
       { de: Inicio, para: 'a' },
@@ -150,7 +139,6 @@ describe('canvas', () => {
     expect(podeLigar([], 'z', Inicio)).toBe(false) // o Início não tem entrada
   })
 
-  // C88 (AC 74)
   it('cadeia inválida desliga salvar e publicar', async () => {
     cadastros()
     const dialogo = await abrirNoCanvas('Boletos')
@@ -183,7 +171,6 @@ describe('canvas', () => {
     expect(dialogo.getByRole('button', { name: 'Publicar' })).toBeDisabled()
   })
 
-  // C89 (AC 75)
   it('salvar envia ordem e posição, e reabrir põe cada nó onde estava', async () => {
     const chamadas = cadastros({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, {}] })
     const dialogo = await abrirNoCanvas('Boletos')
@@ -192,7 +179,6 @@ describe('canvas', () => {
 
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE', null, null, 288, 80), etapa('COORDENACAO_CURSO', null, 48, 576, 80)] }]]))
 
-    // o rascunho que já tem posição abre com cada nó no seu lugar
     await userEvent.click(dialogo.getByRole('button', { name: 'Voltar' })) // salvo: sai sem perguntar
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
     await abrirNoCanvas('Notas')
@@ -200,19 +186,16 @@ describe('canvas', () => {
     expect(posicao(noDeEtapa(2, 'Coordenação do curso'))).toContain('translate(600px,50px)')
   })
 
-  // C90 (AC 76)
   it('remover nó pede confirmação se tem setor ou prazo', async () => {
     cadastros()
     const dialogo = await abrirNoCanvas('Notas')
     await selecionar(noDeEtapa(1, 'Setor Financeiro (24 h)'))
 
-    // com setor e prazo, pergunta primeiro: cancelar mantém
     await userEvent.click(await dialogo.findByRole('button', { name: 'Remover etapa selecionada' }))
     const confirmacao = within(await screen.findByRole('dialog', { name: 'Remover a etapa?' }))
     await userEvent.click(confirmacao.getByRole('button', { name: 'Cancelar' }))
     expect(screen.getByLabelText('Etapa 1: Setor Financeiro (24 h)')).toBeInTheDocument()
 
-    // confirmar remove o nó e as ligações dele, sem religar o vizinho ao Início
     await userEvent.click(await dialogo.findByRole('button', { name: 'Remover etapa selecionada' }))
     await userEvent.click(within(await screen.findByRole('dialog', { name: 'Remover a etapa?' })).getByRole('button', { name: 'Remover' }))
     await waitFor(() => expect(screen.queryByLabelText(/Setor Financeiro/)).not.toBeInTheDocument())
@@ -221,14 +204,12 @@ describe('canvas', () => {
     expect(dialogo.getByRole('alert')).toHaveTextContent(FraseDaCadeia)
     expect(document.querySelectorAll('.react-flow__edge')).toHaveLength(0)
 
-    // sem setor nem prazo, sai direto
     await selecionar(vizinho)
     await userEvent.click(await dialogo.findByRole('button', { name: 'Remover etapa selecionada' }))
     await waitFor(() => expect(screen.queryByLabelText(/^Etapa 1:/)).not.toBeInTheDocument())
     expect(screen.queryByRole('dialog', { name: 'Remover a etapa?' })).not.toBeInTheDocument()
     expect(screen.getByText('Arraste um destino para começar.')).toBeInTheDocument()
   })
-  // C112 (AD-042): a grade pontilhada e o painel da etapa selecionada, que edita prazo e setor sem esconder o desenho
   it('grade pontilhada e painel da etapa selecionada', async () => {
     cadastros()
     await abrirNoCanvas('Notas')
@@ -247,7 +228,6 @@ describe('canvas', () => {
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Etapa selecionada' })).not.toBeInTheDocument())
   })
 
-  // C95 (AC 81)
   it('simulação marca os nós', async () => {
     cadastros({
       'POST /api/admin/fluxos/7/simular': () => [
@@ -272,7 +252,6 @@ describe('canvas', () => {
     expect(within(noDeEtapa(2, 'Coordenação do curso (48 h)')).getByText('Vai por aqui')).toBeInTheDocument()
   })
 
-  // C96 (Observable)
   it('canvas vazio e falha de carga', async () => {
     cadastros()
     const dialogo = await abrirNoCanvas('Matrícula')
@@ -295,7 +274,6 @@ describe('canvas', () => {
     expect(dialogo.getByRole('button', { name: 'Salvar rascunho' })).toBeEnabled()
   })
 
-  // cadastros-fluxo-visual K7 e K13
   it('editor na página, com o estado na barra e o simulador na coluna do canvas', async () => {
     cadastros()
     const dialogo = await abrirFluxo('Boletos')
@@ -311,7 +289,6 @@ describe('canvas', () => {
     expect(dialogo.queryByRole('group', { name: 'Destinos' })).not.toBeInTheDocument() // a fileira de destinos acima do canvas não existe mais
   })
 
-  // K8
   it('inserir etapa no meio da cadeia', async () => {
     const chamadas = cadastros({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, {}] })
     const dialogo = await abrirNoCanvas('Boletos')
@@ -327,7 +304,6 @@ describe('canvas', () => {
     )
   })
 
-  // K9
   it('a barra da etapa remove sem confirmar quando a etapa está em branco', async () => {
     cadastros()
     await abrirNoCanvas('Boletos')
@@ -337,7 +313,6 @@ describe('canvas', () => {
     expect(screen.queryByRole('dialog', { name: 'Remover a etapa?' })).not.toBeInTheDocument()
   })
 
-  // K12
   it('organizar alinha a cadeia, inserir respeita o limite e o Início nunca fica coberto', () => {
     const g = deEtapas([etapa('SETOR', 2, null, 10, 20), etapa('COORDENACAO_CURSO', null, null, 700, 400)])
     expect(organizar(g).nos.map((n) => [n.x, n.y])).toEqual([[288, 80], [576, 80]])

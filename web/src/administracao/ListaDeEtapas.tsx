@@ -15,7 +15,6 @@ type Linha = {
   editar: (f: (g: Grafo) => Grafo) => void
 }
 
-// Uma etapa da lista: destino, setor (só na etapa de setor), prazo e os botões de mover e remover, todos nomeados pelo número da etapa.
 function LinhaDaEtapa({ n, no, setores, pode, foraDaCadeia, editar }: Linha) {
   const alterar = (parcial: Partial<No>) => editar((g) => mudar(g, no.id, parcial))
   return (
@@ -52,7 +51,6 @@ function LinhaDaEtapa({ n, no, setores, pode, foraDaCadeia, editar }: Linha) {
 
 type Props = { grafo: Grafo; setores: Setor[]; editar: (f: (g: Grafo) => Grafo) => void }
 
-// A visão em lista do rascunho: toda operação do canvas existe aqui com botão ou campo nomeado (AC 78).
 export function ListaDeEtapas({ grafo, setores, editar }: Props) {
   const lista = ordenados(grafo)
   const cadeia = caminho(grafo)

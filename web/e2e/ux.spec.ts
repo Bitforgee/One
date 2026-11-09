@@ -1,9 +1,6 @@
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
 import { abrirTela, chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, Telas, varrer } from './simulada'
 
-// revisao-ux, lote 1 (S1, S2 e os tokens de S6): arranjo e cor medidos no Chromium com a API simulada.
-// Medidas por boundingBox() e getComputedStyle, em px CSS, tolerância de 1 px. A cor computada é pintada num canvas 1x1 e lida em sRGB de 8 bits;
-// uma cor com alfa é composta sobre o fundo opaco mais próximo. Contraste: fórmula do WCAG 2.
 test.use({ serviceWorkers: 'block' })
 
 const luminancia = ([r, g, b]: number[]) => {
@@ -15,14 +12,12 @@ const contraste = (x: number[], y: number[]) => {
   return (claro + 0.05) / (escuro + 0.05)
 }
 const pixel = (page: Page, pilha: string[]) => page.evaluate((p) => window.__ux.pintar(p), pilha)
-// A cor de uma propriedade do elemento, composta sobre o fundo opaco mais próximo dele
 const corSobreFundo = (alvo: Locator, propriedade: 'color' | 'backgroundColor' | 'borderTopColor') =>
   alvo.evaluate((el, p) => window.__ux.pintar([...window.__ux.pilha(el.parentElement ?? el), getComputedStyle(el)[p as 'color']]), propriedade)
 const caixa = async (l: Locator) => (await l.boundingBox())!
 const json = (corpo: unknown, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(corpo) })
 const responder = (page: Page, rota: RegExp, corpo: unknown, status = 200) => page.route(rota, (r) => r.fulfill(json(corpo, status)))
 
-// ---------- S1: alvos de toque e campos ----------
 
 const Alvos: Record<string, string> = {
   Button: '[data-slot=button]',
@@ -37,7 +32,6 @@ const SemCasca = ['Login', 'Raiz', 'Primeiro acesso', 'Criar senha']
 type Medida = { tela: string; tipo: string; nome: string; altura: number }
 type Fonte = { tela: string; nome: string; fonte: number }
 
-// Todo elemento visível de cada tipo da tela aberta: a altura (e, nos campos, a fonte). `tela` só rotula.
 async function medir(page: Page, tela: string) {
   return page.evaluate(
     ([nome, alvos, campos]) => {
@@ -58,7 +52,6 @@ async function medir(page: Page, tela: string) {
   )
 }
 
-// As telas de C1 a C3: as de `Telas`, a Conta e Instituições. No Assistente escolhe-se um arquivo, para o "Remover" existir.
 async function percorrer(page: Page, aoAbrir: (nome: string, ehCasca: boolean) => Promise<void>) {
   const telas: [string, () => Promise<void>][] = [
     ...Telas.map(([nome]) => [nome, () => abrirTela(page, nome)] as [string, () => Promise<void>]),
@@ -66,7 +59,6 @@ async function percorrer(page: Page, aoAbrir: (nome: string, ehCasca: boolean) =
     ['Instituições', async () => { await page.goto('/univag/instituicoes'); await page.getByText('Faculdade Antiga').waitFor() }],
   ]
   for (const [nome, abrir] of telas) {
-    // Instituições é do OPERADOR; as outras telas, de quem tem os 3 papéis de equipe e aluno
     await page.unroute('**/api/**')
     await simularApi(page, nome === 'Instituições' ? ['ADMINISTRADOR', 'OPERADOR'] : undefined)
     await abrir()
@@ -78,7 +70,6 @@ async function percorrer(page: Page, aoAbrir: (nome: string, ehCasca: boolean) =
   }
 }
 
-// Mede as telas e, na gaveta aberta (ou na barra, conforme `comGaveta`), os itens da barra lateral.
 async function medirTudo(page: Page, aoMedir: (r: Awaited<ReturnType<typeof medir>>) => void, comGaveta: boolean) {
   await percorrer(page, async (nome, casca) => {
     const r = await medir(page, nome)
@@ -94,7 +85,6 @@ async function medirTudo(page: Page, aoMedir: (r: Awaited<ReturnType<typeof medi
 }
 
 function conferirAlturas(medidas: Medida[]) {
-  // afirma ao menos 1 elemento de cada tipo antes de medir (L-069)
   for (const tipo of Object.keys(Alvos)) expect(medidas.filter((m) => m.tipo === tipo).length, `há elementos de ${tipo}`).toBeGreaterThan(0)
   expect(
     medidas.filter((m) => m.altura < 43.9).map((m) => `${m.tela} · ${m.tipo} · ${m.nome}: ${m.altura}`),
@@ -105,7 +95,6 @@ function conferirAlturas(medidas: Medida[]) {
 test.describe('S1 toque, campos e contraste', () => {
   test.setTimeout(240_000)
 
-  // C1 (AC 1)
   test('alvos de 44 px abaixo de 768 em todas as telas', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -114,7 +103,6 @@ test.describe('S1 toque, campos e contraste', () => {
     conferirAlturas(todas)
   })
 
-  // C2 (AC 1): ponteiro grosso, a 1024 px; a barra aberta e recolhida
   test('alvos de 44 px com ponteiro grosso a 1024', async ({ browser }) => {
     for (const recolhida of [false, true]) {
       const contexto = await browser.newContext({ hasTouch: true, viewport: { width: 1024, height: 768 }, serviceWorkers: 'block' })
@@ -128,7 +116,6 @@ test.describe('S1 toque, campos e contraste', () => {
       conferirAlturas(todas)
       await contexto.close()
     }
-    // sem ponteiro grosso, a 1024 px, o botão "Consultar" segue em 36 px
     const fino = await browser.newContext({ viewport: { width: 1024, height: 768 }, serviceWorkers: 'block' })
     const pagina = await fino.newPage()
     await simularApi(pagina)
@@ -138,7 +125,6 @@ test.describe('S1 toque, campos e contraste', () => {
     await fino.close()
   })
 
-  // C3 (AC 2)
   test('campos de 16 px abaixo de 768 e com ponteiro grosso', async ({ page, browser }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -151,13 +137,11 @@ test.describe('S1 toque, campos e contraste', () => {
     await medirTudo(grosso, (r) => doToque.push(...r.fontes), false)
     await contexto.close()
     for (const [condicao, fontes] of [['390 px', doCelular], ['1024 px com ponteiro grosso', doToque]] as const) {
-      // o CPF do Login, o compositor do Assistente e o seletor de Cadastros
       for (const tela of ['Login', 'Assistente', 'Cadastros']) expect(fontes.filter((f) => f.tela === tela).length, `${condicao}: campos em ${tela}`).toBeGreaterThan(0)
       expect(fontes.filter((f) => f.fonte < 16).map((f) => `${f.tela} · ${f.nome}: ${f.fonte}`), `${condicao}: campos abaixo de 16 px`).toEqual([])
     }
   })
 
-  // C4 (AC 3): o X de 44x44 com o nome Fechar, no Dialog, no Sheet do detalhe e no formulário
   test('X de 44 px com o nome Fechar', async ({ page }) => {
     await instalar(page)
     await simularApi(page)
@@ -177,7 +161,6 @@ test.describe('S1 toque, campos e contraste', () => {
     await expect(encerrar).toBeVisible()
     await fechar(encerrar)
 
-    // o botão da barra do detalhe: "Ações" no lote 1, "Mais" quando o lote 2 o renomear (C34)
     await page.setViewportSize({ width: 390, height: 844 })
     await abrirTela(page, 'Detalhe do chamado')
     await page.getByRole('button', { name: /^(Mais|Ações)$/ }).click()
@@ -194,7 +177,6 @@ test.describe('S1 toque, campos e contraste', () => {
 const Temas = ['light', 'dark', 'black'] as const
 const Marcas = [null, '#8a1538'] as const
 
-// Prepara a página no tema e com a cor da instituição (a API simulada devolve a cor; o app põe --marca no html)
 async function emTema(page: Page, tema: string, cor: string | null, papeis?: string[]) {
   await instalar(page)
   await page.addInitScript((t) => localStorage.setItem('one-tema', t), tema)
@@ -204,7 +186,6 @@ async function emTema(page: Page, tema: string, cor: string | null, papeis?: str
 test.describe('S1 contraste', () => {
   test.setTimeout(240_000)
 
-  // C5 (AC 4): 3 campos x 3 temas x 2 marcas = 18 medidas
   test('borda dos campos com contraste de 3:1 nos três temas', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 })
     let medidas = 0
@@ -225,7 +206,6 @@ test.describe('S1 contraste', () => {
         for (const [nome, campo] of campos) {
           await expect(campo).toHaveCount(1)
           const borda = await corSobreFundo(campo, 'borderTopColor')
-          // a borda é composta sobre o fundo do diálogo, não sobre o do campo
           const composta = await campo.evaluate((el) => window.__ux.pintar([...window.__ux.pilha(el.closest('[data-slot=dialog-content]')!), getComputedStyle(el).borderTopColor]))
           expect(contraste(composta, fundo), `${tema} ${marca ?? 'sem cor'}: borda de ${nome}`).toBeGreaterThanOrEqual(3)
           expect(borda.length).toBe(3)
@@ -235,7 +215,6 @@ test.describe('S1 contraste', () => {
     expect(medidas).toBe(18)
   })
 
-  // C6 (AC 5): 3 esqueletos visíveis em cada tema
   test('esqueleto com contraste de 1,3:1 nos três temas', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     for (const tema of Temas) {
@@ -256,7 +235,6 @@ test.describe('S1 contraste', () => {
     }
   })
 
-  // C7 (AC 6): 9 selos x 3 temas x 2 marcas
   test('selos com contraste de 4,5:1 nos três temas', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 })
     const estados = [['ABERTO', 'Aberto'], ['EM_ATENDIMENTO', 'Em atendimento'], ['AGUARDANDO_ALUNO', 'Aguardando aluno'], ['RESOLVIDO', 'Resolvido'], ['FECHADO', 'Fechado']]
@@ -294,7 +272,6 @@ test.describe('S1 contraste', () => {
     expect(medidos).toBe(54)
   })
 
-  // C8 (AC 7, door 3): nenhum botão verde nos 4 casos
   test('nenhum botão verde', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 })
     await instalar(page)
@@ -329,7 +306,6 @@ test.describe('S1 contraste', () => {
   })
 })
 
-// ---------- S2: a barra de abas do aluno ----------
 
 const Abas = ['assistente', 'solicitacoes', 'conta'] as const
 async function comoAluno(page: Page, largura = 390, altura = 844) {
@@ -339,7 +315,6 @@ async function comoAluno(page: Page, largura = 390, altura = 844) {
 }
 
 test.describe('S2 barra de abas', () => {
-  // C13 (door 1)
   test('barra de abas: 3 colunas iguais e ícone sobre rótulo de 12 px', async ({ page }) => {
     await comoAluno(page)
     await page.goto('/univag/assistente')
@@ -370,7 +345,6 @@ test.describe('S2 barra de abas', () => {
     }
   })
 
-  // C14
   test('aba ativa na cor de ação e peso 600', async ({ page }) => {
     await comoAluno(page)
     for (const [i, rota] of Abas.entries()) {
@@ -393,7 +367,6 @@ test.describe('S2 barra de abas', () => {
     }
   })
 
-  // C15: a área segura de 34 px e nada focável sob a barra, ao rolar até o fim
   test('nada focável fica sob a barra de abas', async ({ page }) => {
     await comoAluno(page)
     const cdp = await page.context().newCDPSession(page)
@@ -436,7 +409,6 @@ test.describe('S2 barra de abas', () => {
     await conferir('Detalhe do chamado')
   })
 
-  // C16
   test('topo do aluno sem botão de menu', async ({ page }) => {
     await comoAluno(page)
     await page.goto('/univag/assistente')
@@ -451,7 +423,6 @@ test.describe('S2 barra de abas', () => {
     expect(Math.abs(s.y + s.height / 2 - (h.y + h.height / 2)), 'mesmo centro vertical').toBeLessThanOrEqual(2)
   })
 
-  // C20 (AC 14)
   test('sem barra de abas a 768 px e para a equipe', async ({ page }) => {
     await instalar(page)
     for (const [papeis, largura] of [[['ALUNO'], 768], [['ATENDENTE'], 390], [['ADMINISTRADOR'], 390], [['ALUNO', 'ATENDENTE'], 390]] as const) {
@@ -466,7 +437,6 @@ test.describe('S2 barra de abas', () => {
 })
 
 test.describe('S2 Conta', () => {
-  // C19: com o service worker liberado, o aviso existe (push.spec.ts faz o mesmo)
   test.use({ serviceWorkers: 'allow' })
 
   test('Conta com linhas de 52 px e Sair por último', async ({ page }) => {
@@ -488,21 +458,17 @@ test.describe('S2 Conta', () => {
       expect((await caixa(linhas.nth(i))).height, `${nome}: altura`).toBeGreaterThanOrEqual(51)
       expect((await caixa(linhas.nth(i))).height, `${nome}: altura`).toBeLessThanOrEqual(53)
     }
-    // o bloco de nome e CPF não tem ação
     const bloco = page.locator('main p', { hasText: 'Ana' }).locator('..')
     await expect(bloco).toContainText('***.456.789-**')
     await expect(bloco.locator('a, button')).toHaveCount(0)
-    // "Tema": o valor atual à direita da linha e no mesmo centro vertical
     const tema = linhas.nth(0)
     const valor = tema.getByText('Sistema', { exact: true })
     await expect(valor).toHaveCount(1)
     const [t, v] = [await caixa(tema), await caixa(valor)]
     expect(t.x + t.width - (v.x + v.width)).toBeLessThanOrEqual(16 + 1)
     expect(Math.abs(t.y + t.height / 2 - (v.y + v.height / 2))).toBeLessThanOrEqual(2)
-    // "Sair" é a última linha e leva a cor destrutiva
     const destrutiva = await referencia(page, '--destructive')
     expect(await linhas.nth(4).evaluate((e) => window.__ux.pintar(['#fff', getComputedStyle(e).color]))).toEqual(destrutiva)
-    // um clique a 4 px da borda direita dispara a ação de cada linha
     const aEsquerda = async (i: number) => {
       const c = await caixa(linhas.nth(i))
       await linhas.nth(i).click({ position: { x: c.width - 4, y: c.height / 2 } })
@@ -526,9 +492,7 @@ test.describe('S2 Conta', () => {
   })
 })
 
-// ---------- S6: tokens neutros e tipografia ----------
 
-// Aplica o tema (classes do html) e a cor de instituição na página aberta e lê a cor de var(--token), em sRGB de 8 bits
 const lerToken = (page: Page, tema: string, marca: string | null, token: string) =>
   page.evaluate(
     ([t, m, k]) => {
@@ -550,7 +514,6 @@ const lerToken = (page: Page, tema: string, marca: string | null, token: string)
 test.describe('S6 tokens', () => {
   test.setTimeout(120_000)
 
-  // C52 (AC 39, door 2): as 14 combinações de token e tema mudam com a marca; o fundo do Preto é #000
   test('neutros mudam com a cor da instituição', async ({ page }) => {
     await instalar(page)
     await simularApi(page)
@@ -567,14 +530,12 @@ test.describe('S6 tokens', () => {
       }
     expect(combinacoes).toBe(14)
     for (const marca of [null, '#8a1538', '#1f7a3a']) expect(await lerToken(page, 'black', marca, '--background'), `Preto ${marca ?? 'sem cor'}`).toEqual([0, 0, 0])
-    // o fundo do body, no Preto, é o pixel 0, 0, 0 com as duas marcas e sem marca
     for (const marca of [null, '#8a1538', '#1f7a3a']) {
       await lerToken(page, 'black', marca, '--background')
       expect(await page.evaluate(() => window.__ux.pintar(['#fff', getComputedStyle(document.body).backgroundColor]))).toEqual([0, 0, 0])
     }
   })
 
-  // C53 (AC 39): 3 pares x 3 temas x 3 marcas = 27 medidas
   test('texto com 4,5:1 sobre os neutros tingidos', async ({ page }) => {
     await instalar(page)
     await simularApi(page)
@@ -593,13 +554,11 @@ test.describe('S6 tokens', () => {
   })
 })
 
-// ---------- Lote 2: S3 (assistente) e S4 (solicitações, fila e chamado) ----------
 
 const Longa =
   'O boleto do semestre fica no Portal do Aluno, em Financeiro, Boletos e mensalidades. Escolha o mês, confira o valor e gere a segunda via; se o valor estiver diferente do contrato, abra uma solicitação para o financeiro conferir a rematrícula do semestre anterior. '.repeat(3)
 const Titulo104 = 'Pedido de segunda via do boleto de novembro com o valor da rematrícula do semestre anterior errado'.padEnd(104, '.')
 
-// Cada pergunta do aluno recebe a resposta `texto` (a primeira abre a conversa 1)
 async function respostas(page: Page, texto: string | ((n: number) => string)) {
   let n = 0
   const resposta = () => ({ resposta: { tipo: 'resposta', texto: typeof texto === 'string' ? texto : texto(++n) } })
@@ -612,7 +571,6 @@ async function perguntar(page: Page, texto: string) {
 }
 
 test.describe('S3 conversa', () => {
-  // C22 (AC 15)
   test('Isso resolveu no fluxo sob a resposta', async ({ page }) => {
     await comoAluno(page)
     await respostas(page, (n) => `Resposta ${n}. ${Longa}`)
@@ -638,7 +596,6 @@ test.describe('S3 conversa', () => {
     expect(posicoes.filter((p) => p === 'fixed' || p === 'sticky')).toEqual([])
   })
 
-  // C24 (Screens: Transferido)
   test('Transferido num bloco único com borda', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -670,7 +627,6 @@ test.describe('S3 conversa', () => {
     expect(medidas.dentroDeBorda).toEqual([false, false, false, false])
   })
 
-  // C25 (AC 17)
   test('balão com até 68 caracteres de largura', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -705,7 +661,6 @@ test.describe('S3 conversa', () => {
     expect(d.largura).toBeLessThanOrEqual(d.limite + 1)
   })
 
-  // C26 (AC 18)
   test('compositor de 44 px e Falar com atendente na linha de cima', async ({ page }) => {
     await instalar(page)
     await simularApi(page, ['ALUNO'])
@@ -732,7 +687,6 @@ test.describe('S3 conversa', () => {
     }
   })
 
-  // C28 (AC 20)
   test('erro de envio entre o balão e o compositor', async ({ page }) => {
     await comoAluno(page)
     await page.route('**/api/conversas', (r) => r.fulfill(json({ status: 500, detail: 'Falha simulada' }, 500)))
@@ -748,7 +702,6 @@ test.describe('S3 conversa', () => {
   })
 })
 
-// Minhas solicitações com 3 itens e a Fila com o título longo de C31
 const longoTitulo = 'Preciso da segunda via do boleto de novembro, que veio com o valor da rematrícula do semestre anterior'
 const MeusTres = (titulo: string) => [
   { numero: 'ONE-1', titulo, estado: 'AGUARDANDO_ALUNO', criadoEm: '2026-11-02T12:00:00Z' },
@@ -768,7 +721,6 @@ const listasDeChamados = async (page: Page, titulo = longoTitulo) => {
 }
 
 test.describe('S4 listas', () => {
-  // C29 (AC 21)
   test('listas em linhas com divisória e sem borda de cartão', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -802,7 +754,6 @@ test.describe('S4 listas', () => {
     }
   })
 
-  // C31 (Screens: Minhas solicitações, Fila)
   test('linha de solicitação em 3 linhas', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -837,7 +788,6 @@ test.describe('S4 listas', () => {
     }
   })
 
-  // C33 (AC 23)
   test('Mais antigos primeiro acima da Fila', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
@@ -847,7 +797,6 @@ test.describe('S4 listas', () => {
     await expect(aviso).toHaveCount(1)
     const [a, primeiro] = [await caixa(aviso), await caixa(page.getByRole('main').getByRole('listitem').first())]
     expect(a.y + a.height).toBeLessThanOrEqual(primeiro.y)
-    // a categoria quebra linha em vez de cortar
     const categoria = page.getByRole('main').getByRole('listitem').first().getByText(/Financeiro > Boletos/)
     const m = await categoria.evaluate((e) => ({ corte: getComputedStyle(e).textOverflow, sobra: e.scrollWidth - e.clientWidth }))
     expect(m.corte).not.toBe('ellipsis')
@@ -855,7 +804,6 @@ test.describe('S4 listas', () => {
   })
 })
 
-// ---------- S4: detalhe do chamado ----------
 
 const Abertos = ['responder', 'nota', 'assumir', 'resolver', 'encaminhar', 'reclassificar', 'duplicado']
 const PorEstado: [string, string[], string[]][] = [
@@ -876,17 +824,13 @@ async function comoEquipe(page: Page, largura: number, estado = 'EM_ATENDIMENTO'
   await page.goto('/univag/chamados/ONE-123')
   await page.getByText('Resumo gerado por IA').waitFor()
 }
-// A barra fixa: o contêiner fixo do botão "Mais" ou da ação principal
 const barraDe = (page: Page) => page.locator('div.fixed').filter({ has: page.getByRole('button', { name: /^(Mais|Assumir|Responder)$/ }) })
-// Os botões e rótulos de um contêiner, na ordem, sem o X do Sheet
 const itensDe = (alvo: Locator) => alvo.evaluate((el) => [...el.querySelectorAll('button, label')].map((e) => e.textContent!.trim()).filter((t) => t && t !== 'Fechar'))
 
 test.describe('S4 detalhe', () => {
   test.setTimeout(180_000)
 
-  // C34 (AC 24, P4, P5)
   test('barra do detalhe com a ação principal do estado', async ({ page }) => {
-    // o cartão a 1024 px dá a ordem das ações de cada estado, e não há barra
     const doCartao: Record<string, string[]> = {}
     for (const [estado, acoes] of PorEstado) {
       await comoEquipe(page, 1024, estado, acoes)
@@ -923,7 +867,6 @@ test.describe('S4 detalhe', () => {
     }
   })
 
-  // C35 (AC 25)
   test('Responder rola até o campo e foca', async ({ page }) => {
     await comoEquipe(page, 390)
     await page.evaluate(() => window.scrollTo(0, 0))
@@ -935,7 +878,6 @@ test.describe('S4 detalhe', () => {
     expect(campo.y + campo.height).toBeLessThanOrEqual(barra.y)
   })
 
-  // C37 (AC 27)
   test('Enviar inteiro acima da barra no fim do detalhe', async ({ page }) => {
     for (const largura of [390, 1023]) {
       await comoEquipe(page, largura)
@@ -948,7 +890,6 @@ test.describe('S4 detalhe', () => {
     }
   })
 
-  // C36 (AC 26)
   test('aluno cancela por botão de texto no fim do detalhe', async ({ page }) => {
     for (const largura of [390, 1280]) {
       await page.unroute('**/api/**').catch(() => undefined)
@@ -967,7 +908,6 @@ test.describe('S4 detalhe', () => {
       await expect(cancelar).toHaveCount(1)
       await expect(page.getByRole('button', { name: /^(Ações|Mais)$/ })).toHaveCount(0)
       const fixos = await page.evaluate(() => {
-        // a navegação é a barra de abas (celular) ou a barra lateral (desktop)
         const nav = document.querySelector('nav[aria-label="Navegação"], [data-slot=sidebar-container]')
         return [...document.querySelectorAll('body *')]
           .filter((e) => getComputedStyle(e).position === 'fixed' && !(nav && (nav.contains(e) || e.contains(nav))) && e.getBoundingClientRect().height > 0)
@@ -990,11 +930,9 @@ test.describe('S4 detalhe', () => {
   })
 })
 
-// ---------- Lote 3: S5 (formulários, erros e administração), varreduras de S6 e S7 ----------
 
 const Celular = { width: 360, height: 740 }
 
-// O que cada diálogo de formulário abre e o nome da ação do rodapé
 type Dialogo = { nome: string; caminho: string; papeis?: string[]; esperar: string; abrir: (p: Page) => Promise<void>; titulo: string; acao: string }
 const Dialogos: Dialogo[] = [
   { nome: 'Artigos Novo', caminho: '/univag/artigos', esperar: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo artigo', acao: 'Salvar' },
@@ -1023,7 +961,6 @@ async function noCelular(page: Page, caminho: string, esperar: string, papeis?: 
 test.describe('S5 diálogos e administração', () => {
   test.setTimeout(240_000)
 
-  // C39 (AC 29)
   for (const d of Dialogos)
     test(`diálogos de formulário em tela inteira abaixo de 768: ${d.nome}`, async ({ page }) => {
       await noCelular(page, d.caminho, d.esperar, d.papeis)
@@ -1066,7 +1003,6 @@ test.describe('S5 diálogos e administração', () => {
     await expect.poll(async () => (await caixa(dialogo)).width).toBeLessThan(768)
   })
 
-  // C40 (AC 30)
   test('erro do CPF abaixo do campo a 360', async ({ page }) => {
     await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque')
     await page.route('**/api/admin/usuarios', (r) =>
@@ -1085,7 +1021,6 @@ test.describe('S5 diálogos e administração', () => {
     await expect(dialogo.locator('[data-slot=sheet-footer]').getByRole('button', { name: 'Salvar' })).toBeVisible()
   })
 
-  // C45 (Screens: Artigos)
   test('Indexado em ícone ao lado do título', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 1280, height: 800 })
@@ -1097,7 +1032,6 @@ test.describe('S5 diálogos e administração', () => {
     const icone = linha.getByRole('img', { name: 'Indexado' })
     await expect(titulo).toHaveCount(1)
     await expect(icone).toHaveCount(1)
-    // o título pode quebrar em linhas: o ícone segue a última
     const fim = await titulo.evaluate((e) => {
       const r = [...e.getClientRects()].at(-1)!
       return { right: r.right, meio: r.top + r.height / 2 }
@@ -1108,7 +1042,6 @@ test.describe('S5 diálogos e administração', () => {
     expect(Math.abs(i.y + i.height / 2 - fim.meio), 'centros verticais').toBeLessThanOrEqual(2)
   })
 
-  // C47 (Screens: Usuários)
   test('busca de Usuários acima da lista', async ({ page }) => {
     await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque', undefined, 390)
     const busca = page.getByLabel('Buscar por nome, CPF ou e-mail')
@@ -1121,7 +1054,6 @@ test.describe('S5 diálogos e administração', () => {
     await expect(page.getByText('Nenhum usuário combina com a busca.')).toBeVisible()
   })
 
-  // C48 (AC 35)
   test('Baixar modelo baixa o CSV com o cabeçalho', async ({ page }) => {
     await noCelular(page, '/univag/matriculas', 'Baixe o modelo', undefined, 1280)
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Baixar modelo (CSV)' }).click()])
@@ -1132,7 +1064,6 @@ test.describe('S5 diálogos e administração', () => {
     expect(Buffer.concat(partes).toString('utf8').split('\n')[0]).toBe('cpf;nome;email;matricula;curso;semestre;situacao')
   })
 
-  // C48 (AC 35): o número de cada passo é visível e legível nos 3 temas
   test('números dos passos de Matrículas visíveis nos 3 temas', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 1280, height: 900 })
@@ -1156,7 +1087,6 @@ test.describe('S5 diálogos e administração', () => {
     }
   })
 
-  // C49 (AC 36)
   const Abas: [string, string, string, string][] = [
     ['Setores', 'Coordenação de Análise e Desenvolvimento de Sistemas', 'Editar: Setores', ''],
     ['Categorias', 'Financeiro > Boletos e mensalidades', 'Editar: Categorias', ''],
@@ -1187,7 +1117,6 @@ test.describe('S5 diálogos e administração', () => {
         const c = await caixa(linhas.first())
         expect(c.height, `${aba} a ${largura}: altura da linha`).toBeGreaterThanOrEqual(47.9)
         await page.mouse.click(c.x + c.width - 4, c.y + c.height / 2)
-        // o editor de fluxo é uma página da casca (região); os outros cadastros abrem diálogo
         await expect(page.getByRole(titulo === 'Editar: Fluxos' ? 'region' : 'dialog', { name: titulo }), `${aba} a ${largura}: abre a edição`).toHaveCount(1)
         casos++
       }
@@ -1195,7 +1124,6 @@ test.describe('S5 diálogos e administração', () => {
     expect(casos).toBe(10)
   })
 
-  // C50 (AC 37)
   test('Aparência com o formulário primeiro e Ver prévia', async ({ page }) => {
     await instalar(page)
     await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
@@ -1219,7 +1147,6 @@ test.describe('S5 diálogos e administração', () => {
     expect(f.x + f.width).toBeLessThanOrEqual(p.x + 1)
   })
 
-  // C51 (AC 38)
   test('prévia escura com a mesma cor do app', async ({ page }) => {
     await instalar(page)
     await page.addInitScript(() => localStorage.setItem('one-tema', 'dark'))
@@ -1237,7 +1164,6 @@ test.describe('S5 diálogos e administração', () => {
     expect(contraste(p.fundo, p.texto)).toBeGreaterThanOrEqual(4.5)
   })
 
-  // C71 (AC 38): a cor digitada pinta o botão da prévia, medida no Chromium
   test('prévia clara pinta a cor digitada', async ({ page }) => {
     await instalar(page)
     await page.addInitScript(() => localStorage.setItem('one-tema', 'light'))
@@ -1258,12 +1184,10 @@ test.describe('S5 diálogos e administração', () => {
   })
 })
 
-// ---------- S6: varreduras de todas as telas ----------
 
 test.describe('S6 varreduras', () => {
   test.setTimeout(300_000)
 
-  // C55 (AC 41)
   test('no máximo 4 tamanhos de texto por tela', async ({ page }) => {
     await instalar(page)
     let telas = 0
@@ -1284,7 +1208,6 @@ test.describe('S6 varreduras', () => {
           return achados
         })
         const fora = Object.entries(tamanhos).filter(([px]) => !['12px', '14px', '16px'].includes(px))
-        // identidade-visual AC 2: além do único tamanho de título, 28 px só no h1 das telas de acesso (o nome da instituição) e da raiz ("One", o mesmo h1) e 40 px só no número principal de Indicadores
         const excecao = ([px, exemplo]: [string, string]) => (px === '28px' && ['Login', 'Raiz', 'Primeiro acesso', 'Criar senha'].includes(nome) && exemplo.startsWith('h1:')) || (px === '40px' && nome === 'Indicadores')
         const titulos = fora.filter((f) => !excecao(f))
         expect(titulos.length, `${nome} a ${largura}: no máximo 1 tamanho de título (${JSON.stringify(tamanhos)})`).toBeLessThanOrEqual(1)
@@ -1295,7 +1218,6 @@ test.describe('S6 varreduras', () => {
     expect(telas).toBe(2 * (Telas.length + 2))
   })
 
-  // C56 (AC 42)
   test('sem emoji nem gradiente', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -1315,7 +1237,6 @@ test.describe('S6 varreduras', () => {
     )
   })
 
-  // C57 (AC 43, door 3)
   test('cor de ação só em botão principal, item ativo, link e foco', async ({ page }) => {
     await instalar(page)
     await varrer(
@@ -1323,7 +1244,6 @@ test.describe('S6 varreduras', () => {
       async (nome) => {
         await page.setViewportSize({ width: nome === 'Conta' ? 390 : 1440, height: 900 })
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
-        // C57: o ranking só conta depois que ao menos uma barra (estrutura-visual door 4: uma div em --chart-1) tem altura
         if (nome === 'Indicadores') await page.waitForFunction(() => [...document.querySelectorAll('[data-barra]')].some((b) => b.getBoundingClientRect().height > 0))
         const [primaria] = await Promise.all([referencia(page, '--primary')])
         const indevidos = await page.evaluate((alvo) => {
@@ -1369,12 +1289,10 @@ test.describe('S6 varreduras', () => {
   })
 })
 
-// ---------- S7: acréscimos depois do lote 2 ----------
 
 test.describe('S7 acréscimos', () => {
   test.setTimeout(120_000)
 
-  // C66 (AC 44)
   test('folha de ações guarda o que foi digitado', async ({ page }) => {
     await comoEquipe(page, 390)
     await page.route('**/api/chamados/ONE-123/resolver', (r) => r.fulfill(json({ ...chamadoSimulado(), acoes: Abertos, setores: [{ id: 2, nome: 'Financeiro' }], categorias: [{ id: 3, nome: 'Boleto' }] })))
@@ -1390,14 +1308,12 @@ test.describe('S7 acréscimos', () => {
     await expect(folha().getByLabel('Resolução')).toHaveValue('Boleto reemitido')
     await expect(folha().getByLabel('Reclassificar')).toHaveValue('3')
     await expect(folha().getByLabel('Duplicado de outro pedido do mesmo aluno')).toHaveValue('ONE-9')
-    // enviada a resolução, o campo volta vazio
     await folha().getByRole('button', { name: 'Resolver', exact: true }).click()
     await expect(folha()).toHaveCount(0)
     await mais()
     await expect(folha().getByLabel('Resolução')).toHaveValue('')
   })
 
-  // C67 (AC 45)
   test('Fila com coluna Aberto em uma linha', async ({ page }) => {
     await instalar(page)
     await simularApi(page)
@@ -1423,13 +1339,11 @@ test.describe('S7 acréscimos', () => {
     for (const [i, texto] of ['aberto hoje', 'aberto ontem', 'aberto há 2 dias'].entries()) await expect(linhas.nth(i)).toContainText(texto)
   })
 
-  // C72
   test('detalhe da Fila em texto corrido no celular', async ({ page }) => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page)
     await listasDeChamados(page, Titulo104)
-    // as datas saem do relógio do próprio teste: "aberto há 2 dias" não depende do dia em que ele roda
     const antes = (dias: number) => new Date(Date.now() - dias * 86_400_000).toISOString()
     await page.route(/\/api\/chamados\?escopo=fila/, (r) =>
       r.fulfill(
@@ -1448,7 +1362,6 @@ test.describe('S7 acréscimos', () => {
     expect((await caixa(detalhe)).width, 'coluna do detalhe').toBeGreaterThanOrEqual(120)
     const m = await detalhe.evaluate((e) => {
       const s = getComputedStyle(e)
-      // cada linha renderizada acaba numa fronteira de palavra: o texto de cada Range por linha termina antes de um espaço ou no fim
       const no = e.firstChild!
       const texto = no.textContent!
       const r = document.createRange()
@@ -1467,7 +1380,6 @@ test.describe('S7 acréscimos', () => {
     expect(m.linhas).toBeGreaterThanOrEqual(1)
   })
 
-  // C73
   test('gráficos com a mesma cor calma', async ({ page }) => {
     test.setTimeout(120_000)
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -1485,7 +1397,6 @@ test.describe('S7 acréscimos', () => {
         expect(a, `${rotulo}: não é --primary`).not.toEqual(await referencia(page, '--primary'))
         const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.parentElement!))) // o fundo é o do pai: a barra div tem fundo próprio
         expect(contraste(a, fundo), `${rotulo}: contraste contra o fundo opaco mais próximo`).toBeGreaterThanOrEqual(3)
-        // croma em oklch a partir do sRGB de 8 bits
         const [r, g, bl] = a.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
         const [l, mm, ss] = [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl].map(Math.cbrt)
         const croma = Math.hypot(1.9779984951 * l - 2.428592205 * mm + 0.4505937099 * ss, 0.0259040371 * l + 0.7827717662 * mm - 0.808675766 * ss)

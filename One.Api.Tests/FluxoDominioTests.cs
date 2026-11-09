@@ -4,7 +4,6 @@ using static One.Api.Dados.Fluxos.ResolverFluxo;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento C15 e C16: a escolha do fluxo e a resolução de cada tipo de destino, sem banco e sem HTTP.
 public class FluxoDominioTests
 {
     static readonly DateTime Agora = new(2026, 11, 2, 12, 0, 0, DateTimeKind.Utc);
@@ -32,7 +31,6 @@ public class FluxoDominioTests
     static Contexto Ctx(long? coordenacao = null, long? lideranca = null) =>
         new(new Dictionary<long, Setor> { [1] = UmSetor(1, true), [2] = UmSetor(2, false), [7] = UmSetor(7, true), [9] = UmSetor(9, true) }, coordenacao, lideranca);
 
-    // C15: os oito casos de existência (com e sem versão publicada) do fluxo de semestre, do de curso e do de todos os cursos
     [Theory]
     [InlineData(false, false, false, "nenhum")]
     [InlineData(false, false, true, "todos")]
@@ -67,7 +65,6 @@ public class FluxoDominioTests
         Assert.Null(Escolher([outroSemestre, outroCurso], Curso, Semestre));
     }
 
-    // C16: os três tipos de destino contra setor ativo ou inativo, curso com ou sem coordenação, liderança disponível ou não
     [Theory]
     [InlineData(DestinosEtapa.Setor, 1L, null, null, 1L, null)]
     [InlineData(DestinosEtapa.Setor, 2L, null, null, null, SetorInativo)]
@@ -134,7 +131,6 @@ public class FluxoDominioTests
         Assert.Equal(1, fluxo.Vigente!.Numero);
     }
 
-    // C98 (door 3): o que cada tipo enxerga e se avisa o aluno vem do tipo, sem coluna nem entrada
     [Theory]
     [InlineData(DestinosEtapa.Setor, true, false)]
     [InlineData(DestinosEtapa.CoordenacaoCurso, true, false)]
@@ -144,7 +140,6 @@ public class FluxoDominioTests
         Assert.Equal(veTudo, DestinosEtapa.VeTudo(destino));
         Assert.Equal(pedeCiencia, DestinosEtapa.PedeCiencia(destino));
 
-        // sem conversa (atendimento direto) só a liderança some, e as outras resolvem como sempre
         var etapa = Etapa(destino, destino == DestinosEtapa.Setor ? 1 : null);
         var resolucao = Situacao(etapa, Ctx(coordenacao: 7, lideranca: 9), comLideranca: false);
         Assert.Equal(!pedeCiencia, resolucao.Resolvida);

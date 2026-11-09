@@ -49,7 +49,6 @@ describe('artigos', () => {
   })
   const servir = (lista: string, itens: unknown[]) => api({ 'GET /api/auth/me': () => [200, admin], [`GET /api/admin/${lista}`]: () => [200, itens], 'GET /api/admin/categorias': () => [200, categorias] })
 
-  // layout-painel C21 (AC 21)
   it('colunas de Artigos e Documentos', async () => {
     servir('artigos', [artigo(1, 'Faltas', 'ATIVO')])
     let montada = abrir('/univag/artigos')
@@ -63,7 +62,6 @@ describe('artigos', () => {
     expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Arquivo', 'Situação', ''])
   })
 
-  // layout-painel C24 (AC 24)
   it('lista vazia numa linha', async () => {
     servir('artigos', [])
     let montada = abrir('/univag/artigos')
@@ -77,7 +75,6 @@ describe('artigos', () => {
     esperaLinhaVazia('PDFs como regulamentos e calendários também alimentam o assistente.', 6)
   })
 
-  // layout-painel C25 (AC 25): por estado do artigo
   it('ações de artigo no menu', async () => {
     servir('artigos', [artigo(1, 'Em rascunho', 'RASCUNHO'), artigo(2, 'No ar', 'ATIVO'), artigo(3, 'Guardado', 'ARQUIVADO')])
     abrir('/univag/artigos')
@@ -87,7 +84,6 @@ describe('artigos', () => {
     expect(await acoesDe('Guardado')).toEqual(['Editar', 'Ativar'])
   })
 
-  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
   it('ações de linha mostram o Spinner enquanto gravam', async () => {
     let responder!: () => void
     const chamadas = api({

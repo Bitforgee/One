@@ -77,7 +77,6 @@ describe('transferência', () => {
   })
 
   it('atualiza chamado a cada 15 s', async () => {
-    // só o setInterval é falso: os findBy e o userEvent continuam no relógio real
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     const chamadas = emConversa({ 'POST /api/conversas/7/transferir': transferido, 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/assistente')

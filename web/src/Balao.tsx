@@ -10,12 +10,6 @@ const MensagemAnimada = motion.create(Message)
 type Foto = { src: string; alt: string }
 type BalaoProps = { doAluno: boolean; autor?: string; nota?: boolean; texto: string; em: string; fuso: string; foto?: Foto; comLinks?: boolean; children?: ReactNode }
 
-// Balão da conversa (Assistente e detalhe do chamado): aluno à direita em bg-primary-subtle; assistente e atendente à
-// esquerda em bg-muted; nota interna em bg-warning-subtle com o selo. O texto vai como texto puro (AD-012); o que vem
-// depois dele (aviso, fontes, anexos) entra como children. O balão novo entra subindo 8 px, só com transform; o
-// MotionConfig do App respeita o movimento reduzido.
-// Ponto de quebra depois de / ? & = # (door 4): link longo quebra entre as partes, não no meio de "financeiro".
-// Continua texto puro (AD-012): só nós de texto e <wbr>, nunca HTML vindo da mensagem.
 export function Quebravel({ texto }: { texto: string }) {
   return texto.split(/(?<=[/?&=#])/).map((parte, i) => (
     <Fragment key={i}>
@@ -25,8 +19,6 @@ export function Quebravel({ texto }: { texto: string }) {
   ))
 }
 
-// Resposta do assistente: o link que sobrou no meio do texto vira âncora curta (mesmo rótulo do botão). Só nós de texto,
-// <wbr> e <a> montados aqui, nunca HTML vindo da mensagem.
 function TextoComLinks({ texto }: { texto: string }) {
   return texto.split(PorUrl).map((parte, i) => {
     if (i % 2 === 0) return <Quebravel key={i} texto={parte} />
@@ -63,7 +55,6 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, comLinks, c
       <div className="text-end text-xs text-muted-foreground">{formatarData(em, fuso)}</div>
     </MensagemAnimada>
   )
-  // a foto do assistente (AC 41) fica à esquerda do balão
   if (!foto) return balao
   return (
     <div className="me-auto flex w-fit max-w-[90%] items-start gap-2">

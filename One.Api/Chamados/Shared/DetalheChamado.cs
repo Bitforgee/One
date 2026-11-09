@@ -69,7 +69,6 @@ public sealed record DetalheChamado(
             ? (object)new TranscricaoDaEquipe(m.Autor, m.Texto, m.CriadaEm, daEquipe.Fontes.GetValueOrDefault(m.Id), m.Anexos)
             : new TranscricaoDoAluno(m.Autor, m.Texto, m.CriadaEm))];
 
-    // O líder vê o curso e o semestre, nunca o número da matrícula (AC 60).
     static Task<DaMatricula> DaMatriculaDoChamado(OneDb db, Chamado c, bool semNumero) =>
         db.Matriculas.Where(m => m.Id == c.MatriculaId).Select(m => new DaMatricula(semNumero ? null : m.Numero, m.Curso!.Nome, c.Semestre)).SingleAsync();
 
@@ -80,7 +79,6 @@ public sealed record DetalheChamado(
         return equipe ? await ComAnexos(db, c, transcricao) : transcricao;
     }
 
-    // subir só aparece para a equipe e enquanto há uma etapa seguinte (AC 41).
     static async Task<List<string>> AcoesDoChamado(OneDb db, Chamado c, string papel, long usuarioId)
     {
         var acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId).ToList();
@@ -101,7 +99,6 @@ public sealed record DetalheChamado(
     public static string Abrangencia(string? curso, int? semestre) =>
         curso is null ? "Todos os cursos" : semestre is null ? curso : $"{curso}, {semestre}º semestre";
 
-    // Só as linhas do aluno levam `anexos` (a lista pode ser vazia); as do assistente ficam sem o campo.
     static async Task<List<LinhaDaTranscricao>> ComAnexos(OneDb db, Chamado c, List<LinhaDaTranscricao> transcricao)
     {
         var anexos = (await db.AnexosConversa.Where(x => db.MensagensConversa.Any(m => m.Id == x.MensagemConversaId && m.ConversaId == c.ConversaId)).OrderBy(x => x.Id).ToListAsync())
@@ -123,7 +120,6 @@ public sealed record DetalheChamado(
     {
         var eventos = (await db.EventosChamado.Where(e => e.ChamadoId == c.Id).OrderBy(e => e.CriadoEm).ThenBy(e => e.Id).ToListAsync())
             .Select(e => new DoEvento(e.Tipo, e.AtorId is { } a ? nomes[a] : "Sistema", e.AtorId == c.SolicitanteId, e.De, e.Para, e.Detalhe, e.CriadoEm)).ToList();
-        // A liderança recebe o resumo e o histórico, sem fontes, origem da categoria, setores nem categorias (door 7).
         if (!completa) return new DaEquipe(nomes[c.SolicitanteId], c.Resumo, null, [], eventos, null, null);
         var fonte = await Fontes.Citadas(db, transcricao.SelectMany(m => m.Citacoes).ToList());
         var fontes = transcricao.Where(m => m.Citacoes.Count > 0).ToDictionary(m => m.Id, m => m.Citacoes.Select(fonte));

@@ -1,4 +1,3 @@
-// Data e hora no fuso da instituição, no formato dd/mm/aaaa hh:mm.
 export function formatarData(iso: string, fuso: string): string {
   const partes = Object.fromEntries(
     new Intl.DateTimeFormat('pt-BR', {
@@ -16,13 +15,11 @@ export function formatarData(iso: string, fuso: string): string {
   return `${partes.day}/${partes.month}/${partes.year} ${partes.hour}:${partes.minute}`
 }
 
-// O dia do calendário de um instante no fuso, em dias desde 1970 (sem hora, para a diferença contar dias inteiros).
 const diaNoFuso = (instante: Date, fuso: string) => {
   const [ano, mes, dia] = new Intl.DateTimeFormat('en-CA', { timeZone: fuso }).format(instante).split('-').map(Number)
   return Date.UTC(ano, mes - 1, dia) / 86_400_000
 }
 
-// "aberto hoje", "aberto ontem" ou "aberto há N dias", em dias de calendário no fuso da instituição.
 export function abertoHa(iso: string, fuso: string, agora = new Date()): string {
   const n = diaNoFuso(agora, fuso) - diaNoFuso(new Date(iso), fuso)
   return n <= 0 ? 'aberto hoje' : n === 1 ? 'aberto ontem' : `aberto há ${n} dias`

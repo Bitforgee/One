@@ -7,13 +7,11 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// base-fluxos S2 (C8 a C12): reclassificar tira o chamado do fluxo da categoria antiga e o deixa no setor onde está.
 public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static Task<HttpResponseMessage> Reclassificar(HttpClient c, string numero, object? categoriaId) =>
         c.PostAsJsonAsync($"/api/chamados/{numero}/reclassificar", new { categoriaId });
 
-    // C8
     [Fact]
     public async Task Reclassificar_no_fluxo_sai_da_etapa_e_fica_no_setor()
     {
@@ -34,7 +32,6 @@ public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFacto
         Assert.Equal(("Dúvida", "Matrícula"), (evento.De, evento.Para));
     }
 
-    // C9
     [Fact]
     public async Task Reclassificar_fora_de_fluxo_so_troca_a_categoria()
     {
@@ -54,7 +51,6 @@ public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFacto
         Assert.Single(await c.Eventos(numero), e => e.Tipo == "RECLASSIFICACAO");
     }
 
-    // C10
     [Fact]
     public async Task Reclassificado_nao_tem_subir_nem_fluxo()
     {
@@ -73,7 +69,6 @@ public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFacto
         Assert.Equal(HttpStatusCode.Conflict, (await c.Subir(c.A.Cliente, numero)).StatusCode);
     }
 
-    // C11
     [Fact]
     public async Task Agendador_nao_sobe_o_reclassificado()
     {
@@ -92,7 +87,6 @@ public class ReclassificarSaiDoFluxoTests(OneFactory f) : IClassFixture<OneFacto
         Assert.Equal((c.Coordenacao.Id, 2), (subiu.SetorId, subiu.EtapaOrdem));
     }
 
-    // C12
     [Fact]
     public async Task Categoria_invalida_400_e_fluxo_intacto()
     {

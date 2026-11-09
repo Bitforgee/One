@@ -2,13 +2,11 @@ using One.Api.Administracao;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid C25: a leitura do CSV de matrículas devolve as linhas válidas e os erros por linha, sem gravar.
 public class CsvMatriculasTests
 {
     const string CpfA = "52998224725", CpfB = "11144477735";
     static readonly Dictionary<string, long> Cursos = new() { ["Direito"] = 5 };
 
-    // Uma instituição onde a matrícula 2024002 e o e-mail b@univag.br já são do CPF B.
     static (List<Linha> Validas, List<ErroCsv> Erros) Ler(params string[] linhas)
     {
         var (lidas, erro) = CsvMatriculas.Separar(string.Join("\n", [CsvMatriculas.Cabecalho, .. linhas]));
@@ -45,7 +43,6 @@ public class CsvMatriculasTests
         foreach (var (motivo, linhas, esperado) in casos)
             Assert.True(esperado.SequenceEqual(Ler(linhas).Erros), $"{motivo}: [{string.Join(" | ", Ler(linhas).Erros)}]");
 
-        // nos limites aceitos: nome de 200, matrícula de 20, semestres 1 e 12, INATIVA; CPF com pontos e traço normalizado
         var (validas, erros) = Ler(Linha(cpf: "529.982.247-25", nome: new string('n', 200), matricula: new string('1', 20), semestre: "1"),
             Linha(cpf: CpfB, email: "b@univag.br", matricula: "2024002", semestre: "12", situacao: "INATIVA"));
         Assert.Empty(erros);

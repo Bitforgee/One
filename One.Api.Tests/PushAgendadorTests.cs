@@ -40,7 +40,6 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
 
     async Task<PushSaida> Linha(long id) => Assert.Single(await f.Pushes(q => q.Where(p => p.Id == id)));
 
-    // chamado ABERTO, instituição sem nome curto nem ícone (push-com-marca)
     static string Payload(Instituicao i, string numero, string icone = "/icons/icon-192.png") =>
         $$"""{"titulo":"{{i.Nome}}","corpo":"Sua solicitação {{numero}} tem uma resposta nova.","url":"/{{i.Slug}}/chamados/{{numero}}","icone":"{{icone}}"}""";
 
@@ -82,7 +81,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         var univag = await f.Instituicao(slug: "univag", nome: "Univag");
         var c = await NovaCena(univag, "Assunto secreto do chamado de matrícula");
         await f.Db(univag.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).ExecuteUpdateAsync(s => s.SetProperty(x => x.Numero, "ONE-12")));
-        Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(c.B.A.Cliente, "ONE-12", "Texto privado da mensagem do atendente")).StatusCode); // enfileira o push (AC 10)
+        Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(c.B.A.Cliente, "ONE-12", "Texto privado da mensagem do atendente")).StatusCode);
 
         await Agendador.Executar();
 
@@ -92,7 +91,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         var titulo = await f.Db(univag.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).Select(x => x.Titulo).SingleAsync());
         foreach (var dado in new[] { c.B.Aluno.Usuario.Nome, c.B.Aluno.Usuario.Email, c.B.Aluno.Usuario.Cpf, "Texto privado da mensagem", titulo })
             Assert.DoesNotContain(dado, payload);
-        var raiz = System.Text.Json.JsonDocument.Parse(payload).RootElement; // a url leva /chamados/; o que o aluno lê é o título e o corpo
+        var raiz = System.Text.Json.JsonDocument.Parse(payload).RootElement;
         Assert.NotEqual("One", raiz.GetProperty("titulo").GetString());
         Assert.DoesNotContain("chamado", raiz.GetProperty("titulo").GetString() + raiz.GetProperty("corpo").GetString(), StringComparison.OrdinalIgnoreCase);
     }
@@ -249,7 +248,6 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public async Task Falha_e_demora_do_push_seguem_os_outros_itens()
     {
-        // falha: o 1º push lança, o 2º push, 1 e-mail e 1 conversa parada são processados
         var c1 = await NovaCena();
         var c2 = await NovaCena();
         var (a, b) = (await Fila(c1), await Fila(c2));
@@ -270,7 +268,6 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotNull(await f.Db(c1.B.Instituicao.Id, db => db.EmailsSaida.Where(e => e.Destinatario == para).Select(e => e.EnviadoEm).SingleAsync()));
         Assert.Equal("ABANDONADA", await f.Db(c1.B.Instituicao.Id, db => db.Conversas.Where(x => x.Id == conversa).Select(x => x.Desfecho).SingleAsync()));
 
-        // demora: o envio pendurado é cancelado aos 30 s do relógio, conta como falha e o resto do ciclo roda
         var (d, e2) = (await Fila(c1), await Fila(c2));
         f.Push.Comportamento = (e, ct) => e.Endpoint == c1.S.Endpoint ? Task.Delay(Timeout.Infinite, ct) : Task.CompletedTask;
         var antes = Chamadas(c1.S.Endpoint).Count;
@@ -289,7 +286,6 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var (c1, c2) = (await NovaCena(), await NovaCena());
         Assert.NotEqual(c1.B.Instituicao.Slug, c2.B.Instituicao.Slug);
-        // só a instituição 1 tem ícone (C7): cada aviso leva o da sua linha ou o padrão
         await f.Db(c1.B.Instituicao.Id, async db =>
         {
             db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 2 });
@@ -310,7 +306,6 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         var a = await NovaCena();
         var b = await f.AlunoLogado();
         var id = await Fila(a);
-        // o aluno da instituição B ativa os avisos no mesmo navegador (C6): a subscrição passa para B
         Assert.Equal(HttpStatusCode.NoContent, (await b.Cliente.PostAsJsonAsync("/api/push/subscricao", new { endpoint = a.S.Endpoint, chaves = new { p256dh = "novo-p", auth = "novo-a" } })).StatusCode);
         Assert.Equal(b.Instituicao.Id, Assert.Single(await f.Subscricoes(q => q.Where(s => s.Id == a.S.Id))).InstituicaoId);
 

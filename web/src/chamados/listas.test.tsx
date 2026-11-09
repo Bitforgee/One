@@ -45,7 +45,6 @@ describe('listas de chamados', () => {
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
   })
 
-  // layout-painel C21 (AC 21)
   it('colunas das listas de chamados', async () => {
     lista('fila', () => [200, [{ numero: 'ONE-1', titulo: 'boleto', categoria: 'Boleto', estado: 'ABERTO', responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 1 }]])
     const montada = abrir('/univag/fila')
@@ -64,7 +63,6 @@ describe('listas de chamados', () => {
     expect(within(item).getAllByRole('cell')[1]).toHaveTextContent(/^histórico$/)
   })
 
-  // layout-painel C24 (AC 24)
   it('lista vazia numa linha', async () => {
     lista('fila', () => [200, []])
     const montada = abrir('/univag/fila')
@@ -95,7 +93,6 @@ describe('listas de chamados', () => {
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
   })
 
-  // C56 (AC 19, door 7): sem rede, a consulta não pausa; o erro vira o alert, numa chamada só
   it('sem rede a lista mostra o erro', async () => {
     const fetch = vi.fn(async (url: string) => {
       if (url === '/api/auth/me') return new Response(JSON.stringify(atendente), { headers: { 'Content-Type': 'application/json' } })

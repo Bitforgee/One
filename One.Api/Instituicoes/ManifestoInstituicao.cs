@@ -24,7 +24,6 @@ public sealed record ManifestoInstituicao(string Slug) : IRequest<IResult>
     public static void Mapear(RouteGroupBuilder g) =>
         g.MapGet("/instituicoes/{slug}/manifest.webmanifest", (string slug, IMediator m) => m.Send(new ManifestoInstituicao(slug))).AllowAnonymous();
 
-    // as mesmas iniciais da casca do web: a primeira letra da primeira e da última palavra
     public static string Iniciais(string nome)
     {
         var partes = nome.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);

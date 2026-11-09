@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, escolher, me, type Rota } from '../test/util'
 
-// Linhas 10 e 11 de ## Screens (Artigos e Documentos); título, categoria, números e datas vêm do fixture, como a tela os formata.
 const Artigos = [
   'Artigos', 'Novo', 'Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.',
   'Indexando', 'Indexado', 'Falhou', 'Rascunho', 'Ativo', 'Arquivado', 'versão', 'válido de', 'válido até', 'Editar', 'Ativar', 'Arquivar',
@@ -24,7 +23,6 @@ const Documentos = [
   'Arquivar o documento?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
   'Documento enviado.', 'Documento arquivado.',
 ]
-// o calendário do ptBR: título do mês, dias da semana e números dos dias (*(novo, do ptBR)*)
 const Calendario = ['novembro 2026', 'dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab', ...Array.from({ length: 31 }, (_, i) => String(i + 1))]
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -55,14 +53,12 @@ describe('textos', () => {
   it('textos Artigos', async () => {
     const t = estados(Artigos)
 
-    // vazia
     servir('artigos', [])
     let montada = abrir('/univag/artigos')
     await screen.findByText('Os artigos são a base das respostas do assistente.')
     t.conferir(tela())
     montada.unmount()
 
-    // lista com os 3 estados e os 3 selos de indexação
     servir(
       'artigos',
       [
@@ -76,7 +72,6 @@ describe('textos', () => {
     await screen.findByText('Estágio obrigatório')
     t.conferir(tela(), ['Estágio', '2', '01/11/2026', '31/12/2026', 'Estágio obrigatório', 'Faltas', 'Prova final'])
 
-    // "Editar artigo" com o calendário aberto; a resposta e as perguntas vêm do fixture
     await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Faltas' }))
     t.conferir(await screen.findByRole('menu'))
     await userEvent.keyboard('{Escape}')
@@ -94,12 +89,10 @@ describe('textos', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo salvo.'))
     t.conferir(avisos())
 
-    // "Novo artigo"
     await userEvent.click(within(tela()).getByRole('button', { name: /Novo/ }))
     t.conferir(await screen.findByRole('dialog'), ['Estágio'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
-    // ativar e arquivar: os outros 2 toasts; e "Arquivar o artigo?"
     await escolher('Faltas', 'Ativar')
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo ativado.'))
     await escolher('Estágio obrigatório', 'Arquivar')
@@ -123,14 +116,12 @@ describe('textos', () => {
     await screen.findByText('Regulamento')
     t.conferir(tela(), ['Estágio', '1', '3', 'Regulamento', 'Regulamento.pdf', 'Edital', 'Edital.pdf'])
 
-    // "Nova versão"
     await userEvent.click(within(tela()).getByRole('button', { name: 'Ações de Regulamento' }))
     t.conferir(await screen.findByRole('menu'))
     await userEvent.click(screen.getByRole('menuitem', { name: 'Nova versão' }))
     t.conferir(await screen.findByRole('dialog'), ['Regulamento'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
-    // "Enviar PDF" e o toast
     await userEvent.click(within(tela()).getByRole('button', { name: /Enviar PDF/ }))
     const dialogo = await screen.findByRole('dialog')
     t.conferir(dialogo, ['Estágio'])
@@ -142,7 +133,6 @@ describe('textos', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento enviado.'))
     t.conferir(avisos())
 
-    // arquivar
     await escolher('Regulamento', 'Arquivar')
     t.conferir(await screen.findByRole('dialog'), ['Regulamento'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Arquivar' }))

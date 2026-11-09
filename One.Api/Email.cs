@@ -14,7 +14,6 @@ public partial class Email(IConfiguration cfg, Armazenamento armazenamento, ILog
 
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")] public static partial Regex Valido();
 
-    // door 6: o texto é o Corpo de sempre; o HTML leva a cor da instituição e o logo inline, montados no envio
     public async Task Enviar(OneDb db, Instituicao instituicao, string para, string assunto, string corpo)
     {
         var logo = await Logo(db, instituicao.Id);
@@ -34,10 +33,8 @@ public partial class Email(IConfiguration cfg, Armazenamento armazenamento, ILog
         await smtp.DisconnectAsync(true);
     }
 
-    // Sem logo, ou com o MinIO fora, o e-mail sai só com o nome (AC 50): o envio não espera o armazenamento além do prazo.
     async Task<(byte[] Bytes, string Tipo)?> Logo(OneDb db, long instituicaoId)
     {
-        // o filtro global já restringe à instituição atual, que os dois chamadores definem antes de enviar
         var imagem = await db.ImagensInstituicao.Where(x => x.InstituicaoId == instituicaoId && x.Tipo == "logo" && x.RemovidaEm == null).Select(x => new LogoGuardado(x.Conteudo, x.Chave)).FirstOrDefaultAsync();
         if (imagem is null) return null;
         using var prazo = new CancellationTokenSource(PrazoDoLogo);

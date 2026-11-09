@@ -13,7 +13,6 @@ public static class ChamadoRotas
         if (c is null) return (null, null);
         if (c.SolicitanteId == u.Id) return (c, PermissoesChamado.Aluno);
         if (!u.Tem(Papeis.Atendente) || !await db.AtendenteSetores.AnyAsync(a => a.UsuarioId == u.Id && a.SetorId == c.SetorId)) return (null, null);
-        // O papel LIDER vem do setor do chamado ser uma liderança, nunca de um dado do usuário (door 7).
         var lideranca = await db.Setores.AnyAsync(s => s.Id == c.SetorId && s.CursoId != null);
         return (c, lideranca ? PermissoesChamado.Lider : PermissoesChamado.Atendente);
     }

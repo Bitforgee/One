@@ -16,10 +16,8 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Spinner } from '../ui/spinner'
 
-// Só o que a tela já exigia (campo preenchido); o resto, quem decide é a API (AC 39, AC 40).
 const obrigatorio = z.string().min(1, 'Preencha este campo.')
 
-// Área de acesso: uma coluna de até 384 px no centro da janela (estados de carga e erro).
 export function Centro({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -32,10 +30,8 @@ const TituloBase = 'Atendimento ao estudante'
 const Frase = 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.'
 const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 
-// O nome da instituição (ou "One" na raiz) em serifa de 28 px.
 const H1 = ({ children }: { children: ReactNode }) => <h1 className="font-heading text-[28px] leading-tight font-semibold tracking-tight">{children}</h1>
 
-// A raiz sem instituição: "One", a frase e o que fazer (AC 20).
 export function Raiz() {
   return (
     <Centro>
@@ -48,7 +44,6 @@ export function Raiz() {
   )
 }
 
-// O logo (até 48 px de altura) ou, sem ele, as iniciais da instituição num quadrado bg-primary (AC 7).
 function Identidade({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   const logo = slug && d?.imagens.logo
   return (
@@ -58,7 +53,6 @@ function Identidade({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   )
 }
 
-// O logo e o nome da instituição em serifa.
 function Nome({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   return (
     <div className="flex flex-col gap-1">
@@ -68,7 +62,6 @@ function Nome({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   )
 }
 
-// O título e a frase do login da Aparência, ou os de base, em texto secundário (AC 7).
 function Textos({ d }: { d?: InstituicaoPublica }) {
   return (
     <div className="flex flex-col gap-1 text-muted-foreground">
@@ -78,7 +71,6 @@ function Textos({ d }: { d?: InstituicaoPublica }) {
   )
 }
 
-// Os itens do login, abaixo do formulário, com marcador discreto.
 function ListaDeItens({ d }: { d?: InstituicaoPublica }) {
   return (
     <ul className="m-0 flex list-disc flex-col gap-1 ps-5 text-sm text-muted-foreground">
@@ -89,15 +81,12 @@ function ListaDeItens({ d }: { d?: InstituicaoPublica }) {
   )
 }
 
-// A foto do login, decorativa e sem nada sobre ela: a faixa do topo (abaixo de 1024 px) ou a coluna direita inteira.
 function Foto({ foto, className, lateral }: { foto: string | null; className: string; lateral?: boolean }) {
   if (!foto) return null
   const img = <img src={foto} alt="" className={className} />
   return lateral ? <div className="relative hidden lg:block">{img}</div> : img
 }
 
-// A coluna do acesso (AC 5): logo, nome em serifa, título e frase do login, tela, formulário (no Login, com o apoio no começo) e itens.
-// Com a foto do login: a faixa de 160 px no topo abaixo de 1024 px, e a coluna direita inteira a partir dela (AC 6).
 function Entrada({ tela, children }: { tela?: string; children: ReactNode }) {
   const { slug } = useParams()
   const { data: d } = useInstituicao(slug)
@@ -121,7 +110,6 @@ function Entrada({ tela, children }: { tela?: string; children: ReactNode }) {
 
 type Props<T extends FieldValues> = { f: UseFormReturn<T>; nome: Path<T>; rotulo: string; dica?: string } & ComponentProps<'input'>
 
-// Campo de senha com o botão de mostrar/ocultar (quem digita no celular erra menos vendo o que escreve).
 function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }: Props<T>) {
   const [visivel, setVisivel] = useState(false)
   const senha = type === 'password'
@@ -157,7 +145,6 @@ function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }:
   )
 }
 
-// Formulário de um envio só: Zod pelo RHF, a mutação em volta de api() e o erro da API num Alert.
 function Formulario<T extends FieldValues>({ schema, enviar, botao, className, children }: {
   schema: z.ZodType<T>
   enviar: (v: T) => Promise<unknown>

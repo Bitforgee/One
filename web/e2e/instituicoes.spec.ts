@@ -1,7 +1,6 @@
 import { expect, test, type Locator } from '@playwright/test'
 import { simularApi } from './simulada'
 
-// Arranjo de ## Screens (Instituições) medido com boundingBox(), tolerância de 1 px.
 test.use({ serviceWorkers: 'block' })
 
 const caixa = async (l: Locator) => (await l.boundingBox())!
@@ -15,7 +14,6 @@ test.describe('arranjo Instituições', () => {
 
     await expect(page.getByRole('heading', { name: 'Instituições' })).toHaveCount(1)
     await expect(page.getByRole('heading', { name: 'Instituições', level: 1 })).toHaveCount(1)
-    // a área de conteúdo é o contêiner da casca menos o recuo (24 px em cima, à direita e embaixo)
     const area = await caixa(page.locator('[class~="@container/main"]'))
     const botao = await caixa(page.getByRole('button', { name: 'Nova instituição' }))
     const tabela = await caixa(page.getByRole('table'))
@@ -46,7 +44,6 @@ test.describe('arranjo Instituições', () => {
     await page.getByText('Faculdade Antiga').waitFor()
 
     const cartao = page.getByRole('listitem').first()
-    // o nome é o texto solto da célula: mede o Range do 1º nó de texto
     const nome = await cartao.evaluate((el) => {
       const r = document.createRange()
       r.selectNodeContents([...el.querySelectorAll('*')].find((c) => c.firstChild?.nodeType === 3 && c.firstChild.textContent?.includes('Várzea'))!.firstChild!)

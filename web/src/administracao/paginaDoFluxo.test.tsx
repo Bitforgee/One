@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 
-// editor-fluxo-integrado: o editor de fluxo é uma página da casca em /:slug/cadastros/fluxos/:id
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const etapa = (destino: string, setorId: number | null = null, prazoHoras: number | null = null) => ({ destino, setorId, prazoHoras, x: null, y: null })
 const listas: Record<string, unknown[]> = {
@@ -24,7 +23,6 @@ const listas: Record<string, unknown[]> = {
   'respostas-prontas': [],
 }
 
-// Prepara a API simulada; cada teste abre a tela com abrir(), depois disso.
 function montar(rotas: Record<string, Rota> = {}, quem = admin, sobre: Record<string, unknown[]> = {}) {
   const leituras = Object.fromEntries(Object.entries({ ...listas, ...sobre }).map(([k, v]) => [`GET /api/admin/${k}`, (() => [200, v]) as Rota]))
   const chamadas = api({ 'GET /api/auth/me': () => [200, quem], 'GET /api/chamados?escopo=fila': () => [200, []], ...leituras, ...rotas })
@@ -38,7 +36,6 @@ const trilha = () => within(screen.getByRole('navigation', { name: 'Trilha' }))
 const comRascunho = [{ ...(listas.fluxos[0] as object), rascunho: { numero: 2, etapas: [etapa('COORDENACAO_CURSO')] } }]
 
 describe('editor de fluxo na casca', () => {
-  // C1
   it('abre na casca sem diálogo', async () => {
     montar()
     abrir('/univag/cadastros')
@@ -52,7 +49,6 @@ describe('editor de fluxo na casca', () => {
     expect(document.querySelector('[data-sidebar=sidebar]')).not.toBeNull()
   })
 
-  // C2
   it('trilha do editor', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -64,7 +60,6 @@ describe('editor de fluxo na casca', () => {
     expect(atual).toHaveAttribute('aria-current', 'page')
   })
 
-  // C3
   it('abre direto pelo endereço', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -74,7 +69,6 @@ describe('editor de fluxo na casca', () => {
     expect(e.queryByLabelText('Destino da etapa 3')).not.toBeInTheDocument()
   })
 
-  // C4
   it('fluxo inexistente', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/999')
@@ -83,7 +77,6 @@ describe('editor de fluxo na casca', () => {
     expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()
   })
 
-  // C6
   it('menu ativo e título', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -93,7 +86,6 @@ describe('editor de fluxo na casca', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cadastros')
   })
 
-  // C7 (Publicar e Descartar também em fluxos.test.tsx)
   it('avisos ao voltar à lista', async () => {
     const chamadas = montar({ 'POST /api/admin/fluxos/6/publicar': () => [201, {}], 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
     abrir('/univag/cadastros/fluxos/6')
@@ -105,7 +97,6 @@ describe('editor de fluxo na casca', () => {
     expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/fluxos/6/publicar', {}]])
   })
 
-  // C7 (Descartar): aviso e destino
   it('avisos ao descartar', async () => {
     const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
     abrir('/univag/cadastros/fluxos/6')
@@ -117,7 +108,6 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
     expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
   })
-  // C8
   it('salvar fica no editor', async () => {
     montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
     abrir('/univag/cadastros/fluxos/7')
@@ -131,7 +121,6 @@ describe('editor de fluxo na casca', () => {
     expect(e.getByText('Rascunho salvo')).toBeInTheDocument()
   })
 
-  // C9
   it('sair sem salvar', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -153,7 +142,6 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
   })
 
-  // C10
   it('sair sem alterações', async () => {
     montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
     abrir('/univag/cadastros/fluxos/7')
@@ -163,7 +151,6 @@ describe('editor de fluxo na casca', () => {
     await semEditor()
     expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
 
-    // depois de salvar o rascunho também não pergunta
     await userEvent.click(await within(screen.getByRole('tabpanel', { name: 'Fluxos' })).findByRole('button', { name: 'Boletos' }))
     e = await editor()
     await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
@@ -175,7 +162,6 @@ describe('editor de fluxo na casca', () => {
     await semEditor()
   })
 
-  // C11
   it('fechar a aba com alterações', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -190,7 +176,6 @@ describe('editor de fluxo na casca', () => {
     expect(fechar()).toBe(true)
   })
 
-  // C22
   it('barra lateral com alterações', async () => {
     montar({ 'GET /api/admin/usuarios': () => [200, []] })
     abrir('/univag/cadastros/fluxos/7')
@@ -210,7 +195,6 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Usuários' })).toBeInTheDocument()
   })
 
-  // C22 (Descartar de propósito não pergunta, mesmo com alterações não salvas)
   it('descartar depois de editar sai sem perguntar', async () => {
     const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
     abrir('/univag/cadastros/fluxos/6')
@@ -224,7 +208,6 @@ describe('editor de fluxo na casca', () => {
     expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()
     expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
   })
-  // C24
   it('Ctrl+S salva o rascunho', async () => {
     let solta: () => void = () => undefined
     const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => new Promise((r) => (solta = () => r([200, { numero: 3, etapas: [] }]))) })
@@ -235,14 +218,12 @@ describe('editor de fluxo na casca', () => {
 
     expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false) // false = o navegador não salva a página
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48), etapa('COORDENACAO_CURSO')] }]]))
-    // durante a gravação, outro Ctrl+S (⌘+S) não envia nada
     expect(fireEvent.keyDown(document.body, { key: 'S', metaKey: true })).toBe(false)
     expect(gravadas(chamadas)).toHaveLength(1)
     solta()
     expect(await screen.findByText('Rascunho salvo.')).toBeInTheDocument()
   })
 
-  // C24 (só Ctrl/⌘ + S: as outras teclas seguem com o navegador)
   it('outras teclas não salvam', async () => {
     const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
     abrir('/univag/cadastros/fluxos/7')
@@ -253,7 +234,6 @@ describe('editor de fluxo na casca', () => {
     await new Promise((r) => setTimeout(r, 50))
     expect(gravadas(chamadas)).toEqual([])
   })
-  // C25
   it('roteador de dados', () => {
     const principal = readFileSync('src/main.tsx', 'utf8')
     const util = readFileSync('src/test/util.tsx', 'utf8')
@@ -263,7 +243,6 @@ describe('editor de fluxo na casca', () => {
     expect(util).toMatch(/createMemoryRouter\(/)
     expect(util).not.toMatch(/<MemoryRouter/)
   })
-  // C14
   it('barra do editor', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/7')
@@ -276,7 +255,6 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByRole('menuitem', { name: 'Descartar rascunho' })).toBeInTheDocument()
   })
 
-  // C18
   it('endereço do editor', async () => {
     montar()
     abrir('/univag/cadastros/fluxos/abc')
@@ -287,7 +265,6 @@ describe('editor de fluxo na casca', () => {
     expect(app.match(/path="cadastros\/fluxos\/:id"/g)).toHaveLength(1)
   })
 
-  // C20
   it('sem o papel de administrador', async () => {
     montar({}, me({ papeis: ['ATENDENTE'], matriculas: [] }))
     abrir('/univag/cadastros/fluxos/7')

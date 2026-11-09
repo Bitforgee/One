@@ -6,7 +6,6 @@ using Lib.Net.Http.WebPush;
 
 namespace One.Api.Tests.Infra;
 
-// web-push: o enviador simulado grava o que sairia para o serviço de push e falha sob comando.
 public record EnvioPush(string Endpoint, string P256dh, string Auth, string Payload);
 
 public class EnviadorFalso : IEnviadorPush
@@ -38,14 +37,12 @@ public static class PushSemente
             return s;
         });
 
-    // lê sem o filtro de instituição, para conferir o que a API gravou em qualquer uma
     public static Task<List<SubscricaoPush>> Subscricoes(this OneFactory f, Func<IQueryable<SubscricaoPush>, IQueryable<SubscricaoPush>>? filtro = null) =>
         f.Db(null, db => (filtro?.Invoke(db.SubscricoesPush.IgnoreQueryFilters()) ?? db.SubscricoesPush.IgnoreQueryFilters()).OrderBy(s => s.Id).ToListAsync());
 
     public static Task<List<PushSaida>> Pushes(this OneFactory f, Func<IQueryable<PushSaida>, IQueryable<PushSaida>>? filtro = null) =>
         f.Db(null, db => (filtro?.Invoke(db.PushesSaida.IgnoreQueryFilters()) ?? db.PushesSaida.IgnoreQueryFilters()).OrderBy(p => p.Id).ToListAsync());
 
-    // outra instância do host (outra configuração) tem outras chaves de cookie: o aluno entra de novo nela
     public static Task<HttpClient> EntrarEm(this WebApplicationFactory<Program> fx, Aluno a) => fx.EntrarEm(a.Instituicao, a.Usuario);
 
     public static async Task<HttpClient> EntrarEm(this WebApplicationFactory<Program> fx, Instituicao i, Usuario u)

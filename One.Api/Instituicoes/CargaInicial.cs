@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Instituicoes;
 
-// A carga inicial que o comando e a rota da plataforma dividem; o chamador já trocou db.InstituicaoAtual.
 public static class CargaInicial
 {
     public static async Task<Existentes> Existentes(OneDb db) =>

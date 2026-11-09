@@ -8,13 +8,10 @@ import { formatarData } from '../datas'
 import { estados } from '../test/textos'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
-// Regra dos textos (checks.md) nas telas 7, 8 e 9 de ## Screens, com os {campos} preenchidos pelo fixture.
-// "Carregando", "Resposta pronta", os ícones "Documento"/"Artigo" e o placeholder "ONE-123" não são texto visível.
 const data = (iso: string) => formatarData(iso, 'America/Cuiaba')
 const Estados = ['Aberto', 'Em atendimento', 'Aguardando aluno', 'Resolvido', 'Fechado']
 const tela = () => screen.getByRole('main')
 
-// Linha 9 (detalhe do chamado), com o fixture de test/util e os desta suíte
 const Detalhe = [
   'ONE-1',
   'preciso do boleto',
@@ -66,7 +63,6 @@ const Todas = ['responder', 'nota', 'assumir', 'confirmar', 'encaminhar', 'cance
 const fonte = (tipo: 'ARTIGO' | 'DOCUMENTO', titulo: string) => ({
   tipo, versaoArtigoId: tipo === 'ARTIGO' ? 7 : null, versaoDocumentoId: tipo === 'DOCUMENTO' ? 42 : null, titulo, numero: 2, trechos: ['mínima de 300 horas'], atualizado: true,
 })
-// Equipe: resumo, fontes de documento e de artigo atualizadas, nota interna com anexo, histórico e todas as ações
 const daEquipe = chamado({
   solicitante: 'Ana',
   resumo: 'Aluna pede o boleto.',
@@ -97,39 +93,33 @@ describe('textos', () => {
   it('textos detalhe do chamado', async () => {
     const t = estados(Detalhe)
 
-    // carregando: só o status, sem texto visível
     let montada = detalhe(() => new Promise(() => {}))
     await screen.findByRole('navigation')
     expect(await screen.findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
     t.conferir(tela())
     montada.unmount()
 
-    // erro: o detail da API
     montada = detalhe(() => [404, { status: 404, detail: 'Chamado não encontrado.' }])
     await screen.findByRole('alert')
     t.conferir(tela(), ['Chamado não encontrado.'])
     montada.unmount()
 
-    // sem respostas, como o aluno vê
     montada = detalhe(chamado({ acoes: [] }), me())
     await screen.findByText('Nenhuma resposta ainda.')
     t.conferir(tela(), ['Em atendimento', 'preciso do boleto', 'O boleto fica no portal.', data('2026-11-02T12:00:00Z')])
     montada.unmount()
 
-    // aluno com o chamado resolvido
     montada = detalhe(chamado({ estado: 'RESOLVIDO', acoes: ['responder', 'rejeitar', 'cancelar'] }), me())
     await screen.findByLabelText('Responder (reabre a solicitação)')
     t.conferir(tela(), ['Resolvido', 'preciso do boleto', 'O boleto fica no portal.', data('2026-11-02T12:00:00Z')])
     montada.unmount()
 
-    // equipe com todas as ações, as fontes atualizadas, a nota interna com anexo e as prontas
     montada = detalhe(daEquipe, undefined, { 'GET /api/respostas-prontas?setorId=5': () => [200, [{ id: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]] })
     await screen.findByLabelText('Resposta pronta')
     await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
     expect(screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')).toHaveAttribute('placeholder', 'ONE-123')
     t.conferir(tela(), [...ValoresDaEquipe, 'Boleto pronto'])
 
-    // diálogos de confirmação
     await userEvent.click(screen.getByRole('button', { name: 'Encaminhar' }))
     t.conferir(await screen.findByRole('dialog'), ['Secretaria'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Voltar' }))
@@ -140,13 +130,11 @@ describe('textos', () => {
     t.todos()
   }, 30_000)
 
-  // Linhas 7 e 8: lista de chamados nos estados carregando, vazia, com itens e erro
   afterEach(() => {
     vi.useRealTimers()
   })
 
   async function lista(caminho: string, escopo: string, literais: string[], itens: unknown[], valores: string[]) {
-    // o relógio fixo faz "criadoEm" de 2/11 valer "aberto há 3 dias"
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-11-05T15:00:00Z'))
     const t = estados(literais)
@@ -188,7 +176,6 @@ describe('textos', () => {
     await lista('/univag/solicitacoes', 'meus', ['Minhas solicitações', 'Número', 'Título', 'Estado', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente', 'aberto há 3 dias', 'A equipe vai responder', 'Responda para continuar', 'Resolvida', 'Encerrada', ...Estados], itens, [...Numeros, '1', '2', '3', '4', '5'])
   })
 
-  // fluxos-atendimento C102: cada tipo de evento do glossário (os que o banco grava) tem frase própria, nunca a saída crua
   it('todo tipo de evento tem frase', () => {
     const glossario = readFileSync(path.resolve(process.cwd(), '../.specs/GLOSSARIO.md'), 'utf8')
     const tipos = [...glossario.matchAll(/^\| `([A-Z_]+)` \| tipo de evento \|/gm)].map((m) => m[1])

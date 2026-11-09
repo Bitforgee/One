@@ -6,8 +6,6 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests.Infra;
 
-// Uma instituição com o curso ADS (coordenação própria), a liderança do 3º semestre e o fluxo "Liderança do semestre → Coordenação do curso",
-// mais um aluno de ADS 3º semestre, um líder e um atendente da coordenação.
 public record Turma(OneFactory F, Instituicao I, Curso Curso, Setor Coordenacao, Setor? Lideranca, Categoria Duvida, Aluno Aluno, Atendente? Lider, Atendente Coord)
 {
     public const int Semestre = 3;
@@ -31,7 +29,6 @@ public record Turma(OneFactory F, Instituicao I, Curso Curso, Setor Coordenacao,
 
     public HttpClient ClienteAluno => Aluno.Cliente;
 
-    // O aluno conversa com o assistente; devolve o id da conversa, ainda aberta.
     public async Task<long> Conversa(Aluno? aluno = null, Categoria? categoria = null)
     {
         F.Llm.Devolver(new { tipo = "pergunta", texto = "Pode detalhar?", categoriaId = (categoria ?? Duvida).Id, resumo = "Dúvida sobre a nota da prova." });
@@ -50,7 +47,6 @@ public record Turma(OneFactory F, Instituicao I, Curso Curso, Setor Coordenacao,
         return (await r.Json()).GetProperty("numero").GetString()!;
     }
 
-    // Um chamado aberto na liderança: o fluxo decide, o aluno não manda nada.
     public Task<string> NaLideranca() => Transferir();
 
     public async Task<JsonElement> Destino(long conversa, Aluno? aluno = null, long? matriculaId = null)

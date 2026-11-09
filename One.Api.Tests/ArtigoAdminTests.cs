@@ -99,7 +99,6 @@ public class ArtigoAdminTests(OneFactory f) : IClassFixture<OneFactory>
 
     static bool CatalogoTem(OneFactory f, string titulo) => f.Llm.Corpos[^1].Contains(titulo);
 
-    // RAG: o artigo ativado só entra na busca depois que o agendador gera o embedding do trecho
     Task Indexar() => f.Services.GetRequiredService<Agendador>().Executar();
 
     [Fact]

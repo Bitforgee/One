@@ -6,7 +6,6 @@ import html from '../index.html?raw'
 import { contraste } from './aparencia'
 import { abrir, api, instituicao, me, type Rota } from './test/util'
 
-// aparencia-instituicao S4, S5 (menu), S6 e S8 do lado do web/. As cores entram em pedaços: interface.test.ts proíbe cor literal em src/.
 const hex = (digitos: string) => '#' + digitos
 const Cor = hex('8a1538')
 const css = readFileSync('src/index.css', 'utf8') // cwd = web/
@@ -24,7 +23,6 @@ const comMarca = instituicao({
 const publica = (inst: object): Record<string, Rota> => ({ 'GET /api/instituicoes/univag': () => [200, inst] })
 const comSessao = (inst: object, papeis = ['ALUNO']) => api({ ...publica(inst), 'GET /api/auth/me': () => [200, me({ papeis })] })
 
-// o index.html do build traz o <head> da marca padrão; o manifesto vem do vite-plugin-pwa, e aqui entra à mão
 beforeEach(() => {
   document.head.innerHTML = [...base.head.children].map((e) => e.outerHTML).join('') + '<link rel="manifest" href="/manifest.webmanifest">'
   document.title = base.title
@@ -36,7 +34,6 @@ afterEach(() => {
 })
 
 describe('marca da instituição', () => {
-  // aparencia-enxuta C15 (AC 15)
   it('título do app no iPhone', async () => {
     const titulo = () => noHead('meta[name="apple-mobile-web-app-title"]', 'content')
     comSessao(comMarca)
@@ -64,16 +61,13 @@ describe('marca da instituição', () => {
     await waitFor(() => expect(titulo()).toBeUndefined())
   })
 
-  // C27 (AC 27, door 8)
   it('contraste calcula a razão WCAG', () => {
-    // C27 diz 7,47 para este azul, mas a regra do servidor (ContrasteDaCor.cs, WCAG 2.x) dá 7,65: ver o ## Handoff
     expect(contraste(hex('224fa7')).toFixed(2)).toBe('7.65')
     expect(contraste(hex('767676')).toFixed(2)).toBe('4.54')
     expect(contraste(hex('ffd700')).toFixed(2)).toBe('1.40')
     expect(contraste(hex('777777')).toFixed(2)).toBe('4.48')
   })
 
-  // C34 (AC 31)
   it('marca no html só com cor', async () => {
     comSessao(comMarca)
     const { unmount } = abrir('/univag')
@@ -87,11 +81,9 @@ describe('marca da instituição', () => {
     expect(document.documentElement.getAttribute('style') ?? '').not.toContain('--marca')
   })
 
-  // C34 (AC 31)
   it('tokens derivam de marca nos três temas', () => {
     const bloco = (seletor: string) => css.slice(css.indexOf(`${seletor} {`)).split('}')[0]
     const declaracao = (corpo: string, token: string) => corpo.match(new RegExp(`\\s${token}:\\s*([^;]+);`))?.[1].trim()
-    // o token vira var(--X, <valor de base>); X é --marca ou um derivado dela, definido com var(--marca)
     const deriva = (corpo: string, token: string) => {
       const [, auxiliar] = declaracao(corpo, token)!.match(/^var\((--marca[\w-]*),/)!
       return auxiliar === '--marca' ? 'var(--marca)' : declaracao(css, auxiliar)!
@@ -106,13 +98,11 @@ describe('marca da instituição', () => {
         expect(declaracao(bloco(seletor), token), `${seletor} ${token}`).toMatch(/^var\(--marca[\w-]*, .+\)$/)
         expect(deriva(bloco(seletor), token), `${seletor} ${token}`).toContain('var(--marca)')
       }
-    // Escuro e Preto (door 8): 55% da marca com branco
     expect(declaracao(css, '--marca-clara')).toBe('color-mix(in oklch, var(--marca) 55%, white)')
     expect(declaracao(bloco('.dark'), '--primary')).toMatch(/^var\(--marca-clara, /)
     expect(declaracao(bloco('.dark'), '--primary-foreground')).toBe('ok' + 'lch(0.17 0 0)')
   })
 
-  // C35 (AC 32)
   it('logo no login e na barra', async () => {
     comSessao(comMarca)
     let montada = abrir('/univag')
@@ -133,7 +123,6 @@ describe('marca da instituição', () => {
     expect(within(barra).getByRole('img', { name: 'Univag' })).toHaveAttribute('src', '/api/instituicoes/univag/imagens/logo?v=3')
     montada.unmount()
 
-    // sem logo: as iniciais, e não "One"
     comSessao(instituicao())
     abrir('/univag')
     await screen.findByLabelText('CPF')
@@ -142,7 +131,6 @@ describe('marca da instituição', () => {
     expect(document.querySelector('span.bg-primary')).toHaveTextContent('U')
   })
 
-  // C36 (AC 33)
   it('ícone na aba, na barra recolhida e no topo', async () => {
     const icone = '/api/instituicoes/univag/imagens/icone?v=2'
     comSessao(comMarca)
@@ -164,7 +152,6 @@ describe('marca da instituição', () => {
     expect(document.querySelector('[data-sidebar=sidebar] span.bg-primary')).toHaveTextContent('U')
   })
 
-  // C37 (AC 34)
   it('título e theme-color da instituição', async () => {
     comSessao(comMarca)
     let montada = abrir('/univag')
@@ -184,7 +171,6 @@ describe('marca da instituição', () => {
     await waitFor(() => expect(document.title).toBe('Centro Universitário de Várzea Grande'))
   })
 
-  // C56 (AC 53)
   it('manifesto da instituição no link', async () => {
     api({})
     let montada = abrir('/univag')
@@ -197,7 +183,6 @@ describe('marca da instituição', () => {
     montada.unmount()
   })
 
-  // C39 (AC 36)
   it('textos do login da instituição ou os de base', async () => {
     comSessao(comMarca)
     let montada = abrir('/univag')
@@ -216,7 +201,6 @@ describe('marca da instituição', () => {
       expect(screen.getByText(item)).toBeInTheDocument()
   })
 
-  // C38 (AC 35): o arranjo é do Playwright; aqui, que a imagem vai no painel e na faixa, decorativa
   it('imagem do login no painel e na faixa', async () => {
     comSessao(instituicao({ login: { titulo: 'Fale com a Univag', frase: null, itens: [] }, imagens: { logo: null, icone: null, login: 1, assistente: null } }))
     abrir('/univag')
@@ -227,7 +211,6 @@ describe('marca da instituição', () => {
     expect(document.querySelector('svg[data-ilustracao="boas-vindas"]')).toBeNull()
   })
 
-  // C46 (AC 43)
   it('item Contato no menu só com contato', async () => {
     comSessao(comMarca)
     let montada = abrir('/univag/assistente')
@@ -246,7 +229,6 @@ describe('marca da instituição', () => {
     await userEvent.keyboard('{Escape}')
     montada.unmount()
 
-    // a gaveta do celular é a mesma barra
     comSessao(comMarca)
     window.innerWidth = 500
     montada = abrir('/univag/assistente')

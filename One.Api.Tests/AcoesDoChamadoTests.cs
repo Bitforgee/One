@@ -5,7 +5,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// vertical-slice-completa C28: cada ação aplicada grava num SaveChanges só e devolve o detalhe do chamado.
 public class AcoesDoChamadoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     [Fact]

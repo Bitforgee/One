@@ -9,7 +9,6 @@ import { abrir, api, me } from '../test/util'
 import { Toaster } from '../ui/sonner'
 import { ThemeProvider } from '../ui/theme-provider'
 
-// a barra lateral do shadcn (desktop ou painel do celular): nem sempre é um <nav>
 const barra = () => document.querySelector('[data-sidebar=sidebar]') as HTMLElement
 const alternarBarra = () => screen.findByRole('button', { name: 'Alternar barra lateral' })
 
@@ -34,7 +33,6 @@ describe('acesso', () => {
     expect(screen.getByLabelText('CPF')).toBeInTheDocument()
   })
 
-  // identidade-visual AC 5: o painel saiu; a coluna não tem ilustração nem elemento focável fora do formulário, salvo o link da tela
   it('painel de entrada sem foco e sem ícones', async () => {
     api({ ...instituicao, 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'x' }] })
     for (const [caminho, links] of [
@@ -112,7 +110,6 @@ describe('acesso', () => {
     expect(within(screen.getByRole('button', { name: /Entrar/ })).getByRole('status')).toHaveClass('animate-spin')
   })
 
-  // C60 (AC 39, AC 40): só os 6 campos obrigatórios; o que a API recusa sai mesmo assim
   it('formulários de acesso exigem só os obrigatórios', async () => {
     const recusa = (detail: string) => () => [422, { status: 422, title: 'Dados inválidos', detail }] as [number, unknown]
     const telas: [string, string, string, [string, string][], Record<string, () => [number, unknown]>][] = [
@@ -152,13 +149,11 @@ describe('acesso', () => {
   it('dependências do kit de interface', () => {
     const todas = { ...pacote.dependencies, ...pacote.devDependencies } as Record<string, string>
     for (const saiu of ['bootstrap', 'react-bootstrap', 'bootstrap-icons']) expect(todas[saiu], saiu).toBeUndefined()
-    // C90: nenhum arquivo importa esses pacotes (o import de bootstrap-icons/font/*.css no main.tsx também falha aqui); os nomes em pedaços
     const importa = new RegExp(`['"](react-)?boot` + `strap(-icons)?[/'"]`)
     const fontes = import.meta.glob('/src/**/*.{ts,tsx,css}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
     expect(Object.entries(fontes).filter(([nome, texto]) => !nome.includes('.test.') && importa.test(texto)).map(([nome]) => nome)).toEqual([])
     expect(todas['react-router']).toMatch(/^\^?8\./)
     expect(todas['vite-plugin-pwa']).toBe('2.0.0')
-    // door 9: a stack nova com versão exata, e nada do AI SDK nem do next-themes
     expect(todas['tailwindcss']).toBe('4.3.4')
     expect(todas['@tailwindcss/vite']).toBe('4.3.4')
     expect(todas['lucide-react']).toBe('1.66.0')
@@ -167,16 +162,13 @@ describe('acesso', () => {
     for (const proibido of ['next-themes', 'ai', '@ai-sdk/react', 'streamdown']) expect(todas[proibido], proibido).toBeUndefined()
   })
 
-  // C91 (AC 49, door 10)
   it('Tema grava a escolha em one-tema', async () => {
     localStorage.clear()
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
-    // redesign-institucional (## Screens linha 0): os temas nesta ordem
     await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
     expect(within(document.querySelector('[data-slot=popover-content]') as HTMLElement).getAllByRole('button').map((b) => b.textContent)).toEqual(['Claro', 'Escuro', 'Preto', 'Sistema'])
     await userEvent.keyboard('{Escape}')
-    // redesign-institucional C3 (AC 3, door 1): Preto grava black e põe dark e black
     for (const [rotulo, valor, classes] of [['Escuro', 'dark', ['dark']], ['Claro', 'light', ['light']], ['Preto', 'black', ['dark', 'black']], ['Sistema', 'system', ['light']]] as const) {
       await escolherTema(rotulo)
       expect(localStorage.getItem('one-tema'), rotulo).toBe(valor)
@@ -185,7 +177,6 @@ describe('acesso', () => {
     expect(document.documentElement).not.toHaveClass('dark')
   })
 
-  // redesign-institucional C4 (AC 4)
   it('sair do Preto tira a classe black', async () => {
     localStorage.clear()
     api({ 'GET /api/auth/me': () => [200, me()] })
@@ -198,7 +189,6 @@ describe('acesso', () => {
     }
   })
 
-  // redesign-institucional C12 (AC 12): só o link da rota atual fica marcado
   it('link ativo da barra lateral', async () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE', 'ADMINISTRADOR'] })], 'GET /api/chamados?escopo=fila': () => [200, []] })
     abrir('/univag/fila')
@@ -212,7 +202,6 @@ describe('acesso', () => {
     }
   })
 
-  // layout-painel C8 (AC 8): no cabeçalho, da esquerda para a direita, o botão da barra, avisos (só aluno) e Tema
   it.each([
     [['ALUNO'], ['Ativar avisos neste aparelho']], // estrutura-visual AC 8 e AC 13: sem Tema no topo, e o botão de menu só abaixo de 768 px
     [['ATENDENTE'], []],
@@ -231,7 +220,6 @@ describe('acesso', () => {
     vi.unstubAllGlobals()
   })
 
-  // C92 (AC 50, door 10)
   it('sem tema gravado segue o sistema', async () => {
     for (const escuro of [true, false]) {
       localStorage.clear()
@@ -298,14 +286,12 @@ describe('acesso', () => {
   it('QueryClient por montagem sem nova tentativa nem releitura no foco', async () => {
     const leiturasDoMe = (chamadas: { url: string }[]) => chamadas.filter((c) => c.url === '/api/auth/me').length
 
-    // 500 no /me: uma chamada só, e a tela volta para o Login
     const falha = api({ ...instituicao, 'GET /api/auth/me': () => [500, { status: 500, detail: 'Erro.' }] })
     const primeira = abrir('/univag/assistente')
     expect(await screen.findByLabelText('CPF')).toBeInTheDocument()
     expect(leiturasDoMe(falha)).toBe(1)
     primeira.unmount()
 
-    // com o /me carregado, foco e visibilidade da janela não releem
     const chamadas = api({ 'GET /api/auth/me': () => [200, me()] })
     const segunda = abrir('/univag/trocar-senha')
     await screen.findByRole('heading', { name: 'Trocar senha' })
@@ -316,7 +302,6 @@ describe('acesso', () => {
     expect(leiturasDoMe(chamadas)).toBe(1)
     segunda.unmount()
 
-    // outra montagem do App não herda o /me da anterior
     api({ 'GET /api/auth/me': () => new Promise(() => {}) })
     abrir('/univag/trocar-senha')
     expect(await screen.findByRole('status', { name: 'Carregando' })).toBeInTheDocument()
@@ -362,7 +347,6 @@ describe('acesso', () => {
   })
 
   it('trocada a senha temporária, abre a tela inicial', async () => {
-    // a API passa a responder deveTrocarSenha false depois da troca
     let trocou = false
     const chamadas = api({
       'GET /api/auth/me': () => [200, me({ deveTrocarSenha: !trocou })],
@@ -381,7 +365,6 @@ describe('acesso', () => {
   })
 })
 
-// redesign-institucional S1: o tema Preto (door 1) e os valores de one-tema gravados antes dele.
 const montarTema = () =>
   render(
     <ThemeProvider defaultTheme="system" storageKey="one-tema">
@@ -395,7 +378,6 @@ afterEach(() => {
 })
 
 describe('tema (redesign-institucional)', () => {
-  // C6 (AC 6)
   it('Toaster escuro no tema Preto', async () => {
     localStorage.setItem('one-tema', 'black')
     montarTema()
@@ -411,7 +393,6 @@ describe('tema (redesign-institucional)', () => {
     expect(document.documentElement).toHaveClass('dark', 'black')
   })
 
-  // C7 (AC 7): matchMedia do jsdom (setup.ts) responde claro, então "system" vira light
   it('valor antigo de one-tema', () => {
     for (const [valor, classe] of [['light', 'light'], ['dark', 'dark'], ['system', 'light']]) {
       localStorage.setItem('one-tema', valor)
@@ -425,7 +406,6 @@ describe('tema (redesign-institucional)', () => {
   })
 })
 
-// barra-lateral-grupos: grupos, nome do usuário e a preferência de recolher
 describe('barra lateral com grupos', () => {
   afterEach(() => {
     localStorage.clear()
@@ -438,10 +418,8 @@ describe('barra lateral com grupos', () => {
     ['Conhecimento', ['Artigos', 'Documentos']],
     ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência']],
   ]
-  // [título do grupo, rótulos dos links dentro dele], na ordem do DOM
   const grupos = (raiz: HTMLElement) => within(raiz).getAllByRole('group').map((g) => [g.getAttribute('aria-labelledby') && document.getElementById(g.getAttribute('aria-labelledby')!)?.textContent, within(g).getAllByRole('link').map((l) => l.textContent)])
 
-  // C1, C3 (AC 1, AC 3)
   it('grupos por assunto na barra e na gaveta', async () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: Todos })] })
     abrir('/univag/trocar-senha')
@@ -457,7 +435,6 @@ describe('barra lateral com grupos', () => {
     for (const [nome] of Esperado) expect(within(gaveta).getByRole('group', { name: nome as string })).toBeInTheDocument()
   })
 
-  // C2 (AC 2)
   it.each([
     [['ALUNO'], [['Atendimento', ['Assistente', 'Minhas solicitações']]]],
     [['ATENDENTE'], [['Atendimento', ['Fila', 'Indicadores']]]],
@@ -468,7 +445,6 @@ describe('barra lateral com grupos', () => {
     expect(grupos(await screen.findByRole('navigation'))).toEqual(esperado)
   })
 
-  // layout-painel C5 (AC 5): o painel do celular leva a instituição, os links e o botão do usuário
   it('nome do usuário no painel do celular', async () => {
     window.innerWidth = 500
     api({ 'GET /api/auth/me': () => [200, me({ nome: 'Ana Beatriz Souza' })] })
@@ -481,7 +457,6 @@ describe('barra lateral com grupos', () => {
     expect(within(painel).getAllByRole('link')[0].compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  // C7 (AC 6)
   it('iniciais do usuário', () => {
     expect(iniciais('Ana Beatriz Souza')).toBe('AS')
     expect(iniciais('ana')).toBe('A')
@@ -490,7 +465,6 @@ describe('barra lateral com grupos', () => {
 
   const estado = () => document.querySelector('[data-slot=sidebar]')!.getAttribute('data-state')
 
-  // layout-painel C2 (AC 2)
   it('alternar barra grava one-barra', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
@@ -502,7 +476,6 @@ describe('barra lateral com grupos', () => {
     expect(localStorage.getItem('one-barra')).toBe('aberta')
   })
 
-  // layout-painel C3 (AC 3): recolhida só com o valor exato
   it.each([
     ['recolhida', 'collapsed'],
     ['aberta', 'expanded'],
@@ -516,7 +489,6 @@ describe('barra lateral com grupos', () => {
     expect(estado()).toBe(esperado)
   })
 
-  // layout-painel C7 (AC 7)
   it('Ctrl+B alterna a barra', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
@@ -529,7 +501,6 @@ describe('barra lateral com grupos', () => {
     }
   })
 
-  // layout-painel C12 (AC 12): o nome do documento vai em pedaços para este arquivo não se acusar
   it('sem cookie sidebar_state', async () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
@@ -540,7 +511,6 @@ describe('barra lateral com grupos', () => {
     expect(Object.keys(fontes).filter((a) => fontes[a].includes('document' + '.cookie'))).toEqual([])
   })
 
-  // layout-painel C9 (AC 9): um h1 por tela, o rótulo do link, o número ou "Trocar senha"
   it.each([
     ['assistente', 'Assistente'],
     ['solicitacoes', 'Minhas solicitações'],
@@ -562,7 +532,6 @@ describe('barra lateral com grupos', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
 
-  // layout-painel C10 (AC 10)
   it.each([
     [['ADMINISTRADOR', 'ATENDENTE', 'ALUNO'], 'Administrador'],
     [['ALUNO', 'ATENDENTE'], 'Atendente'],

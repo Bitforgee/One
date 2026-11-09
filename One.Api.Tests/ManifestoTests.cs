@@ -5,7 +5,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// aparencia-instituicao S8: o manifesto do app instalado (C54, C55).
 public class ManifestoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     [Fact]

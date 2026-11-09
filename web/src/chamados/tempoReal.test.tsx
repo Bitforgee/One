@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest'
 import { encerrarTempoReal } from '../tempo-real'
 import { abrir, api, chamado, me, type Chamada } from '../test/util'
 
-// tempo-real-signalr S3: a conexão é a falsa do setup.ts; o que chega do servidor é só o aviso, o dado vem do GET de sempre.
 const conexao = () => globalThis.conexoesFalsas.at(-1)!
 const leituras = (chamadas: Chamada[], url: string) => chamadas.filter((c) => c.metodo === 'GET' && c.url === url).length
 const mensagem = (texto: string) => ({ id: 1, tipo: 'PUBLICA' as const, texto, autor: 'Carla', doAluno: false, criadaEm: '2026-11-02T12:00:00Z' })
@@ -16,7 +15,6 @@ const MEUS = '/api/chamados?escopo=meus'
 const nav = () => within(screen.getByRole('navigation'))
 const abrirConexao = () => act(async () => conexao().abrir())
 
-// só o relógio dos intervalos é falso, como no teste de 15 s da base
 async function comRelogio(corpo: () => Promise<void>) {
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
   try {

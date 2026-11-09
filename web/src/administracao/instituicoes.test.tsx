@@ -18,7 +18,6 @@ const linha = async (nome: string) => (await screen.findByText(nome)).closest('t
 const gravacoes = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
 const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
 
-// [título do grupo, rótulos dos links dentro dele], na ordem do DOM
 const grupos = (raiz: HTMLElement) =>
   within(raiz).getAllByRole('group').map((g) => [g.getAttribute('aria-labelledby') && document.getElementById(g.getAttribute('aria-labelledby')!)?.textContent, within(g).getAllByRole('link').map((l) => l.textContent)])
 
@@ -28,7 +27,6 @@ describe('instituições', () => {
     window.innerWidth = 1024
   })
 
-  // C5 (AC 5, door 4)
   it('grupo Plataforma só para operador', async () => {
     api({ 'GET /api/auth/me': () => [200, operador] })
     abrir('/univag/trocar-senha')
@@ -59,7 +57,6 @@ describe('instituições', () => {
     }
   })
 
-  // C14 (AC 14)
   it('lista com selo, administradores e ações', async () => {
     tela()
     const ativa = await linha('Faculdade Demo')
@@ -93,7 +90,6 @@ describe('instituições', () => {
     return { d, admin: within(d.getByRole('group', { name: 'Primeiro administrador' })) }
   }
 
-  // C16 (AC 15)
   it('endereço segue o nome até ser editado', async () => {
     tela()
     const { d } = await abrirNova()
@@ -126,7 +122,6 @@ describe('instituições', () => {
     await userEvent.type(admin.getByLabelText('E-mail'), 'admin@demo.edu.br')
   }
 
-  // C17 (AC 16)
   it('criar fecha, avisa e recarrega a lista', async () => {
     let lidas = 0
     const chamadas = tela({
@@ -146,7 +141,6 @@ describe('instituições', () => {
     expect(lidas).toBe(2)
   })
 
-  // C18 (AC 17)
   it('erro da API no campo sem perder o formulário', async () => {
     let tentativa = 0
     tela({
@@ -180,14 +174,12 @@ describe('instituições', () => {
     conferirCampos()
     expect(screen.getByRole('dialog')).toBeInTheDocument()
 
-    // sem campo para o erro, o texto vai para o próprio diálogo
     await userEvent.click(d.getByRole('button', { name: 'Criar' }))
     expect(await d.findByText('Ocorreu um erro inesperado. Tente de novo.')).toBeInTheDocument()
     expect(d.getByLabelText('Endereço')).not.toHaveAccessibleDescription()
     conferirCampos()
   })
 
-  // C21 (AC 21)
   it('importar carga mostra o resumo ou os erros', async () => {
     let tentativa = 0
     const chamadas = tela({
@@ -223,7 +215,6 @@ describe('instituições', () => {
     expect(d.queryByText('setores[1].nome: "A" repetido')).not.toBeInTheDocument()
   })
 
-  // C28 (AC 28)
   it('desativar confirma, reativar e reenviar agem direto', async () => {
     let desativada = false
     const chamadas = tela({

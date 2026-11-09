@@ -5,15 +5,12 @@ import { Button } from '../ui/button'
 import type { Destino } from './comum'
 import { Icones } from './IconesDoDestino'
 
-// Os cartões do canvas seguem o desenho dos editores de fluxo: um bloco de ícone à esquerda, o nome e a posição ao lado,
-// e uma bolinha de entrada e outra de saída. Cores e raios vêm dos tokens, nunca de valores soltos.
 const Cartao = 'relative flex h-16 items-center gap-3 border bg-card text-card-foreground shadow-xs transition-colors'
 const Bloco = 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'
 const Bolinha = 'size-3! border-2! border-card! bg-primary!'
 
 export type DadosDaEtapa = { titulo: string; prazo: number | null; destino: Destino; posicao: number; marca?: string; invalido: boolean; remover: () => void }
 
-// O Início tem só saída e a ponta esquerda arredondada, como o gatilho de uma automação.
 export function NoInicio() {
   return (
     <div className={`${Cartao} w-40 rounded-l-4xl rounded-r-xl pr-3 pl-4`}>
@@ -26,7 +23,6 @@ export function NoInicio() {
   )
 }
 
-// Embaixo do cartão, sem mudar o tamanho dele: o que a simulação disse, ou o que impede a publicação.
 function Aviso({ invalido, marca }: { invalido: boolean; marca?: string }) {
   if (invalido)
     return (
@@ -53,7 +49,6 @@ function bordaDoCartao(invalido: boolean, marca: string | undefined, selecionada
   return marca ? 'border-dashed opacity-70' : 'hover:border-primary/50'
 }
 
-// A barra que aparece sobre a etapa ao passar o mouse ou selecionar, como a do n8n.
 function BarraDaEtapa({ visivel, remover }: { visivel: boolean; remover: () => void }) {
   return (
     <NodeToolbar isVisible={visivel} offset={8}>

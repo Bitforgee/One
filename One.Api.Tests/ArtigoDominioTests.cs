@@ -2,7 +2,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests;
 
-// dominio-e-contratos C30, C31 e C33: o Artigo decide os próprios estados e o número das versões, sem banco e sem HTTP.
 public class ArtigoDominioTests
 {
     static readonly DateTime Agora = new(2026, 11, 2, 12, 0, 0, DateTimeKind.Utc);
@@ -30,11 +29,11 @@ public class ArtigoDominioTests
         Assert.Equal(EstadosArtigo.Ativo, a.Estado);
         Assert.Null(a.Arquivar());
         Assert.Equal(EstadosArtigo.Arquivado, a.Estado);
-        Assert.Null(a.Ativar()); // ARQUIVADO volta a ATIVO
+        Assert.Null(a.Ativar());
         Assert.Equal(EstadosArtigo.Ativo, a.Estado);
 
         var rascunho = Rascunho();
-        Assert.Null(rascunho.Arquivar()); // RASCUNHO vai direto a ARQUIVADO
+        Assert.Null(rascunho.Arquivar());
         Assert.Equal(EstadosArtigo.Arquivado, rascunho.Estado);
     }
 

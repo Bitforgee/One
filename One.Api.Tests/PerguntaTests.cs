@@ -2,7 +2,6 @@ using One.Api.Assistente;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid C26: a pergunta do modelo só vale com até 200 caracteres, terminada em "?", e nunca a 3ª seguida.
 public class PerguntaTests
 {
     static string DeTamanho(int tamanho) => new string('a', tamanho - 1) + "?";
@@ -17,7 +16,6 @@ public class PerguntaTests
         Assert.False(Pergunta.Aceita("   ", []));
         Assert.False(Pergunta.Aceita(null, []));
 
-        // os tipos finais das mensagens anteriores do assistente, da mais nova para a mais velha
         Assert.True(Pergunta.Aceita("Qual o seu curso?", [Tipos.Pergunta]), "2ª pergunta seguida");
         Assert.True(Pergunta.Aceita("Qual o seu curso?", [Tipos.Pergunta, Tipos.Resposta]), "2ª pergunta seguida, depois de uma resposta");
         Assert.False(Pergunta.Aceita("Qual o seu curso?", [Tipos.Pergunta, Tipos.Pergunta]), "3ª pergunta seguida");

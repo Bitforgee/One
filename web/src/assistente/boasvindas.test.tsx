@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, chamado, instituicao, me, type Rota } from '../test/util'
 
-// aparencia-instituicao S5 (AC 38 a AC 42): o assistente com a identidade e o contato da instituição.
 const Perguntas = ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?']
 const Frase = 'Respostas com base nas normas da instituição.'
 const Boleto = 'Como emito o boleto do semestre?'
@@ -18,7 +17,6 @@ const rotas = (inst: object, extra: Record<string, Rota> = {}) =>
 const resposta: Record<string, Rota> = { 'POST /api/conversas': () => [201, { conversaId: 9, resposta: { tipo: 'resposta', texto: 'Falta não é abonada.' } }] }
 
 describe('assistente com identidade', () => {
-  // C41 (AC 38)
   it('boas-vindas com nome, foto e perguntas', async () => {
     rotas(completa)
     abrir('/univag/assistente')
@@ -31,7 +29,6 @@ describe('assistente com identidade', () => {
     expect(document.querySelector('svg[data-ilustracao="conversa"]')).toBeNull()
   })
 
-  // C41 (AC 38)
   it('boas-vindas padrão sem aparência', async () => {
     rotas(instituicao())
     abrir('/univag/assistente')
@@ -42,7 +39,6 @@ describe('assistente com identidade', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
-  // C42 (AC 39)
   it('perguntas padrão', async () => {
     rotas(instituicao())
     abrir('/univag/assistente')
@@ -51,7 +47,6 @@ describe('assistente com identidade', () => {
     expect(botoes.filter((t) => t === Boleto || t === Atestado)).toEqual([Boleto, Atestado])
   })
 
-  // C43 (AC 40)
   it('tocar na sugestão envia a pergunta', async () => {
     const chamadas = rotas(instituicao(), resposta)
     abrir('/univag/assistente')
@@ -63,7 +58,6 @@ describe('assistente com identidade', () => {
     expect(screen.queryByText('Olá! Eu sou Assistente.')).not.toBeInTheDocument()
   })
 
-  // C44 (AC 41)
   it('foto do assistente nos balões', async () => {
     for (const [inst, fotos] of [[completa, 1], [instituicao(), 0]] as const) {
       rotas(inst, resposta)
@@ -85,7 +79,6 @@ describe('assistente com identidade', () => {
     }
   })
 
-  // C45 (AC 42)
   it('contato na transferência', async () => {
     const transferida: Record<string, Rota> = {
       'POST /api/conversas': () => [201, { conversaId: 7, resposta: { tipo: 'sem_base', texto: 'Não encontrei.' } }],

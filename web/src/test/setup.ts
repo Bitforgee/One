@@ -3,8 +3,6 @@ import { cleanup } from '@testing-library/react'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, vi } from 'vitest'
 
-// tempo-real-signalr: o jsdom não tem servidor; toda conexão do app é esta, que nasce fora de Connected (start() fica pendente),
-// de modo que o relê de 15 s dos testes antigos segue valendo. Cada teste dirige a sua: abrir(), cair(), reconectar(), fechar(), emitir().
 class ConexaoFalsa {
   state = 'Disconnected'
   starts = 0
@@ -85,7 +83,6 @@ class ConexaoFalsa {
   }
 }
 
-// recusarConexao: o texto do erro com que start() falha (servidor fora, negotiate recusado); false abre normalmente
 declare global {
   var conexoesFalsas: ConexaoFalsa[]
   var recusarConexao: string | false
@@ -124,8 +121,6 @@ beforeEach(() => {
   globalThis.recusarConexao = false
 })
 
-// o jsdom não tem ResizeObserver; o use-stick-to-bottom (Conversation) e o React Flow (canvas) usam.
-// Ao observar, avisa o tamanho do alvo uma vez, como o navegador: é assim que o React Flow mede os nós (reactflow.dev/learn/advanced-use/testing).
 globalThis.ResizeObserver ??= class {
   constructor(private aviso: ResizeObserverCallback) {}
   observe(alvo: Element) {
@@ -136,7 +131,6 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 }
 
-// nem DOMMatrixReadOnly, que o React Flow lê para saber a escala do painel; sem transformação a escala é 1
 globalThis.DOMMatrixReadOnly ??= class {
   m22 = 1
   constructor(transformacao?: string) {
@@ -145,14 +139,12 @@ globalThis.DOMMatrixReadOnly ??= class {
   }
 } as unknown as typeof DOMMatrixReadOnly
 
-// e o tamanho dos elementos: o React Flow só mostra o nó depois de medi-lo
 Object.defineProperties(HTMLElement.prototype, {
   offsetHeight: { configurable: true, get: () => 40 },
   offsetWidth: { configurable: true, get: () => 100 },
 })
 ;(SVGElement.prototype as SVGGraphicsElement).getBBox ??= () => ({ x: 0, y: 0, width: 0, height: 0 }) as DOMRect
 
-// nem matchMedia; a gaveta (Vaul) consulta ao abrir. Sem media query, nenhuma consulta casa
 window.matchMedia ??= (media: string) =>
   ({ media, matches: false, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false }) as MediaQueryList
 
@@ -162,7 +154,6 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// o jsdom não mede layout; o ProseMirror (Tiptap) mede a seleção com estas APIs
 const SemCaixa = { x: 0, y: 0, width: 0, height: 0, top: 0, right: 0, bottom: 0, left: 0, toJSON: () => ({}) }
 Range.prototype.getClientRects ??= () => ({ length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList
 Range.prototype.getBoundingClientRect ??= () => SemCaixa as DOMRect

@@ -8,7 +8,6 @@ namespace One.Api.Tests;
 
 public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C7: as 27 rotas da Surface com {id} ou {numero}.
     [Fact]
     public async Task Recurso_de_outra_instituicao_404()
     {
@@ -57,7 +56,6 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
             var r = await cliente.SendAsync(new HttpRequestMessage(metodo, url) { Content = corpo is null ? null : JsonContent.Create(corpo) });
             Assert.True(r.StatusCode == HttpStatusCode.NotFound, $"{metodo} {url}: {(int)r.StatusCode}");
         }
-        // as 10 rotas do chamado, para o aluno e para a equipe da demo
         foreach (var cliente in new[] { alunoDemo.Cliente, equipeDemo })
             foreach (var (metodo, url, corpo) in VisibilidadeTests.RotasDoChamado(numero, setorDemo.Id, categoria.Id))
             {
@@ -80,7 +78,6 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(("ATIVO", 1), (artigoDepois.Estado, artigoDepois.Versoes.Count));
     }
 
-    // C8: categoriaId, setorId, matriculaId e numeroOriginal de outra instituição no corpo valem o mesmo que um id inexistente.
     [Fact]
     public async Task Id_de_outra_instituicao_no_corpo_400()
     {
@@ -91,7 +88,6 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var numero = await demo.Chamado(EstadosChamado.EmAtendimento);
         var conversa = (await (await demo.ClienteAluno.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })).Json()).GetProperty("conversaId").GetInt64();
         var antes = await demo.Ler(numero);
-        // a numeração é por instituição: ONE-3 existe só na univag (a demo tem só ONE-1)
         await univag.Chamado();
         await univag.Chamado();
         var daUnivag = await univag.Chamado();
@@ -128,7 +124,6 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotEqual(mUnivag.Id, mDemo.Id);
         Assert.Equal(a.Id, mUnivag.UsuarioId);
         Assert.Equal(b.Id, mDemo.UsuarioId);
-        // dentro da mesma instituição o banco recusa a repetição
         await Assert.ThrowsAsync<DbUpdateException>(() => f.Usuario(univag, [Papeis.Aluno], cpf: cpf));
     }
 
@@ -167,7 +162,6 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(univag.Id, nova.InstituicaoId);
     }
 
-    // fluxos-atendimento C78 (AC 66): a liderança de uma instituição nunca recebe chamado de outra, mesmo com o mesmo curso e semestre
     [Fact]
     public async Task Lideranca_de_outra_instituicao_nunca_recebe()
     {

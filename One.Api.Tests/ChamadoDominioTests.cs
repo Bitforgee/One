@@ -4,8 +4,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// dominio-e-contratos C21 a C25: as transições do Chamado, sem banco e sem HTTP. Os valores esperados vêm da tabela do check
-// (que reproduz o que os auxiliares estáticos e os handlers gravavam na base), não do código das transições.
 public class ChamadoDominioTests
 {
     const long Ator = 7, Outro = 9;
@@ -113,7 +111,7 @@ public class ChamadoDominioTests
             Assert.True(mensagens.All(m => m.AutorId == Ator && m.CriadaEm == Agora), $"{l.Nome}: autor ou instante da mensagem");
             l.Extra?.Invoke(l.C);
         }
-        Assert.Equal(18, Tabela().Length); // as linhas 2 a 18 da tabela e o cancelamento sem justificativa; a linha 1 é Abrir_cria_aberto_com_o_evento_de_criacao
+        Assert.Equal(18, Tabela().Length);
     }
 
     [Fact]
@@ -151,7 +149,6 @@ public class ChamadoDominioTests
         }
     }
 
-    // Aplica ao chamado, no estado dado, o método que a ação do papel chama no handler (quem age é Outro, o responsável é Ator).
     static void Aplicar(string acao, string papel, Chamado c) => _ = (acao, papel) switch
     {
         ("responder", "ALUNO") when c.Estado == Resolvido => c.Rejeitar(Outro, "x", [], true, "Ana", 7, Agora),
@@ -204,7 +201,7 @@ public class ChamadoDominioTests
     [Fact]
     public void Rejeitar_no_limite_aceita_e_depois_recusa()
     {
-        var limite = Antes.AddDays(7); // Resolver gravou ResolvidoEm = Antes
+        var limite = Antes.AddDays(7);
         var noLimite = ChamadoResolvido();
         Assert.Null(noLimite.Rejeitar(Ator, "nao resolveu", [], true, "Ana", 7, limite));
         Assert.Equal(EmAtendimento, noLimite.Estado);
@@ -222,7 +219,6 @@ public class ChamadoDominioTests
 
     static Chamado NoFluxo() => Chamado.Abrir("ONE-1", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes, versaoFluxoId: 5, etapaOrdem: 1);
 
-    // fluxos-atendimento C44 e C45: subir move à etapa seguinte, solta o responsável, deixa ABERTO, guarda o motivo em nota e não soma em Encaminhamentos
     [Fact]
     public void Subir_move_a_etapa_registra_SUBIDA_e_nao_soma_encaminhamento()
     {
@@ -240,7 +236,6 @@ public class ChamadoDominioTests
         Assert.Equal(("NOTA", "A coordenação resolve"), (nota.Tipo, nota.Texto));
     }
 
-    // C43 (domínio): a subida do Agendador não tem autor nem nota, e o detalhe diz o prazo
     [Fact]
     public void Subir_pelo_prazo_nao_tem_autor_nem_nota()
     {
@@ -254,7 +249,6 @@ public class ChamadoDominioTests
         Assert.Equal((Aberto, (int?)2, 0), (c.Estado, c.EtapaOrdem, c.Encaminhamentos));
     }
 
-    // C47 (domínio): só ABERTO, EM_ATENDIMENTO e AGUARDANDO_ALUNO sobem
     [Fact]
     public void Subir_so_nos_estados_abertos()
     {
@@ -265,7 +259,6 @@ public class ChamadoDominioTests
         Assert.Throws<InvalidOperationException>(() => ChamadoFechado().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
     }
 
-    // base-fluxos C13: reclassificar tira o chamado da etapa e o deixa no setor onde está
     [Fact]
     public void Reclassificar_em_fluxo_sai_da_etapa()
     {
@@ -281,7 +274,6 @@ public class ChamadoDominioTests
         Assert.Equal([("RECLASSIFICACAO", "Boleto", "Matrícula")], novos.Select(e => (e.Tipo, e.De, e.Para)));
     }
 
-    // C57 (domínio): encaminhar à mão tira o chamado do fluxo; a abertura sem etapa também fica fora
     [Fact]
     public void Encaminhar_sai_do_fluxo_e_abrir_sem_etapa_fica_fora()
     {

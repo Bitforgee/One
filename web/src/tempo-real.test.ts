@@ -10,7 +10,6 @@ const visibilidade = (valor: 'visible' | 'hidden') => Object.defineProperty(docu
 describe('configuração da conexão', () => {
   afterEach(() => encerrarTempoReal())
 
-  // o caminho do hub (Surface WS /api/tempo-real) e a reconexão automática do cliente SignalR
   it('conecta em /api/tempo-real com reconexão automática', () => {
     abrirTempoReal(cliente())
     expect(ultima().url).toBe('/api/tempo-real')
@@ -25,7 +24,6 @@ describe('reabrir a conexão (AC 23)', () => {
     vi.useRealTimers()
   })
 
-  // C41: 1 s, 2 s, 4 s, 8 s, 16 s e daí em diante 30 s; depois de 10 falhas a 11ª tentativa vem em até 30 s
   it('tentativas de reabrir nunca esperam mais de 30 s', async () => {
     vi.useFakeTimers()
     globalThis.recusarConexao = 'Failed to fetch'
@@ -40,7 +38,6 @@ describe('reabrir a conexão (AC 23)', () => {
       await vi.advanceTimersByTimeAsync(1)
       expect(ultima().starts, `na tentativa ${falhas + 1}`).toBe(falhas + 1)
     }
-    // depois de 10 falhas a próxima espera é de 30 s, não de 2^10 s
     await vi.advanceTimersByTimeAsync(29_999)
     expect(ultima().starts).toBe(11)
     await vi.advanceTimersByTimeAsync(1)

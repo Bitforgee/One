@@ -141,9 +141,9 @@ public class PushRotasTests(OneFactory f) : IClassFixture<OneFactory>
             f.Relogio.Advance(TimeSpan.FromMinutes(1));
             Assert.Equal(HttpStatusCode.NoContent, (await a.Cliente.PostAsJsonAsync("/api/push/subscricao", Corpo(e[n]))).StatusCode);
         }
-        Assert.Equal(e[..10].Order(), (await f.Subscricoes(q => q.Where(x => x.UsuarioId == a.Usuario.Id))).Select(x => x.Endpoint).Order()); // com 10, nada cai
+        Assert.Equal(e[..10].Order(), (await f.Subscricoes(q => q.Where(x => x.UsuarioId == a.Usuario.Id))).Select(x => x.Endpoint).Order());
 
-        f.Relogio.Advance(TimeSpan.FromMinutes(1)); // um novo POST do mais antigo o torna o mais recente
+        f.Relogio.Advance(TimeSpan.FromMinutes(1));
         await a.Cliente.PostAsJsonAsync("/api/push/subscricao", Corpo(e[0]));
         f.Relogio.Advance(TimeSpan.FromMinutes(1));
         await a.Cliente.PostAsJsonAsync("/api/push/subscricao", Corpo(e[10]));

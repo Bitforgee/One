@@ -66,8 +66,6 @@ function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
   )
 }
 
-// Uma réplica pequena do que a aba atual muda, com os valores do formulário, antes de salvar (AC 10, AC 24 de aparencia-instituicao).
-// O ícone do app: o escolhido, o salvo ou o do One.
 function PreviaDoApp({ d }: { d: DadosDaPrevia }) {
   const icone = d.imagens.icone ?? '/icons/icon-192.png'
   const nomeDoApp = (d.nomeCurto.trim() || iniciais(d.nome)).slice(0, 12)
@@ -102,7 +100,6 @@ function PreviaDoContato({ d }: { d: DadosDaPrevia }) {
   )
 }
 
-// A aba da Marca mostra o login, que é onde a cor, o logo e o botão aparecem primeiro.
 const Blocos: Record<IdAba, (p: { d: DadosDaPrevia }) => ReactElement> = {
   marca: PreviaDoLogin,
   app: PreviaDoApp,
@@ -111,7 +108,6 @@ const Blocos: Record<IdAba, (p: { d: DadosDaPrevia }) => ReactElement> = {
   contato: PreviaDoContato,
 }
 
-// A cor vai em --marca-previa só aqui dentro (index.css a transforma em --primary como o app, claro ou escuro), para o resto do app não mudar antes de salvar.
 export function PreviaAparencia({ dados: d }: { dados: DadosDaPrevia }) {
   const cor = d.cor || undefined
   const Bloco = Blocos[d.aba]

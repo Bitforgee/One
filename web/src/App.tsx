@@ -21,7 +21,6 @@ import { Indicadores } from './indicadores/Indicadores'
 import { Toaster } from './ui/sonner'
 import { ThemeProvider } from './ui/theme-provider'
 
-// Um cliente por montagem: o cache não passa de um teste para outro (door 7).
 function novoCliente() {
   return new QueryClient({
     defaultOptions: {

@@ -10,7 +10,6 @@ import { abrir, api, chamado, instituicao, me, type Rota } from './test/util'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 
-// revisao-ux (S1 e os tokens de S6): regras de decisão e de código-fonte; o que se mede em pixels está em e2e/ux.spec.ts.
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 const css = readFileSync('src/index.css', 'utf8') // cwd = web/ (vitest)
 
@@ -19,16 +18,13 @@ afterEach(() => {
   document.documentElement.className = ''
 })
 
-// Abre o App na rota e deixa a localização visível, para afirmar para onde a guarda levou.
 function abrirComLocal(caminho: string) {
   const Local = () => <output data-testid="local">{useLocation().pathname}</output>
-  // roteador de dados, como o main.tsx (AD-047): a Aparência usa useBlocker
   const roteador = createMemoryRouter([{ path: '*', element: <><App /><Local /></> }], { initialEntries: [caminho] })
   return render(<RouterProvider router={roteador} />)
 }
 
 describe('ux', () => {
-  // C4 (AC 3): o X de Dialog e de Sheet é o botão "Fechar", e o nome em inglês saiu
   it('Dialog e Sheet fecham por um botão Fechar', () => {
     const { unmount } = render(
       <Dialog open>
@@ -51,8 +47,6 @@ describe('ux', () => {
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
   })
 
-  // C8 (AC 7, door 3): a cor de status `success` (token, classe ou variável) só em index.css, no selo do chamado e no selo de situação;
-  // `toast.success` é a API do Sonner e não usa o token
   it('verde só nos selos', () => {
     const Token = /(?:bg|text|border|ring|fill|stroke|from|via|to|outline|decoration|shadow)-success\b|--success\b|--color-success\b/
     const usam = Object.entries(fontes)
@@ -61,7 +55,6 @@ describe('ux', () => {
     expect([...usam, ...(Token.test(css) ? ['index.css'] : [])].sort()).toEqual(['chamados/Chamados.tsx', 'conhecimento/comum.tsx', 'index.css'])
   })
 
-  // C9 (AC 8): o primeiro Tab a partir do body foca "Pular para o conteúdo", e Enter leva o foco ao main
   it.each([
     ['ALUNO', '/univag/assistente'],
     ['ATENDENTE', '/univag/fila'],
@@ -82,7 +75,6 @@ describe('ux', () => {
     expect(document.activeElement).toBe(main)
   })
 
-  // C10 (AC 9): o menu mais "conta", por papel; fora do papel volta à tela inicial, dentro do papel abre sem redirecionar
   const Rotas: Record<string, string[]> = {
     ALUNO: ['assistente', 'solicitacoes', 'conta'],
     ATENDENTE: ['fila', 'indicadores'],
@@ -93,7 +85,6 @@ describe('ux', () => {
   const fora = Object.entries(Rotas).flatMap(([papel, minhas]) => Todas.filter((r) => !minhas.includes(r)).map((rota) => [papel, rota] as const))
 
   it('rota de outro papel volta à tela inicial (24 casos)', () => {
-    // os 11 caminhos do menu de Autenticado.tsx mais "conta": 9 de ALUNO, 10 de ATENDENTE e 5 de ADMINISTRADOR
     expect(['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'].map((p) => fora.filter(([papel]) => papel === p).length)).toEqual([9, 10, 5])
     expect(fora).toHaveLength(24)
   })
@@ -112,7 +103,6 @@ describe('ux', () => {
     expect(screen.getByTestId('local')).toHaveTextContent(`/univag/${rota}`)
   })
 
-  // C11 (AC 10): o botão de tema mostra o ícone do tema atual, e a opção atual leva aria-pressed
   it.each([
     ['light', Sun],
     ['dark', Moon],
@@ -132,7 +122,6 @@ describe('ux', () => {
     )
   })
 
-  // C52 (AC 39, door 2): os 14 neutros tingidos pela marca; o fundo do Preto continua preto puro
   it('neutros tingidos pela marca nos três temas', () => {
     const bloco = (seletor: string) => css.slice(css.indexOf(`\n${seletor} {`)).split('}')[0]
     const Formato = /^color-mix\(in oklch, var\(--marca, oklch\([^)]+\)\) (\d+)%, oklch\([^)]+\)\)$/
@@ -151,7 +140,6 @@ describe('ux', () => {
     expect(declarado('.black', '--background')).toBe('okl' + 'ch(0 0 0)') // em pedaços: a regra de cores literais de interface.test.ts varre este arquivo
   })
 
-  // C41 (AC 31, P14): a leitura que falha com 5xx mostra o alerta com ícone, o texto e "Tentar de novo", que refaz a consulta
   type Superficie = { nome: string; papeis: string[]; caminho: string; url: string; oque: string; vazios?: string[]; depois: string | RegExp; ok?: unknown }
   const Vazios = (...urls: string[]) => Object.fromEntries(urls.map((u) => [`GET ${u}`, (() => [200, []]) as Rota]))
   const Superficies: Superficie[] = [
@@ -208,14 +196,12 @@ describe('ux', () => {
     }
   })
 
-  // C56 (AC 42): o ícone Sparkles não existe no código
   it('sem Sparkles no código', () => {
     const usam = Object.keys(fontes).filter((caminho) => !/\.test\.tsx?$/.test(caminho) && /Sparkles/.test(fontes[caminho]))
     expect(Object.keys(fontes).length).toBeGreaterThan(50)
     expect(usam).toEqual([])
   })
 
-  // C58 (Impact: textos): o aluno lê "Solicitação", a equipe continua lendo "Chamado"
   const semChamado = () => expect(textoVisivel(document.body)).not.toMatch(/chamado/i)
 
   it('aluno lê Solicitação e a equipe lê Chamado (Assistente com conversa e transferido)', async () => {

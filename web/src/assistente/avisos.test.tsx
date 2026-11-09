@@ -15,7 +15,6 @@ function inscricao() {
 
 type Opcoes = { sw?: boolean; push?: boolean; notif?: boolean; chave?: number; permissao?: string; existente?: boolean; papeis?: string[]; rotas?: Record<string, Rota> }
 
-// Monta o navegador (service worker, PushManager, Notification) e a API; devolve o que o código chamou.
 function ambiente({ sw = true, push = true, notif = true, chave = 200, permissao = 'granted', existente = false, papeis = ['ALUNO'], rotas = {} }: Opcoes = {}) {
   const nova = inscricao()
   let atual: ReturnType<typeof inscricao> | null = existente ? nova : null
@@ -71,7 +70,6 @@ describe('avisos', () => {
     await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByText('Avisos no celular')).not.toBeInTheDocument()
     conta.unmount()
-    // a consulta termina em success com dado null, nunca em error
     const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     renderHook(() => useAvisos(), { wrapper: ({ children }) => <QueryClientProvider client={cliente}>{children}</QueryClientProvider> })
     await waitFor(() => expect(cliente.getQueryState(['push-chave'])?.status).toBe('success'))
@@ -148,7 +146,6 @@ describe('avisos', () => {
     expect(await botao(Ativar)).toBeEnabled()
   })
 
-  // layout-painel (door 3): o botão de avisos é um ícone no cabeçalho, com o nome acessível; fora da barra
   it('no cabeçalho o botão de avisos é um ícone com nome acessível e alterna', async () => {
     ambiente({ papeis: ['ALUNO', 'ATENDENTE'] })
     abrir('/univag/assistente')

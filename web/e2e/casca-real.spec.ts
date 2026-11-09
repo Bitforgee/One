@@ -1,7 +1,5 @@
 import { expect, test, type APIRequestContext, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 
-// estrutura-visual C28: e2e real, sem simulada.ts. Contra E2E_URL (a imagem própria da feature, porta 8089) e o Mailpit do compose.
-// A instituição `e2e` tem um administrador (123.456.789-09 / admin@e2e.one) criado por `dotnet One.Api.dll instituicao criar`.
 const slug = process.env.E2E_INSTITUICAO ?? 'e2e'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@e2e.one'
@@ -19,7 +17,6 @@ function cpfValido(semente: number) {
   return d.join('')
 }
 
-// O limitador "auth" da API é de 5 por minuto por IP (L-066): o spec loga 2 vezes (o administrador e o aluno) e usa o primeiro acesso de cada um; espera a janela se precisar.
 test.describe.configure({ timeout: 240_000, mode: 'serial' })
 const instantes: number[] = []
 const dormir = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -60,7 +57,6 @@ let admin: APIRequestContext
 let aluno: APIRequestContext
 let numero: string
 
-// O administrador (1 login) cadastra o curso e a matrícula do aluno; o aluno (1 login) abre a solicitação pela API, sem tela.
 test.beforeAll(async ({ playwright, baseURL }) => {
   test.setTimeout(240_000) // a janela do limitador pode estar ocupada pelo spec anterior
   const rodada = Date.now()
@@ -96,7 +92,6 @@ const comSessao = async (browser: Browser, baseURL: string | undefined, quem: AP
   browser.newContext({ baseURL, storageState: await quem.storageState() })
 
 test('atendente escolhe Escuro no rodapé e recarrega, o aluno envia com Enter e o ranking mostra o real', async ({ browser, baseURL }) => {
-  // 1. o administrador escolhe Escuro na linha Tema do rodapé da barra; o tema sobrevive à recarga
   const contexto = await comSessao(browser, baseURL, admin)
   const page = await contexto.newPage()
   const leituras: { ate: string; corpo: Promise<{ principaisCategorias: { porChamados: { categoria: string; total: number }[] } }> }[] = []
@@ -114,7 +109,6 @@ test('atendente escolhe Escuro no rodapé e recarrega, o aluno envia com Enter e
   await expect(page.getByText('Indicador principal', { exact: true })).toBeVisible()
   await expect(page.locator('html')).toHaveClass(/dark/)
 
-  // 2. o ranking por chamados mostra a categoria e o total que a API devolve, com 1 barra por linha
   const atual = leituras.sort((a, b) => b.ate.localeCompare(a.ate))[0] // o período corrente termina depois do anterior
   const real = (await atual.corpo).principaisCategorias.porChamados
   expect(real.length, 'a API devolve ao menos 1 categoria por chamados').toBeGreaterThanOrEqual(1)
@@ -128,7 +122,6 @@ test('atendente escolhe Escuro no rodapé e recarrega, o aluno envia com Enter e
   }
   await contexto.close()
 
-  // 3. o aluno escreve e aperta Enter: a mensagem aparece na conversa e o campo esvazia
   const doAluno = await comSessao(browser, baseURL, aluno)
   const tela = await doAluno.newPage()
   await tela.goto(`/${slug}/assistente`)

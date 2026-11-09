@@ -4,7 +4,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;
 
-// Instituição com dois artigos ativos e um aluno logado, como no teste independente do S3.
 public record Cenario(Instituicao Instituicao, Aluno Aluno, Artigo Boleto, Artigo Faltas)
 {
     public const string RespostaBoleto = "O boleto do semestre fica no Portal do Aluno, no menu Financeiro. O prazo de pagamento é o dia 10 de cada mês.";
@@ -24,7 +23,6 @@ public record Cenario(Instituicao Instituicao, Aluno Aluno, Artigo Boleto, Artig
         return new Cenario(i, await f.AlunoLogado(i), boleto, faltas);
     }
 
-    // Cita artigos semeados pelo trecho de fonte deles (Semente.Fonte); um id que não é de artigo semeado vira um trecho inexistente.
     public static object Resposta(string texto, long[] artigoIds, params (long artigoId, string texto)[] trechos) => new
     {
         tipo = "resposta",

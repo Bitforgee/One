@@ -10,7 +10,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// RAG S2: indexação dos artigos pelo agendador.
 public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     Agendador Agendador => f.Services.GetRequiredService<Agendador>();
@@ -26,7 +25,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
 
     static async Task<long> Criar(HttpClient admin, object corpo) => (await (await admin.PostAsJsonAsync("/api/admin/artigos", corpo)).Json()).GetProperty("id").GetInt64();
 
-    // C6
     [Fact]
     public async Task Ativar_e_editar_gravam_trecho_pendente()
     {
@@ -44,7 +42,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var t2 = (await Trechos()).Last();
         Assert.Equal((2, "Faltas e atestados\nposso abonar falta?\nFaltas não são abonadas, nem com atestado médico."), (t2.VersaoArtigo!.Numero, t2.Texto));
 
-        // a gravação do trecho falha: o artigo continua RASCUNHO
         var outro = await Criar(admin, Corpo(categoria, "FALHA-FORCADA"));
         await using var con = new Npgsql.NpgsqlConnection(f.ConnectionString);
         await con.OpenAsync();
@@ -59,11 +56,10 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(EstadosArtigo.Rascunho, await f.Db(i.Id, db => db.Artigos.Where(a => a.Id == outro).Select(a => a.Estado).SingleAsync()));
     }
 
-    // C7
     [Fact]
     public async Task Lotes_de_100_gravam_vetores()
     {
-        await Agendador.Executar(); // esvazia pendências de outros testes da classe
+        await Agendador.Executar();
         var instituicoes = new[] { await f.Instituicao(), await f.Instituicao() };
         foreach (var i in instituicoes)
         {
@@ -83,7 +79,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([100, 100, 50], lotes);
         Assert.All(f.Llm.CorposEmbeddings.Skip(antes).Select(c => JsonDocument.Parse(c).RootElement), c =>
             Assert.Equal(("text-embedding-3-small", "float"), (c.GetProperty("model").GetString(), c.GetProperty("encoding_format").GetString())));
-        // door R1: a URL sai de Llm:BaseUrl (https://llm.teste/v1 no OneFactory)
         Assert.Equal(["https://llm.teste/v1/embeddings", "https://llm.teste/v1/embeddings", "https://llm.teste/v1/embeddings"],
             f.Llm.UrisEmbeddings.Skip(antes).Select(u => u.ToString()).ToList());
         foreach (var i in instituicoes)
@@ -94,7 +89,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C8
     [Fact]
     public async Task Falha_de_embeddings_tenta_5_vezes()
     {
@@ -124,7 +118,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("FALHOU", lista.GetProperty("indexacao").GetString());
     }
 
-    // C9
     [Fact]
     public async Task Indexacao_no_admin()
     {
@@ -144,7 +137,6 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// RAG S2: a busca no assistente.
 public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string SemBase = "Não encontrei isso nas orientações da instituição. Posso transferir você para um atendente.";
@@ -175,7 +167,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<long> Conversa(Aluno a, string mensagem) =>
         (await (await a.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem })).Json()).GetProperty("conversaId").GetInt64();
 
-    // C10
     [Fact]
     public async Task Chat_recebe_os_5_mais_proximos()
     {
@@ -193,7 +184,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(esperados, IdsDasFontes(f.Llm.UltimoCorpo));
     }
 
-    // C11
     [Fact]
     public async Task Consulta_com_as_ultimas_3_mensagens()
     {
@@ -205,13 +195,11 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         var entrada = JsonDocument.Parse(f.Llm.CorposEmbeddings[^1]).RootElement.GetProperty("input")[0].GetString();
         Assert.Equal("segunda mensagem\nterceira mensagem\nquarta mensagem", entrada);
 
-        // "sim" depois de uma conversa sobre o boleto ainda busca o boleto primeiro
         var outra = await Conversa(c.Aluno, "preciso do boleto");
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{outra}/mensagens", new { mensagem = "sim" });
         Assert.Equal(Semente.Fonte(c.Boleto.Id), IdsDasFontes(f.Llm.UltimoCorpo)[0]);
     }
 
-    // C12
     [Fact]
     public async Task Consulta_de_embedding_mascarada()
     {
@@ -223,7 +211,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("boleto da matrícula [número removido], cpf [número removido], email [e-mail removido]", entrada);
     }
 
-    // C13
     [Fact]
     public async Task So_trechos_buscaveis()
     {
@@ -253,7 +240,7 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
             db.VersoesArtigo.Add(v2);
             await db.SaveChangesAsync();
         });
-        proibidos.Add(Semente.Fonte(antigo.Id)); // o trecho da versão 1
+        proibidos.Add(Semente.Fonte(antigo.Id));
         var semEmbedding = await f.Artigo(i, "S", "y");
         proibidos.Add((await Trecho(i, await Versao(semEmbedding), pergunta, comEmbedding: false)).Id);
         var deOutra = await f.Artigo(outra, "O", pergunta);
@@ -267,7 +254,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Empty(ids.Intersect(proibidos));
     }
 
-    // C14
     [Fact]
     public async Task Arquivar_tira_da_busca()
     {
@@ -285,7 +271,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Você encontra o boleto no Portal do Aluno, na área financeira.", conversa.GetProperty("mensagens")[1].GetProperty("texto").GetString());
     }
 
-    // C15
     [Fact]
     public async Task Sem_trechos_indexados()
     {
@@ -293,7 +278,7 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         var aluno = await f.AlunoLogado(i);
         var categoria = (await f.Categoria(i, "Acadêmico")).Id;
         var artigo = (await (await admin.PostAsJsonAsync("/api/admin/artigos", new { titulo = "Boleto", perguntas = new[] { "boleto?" }, categoriaId = categoria, resposta = "O boleto fica no Portal do Aluno, menu Financeiro.", links = Array.Empty<string>() })).Json()).GetProperty("id").GetInt64();
-        await admin.PostAsync($"/api/admin/artigos/{artigo}/ativar", null); // trecho pendente, sem embedding
+        await admin.PostAsync($"/api/admin/artigos/{artigo}/ativar", null);
         f.Llm.Devolver(Cenario.Resposta("O boleto fica no portal.", [artigo], (artigo, "fica no Portal do Aluno, menu Financeiro")));
 
         var r = await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "boleto" });
@@ -302,7 +287,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("sem_base", (await r.Json()).GetProperty("resposta").GetProperty("tipo").GetString());
     }
 
-    // C16
     [Fact]
     public async Task Fonte_fora_dos_buscados_sem_base()
     {
@@ -320,14 +304,12 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(Logou(j.GetProperty("conversaId").GetInt64(), "fonte_invalida"));
     }
 
-    // C17
     [Fact]
     public async Task Conferencia_contra_o_trecho_de_fonte()
     {
         var c = await Cenario.Criar(f);
         var casos = new (object saida, string tipo, string? motivo)[]
         {
-            // o título está no texto do trecho de fonte, e não na resposta do artigo: confere contra o trecho
             (Cenario.Resposta("Veja no portal.", [c.Boleto.Id], (c.Boleto.Id, "Como emitir o boleto do semestre")), "resposta", null),
             (Cenario.Resposta("Boleto vence no dia 15.", [c.Boleto.Id], (c.Boleto.Id, "O prazo de pagamento é o dia 15 de cada mês.")), "sem_base", "trecho_invalido"),
             (Cenario.Resposta("Veja https://falso.exemplo agora.", [c.Boleto.Id], (c.Boleto.Id, Cenario.TrechoBoleto)), "sem_base", "link_invalido"),
@@ -341,7 +323,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C18
     [Fact]
     public async Task Grava_buscados_e_citacoes()
     {
@@ -355,14 +336,12 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         var citacao = Assert.Single(m.Citacoes);
         Assert.Equal((Semente.Fonte(c.Boleto.Id), (long?)null), (citacao.TrechoFonteId!.Value, citacao.VersaoArtigoId));
 
-        // nada indexado: a lista gravada é vazia, não nula
         var vazio = await f.AlunoLogado(await f.Instituicao());
         var semFontes = await Conversa(vazio, "boleto");
         var gravada = await f.Db(vazio.Instituicao.Id, db => db.MensagensConversa.SingleAsync(x => x.ConversaId == semFontes && x.Autor == "ASSISTENTE"));
         Assert.Equal([], gravada.TrechosBuscados);
     }
 
-    // C20
     [Fact]
     public async Task Embedding_da_consulta_falha_sem_base()
     {
@@ -379,7 +358,6 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
         finally { f.Llm.ResponderEmbeddings = null; }
     }
 
-    // C21
     [Fact]
     public async Task Log_da_busca_sem_texto()
     {

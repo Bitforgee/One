@@ -55,7 +55,6 @@ describe('resposta no chamado', () => {
     expect((screen.getByLabelText(/Anexos/) as HTMLInputElement).files).toHaveLength(0)
   })
 
-  // C42 (AC 32, door 11): o campo nativo continua achado pelo rótulo, e o arquivo solto na área do Dropzone vai em anexos
   it('soltar arquivo em Anexos envia em anexos', async () => {
     const chamadas = detalhe(chamado({ acoes: ['responder'] }), {}, me())
     const campo = await screen.findByLabelText('Anexos (PDF, JPG ou PNG, até 10 MB cada)')
@@ -164,7 +163,6 @@ describe('conversa do chamado', () => {
     expect(within(resposta).getByText('Este documento foi atualizado depois desta resposta.')).toBeInTheDocument()
   })
 
-  // historico-legivel C2 (AC 2): substitui "histórico só mostra a seta quando o evento tem origem ou destino" (formato cru)
   it('estado nulo no histórico sai como travessão', async () => {
     const evento = (tipo: string, de: string | null, para: string | null) => ({ tipo, ator: 'Carla', doAluno: false, de, para, detalhe: null, criadoEm: '2026-11-02T12:00:00Z' })
     detalhe(chamado({ mensagens: [], eventos: [evento('NOTA', null, null), evento('TRANSICAO', 'EM_ATENDIMENTO', null)] }))
@@ -173,7 +171,6 @@ describe('conversa do chamado', () => {
   })
 })
 
-// mobile-m0: a linha inteira da caixa é a área de toque, a nota avisa quem a vê e o aluno decide antes de reabrir.
 describe('mobile m0 no chamado', () => {
   it('toque no texto da marca: a linha é o rótulo e mede 44 px', async () => {
     detalhe(chamado({ eventos: [], acoes: ['responder', 'nota'] }))

@@ -5,7 +5,6 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-// Só entrega sinais (ChamadoMudou, FilaMudou); nenhum método devolve dado, texto ou fluxo (AD-012).
 public class TempoRealHub(OneDb db) : Hub
 {
     public async Task EntrarNoChamado(string numero)
@@ -31,7 +30,6 @@ public class TempoRealHub(OneDb db) : Hub
             await Groups.AddToGroupAsync(Context.ConnectionId, TempoRealGrupos.Fila(u.InstituicaoId, setorId));
     }
 
-    // O principal fica guardado desde a conexão: usuário, papéis, setores e atividade são relidos a cada chamada.
     async Task<Usuario> Reler()
     {
         var sub = long.Parse(Context.User!.FindFirstValue("sub")!);

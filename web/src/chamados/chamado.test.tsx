@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Chamado } from '../chamado'
 import { abrir, api, chamado, me } from '../test/util'
 
-// Chamado como a equipe o recebe: resumo, fontes e eventos.
 function daEquipe(parcial: Partial<Chamado> = {}): Chamado {
   return chamado({
     solicitante: 'Ana',
@@ -19,7 +18,6 @@ function daEquipe(parcial: Partial<Chamado> = {}): Chamado {
 const equipe = me({ papeis: ['ATENDENTE'], matriculas: [] })
 
 describe('chamado', () => {
-  // C39: os três estados do detalhe antes de haver conversa para mostrar
   it('detalhe do chamado carregando, erro e sem respostas', async () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => new Promise(() => {}) })
     const carregando = abrir('/univag/chamados/ONE-1')
@@ -42,7 +40,6 @@ describe('chamado', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  // layout-painel C30 (AC 30)
   it('título do chamado em h2', async () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/chamados/ONE-1')
@@ -100,7 +97,6 @@ describe('chamado', () => {
     expect(within(nova).getByText('“fica no Portal do Aluno”')).toBeInTheDocument()
   })
 
-  // anexos-assistente C38 (AC 29): o anexo que o aluno mandou ao assistente aparece na transcrição, como link para o download da conversa
   it('transcrição mostra os anexos do aluno como links', async () => {
     api({
       'GET /api/auth/me': () => [200, equipe],
@@ -127,7 +123,6 @@ describe('chamado', () => {
       expect(within((screen.getByText(texto)).closest('.is-user, .is-assistant') as HTMLElement).queryByRole('link')).not.toBeInTheDocument()
   })
 
-  // RAG C40
   it('fonte de documento no detalhe', async () => {
     api({
       'GET /api/auth/me': () => [200, equipe],
@@ -162,7 +157,6 @@ describe('chamado', () => {
     expect(within(art).queryByRole('link')).not.toBeInTheDocument()
   })
 
-  // redesign-institucional C15 (## Screens linha 9): o trecho da fonte quebra como o balão, depois de / ? & = #
   it('trecho da fonte quebra depois de / ? & = #', async () => {
     const Trecho = 'https://portal.univag.edu.br/a?x=1&y=2#topo'
     api({
@@ -184,7 +178,6 @@ describe('chamado', () => {
     expect([...citacao.querySelectorAll('wbr')].map((w) => w.previousSibling?.textContent?.slice(-1))).toEqual(['/', '/', '/', '?', '=', '&', '=', '#'])
   })
 
-  // C41 (AC 31): o detalhe relê o chamado a cada 15 s; só o relógio dos intervalos é falso
   it('detalhe relê o chamado a cada 15 s', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     try {
@@ -223,7 +216,6 @@ describe('chamado', () => {
     abrir('/univag/chamados/ONE-1')
 
     const lis = within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem')
-    // America/Cuiaba é UTC-4: 03:30Z ainda é dia 1º
     expect(lis.map((li) => li.textContent)).toEqual([
       '01/11/2026 23:30 · Sistema abriu a solicitação',
       '02/11/2026 08:00 · Carla assumiu a solicitação', // historico-frases AC 5
@@ -232,7 +224,6 @@ describe('chamado', () => {
     for (const li of lis) expect(within(li).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toHaveClass('text-muted-foreground')
   })
 
-  // historico-legivel: monta o detalhe da equipe com estes eventos e devolve o texto de cada item do Histórico
   async function historico(eventos: { tipo: string; ator?: string; doAluno?: boolean; de?: string | null; para?: string | null; detalhe?: string | null }[]) {
     const completos = eventos.map((e) => ({ ator: 'Carla', doAluno: false, de: null, para: null, detalhe: null, criadoEm: '2026-11-02T12:00:00Z', ...e }))
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, daEquipe({ mensagens: [], eventos: completos })] })
@@ -240,7 +231,6 @@ describe('chamado', () => {
     return within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem').map((li) => li.textContent!.replace('02/11/2026 08:00 · ', ''))
   }
 
-  // historico-legivel C1, C2 (AC 1, AC 2): as 10 linhas de ## Screens (11 casos)
   it('frase de cada tipo de evento', async () => {
     const Casos: [{ tipo: string; ator?: string; de?: string | null; para?: string | null }, string][] = [
       [{ tipo: 'CRIACAO', ator: 'Sistema', para: 'ABERTO' }, 'Sistema abriu a solicitação'],
@@ -260,7 +250,6 @@ describe('chamado', () => {
     for (const item of itens) expect(item, 'sem código cru').not.toMatch(/[A-Z]{2,}_[A-Z]+|\b(?:TRANSICAO|CRIACAO|ATRIBUICAO|ABERTO|FECHADO|RESOLVIDO)\b/)
   })
 
-  // historico-frases C3 a C7 (AC 3 a AC 7)
   it('frases com o autor certo', async () => {
     const Casos: [{ tipo: string; ator: string; doAluno?: boolean; de?: string | null; para?: string | null }, string][] = [
       [{ tipo: 'RESPOSTA', ator: 'Mariana', doAluno: true }, 'Mariana respondeu à equipe'],
@@ -273,7 +262,6 @@ describe('chamado', () => {
     expect(await historico(Casos.map(([e]) => e))).toEqual(Casos.map(([, f]) => f))
   })
 
-  // fluxos-atendimento C56 (AC 47): a frase da subida, com e sem autor
   it('frase da subida', async () => {
     const itens = await historico([
       { tipo: 'SUBIDA', ator: 'Ana', de: 'Líderes', para: 'Coordenação' },
@@ -287,7 +275,6 @@ describe('chamado', () => {
     ])
   })
 
-  // fluxos-atendimento C82 (AC 69): a coluna lateral diz em que etapa o chamado está, e nada quando não há fluxo
   it('etapa do fluxo na coluna lateral', async () => {
     api({
       'GET /api/auth/me': () => [200, equipe],
@@ -302,7 +289,6 @@ describe('chamado', () => {
     await screen.findByText('Atendimento')
     expect(screen.queryByText(/^Etapa \d+ de \d+/)).not.toBeInTheDocument()
   })
-  // fluxos-atendimento C79 (AC 60): a liderança recebe transcricao [] e matricula.numero null
   it('detalhe do líder sem a conversa nem o número de matrícula', async () => {
     api({
       'GET /api/auth/me': () => [200, equipe],
@@ -321,7 +307,6 @@ describe('chamado', () => {
     expect(screen.queryByRole('button', { name: 'Reclassificar' })).not.toBeInTheDocument()
   })
 
-  // historico-legivel C3 (AC 3)
   it('detalhe no fim da frase', async () => {
     expect(
       await historico([
@@ -340,7 +325,6 @@ describe('chamado', () => {
     ])
   })
 
-  // historico-legivel C5 (AC 5)
   it('estado desconhecido sai cru', async () => {
     expect(await historico([{ tipo: 'TRANSICAO', de: 'ABERTO', para: 'SUSPENSO' }])).toEqual(['Carla mudou o estado de Aberto para SUSPENSO'])
   })

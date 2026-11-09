@@ -10,7 +10,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// anexos-assistente: o aluno anexa foto e PDF na conversa, a equipe vê no chamado transferido.
 public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string SemBase = "Não encontrei isso nas orientações da instituição. Posso transferir você para um atendente.";
@@ -86,7 +85,6 @@ public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Trecho_copiado_do_anexo_vira_sem_base()
     {
         var c = await Cenario.Criar(f);
-        // o trecho T está no texto do PDF anexo e não existe na fonte citada
         const string t = "Vencimento em 15/11 para Maria Silva";
         f.Llm.Devolver(Cenario.Resposta("Seu boleto vence dia 15.", [c.Boleto.Id], (c.Boleto.Id, t)));
 
@@ -117,7 +115,6 @@ public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
         }
         Assert.Equal(antes, await Estado(c));
 
-        // exatamente 10 MiB passa
         Assert.Equal(HttpStatusCode.OK, (await Seguinte(c.Cliente, id, "oi", ("limite.png", Balcao.Arquivo(Balcao.Png, DezMiB)))).StatusCode);
     }
 

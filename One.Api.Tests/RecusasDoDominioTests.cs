@@ -7,8 +7,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// dominio-e-contratos C24, C25 e C31: as recusas de negócio que a entidade passa a decidir, presas na fronteira HTTP com o código
-// da base (status, detail e nada gravado).
 public class RecusasDoDominioTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static async Task<string?> Detail(HttpResponseMessage r) => (await r.Json()).GetProperty("detail").GetString();
@@ -20,7 +18,6 @@ public class RecusasDoDominioTests(OneFactory f) : IClassFixture<OneFactory>
             return (c.Estado, c.ResponsavelId, await db.EventosChamado.CountAsync(e => e.ChamadoId == c.Id), await db.MensagensChamado.CountAsync(m => m.ChamadoId == c.Id));
         });
 
-    // C24
     [Fact]
     public async Task Assumir_sendo_o_responsavel_409()
     {
@@ -36,7 +33,6 @@ public class RecusasDoDominioTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Retrato(b, numero));
     }
 
-    // C25
     [Fact]
     public async Task Rejeitar_ou_responder_fora_do_prazo_409()
     {
@@ -58,7 +54,6 @@ public class RecusasDoDominioTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Resolvido, antes.Item1);
     }
 
-    // C31
     [Fact]
     public async Task Artigo_ja_ativo_ou_ja_arquivado_409()
     {

@@ -40,7 +40,6 @@ export function Cabecalho({ c }: { c: Chamado }) {
   )
 }
 
-// RAG: a fonte citada, com o link do PDF da versão citada e o aviso de versão atualizada.
 function FonteCitada({ f }: { f: Fonte }) {
   const documento = f.tipo === 'DOCUMENTO'
   const Icone = documento ? FileText : BookText
@@ -65,8 +64,6 @@ function FonteCitada({ f }: { f: Fonte }) {
   )
 }
 
-// A liderança não recebe a conversa (transcricao: []): sem ela o bloco inteiro some, com o título.
-// Recolhida por padrão: a conversa longa com o assistente não empurra o atendimento para baixo.
 export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
   const [aberta, setAberta] = useState(false)
   if (c.transcricao.length === 0) return null
@@ -82,7 +79,6 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
       {aberta && (
         <div id="transcricao" className="flex flex-col gap-2">
           {c.transcricao.map((m, i) => {
-            // como no chat do aluno: os links do assistente viram botões abaixo do texto (AC 46)
             const { texto, links } = m.autor === 'ASSISTENTE' ? separarLinks(m.texto) : { texto: m.texto, links: [] }
             return (
               <Balao key={i} doAluno={m.autor === 'ALUNO'} texto={texto} comLinks={m.autor === 'ASSISTENTE'} em={m.criadaEm} fuso={fuso}>
@@ -108,14 +104,12 @@ function Mensagem({ m, fuso }: { m: MensagemChamado; fuso: string }) {
 
 type Item = { chave: string; em: string; evento?: Evento; mensagem?: MensagemChamado }
 
-// Mensagens e eventos numa só sequência, do mais antigo ao mais novo; no mesmo instante o evento vem antes da mensagem.
 function sequencia(mensagens: MensagemChamado[], eventos: Evento[] | null, comEventos: boolean): Item[] {
   const itens: Item[] = mensagens.map((m) => ({ chave: `m${m.id}`, em: m.criadaEm, mensagem: m }))
   if (comEventos) eventos?.forEach((e, i) => itens.push({ chave: `e${i}`, em: e.criadoEm, evento: e }))
   return itens.sort((a, b) => Date.parse(a.em) - Date.parse(b.em) || Number(!!b.evento) - Number(!!a.evento))
 }
 
-// "Ir para o mais recente" só aparece quando a sequência passa de uma tela.
 function useMaisQueUmaTela(lista: RefObject<HTMLOListElement | null>, n: number) {
   const [longa, setLonga] = useState(false)
   useLayoutEffect(() => {

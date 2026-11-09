@@ -1,6 +1,5 @@
 import { Paperclip } from 'lucide-react'
 
-// Anexo como link com o nome (e o tamanho, quando há): o do chamado e o da conversa com o assistente.
 export function LinkDeAnexo({ href, nome, tamanho }: { href: string; nome: string; tamanho?: number }) {
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm break-all">

@@ -18,7 +18,6 @@ public static class PushComando
     }
 }
 
-// par VAPID (RFC 8292): chave pública P-256 não comprimida (65 bytes) e privada D (32 bytes), em base64url sem preenchimento
 public sealed record ParVapid(string PublicKey, string PrivateKey)
 {
     public static ParVapid Gerar()

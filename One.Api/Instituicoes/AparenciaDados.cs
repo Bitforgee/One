@@ -16,7 +16,6 @@ public static class TiposDeImagem
     public static readonly string[] Todos = [Logo, Icone, Login, Assistente];
 }
 
-// A forma da aparência que as respostas de admin e a pública repartem; cada caso de uso a herda na sua Resposta.
 public record AparenciaDados(string? NomeCurto, string? Cor, LoginAparencia Login, AssistenteAparencia Assistente, ContatoAparencia Contato, ImagensAparencia Imagens)
 {
     public static AparenciaDados De(Instituicao i, IEnumerable<ImagemInstituicao> imagens)

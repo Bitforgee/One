@@ -8,7 +8,6 @@ namespace One.Api.Tests.Infra;
 
 public record Atendente(Usuario Usuario, HttpClient Cliente);
 
-// Instituição com um aluno, dois atendentes da triagem (A e B) e um atendente de outro setor (Alheio).
 public record Balcao(OneFactory F, Instituicao Instituicao, Aluno Aluno, Setor Triagem, Setor Outro, Atendente A, Atendente B, Atendente Alheio)
 {
     public HttpClient ClienteAluno => Aluno.Cliente;
@@ -22,7 +21,6 @@ public record Balcao(OneFactory F, Instituicao Instituicao, Aluno Aluno, Setor T
             await f.Atendente(i, triagem), await f.Atendente(i, triagem), await f.Atendente(i, outro));
     }
 
-    // Chamado na triagem por atendimento direto, levado ao estado pedido pelo atendente A e pelo aluno.
     public async Task<string> Chamado(string estado = EstadosChamado.Aberto, string descricao = "Preciso de ajuda com o boleto")
     {
         var r = await ClienteAluno.PostAsJsonAsync("/api/atendimento-direto", new { descricao });
@@ -64,7 +62,6 @@ public record Balcao(OneFactory F, Instituicao Instituicao, Aluno Aluno, Setor T
 
     public static readonly byte[] Pdf = "%PDF"u8.ToArray(), Jpg = [0xFF, 0xD8, 0xFF], Png = [0x89, 0x50, 0x4E, 0x47], Exe = "MZ"u8.ToArray();
 
-    // Volta no tempo só o chamado: avançar o relógio 7 dias venceria também o cookie de 8 h das sessões.
     public Task Recuar(string numero, TimeSpan quanto) =>
         F.Db(Instituicao.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s
             .SetProperty(c => c.CriadoEm, c => c.CriadoEm - quanto)
@@ -100,14 +97,12 @@ public static class SementeAtendimento
         return new Atendente(u, await f.Entrar(i, u));
     }
 
-    // A antiga regra por categoria: um fluxo para todos os cursos, publicado, de uma etapa (setor fixo, ou a coordenação do curso sem setor).
     public static Task<Fluxo> Regra(this OneFactory f, Instituicao i, Categoria c, Setor? setor) =>
         f.Fluxo(i, c, null, null, setor is null ? Etapa(DestinosEtapa.CoordenacaoCurso) : Etapa(DestinosEtapa.Setor, setor.Id));
 
     public static EtapaFluxo.Dados Etapa(string destino, long? setorId = null, int? prazoHoras = null, double? x = null, double? y = null) =>
         new(destino, setorId, prazoHoras, x, y);
 
-    // Fluxo gravado direto no banco; publicar false deixa só o rascunho.
     public static Task<Fluxo> Fluxo(this OneFactory f, Instituicao i, Categoria c, long? cursoId, int? semestre, params EtapaFluxo.Dados[] etapas) =>
         f.Fluxo(i, c, cursoId, semestre, true, etapas);
 

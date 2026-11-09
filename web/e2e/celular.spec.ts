@@ -2,7 +2,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 import { buttonVariants } from '../src/ui/button'
 import { chamadoSimulado, simularApi, Telas } from './simulada'
 
-// Arranjo do celular medido com boundingBox() e getComputedStyle: px CSS, tolerância de 1 px (checks.md).
 test.use({ serviceWorkers: 'block' })
 
 const caixa = async (l: Locator) => (await l.boundingBox())!
@@ -34,7 +33,6 @@ test.describe('S1 celular', () => {
   test('alvos de toque de 44 px abaixo de 768', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await simularApi(page)
-    // Button, os 8 tamanhos de ui/button.tsx: em tela real quando algum uso existe, senão num botão de teste com as classes de buttonVariants
     const nomes = ['default', 'sm', 'lg', 'xs', 'icon', 'icon-xs', 'icon-sm', 'icon-lg'] as const
     const medidos: Record<string, number> = {}
     await abrirTela(page, 'Artigos')
@@ -48,7 +46,6 @@ test.describe('S1 celular', () => {
     await abrirTela(page, 'Usuários')
     medidos.icon = await altura(page.getByRole('button', { name: /^Ações de/ })) // o size="icon" em tela é o MenuAcoes
     await abrirTela(page, 'Assistente')
-    // lg não tem uso em tela (o lg da casca é SidebarMenuButton, não Button); falta só ele, e vai pelo botão de teste
     for (const tamanho of nomes.filter((n) => !(n in medidos))) {
       await page.evaluate(([id, classe]) => document.body.insertAdjacentHTML('beforeend', `<button id="${id}" class="${classe}">x</button>`), [`t-${tamanho}`, buttonVariants({ size: tamanho })])
       medidos[tamanho] = await altura(page.locator(`#t-${tamanho}`))
@@ -81,9 +78,7 @@ test.describe('S1 celular', () => {
     })
     expect(varridos, 'elementos varridos').toBeGreaterThan(0)
     expect(cortados).toEqual([])
-    // frase de destaque inteira; rótulo de 40 caracteres em até 2 linhas
     await expect(page.getByText('Resolvidas sem reabertura, sobre as conversas com desfecho')).toBeVisible()
-    // estrutura-visual door 4: o rótulo do ranking é o texto inteiro da célula, que a varredura acima já conferiu sem corte
     const rotulo = page.locator('section tbody td:first-child', { hasText: 'Financeiro' })
     expect((await rotulo.textContent())!.replace(/\s/g, '')).toBe('Financeiro>Boletosemensalidades2026')
   })
@@ -93,7 +88,6 @@ test.describe('S1 celular', () => {
     await simularApi(page)
     await abrirTela(page, 'Cadastros')
     const seletor = await caixa(page.getByLabel('Cadastro'))
-    // cadastros-fluxo-visual (AC 1, AC 2): o cabeçalho do cadastro traz o botão com o nome do objeto, abaixo do seletor
     const novo = await caixa(page.getByRole('button', { name: /^Nov[oa] / }))
     expect(novo.y).toBeGreaterThan(seletor.y)
     expect(novo.y - (seletor.y + seletor.height)).toBeLessThanOrEqual(120) // logo abaixo: só o título e a frase do cadastro entre os dois
@@ -113,7 +107,6 @@ test.describe('S2 celular', () => {
       const cartoes = principal.getByRole('listitem')
       expect(await cartoes.count(), nome).toBeGreaterThan(0)
       if (nome === 'Fila' || nome === 'Minhas solicitações') {
-        // C29: linhas densas; 1 selo por linha antes de medir (L-069): sem selo o teste falha, não pula
         expect(await cartoes.locator('[data-slot=badge]').count(), `${nome}: 1 selo por linha`).toBe(await cartoes.count())
         const s = await caixa(cartoes.first().locator('[data-slot=badge]'))
         const assunto = await caixa(cartoes.first().getByRole('link'))
@@ -135,7 +128,6 @@ test.describe('S2 celular', () => {
     for (const largura of [390, 1023]) {
       await page.setViewportSize({ width: largura, height: 800 })
       await abrirTela(page, 'Detalhe do chamado')
-      // a barra fixa tem a ação principal ("Responder") e "Mais" (AC 24)
       const botao = page.getByRole('button', { name: 'Mais', exact: true })
       const estilo = await botao.evaluate((b) => ({ posicao: getComputedStyle(b.parentElement!).position, fundo: getComputedStyle(b.parentElement!).bottom }))
       expect(estilo, `${largura} px`).toEqual({ posicao: 'fixed', fundo: '0px' })
@@ -189,7 +181,6 @@ test.describe('mobile-m0 celular', () => {
         const linha = page.locator('label', { hasText: nome })
         const medida = await caixa(linha)
         expect(medida.height, nome + ' a ' + largura).toBeGreaterThanOrEqual(44)
-        // tocar no texto (fora dos 20 px da caixa) alterna a caixa
         await linha.getByText(nome, { exact: true }).click()
         await expect(page.getByLabel(nome)).toBeChecked()
         await linha.getByText(nome, { exact: true }).click()

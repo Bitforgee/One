@@ -4,13 +4,11 @@ import { describe, expect, it } from 'vitest'
 import type { Chamado, Evento, MensagemChamado } from '../chamado'
 import { abrir, api, chamado, me } from '../test/util'
 
-// chat-linha-do-tempo C8 a C17: mensagens e eventos numa só sequência
 const equipe = me({ papeis: ['ATENDENTE'], matriculas: [] })
 
 const evento = (tipo: string, ator: string, criadoEm: string, de: string | null = null, para: string | null = null): Evento => ({ tipo, ator, doAluno: false, de, para, detalhe: null, criadoEm })
 const mensagem = (id: number, texto: string, criadaEm: string, extra: Partial<MensagemChamado> = {}): MensagemChamado => ({ id, tipo: 'PUBLICA', texto, autor: 'Carla', doAluno: false, criadaEm, ...extra })
 
-// 12:00 abriu · 12:05 Carla assumiu · 12:10 resposta · 12:20 mudou o estado · 12:30 resposta do aluno
 const abertura = evento('CRIACAO', 'Sistema', '2026-11-02T12:00:00Z', null, 'ABERTO')
 const assumiu = evento('ATRIBUICAO', 'Carla', '2026-11-02T12:05:00Z', null, 'Carla')
 const mudou = evento('TRANSICAO', 'Carla', '2026-11-02T12:20:00Z', 'EM_ATENDIMENTO', 'AGUARDANDO_ALUNO')
@@ -31,7 +29,6 @@ const textos = async () => (await itens()).map((li) => li.textContent!)
 
 describe('linha do tempo do chamado', () => {
   it('mensagens e eventos em ordem cronológica', async () => {
-    // fora de ordem na API: a tela ordena pelo horário
     detalhe(daEquipe({ mensagens: [doAluno, resposta], eventos: [mudou, abertura, assumiu] }))
     const lista = await itens()
     expect(lista).toHaveLength(5)
@@ -100,7 +97,6 @@ describe('linha do tempo do chamado', () => {
     expect(await screen.findByText('Etapa 2 de 3 · ADS')).toBeInTheDocument()
     expect(screen.getByText('Ações')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Histórico' })).not.toBeInTheDocument()
-    // o único lugar do evento é a linha do tempo
     expect(screen.getAllByText(/Carla assumiu a solicitação/)).toHaveLength(1)
     expect(screen.getByTestId('linha-do-tempo')).toHaveTextContent('Carla assumiu a solicitação')
   })

@@ -8,7 +8,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// aparencia-instituicao S3: as rotas de admin da aparência (C11 a C22, C59).
 public class AparenciaAdminTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string RecusaDaCor = "Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.";
@@ -136,7 +135,7 @@ public class AparenciaAdminTests(OneFactory f) : IClassFixture<OneFactory>
     static void Definir(JsonObject corpo, string campo, int tamanho)
     {
         var texto = new string('a', tamanho);
-        if (campo.EndsWith('#')) // quantidade de itens
+        if (campo.EndsWith('#'))
         {
             var (grupo, lista) = campo.TrimEnd('#').Split('.') is [var g, var l] ? (g, l) : throw new InvalidOperationException(campo);
             corpo[grupo]![lista] = new JsonArray([.. Enumerable.Range(0, tamanho).Select(n => (JsonNode?)$"item {n}")]);
@@ -364,7 +363,6 @@ public class AparenciaAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Null((await Gravada(i.Id)).NomeCurto);
         Assert.Empty(await Linhas(i.Id));
 
-        // isolamento: o admin de A grava, o de B não vê nada disso e não remove a imagem de A
         await Put(admin, Valido());
         await ImagemTeste.Enviar(admin, "logo", ImagemTeste.Png());
         var (b, adminB) = await Admin();

@@ -14,7 +14,6 @@ type Erro = { linha: number; motivo: string }
 
 const CabecalhoDoCsv = 'cpf;nome;email;matricula;curso;semestre;situacao'
 
-// O modelo: só o cabeçalho, para o arquivo nascer com as colunas certas.
 function baixarModelo() {
   const url = URL.createObjectURL(new Blob([`${CabecalhoDoCsv}
 `], { type: 'text/csv;charset=utf-8' }))
@@ -25,7 +24,6 @@ function baixarModelo() {
   URL.revokeObjectURL(url)
 }
 
-// Os erros por linha que a API devolve: "Linha N" e o motivo.
 function ErrosDaImportacao({ erros }: { erros: Erro[] }) {
   if (erros.length === 0) return null
   return (
@@ -55,7 +53,6 @@ function Passo({ n, titulo, children }: { n: number; titulo: string; children: R
   )
 }
 
-// S8 e door 15: CSV do sistema acadêmico; tudo ou nada.
 export function Matriculas() {
   const [arquivo, setArquivo] = useState<File>()
   const [confirmar, setConfirmar] = useState(false)

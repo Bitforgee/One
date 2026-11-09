@@ -3,7 +3,6 @@ using One.Api.Instituicoes;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid C24: a validação da carga devolve os erros sem gravar; um caso por motivo de recusa.
 public class CargaValidacaoTests
 {
     static Existentes Existentes() => new(
@@ -53,7 +52,6 @@ public class CargaValidacaoTests
         foreach (var (motivo, arquivo, esperado) in casos)
             Assert.True(esperado.SequenceEqual(Erros(arquivo)), $"{motivo}: [{string.Join(" | ", Erros(arquivo))}]");
 
-        // arquivo válido: nenhum erro, e o plano traz o que o comando vai gravar
         var (erros, plano) = CargaValidacao.Validar(Arquivo(setores: [new("Financeiro")], categorias: [new("Matrícula")], cursos: [new("Medicina", "Financeiro")],
             regras: [new("Matrícula", null, true)], artigos: [Artigo()]), Existentes());
         Assert.Empty(erros);
@@ -63,7 +61,6 @@ public class CargaValidacaoTests
         Assert.Equal("Boletos", Assert.Single(plano.Artigos).Categoria.Nome);
     }
 
-    // fluxos-atendimento C10: cada regra da carga vira um fluxo de uma etapa; o plano guarda o destino e o setor dela
     [Fact]
     public void Regra_da_carga_vira_fluxo_de_uma_etapa()
     {
@@ -76,7 +73,6 @@ public class CargaValidacaoTests
         Assert.Equal((DestinosEtapa.CoordenacaoCurso, "Notas", null), (plano.Regras[1].Destino, plano.Regras[1].Categoria.Nome, plano.Regras[1].Setor?.Nome));
     }
 
-    // fluxos-atendimento C11: a categoria que já tem fluxo para todos os cursos recusa a regra, com o erro de sempre
     [Fact]
     public void Categoria_com_fluxo_ja_tem_regra()
     {

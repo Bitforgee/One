@@ -9,7 +9,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid S2: cada prazo vem de Prazos:* e o texto que o aluno lê diz o mesmo número.
 public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<OneFactoryPrazos>, IClassFixture<OneFactory>
 {
     static Task<string> CorpoResolvido(OneFactory f, Balcao b, string numero) =>
@@ -21,7 +20,6 @@ public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<
     static Task<HttpResponseMessage> Rejeitar(Balcao b, string numero) =>
         b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{numero}/rejeitar", new { motivo = "Não resolveu." });
 
-    // C8
     [Fact]
     public async Task Confirmacao_de_10_dias_fecha_no_10o_e_textos_dizem_10()
     {
@@ -39,7 +37,6 @@ public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<
         Assert.Contains("(até 10 dias)", await CorpoResolvido(f, b, vencido));
     }
 
-    // C9
     [Fact]
     public async Task Rejeicao_segue_prazo_de_confirmacao()
     {
@@ -55,7 +52,6 @@ public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<
         Assert.Equal("O prazo de 10 dias para rejeitar a resolução terminou.", (await r.Json()).GetProperty("detail").GetString());
     }
 
-    // C10
     [Fact]
     public async Task Lembrete_de_4_dias_no_texto()
     {
@@ -72,7 +68,6 @@ public class PrazosTests(OneFactoryPrazos f, OneFactory padrao) : IClassFixture<
         Assert.Equal("Lembrete ao aluno: 4 dias aguardando resposta", lembrete.Detalhe);
     }
 
-    // C11: sem nenhuma chave Prazos:*, os valores e os textos de hoje
     [Fact]
     public async Task Padroes_sem_configuracao()
     {

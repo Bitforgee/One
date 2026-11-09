@@ -7,10 +7,8 @@ namespace One.Api.Instituicoes;
 
 public record NovaInstituicao(string Slug, string Nome, string Fuso, string? Cpf, string AdminNome, string Email);
 
-// campo no formato da rota ("admin.cpf"); o comando troca o ponto por hífen ("--admin-cpf")
 public record ErroDeCampo(string Campo, string Mensagem, bool Repetido = false);
 
-// A criação de instituição que o comando e a rota da plataforma dividem.
 public static partial class Criacao
 {
     [GeneratedRegex("^[a-z0-9-]{3,30}$")] private static partial Regex SlugValido();
@@ -28,7 +26,6 @@ public static partial class Criacao
         return erros;
     }
 
-    // Grava tudo numa transação; com cfg, o e-mail de primeiro acesso entra nela.
     public static async Task<(Instituicao, string)> Gravar(OneDb db, NovaInstituicao n, DateTime agora, IConfiguration? cfg)
     {
         await using var tx = await db.Database.BeginTransactionAsync();

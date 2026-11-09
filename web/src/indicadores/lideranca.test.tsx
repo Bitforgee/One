@@ -4,7 +4,6 @@ import { abrir, api, me } from '../test/util'
 
 const lider = me({ papeis: ['ATENDENTE'], matriculas: [] })
 
-// base-fluxos C7 (AC 3): o líder tem o papel ATENDENTE, então o menu mostra Indicadores; a API recusa e a tela diz por quê.
 describe('indicadores para a liderança', () => {
   afterEach(() => {
     vi.useRealTimers()

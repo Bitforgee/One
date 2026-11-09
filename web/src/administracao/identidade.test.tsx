@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, instituicao, me } from '../test/util'
 
-// identidade-visual S5 (AC 19, AC 21): a Planilha de Matrículas e a prévia da Aparência; o arranjo é do Playwright (e2e/identidade.spec.ts).
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const Perguntas = ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?']
 const aparencia = (login: number | null) => {
@@ -22,7 +21,6 @@ beforeEach(() => {
 })
 
 describe('Matrículas', () => {
-  // C37 (AC 19)
   it('Planilha no passo 2 com as 7 colunas', async () => {
     api({ 'GET /api/auth/me': () => [200, admin] })
     let blob: Blob | undefined
@@ -42,7 +40,6 @@ describe('Matrículas', () => {
 })
 
 describe('prévia da Aparência', () => {
-  // C39 (AC 21)
   it('prévia com o login e as boas-vindas novos', async () => {
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/aparencia': () => [200, aparencia(null)], 'GET /api/instituicoes/univag': () => [200, instituicao()] })
     abrir('/univag/aparencia')
@@ -54,7 +51,6 @@ describe('prévia da Aparência', () => {
     expect(previa.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     expect(regiao.querySelector('img[src*="/imagens/login"]'), 'sem foto de login').toBeNull()
 
-    // a prévia mostra o bloco da aba: o do assistente aparece na aba Assistente
     await userEvent.click(screen.getByRole('tab', { name: 'Assistente' }))
     expect(previa.getByText('Atendimento ao estudante · Univag')).toBeInTheDocument()
     expect(previa.getByText('Oi! Posso ajudar com boletos e matrícula.')).toBeInTheDocument()

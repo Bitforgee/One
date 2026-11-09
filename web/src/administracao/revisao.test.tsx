@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 
-// revisao-ux S5 (C40, C47, C48): erro de campo, Usuários e Matrículas; o que se mede em pixels está em e2e/ux.spec.ts.
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const operador = me({ papeis: ['ADMINISTRADOR', 'OPERADOR'], matriculas: [] })
 const ok = (corpo: unknown): Rota => () => [200, corpo]
@@ -50,7 +49,6 @@ describe('erro de campo da API abaixo do campo', () => {
     },
   ]
 
-  // C40 (AC 30): o texto vem depois do campo e antes do rótulo do seguinte, o campo aponta para ele e o rodapé não o tem
   it.each(Casos)('erro de campo da API abaixo do campo ($nome)', async ({ caminho, eu, rotas, abrirForm, enviar, rotulo, proximo, texto, preencher }) => {
     api({ 'GET /api/auth/me': ok(eu), ...rotas })
     abrir(caminho)
@@ -86,7 +84,6 @@ describe('CPF formatado e busca por nome, CPF ou e-mail', () => {
   }
   const visiveis = () => ['Carla Souza', 'Bruno Lima'].filter((n) => screen.queryByText(n))
 
-  // C47 (AC 34)
   it('CPF formatado e busca por nome, CPF ou e-mail (formato)', async () => {
     tela()
     await screen.findByText('Carla Souza')
@@ -118,7 +115,6 @@ describe('Matrículas em 3 passos com modelo e erros por linha', () => {
     abrir('/univag/matriculas')
   }
 
-  // C48 (AC 35)
   it('Matrículas em 3 passos com modelo e erros por linha: os 3 passos numerados', async () => {
     tela()
     await screen.findByLabelText('Arquivo CSV')

@@ -8,7 +8,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// tempo-real-signalr S1: o cliente .NET contra o hub real; entrar em grupo repete a regra do GET.
 public class TempoRealEntradaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string NaoEncontrado = "Chamado não encontrado.";
@@ -168,7 +167,6 @@ public class TempoRealEntradaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Empty(await c.Quieto());
         }
 
-        // o mesmo detail do GET para o caso
         var get = await b.Alheio.Cliente.GetAsync($"/api/chamados/{numero}");
         Assert.Equal(NaoEncontrado, (await get.Json()).GetProperty("detail").GetString());
     }
@@ -223,7 +221,6 @@ public class TempoRealEntradaTests(OneFactory f) : IClassFixture<OneFactory>
                 Assert.True(Invalida == await c.Recusa(() => chamar(c)), $"{nome}, instituição inativa: {instituicaoInativa}");
             }
 
-        // a recusa de sessão vem antes: chamado inexistente e usuário que não é atendente também dão "Sessão inválida."
         var aluno = await f.AlunoLogado();
         await using var ca = await f.Abrir(aluno.Instituicao, aluno.Usuario);
         await f.Desativar(aluno.Instituicao, aluno.Usuario);

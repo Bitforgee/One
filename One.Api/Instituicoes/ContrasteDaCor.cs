@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 
 namespace One.Api.Instituicoes;
 
-// Door 8: a cor da marca precisa de 4,5:1 contra o branco (WCAG 2.x, luminância relativa sRGB).
 public static partial class ContrasteDaCor
 {
     public const double Minimo = 4.5;

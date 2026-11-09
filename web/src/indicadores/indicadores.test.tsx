@@ -16,7 +16,6 @@ describe('indicadores', () => {
       chamadosAbertos: 0, chamadosResolvidos: 0, tempoPrimeiraRespostaHoras: null, tempoResolucaoHoras: null, roteamentoCorreto: null, taxaReabertura: null,
       principaisCategorias: { porConversas: [], porChamados: [] }, indicadorPrincipal: null,
     }
-    // a consulta inicial (mês corrente) não está no mapa e responde 404; a do período escolhido devolve o vazio
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/indicadores?de=2026-10-01&ate=2026-10-31': () => [200, vazio] })
     abrir('/univag/indicadores')
     await userEvent.clear(await screen.findByLabelText('De'))
@@ -29,7 +28,6 @@ describe('indicadores', () => {
     expect(screen.queryByText('Autoatendimento')).not.toBeInTheDocument()
   })
 
-  // layout-painel C45 (AC 20)
   it('Consultar mostra o Spinner enquanto busca', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 15, 10, 0))
@@ -89,11 +87,9 @@ describe('indicadores', () => {
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
     expect(screen.queryByText('Sem atendimentos neste período.')).not.toBeInTheDocument()
     expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(2) // o período e o anterior (identidade-visual AC 12)
-    // os rankings ficam um embaixo do outro no celular e lado a lado a partir de 896 px do main
     expect(conversas.parentElement).toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')
   })
 
-  // layout-painel C16 (AC 16) e C18 (AC 18): os 13 rótulos e valores de hoje, os 4 de destaque primeiro com o rodapé
   const dadosCheios = {
     semDados: false, alunosAtivos: 12, conversas: 5, taxaAutoatendimento: 0.456, taxaEscalonamento: 0.2, taxaAbandono: 0.1, taxaPerguntasSemArtigo: 0.1,
     chamadosAbertos: 4, chamadosResolvidos: 2, tempoPrimeiraRespostaHoras: 1.5, tempoResolucaoHoras: 3, roteamentoCorreto: 0.5, taxaReabertura: 0.1,
@@ -119,7 +115,6 @@ describe('indicadores', () => {
       ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
       ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública.'],
     ])
-    // vêm antes de qualquer outro cartão
     expect(principal.parentElement!.previousElementSibling?.tagName).toBe('FORM')
   })
 
@@ -153,7 +148,6 @@ describe('indicadores', () => {
   })
 
   describe('rankings e período', () => {
-    // 10/11/2026: a consulta inicial vai de 01/11 a 10/11
     const Inicial = 'GET /api/indicadores?de=2026-11-01&ate=2026-11-10'
     const dados = {
       semDados: false, alunosAtivos: 12, conversas: 5, taxaAutoatendimento: 0.5, taxaEscalonamento: 0.2, taxaAbandono: 0.1, taxaPerguntasSemArtigo: 0.1,
@@ -171,7 +165,6 @@ describe('indicadores', () => {
     const cartao = async (titulo: string) => (await screen.findByText(titulo)).closest('section') as HTMLElement
     const barras = (c: HTMLElement) => c.querySelectorAll('[data-barra]')
 
-    // C46 (AC 34), estrutura-visual door 4: a tabela já vem aberta, com uma barra por linha e sem gráfico
     it('ranking com barras na própria tabela', async () => {
       indicadores()
       const conversas = await cartao('Categorias por conversas')
@@ -180,7 +173,6 @@ describe('indicadores', () => {
       expect(conversas.querySelector('.recharts-responsive-container')).toBeNull()
     })
 
-    // C47 (AC 35): o ranking vazio mostra só o traço, sem barra
     it('ranking vazio sem barras', async () => {
       indicadores()
       await cartao('Categorias por conversas')
@@ -189,7 +181,6 @@ describe('indicadores', () => {
       expect(barras(chamados)).toHaveLength(0)
     })
 
-    // C51 (AC 54, door 16)
     it('rankings em tabela Categoria e Total', async () => {
       indicadores()
       for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
@@ -203,7 +194,6 @@ describe('indicadores', () => {
       ])
     })
 
-    // C49 (AC 52, door 15; AC 32): o período vem dos campos de data e só consulta no Consultar
     it('período pelos campos de data só consulta no Consultar', async () => {
       const chamadas = indicadores()
       await screen.findByText('Indicador principal')

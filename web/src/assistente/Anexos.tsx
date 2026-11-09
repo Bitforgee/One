@@ -6,7 +6,6 @@ import { Button } from '../ui/button'
 export const LimiteDeAnexos = 3
 export const AjudaDosAnexos = 'PDF ou foto, até 10 MB'
 
-// Os arquivos escolhidos e a conta dos que a conversa já recebeu: juntos, no máximo 3.
 export function useAnexos() {
   const [escolhidos, setEscolhidos] = useState<File[]>([])
   const [enviados, setEnviados] = useState(0)
@@ -18,7 +17,6 @@ export function useAnexos() {
     enviados,
     escolher: (novos: File[]) => setEscolhidos((atuais) => [...atuais, ...novos].slice(0, LimiteDeAnexos - enviados)),
     remover: (i: number) => setEscolhidos((atuais) => atuais.filter((_, j) => j !== i)),
-    // a mensagem foi: os escolhidos passam a contar como enviados
     enviou: () => {
       setEnviados((n) => n + escolhidos.length)
       setEscolhidos([])

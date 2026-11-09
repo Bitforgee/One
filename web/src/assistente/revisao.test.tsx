@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
-// revisao-ux S3 (C21 a C28): o aluno lê, avalia e é transferido sem confusão.
 const Convite = 'Quer explicar melhor ou falar com um atendente?'
 const resposta = (texto = 'O boleto fica no portal.'): Rota => () => [201, { conversaId: 7, resposta: { tipo: 'resposta', texto } }]
 const Contato = { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: null }
@@ -22,7 +21,6 @@ async function enviar(texto = 'preciso do boleto') {
 const balaoDoAssistente = () => [...document.querySelectorAll('.is-assistant')]
 
 describe('assistente revisado', () => {
-  // C21 (AC 15)
   it('Isso resolveu logo abaixo da última resposta', async () => {
     assistente({ 'POST /api/conversas': resposta('Primeira resposta.'), 'POST /api/conversas/7/mensagens': () => [200, { resposta: { tipo: 'resposta', texto: 'Segunda resposta.' } }] })
     await enviar()
@@ -42,7 +40,6 @@ describe('assistente revisado', () => {
     expect(within(grupo).getByRole('button', { name: 'Não' })).toHaveAttribute('data-variant', 'outline')
   })
 
-  // C23 (AC 16)
   it('transferência mostra para onde foi e tira o convite', async () => {
     for (const contato of [Contato, { horario: null, telefone: null, email: null }]) {
       assistente(
@@ -72,18 +69,15 @@ describe('assistente revisado', () => {
     }
   })
 
-  // C26 (AC 18, P13)
   it('Falar com atendente outline fora do destaque', async () => {
     assistente({ 'POST /api/conversas': resposta(), 'POST /api/conversas/7/avaliacao': () => [200, { desfecho: null }] })
     const botao = await screen.findByRole('button', { name: /Falar com atendente/ })
     expect(botao).toHaveAttribute('data-variant', 'outline')
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Não' }))
-    // em destaque (depois do "Não"), segue o botão principal
     expect(screen.getByRole('button', { name: /Falar com atendente/ })).toHaveAttribute('data-variant', 'default')
   })
 
-  // C27 (AC 19): 4 casos
   it('ajuda dos anexos só com arquivo ou clipe focado', async () => {
     assistente()
     const clipe = await screen.findByRole('button', { name: 'Anexar arquivo' })
@@ -100,10 +94,8 @@ describe('assistente revisado', () => {
     expect(ajuda()).toHaveLength(1)
   })
 
-  // C28 (AC 20): 3 casos
   describe('erro de envio no lugar da resposta com Reenviar', () => {
     const falha: Rota = () => [500, { status: 500, detail: 'Falha simulada' }]
-    // a primeira chamada falha; a seguinte devolve a resposta
     const comFalha = (certa: Rota): Rota => {
       let n = 0
       return (corpo) => (n++ === 0 ? falha(corpo) : certa(corpo))

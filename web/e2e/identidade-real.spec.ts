@@ -1,7 +1,5 @@
 import { expect, test, type APIRequestContext, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 
-// identidade-visual C44: e2e real, sem simulada.ts. Contra E2E_URL (a imagem própria da feature, porta 8089) e o Mailpit do compose.
-// A instituição `e2e` tem um administrador (123.456.789-09 / admin@e2e.one) criado por `dotnet One.Api.dll instituicao criar`.
 const slug = process.env.E2E_INSTITUICAO ?? 'e2e'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@e2e.one'
@@ -19,7 +17,6 @@ function cpfValido(semente: number) {
   return d.join('')
 }
 
-// O limitador "auth" da API é de 5 por minuto por IP (L-066): o spec loga 2 vezes (o administrador e o aluno) e usa o primeiro acesso de cada um; espera a janela se precisar.
 test.describe.configure({ timeout: 240_000, mode: 'serial' })
 const instantes: number[] = []
 const dormir = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -60,7 +57,6 @@ let admin: APIRequestContext
 let aluno: APIRequestContext
 let numero: string
 
-// O administrador (1 login) cadastra o curso e a matrícula do aluno; o aluno (1 login) abre a solicitação pela API, sem tela.
 test.beforeAll(async ({ playwright, baseURL }) => {
   test.setTimeout(240_000) // a janela do limitador pode estar ocupada pelo spec anterior
   const rodada = Date.now()
@@ -96,7 +92,6 @@ const comSessao = async (browser: Browser, baseURL: string | undefined, quem: AP
   browser.newContext({ baseURL, storageState: await quem.storageState() })
 
 test('aluno vê a solicitação em aberto e as fontes do app', async ({ browser, baseURL }) => {
-  // 1. o Login sem cookie pede a Public Sans do próprio app e nenhuma Inter
   const anonimo = await browser.newContext({ baseURL })
   const login = await anonimo.newPage()
   const respostas: { url: string; status: number; tipo: string }[] = []
@@ -115,7 +110,6 @@ test('aluno vê a solicitação em aberto e as fontes do app', async ({ browser,
   expect(urls.filter((u) => u.includes('inter-')), 'nenhum URL com inter-').toEqual([])
   await anonimo.close()
 
-  // 2. o aluno, só ALUNO, abre o Assistente sem conversa e vê a solicitação em aberto
   const contexto = await comSessao(browser, baseURL, aluno)
   const page = await contexto.newPage()
   await page.goto(`/${slug}/assistente`)
@@ -137,7 +131,6 @@ test('Indicadores consulta o período anterior na API real', async ({ browser, b
   await expect(page.getByText('Indicador principal', { exact: true })).toBeVisible()
   await expect(page.getByRole('alert')).toHaveCount(0)
 
-  // as datas saem do relógio do navegador: o mês corrente até hoje e o período anterior de mesmo número de dias
   const hoje = await page.evaluate(() => {
     const d = new Date()
     return [d.getFullYear(), d.getMonth() + 1, d.getDate()]

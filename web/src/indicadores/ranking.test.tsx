@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
 import { Ranking } from './Indicadores'
 
-// estrutura-visual S5 (door 4): o ranking é uma tabela com a barra desenhada em HTML, sem biblioteca de gráfico.
 afterEach(() => {
   vi.useRealTimers()
 })

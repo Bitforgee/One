@@ -3,7 +3,6 @@ import path from 'node:path'
 import type { Browser, Locator, Page } from '@playwright/test'
 import { narracao } from './tts'
 
-// Kit da gravação da apresentação: cursor visível, legenda, selo do papel, cartões e passos narrados.
 
 export const Tamanho = { width: 1280, height: 720 }
 export const Saida = path.join(import.meta.dirname, 'saida')
@@ -18,21 +17,14 @@ const Pausa = 1.2 // segundos de respiro depois de cada fala
 
 export type Passo = { id: string; texto: string; acao?: (page: Page) => Promise<void> }
 export type Cartao = { titulo: string; subtitulo?: string; nota?: string }
-// Um segmento é um vídeo: um cartão de título ou um papel (contexto próprio, login próprio).
 export type Segmento = { id: string; cartao?: Cartao; selo?: string; preparar?: (page: Page) => Promise<void>; passos: Passo[] }
 export type Roteiro = { video: string; legendas: string; segmentos: Segmento[] }
 
-// Um pixel quase invisível que repinta sem parar: o screencast só manda quadro quando a tela muda,
-// e sem quadros o vídeo de uma tela parada sai mais curto que a gravação.
 const Pulso = {
   css: '@keyframes apr-pulso { to { opacity: .02; } } .apr-pulso { position: fixed; right: 0; bottom: 0; width: 2px; height: 2px; background: #000; opacity: .01; animation: apr-pulso .1s steps(2) infinite alternate; }',
   html: '<i class="apr-pulso"></i>',
 }
 
-// O CSS da camada também contorna um defeito visual do app: Alert com texto solto (sem ícone nem AlertDescription)
-// cai na coluna de 0 px do grid e quebra palavra por palavra.
-// Camada por cima do app: cursor, onda do clique, legenda e selo. Roda em cada documento (addInitScript);
-// legenda, selo e posição do cursor ficam no sessionStorage para sobreviver às navegações.
 function camada(pulso: typeof Pulso) {
   const ss = sessionStorage
   const montar = () => {
@@ -65,9 +57,6 @@ function camada(pulso: typeof Pulso) {
     c.style.display = 'block'
     c.style.transform = `translate(${x - 3}px, ${y - 2}px)` // a ponta da seta fica no ponto do mouse
   }
-  // A legenda fica no alto, entre o título da página e os botões do cabeçalho: não cobre o compositor do
-  // assistente (fixo no rodapé) nem as respostas novas, que entram por baixo.
-  // Reposiciona sempre (setInterval): a navegação do app troca o título sem recarregar a página.
   const posicionar = () => {
     const legenda = el('apr-legenda')
     if (!legenda) return
@@ -116,7 +105,6 @@ const definir = (page: Page, chave: string, valor: string) =>
 export const legendar = (page: Page, texto: string) => definir(page, 'apr-legenda', texto)
 export const selo = (page: Page, texto: string) => definir(page, 'apr-selo', texto)
 
-// Movimento suave (ease-in-out) da posição atual até (x, y); o Playwright guarda a última posição do mouse.
 const posicoes = new WeakMap<Page, { x: number; y: number }>()
 export async function mover(page: Page, x: number, y: number, ms = 700) {
   const de = posicoes.get(page) ?? { x: Tamanho.width / 2, y: Tamanho.height / 2 }
@@ -155,7 +143,6 @@ export async function rolar(page: Page, dy: number, ms = 800) {
   }
 }
 
-// Cartão de título em tela cheia, com a Inter do próprio app embutida (não depende do servidor).
 const Inter = readFileSync(path.join(import.meta.dirname, '..', 'node_modules', '@fontsource-variable', 'inter', 'files', 'inter-latin-wght-normal.woff2')).toString('base64')
 const escapar = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)
 export function htmlCartao({ titulo, subtitulo, nota }: Cartao) {
@@ -171,12 +158,10 @@ export function htmlCartao({ titulo, subtitulo, nota }: Cartao) {
   </style><body>${Pulso.html}<div class="marca"></div><h1>${escapar(titulo)}</h1>${subtitulo ? `<p>${escapar(subtitulo)}</p>` : ''}${nota ? `<small>${escapar(nota)}</small>` : ''}</body></html>`
 }
 
-// Estado da gravação de cada página: t0 é o instante da criação da página, quando o vídeo começa.
 type PassoGravado = { id: string; texto: string; inicio: number; arquivo: string; duracao: number; motor: string }
 const gravacoes = new WeakMap<Page, { t0: number; cartao: boolean; passos: PassoGravado[] }>()
 const agora = (page: Page) => (Date.now() - gravacoes.get(page)!.t0) / 1000
 
-// Mostra o texto na legenda, marca o início, executa a ação e espera a fala terminar (+ pausa).
 export async function passo(page: Page, p: Passo) {
   const g = gravacoes.get(page)!
   const audio = await narracao(p.texto)
@@ -188,8 +173,6 @@ export async function passo(page: Page, p: Passo) {
   if (resta > 0) await page.waitForTimeout(resta * 1000)
 }
 
-// Grava um segmento num contexto novo e deixa em saida/segmentos/<id>.webm + <id>.json.
-// "corte" é o instante em que a tela ficou pronta: o compositor descarta o vídeo antes dele (carregamento, login).
 export async function gravar(browser: Browser, seg: Segmento) {
   const pasta = path.join(Saida, 'segmentos')
   const bruto = path.join(Saida, 'bruto', seg.id)
@@ -207,8 +190,6 @@ export async function gravar(browser: Browser, seg: Segmento) {
     await page.mouse.move(Tamanho.width / 2, Tamanho.height / 2)
   }
   await page.waitForTimeout(400) // fontes e animações de entrada assentam antes do corte
-  // Marca de sincronia: o vídeo começa um pouco depois de newPage(); o compositor acha este quadrado
-  // magenta no vídeo e corrige a diferença entre o relógio daqui e o tempo do vídeo.
   await page.evaluate(() => {
     const m = document.createElement('div')
     m.id = 'apr-sinc'

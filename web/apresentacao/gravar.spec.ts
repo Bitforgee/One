@@ -5,7 +5,6 @@ import { gravar, Saida, type Roteiro } from './kit'
 import { roteiro as amostra } from './cenas/amostra'
 import { roteiro as principal } from './cenas/principal'
 
-// Grava os segmentos do roteiro escolhido (ROTEIRO=amostra|principal), em ordem, um vídeo por segmento.
 const Roteiros: Record<string, Roteiro> = { amostra, principal }
 const nome = process.env.ROTEIRO ?? 'principal'
 const roteiro = Roteiros[nome]
@@ -15,7 +14,6 @@ test.describe.configure({ mode: 'serial' })
 
 for (const seg of roteiro.segmentos) test(seg.id, ({ browser }) => gravar(browser, seg))
 
-// Manifesto para o compositor: a ordem dos segmentos e os nomes dos arquivos finais.
 test.afterAll(() => {
   mkdirSync(Saida, { recursive: true })
   writeFileSync(

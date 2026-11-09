@@ -48,7 +48,6 @@ async function abrirFluxo(nome: string) {
 }
 
 describe('fluxos', () => {
-  // fluxos-atendimento C40 (AC 31)
   it('lista com abrangência e cadeia', async () => {
     cadastros()
     const painel = within(await abaFluxos())
@@ -63,7 +62,6 @@ describe('fluxos', () => {
     ])
   })
 
-  // C41 (AC 32)
   it('criar pede categoria e abrangência', async () => {
     const chamadas = cadastros({ 'POST /api/admin/fluxos': () => [201, {}] })
     await abaFluxos()
@@ -87,7 +85,6 @@ describe('fluxos', () => {
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/fluxos', { categoriaId: 9, cursoId: 4, semestre: 3 }]]))
   })
 
-  // C42 (AC 33)
   it('simular e publicar', async () => {
     let tentativa = 0
     const chamadas = cadastros({
@@ -110,7 +107,6 @@ describe('fluxos', () => {
     })
     const d = await abrirFluxo('Notas')
 
-    // Simular pede curso e semestre, e usa a versão vigente enquanto nada mudou
     expect(d.getByRole('button', { name: 'Simular' })).toBeDisabled()
     await userEvent.selectOptions(d.getByLabelText('Curso do aluno'), '4')
     await userEvent.selectOptions(d.getByLabelText('Semestre do aluno'), '3')
@@ -119,7 +115,6 @@ describe('fluxos', () => {
     expect(d.getByText('Setor fixo: Financeiro')).toBeInTheDocument()
     expect(d.getByText('O chamado abre em Financeiro.')).toBeInTheDocument()
 
-    // Publicar fica desligado até a API aceitar o rascunho como está na tela
     expect(d.getByRole('button', { name: 'Publicar' })).toBeDisabled()
     await userEvent.click(d.getByRole('button', { name: 'Adicionar etapa' }))
     await userEvent.click(d.getByRole('button', { name: 'Salvar rascunho' }))
@@ -143,7 +138,6 @@ describe('fluxos', () => {
     const comRascunho = [{ ...(listas.fluxos[0] as object), rascunho: { numero: 2, etapas: [etapa('COORDENACAO_CURSO')] } }]
     const chamadas = cadastros({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, { fluxos: comRascunho })
     const d = await abrirFluxo('Notas')
-    // o rascunho salvo vale como válido: Publicar já está ligado, e a lista mostra a etapa do rascunho
     expect(d.getByRole('button', { name: 'Publicar' })).toBeEnabled()
     expect(d.getByLabelText('Destino da etapa 1')).toHaveValue('COORDENACAO_CURSO')
 
@@ -154,7 +148,6 @@ describe('fluxos', () => {
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()) // voltou à lista
   })
 
-  // C43 (AC 34)
   it('estado vazio', async () => {
     cadastros({}, { fluxos: [] })
     const painel = within(await abaFluxos())
@@ -162,7 +155,6 @@ describe('fluxos', () => {
     expect(screen.getByRole('button', { name: 'Novo fluxo' })).toBeInTheDocument()
   })
 
-  // C92 (AC 78): as operações do canvas, na lista, cada uma com um botão ou campo nomeado
   it('lista tem todas as operações do canvas', async () => {
     const chamadas = cadastros({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
     const d = await abrirFluxo('Boletos')
@@ -171,13 +163,11 @@ describe('fluxos', () => {
     expect(d.getByLabelText('Prazo da etapa 2 (horas)')).toHaveValue(48)
     expect(d.queryByLabelText('Setor da etapa 1')).not.toBeInTheDocument()
 
-    // adicionar, escolher o destino e o setor, e definir o prazo
     await userEvent.click(d.getByRole('button', { name: 'Adicionar etapa' }))
     await userEvent.selectOptions(d.getByLabelText('Destino da etapa 3'), 'Setor fixo')
     expect(opcoes(d.getByLabelText('Setor da etapa 3'))).toEqual(['Escolha o setor', 'Triagem', 'Financeiro']) // o setor inativo não é oferecido
     await userEvent.selectOptions(d.getByLabelText('Setor da etapa 3'), '2')
     await userEvent.type(d.getByLabelText('Prazo da etapa 3 (horas)'), '12')
-    // descer, subir e remover
     await userEvent.click(d.getByRole('button', { name: 'Mover etapa 3 para cima' }))
     expect(d.getByLabelText('Destino da etapa 2')).toHaveValue('SETOR')
     expect(d.getByLabelText('Destino da etapa 3')).toHaveValue('COORDENACAO_CURSO')

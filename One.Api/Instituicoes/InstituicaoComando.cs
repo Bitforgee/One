@@ -12,7 +12,7 @@ public static class InstituicaoComando
     {
         using var scope = servicos.CreateScope();
         var sp = scope.ServiceProvider;
-        var remover = args.Contains("--remover"); // flag sem valor: sai antes de ler os pares
+        var remover = args.Contains("--remover");
         string[] pares = [.. args.Where(a => a != "--remover")];
         var opcoes = new Dictionary<string, string>();
         for (var i = 1; i + 1 < pares.Length; i += 2)
@@ -77,7 +77,6 @@ public static class InstituicaoComando
         return [];
     }
 
-    // O papel OPERADOR (door 1) só passa por aqui, nunca por rota HTTP.
     static async Task<List<string>> Operador(IServiceProvider sp, Dictionary<string, string> o, bool remover, TextWriter saida)
     {
         var db = sp.GetRequiredService<OneDb>();

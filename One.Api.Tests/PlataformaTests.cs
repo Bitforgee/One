@@ -9,7 +9,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// instituicoes-plataforma: as 6 rotas de /api/plataforma (door 2) e o que elas fazem nas outras instituições (door 3).
 public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string SoOperador = "Só operadores da plataforma podem usar esta área.";
@@ -53,7 +52,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         },
     });
 
-    // ---- C4 ----
 
     static HttpRequestMessage Pedido(HttpMethod metodo, string url, bool corpoJson = false) =>
         new(metodo, url) { Content = corpoJson ? JsonContent.Create(new { slug = "x" }) : metodo == HttpMethod.Post ? Arquivo("{}") : null };
@@ -96,7 +94,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(24, feitos);
     }
 
-    // ---- C6, C7 ----
 
     [Fact]
     public async Task Editar_usuario_preserva_operador()
@@ -139,7 +136,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Db(i.Id, db => db.UsuarioPapeis.CountAsync()));
     }
 
-    // ---- C8 ----
 
     [Fact]
     public async Task Listar_todas_ativas_primeiro()
@@ -154,7 +150,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Usuario(a, [Papeis.Administrador]);
         var inativo = await f.Usuario(a, [Papeis.Administrador]);
         await f.Db(a.Id, db => db.Usuarios.Where(u => u.Id == inativo.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.Ativo, false)));
-        await f.Usuario(a, [Papeis.Atendente]); // não conta
+        await f.Usuario(a, [Papeis.Atendente]);
 
         var r = await op.Cliente.GetAsync(Lista);
 
@@ -168,7 +164,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("America/Cuiaba", itens[0].GetProperty("fuso").GetString());
     }
 
-    // ---- C9, C10, C11, C12 ----
 
     [Fact]
     public async Task Criar_instituicao_201()
@@ -213,10 +208,9 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var registro = await f.Db(demo.Id, db => db.Tokens.SingleAsync(t => t.Hash == Tokens.Hash(token)));
         Assert.True(registro.ExpiraEm > f.Relogio.GetUtcNow().UtcDateTime);
 
-        // com o commit falhando, nem a instituição nem o e-mail ficam
         f.Commit.Falhar = true;
         try { await op.Cliente.PostAsJsonAsync(Lista, Corpo(slug: "demo-falha", cpf: Semente.NovoCpf(), email: "admin@demo-falha.edu.br")); }
-        catch (Exception) { /* o servidor de teste pode relançar a falha */ }
+        catch (Exception) { }
         finally { f.Commit.Falhar = false; }
         Assert.False(await f.Db(null, db => db.Instituicoes.AnyAsync(x => x.Slug == "demo-falha")));
         Assert.False(await f.Db(null, db => db.EmailsSaida.IgnoreQueryFilters().AnyAsync(e => e.Destinatario == "admin@demo-falha.edu.br")));
@@ -228,7 +222,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var op = await UmOperador();
         f.Gravacoes.FalharAoGravarEmail = true;
         try { await op.Cliente.PostAsJsonAsync(Lista, Corpo(slug: "demo-sem-email", cpf: Semente.NovoCpf(), email: "admin@demo-sem-email.edu.br")); }
-        catch (Exception) { /* o servidor de teste pode relançar a falha */ }
+        catch (Exception) { }
         finally { f.Gravacoes.FalharAoGravarEmail = false; }
 
         Assert.False(await f.Db(null, db => db.Instituicoes.AnyAsync(x => x.Slug == "demo-sem-email")));
@@ -277,7 +271,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Db(null, db => db.Instituicoes.CountAsync()));
     }
 
-    // ---- C19, C20 ----
 
     [Fact]
     public async Task Carga_pela_rota_grava_na_instituicao_do_slug()
@@ -337,7 +330,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Contagens());
     }
 
-    // ---- C22, C23, C24 ----
 
     [Fact]
     public async Task Desativar_bloqueia_login_e_sessao()
@@ -371,7 +363,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Task<int> Tokens() => f.Db(demo.Id, db => db.Tokens.CountAsync());
         Task<int> Emails() => f.Db(demo.Id, db => db.EmailsSaida.CountAsync());
         await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
-        Assert.Equal(1, await Tokens()); // ativa: o pedido grava o token
+        Assert.Equal(1, await Tokens());
 
         await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/desativar", null);
         await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
@@ -408,7 +400,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(demo.Slug, adminDemo.Cpf)).StatusCode);
     }
 
-    // ---- C25, C26, C27 ----
 
     [Fact]
     public async Task Reenviar_acesso_para_admins_ativos()
@@ -476,7 +467,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // ---- C31 ----
 
     [Fact]
     public void InstituicaoAtual_so_onde_ja_era_e_na_plataforma()

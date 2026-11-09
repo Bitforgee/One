@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace One.Api.Dados.Fluxos;
 
-// A única decisão de "para qual setor vai o chamado": a transferência, a subida (rota e Agendador) e o simulador chamam estas funções.
 public static class ResolverFluxo
 {
     public const string SemCoordenacao = "Curso sem coordenação";
@@ -21,7 +20,6 @@ public static class ResolverFluxo
 
     public sealed record Rota(Fluxo? Fluxo, Passo? Passo, long SetorId);
 
-    // O fluxo publicado mais específico: curso e semestre, depois só o curso, depois todos os cursos.
     public static Fluxo? Escolher(IEnumerable<Fluxo> fluxos, long cursoId, int semestre)
     {
         var publicados = fluxos.Where(f => f.Vigente is not null).ToList();
@@ -37,14 +35,12 @@ public static class ResolverFluxo
         _ => contexto.Lideranca is { } lider ? new Resolucao(lider, null) : new Resolucao(null, SemLideranca),
     };
 
-    // Quem decide é o fluxo, nunca o aluno. A liderança só fica de fora quando não há conversa a resumir (atendimento direto); sem liderança disponível o motivo é a falta dela.
     public static Resolucao Situacao(EtapaFluxo etapa, Contexto contexto, bool comLideranca)
     {
         var resolucao = Etapa(etapa, contexto);
         return DestinosEtapa.PedeCiencia(etapa.Destino) && resolucao.Resolvida && !comLideranca ? new Resolucao(null, SemConversa) : resolucao;
     }
 
-    // A primeira etapa depois de `depoisDe` que resolve.
     public static Passo? Proximo(IEnumerable<EtapaFluxo> etapas, int depoisDe, Contexto contexto, bool comLideranca) =>
         etapas.Where(e => e.Ordem > depoisDe).OrderBy(e => e.Ordem)
             .Select(e => (Etapa: e, Resolucao: Situacao(e, contexto, comLideranca)))
@@ -52,7 +48,6 @@ public static class ResolverFluxo
             .Select(x => new Passo(x.Etapa, x.Resolucao.SetorId!.Value))
             .FirstOrDefault();
 
-    // A liderança do curso e semestre só está disponível com o setor ativo e ao menos um atendente ativo que não seja o aluno (AC 55).
     public static async Task<long?> Lideranca(OneDb db, long cursoId, int semestre, long alunoId) =>
         await db.Setores
             .Where(s => s.CursoId == cursoId && s.Semestre == semestre && s.Ativo
@@ -66,7 +61,6 @@ public static class ResolverFluxo
         return new Contexto(setores, coordenacao, semestre is { } s ? await Lideranca(db, cursoId, s, alunoId) : null);
     }
 
-    // Os nomes (únicos, em ordem) das categorias cujo fluxo publicado tem uma etapa de setor fixo neste setor, na versão vigente (base-fluxos, F7).
     public static async Task<List<string>> CategoriasQueUsamOSetor(OneDb db, long setorId)
     {
         var fluxos = await db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas).ToListAsync();
@@ -88,7 +82,6 @@ public static class ResolverFluxo
         return new Rota(passo is null ? null : fluxo, passo, passo?.SetorId ?? triagem);
     }
 
-    // A etapa seguinte do chamado que resolve, ou nenhuma (fora de fluxo, última etapa ou nenhuma seguinte resolve).
     public static async Task<Passo?> Seguinte(OneDb db, Chamado chamado)
     {
         if (chamado.VersaoFluxoId is not { } versao || chamado.EtapaOrdem is not { } ordem) return null;

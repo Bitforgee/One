@@ -9,10 +9,8 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// tempo-real-signalr S2: o cliente .NET conectado ao hub real recebe o aviso depois de cada gravação feita pela API.
 public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // Aluno no grupo do chamado e o atendente B da triagem na fila; os dois já com o chamado criado.
     sealed record Cena(Balcao B, Conectado Aluno, Conectado Fila) : IAsyncDisposable
     {
         public async ValueTask DisposeAsync()
@@ -31,7 +29,6 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         return new Cena(b, aluno, fila);
     }
 
-    // O semente dá nomes e números de matrícula aleatórios; a comparação entre as duas execuções ignora só eles.
     static async Task<(string, HttpStatusCode)> Corpo(HttpResponseMessage r) => (System.Text.RegularExpressions.Regex.Replace(await r.Content.ReadAsStringAsync(), "Pessoa [0-9a-f]{6}|[0-9]{10}", "x"), r.StatusCode);
 
     [Fact]
@@ -71,7 +68,6 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(await cena.Fila.Receber("FilaMudou"), $"{nome}: FilaMudou");
         }
 
-        // os 2 caminhos em que o chamado nasce agora: só a fila é avisada, não há grupo de chamado para entrar antes
         await using var fila = await f.Abrir(b.Instituicao, b.B.Usuario);
         await fila.EntrarNaFila();
         fila.Limpar();
@@ -115,7 +111,6 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True((await b.Ler(lembrar)).LembreteEm is not null);
         Assert.Equal(Resolvido, (await b.Ler(voltar)).Estado);
         foreach (var n in new[] { fechar, lembrar, voltar }) Assert.True(await aluno.Receber($"ChamadoMudou:{n}"), n);
-        // cada uma das 3 tarefas manda o seu FilaMudou (o setor é o mesmo): 3 no total, nem menos nem mais
         var fim = DateTime.UtcNow.AddSeconds(5);
         while (fila.Recebidos.Count(e => e == "FilaMudou") < 3 && DateTime.UtcNow < fim) await Task.Delay(20);
         await Task.Delay(300);
@@ -133,7 +128,7 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
 
         f.Llm.Devolver(c.RespostaBoletoValida());
         var (id, _) = await c.Primeira();
-        f.Commit.Atraso = TimeSpan.FromMilliseconds(800); // o aviso, se saísse no SaveChanges, chegaria e leria a fila durante esta espera
+        f.Commit.Atraso = TimeSpan.FromMilliseconds(800);
         HttpResponseMessage r;
         try { r = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { }); }
         finally { f.Commit.Atraso = TimeSpan.Zero; }
@@ -270,7 +265,7 @@ public class TempoRealAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Created, criada.StatusCode);
         var j = await criada.Json();
         var id = j.GetProperty("conversaId").GetInt64();
-        Assert.False(string.IsNullOrWhiteSpace(j.GetProperty("resposta").GetProperty("texto").GetString())); // resposta inteira no corpo da chamada
+        Assert.False(string.IsNullOrWhiteSpace(j.GetProperty("resposta").GetProperty("texto").GetString()));
 
         var mensagem = await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "explico melhor" });
         Assert.Equal(HttpStatusCode.OK, mensagem.StatusCode);

@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, instituicao } from '../test/util'
 
-// identidade-visual S2 (AC 5, AC 7): os textos e o logo do login; o arranjo é do Playwright (e2e/identidade.spec.ts).
 const Apoio = 'Entre com seu CPF e sua senha.'
 const Base = ['Atendimento ao estudante', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 const Nome = 'Centro Universitário de Várzea Grande'
@@ -15,7 +14,6 @@ const comAparencia = (login: number | null) =>
   })
 
 describe('textos do login', () => {
-  // C15 (AC 5, AC 7)
   it('textos e logo do login com e sem foto', async () => {
     for (const login of [null, 1]) {
       api({ 'GET /api/instituicoes/univag': () => [200, comAparencia(login)] })
@@ -40,7 +38,6 @@ describe('textos do login', () => {
     }
   })
 
-  // C16 (AC 20), a parte do jsdom
   it('raiz sem ilustração', () => {
     api({})
     abrir('/')

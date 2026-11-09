@@ -19,7 +19,7 @@ public sealed class ReenviarAcessoHandler(OneDb db, TimeProvider relogio, IConfi
         if (instituicao is null) return Problemas.Erro(404, PlataformaRotas.NaoEncontrada);
         if (!instituicao.Ativa) return Problemas.Erro(409, "A instituição está desativada.");
 
-        db.InstituicaoAtual = instituicao.Id; // door 3
+        db.InstituicaoAtual = instituicao.Id;
         var admins = await db.Usuarios.Where(u => u.Ativo && u.Papeis.Any(p => p.Papel == Papeis.Administrador)).ToListAsync(ct);
         if (admins.Count == 0) return Problemas.Erro(409, "Esta instituição não tem administrador ativo para receber o acesso.");
 

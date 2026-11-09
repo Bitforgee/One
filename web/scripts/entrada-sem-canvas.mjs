@@ -1,6 +1,3 @@
-// fluxos-atendimento C94 (door 10): o pacote de entrada do build não pode conter o código da biblioteca do canvas.
-// Roda depois de `npm --prefix web run build`; sai com 1 se a entrada (ou algo que o index.html pré-carrega) trouxer a biblioteca,
-// ou se o build nem tiver um pacote com ela (a verificação então não provaria nada).
 import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Chamado } from '../chamado'
 import { abrir, api, chamado, me } from '../test/util'
 
-// revisao-ux S4 (C30 a C38): listas em linhas, próximo passo, categoria e data, e o formulário do detalhe.
 const equipe = me({ papeis: ['ALUNO', 'ATENDENTE'] })
 const celular = () =>
   vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)' || media === '(max-width: 1023px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
@@ -21,7 +20,6 @@ afterEach(() => {
 const linhas = () => within(screen.getByRole('main')).getAllByRole('listitem')
 
 describe('listas de chamados revisadas', () => {
-  // C30 (AC 21, P9): 4 casos por lista
   it('data relativa aberto hoje ontem e há N dias', async () => {
     const casos: [string, string, string, number][] = [
       ['2026-11-04T15:00:00Z', '2026-11-04T13:00:00Z', 'aberto hoje', 0],
@@ -47,7 +45,6 @@ describe('listas de chamados revisadas', () => {
     }
   })
 
-  // C32 (AC 22, P1): 5 casos
   it.each([
     ['ABERTO', 'A equipe vai responder'],
     ['EM_ATENDIMENTO', 'A equipe vai responder'],
@@ -63,7 +60,6 @@ describe('listas de chamados revisadas', () => {
     expect(within(linha).getByText(passo).textContent).toBe(passo) // sem data junto
   })
 
-  // C33 (AC 23, P2)
   it('Fila com categoria, data e Mais antigos primeiro', async () => {
     celular()
     relogio('2026-11-04T15:00:00Z')
@@ -90,7 +86,6 @@ describe('detalhe do chamado revisado', () => {
   const detalhe = (c: Chamado, quem = me()) =>
     api({ 'GET /api/auth/me': () => [200, quem], 'GET /api/chamados/ONE-1': () => [200, c], 'POST /api/chamados/ONE-1/cancelar': () => [200, c] })
 
-  // C36 (AC 26): o lado do vitest
   it('aluno sem barra e Cancelar solicitação com confirmação', async () => {
     celular()
     const chamadas = detalhe(chamado({ estado: 'ABERTO', acoes: ['responder', 'cancelar'] }))
@@ -107,7 +102,6 @@ describe('detalhe do chamado revisado', () => {
     await waitFor(() => expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url)).toEqual(['/api/chamados/ONE-1/cancelar']))
   })
 
-  // C38 (AC 28): 3 casos
   it('sem formulário de resposta para a equipe em RESOLVIDO e FECHADO', async () => {
     const equipeDoChamado = (estado: string, acoes: string[]) => chamado({ estado, eventos: [], acoes, solicitante: 'Ana' })
     for (const [estado, acoes] of [['RESOLVIDO', ['nota', 'reclassificar']], ['FECHADO', []]] as const) {
@@ -118,12 +112,10 @@ describe('detalhe do chamado revisado', () => {
       expect(screen.queryByRole('button', { name: 'Enviar' })).not.toBeInTheDocument()
       cleanup()
     }
-    // o aluno em RESOLVIDO segue com o campo
     detalhe(chamado({ estado: 'RESOLVIDO', acoes: ['responder', 'confirmar', 'rejeitar'] }))
     abrir('/univag/chamados/ONE-1')
     expect(await screen.findByLabelText('Responder (reabre a solicitação)')).toBeInTheDocument()
   })
-  // C34 e C35, o lado do vitest: a barra do celular
   it('barra do celular da equipe assume, responde e abre o Mais', async () => {
     celular()
     Element.prototype.scrollIntoView = vi.fn()
@@ -138,7 +130,6 @@ describe('detalhe do chamado revisado', () => {
     const assumir = await screen.findByRole('button', { name: 'Assumir' })
     expect(screen.getByRole('button', { name: 'Mais' })).toBeInTheDocument()
     await userEvent.click(assumir)
-    // o estado muda e a ação principal vira "Responder", que foca o campo
     await userEvent.click(await screen.findByRole('button', { name: 'Responder' }))
     expect(document.activeElement).toBe(screen.getByLabelText('Responder'))
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.url)).toEqual(['/api/chamados/ONE-1/assumir'])
@@ -148,7 +139,6 @@ describe('detalhe do chamado revisado', () => {
 })
 
 describe('folha de ações do chamado', () => {
-  // achado do e2e real (C64): a resposta tardia de "Assumir" não pode fechar a folha que o atendente abriu depois do clique
   it('a resposta de uma ação da barra não fecha a folha aberta depois', async () => {
     celular()
     const aberto = chamado({ estado: 'ABERTO', eventos: [], solicitante: 'Ana', acoes: ['responder', 'nota', 'assumir', 'resolver', 'encaminhar'] })
@@ -163,14 +153,12 @@ describe('folha de ações do chamado', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mais' }))
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
     responder()
-    // a barra (atrás da folha, fora da árvore acessível) troca "Assumir" por "Responder" e a folha segue aberta
     await screen.findByRole('button', { name: 'Responder', hidden: true })
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 })
 
 describe('conversa com o assistente vista pela equipe', () => {
-  // C68 (AC 46): o link da resposta do assistente vira botão também no detalhe da equipe
   it('links da resposta como botão na conversa da equipe', async () => {
     const url = 'https://portal.univag.edu.br/financeiro/boletos/segunda-via'
     const c = chamado({

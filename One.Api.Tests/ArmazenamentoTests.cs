@@ -10,11 +10,9 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// GC.GetTotalAllocatedBytes (C11) conta o processo todo: esta classe roda sozinha, sem outras classes de teste em paralelo.
 [CollectionDefinition("Armazenamento", DisableParallelization = true)]
 public class ColecaoArmazenamento;
 
-// arquivos-minio: os bytes de anexos e PDFs moram no bucket do MinIO do compose; o banco guarda chave, hash e tamanho.
 [Collection("Armazenamento")]
 public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
 {
@@ -44,7 +42,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
     Task<List<VersaoDocumento>> Versoes(Instituicao i, long documentoId) =>
         f.Db(i.Id, db => db.VersoesDocumento.Where(v => v.DocumentoId == documentoId).OrderBy(v => v.Numero).ToListAsync());
 
-    // C1
     [Fact]
     public async Task Anexo_vai_para_o_bucket_com_chave_hash_e_tamanho()
     {
@@ -60,7 +57,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes.Append(anexo.Chave).Order(), await f.Chaves());
     }
 
-    // C3
     [Fact]
     public async Task Detalhe_do_chamado_nao_expoe_chave_nem_hash()
     {
@@ -77,7 +73,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain("hash", detalhe.GetRawText(), StringComparison.OrdinalIgnoreCase);
     }
 
-    // C4
     [Fact]
     public async Task Recusa_antes_da_gravacao_nao_deixa_objeto()
     {
@@ -102,7 +97,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Estado());
     }
 
-    // C7
     [Fact]
     public async Task Download_do_anexo_devolve_bytes_tipo_nome_e_content_length()
     {
@@ -113,7 +107,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
             var d = await c.GetAsync($"/api/anexos/{id}");
             Assert.Equal(HttpStatusCode.OK, d.StatusCode);
             Assert.Equal(png, await d.Content.ReadAsByteArrayAsync());
-            // valores que o Results.File produzia na base (<base>)
             Assert.Equal("image/png", d.Content.Headers.ContentType?.ToString());
             Assert.Equal("attachment; filename=tela.png; filename*=UTF-8''tela.png", string.Join(",", d.Content.Headers.GetValues("Content-Disposition")));
             Assert.Equal(5000, d.Content.Headers.ContentLength);
@@ -121,7 +114,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C8
     [Fact]
     public async Task Download_negado_e_404_sem_abrir_objeto()
     {
@@ -144,7 +136,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(leiturasAntes, f.LeiturasDeObjeto);
     }
 
-    // C7 (rodada 1): o Content-Length que vai no fio, lido com ResponseHeadersRead (GetAsync calcula do corpo em memória)
     [Fact]
     public async Task Content_length_do_anexo_e_da_versao_vai_no_cabecalho()
     {
@@ -159,7 +150,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(pdf.Length, d.Content.Headers.ContentLength);
     }
 
-    // C8 (rodada 1): o contador enxerga a leitura pela URL assinada, senão "zero leituras" seria vazio
     [Fact]
     public async Task Contador_de_leituras_ve_o_download_pela_url_assinada()
     {
@@ -169,7 +159,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes + 1, f.LeiturasDeObjeto);
     }
 
-    // AC 13 (rodada 1): erro de serviço do bucket (S3 responde com erro) vira 503, não só porta fechada
     [Fact]
     public async Task Erro_do_bucket_responde_503_e_nada_fica()
     {
@@ -179,7 +168,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var s3 = (AmazonS3Client)f.Services.GetRequiredService<IAmazonS3>();
         void Troca(object? _, Amazon.Runtime.RequestEventArgs e)
         {
-            // o MinIO recusa a gravação com um erro de serviço (AmazonS3Exception): o resumo MD5 declarado não confere
             if (e is Amazon.Runtime.WebServiceRequestEventArgs { Request: PutObjectRequest } w) w.Headers["Content-MD5"] = "AAAAAAAAAAAAAAAAAAAAAA==";
         }
         s3.BeforeRequestEvent += Troca;
@@ -191,7 +179,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, string.Join(",", await f.Chaves()) + "|" + await f.Db(b.Instituicao.Id, db => db.Anexos.CountAsync()));
     }
 
-    // C4/C13 (rodada 1): a recusa de estado vem antes da gravação, nenhum objeto órfão
     [Fact]
     public async Task Rejeitar_resolucao_vencida_com_anexo_nao_deixa_objeto()
     {
@@ -206,7 +193,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Chaves());
     }
 
-    // verificação rodada 2 (N4): a rejeição aceita dentro do prazo grava o objeto do anexo que a linha aponta
     [Fact]
     public async Task Rejeitar_resolucao_no_prazo_com_anexo_grava_o_objeto()
     {
@@ -237,7 +223,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await f.Chaves());
     }
 
-    // C9
     [Fact]
     public async Task Download_usa_so_a_chave_da_linha()
     {
@@ -253,7 +238,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(png, await d.Content.ReadAsByteArrayAsync());
     }
 
-    // C10
     [Fact]
     public async Task Download_da_versao_devolve_pdf_e_application_pdf()
     {
@@ -275,7 +259,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Documento não encontrado.", (await negado.Json()).GetProperty("detail").GetString());
     }
 
-    // C11
     [Fact]
     public async Task Download_de_10_MiB_nao_aloca_o_array_inteiro()
     {
@@ -294,7 +277,7 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
             return lidos;
         }
 
-        await Baixar(); // aquece o JIT e os pools
+        await Baixar();
         var antes = GC.GetTotalAllocatedBytes(precise: true);
         var lidos = await Baixar();
         var alocado = GC.GetTotalAllocatedBytes(precise: true) - antes;
@@ -303,7 +286,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(alocado < 5 * 1024 * 1024, $"alocou {alocado} bytes");
     }
 
-    // C12
     [Fact]
     public async Task Pdf_novo_e_nova_versao_vao_para_o_bucket()
     {
@@ -331,7 +313,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("Segunda pagina da versao dois.", versoes[1].Texto);
     }
 
-    // C13
     [Fact]
     public async Task Pdf_recusado_nao_deixa_objeto()
     {
@@ -362,7 +343,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Estado());
     }
 
-    // C14
     [Fact]
     public async Task Nova_versao_mantem_o_objeto_anterior()
     {
@@ -392,7 +372,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Fora, (await r.Json()).GetProperty("detail").GetString());
     }
 
-    // C15
     [Fact]
     public async Task Envio_com_armazenamento_fora_responde_503_e_nada_no_banco()
     {
@@ -417,7 +396,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Contagens());
     }
 
-    // C16
     [Fact]
     public async Task Leitura_com_armazenamento_fora_ou_objeto_ausente_responde_503()
     {
@@ -431,7 +409,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
             await Indisponivel(await admin.GetAsync($"/api/documentos/versoes/{versaoId}"), "versão, porta fechada");
         }
 
-        // o bucket é versionado: apagar o objeto põe uma marca e a leitura da chave passa a dar 404 (a linha é append-only)
         using var s3 = OneFactory.ClienteS3();
         foreach (var chave in await f.Db(null, async db => new[]
         {
@@ -443,7 +420,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         await Indisponivel(await admin.GetAsync($"/api/documentos/versoes/{versaoId}"), "versão, objeto ausente");
     }
 
-    // C17
     [Fact]
     public async Task Conflito_no_banco_apos_gravar_deixa_objeto_orfao()
     {
@@ -451,7 +427,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var numero = await b.Chamado(EstadosChamado.AguardandoAluno);
         var antes = await f.Chaves();
         var s3 = (AmazonS3Client)f.Services.GetRequiredService<IAmazonS3>();
-        // logo depois do PutObject, outra sessão altera o chamado: o SaveChanges da API vê a versão velha
         void Concorrente(object? _, Amazon.Runtime.ResponseEventArgs e)
         {
             if (e is Amazon.Runtime.WebServiceResponseEventArgs { Response: PutObjectResponse })
@@ -474,7 +449,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(await f.Db(null, db => db.Anexos.IgnoreQueryFilters().AnyAsync(x => x.Chave == novas[0])));
     }
 
-    // C18
     [Fact]
     public async Task Preparar_sem_minio_falha_a_subida_citando_endpoint_e_bucket()
     {
@@ -489,7 +463,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(fechada.Bucket, subida.ToString());
     }
 
-    // C19
     [Fact]
     public async Task Preparar_cria_bucket_e_liga_versionamento_e_e_idempotente()
     {
@@ -508,7 +481,6 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         finally { await s3.DeleteBucketAsync(bucket); }
     }
 
-    // C21
     [Fact]
     public async Task Duas_gravacoes_do_mesmo_conteudo_geram_chaves_diferentes()
     {

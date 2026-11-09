@@ -1,8 +1,6 @@
 import { defineConfig } from '@playwright/test'
 import { Contexto, Tamanho } from './kit'
 
-// Só a gravação da apresentação: fica fora do testDir de web/e2e, então `npx playwright test` não a pega.
-// Cada segmento abre o próprio contexto (kit.gravar) com as mesmas opções e grava em 1280x720.
 export default defineConfig({
   testDir: '.',
   testMatch: 'gravar.spec.ts',

@@ -51,7 +51,6 @@ public static class DocumentoRotas
         }
     }
 
-    // A chave é sorteada aqui e o objeto só é gravado depois da decisão do domínio: um 409 não deixa objeto órfão.
     public static VersaoDocumento Versao(long instituicaoId, Pdf pdf, int numero, DateTime agora) =>
         new() { Numero = numero, NomeArquivo = pdf.Nome, Chave = Armazenamento.NovaChave(instituicaoId, "documentos"), Hash = Armazenamento.Hash(pdf.Conteudo), Tamanho = pdf.Conteudo.Length, Texto = pdf.Texto, Paginas = pdf.Paginas, CriadaEm = agora };
 

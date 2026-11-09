@@ -23,13 +23,11 @@ import { TableCell, TableRow } from '../ui/table'
 type Item = { slug: string; nome: string; fuso: string; ativa: boolean; criadaEm: string; administradores: number }
 type Contagens = { setores: number; cursos: number; categorias: number; regras: number; artigos: number }
 
-// Os fusos IANA do Brasil, America/Sao_Paulo primeiro (a lista de fusos do plano é uma constante).
 const Fusos = [
   'America/Sao_Paulo', 'America/Noronha', 'America/Belem', 'America/Fortaleza', 'America/Recife', 'America/Araguaina', 'America/Maceio', 'America/Bahia',
   'America/Campo_Grande', 'America/Cuiaba', 'America/Santarem', 'America/Porto_Velho', 'America/Boa_Vista', 'America/Manaus', 'America/Eirunepe', 'America/Rio_Branco',
 ]
 
-// Minúsculas, sem acento e com hífen no lugar de espaços e símbolos.
 export const enderecoDe = (nome: string) =>
   nome
     .normalize('NFD')
@@ -42,7 +40,6 @@ type Ficha = { nome: string; slug: string; slugEditado: boolean; fuso: string; a
 const Nova: Ficha = { nome: '', slug: '', slugEditado: false, fuso: Fusos[0], adminNome: '', cpf: '', email: '' }
 const corpo = (f: Ficha) => ({ slug: f.slug, nome: f.nome, fuso: f.fuso, admin: { cpf: f.cpf, nome: f.adminNome, email: f.email } })
 
-// O 400 traz `errors` por campo e o 409, o endereço repetido.
 function errosDaCriacao(erro: unknown): Record<string, string> {
   return erro instanceof ErroApi && erro.status === 409 ? { slug: erro.message } : errosDeCampo(erro)
 }
@@ -84,7 +81,6 @@ function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Pa
   )
 }
 
-// Os erros do arquivo de carga, um por linha; sem lista, a API só avisou (por exemplo, o arquivo grande demais).
 const errosDoArquivo = (erro: unknown): string[] => (erro instanceof ErroApi ? (erro.corpo?.errors?.arquivo ?? []) : [])
 
 function ResultadoDaCarga({ r, erro }: { r?: Contagens; erro: Error | null }) {
@@ -108,7 +104,6 @@ function ResultadoDaCarga({ r, erro }: { r?: Contagens; erro: Error | null }) {
   return <ErroDe erro={erro} />
 }
 
-// Importar carga: o arquivo JSON vai por multipart; o resumo ou a lista de erros ficam no próprio diálogo.
 function ImportarCarga({ alvo, fechar }: { alvo: Item; fechar: () => void }) {
   const [arquivo, setArquivo] = useState<File>()
   const importacao = useMutation({ mutationFn: (f: FormData) => api<Contagens>(`/api/plataforma/instituicoes/${alvo.slug}/carga`, f) })
@@ -171,7 +166,6 @@ function Linha({ i, importar, desativar, agir, pendente }: { i: Item; importar: 
   )
 }
 
-// A criação: o diálogo, a mutação e o aviso de sucesso; os erros por campo ficam no formulário e os outros, no diálogo.
 function useCriacao(recarregar: () => Promise<unknown>) {
   const [nova, setNova] = useState<Ficha>()
   const [criada, setCriada] = useState<Ficha>()
@@ -200,7 +194,6 @@ const AvisoDeCriacao = ({ criada }: { criada: Ficha }) => (
   </Alert>
 )
 
-// Tela dos operadores da plataforma: lista as instituições, cria, importa a carga, desativa, reativa e reenvia o acesso.
 export function Instituicoes() {
   const { dados, erro, recarregar } = useLeituras<{ lista: Item[] }>({ lista: '/api/plataforma/instituicoes' })
   const criacao = useCriacao(recarregar)

@@ -14,7 +14,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// vertical-slice-completa S1: a tabela de rotas e os corpos de erro gravados com o código da base (One.Api.Tests/Retratos).
 public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static string Retrato(string nome) => Path.Combine(ArquiteturaTests.Raiz(), "One.Api.Tests", "Retratos", nome);
@@ -28,16 +27,14 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         $"{Metodo(e)} {e.RoutePattern.RawText} anonimo={e.Metadata.GetMetadata<IAllowAnonymous>() is not null} " +
         $"autorizacao={e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()} limite={e.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName ?? "-"}";
 
-    // C3
     [Fact]
     public void Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano()
     {
         var endpoints = Endpoints(f);
         var viva = endpoints.Select(Linha).ToList();
-        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "rotas.viva.txt"), viva); // para comparar à mão quando falhar
+        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "rotas.viva.txt"), viva);
 
         Assert.Equal(84, viva.Count);
-        // os fallbacks têm a ordem int.MaxValue; o do MapFallbackToFile atende GET e HEAD
         var fallbacks = endpoints.Where(e => e.Order == int.MaxValue).Select(e => e.RoutePattern.RawText).ToList();
         Assert.Equal(["/api/{**resto}", "{*path:nonfile}"], fallbacks);
         Assert.Equal(81, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
@@ -51,7 +48,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva);
     }
 
-    // C5
     [Fact]
     public async Task Admin_403_com_detail_em_toda_rota_admin()
     {
@@ -75,7 +71,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 
     static string SemTraceId(string corpo) => Regex.Replace(corpo, @",?""traceId"":""[^""]*""", "");
 
-    // C6: um pedido de cada status; o corpo sem traceId é comparado byte a byte com o gravado na base
     async Task<List<string>> Corpos()
     {
         var c = await Cenario.Criar(f);
@@ -118,16 +113,14 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Corpos_de_erro_iguais_aos_da_base()
     {
         var vivos = await Corpos();
-        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "erros.vivos.txt"), vivos); // para comparar à mão quando falhar
+        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "erros.vivos.txt"), vivos);
 
         var gravados = File.ReadAllLines(Retrato("erros.txt"));
         Assert.Equal(9, gravados.Length);
         Assert.Equal(gravados.Select(SemTraceId), vivos);
     }
 
-    // dominio-e-contratos S1: os corpos de sucesso, o 400 da importação e as gravações do chamado, gravados com o código da base.
 
-    // Só os ids gerados pelo banco (membros id e *Id numéricos), os números ONE-n e os instantes viram marcadores do mesmo tipo JSON.
     static string Normalizar(string corpo)
     {
         corpo = Regex.Replace(corpo, @"""(id|[a-z][A-Za-z]*Id)"":\d+", @"""$1"":0");
@@ -135,7 +128,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         return Regex.Replace(corpo, @"""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})?""", @"""instante""");
     }
 
-    // Banco novo: os ids que não são membro id/*Id (os setores do usuário) saem sempre iguais.
     static async Task<OneFactory> Nova()
     {
         var n = new OneFactory();
@@ -143,7 +135,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         return n;
     }
 
-    // Pessoa com nome, CPF e e-mail fixos: os nomes aparecem nos corpos e nas gravações.
     static async Task<Usuario> Pessoa(OneFactory n, Instituicao i, string nome, string cpf, string[] papeis, string? matricula = null, string? senha = Semente.Senha)
     {
         var u = await n.Usuario(i, papeis, senha, cpf, $"{cpf}@retrato.one", matricula);
@@ -182,7 +173,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
             { new ByteArrayContent(Balcao.Arquivo(Balcao.Pdf, tamanho)), "anexos", nome },
         });
 
-    // As 59 chamadas de C4, numa instituição com nomes, CPFs e textos fixos; cada linha: método, rota, ator, status e corpo normalizado.
     static async Task<List<string>> Sucessos(OneFactory n)
     {
         var linhas = new List<string>();
@@ -205,13 +195,11 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var admin = await n.Entrar(i, await Pessoa(n, i, "Carla Admin", "33344455508", [Papeis.Administrador]));
         var (anonimo, aluno) = (n.Cliente(), n.Cliente());
 
-        // Acesso (4)
         await R("POST", "/api/auth/login", "aluno", 200, aluno.Login(i.Slug, ana.Cpf));
         await R("POST", "/api/auth/primeiro-acesso", "anonimo", 202, anonimo.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = "44455566619" }));
         await R("GET", "/api/auth/me", "aluno", 200, aluno.GetAsync("/api/auth/me"));
         await R("GET", "/api/instituicoes/{slug}", "anonimo", 200, anonimo.GetAsync($"/api/instituicoes/{i.Slug}"));
 
-        // Administração: cadastros (15)
         await R("GET", "/api/admin/setores", "admin", 200, admin.GetAsync("/api/admin/setores"));
         var financeiro = Id(await R("POST", "/api/admin/setores", "admin", 201, admin.PostAsJsonAsync("/api/admin/setores", new { nome = "Financeiro", triagem = false })));
         await R("PUT", "/api/admin/setores/{id}", "admin", 200, admin.PutAsJsonAsync($"/api/admin/setores/{financeiro}", new { nome = "Financeiro e Bolsas", triagem = false, ativo = true }));
@@ -227,7 +215,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         await R("PUT", "/api/admin/respostas-prontas/{id}", "admin", 200,
             admin.PutAsJsonAsync($"/api/admin/respostas-prontas/{pronta}", new { setorId = triagem.Id, titulo = "Segunda via do boleto", texto = "Use o Portal do Aluno, menu Financeiro." }));
 
-        // Administração: usuários (4) e importação (1)
         await R("GET", "/api/admin/usuarios", "admin", 200, admin.GetAsync("/api/admin/usuarios"));
         var eva = Id(await R("POST", "/api/admin/usuarios", "admin", 201, admin.PostAsJsonAsync("/api/admin/usuarios",
             new { cpf = "55566677720", nome = "Eva Atendente", email = "eva@retrato.one", senhaTemporaria = "senha-temporaria", papeis = new[] { Papeis.Atendente }, setores = new[] { triagem.Id } })));
@@ -237,7 +224,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         await R("POST", "/api/admin/matriculas/importacao", "admin", 200, admin.Importar(
             "cpf;nome;email;matricula;curso;semestre;situacao\n66677788830;Fabio Importado;fabio@retrato.one;2026000006;Análise e Desenvolvimento de Sistemas;2;ATIVA\n"));
 
-        // Administração: artigos (5) e documentos (4)
         await R("GET", "/api/admin/artigos", "admin", 200, admin.GetAsync("/api/admin/artigos"));
         var artigo = new { titulo = "Trancamento de matrícula", perguntas = new[] { "Como tranco a matrícula?" }, categoriaId = categoria, resposta = "Peça o trancamento na secretaria.",
             links = new[] { "https://portal.exemplo/trancamento" }, visivelDe = "2026-11-01", visivelAte = "2026-12-31" };
@@ -250,7 +236,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         await R("GET", "/api/admin/documentos", "admin", 200, admin.GetAsync("/api/admin/documentos"));
         await R("POST", "/api/admin/documentos/{id}/arquivar", "admin", 200, admin.PostAsync($"/api/admin/documentos/{documento}/arquivar", null));
 
-        // Assistente (7): a primeira resposta cita o artigo, a segunda não
         n.Llm.Devolver(Cenario.Resposta("Você encontra o boleto no Portal do Aluno, na área financeira.", [boleto.Id], (boleto.Id, Cenario.TrechoBoleto)));
         var conversa = (await R("POST", "/api/conversas", "aluno", 201, aluno.PostAsJsonAsync("/api/conversas", new { mensagem = "preciso do boleto" }))).GetProperty("conversaId").GetInt64();
         n.Llm.Devolver(new { tipo = "sem_base", texto = "" });
@@ -264,7 +249,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var t2 = (await R("POST", "/api/atendimento-direto", "aluno", 201, aluno.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "Preciso de ajuda com a matrícula" })))
             .GetProperty("numero").GetString()!;
 
-        // Chamados (17) e conhecimento e indicadores (2)
         await R("GET", "/api/chamados/{numero}", "aluno", 200, aluno.GetAsync($"/api/chamados/{t1}"));
         await R("GET", "/api/chamados/{numero}", "atendente", 200, atendente.GetAsync($"/api/chamados/{t1}"));
         await R("GET", "/api/chamados?escopo=fila", "atendente", 200, atendente.GetAsync("/api/chamados?escopo=fila"));
@@ -293,20 +277,18 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         return linhas;
     }
 
-    // C4
     [Fact]
     public async Task Corpos_de_sucesso_iguais_aos_da_base()
     {
         await using var n = await Nova();
         var vivos = await Sucessos(n);
-        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "sucessos.vivos.txt"), vivos); // para comparar à mão quando falhar
+        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "sucessos.vivos.txt"), vivos);
 
         var gravados = File.ReadAllLines(Retrato("sucessos.txt"));
         Assert.Equal(56, gravados.Length);
         Assert.Equal(gravados.Select(Normalizar), vivos);
     }
 
-    // C5
     [Fact]
     public async Task Erros_da_importacao_iguais_aos_da_base()
     {
@@ -322,7 +304,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
         Assert.Equal(4, (await r.Json()).GetProperty("erros").GetArrayLength());
         var vivo = $"400 {SemTraceId(await r.Content.ReadAsStringAsync())}";
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "importacao.vivo.txt"), vivo); // para comparar à mão quando falhar
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "importacao.vivo.txt"), vivo);
 
         var gravado = File.ReadAllLines(Retrato("importacao.txt"));
         Assert.Single(gravado);
@@ -339,8 +321,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly JsonSerializerOptions Legivel = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    // Uma linha de C6: as colunas do chamado (pessoas, setor e categorias por nome; datas em minutos relativos ao relógio) e as
-    // mensagens e os eventos gravados depois das marcas, em ordem de Id.
     static Task<string> Linha(OneFactory n, Instituicao i, string caso, string numero, (long Mensagem, long Evento) antes) =>
         n.Db(i.Id, async db =>
         {
@@ -374,7 +354,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
             return Regex.Replace($"{caso} {JsonSerializer.Serialize(linha, Legivel)}", @"ONE-\d+", "ONE-n");
         });
 
-    // Os 21 casos de C6 (24 chamados); o estado de partida sai só de rotas, do Agendador e de ExecuteUpdate.
     static async Task<List<string>> Gravacoes(OneFactory n)
     {
         var i = await n.Instituicao(slug: "gravacoes", nome: "Univag");
@@ -401,7 +380,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         }
         Task<HttpResponseMessage> Acao(HttpClient x, string numero, string acao, object corpo) => x.PostAsJsonAsync($"/api/chamados/{numero}/{acao}", corpo);
 
-        // G7 e G21 precisam do LembreteEm gravado pelo Agendador: AGUARDANDO_ALUNO há 4 dias
         var g7 = await Novo(aluno, "Pedido G7");
         await Assumir(a, g7);
         await Aguardar(a, g7);
@@ -465,7 +443,6 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         await Aguardar(a, g15);
         await Caso("G15", g15, () => Acao(aluno, g15, "cancelar", new { motivo = "Cancelo G15" }));
         var g16 = await Novo(aluno, "Pedido G16");
-        // "sem corpo": o JSON null liga o corpo nulo (Corpo?.Motivo); um POST sem Content-Type cai no fallback 404 na base
         await Caso("G16", g16, () => aluno.PostAsync($"/api/chamados/{g16}/cancelar", new StringContent("null", System.Text.Encoding.UTF8, "application/json")));
 
         var g17 = await Novo(aluno, "Pedido G17");
@@ -489,13 +466,12 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         return linhas;
     }
 
-    // C6
     [Fact]
     public async Task Gravacoes_do_chamado_iguais_as_da_base()
     {
         await using var n = await Nova();
         var vivas = await Gravacoes(n);
-        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "gravacoes.vivas.txt"), vivas); // para comparar à mão quando falhar
+        File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "gravacoes.vivas.txt"), vivas);
 
         var gravadas = File.ReadAllLines(Retrato("gravacoes.txt"));
         Assert.Equal(24, gravadas.Length);

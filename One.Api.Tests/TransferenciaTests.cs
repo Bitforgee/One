@@ -52,7 +52,6 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(chamadasAntes, f.Llm.Corpos.Count);
     }
 
-    // fluxos-atendimento C9: o atendimento direto usa a categoria padrão, então nunca segue fluxo: abre na triagem, sem as três colunas
     [Fact]
     public async Task Atendimento_direto_sem_fluxo_na_triagem()
     {
@@ -101,7 +100,6 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var c = await Cenario.Criar(f);
         var primeira = new string('p', 121);
-        // três respostas: o resumo que vale é o último não vazio (o segundo), nem o primeiro nem o vazio
         f.Llm.Devolver(new { tipo = "pergunta", texto = "É o boleto deste semestre?", resumo = "resumo antigo" });
         var (id, _) = await c.Primeira(primeira);
         f.Llm.Devolver(new { tipo = "sem_base", texto = "", resumo = new string('r', 600) });
@@ -110,7 +108,6 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "e agora?" });
 
         var numero = (await (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
-        // uma importação posterior muda o semestre da matrícula; o chamado guarda o do momento da transferência
         await f.Db(c.Instituicao.Id, db => db.Matriculas.Where(m => m.UsuarioId == c.Aluno.Usuario.Id).ExecuteUpdateAsync(s => s.SetProperty(m => m.Semestre, 4)));
 
         var chamado = await f.Db(c.Instituicao.Id, db => db.Chamados.SingleAsync(x => x.Numero == numero));
@@ -209,7 +206,6 @@ public class CategoriaOrigemTests(OneFactory f) : IClassFixture<OneFactory>
 
         object Cita(Artigo a, string t, long? categoriaId = null) => new { tipo = "resposta", texto = "Peça pelo portal.", fonteIds = new[] { Semente.Fonte(a.Id) }, trechos = new[] { new { fonteId = Semente.Fonte(a.Id), texto = t } }, categoriaId };
 
-        // cada caso é uma conversa com várias respostas; vale sempre a última sugestão válida ou o último artigo citado (AC 60, AC 61)
         var casos = new (object[] saidas, string categoria, string origem)[]
         {
             ([new { tipo = "pergunta", texto = "É o boleto deste semestre?", categoriaId = financeiro.Id }], "Financeiro", "IA"),

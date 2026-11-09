@@ -2,7 +2,6 @@ import { useRef } from 'react'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 
-// Uma imagem da aparência: a miniatura (a escolhida e ainda não salva, ou a salva), "Enviar imagem" e "Remover" (AC 21, AC 24).
 export function CampoImagem({ rotulo, dica, extra, miniatura, escolher, remover, erro }: {
   rotulo: string
   dica: string

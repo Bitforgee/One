@@ -6,7 +6,6 @@ namespace One.Api.Instituicoes;
 
 public sealed record BaixarImagemInstituicao(string Slug, string Tipo) : IRequest<IResult>
 {
-    // door 4: a versão vai na URL, então a imagem nunca muda debaixo do mesmo endereço
     public const string Cache = "public, max-age=31536000, immutable";
 
     public static void Mapear(RouteGroupBuilder g) =>

@@ -104,7 +104,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.HasMany(x => x.Etapas).WithOne().HasForeignKey(x => x.VersaoFluxoId);
             e.HasIndex(x => new { x.FluxoId, x.Numero }).IsUnique();
             e.HasIndex(x => x.FluxoId).IsUnique().HasFilter("publicada_em IS NULL").HasDatabaseName("ux_versao_rascunho");
-            e.Property(x => x.PublicadaEm).IsConcurrencyToken(); // publicar só vale se ninguém publicou antes (AC 26)
+            e.Property(x => x.PublicadaEm).IsConcurrencyToken();
         });
         mb.Entity<EtapaFluxo>(e =>
         {
@@ -158,7 +158,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         {
             e.HasOne<SubscricaoPush>().WithMany().HasForeignKey(x => x.SubscricaoId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
-            e.Property(x => x.EnviadoEm).IsConcurrencyToken(); // a gravação só vale se ninguém enviou antes (AC 18)
+            e.Property(x => x.EnviadoEm).IsConcurrencyToken();
         });
         mb.Entity<Chamado>(e =>
         {

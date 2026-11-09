@@ -7,13 +7,11 @@ import { Spinner } from './ui/spinner'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Cartoes, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
-// Colunas "largo" só aparecem a partir de @2xl/main (672 px); no estreito os valores vão para a linha de Detalhe (layout-painel AC 22).
 const Largo = 'hidden md:@2xl/main:table-cell'
 export const Principal = 'whitespace-normal [overflow-wrap:anywhere]'
 
 export type Coluna = { titulo: string; largo?: boolean }
 
-// O estado vazio de uma lista (identidade-visual AC 18): o ícone de 28 px, o título, a frase e, quando a lista tem, o botão de ação.
 export type Vazio = { Icone: LucideIcon; titulo?: string; frase: ReactNode; acao?: ReactNode }
 const SemItens: Vazio = { Icone: ClipboardList, titulo: 'Nada cadastrado', frase: 'Nenhum item cadastrado.' }
 
@@ -28,11 +26,8 @@ export function BlocoVazio({ Icone, titulo, frase, acao }: Vazio) {
   )
 }
 
-// Abaixo de 768 px (o `md` do Tailwind) as linhas viram cartões (AC 7), ou linhas com divisória quando `densa` (revisao-ux AC 21).
 export const useEstreito = () => useConsulta('(max-width: 767px)')
 
-// A tabela sem caixa, só com linhas; lista vazia, uma linha só com o texto de vazio (AC 24).
-// Lista ainda não chegada: 3 esqueletos (AC 4); com `erro`, nada (a tela mostra o erro).
 export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children }: { colunas: Coluna[]; itens?: unknown[]; vazio?: Vazio; erro?: unknown; densa?: boolean; children: ReactNode }) {
   const cartoes = useEstreito()
   if (!itens)
@@ -53,7 +48,6 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
     ) : (
       children
     )
-  // sem <table>: a lista de cartões (linhas e células viram div em ui/table.tsx)
   if (cartoes)
     return (
       <div role="list" {...{ [densa ? 'data-linhas' : 'data-cartoes']: '' }} className={`flex flex-col text-sm ${densa ? '' : 'gap-2'}`}>
@@ -78,10 +72,8 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
 
 export const CelulaLargo = ({ children, className = '' }: { children?: ReactNode; className?: string }) => <TableCell className={`${Largo} ${Principal} ${className}`}>{children}</TableCell>
 
-// A linha de 12 px sob a coluna principal, só no estreito: os valores "largo" unidos por " · " (AC 22).
 export const Detalhe = ({ children }: { children: ReactNode }) => <div className="text-xs text-muted-foreground md:@2xl/main:hidden">{children}</div>
 
-// O menu "⋮" da última coluna (door 4); a tela só o monta quando a linha tem alguma ação.
 export function MenuAcoes({ nome, pendente, children }: { nome: string; pendente?: boolean; children: ReactNode }) {
   return (
     <DropdownMenu>

@@ -5,7 +5,6 @@ import { abrir, api, me } from '../test/util'
 
 const Pergunta = 'É do semestre atual?'
 
-// chat-linha-do-tempo C7: a caixa do compositor
 describe('compositor', () => {
   it('limite de 10 mensagens', async () => {
     api({
@@ -16,7 +15,6 @@ describe('compositor', () => {
     abrir('/univag/assistente')
     for (let n = 1; n <= 10; n++) {
       if (n === 10) {
-        // antes da 10ª o compositor ainda existe, com o campo e o Enviar dentro dele
         const caixa = screen.getByTestId('compositor')
         expect(caixa).toContainElement(screen.getByLabelText('Mensagem'))
         expect(caixa).toContainElement(screen.getByRole('button', { name: /Enviar/ }))

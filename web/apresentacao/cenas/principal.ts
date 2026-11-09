@@ -5,12 +5,9 @@ import { expect, type Page } from '@playwright/test'
 import type { Roteiro, Segmento } from '../kit'
 import { apontar, clicar, digitar, rolar, Saida } from '../kit'
 
-// Roteiro da apresentação completa, contra o backend real (IA de verdade) numa instituição limpa
-// montada por preparar.ts. Cada papel é um segmento com contexto e login próprios.
 
 type Pessoa = { nome: string; cpf: string; senha: string }
 type Execucao = { slug: string; aluna: Pessoa; lucas: Pessoa; atendente: Pessoa; gestora: Pessoa }
-// Lido só na hora de gravar: o roteiro da amostra também importa este arquivo.
 const execucao = (): Execucao => JSON.parse(readFileSync(path.join(Saida, 'execucao.json'), 'utf8'))
 const dados = () => JSON.parse(readFileSync(path.join(import.meta.dirname, '..', 'dados.json'), 'utf8'))
 const Coordenacao = 'Coordenação de Análise e Desenvolvimento de Sistemas'
@@ -21,7 +18,6 @@ const abrirLogin = async (page: Page) => {
   await page.getByLabel('CPF').waitFor()
 }
 
-// Login pela tela, digitado; termina na tela inicial do papel.
 async function entrar(page: Page, quem: Pessoa, inicial: string) {
   await digitar(page, page.getByLabel('CPF'), quem.cpf)
   await digitar(page, page.getByLabel('Senha'), quem.senha, 40)
@@ -30,7 +26,6 @@ async function entrar(page: Page, quem: Pessoa, inicial: string) {
   await respiro(page)
 }
 
-// Login fora do vídeo (antes do corte), para os segmentos que não mostram a entrada.
 async function entrarDireto(page: Page, quem: Pessoa, inicial: string) {
   await abrirLogin(page)
   await page.getByLabel('CPF').fill(quem.cpf)
@@ -39,7 +34,6 @@ async function entrarDireto(page: Page, quem: Pessoa, inicial: string) {
   await page.waitForURL(`**/${inicial}`)
 }
 
-// Item da barra lateral, com uma pausa para a tela ser lida.
 async function menu(page: Page, nome: string) {
   await clicar(page, page.getByRole('link', { name: nome, exact: true }))
   await page.waitForLoadState('networkidle')
@@ -351,7 +345,6 @@ const gestora: Segmento = {
   ],
 }
 
-// Espera o agendador indexar o artigo novo (nenhum trecho sem embedding na instituição).
 async function indexado(page: Page) {
   const sql = (c: string) => execFileSync('docker', ['compose', 'exec', '-T', 'postgres', 'psql', '-U', 'postgres', '-d', 'one', '-At', '-c', c], { cwd: path.resolve(import.meta.dirname, '..', '..', '..'), encoding: 'utf8' }).trim()
   const id = sql(`select id from instituicao where slug = '${execucao().slug}'`)
@@ -361,7 +354,6 @@ async function indexado(page: Page) {
   }
 }
 
-// O artigo criado pela gestora já responde: só passa se a resposta trouxer o link que só esse artigo tem.
 const lucas: Segmento = {
   id: '35-lucas',
   selo: 'Visão do aluno',

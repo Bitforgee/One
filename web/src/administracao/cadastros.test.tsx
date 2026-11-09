@@ -168,7 +168,6 @@ describe('cadastros', () => {
     expect(painel.queryByText('Nenhum item cadastrado.')).not.toBeInTheDocument()
   })
 
-  // C82 (AC 45, door 13)
   it('toast de cadastro só no sucesso', async () => {
     await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
     let tentativa = 0
@@ -182,7 +181,6 @@ describe('cadastros', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
   })
 
-  // fluxos-atendimento S4 (AC 49, AC 53, AC 54): a liderança de semestre é um setor com curso e semestre, que só se escolhem na criação
   it('liderança de semestre: curso e semestre na criação, só leitura na edição', async () => {
     const lideranca = { id: 10, nome: 'Líderes ADS 3º', triagem: false, ativo: true, cursoId: 4, semestre: 3 }
     listas.setores.push(lideranca)
@@ -214,7 +212,6 @@ describe('cadastros', () => {
     }
   })
 
-  // AC 54: nenhuma lista de destino oferece a liderança
   it('listas de destino sem lideranças', async () => {
     listas.setores.push({ id: 10, nome: 'Líderes ADS 3º', triagem: false, ativo: true, cursoId: 4, semestre: 3 })
     try {
@@ -228,7 +225,6 @@ describe('cadastros', () => {
     }
   })
 
-  // cadastros-fluxo-visual K1
   it('abas em coluna com a contagem', async () => {
     cadastros()
     await screen.findByRole('button', { name: 'Triagem' })
@@ -237,7 +233,6 @@ describe('cadastros', () => {
     expect(contagens).toEqual(['3', '3', '2', '2', '1'])
   })
 
-  // K2 e K5
   it('título, ajuda, botão com o objeto e busca pelo nome', async () => {
     cadastros()
     await screen.findByRole('button', { name: 'Triagem' })

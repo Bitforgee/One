@@ -6,7 +6,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests;
 
-// arquivos-minio S6: a migração ArquivosMinio roda em banco descartável, sem passar pelo OneFactory.
 public class MigracaoArquivosMinioTests
 {
     const string Servidor = "Host=localhost;Port=5432;Username=postgres;Password=postgres";
@@ -31,7 +30,6 @@ public class MigracaoArquivosMinioTests
         return lista;
     }
 
-    // Banco novo migrado até Rag; as linhas de teste entram com as chaves estrangeiras desligadas (a migração só olha a contagem).
     static async Task Com(Func<string, Func<string, Task>, Task> prova, string? insere = null)
     {
         var banco = "one_mig_" + Guid.NewGuid().ToString("N")[..12];
@@ -61,7 +59,6 @@ public class MigracaoArquivosMinioTests
         WHERE table_schema = 'public' AND table_name IN ('anexo', 'versao_documento') ORDER BY 1
         """;
 
-    // C22
     [Fact]
     public Task Migracao_aplica_em_banco_sem_linha() => Com(async (cs, migrar) =>
     {
@@ -80,7 +77,6 @@ public class MigracaoArquivosMinioTests
         Assert.Contains(Migracao, await Consultar(cs, """SELECT "MigrationId" FROM "__EFMigrationsHistory" """));
     });
 
-    // C23: caso 1 com linha em anexo, caso 2 com linha em versao_documento
     [Theory]
     [InlineData("INSERT INTO anexo (instituicao_id, mensagem_chamado_id, nome, tipo, tamanho, conteudo) VALUES (1, 1, 'a.png', 'image/png', 1, '\\x00')")]
     [InlineData("INSERT INTO versao_documento (instituicao_id, documento_id, numero, nome_arquivo, conteudo, texto, paginas, criada_em) VALUES (1, 1, 1, 'a.pdf', '\\x00', 't', 1, now())")]

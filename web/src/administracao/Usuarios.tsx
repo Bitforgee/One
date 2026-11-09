@@ -22,7 +22,6 @@ const Papeis: [string, string][] = [
   ['ADMINISTRADOR', 'Administrador'],
 ]
 
-// O formulário sempre tem texto e listas; a senha temporária vazia não vai para a API.
 type Ficha = Pick<Usuario, 'cpf' | 'nome' | 'email' | 'papeis' | 'setores'> & { id?: number; senhaTemporaria: string }
 type Edicao = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; setores: Setor[] }
 const Novo: Ficha = { cpf: '', nome: '', email: '', papeis: ['ATENDENTE'], setores: [], senhaTemporaria: '' }
@@ -107,7 +106,6 @@ function CamposDoUsuario({ editando, setEditando, setores, erros }: Edicao & { e
 const CamposComErro = ['cpf', 'nome', 'email', 'senhaTemporaria']
 const semAcento = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
-// A busca casa o nome e o e-mail sem caixa nem acento, e o CPF com ou sem máscara.
 function casa(u: Usuario, busca: string) {
   const t = semAcento(busca.trim())
   const digitos = t.replace(/\D/g, '')
@@ -116,7 +114,6 @@ function casa(u: Usuario, busca: string) {
 
 const tituloDaJanela = (f?: Ficha) => (f?.id ? 'Editar usuário' : 'Novo usuário')
 
-// S8: atendentes e administradores; alunos chegam pela importação, mas também podem ser editados aqui.
 export function Usuarios() {
   const { dados, erro, recarregar } = useLeituras<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
   const [editando, setEditando] = useState<Ficha>()

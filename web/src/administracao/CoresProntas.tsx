@@ -1,6 +1,5 @@
 import { CorValida } from '../aparencia'
 
-// As cores são guardadas sem o "#": interface.test.ts proíbe cor literal em src/. Todas têm contraste de pelo menos 4,5:1 com o branco (AC 17).
 const Prontas: [string, string][] = [
   ['Azul One', '224fa7'],
   ['Verde', '166534'],
@@ -13,7 +12,6 @@ const Prontas: [string, string][] = [
 ]
 const comHash = (digitos: string) => '#' + digitos
 
-// 8 cores nomeadas em botões de rádio e o seletor nativo; escolher uma põe a cor no campo hexadecimal (AC 17, AC 18).
 export function CoresProntas({ cor, escolher }: { cor: string; escolher: (cor: string) => void }) {
   const atual = cor.toLowerCase()
   return (

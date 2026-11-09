@@ -2,7 +2,6 @@ import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection 
 import type { QueryClient } from '@tanstack/react-query'
 import { useEffect, useSyncExternalStore } from 'react'
 
-// O hub só avisa que algo mudou (ChamadoMudou, FilaMudou); o dado vem sempre do GET de sempre (AD-022, AD-012).
 export const UrlDaFila = '/api/chamados?escopo=fila'
 const EsperaMaxima = 30_000
 
@@ -30,7 +29,6 @@ function entrarNosGrupos() {
   if (filasAbertas > 0) void conexao?.invoke('EntrarNaFila').catch(semErro)
 }
 
-// Os avisos da queda se perderam: relê o que está aberto.
 function reler(cliente: QueryClient) {
   for (const numero of chamadosAbertos.keys()) void cliente.invalidateQueries({ queryKey: ['chamado', numero] })
   if (filasAbertas > 0) void cliente.invalidateQueries({ queryKey: [UrlDaFila] })
@@ -56,13 +54,11 @@ async function tentar(minha: number) {
   entrarNosGrupos()
 }
 
-// Espera crescente entre as tentativas de abrir, nunca mais que 30 s.
 function agendar(minha: number) {
   clearTimeout(temporizador)
   temporizador = setTimeout(() => void tentar(minha), Math.min(1000 * 2 ** Math.max(falhas - 1, 0), EsperaMaxima))
 }
 
-// A aba que volta a ficar visível tenta de imediato, sem esperar o relógio.
 function aoVoltar() {
   if (document.visibilityState !== 'visible' || conexao?.state !== HubConnectionState.Disconnected) return
   clearTimeout(temporizador)
@@ -103,7 +99,6 @@ export async function encerrarTempoReal() {
   notificar()
 }
 
-// Abre a conexão enquanto a sessão está autenticada e a encerra ao sair.
 export function useTempoReal(cliente: QueryClient, autenticado: boolean) {
   useEffect(() => {
     if (!autenticado) return
@@ -119,7 +114,6 @@ const assinar = (ouvinte: () => void) => {
 
 export const useEstadoDaConexao = () => useSyncExternalStore(assinar, () => estado)
 
-// A tela do chamado aberta entra no grupo do chamado e sai ao fechar.
 export function useChamadoAberto(numero?: string) {
   useEffect(() => {
     if (!numero) return
@@ -136,7 +130,6 @@ export function useChamadoAberto(numero?: string) {
   }, [numero])
 }
 
-// A fila aberta entra nos grupos das filas dos setores do atendente.
 export function useFilaAberta() {
   useEffect(() => {
     filasAbertas++

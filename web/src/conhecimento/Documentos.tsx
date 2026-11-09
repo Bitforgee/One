@@ -29,7 +29,6 @@ type Envio = { id?: number; titulo: string; categoriaId: string; arquivo?: File 
 
 const paginas = (n: number) => (n === 1 ? 'página' : 'páginas')
 
-// Documento novo leva título e categoria; nova versão leva só o arquivo.
 function formulario(r: Envio) {
   const f = new FormData()
   if (!r.id) {
@@ -107,7 +106,6 @@ const CamposComErro = ['titulo', 'categoriaId']
 const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Enviar PDF')
 const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos')
 
-// RAG S3: PDFs da instituição que o assistente consulta; o aluno nunca vê o documento, só a resposta.
 export function Documentos() {
   const { itens: documentos, categorias, erro, recarregar } = useCatalogo<Documento>('/api/admin/documentos')
   const [envio, setEnvio] = useState<Envio>()

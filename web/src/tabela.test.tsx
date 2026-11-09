@@ -5,7 +5,6 @@ import { abrir, api, me } from './test/util'
 
 const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] }) // com ALUNO, a guarda de papel deixa abrir /solicitacoes
 const vazias = ['setores', 'categorias', 'cursos', 'fluxos', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []]] as const)
-// as 6 listas vazias de AC 45 (identidade-visual AC 18): [rota, caminho, título, frase, botão]
 const Listas: [string, string, string, string, string?][] = [
   ['GET /api/chamados?escopo=fila', '/univag/fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.'],
   ['GET /api/chamados?escopo=meus', '/univag/solicitacoes', 'Nenhuma solicitação', 'Você ainda não tem solicitações.', 'Falar com o assistente'],
@@ -20,7 +19,6 @@ const fila = (estados: string[]) =>
   estados.map((estado, i) => ({ numero: `ONE-${i + 1}`, titulo: `chamado ${i + 1}`, categoria: 'Boleto', estado, responsavel: null, criadoEm: '2026-11-02T12:00:00Z', dias: 1 }))
 
 describe('Tabela', () => {
-  // aparencia-instituicao C3 (AC 3)
   it('selo de estado com cor por grupo', async () => {
     const grupos: [string, string, string][] = [
       ['ABERTO', 'Aberto', 'bg-accent'],
@@ -35,7 +33,6 @@ describe('Tabela', () => {
     for (const [, texto, classe] of grupos) expect(screen.getByText(texto, { selector: '[data-slot=badge]' }), texto).toHaveClass(classe)
   })
 
-  // aparencia-instituicao C4 (AC 4)
   it('carregando mostra 3 esqueletos', async () => {
     api({ 'GET /api/auth/me': () => [200, atendente], 'GET /api/chamados?escopo=fila': () => new Promise(() => {}) })
     abrir('/univag/fila')
@@ -44,7 +41,6 @@ describe('Tabela', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  // aparencia-instituicao C48 (AC 45)
   it.each(Listas)('vazio com ícone nas 6 listas (%s)', async (rota, caminho, titulo, frase, botao) => {
     api({ 'GET /api/auth/me': () => [200, admin], ...Object.fromEntries(vazias), 'GET /api/admin/categorias': () => [200, []], 'GET /api/admin/usuarios': () => [200, []], [rota]: () => [200, []] })
     abrir(caminho)

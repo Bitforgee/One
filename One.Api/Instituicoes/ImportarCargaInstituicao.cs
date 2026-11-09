@@ -37,7 +37,7 @@ public sealed class ImportarCargaInstituicaoHandler(OneDb db, TimeProvider relog
         catch (JsonException e) { return Recusa([$"JSON inválido ({e.Message})"]); }
         if (arq is null) return Recusa(["O arquivo está vazio."]);
 
-        db.InstituicaoAtual = instituicao.Id; // door 3
+        db.InstituicaoAtual = instituicao.Id;
         var existentes = await CargaInicial.Existentes(db);
         var (erros, plano) = CargaValidacao.Validar(arq, existentes);
         if (erros.Count > 0) return Recusa(erros);

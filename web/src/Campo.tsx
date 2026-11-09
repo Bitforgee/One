@@ -2,7 +2,6 @@ import type { ComponentProps } from 'react'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 
-// Campo de texto com o rótulo em cima e, quando a API recusou o valor, o erro logo abaixo do campo.
 export function Campo({ id, rotulo, erro, ...props }: { id: string; rotulo: string; erro?: string } & ComponentProps<'input'>) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -13,7 +12,6 @@ export function Campo({ id, rotulo, erro, ...props }: { id: string; rotulo: stri
   )
 }
 
-// O texto do erro de um campo; `id` é o do campo, e o texto fica em `{id}-erro` (o `aria-describedby` do campo).
 export function ErroDoCampo({ id, erro }: { id: string; erro?: string }) {
   if (!erro) return null
   return (

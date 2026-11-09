@@ -17,7 +17,6 @@ public sealed class ListarInstituicoesHandler(OneDb db) : IRequestHandler<Listar
 
     public async ValueTask<IResult> Handle(ListarInstituicoes m, CancellationToken ct)
     {
-        // door 5: SQL direto, a única leitura entre instituições, um número por instituicao_id
         var administradores = (await db.Database.SqlQuery<Contagem>($"""
             SELECT u.instituicao_id AS "InstituicaoId", COUNT(*)::int AS "Total" FROM usuario u
             WHERE u.ativo AND EXISTS (SELECT 1 FROM usuario_papel p WHERE p.usuario_id = u.id AND p.papel = {Papeis.Administrador})

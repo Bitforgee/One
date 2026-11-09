@@ -1,13 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 import { simularApi } from './simulada'
 
-// fluxos-atendimento S6: o que o canvas faz com mouse e teclado, que o jsdom não mede. API simulada (e2e/simulada.ts).
 const etapa = (destino: string, x: number | null = null, y: number | null = null, prazoHoras: number | null = null) => ({ destino, setorId: null, prazoHoras, x, y })
 const categoria = { id: 1, nome: 'Financeiro > Boletos e mensalidades', ativa: true, padrao: false }
 
 async function fluxos(page: Page, rascunho: object | null) {
   await simularApi(page)
-  // a lista de fluxos desta tela: um fluxo para todos os cursos, com o rascunho pedido (o último route registrado vale primeiro)
   await page.route('**/api/admin/fluxos', (rota) =>
     rota.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([{ id: 6, categoriaId: 1, cursoId: null, semestre: null, vigente: null, rascunho }]) }),
   )
@@ -17,7 +15,6 @@ async function fluxos(page: Page, rascunho: object | null) {
 async function abrirEditor(page: Page) {
   await page.goto('/univag/cadastros')
   await page.waitForSelector('[role=tab], select[aria-label=Cadastro]', { state: 'attached' })
-  // em telas estreitas as abas viram uma lista de escolha
   const aba = page.getByRole('tab', { name: 'Fluxos' })
   if (await aba.isVisible()) await aba.click()
   else await page.getByLabel('Cadastro').selectOption('fluxos')
@@ -32,7 +29,6 @@ async function abrirCanvas(page: Page) {
   return dialogo
 }
 
-// arrasta um destino do menu do botão Adicionar etapa até um ponto do canvas (a paleta em fileira deu lugar ao menu)
 async function arrastar(page: Page, destino: string, alvo: { x: number; y: number }) {
   await page.getByRole('button', { name: 'Adicionar etapa', exact: true }).click()
   await page.getByRole('button', { name: new RegExp(`^${destino}`) }).dragTo(page.locator('.react-flow'), { targetPosition: alvo })
@@ -46,7 +42,6 @@ const centro = async (alvo: ReturnType<Page['locator']>) => {
   return { x: caixa.x + caixa.width / 2, y: caixa.y + caixa.height / 2 }
 }
 
-// arrasta da bolinha de saída de um nó até a de entrada de outro, com o mouse, em passos
 async function ligar(page: Page, de: ReturnType<Page['locator']>, para: ReturnType<Page['locator']>) {
   const [a, b] = [await centro(de.locator('.react-flow__handle.source')), await centro(para.locator('.react-flow__handle.target'))]
   await page.mouse.move(a.x, a.y)
@@ -57,7 +52,6 @@ async function ligar(page: Page, de: ReturnType<Page['locator']>, para: ReturnTy
 }
 
 test.describe('canvas dos fluxos', () => {
-  // fluxos-atendimento C85 (AC 72)
   test('arrastar tipo da paleta', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [] })
     await abrirCanvas(page)
@@ -77,7 +71,6 @@ test.describe('canvas dos fluxos', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'Ligue todas as etapas ao Início' })).toBeVisible()
   })
 
-  // C87 (AC 73)
   test('ligar nós em cadeia', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [] })
     await abrirCanvas(page)
@@ -91,7 +84,6 @@ test.describe('canvas dos fluxos', () => {
     await ligar(page, inicio, primeiro)
     await expect(arestas(page)).toHaveCount(1)
 
-    // o Início já tem a sua saída: uma segunda é recusada
     await ligar(page, inicio, segundo)
     await expect(arestas(page)).toHaveCount(1)
 
@@ -100,18 +92,15 @@ test.describe('canvas dos fluxos', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'Ligue todas as etapas ao Início' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Salvar rascunho' })).toBeEnabled()
 
-    // o fim da cadeia não fecha um ciclo com o primeiro
     await ligar(page, segundo, primeiro)
     await expect(arestas(page)).toHaveCount(2)
   })
 
-  // C91 (AC 77)
   test('teclado no canvas', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE', 320, 40), etapa('COORDENACAO_CURSO', 620, 40)] })
     const dialogo = await abrirCanvas(page)
     await dialogo.getByRole('tab', { name: 'Canvas' }).focus()
 
-    // Tab chega a cada nó do canvas
     const visitados = new Set<string>()
     for (let i = 0; i < 30 && visitados.size < 3; i++) {
       await page.keyboard.press('Tab')
@@ -120,7 +109,6 @@ test.describe('canvas dos fluxos', () => {
     }
     expect([...visitados].sort()).toEqual(['Etapa 1: Liderança do semestre', 'Etapa 2: Coordenação do curso', 'Início'])
 
-    // Enter seleciona o nó em foco e as setas o movem
     const primeiro = page.getByLabel('Etapa 1: Liderança do semestre')
     await primeiro.focus()
     await page.keyboard.press('Enter')
@@ -134,7 +122,6 @@ test.describe('canvas dos fluxos', () => {
     expect(depois.y).toBeGreaterThan(antes.y)
   })
 
-  // C113 (AD-042): o zoom nunca passa de 100%, nem com um fluxo curto
   test('zoom máximo de 100%', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('COORDENACAO_CURSO', 320, 40)] })
     await abrirCanvas(page)
@@ -143,7 +130,6 @@ test.describe('canvas dos fluxos', () => {
     expect(escala).toBeGreaterThan(0)
   })
 
-  // C93 (AC 79)
   test('celular só com a lista', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('COORDENACAO_CURSO')] })
     await page.setViewportSize({ width: 767, height: 900 })
@@ -155,7 +141,6 @@ test.describe('canvas dos fluxos', () => {
     await expect(page.locator('.react-flow')).toHaveCount(0)
   })
 
-  // fluxos-atendimento ## Screens: Simular e Publicar na mesma barra, os quatro botões à vista (extra)
   test('arranjo da barra de ações: Simular e Publicar na mesma barra a 1440x900', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO')] })
     await page.setViewportSize({ width: 1440, height: 900 })

@@ -7,14 +7,12 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento S5 (C80 e C81): o detalhe do chamado diz por que ele caiu ali.
 public class FluxoRastroTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C80
     [Fact]
     public async Task Detalhe_traz_fluxo_e_abrangencia()
     {
-        var c = await Cadeia.Criar(f); // categoria "Dúvida": fluxo para todos os cursos, 2 etapas
+        var c = await Cadeia.Criar(f);
         var matricula = await f.Db(c.I.Id, db => db.Matriculas.SingleAsync(m => m.UsuarioId == c.Aluno.Usuario.Id));
         var curso = await f.Db(c.I.Id, db => db.Cursos.SingleAsync(x => x.Id == matricula.CursoId));
         var doCurso = await f.Categoria(c.I, "Do curso");
@@ -37,14 +35,12 @@ public class FluxoRastroTests(OneFactory f) : IClassFixture<OneFactory>
                 (fluxo.GetProperty("versao").GetInt32(), fluxo.GetProperty("etapa").GetInt32(), fluxo.GetProperty("total").GetInt32(),
                  fluxo.GetProperty("destino").GetString(), fluxo.GetProperty("abrangencia").GetString()));
         }
-        // depois de subir, a etapa avança e a versão fica
         var subido = await c.Transferir();
         await c.Subir(c.A.Cliente, subido);
         var depois = (await c.Detalhe(c.B.Cliente, subido)).GetProperty("fluxo");
         Assert.Equal((1, 2), (depois.GetProperty("versao").GetInt32(), depois.GetProperty("etapa").GetInt32()));
     }
 
-    // C81
     [Fact]
     public async Task Fora_de_fluxo_traz_null()
     {

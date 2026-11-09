@@ -6,7 +6,6 @@ namespace One.Api.Chamados;
 
 public sealed record DesativarPush(string? Endpoint, Usuario Usuario) : IRequest<IResult>
 {
-    // o endpoint vai na query (DELETE sem corpo): uma rota sem corpo JSON exigido não vira 404 pelo fallback quando falta o Content-Type
     public static void Mapear(RouteGroupBuilder g) =>
         g.MapDelete("/subscricao", (string? endpoint, HttpContext ctx, IMediator m) => m.Send(new DesativarPush(endpoint, ctx.Usuario())));
 }

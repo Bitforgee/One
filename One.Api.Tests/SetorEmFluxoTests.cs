@@ -7,7 +7,6 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests;
 
-// base-fluxos S3 (C14 a C17 e C22, F7): não se desativa um setor que a versão vigente de um fluxo usa.
 public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     record Mundo(Instituicao I, HttpClient Admin, Setor Financeiro, Curso Ads);
@@ -24,7 +23,6 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
 
     Task<bool> Ativo(Instituicao i, long setorId) => f.Db(i.Id, db => db.Setores.Where(s => s.Id == setorId).Select(s => s.Ativo).SingleAsync());
 
-    // C14
     [Fact]
     public async Task Setor_em_fluxo_publicado_nao_desativa()
     {
@@ -39,7 +37,6 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(await Ativo(m.I, m.Financeiro.Id));
     }
 
-    // C15
     [Fact]
     public async Task Setor_so_em_rascunho_ou_versao_antiga_desativa()
     {
@@ -61,7 +58,6 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(await Ativo(m.I, secretaria.Id));
     }
 
-    // C16
     [Fact]
     public async Task Renomear_e_reativar_seguem_como_hoje()
     {
@@ -78,7 +74,6 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(await Ativo(m.I, secretaria.Id));
     }
 
-    // C17
     [Fact]
     public async Task Fluxo_de_outra_instituicao_nao_bloqueia()
     {
@@ -91,7 +86,6 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(await Ativo(alheia.I, alheia.Financeiro.Id));
     }
 
-    // C22
     [Fact]
     public async Task Setor_inexistente_ou_alheio_404()
     {

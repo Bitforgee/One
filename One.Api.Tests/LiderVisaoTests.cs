@@ -7,10 +7,8 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento C73 a C77 (door 7): a liderança vê só o necessário, responde e sobe; o resto é da equipe.
 public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    // C73
     [Fact]
     public async Task Detalhe_do_lider_sem_transcricao_nem_matricula()
     {
@@ -27,7 +25,6 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, d.GetProperty("transcricao").GetArrayLength());
         Assert.Equal(JsonValueKind.Null, d.GetProperty("matricula").GetProperty("numero").ValueKind);
         Assert.Equal(JsonValueKind.Null, d.GetProperty("categorias").ValueKind);
-        // o líder não reclassifica nem encaminha (AC 61), então não recebe as listas de destino; a origem da categoria vem do que a IA citou, que é da equipe
         Assert.Equal(JsonValueKind.Null, d.GetProperty("setores").ValueKind);
         Assert.Equal(JsonValueKind.Null, d.GetProperty("origemCategoria").ValueKind);
         Assert.Equal(t.Aluno.Usuario.Nome, d.GetProperty("solicitante").GetString());
@@ -38,34 +35,30 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotEqual(0, d.GetProperty("eventos").GetArrayLength());
         Assert.Equal(1, d.GetProperty("fluxo").GetProperty("etapa").GetInt32());
         Assert.Equal("LIDERANCA_SEMESTRE", d.GetProperty("fluxo").GetProperty("destino").GetString());
-        // a conversa e o número da matrícula também não aparecem em lugar nenhum do corpo
         var texto = d.GetRawText();
         var numeroDaMatricula = await f.Db(t.I.Id, db => db.Matriculas.Where(m => m.UsuarioId == t.Aluno.Usuario.Id).Select(m => m.Numero).SingleAsync());
         Assert.DoesNotContain(numeroDaMatricula, texto);
         Assert.DoesNotContain("Pode detalhar?", texto);
 
-        // a coordenação, que vê tudo, ainda vê a transcrição
         var aluno = await t.Detalhe(t.ClienteAluno, numero);
         Assert.Equal(1, aluno.GetProperty("transcricao").EnumerateArray().Count(m => m.GetProperty("texto").GetString() == "preciso de ajuda com a nota"));
     }
 
-    // Impact do plano: a lista `setores` do detalhe deixa de oferecer lideranças à equipe comum
     [Fact]
     public async Task Setores_do_detalhe_da_equipe_nao_oferecem_lideranca()
     {
         var t = await Turma.Criar(f);
         var financeiro = await f.Setor(t.I, "Financeiro");
         var numero = await t.NaLideranca();
-        Assert.Equal(HttpStatusCode.OK, (await t.Lider!.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/subir", new { motivo = "É da coordenação" })).StatusCode); // sobe à coordenação, vista pela equipe comum
+        Assert.Equal(HttpStatusCode.OK, (await t.Lider!.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/subir", new { motivo = "É da coordenação" })).StatusCode);
 
         var d = await t.Detalhe(t.Coord.Cliente, numero);
 
         var ofertados = d.GetProperty("setores").EnumerateArray().Select(s => s.GetProperty("id").GetInt64()).ToList();
-        Assert.Contains(financeiro.Id, ofertados); // a lista existe e traz os setores comuns
+        Assert.Contains(financeiro.Id, ofertados);
         Assert.DoesNotContain(t.Lideranca!.Id, ofertados);
     }
 
-    // C74
     [Fact]
     public async Task Lider_nao_reclassifica_nem_encaminha()
     {
@@ -81,7 +74,6 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(t.Lideranca!.Id, (await t.Ler(numero)).SetorId);
     }
 
-    // C75
     [Fact]
     public async Task Anexo_da_conversa_404_para_o_lider()
     {
@@ -98,12 +90,10 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
 
         Assert.Equal(HttpStatusCode.NotFound, (await t.Lider!.Cliente.GetAsync($"/api/conversas/anexos/{anexo}")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await t.ClienteAluno.GetAsync($"/api/conversas/anexos/{anexo}")).StatusCode);
-        // depois de subir, a coordenação (equipe completa) abre o anexo da conversa
         Assert.Equal(HttpStatusCode.OK, (await t.Lider.Cliente.PostAsJsonAsync($"/api/chamados/{numero}/subir", new { motivo = "É da coordenação" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await t.Coord.Cliente.GetAsync($"/api/conversas/anexos/{anexo}")).StatusCode);
     }
 
-    // C76
     [Fact]
     public async Task Lider_perde_o_chamado_ao_subir()
     {
@@ -121,7 +111,6 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((t.Coordenacao.Id, 2, 0), (chamado.SetorId, chamado.EtapaOrdem, chamado.Encaminhamentos));
     }
 
-    // C77
     [Fact]
     public async Task Solicitante_atendente_ve_como_aluno()
     {

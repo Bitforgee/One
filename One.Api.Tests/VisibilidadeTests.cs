@@ -45,7 +45,6 @@ public class VisibilidadeTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(eventos, (await b.Eventos(numero)).Count);
     }
 
-    // Conversa com uma resposta apoiada no artigo do boleto, transferida para a triagem, com uma nota interna.
     async Task<(Cenario c, Atendente atendente, string numero)> Transferido()
     {
         var c = await Cenario.Criar(f);
@@ -127,7 +126,6 @@ public class TransicoesTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static readonly string[] Estados = [Aberto, EmAtendimento, AguardandoAluno, Resolvido, Fechado];
 
-    // AC 89: quem pode fazer a ação e em quais estados; a tabela vive aqui, não no código de produção.
     static readonly (string acao, bool doAluno, string[] estados)[] Matriz =
     [
         ("resposta pública", false, [Aberto, EmAtendimento, AguardandoAluno]),
@@ -173,7 +171,6 @@ public class TransicoesTests(OneFactory f) : IClassFixture<OneFactory>
             {
                 var numero = await b.Chamado(estado);
                 var antes = await Fotografia(b, numero);
-                // B é atendente do setor e nunca é o responsável, então assumir também vale em EM_ATENDIMENTO e AGUARDANDO_ALUNO
                 var r = await Executar(b, doAluno ? b.ClienteAluno : b.B.Cliente, acao, numero, categoria.Id);
 
                 if (permitidos.Contains(estado))
@@ -193,13 +190,12 @@ public class TransicoesTests(OneFactory f) : IClassFixture<OneFactory>
         var categoria = await f.Categoria(b.Instituicao, "Financeiro");
         foreach (var (acao, doAluno, permitidos) in Matriz)
         {
-            // o papel errado tenta a ação num estado em que ela seria permitida
             var numero = await b.Chamado(permitidos[0]);
             var antes = await Fotografia(b, numero);
 
             var r = await Executar(b, doAluno ? b.A.Cliente : b.ClienteAluno, acao, numero, categoria.Id);
 
-            if (acao == "resposta pública") Assert.True(r.IsSuccessStatusCode, $"{acao}: {(int)r.StatusCode}"); // os dois papéis respondem
+            if (acao == "resposta pública") Assert.True(r.IsSuccessStatusCode, $"{acao}: {(int)r.StatusCode}");
             else
             {
                 Assert.True(r.StatusCode == HttpStatusCode.Forbidden, $"{acao} pelo papel errado: {(int)r.StatusCode}");
@@ -217,7 +213,6 @@ public class ConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory>
         var b = await Balcao.Criar(f);
         var numero = await b.Chamado(EmAtendimento);
 
-        // door 14 na camada do banco: duas sessões leem a mesma versão e só a primeira grava
         await f.Db(b.Instituicao.Id, async db1 => await f.Db(b.Instituicao.Id, async db2 =>
         {
             var c1 = await db1.Chamados.SingleAsync(c => c.Numero == numero);
@@ -230,7 +225,6 @@ public class ConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory>
         var c = await b.Ler(numero);
         Assert.Equal((EmAtendimento, (long?)b.B.Usuario.Id), (c.Estado, c.ResponsavelId));
 
-        // pela API: dois atendentes resolvem ao mesmo tempo; um grava e o outro recebe 409
         var outro = await b.Chamado(EmAtendimento);
         var respostas = await Task.WhenAll(
             b.A.Cliente.PostAsJsonAsync($"/api/chamados/{outro}/resolver", new { texto = "Feito por A." }),

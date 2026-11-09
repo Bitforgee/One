@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
 
-// revisao-ux S5 (C42): um controle de período, destaques com número, rótulo e frase, e "Ver tabela".
 afterEach(() => {
   vi.useRealTimers()
 })
@@ -21,7 +20,6 @@ function indicadores() {
 }
 
 describe('um controle de período, destaques e Ver tabela', () => {
-  // C42 (AC 32, P8)
   it('um controle de período, destaques e Ver tabela: o período', async () => {
     indicadores()
     const de = await screen.findByLabelText('De')

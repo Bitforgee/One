@@ -119,7 +119,6 @@ describe('assistente', () => {
     for (let n = 1; n <= 10; n++) {
       await enviar(`mensagem ${n}`)
       await waitFor(() => expect(screen.getAllByText('É do semestre atual?')).toHaveLength(n))
-      // em conversa aberta, antes do limite, o botão fica na variante outline
       if (n === 9) {
         expect(falar()).toHaveClass('bg-background')
         expect(falar()).not.toHaveClass('bg-primary')
@@ -130,7 +129,6 @@ describe('assistente', () => {
     expect(falar()).not.toHaveClass('bg-background')
   })
 
-  // compositor no estilo do ChatGPT: Enter envia, Shift+Enter quebra a linha, e Enter com o campo em branco não envia
   it('Enter envia e Shift+Enter quebra a linha', async () => {
     const chamadas = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })
     const campo = await screen.findByLabelText('Mensagem')

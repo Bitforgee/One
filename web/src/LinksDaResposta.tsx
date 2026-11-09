@@ -1,23 +1,16 @@
 import { ExternalLink } from 'lucide-react'
 import { Button } from './ui/button'
 
-// Mesma regra de URL do backend (Conferencia.Url), que já recusa a resposta com link fora das fontes citadas.
 export const PorUrl = /(https?:\/\/[^\s<>()"']+)/i
-// URL que fecha o texto (só pontuação, espaço ou ")" depois dela)
 const UrlFinal = /(https?:\/\/[^\s<>()"']+?)[\s.,;:!?)]*$/i
 export const semPontuacao = (url: string) => url.replace(/[.,;:!?]+$/, '')
 
-// Os links que fecham a resposta (só espaço, pontuação ou "e" entre eles) saem do texto e viram botões; a frase que
-// os apresenta termina em ":". Link no meio do texto fica onde está (Balao o desenha como link curto).
-// O que fica antes do primeiro link final: sai o parêntese que só o envolvia ("(veja url).", e a pontuação da própria
-// frase volta em `fim`) e o separador solto ("p. 12 - url").
 function aparar(antes: string, cauda: string) {
   const paren = cauda.includes(')') ? antes.match(/\s*\((?:\p{L}+[\s:]+){0,2}$/u) : null
   const resto = (paren ? antes.slice(0, paren.index) : antes).replace(/[\s(]+$/, '').replace(/\s+[-–—|]$/, '')
   return { resto, fim: paren ? (cauda.match(/[.!?]/)?.[0] ?? '') : '' }
 }
 
-// "?" e "!" ficam como estão; ponto, vírgula e ";" cedem lugar aos dois-pontos
 function fechar(resto: string) {
   const frase = /[:?!]$/.test(resto) ? resto : resto.replace(/[.,;]+$/, '')
   return /[\p{L}\p{N}]$/u.test(frase) ? `${frase}:` : frase
@@ -31,7 +24,6 @@ export function separarLinks(texto: string) {
     const url = semPontuacao(m[1])
     if (!links.includes(url)) links.unshift(url)
     const antes = resto.slice(0, m.index)
-    // "https://a e https://b": o "e" que junta dois links finais sai junto; antes de texto comum ele fica
     const semJuncao = antes.replace(/(?:\s+e)?[\s,;(]*$/, '')
     if (!UrlFinal.test(semJuncao)) {
       ;({ resto, fim } = aparar(antes, m[0].slice(m[1].length)))
@@ -43,7 +35,6 @@ export function separarLinks(texto: string) {
   return { texto: fim ? resto + fim : fechar(resto), links }
 }
 
-// Domínio e caminho, sem o www.: "portal.univag.edu.br/financeiro/boletos"
 export const rotulo = (link: string) => {
   if (!URL.canParse(link)) return link
   const u = new URL(link)

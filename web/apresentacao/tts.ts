@@ -3,9 +3,6 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-// Narração: um arquivo de áudio por texto, em cache pelo hash do texto (saida/audio/<hash>-<motor>.wav).
-// Ordem: OpenAI gpt-4o-mini-tts, OpenAI tts-1, voz SAPI "Microsoft Maria Desktop" do Windows.
-// Para trocar de voz ou motor, apague saida/audio.
 const Pasta = path.join(import.meta.dirname, 'saida', 'audio')
 const Raiz = path.resolve(import.meta.dirname, '..', '..')
 const Instrucoes = 'Fale em português do Brasil, tom calmo e didático de apresentação acadêmica.'
@@ -16,13 +13,11 @@ const Modelos = [
 
 export type Audio = { arquivo: string; duracao: number; motor: string }
 
-// Duração em segundos, medida pelo ffprobe.
 export function duracao(arquivo: string) {
   const saida = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', arquivo], { encoding: 'utf8' })
   return Number(saida.trim())
 }
 
-// A chave nunca é impressa nem gravada: vem do user-secrets da API ou do .env da raiz.
 let chave: string | null | undefined
 function chaveOpenAi() {
   if (chave !== undefined) return chave
@@ -31,7 +26,6 @@ function chaveOpenAi() {
     const segredos = execFileSync('dotnet', ['user-secrets', 'list', '--project', path.join(Raiz, 'One.Api')], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
     chave = segredos.match(/^Llm:ChaveApi = (.+)$/m)?.[1].trim() ?? null
   } catch {
-    // sem dotnet ou sem segredos: tenta o .env
   }
   if (!chave && existsSync(path.join(Raiz, '.env')))
     chave = readFileSync(path.join(Raiz, '.env'), 'utf8').match(/^LLM_CHAVE_API=(.+)$/m)?.[1].trim() ?? null
@@ -61,8 +55,6 @@ async function openAi(texto: string, destino: string) {
   return null
 }
 
-// Tira o silêncio do começo e do fim (a OpenAI às vezes devolve quase 2 s mudos no fim) e grava WAV,
-// que tem a duração exata no cabeçalho.
 function aparar(entrada: string, saida: string) {
   const corta = 'silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05'
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', entrada, '-af', `${corta},areverse,${corta},areverse`, '-ar', '48000', '-ac', '1', saida])
@@ -75,7 +67,6 @@ function sapi(texto: string, destino: string) {
   const script =
     'Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; ' +
     "$s.SelectVoice('Microsoft Maria Desktop'); $s.SetOutputToWaveFile($env:TTS_ARQUIVO); $s.Speak($env:TTS_TEXTO); $s.Dispose()"
-  // texto e caminho por variável de ambiente: sem problemas de aspas no PowerShell
   execFileSync('powershell', ['-NoProfile', '-Command', script], { env: { ...process.env, TTS_TEXTO: texto, TTS_ARQUIVO: arquivo }, stdio: 'ignore' })
   return aparar(arquivo, `${destino}-sapi.wav`)
 }

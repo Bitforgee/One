@@ -40,7 +40,6 @@ public class PushDominioTests
         Assert.Equal(0, p.Tentativas);
     }
 
-    // AD-024: a única propriedade com set público é InstituicaoId, que a interface IDaInstituicao exige (como nos outros agregados)
     [Fact]
     public void Sem_setter_publico()
     {

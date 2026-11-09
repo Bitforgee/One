@@ -20,7 +20,6 @@ using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;
 
-// Uma instância por classe de teste: banco próprio no PostgreSQL do compose, relógio e provedor de IA falsos.
 public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     const string Servidor = "Host=localhost;Port=5432;Username=postgres;Password=postgres";
@@ -39,7 +38,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected virtual int PortaMinio => 9000;
     public string Bucket { get; } = "one-teste-" + Guid.NewGuid().ToString("N")[..12];
     int leituras;
-    public int LeiturasDeObjeto => leituras; // GetObject do SDK + leituras por URL assinada (Landing linha 6)
+    public int LeiturasDeObjeto => leituras;
 
     sealed class ContaLeituras(OneFactory f) : DelegatingHandler(new HttpClientHandler())
     {
@@ -69,7 +68,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Push:ChavePublica", Vapid.PublicKey);
         builder.UseSetting("Push:ChavePrivada", Vapid.PrivateKey);
         builder.UseSetting("Push:Assunto", "mailto:teste@one.test");
-        builder.UseSetting("Agendador:Ativo", "false"); // os testes chamam Agendador.Executar com o relógio falso
+        builder.UseSetting("Agendador:Ativo", "false");
         if (!LimitesReais)
         {
             builder.UseSetting("Limites:AuthPorMinuto", "100000");
@@ -77,7 +76,6 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         }
         if (WebRoot is not null)
         {
-            // com e sem One.Api/wwwroot compilado: o caminho e o provedor de arquivos apontam para a pasta do teste
             builder.UseWebRoot(WebRoot);
             builder.ConfigureServices((ctx, _) => ctx.HostingEnvironment.WebRootFileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(WebRoot));
         }
@@ -90,7 +88,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
             s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes, Commit));
-            if (!EnviadorPushReal) s.AddSingleton<IEnviadorPush>(Push); // o último registro vence; o real só no OneFactoryEnviadorReal
+            if (!EnviadorPushReal) s.AddSingleton<IEnviadorPush>(Push);
             s.RemoveAll<Armazenamento>();
             s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, new ContaLeituras(this)));
         });
@@ -98,7 +96,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     public ValueTask InitializeAsync()
     {
-        _ = Services; // sobe o host e aplica as migrações
+        _ = Services;
         ((AmazonS3Client)Services.GetRequiredService<IAmazonS3>()).BeforeRequestEvent += (_, e) =>
         {
             if (e is WebServiceRequestEventArgs { Request: GetObjectRequest }) Interlocked.Increment(ref leituras);
@@ -106,7 +104,6 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
-    // C15/C16: a fábrica sobe na porta real (o Preparar da subida precisa do MinIO) e só então o cliente S3 da API passa a apontar para uma porta fechada.
     public IDisposable MinioFora()
     {
         var config = (AmazonS3Config)((AmazonS3Client)Services.GetRequiredService<IAmazonS3>()).Config;
@@ -120,7 +117,6 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         public void Dispose() => acao();
     }
 
-    // Cliente próprio do teste, sempre na porta real do MinIO: lê o bucket sem passar pela API.
     public static AmazonS3Client ClienteS3() =>
         new(new BasicAWSCredentials("one", "one-minio-dev"), new AmazonS3Config { ServiceURL = "http://localhost:9000", ForcePathStyle = true, RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED, ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED });
 
@@ -151,7 +147,6 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         GC.SuppressFinalize(this);
     }
 
-    // O bucket é versionado: apagar o objeto só põe uma marca, então saem todas as versões antes do bucket.
     async Task ApagarBucket()
     {
         using var s3 = ClienteS3();
@@ -162,7 +157,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 await s3.DeleteObjectsAsync(new DeleteObjectsRequest { BucketName = Bucket, Objects = [.. versoes.Versions.Select(v => new KeyVersion { Key = v.Key, VersionId = v.VersionId })] });
             await s3.DeleteBucketAsync(Bucket);
         }
-        catch (AmazonS3Exception) { } // bucket nunca criado (subida recusada)
+        catch (AmazonS3Exception) { }
     }
 
     public HttpClient Cliente() =>
@@ -179,13 +174,12 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public Task Db(long? instituicaoId, Func<OneDb, Task> acao) => Db(instituicaoId, async db => { await acao(db); return 0; });
 }
 
-// refatoracao-solid C33: conta as chamadas de SaveChanges de todos os DbContext do host.
 public class ContadorDeGravacoes : SaveChangesInterceptor
 {
     int total;
     public int Total => total;
     public void Zerar() => Interlocked.Exchange(ref total, 0);
-    public bool FalharAoGravarEmail { get; set; } // instituicoes-plataforma C10: o SaveChanges que grava a EmailSaida lança
+    public bool FalharAoGravarEmail { get; set; }
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
@@ -201,11 +195,10 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
     }
 }
 
-// tempo-real-signalr C23: segura cada commit pelo tempo dado (zero por padrão), para provar o que acontece entre o SaveChanges e o commit.
 public class AtrasoDoCommit : DbTransactionInterceptor
 {
     public TimeSpan Atraso { get; set; }
-    public bool Falhar { get; set; } // instituicoes-plataforma C10: o commit falha, e a transação inteira deve sumir
+    public bool Falhar { get; set; }
 
     public override async ValueTask<InterceptionResult> TransactionCommittingAsync(System.Data.Common.DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
     {
@@ -245,7 +238,6 @@ public class HasherEspiao : IPasswordHasher<Usuario>
 
 public class LlmFalso : HttpMessageHandler
 {
-    // Corpos e Pedidos são só do chat; os de /embeddings ficam em CorposEmbeddings.
     public List<string> Corpos { get; } = [];
     public List<HttpRequestMessage> Pedidos { get; } = [];
     public List<string> CorposEmbeddings { get; } = [];
@@ -253,7 +245,6 @@ public class LlmFalso : HttpMessageHandler
     public List<string?> AutorizacoesEmbeddings { get; } = [];
     public Func<string, CancellationToken, Task<HttpResponseMessage>>? ResponderEmbeddings { get; set; }
 
-    // Vetor determinístico: cada palavra (sem acento, 3+ letras) soma 1 numa posição fixa; textos com palavras em comum ficam próximos.
     public static float[] Vetor(string texto)
     {
         var v = new float[1536];
@@ -327,7 +318,6 @@ public class LogCapturado : ILoggerProvider
     }
 }
 
-// refatoracao-solid C8 a C10: prazos diferentes do padrão, lidos de Prazos:*
 public class OneFactoryPrazos : OneFactory
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)

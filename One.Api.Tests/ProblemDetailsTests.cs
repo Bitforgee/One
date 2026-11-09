@@ -11,7 +11,6 @@ public class ProblemDetailsTests(OneFactory f) : IClassFixture<OneFactory>
 {
     static readonly string[] Ingles = ["One or more validation errors occurred.", "Unauthorized", "Forbidden", "Not Found", "Conflict", "Too Many Requests", "Bad Request", "An error occurred", "Internal Server Error"];
 
-    // Uma resposta de cada status de erro da API.
     async Task<List<(int esperado, HttpResponseMessage r)>> Erros()
     {
         var c = await Cenario.Criar(f);

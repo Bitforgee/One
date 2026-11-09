@@ -6,7 +6,6 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import { useRef } from 'react'
 import { Label } from '../ui/label'
 
-// Texto puro (door 14): só documento, parágrafo e texto, sem marca; o que se grava é o `getText`, a fonte da conferência literal (AD-012).
 export function Resposta({ valor, aoMudar }: { valor: string; aoMudar: (texto: string) => void }) {
   const ultimo = useRef(aoMudar) // o editor guarda o onUpdate da criação; a ref entrega sempre o do último render
   ultimo.current = aoMudar

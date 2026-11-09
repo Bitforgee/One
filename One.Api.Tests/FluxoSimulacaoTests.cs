@@ -8,7 +8,6 @@ using static One.Api.Tests.Infra.SementeAtendimento;
 
 namespace One.Api.Tests;
 
-// fluxos-atendimento S2 (C34 a C36): o simulador usa a mesma resolução da transferência e não grava nada.
 public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     record Mundo(Instituicao I, HttpClient Admin, Categoria Duvida, Curso Ads, Curso Direito, Setor Financeiro, Setor Biblioteca, Setor CoordAds);
@@ -20,7 +19,7 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var (ads, direito) = await f.Db(i.Id, async db =>
         {
             var a = new Curso { Nome = "ADS", SetorCoordenacaoId = coordAds.Id };
-            var d = new Curso { Nome = "Direito" }; // sem coordenação
+            var d = new Curso { Nome = "Direito" };
             db.Cursos.AddRange(a, d);
             await db.SaveChangesAsync();
             return (a, d);
@@ -34,7 +33,6 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<int[]> Contagens(Mundo m) => await f.Db(m.I.Id, async db =>
         new[] { await db.Chamados.CountAsync(), await db.Fluxos.CountAsync(), await db.VersoesFluxo.CountAsync(), await db.EtapasFluxo.CountAsync() });
 
-    // C34
     [Fact]
     public async Task Simula_sem_gravar()
     {
@@ -67,19 +65,17 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.OK, rascunho.StatusCode);
         var j = await rascunho.Json();
         Assert.Equal("Biblioteca", j.GetProperty("inicial").GetString());
-        Assert.Equal(JsonValueKind.Null, j.GetProperty("escolhido").ValueKind); // sem versão publicada o roteamento real não usa o fluxo
+        Assert.Equal(JsonValueKind.Null, j.GetProperty("escolhido").ValueKind);
         Assert.Equal(HttpStatusCode.BadRequest, vigente.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await Simular(m.Admin, fluxo.Id, "OUTRA", m.Ads.Id, 1)).StatusCode);
     }
 
-    // C35
     [Fact]
     public async Task Etapa_nao_resolvida_com_motivo()
     {
         var m = await Montar();
         var fluxo = await f.Fluxo(m.I, m.Duvida, null, null, Etapa(DestinosEtapa.LiderancaSemestre), Etapa(DestinosEtapa.CoordenacaoCurso), Etapa(DestinosEtapa.Setor, m.Biblioteca.Id));
 
-        // Direito não tem coordenação, e nenhuma liderança existe
         var j = await (await Simular(m.Admin, fluxo.Id, "VIGENTE", m.Direito.Id, 2)).Json();
 
         var etapas = j.GetProperty("etapas").EnumerateArray().ToList();
@@ -88,7 +84,6 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("Biblioteca", j.GetProperty("inicial").GetString());
     }
 
-    // C36
     [Fact]
     public async Task Simulacao_igual_a_transferencia_real()
     {
@@ -105,7 +100,6 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
             await f.Db(m.I.Id, db => db.Matriculas.Where(x => x.UsuarioId == aluno.Usuario.Id)
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.CursoId, curso.Id).SetProperty(x => x.Semestre, semestre)));
 
-            // o fluxo que o roteamento real usaria, e o que a simulação dele devolve como setor inicial
             var escolhido = (await (await Simular(m.Admin, todos.Id, "VIGENTE", curso.Id, semestre)).Json()).GetProperty("escolhido").GetProperty("id").GetInt64();
             var inicial = (await (await Simular(m.Admin, escolhido, "VIGENTE", curso.Id, semestre)).Json()).GetProperty("inicial").GetString();
             f.Llm.Devolver(new { tipo = "pergunta", texto = "Pode detalhar?", categoriaId = m.Duvida.Id });

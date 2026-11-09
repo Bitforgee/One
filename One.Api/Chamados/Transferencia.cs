@@ -25,7 +25,6 @@ public static class Transferencia
     static List<MensagemConversa> DoAssistente(Conversa conversa) =>
         [.. conversa.Mensagens.Where(m => m.Autor == Assistente.Assistente.Autor).OrderByDescending(m => m.Id)];
 
-    // A categoria da dúvida: a sugerida pela IA, senão a do último artigo citado, senão a padrão.
     public static async Task<(Categoria Categoria, string Origem)> EscolherCategoria(OneDb db, Conversa conversa)
     {
         var assistente = DoAssistente(conversa);

@@ -45,7 +45,6 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var aluno = await f.AlunoLogado();
 
-        // conta a partir da última requisição, não do login: 1 h e depois mais 7 h 59 min
         f.Relogio.Advance(TimeSpan.FromHours(1));
         Assert.Equal(HttpStatusCode.OK, (await aluno.Cliente.GetAsync("/api/auth/me")).StatusCode);
         f.Relogio.Advance(TimeSpan.FromHours(7) + TimeSpan.FromMinutes(59));
@@ -73,7 +72,6 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(antes, f.Hasher.Verificacoes);
         }
 
-        // CPF válido com senha vazia: 400 sem consultar a senha
         var semSenha = f.Hasher.Verificacoes;
         var vazia = await f.Cliente().Login(i.Slug, cpf, "");
         Assert.Equal(HttpStatusCode.BadRequest, vazia.StatusCode);

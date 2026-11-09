@@ -15,11 +15,9 @@ public class VersaoCitadaTests(OneFactory f) : IClassFixture<OneFactory>
         f.Llm.Devolver(c.RespostaBoletoValida("Você encontra o boleto no Portal do Aluno."));
         var (id, _) = await c.Primeira();
         var v1 = await f.Db(c.Instituicao.Id, db => db.VersoesArtigo.SingleAsync(v => v.ArtigoId == c.Boleto.Id));
-        // RAG, door R5: a citação grava o trecho de fonte; a versão citada é a do trecho
         var citada = await f.Db(c.Instituicao.Id, db => db.Citacoes.Select(x => db.TrechosFonte.Where(t => t.Id == x.TrechoFonteId).Select(t => t.VersaoArtigoId).Single()).SingleAsync());
         Assert.Equal(v1.Id, citada);
 
-        // edição do artigo: nova versão (a rota de edição chega com o S7)
         var v2 = await f.Db(c.Instituicao.Id, async db =>
         {
             var v = new VersaoArtigo { ArtigoId = c.Boleto.Id, Numero = 2, Titulo = "Boleto (novo)", Perguntas = ["boleto?"], Resposta = "Texto novo do boleto.", Links = [], CriadaEm = DateTime.UtcNow };
@@ -43,7 +41,6 @@ public class VersaoCitadaTests(OneFactory f) : IClassFixture<OneFactory>
         var atual = await (await atendente.GetAsync($"/api/artigos/versoes/{v2.Id}")).Json();
         Assert.Equal(System.Text.Json.JsonValueKind.Null, atual.GetProperty("versaoAtivaAtualId").ValueKind);
 
-        // o detalhe do chamado avisa a equipe que a fonte citada mudou
         var numero = (await (await c.Cliente.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
         var triagem = await f.Db(c.Instituicao.Id, db => db.Setores.SingleAsync(s => s.Triagem));
         var equipe = await f.Atendente(c.Instituicao, triagem);

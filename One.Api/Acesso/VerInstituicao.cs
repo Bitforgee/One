@@ -8,7 +8,6 @@ namespace One.Api.Acesso;
 
 public sealed record VerInstituicao(string Slug) : IRequest<IResult>
 {
-    // `nome` como sempre, e a aparência ao lado dele (door 1)
     public sealed record Resposta : AparenciaDados
     {
         public Resposta(string nome, AparenciaDados aparencia) : base(aparencia) => Nome = nome;

@@ -121,7 +121,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
     record Arquivo(string Filename, [property: JsonPropertyName("file_data")] string FileData);
     record ParaOProvedor(long Id, string Chave, string Tipo);
 
-    // Os anexos das mensagens do aluno que estão no histórico, como data URL; null quando o armazenamento não responde.
     async Task<Dictionary<long, string>?> LerAnexos(Conversa conversa)
     {
         var mensagens = Janela(conversa).Select(m => m.Id).ToList();
@@ -140,7 +139,6 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         return lidos;
     }
 
-    // Texto mascarado primeiro; depois cada anexo na ordem de envio. O nome original nunca sai daqui: o PDF vai como anexo-<posição na conversa>.pdf.
     static object Conteudo(MensagemConversa m, Dictionary<long, int> posicoes, Dictionary<long, string> anexos)
     {
         var texto = Mascara.Aplicar(m.Texto);

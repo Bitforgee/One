@@ -7,7 +7,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// RAG S1: o assistente passa a usar a OpenAI.
 public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string SemBase = "Não encontrei isso nas orientações da instituição. Posso transferir você para um atendente.";
@@ -15,7 +14,6 @@ public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
     bool Logou(long conversaId, string motivo) =>
         f.Logs.Entradas.Any(l => Equals(l.Campos.GetValueOrDefault("Motivo"), motivo) && Equals(l.Campos.GetValueOrDefault("ConversaId"), conversaId));
 
-    // C2
     [Fact]
     public async Task Log_tokens_com_cache_openai()
     {
@@ -35,7 +33,6 @@ public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((1000, 200, 80), ((int)log.Campos["EntradaComCache"]!, (int)log.Campos["EntradaSemCache"]!, (int)log.Campos["TokensSaida"]!));
     }
 
-    // C3
     [Fact]
     public async Task Falhas_do_chat_viram_sem_base()
     {
@@ -61,7 +58,6 @@ public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C4: configuração do app sem a do teste, e a chave pelo ambiente do contêiner
     [Fact]
     public void Configuracao_padrao_openai()
     {
@@ -74,7 +70,6 @@ public class ProvedorTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// RAG: banco, restrições, decisões e dependências.
 public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<object?> Escalar(string sql)
@@ -84,7 +79,6 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         return await new Npgsql.NpgsqlCommand(sql, con).ExecuteScalarAsync();
     }
 
-    // C22
     [Fact]
     public async Task Pgvector_e_indice_hnsw()
     {
@@ -93,13 +87,11 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         var indice = (string?)await Escalar("SELECT indexdef FROM pg_indexes WHERE tablename = 'trecho_fonte' AND indexdef LIKE '%embedding%'");
         Assert.Contains("USING hnsw", indice);
         Assert.Contains("vector_cosine_ops", indice);
-        // o mapeamento do tipo vector existe nos dois lugares que montam o modelo: o app e as migrações
         using var desenho = new One.Api.Dados.OneDbDesignTime().CreateDbContext([]);
         foreach (var ctx in new Microsoft.EntityFrameworkCore.DbContext[] { desenho, f.Services.CreateScope().ServiceProvider.GetRequiredService<One.Api.Dados.OneDb>() })
             Assert.NotNull(Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource>(ctx).FindMapping(typeof(Pgvector.Vector)));
     }
 
-    // C23
     [Fact]
     public async Task Check_constraints()
     {
@@ -136,7 +128,6 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         }
     }
 
-    // C25 (door R6)
     [Fact]
     public void Decisoes_registradas()
     {
@@ -149,7 +140,6 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.EndsWith("| active | 2026-11-02 |", Linha("AD-016"));
     }
 
-    // C46 (door R7)
     [Fact]
     public void Sem_framework_de_agentes()
     {
@@ -162,7 +152,6 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// RAG C19: door R3 e door 6.
 public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
 {
     [Fact]
@@ -178,7 +167,6 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
                 new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Chave = $"1/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
-            // trecho pendente do documento, para a gravação permitida do embedding
             db.TrechosFonte.Add(new TrechoFonte { VersaoDocumentoId = d.Versoes.Single().Id, Texto = "pendente", ProximaTentativa = DateTime.UtcNow });
             await db.SaveChangesAsync();
         });
@@ -194,7 +182,6 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
             ("versao_documento", "DELETE FROM versao_documento", "tabela versao_documento é append-only"),
             ("citacao_artigo", "UPDATE citacao_artigo SET trechos = ARRAY['outro']", "tabela citacao_artigo é append-only"),
             ("citacao_artigo", "DELETE FROM citacao_artigo", "tabela citacao_artigo é append-only"),
-            // o trecho sem citação: a recusa só pode vir do trigger, não da FK de citacao_artigo
             ("trecho_fonte", "DELETE FROM trecho_fonte WHERE texto = 'pendente'", "trecho_fonte não aceita DELETE"),
             ("trecho_fonte", "UPDATE trecho_fonte SET texto = 'outro'", SoEmbedding),
             ("trecho_fonte", $"UPDATE trecho_fonte SET embedding = (SELECT embedding FROM trecho_fonte WHERE id = {Semente.Fonte(c.Faltas.Id)}) WHERE id = {indexado}", SoEmbedding),
@@ -206,12 +193,10 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(antes, await Foto(tabela));
         }
 
-        // door R4: o número da versão é único por documento
         var repetida = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => new Npgsql.NpgsqlCommand(
             "INSERT INTO versao_documento (instituicao_id, documento_id, numero, nome_arquivo, chave, hash, tamanho, texto, paginas, criada_em) SELECT instituicao_id, documento_id, numero, nome_arquivo, chave || 'x', hash, tamanho, texto, paginas, criada_em FROM versao_documento", con).ExecuteNonQueryAsync());
         Assert.Equal(("23505", "ix_versao_documento_documento_id_numero"), (repetida.SqlState, repetida.ConstraintName));
 
-        // o embedding vazio pode ser gravado uma vez
         var gravados = await new Npgsql.NpgsqlCommand($"UPDATE trecho_fonte SET embedding = (SELECT embedding FROM trecho_fonte WHERE id = {indexado}) WHERE texto = 'pendente'", con).ExecuteNonQueryAsync();
         Assert.Equal(1, gravados);
     }

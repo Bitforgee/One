@@ -2,7 +2,6 @@ import type { Roteiro } from '../kit'
 import { clicar, digitar } from '../kit'
 import { simularApi } from '../../e2e/simulada'
 
-// Amostra curta para provar o kit: abertura, uma cena de 3 passos na API simulada do e2e, encerramento.
 export const roteiro: Roteiro = {
   video: 'amostra.mp4',
   legendas: 'amostra.srt',

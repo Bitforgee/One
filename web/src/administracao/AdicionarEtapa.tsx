@@ -16,7 +16,6 @@ const Descricoes: Record<Destino, string> = {
 
 type Escolher = (destino: Destino) => void
 
-// O menu de destinos, como o painel de nós do n8n: clicar escolhe; arrastar solta um nó onde cair no canvas.
 function MenuDeDestinos({ escolher, pergunta }: { escolher: Escolher; pergunta: string }) {
   return (
     <PopoverContent align="start" className="flex w-64 flex-col gap-1 p-2">
@@ -51,7 +50,6 @@ function MenuDeDestinos({ escolher, pergunta }: { escolher: Escolher; pergunta: 
 
 type PropsDoMenu = { adicionar: Escolher; pergunta: string; children: ReactNode }
 
-// Um botão que abre o menu de destinos e fecha ao escolher.
 export function MenuDeAdicionar({ adicionar, pergunta, children }: PropsDoMenu) {
   const [aberto, setAberto] = useState(false)
   return (
@@ -68,7 +66,6 @@ export function MenuDeAdicionar({ adicionar, pergunta, children }: PropsDoMenu) 
   )
 }
 
-// O botão fixo no canto do canvas: o jeito de abrir o menu sem procurar o "+" da cadeia.
 export function BotaoFlutuante({ adicionar, cheia }: { adicionar: Escolher; cheia: boolean }) {
   return (
     <Panel position="top-left" className="m-3! flex max-w-64 flex-col gap-1.5">
@@ -86,7 +83,6 @@ export function BotaoFlutuante({ adicionar, cheia }: { adicionar: Escolher; chei
 }
 type PropsDoBotao = { x: number; y: number; vazio: boolean; adicionar: Escolher }
 
-// O "+" no fim da cadeia, no lugar da próxima etapa: abre a lista dos destinos. Fica no espaço do desenho, então acompanha o zoom e o arrasto.
 export function BotaoDeAdicionar({ x, y, vazio, adicionar }: PropsDoBotao) {
   return (
     <ViewportPortal>

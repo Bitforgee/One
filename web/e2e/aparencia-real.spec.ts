@@ -1,8 +1,6 @@
 import { expect, test, type APIRequestContext, type APIResponse, type PlaywrightWorkerArgs } from '@playwright/test'
 import { crc32, deflateSync } from 'node:zlib'
 
-// aparencia-instituicao C64: e2e real, sem simulada.ts. Contra E2E_URL, com o Mailpit do compose (primeiro acesso do administrador) e o MinIO atrás da API.
-// Mesma instituição descartável e mesma senha de anexos.spec.ts (E2E_INSTITUICAO, E2E_ADMIN_CPF, E2E_ADMIN_EMAIL): o primeiro acesso só acontece se o login falhar.
 const slug = process.env.E2E_INSTITUICAO ?? 'demo'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.one'
@@ -10,7 +8,6 @@ const mailpit = process.env.E2E_MAILPIT ?? 'http://localhost:8025'
 const senhaAdmin = 'admin-e2e-minio-1'
 const Cor = '#8a1538'
 
-// O limitador "auth" da API é de 5 por minuto por IP (login e primeiro acesso, L-066): contamos as tentativas e, no 429, esperamos a janela.
 test.describe.configure({ timeout: 240_000 })
 async function limitado(chamar: () => Promise<APIResponse>) {
   for (let tentativa = 0; tentativa < 3; tentativa++) {
@@ -21,7 +18,6 @@ async function limitado(chamar: () => Promise<APIResponse>) {
   throw new Error('o limitador de autenticação não liberou')
 }
 
-// PNG liso de largura x altura, montado à mão: assinatura, IHDR, IDAT e IEND, cada bloco com o CRC32 do tipo e dos dados.
 function png(largura: number, altura: number, [r, g, b]: [number, number, number]) {
   const bloco = (tipo: string, dados: Buffer) => {
     const miolo = Buffer.concat([Buffer.from(tipo, 'ascii'), dados])
@@ -72,7 +68,6 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   const logo = png(240, 80, [200, 30, 70])
   const icone = png(512, 512, [138, 21, 56])
 
-  // 1. o administrador abre Aparência, define a cor, envia o logo e o ícone e salva
   const equipe = await browser.newContext({ baseURL, storageState: await admin.storageState() })
   const painel = await equipe.newPage()
   await painel.goto(`/${slug}/aparencia`)
@@ -82,11 +77,9 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   await painel.getByLabel('Arquivo: Ícone do app').setInputFiles({ name: 'icone.png', mimeType: 'image/png', buffer: icone })
   await painel.getByRole('button', { name: 'Salvar' }).click()
   await expect(painel.getByText('Aparência salva.')).toBeVisible()
-  // vale no app sem recarregar: a cor no <html> e o logo na barra
   await expect.poll(() => painel.evaluate(() => document.documentElement.style.getPropertyValue('--marca'))).toBe(Cor)
   await expect(painel.locator('[data-sidebar=sidebar] img[src*="/imagens/logo"]')).toBeVisible()
 
-  // 2. sem cookie, o login da instituição mostra o logo e o botão "Entrar" na cor
   const anonimo = await browser.newContext({ baseURL })
   const login = await anonimo.newPage()
   await login.setViewportSize({ width: 1280, height: 800 })
@@ -104,7 +97,6 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   }, Cor)
   expect(fundo).toBe(esperado)
 
-  // 3. o manifesto traz o ícone novo, e a página aponta para ele
   const manifesto = await login.request.get(`/api/instituicoes/${slug}/manifest.webmanifest`)
   expect(manifesto.status()).toBe(200)
   expect(manifesto.headers()['content-type']).toContain('application/manifest+json')
@@ -122,7 +114,6 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   await expect(login.locator('link[rel="icon"]')).toHaveAttribute('href', corpo.icons[1].src)
   await expect(login.locator('meta[name="theme-color"]')).toHaveAttribute('content', Cor)
 
-  // volta ao padrão: a instituição descartável não fica com a marca de teste (os objetos antigos ficam no bucket)
   const nulos = { nomeCurto: null, cor: null, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, boasVindas: null, perguntas: [] }, contato: { horario: null, telefone: null, email: null } }
   expect((await admin.put('/api/admin/aparencia', { data: nulos })).status()).toBe(200)
   for (const tipo of ['logo', 'icone']) expect((await admin.delete(`/api/admin/aparencia/imagens/${tipo}`)).status()).toBe(204)

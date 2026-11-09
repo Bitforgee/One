@@ -17,7 +17,6 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<(int emails, List<PushSaida> pushes)> Contagem(Balcao b) =>
         (await f.Db(b.Instituicao.Id, db => db.EmailsSaida.CountAsync()), await f.Pushes(q => q.Where(p => p.InstituicaoId == b.Instituicao.Id)));
 
-    // roda a origem e confere: 1 e-mail novo e 1 PushSaida por aparelho do aluno, para o chamado e com ProximaTentativa = relógio
     async Task Confere(Balcao b, SubscricaoPush[] aparelhos, Func<Task<string>> origem)
     {
         var (emails, pushes) = await Contagem(b);
@@ -36,11 +35,8 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         var b = await Balcao.Criar(f);
         SubscricaoPush[] aparelhos = [await f.Subscrever(b.Instituicao, b.Aluno.Usuario), await f.Subscrever(b.Instituicao, b.Aluno.Usuario)];
 
-        // ResponderChamado -> Avisos.NovaResposta
         await Confere(b, aparelhos, () => b.Chamado(EstadosChamado.AguardandoAluno));
-        // ResolverChamado -> Avisos.Resolvido
         await Confere(b, aparelhos, () => b.Chamado(EstadosChamado.Resolvido));
-        // MarcarDuplicado -> Avisos.NovaResposta
         var original = await b.Chamado();
         await Confere(b, aparelhos, async () =>
         {
@@ -48,7 +44,6 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(HttpStatusCode.OK, (await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{duplicado}/duplicado", new { numeroOriginal = original })).StatusCode);
             return duplicado;
         });
-        // Agendador.ResolverSemResposta -> Avisos.Resolvido
         var aguardando = await b.Chamado(EstadosChamado.AguardandoAluno);
         await Confere(b, aparelhos, async () =>
         {
@@ -57,7 +52,6 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(EstadosChamado.Resolvido, (await b.Ler(aguardando)).Estado);
             return aguardando;
         });
-        // Agendador.Lembrar -> Avisos.AguardaResposta
         var lembrete = await b.Chamado(EstadosChamado.AguardandoAluno);
         await Confere(b, aparelhos, async () =>
         {
@@ -78,7 +72,6 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(emails + 1, depois);
         Assert.Empty(pushes);
 
-        // com aparelho, mas sem a chave privada
         await f.Subscrever(b.Instituicao, b.Aluno.Usuario);
         var numero = await b.Chamado();
         await using var fx = f.WithWebHostBuilder(h => h.UseSetting("Push:ChavePrivada", ""));
@@ -133,8 +126,8 @@ public class PushAvisosTests(OneFactory f) : IClassFixture<OneFactory>
         var doAtendente = await f.Subscrever(b.Instituicao, b.A.Usuario);
         var doColega = await f.Subscrever(b.Instituicao, colega.Usuario);
 
-        await b.Chamado(EstadosChamado.AguardandoAluno); // responder
-        await b.Chamado(EstadosChamado.Resolvido); // resolver
+        await b.Chamado(EstadosChamado.AguardandoAluno);
+        await b.Chamado(EstadosChamado.Resolvido);
         var original = await b.Chamado();
         var duplicado = await b.Chamado();
         await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{duplicado}/duplicado", new { numeroOriginal = original });

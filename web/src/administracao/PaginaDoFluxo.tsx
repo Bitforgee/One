@@ -8,7 +8,6 @@ import { EdicaoDoFluxo } from './EdicaoDoFluxo'
 
 type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; fluxos: Fluxo[] }
 
-// A rota /:slug/cadastros/fluxos/:id: acha o fluxo na lista da instituição e abre o editor dentro da casca.
 export function PaginaDoFluxo() {
   const { slug, id } = useParams()
   const { dados, erro, recarregar } = useLeituras<Listas>({

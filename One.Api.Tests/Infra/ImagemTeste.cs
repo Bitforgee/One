@@ -1,6 +1,5 @@
 namespace One.Api.Tests.Infra;
 
-// PNG mínimo: assinatura, chunk IHDR com a largura e a altura, e enchimento até o tamanho pedido (a API só lê a assinatura e o IHDR).
 public static class ImagemTeste
 {
     public static byte[] Png(int largura = 64, int altura = 64, int tamanho = 64)

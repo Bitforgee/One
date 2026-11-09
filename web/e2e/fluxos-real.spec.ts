@@ -1,9 +1,6 @@
 import { createServer, type Server } from 'node:http'
 import { expect, test, type APIRequestContext, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 
-// fluxos-atendimento C105: o fluxo real de ponta a ponta, sem simulada.ts. Contra E2E_URL (a imagem própria do HEAD, porta 8089) e o Mailpit do compose.
-// A instituição `e2e` tem um administrador (123.456.789-09 / admin@e2e.one) criado por `dotnet One.Api.dll instituicao criar`.
-// O modelo de linguagem é falso: a imagem aponta Llm__BaseUrl para o servidor HTTP deste arquivo (E2E_LLM_PORTA), que devolve a categoria combinada. Nada vai a um provedor de IA.
 const slug = process.env.E2E_INSTITUICAO ?? 'e2e'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@e2e.one'
@@ -22,7 +19,6 @@ function cpfValido(semente: number) {
   return d.join('')
 }
 
-// O limitador "auth" da API é de 5 por minuto por IP (L-066): o spec faz 4 logins e 3 primeiros acessos, e espera a janela quando precisa.
 test.describe.configure({ timeout: 360_000, mode: 'serial' })
 const instantes: number[] = []
 const dormir = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -66,7 +62,6 @@ async function pessoa(playwright: { request: { newContext: (o: { baseURL?: strin
   return contexto
 }
 
-// O modelo falso: o chat devolve uma pergunta da categoria combinada, com resumo; os embeddings, um vetor qualquer.
 let categoriaDoModelo = 0
 let servidor: Server
 const vetor = Array.from({ length: 1536 }, (_, i) => (i === 0 ? 1 : 0))
@@ -105,7 +100,6 @@ const criado = async (r: APIResponse) => {
   return (await r.json()).id as number
 }
 
-// O administrador cadastra, pela API, o que o teste de tela não precisa mostrar: o curso com a coordenação, a liderança de ADS 3º semestre, a categoria, o líder, a coordenação e o aluno.
 test.beforeAll(async ({ playwright, baseURL }) => {
   test.setTimeout(420_000)
   await subirModeloFalso()
@@ -150,7 +144,6 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await page.goto(`/${slug}/cadastros`)
   await page.getByRole('tab', { name: 'Fluxos' }).click()
 
-  // novo fluxo: a categoria e a abrangência "Um semestre de um curso" (ADS, 3º semestre)
   await page.getByRole('button', { name: /Novo/ }).click()
   const novo = page.getByRole('dialog', { name: 'Novo: Fluxos' })
   await novo.getByLabel('Categoria').selectOption({ label: nomeDaCategoria })
@@ -160,7 +153,6 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await novo.getByRole('button', { name: 'Salvar' }).click()
   await page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('button', { name: nomeDaCategoria }).click()
 
-  // a cadeia: Liderança do semestre com prazo de 48 h, depois Coordenação do curso (a API recusa prazo na última etapa, AC 22)
   const editor = page.getByRole('region', { name: 'Editar: Fluxos' })
   await editor.getByRole('button', { name: 'Adicionar etapa' }).click()
   await editor.getByLabel('Destino da etapa 1').selectOption('LIDERANCA_SEMESTRE')
@@ -171,7 +163,6 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await editor.getByRole('button', { name: 'Salvar rascunho' }).click()
   await expect(editor.getByRole('button', { name: 'Publicar' })).toBeEnabled()
 
-  // o simulador: um aluno de ADS no 3º semestre abre o chamado na liderança (o fluxo decide, AD-042)
   await editor.getByLabel('Curso do aluno').selectOption({ label: nomeDoCurso })
   await editor.getByLabel('Semestre do aluno').selectOption({ label: '3º semestre' })
   await editor.getByRole('button', { name: 'Simular' }).click()
@@ -208,7 +199,6 @@ test('o fluxo leva o chamado à liderança', async ({ browser, baseURL }) => {
 })
 
 test('o líder vê o chamado sem a conversa e sobe; a coordenação o recebe', async ({ browser, baseURL }) => {
-  // o líder: nome, curso, semestre e resumo, sem transcrição nem número de matrícula
   const contextoDoLider = await comSessao(browser, baseURL, lider)
   const page = await contextoDoLider.newPage()
   await page.goto(`/${slug}/chamados/${numero}`)
@@ -227,7 +217,6 @@ test('o líder vê o chamado sem a conversa e sobe; a coordenação o recebe', a
   await expect.poll(async () => (await lider.get(`/api/chamados/${numero}`)).status()).toBe(404)
   await contextoDoLider.close()
 
-  // a coordenação vê tudo: a conversa, o número de matrícula e a etapa 2 de 2
   const contextoDaCoordenacao = await comSessao(browser, baseURL, coordenacao)
   const tela = await contextoDaCoordenacao.newPage()
   await tela.goto(`/${slug}/chamados/${numero}`)

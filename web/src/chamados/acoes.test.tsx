@@ -153,7 +153,6 @@ describe('ações do chamado', () => {
     expect(dialogo.getByRole('button', { name: 'Encaminhar' })).toBeDisabled()
   })
 
-  // fluxos-atendimento C58 (S3): o botão Subir aparece com a ação `subir`, pede o motivo e envia POST /subir
   it('subir pede o motivo', async () => {
     const chamadas = detalhe(daEquipe({ acoes: ['responder', 'subir'] }), { 'POST /api/chamados/ONE-1/subir': () => [200, daEquipe({ acoes: [], setor: 'Coordenação' })] })
     await userEvent.click(await screen.findByRole('button', { name: 'Subir' }))

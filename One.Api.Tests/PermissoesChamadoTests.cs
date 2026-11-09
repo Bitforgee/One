@@ -3,7 +3,6 @@ using static One.Api.Dados.EstadosChamado;
 
 namespace One.Api.Tests;
 
-// refatoracao-solid C21: a tabela de permissões do chamado, célula a célula, sem banco e sem HTTP.
 public class PermissoesChamadoTests
 {
     static readonly string[] Estados = [Aberto, EmAtendimento, AguardandoAluno, Resolvido, Fechado];
@@ -11,7 +10,6 @@ public class PermissoesChamadoTests
     static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
     static readonly string[] NaoFechados = [Aberto, EmAtendimento, AguardandoAluno, Resolvido];
 
-    // A tabela de hoje (AC 89 do mvp-one): ação x papel -> estados em que vale; par ausente não vale em estado nenhum.
     static readonly Dictionary<(string acao, string papel), string[]> Hoje = new()
     {
         [("responder", "ALUNO")] = NaoFechados,
@@ -45,17 +43,14 @@ public class PermissoesChamadoTests
             }
         Assert.Equal(110, celulas);
 
-        // assumir some para quem já é o responsável; as outras ações continuam
         var doResponsavel = PermissoesChamado.Acoes(Aberto, "ATENDENTE", responsavelId: 7, usuarioId: 7).ToList();
         Assert.Equal(["duplicado", "encaminhar", "nota", "reclassificar", "resolver", "responder", "subir"], doResponsavel.Order());
         Assert.Contains("assumir", PermissoesChamado.Acoes(Aberto, "ATENDENTE", responsavelId: 8, usuarioId: 7));
 
-        // o pipeline distingue par ausente (403) de estado fora da lista (409)
         Assert.Null(PermissoesChamado.Estados("confirmar", "ATENDENTE"));
         Assert.Equal([Resolvido], PermissoesChamado.Estados("confirmar", "ALUNO"));
     }
 
-    // fluxos-atendimento C60 (door 7): subir só vale para ATENDENTE e LIDER, em ABERTO, EM_ATENDIMENTO e AGUARDANDO_ALUNO
     [Fact]
     public void Subir_so_para_atendente_e_lider()
     {
@@ -71,7 +66,6 @@ public class PermissoesChamadoTests
         Assert.Null(PermissoesChamado.Estados("subir", "ALUNO"));
     }
 
-    // door 7: a liderança responde, anota, assume, resolve e sobe; não reclassifica, não marca duplicado nem encaminha
     [Fact]
     public void Lider_tem_cinco_acoes()
     {

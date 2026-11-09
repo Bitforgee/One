@@ -49,7 +49,6 @@ const corpo = (r: Rascunho) => ({
 
 const Colunas = [{ titulo: 'Título' }, { titulo: 'Categoria', largo: true }, { titulo: 'Versão', largo: true }, { titulo: 'Validade', largo: true }, { titulo: 'Situação' }, { titulo: '' }]
 
-// "válido de 01/12/2026 · válido até 31/12/2026"; sem datas, vazio.
 const validade = (a: Artigo) => [a.visivelDe && `válido de ${dataBr(a.visivelDe)}`, a.visivelAte && `válido até ${dataBr(a.visivelAte)}`].filter(Boolean).join(' · ')
 
 function LinhaArtigo({ a, editar, mudar, arquivar, pendente }: { a: Artigo; editar: () => void; mudar: () => void; arquivar: () => void; pendente: boolean }) {
@@ -123,7 +122,6 @@ const CamposComErro = ['titulo', 'perguntas', 'categoriaId', 'links', 'visivelDe
 const Avisos = { ativar: 'Artigo ativado.', arquivar: 'Artigo arquivado.' }
 const tituloDaJanela = (r?: Rascunho) => (r?.id ? 'Editar artigo' : 'Novo artigo')
 
-// S7: a base interna que o assistente usa como fonte; nunca aparece para o aluno.
 export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
   const vazia = artigos?.length === 0

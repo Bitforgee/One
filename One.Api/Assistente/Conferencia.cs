@@ -23,8 +23,6 @@ public static partial class Conferencia
 
     public static bool TemLink(string texto) => Url().IsMatch(texto);
 
-    // Números inteiros (com . , / internos) do texto têm de existir nos textos permitidos, com zeros à esquerda de cada grupo tirados.
-    // Qualquer caractere numérico fora de 0-9 recusa o texto.
     public static bool NumerosConferem(string texto, IEnumerable<string> permitidos)
     {
         if (OutroNumerico().IsMatch(texto)) return false;

@@ -91,7 +91,6 @@ describe('documentos', () => {
     const arquivado = await item('Edital antigo')
     expect(within(arquivado).getByText('Arquivado')).toHaveClass('bg-foreground')
     expect(arquivado).toHaveTextContent('Estágio · versão 1 · 3 páginas · Edital antigo.pdf')
-    // a indexação é um ícone com nome, e só a situação é selo
     expect(within(arquivado).getByRole('img', { name: 'Indexado' })).toBeInTheDocument()
     expect(arquivado.querySelectorAll('[data-slot=badge]')).toHaveLength(1)
     expect(within(arquivado).queryByRole('button')).not.toBeInTheDocument()
@@ -144,8 +143,6 @@ describe('documentos', () => {
   })
 })
 
-// S7: toasts, editor Tiptap de texto puro, calendário e Dropzone
-// a gravação do teste anterior pode terminar depois dele e o toast cair na tela deste (o Sonner é um singleton)
 const toastsAtrasados = () => new Promise((r) => setTimeout(r, 50))
 const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
 const comResposta = (id: number, resposta: string) => {
@@ -166,7 +163,6 @@ const salvo = async (chamadas: ReturnType<typeof tela>) => {
 }
 
 describe('toasts', () => {
-  // C67 (AC 41, door 13)
   it('toasts de artigo só no sucesso', async () => {
     await toastsAtrasados()
     tela('/univag/artigos', 'artigos', [artigo(1, 'Rascunho', 'RASCUNHO'), artigo(2, 'Ativo', 'ATIVO')], {
@@ -175,7 +171,6 @@ describe('toasts', () => {
       'POST /api/admin/artigos/1/ativar': () => [200, {}],
       'POST /api/admin/artigos/1/arquivar': () => [200, {}],
     })
-    // salvar com 422: o detail no alert do diálogo e nenhum toast
     await escolher('Ativo', 'Editar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Título repetido.')
@@ -192,7 +187,6 @@ describe('toasts', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo arquivado.'))
   })
 
-  // C68 (AC 42, door 13)
   it('toasts de documento só no sucesso', async () => {
     await toastsAtrasados()
     tela('/univag/documentos', 'documentos', [documento(1, 'Regulamento', 'ATIVO'), documento(2, 'Edital', 'ATIVO')], {
@@ -220,7 +214,6 @@ describe('toasts', () => {
 })
 
 describe('editor Resposta', () => {
-  // C70 (AC 55, door 14)
   it('resposta é o texto digitado sem marcação', async () => {
     const chamadas = tela('/univag/artigos', 'artigos', [], { 'POST /api/admin/artigos': () => [201, {}] })
     await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
@@ -233,7 +226,6 @@ describe('editor Resposta', () => {
     expect(gravadas(chamadas)[0][2].resposta).toBe('<b>x</b> &amp; **y**\nfim')
   })
 
-  // C71 (AC 56)
   it('resposta sem mudança volta igual', async () => {
     for (const resposta of ['a\n\nb', 'a  b', ' a ', 'a\n', '', '<b>x</b>', '**x**', '&amp;']) {
       const chamadas = await editarArtigo(resposta)
@@ -242,7 +234,6 @@ describe('editor Resposta', () => {
     }
   })
 
-  // C72 (AC 57)
   it('colar formatado fica só o texto', async () => {
     const chamadas = await editarArtigo('')
     const dados: Record<string, string> = { 'text/html': '<b>negrito</b> e <i>itálico</i>', 'text/plain': 'negrito e itálico' }
@@ -252,7 +243,6 @@ describe('editor Resposta', () => {
     expect(await salvo(chamadas)).toBe('negrito e itálico')
   })
 
-  // C73 (AC 58)
   it('editor Resposta acessível', async () => {
     tela('/univag/artigos', 'artigos', [])
     await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
@@ -261,10 +251,8 @@ describe('editor Resposta', () => {
     expect(campo).toHaveAttribute('contenteditable', 'true')
   })
 
-  // C74 (AC 59)
   it('Resposta para em 8000 caracteres', async () => {
     const chamadas = await editarArtigo('a'.repeat(7999))
-    // o jsdom põe o cursor no começo do texto: o teste o leva ao fim, como quem clica depois do último caractere
     const campo = await editor()
     campo.focus()
     window.getSelection()!.collapse(campo.querySelector('p')!.firstChild, 7999)
@@ -276,7 +264,6 @@ describe('editor Resposta', () => {
 describe('validade e arquivo', () => {
   afterEach(() => vi.useRealTimers())
 
-  // C75 (AC 60, AC 53, door 15)
   it('validade pelo calendário só grava no Salvar', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 10, 10, 0))
@@ -304,7 +291,6 @@ describe('validade e arquivo', () => {
     expect(gravadas(chamadas)[0][2]).toMatchObject({ visivelDe: '2026-11-03', visivelAte: '2026-11-17' })
   })
 
-  // C77 (door 11)
   it('soltar PDF em Arquivo PDF envia o arquivo', async () => {
     const chamadas = tela('/univag/documentos', 'documentos', [], { 'POST /api/admin/documentos': () => [201, {}] })
     await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))

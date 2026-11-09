@@ -12,12 +12,10 @@ public static class ConversaRotas
     public const int LimiteAnexos = 3;
     const long MaxAnexo = 10 * 1024 * 1024;
 
-    // 3 arquivos de 10 MiB mais o multipart: o Kestrel recusa mais de 30.000.000 bytes se a rota não declarar o limite.
     public static readonly Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute LimiteDoCorpo = new(LimiteAnexos * MaxAnexo + 1024 * 1024);
 
     record CorpoJson(string? Mensagem);
 
-    // O corpo das rotas de mensagem: JSON { "mensagem" } como sempre, ou multipart com "mensagem" e "anexos". null vira 400 (ThrowOnBadRequest é false).
     public static async ValueTask<(string? Mensagem, IReadOnlyList<IFormFile> Anexos)?> LerEntrada(HttpContext ctx)
     {
         var req = ctx.Request;
@@ -63,7 +61,6 @@ public static class ConversaRotas
         return (lidos, null);
     }
 
-    // Os objetos são gravados antes da mensagem: com o MinIO fora, nada é salvo (503). Quem chama já fez todas as recusas.
     public static async Task<MensagemConversa> Responder(OneDb db, Assistente assistente, Armazenamento armazenamento, Conversa conversa, long instituicaoId,
         string mensagem, List<Arquivos.Lido> lidos, DateTime agora)
     {

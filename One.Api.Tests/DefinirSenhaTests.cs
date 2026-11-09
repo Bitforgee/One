@@ -54,8 +54,6 @@ public class DefinirSenhaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public async Task Link_usado_vencido_ou_inexistente_400()
     {
-        // Só o token vencido passa pelo avanço do relógio: os outros são criados depois, ainda válidos,
-        // para que cada um seja recusado pela sua própria condição e não pela validade.
         var (iVencido, _, vencido) = await ComToken();
         f.Relogio.Advance(TimeSpan.FromMinutes(61));
         var (_, _, usado) = await ComToken();

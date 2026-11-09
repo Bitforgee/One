@@ -7,7 +7,6 @@ const sessaoAusente = () => {
   throw new TypeError('Failed to fetch')
 }
 
-// mobile-m0 AC 4 e 6: sem rede a sessão não vira "sem login"; só o 401 manda para o login.
 describe('sessão sem rede', () => {
   it('sem rede mostra a conexão e não vai para o login', async () => {
     api({ 'GET /api/auth/me': sessaoAusente, 'GET /api/instituicoes/univag': () => [200, instituicao()] })

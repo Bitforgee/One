@@ -6,7 +6,6 @@ import type { Destino } from './comum'
 
 export type DadosDaLigacao = { entre: string; cheia: boolean; inserir: (destino: Destino) => void }
 
-// A ligação com um "+" no meio, como no n8n: escolher um destino põe a etapa naquele ponto da cadeia.
 export function LigacaoComMais({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, data }: EdgeProps<Edge<DadosDaLigacao>>) {
   const [caminho, x, y] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition })
   return (

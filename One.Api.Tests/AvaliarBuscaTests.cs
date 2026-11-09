@@ -6,7 +6,6 @@ using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
 
-// RAG S4: `instituicao avaliar-busca` mede a busca do assistente com perguntas e a fonte esperada.
 public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
 {
     async Task<(int codigo, string saida, string erro)> Rodar(params string[] args)
@@ -23,9 +22,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         return caminho;
     }
 
-    // Seis artigos ativos indexados (o vetor do provedor falso aproxima textos com palavras em comum).
-    // "boleto vencido segunda via" fica mais perto de A1, depois A2, depois A3 ("Boleto pagamento");
-    // "estacionamento campus" não tem palavra em comum com nenhum: empate, e o desempate por id deixa o último artigo fora dos 5.
     async Task<Instituicao> Base()
     {
         var i = await f.Instituicao();
@@ -46,7 +42,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         new { pergunta = "estacionamento campus", fonte = "Estagio obrigatorio" },
     ];
 
-    // C41
     [Fact]
     public async Task Avaliacao_valida_sai_0()
     {
@@ -85,7 +80,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         await db.EmailsSaida.IgnoreQueryFilters().CountAsync(),
     });
 
-    // C42
     [Fact]
     public async Task Nao_chama_chat_nem_grava()
     {
@@ -97,7 +91,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
         });
-        // o título de um documento ativo também é fonte aceita
         var arquivo = Arquivo(Perguntas.Append(new { pergunta = "horas de estagio", fonte = "Regulamento de estagio" }).ToArray());
         var (chat, embeddings, antes) = (f.Llm.Corpos.Count, f.Llm.CorposEmbeddings.Count, await Linhas());
 
@@ -110,7 +103,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, await Linhas());
     }
 
-    // C43
     [Fact]
     public async Task Arquivo_invalido_sai_1()
     {
@@ -136,7 +128,6 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(embeddings, f.Llm.CorposEmbeddings.Count);
         }
 
-        // provedor de embeddings fora: sai com 1 e diz o motivo
         f.Llm.ResponderEmbeddings = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError));
         try
         {

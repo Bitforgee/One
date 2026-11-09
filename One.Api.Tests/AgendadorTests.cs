@@ -59,13 +59,12 @@ public class AgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         var conversa = await Conversa(b.Aluno);
         var numero = await b.Chamado(Resolvido);
         f.Relogio.Advance(TimeSpan.FromMinutes(30));
-        await b.Recuar(numero, TimeSpan.FromDays(7) - TimeSpan.FromMinutes(30)); // resolvido há exatos 7 dias: vence e ainda aceita rejeição
+        await b.Recuar(numero, TimeSpan.FromDays(7) - TimeSpan.FromMinutes(30));
 
         var lidos = await Agendador.Ler();
         Assert.Contains(lidos, x => x.Tipo == "conversa" && x.Id == conversa);
         var chamadoId = (await b.Ler(numero)).Id;
         Assert.Contains(lidos, x => x.Tipo == "chamado" && x.Id == chamadoId);
-        // o aluno age entre a leitura e a gravação do agendador
         Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/conversas/{conversa}/mensagens", new { mensagem = "ainda estou aqui" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{numero}/rejeitar", new { motivo = "Não resolveu." })).StatusCode);
 
@@ -104,7 +103,6 @@ public class AgendadorTests(OneFactory f) : IClassFixture<OneFactory>
             && l.Campos.GetValueOrDefault("ItemId") is long item && item == quebrada);
     }
 
-    // C13: AC 10, cada item usa os dados da sua instituição.
     [Fact]
     public async Task Item_usa_fuso_nome_e_remetente_da_sua_instituicao()
     {
@@ -122,10 +120,9 @@ public class AgendadorTests(OneFactory f) : IClassFixture<OneFactory>
             });
         }
 
-        // um chamado em AGUARDANDO_ALUNO há 3 dias em cada instituição: o lembrete traz a data no fuso dela
         var desde = f.Relogio.GetUtcNow().UtcDateTime.AddDays(-3);
         var lembretes = new List<(Balcao b, string numero, string esperado)>();
-        foreach (var (i, horas) in new[] { (univag, -4), (demo, -3) }) // Cuiabá UTC-4 e São Paulo UTC-3, sem horário de verão desde 2019
+        foreach (var (i, horas) in new[] { (univag, -4), (demo, -3) })
         {
             var b = await Balcao.Criar(f, i);
             var numero = await b.Chamado(EstadosChamado.AguardandoAluno);

@@ -37,7 +37,6 @@ describe('usuários', () => {
     expect(screen.queryByText('Cadastre a equipe ou importe as matrículas.')).not.toBeInTheDocument()
   })
 
-  // layout-painel C25 (AC 25): ativo -> Editar e Desativar (destrutivo); desativado -> sem botão
   it('ações de usuário no menu', async () => {
     usuarios()
     await screen.findByText('Carla')
@@ -77,7 +76,6 @@ describe('usuários', () => {
     ])
   })
 
-  // instituicoes-plataforma AC 6: OPERADOR não é papel da tela; a lista não o mostra e o PUT não o devolve (a API o preserva)
   it('usuário com OPERADOR edita sem enviar o papel', async () => {
     const dona = { ...carla, id: 3, nome: 'Dona', email: 'dona@univag.edu.br', papeis: ['ADMINISTRADOR', 'OPERADOR'], setores: [] }
     const chamadas = usuarios({ 'GET /api/admin/usuarios': () => [200, [dona]], 'PUT /api/admin/usuarios/3': () => [200, {}] })
@@ -123,7 +121,6 @@ describe('usuários', () => {
     await waitFor(() => expect(posts(chamadas)).toEqual([['POST', '/api/admin/usuarios/1/desativar', {}]]))
   })
 
-  // C81 (AC 44, door 13)
   it('toasts de usuário só no sucesso', async () => {
     await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
     let tentativa = 0
@@ -143,7 +140,6 @@ describe('usuários', () => {
     await waitFor(() => expect(avisos()).toHaveTextContent('Usuário desativado.'))
   })
 
-  // layout-painel C47 (AC 27): o gatilho do menu mostra o Spinner e desabilita enquanto a gravação roda
   it('ações de linha mostram o Spinner enquanto gravam', async () => {
     let responder!: () => void
     usuarios({ 'POST /api/admin/usuarios/1/desativar': () => new Promise((resolve) => (responder = () => resolve([200, {}]))) })

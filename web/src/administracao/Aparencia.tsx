@@ -32,7 +32,6 @@ function valoresDe(dados: object): Valores {
   return Object.fromEntries(Campos.map(({ chave }) => [chave, [ler(dados, chave) ?? ''].flat().join('\n')]))
 }
 
-// O corpo do PUT: o caminho "login.titulo" vira { login: { titulo } }; texto vazio vai como null (volta ao padrão).
 function corpoDe(v: Valores) {
   const corpo: Record<string, any> = {}
   for (const { chave } of Campos) {
@@ -46,7 +45,6 @@ function corpoDe(v: Valores) {
 
 type Falhas = { campos: Record<string, string>; imagens: Partial<Record<Tipo, string>>; geral?: string }
 
-// Os erros 400 por campo da API (`errors` com o caminho do JSON); o que não casa com nenhum campo vai para o alerta geral.
 function falhaDe(e: unknown): Falhas {
   const erros = e instanceof ErroApi ? (e.corpo?.errors as Record<string, string[]> | undefined) : undefined
   const campos = Object.fromEntries(Object.entries(erros ?? {}).filter(([k]) => Campos.some((c) => c.chave === k)).map(([k, m]) => [k, m[0]]))
@@ -62,7 +60,6 @@ const formulario = (arquivo: File) => {
 type Resultado = Falhas & { enviadas: Tipo[] }
 const semFalhas = (f: Falhas) => !f.geral && !Object.keys(f.campos).length && !Object.keys(f.imagens).length
 
-// Grava os campos e depois cada imagem escolhida; o que a API recusa volta em `Falhas` e nada do digitado se perde.
 async function gravarTudo(valores: Valores, escolhidas: Partial<Record<Tipo, File>>): Promise<Resultado> {
   const resultado: Resultado = { campos: {}, imagens: {}, enviadas: [] }
   try {
@@ -81,7 +78,6 @@ async function gravarTudo(valores: Valores, escolhidas: Partial<Record<Tipo, Fil
   return resultado
 }
 
-// As miniaturas das imagens escolhidas e ainda não salvas (blob:), liberadas ao trocar ou sair.
 function useBlobs(arquivos: Partial<Record<Tipo, File>>) {
   const [urls, setUrls] = useState<Partial<Record<Tipo, string>>>({})
   useEffect(() => {
@@ -92,7 +88,6 @@ function useBlobs(arquivos: Partial<Record<Tipo, File>>) {
   return urls
 }
 
-// A amostra da cor e o contraste com o branco, pela mesma regra do servidor (AC 27 de aparencia-instituicao).
 function Amostra({ cor }: { cor: string }) {
   if (!CorValida.test(cor)) return null
   const razao = contraste(cor)
@@ -137,7 +132,6 @@ function CampoDeTexto({ campo, valor, mudar, erro }: { campo: Campo; valor: stri
 
 type Dados = ReturnType<typeof normalizar>
 
-// O que a prévia mostra: os valores do formulário, e as imagens escolhidas ou já salvas.
 const daPrevia = (aba: IdAba, nome: string, v: Valores, miniatura: (t: Tipo) => string | undefined) => ({
   aba,
   nome,
@@ -157,7 +151,6 @@ const daPrevia = (aba: IdAba, nome: string, v: Valores, miniatura: (t: Tipo) => 
 
 type DadosDaPreviaProp = Parameters<typeof PreviaAparencia>[0]['dados']
 
-// A prévia: à direita e fixa a partir de 1024 px; abaixo disso, só pelo botão "Ver prévia", que a abre numa folha.
 const PreviaLateral = ({ dados }: { dados: DadosDaPreviaProp }) => (
   <section aria-label="Prévia" className="sticky top-16">
     <PreviaAparencia dados={dados} />
@@ -184,7 +177,6 @@ function VerPrevia({ dados }: { dados: DadosDaPreviaProp }) {
   )
 }
 
-// A barra fixa no pé da tela: diz se há o que salvar (AC 5).
 function BarraDeSalvar({ alterado, pendente, bloqueado, descartar, previa }: { alterado: boolean; pendente: boolean; bloqueado: boolean; descartar: () => void; previa?: ReactNode }) {
   return (
     <div className="sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border-t bg-background py-3">
@@ -219,7 +211,6 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
   const blobs = useBlobs(escolhidas)
   const estreito = useConsulta('(max-width: 1023px)')
   const reler = () => Promise.all([cliente.invalidateQueries({ queryKey: ['aparencia-admin'] }), cliente.invalidateQueries({ queryKey: ['instituicao', slug] })])
-  // o Radix dispara a troca no mousedown e de novo no foco, antes de o roteador (assíncrono) refletir a primeira: sem a guarda, o histórico ganha a mesma aba duas vezes
   const ultima = useRef(aba)
   useEffect(() => {
     ultima.current = aba
@@ -230,7 +221,6 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
     setParams({ aba: id })
   }
 
-  // alterado: o que está na tela difere do salvo (texto aparado, como vai no PUT) ou há imagem escolhida e não enviada
   const alterado = JSON.stringify(corpoDe(valores)) !== JSON.stringify(corpoDe(valoresDe(dados))) || Object.keys(escolhidas).length > 0
   const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && currentLocation.pathname !== nextLocation.pathname)
   useAvisoAoFechar(alterado)
@@ -322,7 +312,6 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
   )
 }
 
-// A tela Aparência (door 7 de aparencia-instituicao): o administrador define a marca em abas e vê a prévia da aba antes de salvar.
 export function Aparencia() {
   const { slug } = useParams()
   const { me } = useSessao()

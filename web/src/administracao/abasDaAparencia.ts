@@ -14,7 +14,6 @@ export const Rotulos: Record<Tipo, [string, string, string?]> = {
 
 export const LimiteDoNomeDoApp = 12
 
-// As abas na ordem da tela; `chave` é o caminho do campo no JSON da API, que é também o nome do erro 400 (door 10 de aparencia-instituicao).
 export const Abas: Aba[] = [
   { id: 'marca', titulo: 'Marca', campos: [{ chave: 'cor', rotulo: 'Cor principal' }], imagens: ['logo'] },
   {
@@ -58,10 +57,8 @@ export const Abas: Aba[] = [
 export const Campos = Abas.flatMap((a) => a.campos)
 export const EhLista = (chave: string) => chave === 'login.itens' || chave === 'assistente.perguntas'
 
-// ?aba= desconhecido ou ausente abre a Marca (AC 4).
 export const abaPedida = (pedida: string | null): IdAba => Abas.find((a) => a.id === pedida)?.id ?? 'marca'
 
-// As abas que têm um campo ou uma imagem recusada pela API, na ordem das abas (AC 8).
 export function abasComErro(campos: Record<string, string>, imagens: Partial<Record<Tipo, string>>): IdAba[] {
   return Abas.filter((a) => a.campos.some((c) => campos[c.chave]) || a.imagens.some((t) => imagens[t])).map((a) => a.id)
 }

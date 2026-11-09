@@ -20,7 +20,6 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         var c = await b.Ler(numero);
         Assert.Equal(EmAtendimento, c.Estado);
         Assert.Equal(b.A.Usuario.Id, c.ResponsavelId);
-        // assumir de novo sendo o responsável: 409 e nenhum evento a mais
         var eventos = (await b.Eventos(numero)).Count;
         Assert.Equal(HttpStatusCode.Conflict, (await b.A.Cliente.PostAsync($"/api/chamados/{numero}/assumir", null)).StatusCode);
         Assert.Equal(eventos, (await b.Eventos(numero)).Count);
@@ -212,7 +211,6 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         var semMotivo = await b.Chamado();
         Assert.Equal(HttpStatusCode.OK, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{semMotivo}/cancelar", new { })).StatusCode);
 
-        // justificativa: 4001 recusada sem mudar o chamado, 4000 aceita
         var longo = await b.Chamado();
         Assert.Equal(HttpStatusCode.BadRequest, (await b.ClienteAluno.PostAsJsonAsync($"/api/chamados/{longo}/cancelar", new { motivo = new string('j', 4001) })).StatusCode);
         Assert.Equal(Aberto, (await b.Ler(longo)).Estado);
@@ -245,12 +243,10 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Aberto, (await b.Ler(numero)).Estado);
     }
 
-    // Tipo, ator e doAluno de cada evento, como a equipe lê na rota.
     static List<(string Tipo, string Ator, bool DoAluno)> Eventos(System.Text.Json.JsonElement detalhe) =>
         detalhe.GetProperty("eventos").EnumerateArray()
             .Select(e => (e.GetProperty("tipo").GetString()!, e.GetProperty("ator").GetString()!, e.GetProperty("doAluno").GetBoolean())).ToList();
 
-    // historico-frases C1
     [Fact]
     public async Task Evento_diz_se_veio_do_aluno()
     {
@@ -267,7 +263,6 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(("RESPOSTA", b.Aluno.Usuario.Nome, true), eventos);
     }
 
-    // historico-frases C2
     [Fact]
     public async Task Atendente_com_o_nome_do_aluno_nao_vira_aluno()
     {
@@ -287,7 +282,6 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([("RESPOSTA", b.Aluno.Usuario.Nome, false), ("RESPOSTA", b.Aluno.Usuario.Nome, true)], respostas);
     }
 
-    // historico-frases C8
     [Fact]
     public async Task Aluno_nao_recebe_eventos()
     {
@@ -301,7 +295,6 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(System.Text.Json.JsonValueKind.Null, (await r.Json()).GetProperty("eventos").ValueKind);
     }
 
-    // historico-frases C8
     [Fact]
     public async Task Detalhe_fora_do_setor_continua_404()
     {
@@ -323,7 +316,6 @@ public class FilaTests(OneFactory f) : IClassFixture<OneFactory>
         var meio = await b.Chamado(EmAtendimento, "segundo");
         await b.Recuar(meio, TimeSpan.FromHours(1));
         var fechado = await b.Chamado(Fechado, "terceiro");
-        // chamado de outro setor
         await b.A.Cliente.PostAsJsonAsync($"/api/chamados/{await b.Chamado(descricao: "quarto")}/encaminhar", new { setorId = b.Outro.Id, motivo = "É do financeiro." });
 
         var r = await b.B.Cliente.GetAsync("/api/chamados?escopo=fila");

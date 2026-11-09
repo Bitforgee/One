@@ -19,7 +19,6 @@ import { Textarea } from '../ui/textarea'
 import { abrangenciaDoFluxo, semLideranca, SemestresDe1a12, type Fluxo } from './comum'
 import { linhas, type Aba, type Linha, type Listas } from './LinhasDosCadastros'
 
-// O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
 type Ficha = Record<string, any>
 type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas; erros: Record<string, string> }
 const CamposComErro = ['nome', 'titulo', 'texto', 'setorId', 'categoriaId', 'setorCoordenacaoId', 'cursoId', 'semestre']
@@ -37,7 +36,6 @@ const ficha = (x: object): Ficha => Object.fromEntries(Object.entries(x).map(([k
 const num = (v: string | number) => (v === '' ? null : Number(v))
 
 const Corpos: Record<Aba, (r: Ficha) => unknown> = {
-  // curso e semestre da liderança só vão na criação (AC 53); o setor editado não tem a marca `lideranca`
   setores: (r) => ({ nome: r.nome, triagem: r.triagem, ativo: r.ativo, ...(r.lideranca ? { cursoId: num(r.cursoId), semestre: num(r.semestre) } : {}) }),
   categorias: (r) => ({ nome: r.nome, ativa: r.ativa }),
   cursos: (r) => ({ nome: r.nome, setorCoordenacaoId: num(r.setorCoordenacaoId) }),
@@ -55,7 +53,6 @@ const Ajudas: Record<Aba, string> = {
 }
 const SemFluxo: Vazio = { Icone: Workflow, titulo: 'Nenhum fluxo', frase: 'Sem fluxo, os chamados vão para a Triagem.' }
 const Botoes: Record<Aba, string> = { setores: 'Novo setor', categorias: 'Nova categoria', cursos: 'Novo curso', fluxos: 'Novo fluxo', prontas: 'Nova resposta pronta' }
-// Sem acento nem caixa: "secretaria" acha "Secretaria Acadêmica".
 const simples = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 const SemResultado = (busca: string, limpar: () => void): Vazio => ({
   Icone: SearchX,
@@ -68,7 +65,6 @@ const SemResultado = (busca: string, limpar: () => void): Vazio => ({
   ),
 })
 
-// O título do cadastro, a frase do que ele é, o botão que cria e a busca pelo nome.
 function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string; buscar: (b: string) => void; novo: () => void }) {
   return (
     <div className="flex flex-col gap-3">
@@ -90,7 +86,6 @@ function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string;
   )
 }
 
-// Cada linha: o nome, que é um botão que abre o editor, e o que distingue o registro (em coluna no largo, sob o nome no estreito).
 function ListaDaAba({ itens, erro, linha, editar, vazio }: { itens?: { id: number }[]; erro?: Error; linha: (x: any) => Linha; editar: (x: object) => void; vazio?: Vazio }) {
   return (
     <Tabela colunas={Colunas} itens={itens} erro={erro} vazio={vazio}>
@@ -137,7 +132,6 @@ function CampoNome(c: Campos) {
   )
 }
 
-// Setor e categoria: o nome e as marcas que ligam e desligam o registro.
 function NomeEMarcas({ c, marcas }: { c: Campos; marcas: [id: string, rotulo: string, chave: string][] }) {
   return (
     <>
@@ -149,7 +143,6 @@ function NomeEMarcas({ c, marcas }: { c: Campos; marcas: [id: string, rotulo: st
   )
 }
 
-// Na criação, a marca "Liderança de semestre" pede o curso e o semestre; na edição os dois só se leem (AC 53).
 function TurmaDaLideranca(c: Campos) {
   const { editando } = c
   if (editando.id) {
@@ -194,7 +187,6 @@ const CamposDeSetor = (c: Campos) => (
 
 const CamposDeCategoria = (c: Campos) => <NomeEMarcas c={c} marcas={[['cad-ativa', 'Ativa', 'ativa']]} />
 
-// Lista nativa de um cadastro (door 5): a primeira opção, vazia, pede a escolha.
 function Escolha({ c, id, rotulo, chave, vazio, itens }: { c: Campos; id: string; rotulo: string; chave: string; vazio: string; itens?: { id: number; nome: string }[] }) {
   return (
     <Rotulado id={id} rotulo={rotulo} erro={c.erros[chave]}>
@@ -218,7 +210,6 @@ const Abrangencias: [string, string][] = [
   ['SEMESTRE', 'Um semestre de um curso'],
 ]
 
-// O fluxo novo: a categoria e a abrangência (todos os cursos, um curso, ou um semestre de um curso); o curso e o semestre só aparecem quando a abrangência os pede.
 function CamposDeFluxo(c: Campos) {
   const abrangencia = c.editando.abrangencia
   return (
@@ -273,7 +264,6 @@ const tituloDaJanela = (aba: Aba, f?: Ficha) => `${f?.id ? 'Editar' : 'Novo'}: $
 
 type Painel = { aba: Aba; dados?: Listas; erro?: Error; novo: () => void; editar: (x: object) => void }
 
-// Um cadastro: o cabeçalho com a busca e a lista filtrada pelo nome (sem acento nem caixa).
 function PainelDaAba({ aba, dados, erro, novo, editar }: Painel) {
   const [busca, setBusca] = useState('')
   const linha = dados ? linhas(dados)[aba] : undefined
@@ -288,7 +278,6 @@ function PainelDaAba({ aba, dados, erro, novo, editar }: Painel) {
   )
 }
 
-// A navegação em coluna: cada cadastro com a contagem (só para quem enxerga; o nome acessível é o do cadastro).
 function Navegacao({ abas, dados }: { abas: Aba[]; dados?: Listas }) {
   return (
     <TabsList className="hidden h-auto w-56 shrink-0 flex-col items-stretch gap-0.5 self-start bg-transparent p-0 @4xl/main:flex">
@@ -304,7 +293,6 @@ function Navegacao({ abas, dados }: { abas: Aba[]; dados?: Listas }) {
   )
 }
 
-// Setores, categorias, cursos, fluxos de atendimento e respostas prontas.
 export function Cadastros() {
   const { dados, erro, recarregar } = useLeituras<Listas>({
     setores: '/api/admin/setores',
@@ -313,7 +301,6 @@ export function Cadastros() {
     fluxos: '/api/admin/fluxos',
     prontas: '/api/admin/respostas-prontas',
   })
-  // a aba vive na URL (?aba=fluxos): o Voltar do editor de fluxo e a trilha dele chegam na aba certa
   const [params, setParams] = useSearchParams()
   const { slug } = useParams()
   const navegar = useNavigate()

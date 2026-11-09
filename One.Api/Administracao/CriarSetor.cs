@@ -20,7 +20,6 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
         return await EmFluxoPublicado(db, e, atual) ?? await TriagemENome(db, e, atual) ?? await LiderancaRepetida(db, e, atual);
     }
 
-    // base-fluxos F7: desativar o setor de uma etapa da versão vigente de um fluxo faria o fluxo pulá-la em silêncio.
     static async Task<IResult?> EmFluxoPublicado(OneDb db, Entrada e, Setor? atual)
     {
         if (atual is not { Ativo: true } || e.Ativo != false) return null;
@@ -36,7 +35,6 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
         return await db.Setores.AnyAsync(s => s.Nome == e.Nome && s.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe um setor com este nome.") : null;
     }
 
-    // Curso e semestre vêm juntos, dentro dos limites, e nunca num setor de triagem (AC 50, AC 51).
     static async Task<IResult?> Turma(OneDb db, Entrada e)
     {
         if (e.CursoId is null && e.Semestre is null) return null;
@@ -46,7 +44,6 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
         return e.Triagem == true ? Problemas.Invalido("O setor de triagem não pode ser uma liderança.", "triagem") : null;
     }
 
-    // Uma liderança ativa por curso e semestre, ao criar e ao reativar (AC 52). O índice ux_setor_lideranca fecha a corrida.
     static async Task<IResult?> LiderancaRepetida(OneDb db, Entrada e, Setor? atual)
     {
         var (curso, semestre) = atual is null ? (e.CursoId, e.Semestre) : (atual.CursoId, atual.Semestre);

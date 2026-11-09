@@ -81,7 +81,6 @@ public class EmailTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// Host próprio com o SMTP fora do ar.
 public class EmailFalhaTests : IAsyncLifetime
 {
     readonly OneFactorySmtpFora f = new();
@@ -192,8 +191,6 @@ public class AnexoTests(OneFactory f) : IClassFixture<OneFactory>
     }
 }
 
-// refatoracao-solid C17: com a leitura e a assinatura do arquivo num helper só, o anexo continua com 413 acima de 10 MB
-// e 415 com tipo errado, com o mesmo detail; 10 MB exatos continuam aceitos.
 public class EmailAnexoTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const int DezMb = 10 * 1024 * 1024;

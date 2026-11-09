@@ -2,7 +2,6 @@ using One.Api.Dados;
 
 namespace One.Api.Instituicoes;
 
-// Door 2: o grupo /api/plataforma só atende quem tem o papel OPERADOR; a instituição alvo vem do {slug} da URL.
 public static class PlataformaRotas
 {
     public const string NaoEOperador = "Só operadores da plataforma podem usar esta área.";

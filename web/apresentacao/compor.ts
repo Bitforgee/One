@@ -3,9 +3,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { duracao } from './tts.ts'
 
-// Monta o vídeo final: para cada segmento, corta o carregamento, põe cada fala no instante do seu passo
-// (adelay + amix), codifica em MP4 (H.264 yuv420p + AAC) e concatena tudo; escreve também o SRT.
-// Uso: node apresentacao/compor.ts [amostra|principal]
 type PassoGravado = { id: string; texto: string; inicio: number; arquivo: string; duracao: number }
 type Gravado = { id: string; sinc: number; corte: number; fim: number; passos: PassoGravado[] }
 
@@ -18,7 +15,6 @@ const quadros = path.join(Saida, 'quadros')
 mkdirSync(quadros, { recursive: true })
 const ffmpeg = (args: string[]) => execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' })
 
-// Instante (no tempo do vídeo) do primeiro quadro com a marca magenta no canto; o webm do Playwright é 25 qps fixo.
 function marca(webm: string, ate: number) {
   const px = execFileSync('ffmpeg', ['-v', 'error', '-t', String(ate), '-i', webm, '-vf', 'crop=8:8:8:8,scale=1:1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'])
   for (let i = 0; i + 2 < px.length; i += 3) if (px[i] > 200 && px[i + 1] < 80 && px[i + 2] > 200) return i / 3 / 25
@@ -66,7 +62,6 @@ for (const id of manifesto.segmentos.filter((s) => !so || s === so)) {
     const inicio = p.inicio - g.corte
     const fim = Math.min(inicio + p.duracao + 0.3, g.passos[i + 1] ? g.passos[i + 1].inicio - g.corte : total)
     srt.push(`${srt.length + 1}\n${relogio(deslocamento + inicio)} --> ${relogio(deslocamento + fim)}\n${p.texto}\n`)
-    // um quadro do fim de cada passo, para conferir legenda e tela: saida/quadros/<segmento>-<passo>.png
     const fimDoPasso = (g.passos[i + 1] ? g.passos[i + 1].inicio - g.corte : total) - 0.3
     ffmpeg(['-ss', Math.max(0, fimDoPasso).toFixed(2), '-i', saida, '-frames:v', '1', path.join(quadros, `${id}-${p.id}.png`)])
     console.log(`  ${relogio(deslocamento + inicio)} ${p.id}`)
@@ -78,7 +73,6 @@ for (const id of manifesto.segmentos.filter((s) => !so || s === so)) {
 
 if (so) process.exit(0)
 
-// Todos os segmentos têm os mesmos parâmetros: o concat demuxer junta sem recodificar.
 mkdirSync(Saida, { recursive: true })
 const lista = path.join(pasta, `${nome}.txt`)
 writeFileSync(lista, mp4s.map((f) => `file '${f.replace(/\\/g, '/')}'`).join('\n'))

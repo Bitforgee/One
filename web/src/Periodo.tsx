@@ -8,8 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 
 export const dia = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-// O calendário só escreve os dois campos de data; nada é consultado nem gravado ao escolher (door 15). Cada abertura
-// começa uma escolha nova: o primeiro dia escolhido é o primeiro campo e o segundo, o último.
 export function Periodo({ rotulo, className, setDe, setAte }: { rotulo: string; className?: string; setDe: (d: string) => void; setAte: (d: string) => void }) {
   const [faixa, setFaixa] = useState<DateRange>()
   function escolher(r?: DateRange) {

@@ -5,7 +5,6 @@ import { formatarData } from '../datas'
 import { estados } from '../test/textos'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
-// Linha 6 de ## Screens (Assistente); "Mensagem", "Escreva sua dúvida", "Digitando" não são texto visível; "Enviar" é escrito (estrutura-visual AC 14).
 const Assistente = [
   'Assistente',
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.',
@@ -78,25 +77,21 @@ describe('textos', () => {
     const t = estados(Assistente)
     const conversa = [Pergunta, data]
 
-    // sem conversa: rótulo oculto e placeholder do campo
     let montada = assistente()
     const campo = await screen.findByLabelText('Mensagem')
     expect(campo).toHaveAttribute('placeholder', 'Escreva sua dúvida')
     t.conferir(tela())
-    // com um arquivo escolhido, a ajuda dos anexos aparece
     await userEvent.upload(document.querySelector<HTMLInputElement>('input[type="file"]')!, new File(['x'], 'foto.png', { type: 'image/png' }))
     await screen.findByText('PDF ou foto, até 10 MB')
     t.conferir(tela(), ['foto.png'])
     montada.unmount()
 
-    // digitando
     montada = assistente({ 'POST /api/conversas': () => new Promise(() => {}) })
     await enviar()
     expect(await screen.findByRole('status', { name: 'Digitando' })).toBeInTheDocument()
     t.conferir(tela(), conversa)
     montada.unmount()
 
-    // resposta com "Isso resolveu?", depois o "Não"
     montada = assistente({ 'POST /api/conversas': responde('resposta', 'O boleto fica no portal.'), 'POST /api/conversas/7/avaliacao': () => [200, { desfecho: null }] })
     await enviar()
     await screen.findByText('Isso resolveu?')
@@ -106,7 +101,6 @@ describe('textos', () => {
     t.conferir(tela(), [...conversa, 'O boleto fica no portal.'])
     montada.unmount()
 
-    // limite de 10 mensagens
     montada = assistente({
       'POST /api/conversas': responde('pergunta', 'É do semestre atual?'),
       'POST /api/conversas/7/mensagens': () => [200, { resposta: { tipo: 'pergunta', texto: 'É do semestre atual?' } }],
@@ -120,13 +114,11 @@ describe('textos', () => {
     t.conferir(tela(), [...enviadas, 'É do semestre atual?', data])
     montada.unmount()
 
-    // diálogo sem conversa, com duas matrículas ativas
     montada = assistente({}, duas)
     await userEvent.click(await screen.findByRole('button', { name: /Falar com atendente/ }))
     t.conferir(await screen.findByRole('dialog'), ['2000567890 — ADS', '2000567891 — Direito'])
     montada.unmount()
 
-    // diálogos em conversa: "Falar com um atendente?" e "Encerrar a conversa?"
     montada = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })
     await enviar()
     await screen.findByText('É do semestre atual?')
@@ -138,7 +130,6 @@ describe('textos', () => {
     t.conferir(await screen.findByRole('dialog'))
     montada.unmount()
 
-    // transferido, com a resposta do atendente
     montada = assistente({
       'POST /api/conversas': responde('transferir', 'Vou transferir você.'),
       'POST /api/conversas/7/transferir': () => [201, { numero: 'ONE-1', estado: 'ABERTO', setor: 'Financeiro' }],
@@ -154,7 +145,6 @@ describe('textos', () => {
     t.conferir(tela(), [...conversa, 'Vou transferir você.', 'Olá!', 'Carla'])
     montada.unmount()
 
-    // encerrada pelo "Sim"
     montada = assistente({ 'POST /api/conversas': responde('resposta', 'O boleto fica no portal.'), 'POST /api/conversas/7/avaliacao': () => [200, { desfecho: 'RESOLVIDA_AUTOATENDIMENTO' }] })
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Sim' }))
@@ -162,7 +152,6 @@ describe('textos', () => {
     t.conferir(tela(), [...conversa, 'O boleto fica no portal.'])
     montada.unmount()
 
-    // encerrada pelo "Encerrar"
     montada = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?'), 'POST /api/conversas/7/encerrar': () => [200, { desfecho: 'ENCERRADA' }] })
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Encerrar' }))
@@ -171,7 +160,6 @@ describe('textos', () => {
     t.conferir(tela(), [...conversa, 'É do semestre atual?'])
     montada.unmount()
 
-    // erro: o detail da API
     montada = assistente({ 'POST /api/conversas': () => [503, { status: 503, detail: 'Assistente indisponível.' }] })
     await enviar()
     expect(await screen.findByRole('alert')).toHaveTextContent('Assistente indisponível.')

@@ -1,9 +1,6 @@
 import { expect, test, type APIRequestContext, type PlaywrightWorkerArgs } from '@playwright/test'
 import { createHash } from 'node:crypto'
 
-// arquivos-minio C29: e2e real, sem simulada.ts. Contra E2E_URL, com o Mailpit do compose (primeiro acesso por e-mail) e o MinIO atrás da API.
-// A instituição precisa ter um administrador (padrão: demo / 123.456.789-09 / admin@demo.one; `dotnet One.Api.dll instituicao criar` cria uma).
-// O primeiro acesso do administrador redefine a senha dele: use uma instituição descartável.
 const slug = process.env.E2E_INSTITUICAO ?? 'demo'
 const adminCpf = process.env.E2E_ADMIN_CPF ?? '123.456.789-09'
 const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@demo.one'
@@ -21,7 +18,6 @@ function cpfValido(semente: number) {
   return d.join('')
 }
 
-// Pega o link de definir-senha do e-mail novo mais recente enviado ao endereço.
 async function tokenDoEmail(request: APIRequestContext, para: string) {
   for (let i = 0; i < 40; i++) {
     const lista = await (await request.get(`${mailpit}/api/v1/search`, { params: { query: `to:${para}` } })).json()
@@ -51,7 +47,6 @@ async function entrar(request: APIRequestContext, cpf: string, senha: string) {
   expect(r.status()).toBe(200)
 }
 
-// O limitador "auth" da API é de 5 por minuto por IP (login e primeiro acesso): espera a janela em vez de tomar 429.
 test.describe.configure({ timeout: 150_000 }) // inclui a espera da janela do limitador
 const autenticacoes: number[] = []
 async function vaga(): Promise<void> {
@@ -71,13 +66,11 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   const alunoCpf = cpfValido(rodada)
   const alunoEmail = `aluno.${rodada}@e2e.one`
 
-  // administrador: primeiro acesso (token do Mailpit) e login
   const admin = await playwright.request.newContext({ baseURL })
   const tokenAdmin = await primeiroAcesso(admin, adminCpf, adminEmail)
   expect((await admin.post('/api/auth/definir-senha', { data: { token: tokenAdmin, novaSenha: senhaAdmin } })).ok()).toBeTruthy()
   await entrar(admin, adminCpf, senhaAdmin)
 
-  // curso na triagem e matrícula do aluno por CSV (cria o usuário)
   const setores = await (await admin.get('/api/admin/setores')).json()
   const triagem = (Array.isArray(setores) ? setores : setores.itens).find((s: { triagem: boolean }) => s.triagem)
   const curso = `Curso e2e ${rodada}`
@@ -86,7 +79,6 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   const importado = await admin.post('/api/admin/matriculas/importacao', { multipart: { arquivo: { name: 'm.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })
   expect(importado.status(), await importado.text()).toBe(200)
 
-  // aluno: primeiro acesso pela tela, com o link do e-mail
   const contexto = await browser.newContext({ baseURL })
   const page = await contexto.newPage()
   const tokenAluno = await primeiroAcesso(page.request, alunoCpf, alunoEmail)
@@ -96,7 +88,6 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   await expect(page.getByText('Senha criada.')).toBeVisible()
   await entrar(page.request, alunoCpf, senhaAluno)
 
-  // chamado e anexo PDF, depois o download conferindo os bytes
   const aberto = await page.request.post('/api/atendimento-direto', { data: { descricao: 'Preciso da segunda via do boleto.' } })
   expect(aberto.status()).toBe(201)
   const numero = (await aberto.json()).numero as string
@@ -115,7 +106,6 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   expect(baixado.headers()['content-length']).toBe(String(pdf.length))
   expect(sha((await baixado.body()) as Buffer)).toBe(sha(pdf))
 
-  // limpeza possível: o aluno sai e é desativado (matrícula, curso e objeto ficam: o bucket nunca apaga e o cadastro é append-only)
   const usuarios = await (await admin.get('/api/admin/usuarios')).json()
   const lista = Array.isArray(usuarios) ? usuarios : usuarios.itens
   const aluno = lista.find((u: { email: string }) => u.email === alunoEmail)
@@ -124,10 +114,8 @@ test('aluno novo envia um PDF anexo e baixa os mesmos bytes do MinIO', async ({ 
   await admin.dispose()
 })
 
-// anexos-assistente C39: o aluno anexa uma foto na conversa com o assistente (sem chave do provedor: a resposta é sem_base) e a equipe baixa a mesma foto no chamado transferido.
 async function adminLogado(playwright: PlaywrightWorkerArgs['playwright'], baseURL: string | undefined) {
   const admin = await playwright.request.newContext({ baseURL })
-  // o outro teste deste arquivo já pode ter feito o primeiro acesso (a senha é a mesma)
   await vaga()
   if ((await admin.post('/api/auth/login', { data: { instituicao: slug, cpf: adminCpf, senha: senhaAdmin } })).status() !== 200) {
     const token = await primeiroAcesso(admin, adminCpf, adminEmail)
@@ -143,7 +131,6 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   const alunoEmail = `aluno.${rodada}@e2e.one`
   const admin = await adminLogado(playwright, baseURL)
 
-  // o administrador passa a atender a triagem, para abrir o chamado transferido
   const eu = await (await admin.get('/api/auth/me')).json()
   const setores = await (await admin.get('/api/admin/setores')).json()
   const triagem = (Array.isArray(setores) ? setores : setores.itens).find((s: { triagem: boolean }) => s.triagem)
@@ -166,7 +153,6 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   await expect(page.getByText('Senha criada.')).toBeVisible()
   await entrar(page.request, alunoCpf, senhaAluno)
 
-  // pela tela: escolhe a foto, escreve e envia; o balão do aluno ganha o link
   const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from(Array.from({ length: 3000 }, (_, i) => (i * 11 + rodada) % 256))])
   await page.goto(`/${slug}/assistente`)
   await page.locator('input[type="file"]').setInputFiles({ name: 'boleto.png', mimeType: 'image/png', buffer: png })
@@ -183,7 +169,6 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   expect(baixado.headers()['content-type']).toBe('image/png')
   expect(sha((await baixado.body()) as Buffer)).toBe(sha(png))
 
-  // transfere para um atendente; o administrador abre o chamado e baixa a mesma foto
   await page.getByRole('button', { name: 'Falar com atendente' }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
   const protocolo = page.getByRole('link', { name: 'Ver solicitação' })
@@ -201,14 +186,12 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   expect(daEquipe.status()).toBe(200)
   expect(sha((await daEquipe.body()) as Buffer)).toBe(sha(png))
 
-  // o limite de corpo de 30 MB do Kestrel não vale nas duas rotas de mensagem: 3 arquivos de 10 MiB passam (AC 16)
   const form = new FormData()
   form.append('mensagem', 'três fotos grandes')
   for (const n of [1, 2, 3]) form.append('anexos', new Blob([png.subarray(0, 8), Buffer.alloc(10 * 1024 * 1024 - 8, n)], { type: 'image/png' }), `grande-${n}.png`)
   const tres = await page.request.post('/api/conversas', { multipart: form, timeout: 120_000 })
   expect(tres.status(), await tres.text()).toBe(201)
 
-  // limpeza possível: o aluno é desativado (o bucket nunca apaga e o cadastro é append-only)
   const usuarios = await (await admin.get('/api/admin/usuarios')).json()
   const aluno = (Array.isArray(usuarios) ? usuarios : usuarios.itens).find((u: { email: string }) => u.email === alunoEmail)
   expect((await admin.post(`/api/admin/usuarios/${aluno.id}/desativar`)).ok()).toBeTruthy()

@@ -18,7 +18,6 @@ export function useIsMobile() {
   return !!isMobile
 }
 
-// Segue uma media query; sem matchMedia (jsdom) vale falso, o arranjo largo.
 export function useConsulta(consulta: string) {
   const [vale, setVale] = React.useState(() => !!window.matchMedia?.(consulta).matches)
   React.useEffect(() => {

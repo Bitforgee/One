@@ -40,7 +40,6 @@ public class InjecaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Numero_fora_da_fonte_citada_vira_sem_base()
     {
         var c = await Cenario.Criar(f);
-        // buscada e não citada, com o 45 (L-071): só a conferência pelas citadas a recusa
         await f.Artigo(c.Instituicao, "Prazo de matrícula", "A matrícula tem prazo de 45 dias.");
         var (ok, _) = await Enviar(c, c.RespostaBoletoValida("O pagamento vence no dia 10 de cada mês."));
         Assert.Equal("resposta", ok.GetProperty("tipo").GetString());
