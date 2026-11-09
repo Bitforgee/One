@@ -78,6 +78,7 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   await painel.goto(`/${slug}/aparencia`)
   await painel.getByLabel('Cor principal').fill(Cor)
   await painel.getByLabel('Arquivo: Logo').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: logo })
+  await painel.getByRole('tab', { name: 'App instalado' }).click()
   await painel.getByLabel('Arquivo: Ícone do app').setInputFiles({ name: 'icone.png', mimeType: 'image/png', buffer: icone })
   await painel.getByRole('button', { name: 'Salvar' }).click()
   await expect(painel.getByText('Aparência salva.')).toBeVisible()

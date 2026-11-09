@@ -37,7 +37,7 @@ manifesto por instituição, que já existem e não mudam; a mudança é de orga
 3. `PreviaAparencia.tsx` (exists) mostra o bloco da aba ativa; o bloco do app instalado é um componente novo do mesmo arquivo (new, no door - placement per conventions)
 4. salvar -> `PUT /api/admin/aparencia` e `POST /api/admin/aparencia/imagens/{tipo}` (exists), como hoje
 5. `aparencia.tsx` (exists, o ponto que troca `<title>`, ícone, `theme-color` e manifesto) passa a pôr também `apple-mobile-web-app-title`
-6. sair da tela com alterações -> `useBlocker` como em `EdicaoDoFluxo.tsx` (exists) pergunta "Sair sem salvar?" com `Confirmar` (exists)
+6. sair da tela com alterações -> `useBlocker` como em `EdicaoDoFluxo.tsx` (exists) pergunta "Sair sem salvar?" com `Confirmar` (exists); o aviso ao fechar a aba do navegador sai de `EdicaoDoFluxo.tsx` para `avisoAoFechar.ts` (new, no door - o `dryer` da AD-018 acusou a cópia com nota 1.00) e as duas telas o usam
 
 ## Impact
 
@@ -48,6 +48,7 @@ manifesto por instituição, que já existem e não mudam; a mudança é de orga
 | index.html | continua padrão do One: sem `slug`, o `<meta>` novo não existe e o iPhone usa o `<title>` "One" |
 | stored data | nada: nenhuma coluna, rota ou contrato muda |
 | decisão | nenhuma AD ativa muda. O uso de `?aba=` segue o precedente da AD-046 |
+| testes de features fechadas | emendados na construção, sem enfraquecer asserção de regra: `identidade.test.tsx` (a prévia mostra o bloco da aba: o login na Marca, o assistente na aba Assistente), `ux.test.tsx` (roteador de dados no lugar do `MemoryRouter`, porque a Aparência usa `useBlocker`, AD-047), `identidade.spec.ts` C32 (4 seções sem caixa viram 5 painéis sem caixa) e C39 (as duas frases da prévia, cada uma na sua aba), `ux.spec.ts` C57 (as cores prontas são dado, como a amostra da cor), `aparencia.spec.ts` e `aparencia-real.spec.ts` (abrem a aba antes) |
 
 ## Relations
 

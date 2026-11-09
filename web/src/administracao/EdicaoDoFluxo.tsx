@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Spinner } from '../ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
 import { useConsulta } from '../ui/use-mobile'
+import { useAvisoAoFechar } from './avisoAoFechar'
 import { abrangenciaDoFluxo, type Categoria, type Curso, type Fluxo, type Setor } from './comum'
 import { caminho, cadeiaValida, deEtapas, etapasParaApi, FraseDaCadeia, fixarPosicoes, type Grafo } from './grafo'
 import { ListaDeEtapas } from './ListaDeEtapas'
@@ -208,16 +209,6 @@ function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar
       </DialogContent>
     </Dialog>
   )
-}
-
-// Fechar ou recarregar a aba com alterações não salvas pede a confirmação do navegador.
-function useAvisoAoFechar(ativo: boolean) {
-  useEffect(() => {
-    if (!ativo) return
-    const aviso = (e: BeforeUnloadEvent) => e.preventDefault()
-    window.addEventListener('beforeunload', aviso)
-    return () => window.removeEventListener('beforeunload', aviso)
-  }, [ativo])
 }
 
 // Ctrl+S (⌘+S) salva o rascunho como o botão e impede a janela de salvar a página; o corpo roda a cada tecla com o estado atual.

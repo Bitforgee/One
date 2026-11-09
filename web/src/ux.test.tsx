@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 import { Monitor, Moon, MoonStar, Sun } from 'lucide-react'
-import { MemoryRouter, useLocation } from 'react-router'
+import { createMemoryRouter, RouterProvider, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { textoVisivel } from './test/textos'
@@ -22,12 +22,9 @@ afterEach(() => {
 // Abre o App na rota e deixa a localização visível, para afirmar para onde a guarda levou.
 function abrirComLocal(caminho: string) {
   const Local = () => <output data-testid="local">{useLocation().pathname}</output>
-  return render(
-    <MemoryRouter initialEntries={[caminho]}>
-      <App />
-      <Local />
-    </MemoryRouter>,
-  )
+  // roteador de dados, como o main.tsx (AD-047): a Aparência usa useBlocker
+  const roteador = createMemoryRouter([{ path: '*', element: <><App /><Local /></> }], { initialEntries: [caminho] })
+  return render(<RouterProvider router={roteador} />)
 }
 
 describe('ux', () => {

@@ -36,6 +36,34 @@ afterEach(() => {
 })
 
 describe('marca da instituição', () => {
+  // aparencia-enxuta C15 (AC 15)
+  it('título do app no iPhone', async () => {
+    const titulo = () => noHead('meta[name="apple-mobile-web-app-title"]', 'content')
+    comSessao(comMarca)
+    const a = abrir('/univag/trocar-senha')
+    await waitFor(() => expect(titulo()).toBe('Univag'))
+    a.unmount()
+
+    comSessao(instituicao({ nomeCurto: null }))
+    const b = abrir('/univag/trocar-senha')
+    await waitFor(() => expect(titulo()).toBe('Univag'))
+    b.unmount()
+
+    comSessao(instituicao({ nomeCurto: 'Marca', nome: 'Centro Universitário' }))
+    const c = abrir('/univag/trocar-senha')
+    await waitFor(() => expect(titulo()).toBe('Marca'))
+    c.unmount()
+
+    comSessao(instituicao({ nomeCurto: null, nome: 'Centro Universitário' }))
+    const d = abrir('/univag/trocar-senha')
+    await waitFor(() => expect(titulo()).toBe('Centro Universitário'))
+    d.unmount()
+
+    api({})
+    abrir('/')
+    await waitFor(() => expect(titulo()).toBeUndefined())
+  })
+
   // C27 (AC 27, door 8)
   it('contraste calcula a razão WCAG', () => {
     // C27 diz 7,47 para este azul, mas a regra do servidor (ContrasteDaCor.cs, WCAG 2.x) dá 7,65: ver o ## Handoff

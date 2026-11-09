@@ -25,9 +25,11 @@ test.describe('S3 tela Aparência', () => {
     expect(await previa.evaluate((e) => getComputedStyle(e).position)).toBe('sticky')
     await expect(page.getByRole('button', { name: 'Ocultar prévia' })).toBeHidden()
 
-    // as seções na ordem, e "Salvar" depois delas
+    // as abas na ordem, e a barra com "Salvar" depois delas
     const ys = async (ls: Locator[]) => Promise.all(ls.map(async (l) => (await caixa(l)).y))
-    const ordem = await ys(['Marca', 'Login', 'Assistente', 'Contato'].map((t) => form.getByRole('heading', { name: t, exact: true })).concat(form.getByRole('button', { name: 'Salvar' })))
+    const abas = await form.getByRole('tab').allTextContents()
+    expect(abas).toEqual(['Marca', 'App instalado', 'Login', 'Assistente', 'Contato'])
+    const ordem = await ys([form.getByRole('tab', { name: 'Marca' }), form.getByLabel('Cor principal'), form.getByRole('button', { name: 'Salvar' })])
     expect(ordem).toEqual([...ordem].sort((a, b) => a - b))
 
     // abaixo de 1024 px (AC 37): o formulário vem primeiro, e a prévia só abre pelo "Ver prévia", numa folha
@@ -37,6 +39,33 @@ test.describe('S3 tela Aparência', () => {
     await page.getByRole('button', { name: 'Ver prévia' }).click()
     const folha = page.getByRole('dialog', { name: 'Prévia' })
     await expect(folha.getByRole('button', { name: 'Entrar' })).toBeVisible()
+  })
+
+  // aparencia-enxuta C9 (AC 9): a 360 px as abas rolam na horizontal, têm 44 px de altura e a página não rola
+  test('abas a 360 px', async ({ page }) => {
+    await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto('/univag/aparencia')
+    await page.getByLabel('Cor principal').waitFor()
+    const lista = page.getByRole('tablist', { name: 'Seções da aparência' })
+    const [rolagem, visivel, estilo] = await lista.evaluate((e) => [e.scrollWidth, e.clientWidth, getComputedStyle(e).overflowX] as const)
+    expect(rolagem, 'a lista é mais larga que a janela').toBeGreaterThan(visivel)
+    expect(estilo).toBe('auto')
+    for (const aba of await page.getByRole('tab').all()) expect((await caixa(aba)).height, await aba.textContent() ?? '').toBeGreaterThanOrEqual(44)
+    const [doc, janela] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])
+    expect(doc, 'sem rolagem horizontal').toBe(janela)
+  })
+
+  // aparencia-enxuta C10 (AC 10): a 1280 px a prévia fica ao lado do formulário
+  test('prévia ao lado a 1280 px', async ({ page }) => {
+    await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.goto('/univag/aparencia?aba=app')
+    await page.getByLabel('Nome do app').waitFor()
+    const [f, p] = [await caixa(page.locator('main form')), await caixa(page.getByRole('region', { name: 'Prévia' }))]
+    expect(p.x, 'a prévia começa depois do fim do formulário').toBeGreaterThanOrEqual(f.x + f.width - 1)
+    await expect(page.getByRole('region', { name: 'Tela inicial' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Janela do computador' })).toBeVisible()
   })
 })
 

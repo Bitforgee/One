@@ -1339,7 +1339,7 @@ test.describe('S6 varreduras', () => {
             if (s.backgroundColor !== 'rgba(0, 0, 0, 0)' && igual(s.backgroundColor, '#fff')) {
               const botao = el.matches('[data-slot=button][data-variant=default]')
               const sigla = el.getAttribute('aria-hidden') === 'true' && el.textContent!.trim().length <= 2
-              const amostra = el.getAttribute('data-testid') === 'amostra' // a cor que o administrador digitou, mostrada como dado do campo
+              const amostra = el.getAttribute('data-testid') === 'amostra' || el.hasAttribute('data-amostra') // a cor que o administrador digitou ou as cores prontas, mostradas como dado do campo
               if (!botao && !ativo(el) && !sigla && !amostra) achados.push(`fundo ${rotulo}`)
             }
             if (igual(s.color, '#fff') && !el.closest('a, [data-variant=link], [aria-current=page], [data-active=true]')) achados.push(`texto ${rotulo}`)

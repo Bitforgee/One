@@ -54,6 +54,8 @@ describe('prévia da Aparência', () => {
     expect(previa.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     expect(regiao.querySelector('img[src*="/imagens/login"]'), 'sem foto de login').toBeNull()
 
+    // a prévia mostra o bloco da aba: o do assistente aparece na aba Assistente
+    await userEvent.click(screen.getByRole('tab', { name: 'Assistente' }))
     expect(previa.getByText('Atendimento ao estudante · Univag')).toBeInTheDocument()
     expect(previa.getByText('Oi! Posso ajudar com boletos e matrícula.')).toBeInTheDocument()
     expect(previa.getByText('Vagner, assistente virtual')).toBeInTheDocument()
@@ -61,6 +63,7 @@ describe('prévia da Aparência', () => {
     expect(previa.queryByText(/Olá! Eu sou/)).not.toBeInTheDocument()
     expect(regiao.querySelector('svg[data-ilustracao]')).toBeNull()
 
+    await userEvent.click(screen.getByRole('tab', { name: 'Login' }))
     await userEvent.upload(screen.getByLabelText('Arquivo: Imagem do login'), new File(['x'], 'login.png', { type: 'image/png' }))
     expect(regiao.querySelector('img[src="blob:login-novo"]'), 'com a foto escolhida no formulário').not.toBeNull()
   })

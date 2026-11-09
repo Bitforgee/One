@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/aparencia-enxuta/plan.md`
 
-19 checks em 3 slices · 0 one-way doors (nenhuma coluna, rota ou contrato muda) · 2 perguntas abertas, nenhuma bloqueia (plano aprovado pelo usuário em 09/11: "siga com o que for recomendado, eu aprovo o plano")
+20 checks (19 + o gate da AD-018) em 3 slices · 0 one-way doors (nenhuma coluna, rota ou contrato muda) · 2 perguntas abertas, nenhuma bloqueia (plano aprovado pelo usuário em 09/11: "siga com o que for recomendado, eu aprovo o plano")
 
 **Como as provas rodam.** Na raiz `D:\one-system`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`; um filtro que não seleciona teste sai com 0 (L-002), então confira a contagem no relatório. Playwright mede com `boundingBox()` e `scrollWidth` contra o servidor de desenvolvimento: `npm --prefix web run dev` em outro terminal e, na raiz, `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- aparencia.spec.ts -g "<nome>"`. A API é simulada; nada chama IA nem e-mail real. Mutação suspensa (AD-025).
 
@@ -76,6 +76,10 @@ Proof: `cd web && npx vitest run src/administracao/aparenciaAbas.test.tsx -t "es
 **C19** - Mudar o seletor nativo para `#ffff00` (contraste menor que 4,5) mostra `Contraste com o branco:` em vermelho (`text-destructive`) e deixa `Salvar` desabilitado; trocar por uma amostra o habilita; e os testes antigos de `aparencia.test.tsx` (prévia muda antes de salvar, salvar aplica sem recarregar, erro da API, contraste, remover imagem, 4 imagens, Ver prévia, iniciais) seguem verdes com a única mudança de abrir a aba antes (AC 19; regra do AC 27 de `aparencia-instituicao`)
 Proof: `cd web && npx vitest run src/administracao/aparenciaAbas.test.tsx -t "cor sem contraste bloqueia o Salvar"`
 Proof: `cd web && npx vitest run src/administracao/aparencia.test.tsx`
+
+**C20** - O `crapper` sobre `web/src` sai 0 no limite 9.99 e o `dryer` não acha candidato com nota 0.8 ou mais (AD-018, acrescentado na construção: o gate vale para todo `web/` e faltava como check). Se o `crapper` seguir bloqueado neste computador (AD-044), o check fica aberto como "não rodou", nunca como PASS
+Proof: `npm --prefix web run coverage; cd web; crapper --use-existing-coverage -s src --threshold 9.99`
+Proof: `cd web; dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao --threshold 0.8 src/App.tsx src/Autenticado.tsx src/api.ts src/chamado.ts src/datas.ts src/sessao.ts`
 
 ## Coverage
 

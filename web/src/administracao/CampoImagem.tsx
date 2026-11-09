@@ -3,9 +3,10 @@ import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 
 // Uma imagem da aparência: a miniatura (a escolhida e ainda não salva, ou a salva), "Enviar imagem" e "Remover" (AC 21, AC 24).
-export function CampoImagem({ rotulo, dica, miniatura, escolher, remover, erro }: {
+export function CampoImagem({ rotulo, dica, extra, miniatura, escolher, remover, erro }: {
   rotulo: string
   dica: string
+  extra?: string
   miniatura?: string
   escolher: (arquivo: File) => void
   remover: () => void
@@ -44,6 +45,7 @@ export function CampoImagem({ rotulo, dica, miniatura, escolher, remover, erro }
         />
       </div>
       <p className="m-0 text-xs text-muted-foreground">{dica}</p>
+      {extra && <p className="m-0 text-xs text-muted-foreground">{extra}</p>}
       {erro && <Alert variant="destructive">{erro}</Alert>}
     </div>
   )

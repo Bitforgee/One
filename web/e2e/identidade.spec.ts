@@ -880,23 +880,19 @@ const semBordaNemFundo = (l: Locator) =>
 const esperaAparencia = (p: Page) => p.getByLabel('Cor principal').waitFor()
 const esperaDetalhe = (p: Page) => p.getByText('Resumo gerado por IA').waitFor()
 
-// C32
-test('seções da Aparência sem caixa a 32 px', async ({ page }) => {
+// C32 (emendado por aparencia-enxuta: as 4 seções viraram 5 abas; cada painel segue sem caixa)
+test('painéis da Aparência sem caixa', async ({ page }) => {
   await em(page, 1440, '/univag/aparencia', esperaAparencia)
-  const secoes = page.locator('form section[aria-labelledby]')
-  await expect(secoes).toHaveCount(4)
-  const caixas: Caixa[] = []
-  for (const [i, nome] of ['Marca', 'Login', 'Assistente', 'Contato'].entries()) {
-    const secao = secoes.nth(i)
-    await expect(secao.getByRole('heading', { level: 2 }), nome).toHaveText(nome)
-    const m = await semBordaNemFundo(secao)
+  const abas = ['Marca', 'App instalado', 'Login', 'Assistente', 'Contato']
+  await expect(page.getByRole('tab')).toHaveText(abas)
+  for (const nome of abas) {
+    await page.getByRole('tab', { name: nome }).click()
+    const painel = page.getByRole('tabpanel')
+    await expect(painel, nome).toHaveCount(1)
+    const m = await semBordaNemFundo(painel)
     expect(m.bordas, `${nome}: sem borda`).toEqual([0, 0, 0, 0])
     expect(m.transparente, `${nome}: sem fundo`).toBe(true)
-    const [s, h] = [await caixa(secao), await caixa(secao.getByRole('heading', { level: 2 }))]
-    perto(h.y, s.y, `${nome}: título no topo da seção`)
-    caixas.push(s)
   }
-  for (const [i, c] of caixas.slice(1).entries()) perto(c.y - (caixas[i].y + caixas[i].height), 32, `espaço antes da seção ${i + 1}`)
 })
 
 // A coluna do detalhe é o filho da grade que contém o bloco; a cadeia vai do bloco até ela (exclusive)
@@ -1047,15 +1043,18 @@ test('Planilha mostra as 7 colunas numa linha', async ({ page }) => {
   }
 })
 
-// C39 (a parte do Chromium)
+// C39 (a parte do Chromium; emendado por aparencia-enxuta: a prévia mostra o bloco da aba, o login na Marca e o assistente na aba Assistente)
 test('prévia com serifa e perguntas em linhas', async ({ page }) => {
   await em(page, 1440, '/univag/aparencia', esperaAparencia)
   const previa = page.getByRole('region', { name: 'Prévia' })
-  for (const texto of [Nome, 'Atendimento ao estudante · Univag']) {
+  const serifa = async (texto: string) => {
     const t = previa.getByText(texto, { exact: true })
     await expect(t, texto).toHaveCount(1)
     expect(await familia(t), `${texto}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
   }
+  await serifa(Nome)
+  await page.getByRole('tab', { name: 'Assistente' }).click()
+  await serifa('Atendimento ao estudante · Univag')
   for (const pergunta of Perguntas) {
     const linha = previa.getByText(pergunta, { exact: true }).locator('xpath=ancestor::li[1]')
     await expect(linha, pergunta).toHaveCount(1)

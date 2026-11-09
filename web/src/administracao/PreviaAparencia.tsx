@@ -1,10 +1,12 @@
 import { ChevronRight, MessageCircleQuestion } from 'lucide-react'
-import type { CSSProperties } from 'react'
-import { Sigla } from '../aparencia'
+import type { CSSProperties, ReactElement } from 'react'
+import { iniciais, Sigla } from '../aparencia'
 import { Button } from '../ui/button'
+import type { IdAba } from './abasDaAparencia'
 
-export type ImagensDaPrevia = { logo?: string; login?: string; assistente?: string }
+export type ImagensDaPrevia = { logo?: string; icone?: string; login?: string; assistente?: string }
 export type DadosDaPrevia = {
+  aba: IdAba
   nome: string
   nomeCurto: string
   cor: string
@@ -14,6 +16,9 @@ export type DadosDaPrevia = {
   assistenteNome: string
   boasVindas: string
   perguntas: string[]
+  contatoHorario: string
+  contatoTelefone: string
+  contatoEmail: string
   imagens: ImagensDaPrevia
 }
 
@@ -41,7 +46,7 @@ function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
 
 function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
   return (
-    <div className="flex flex-col items-start gap-2 border-t pt-4">
+    <div className="flex flex-col items-start gap-2">
       <p className="m-0 font-heading text-xl font-semibold">{`Atendimento ao estudante · ${d.nomeCurto.trim() || d.nome}`}</p>
       <p className="m-0 text-muted-foreground">{d.boasVindas || 'Respostas com base nas normas da instituição.'}</p>
       <div className="flex items-center gap-2 text-muted-foreground">
@@ -61,14 +66,58 @@ function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
   )
 }
 
-// Uma réplica pequena do login e do balão do assistente com os valores do formulário, antes de salvar (AC 24).
+// Uma réplica pequena do que a aba atual muda, com os valores do formulário, antes de salvar (AC 10, AC 24 de aparencia-instituicao).
+// O ícone do app: o escolhido, o salvo ou o do One.
+function PreviaDoApp({ d }: { d: DadosDaPrevia }) {
+  const icone = d.imagens.icone ?? '/icons/icon-192.png'
+  const nomeDoApp = (d.nomeCurto.trim() || iniciais(d.nome)).slice(0, 12)
+  return (
+    <div className="flex flex-col gap-4">
+      <section aria-label="Tela inicial" className="flex flex-col items-center gap-1">
+        <p className="m-0 self-start text-muted-foreground">Tela inicial</p>
+        <img data-testid="icone-do-app" src={icone} alt="" className="size-14 rounded-xl border object-cover" />
+        <span className="text-xs">{nomeDoApp}</span>
+      </section>
+      <section aria-label="Janela do computador" className="flex flex-col gap-1">
+        <p className="m-0 text-muted-foreground">Janela do computador</p>
+        <div data-testid="barra-do-app" className="flex items-center gap-2 rounded-t-md bg-primary px-3 py-2 text-primary-foreground" style={{ backgroundColor: d.cor || undefined }}>
+          <img data-testid="icone-do-app" src={icone} alt="" className="size-4 object-cover" />
+          <span className="truncate text-xs">{d.nome}</span>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function PreviaDoContato({ d }: { d: DadosDaPrevia }) {
+  const { contatoHorario: horario, contatoTelefone: telefone, contatoEmail: email } = d
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <p className="m-0 font-heading text-xl font-semibold">Contato do atendimento</p>
+      {horario && <p className="m-0 text-muted-foreground">{horario}</p>}
+      {telefone && <a href={`tel:${telefone.replace(/\s/g, '')}`}>{telefone}</a>}
+      {email && <a href={`mailto:${email}`}>{email}</a>}
+      {!(horario || telefone || email) && <p className="m-0 text-muted-foreground">Preencha o contato para ver como o aluno o recebe.</p>}
+    </div>
+  )
+}
+
+// A aba da Marca mostra o login, que é onde a cor, o logo e o botão aparecem primeiro.
+const Blocos: Record<IdAba, (p: { d: DadosDaPrevia }) => ReactElement> = {
+  marca: PreviaDoLogin,
+  app: PreviaDoApp,
+  login: PreviaDoLogin,
+  assistente: PreviaDoAssistente,
+  contato: PreviaDoContato,
+}
+
 // A cor vai em --marca-previa só aqui dentro (index.css a transforma em --primary como o app, claro ou escuro), para o resto do app não mudar antes de salvar.
 export function PreviaAparencia({ dados: d }: { dados: DadosDaPrevia }) {
   const cor = d.cor || undefined
+  const Bloco = Blocos[d.aba]
   return (
     <div className={`flex flex-col gap-4 rounded-md border bg-card p-4 text-sm ${cor ? 'previa-marca' : ''}`} style={{ '--marca-previa': cor } as CSSProperties}>
-      <PreviaDoLogin d={d} />
-      <PreviaDoAssistente d={d} />
+      <Bloco d={d} />
     </div>
   )
 }

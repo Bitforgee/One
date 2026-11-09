@@ -23,6 +23,7 @@ const rotas = (extra: Record<string, Rota> = {}, atual: object = aparencia()) =>
     ...extra,
   })
 
+const ir = (aba: string) => userEvent.click(screen.getByRole('tab', { name: new RegExp(`^${aba}`) }))
 async function digitar(rotulo: string | RegExp, texto: string) {
   const campo = await screen.findByLabelText(rotulo)
   await userEvent.clear(campo)
@@ -83,9 +84,11 @@ describe('tela Aparência', () => {
     await userEvent.upload(screen.getByLabelText('Arquivo: Logo'), arquivo('logo.png'))
     expect(document.querySelector('[aria-label="Prévia"] img[src^="blob:"]')).not.toBeNull()
 
+    await ir('Login')
     await digitar('Título do login', 'Fale com a Univag')
     expect(previa.getByText('Fale com a Univag')).toBeInTheDocument()
 
+    await ir('Assistente')
     await digitar('Nome do assistente', 'Vagner')
     expect(previa.getByText('Atendimento ao estudante · Univag')).toBeInTheDocument()
     expect(previa.getByText('Vagner, assistente virtual')).toBeInTheDocument()
@@ -102,8 +105,9 @@ describe('tela Aparência', () => {
       },
     })
     abrir('/univag/aparencia')
-    await digitar('Nome curto', 'Univag')
     await digitar('Cor principal', Cor)
+    await ir('App instalado')
+    await digitar('Nome do app', 'Univag')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
     expect(await screen.findByText('Aparência salva.')).toBeInTheDocument()
@@ -118,12 +122,14 @@ describe('tela Aparência', () => {
   it('erro da API aparece e o formulário fica', async () => {
     rotas({ 'PUT /api/admin/aparencia': () => [400, { status: 400, detail: 'Escolha uma cor mais escura.', errors: { cor: ['Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.'] } }] })
     const { unmount } = abrir('/univag/aparencia')
-    await digitar('Título do login', 'Fale com a Univag')
     await digitar('Cor principal', hex('767676'))
+    await ir('Login')
+    await digitar('Título do login', 'Fale com a Univag')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
     const erro = await screen.findByText('Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.')
-    expect(erro.closest('div')).toContainElement(screen.getByLabelText('Cor principal')) // abaixo do campo de cor
+    expect(erro.closest('div')).toContainElement(screen.getByLabelText('Cor principal')) // abaixo do campo de cor, na aba Marca que a tela abre sozinha
     expect(screen.getByLabelText('Cor principal')).toHaveValue(hex('767676'))
+    await ir('Login')
     expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
     unmount()
 
@@ -133,15 +139,17 @@ describe('tela Aparência', () => {
         'POST /api/admin/aparencia/imagens/logo': () => [status, { status, title: 'Erro', detail }],
       })
       const montada = abrir('/univag/aparencia')
-      await digitar('Título do login', 'Fale com a Univag')
       await userEvent.upload(await screen.findByLabelText('Arquivo: Logo'), arquivo('logo.png'))
+      await ir('Login')
+      await digitar('Título do login', 'Fale com a Univag')
       await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
       const alerta = await screen.findByRole('alert')
       expect(alerta, String(status)).toHaveTextContent(detail)
       expect(alerta.closest('div')!.parentElement).toContainElement(screen.getByRole('button', { name: 'Enviar imagem: Logo' })) // no bloco da imagem
-      expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
       expect(document.querySelector('img[alt="Miniatura: Logo"]')).toHaveAttribute('src', 'blob:imagem-nova') // a escolhida continua
       expect(screen.queryByText('Aparência salva.')).not.toBeInTheDocument()
+      await ir('Login')
+      expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
       montada.unmount()
     }
   })
@@ -194,7 +202,7 @@ describe('tela Aparência', () => {
       const botao = await screen.findByRole('button', { name: 'Ver prévia' })
       expect(screen.queryByRole('region', { name: 'Prévia' })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
-      expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Marca', 'Login', 'Assistente', 'Contato'])
+      expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Marca', 'App instalado', 'Login', 'Assistente', 'Contato'])
       fireEvent.click(botao)
       expect(within(await screen.findByRole('dialog', { name: 'Prévia' })).getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     } finally {
@@ -204,8 +212,8 @@ describe('tela Aparência', () => {
 
   // C70 (AC 15, AC 21)
   it('as 4 imagens com miniatura, enviar e remover', async () => {
-    const tipos = [['logo', 'Logo'], ['icone', 'Ícone do app'], ['login', 'Imagem do login'], ['assistente', 'Foto do assistente']] as const
-    for (const [tipo, rotulo] of tipos) {
+    const tipos = [['logo', 'Logo', 'Marca'], ['icone', 'Ícone do app', 'App instalado'], ['login', 'Imagem do login', 'Login'], ['assistente', 'Foto do assistente', 'Assistente']] as const
+    for (const [tipo, rotulo, aba] of tipos) {
       const imagens = { logo: null, icone: null, login: null, assistente: null, [tipo]: 7 }
       const chamadas = rotas({
         'GET /api/admin/aparencia': () => [200, aparencia({ imagens })],
@@ -214,6 +222,8 @@ describe('tela Aparência', () => {
         [`DELETE /api/admin/aparencia/imagens/${tipo}`]: () => [204, undefined],
       })
       const { unmount } = abrir('/univag/aparencia')
+      await screen.findByLabelText('Cor principal')
+      await ir(aba)
       expect(await screen.findByRole('img', { name: `Miniatura: ${rotulo}` }), tipo).toHaveAttribute('src', `/api/instituicoes/univag/imagens/${tipo}?v=7`)
       expect(screen.getByRole('button', { name: `Enviar imagem: ${rotulo}` })).toBeInTheDocument()
       // sem versão nos outros 3 tipos: nem miniatura nem "Remover"
