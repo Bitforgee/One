@@ -112,6 +112,10 @@ test.describe('editor de fluxo na casca', () => {
       centros.push(b.y + b.height / 2)
     }
     expect(Math.max(...centros) - Math.min(...centros), JSON.stringify(centros)).toBeLessThanOrEqual(2)
+    // da esquerda para a direita: Voltar, estado, visões, Simular, Salvar rascunho, Publicar, Mais
+    const xs: number[] = []
+    for (const c of controles) xs.push((await caixa(c)).x)
+    expect(xs, JSON.stringify(xs)).toEqual([...xs].sort((a, b) => a - b))
     await expect(e.getByRole('button', { name: 'Cancelar' })).toHaveCount(0)
   })
 

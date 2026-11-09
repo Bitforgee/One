@@ -105,6 +105,18 @@ describe('editor de fluxo na casca', () => {
     expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/fluxos/6/publicar', {}]])
   })
 
+  // C7 (Descartar): aviso e destino
+  it('avisos ao descartar', async () => {
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
+    abrir('/univag/cadastros/fluxos/6')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Mais' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
+    expect(await screen.findByText('Rascunho descartado.')).toBeInTheDocument()
+    await semEditor()
+    expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
+    expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
+  })
   // C8
   it('salvar fica no editor', async () => {
     montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })

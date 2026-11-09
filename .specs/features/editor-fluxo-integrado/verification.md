@@ -1,0 +1,100 @@
+# Editor de fluxo dentro da casca - verification
+
+**Verdict**: FAIL
+**Profile**: ui
+**Diff range**: 9d80016..HEAD (8579e27)
+**Round**: 1 - full
+**Verifier**: independent sub-agent (author != verifier)
+
+Resumo: 18 de 21 checks PASS; 3 não PASS: C7 (o fim "Descartar rascunho" não tem prova do destino nem do aviso; mutante sobreviveu), C14 (a ordem dos controles é afirmada pelo check e nenhum teste a mede; mutante sobreviveu), C21 (`crapper` NÃO RODOU, AD-044; `dryer` saiu 0).
+
+## Binding sources
+
+| Source | Opened | Contradiction | Uncovered |
+| --- | --- | --- | --- |
+| `.playwright-mcp/cad-depois-canvas2.png` (estado antigo, 1440x900) | yes - imagem aberta | none: o antigo tem "Editar: Fluxos" + "Boletos · ADS, 3º semestre" no topo, sem casca, botão `Cancelar`, canvas até ~780 px com ~120 px vazios, painel "Simular um aluno" sem moldura. O novo retira a `Cancelar`, põe a casca e preenche a altura, como o plano pede | - |
+| print real do editor novo, 1440x900, dev server + API simulada (mesma preparação de `editor-fluxo.spec.ts`; arquivo temporário apagado) | yes - imagem aberta | none. Vejo: barra lateral da instituição à esquerda com "Cadastros" ativo e o título "Cadastros" no cabeçalho; trilha `Cadastros › Fluxos › Financeiro > Boletos e mensalidades · Todos os cursos`; uma barra com `Voltar`, selo `Publicado v2`, abas `Lista`/`Canvas`, e à direita `Simular`, `Salvar rascunho`, `Publicar`, `Mais`; o canvas vai até ~12 px do fim da janela; à direita o painel "Simular um aluno" com os dois seletores; sem `Cancelar`. O texto da trilha difere do antigo só porque a fixture é outra. Os cartões dos nós aparecem pequenos (enquadramento do `fitView`), o que nenhum check fixa | Ordem dos controles na barra: o check C14 diz "nesta ordem ... e o botão `Voltar`" (Voltar ao fim); o código e o print põem `Voltar` primeiro e nenhum teste mede a ordem (ver C14). Zoom/tamanho dos nós no canvas: sem check (cosmético) |
+| plan.md `Surface` (200/404/403), `Landing` (endereço), `Criteria` AC 1-17 | yes - lidos | none (C20 e Surface: o plano já diz "a casca leva à tela inicial", a emenda do builder em C20 acompanha o plano) | - |
+| n8n: community.n8n.io "canvas improvements" (focus panel) e blog "Autosave" | não reabertas (fontes externas só de motivação; o plano as cita como justificativa, nenhum check as copia literalmente) | none - painel lateral à direita com o diagrama à vista e salvar separado de publicar batem com AC 12/13/8 | - |
+
+## Checks
+
+Provas rodadas em HEAD, em um comando por alvo. Vitest: `npx vitest run src/administracao/paginaDoFluxo.test.tsx src/administracao/fluxos.test.tsx --reporter=verbose` - 20 passed, cada nome aparece no relatório. Playwright (dev server em 5173): `$env:E2E_URL='http://localhost:5173'; npx playwright test editor-fluxo.spec.ts` - 9 passed. Os 13 testes de `paginaDoFluxo.test.tsx` e os 7 de `fluxos.test.tsx` existem (`rg`/Select-String nas linhas `it(` 42-206 e 52-199).
+
+| Check | Claim | Proof run | Evidence | Result |
+| --- | --- | --- | --- | --- |
+| C1 | editor em região, sem diálogo, barra lateral, URL `/univag/cadastros/fluxos/7` | vitest `abre na casca sem diálogo` + playwright `endereço do editor` exit 0 | `paginaDoFluxo.test.tsx:42-54` (`expect(screen.queryByRole('dialog')).not.toBeInTheDocument()`); `editor-fluxo.spec.ts:46` `expect(new URL(page.url()).pathname).toBe('/univag/cadastros/fluxos/7')`, `:47` `getByRole('dialog')).toHaveCount(0)` | PASS |
+| C2 | trilha com hrefs e item atual | vitest `trilha do editor` | `paginaDoFluxo.test.tsx:61` `toHaveAttribute('href', '/univag/cadastros')`, `:62` `'/univag/cadastros?aba=fluxos'`, `:64` `toHaveAttribute('aria-current', 'page')`. Emenda `?aba=fluxos`: não enfraquece (é o que o AC 2 diz) | PASS |
+| C3 | abre direto e recarrega, 2 etapas | vitest `abre direto pelo endereço` + playwright `recarregar mantém o editor` | `paginaDoFluxo.test.tsx:68-76` (`Destino da etapa 1` = LIDERANCA_SEMESTRE, `etapa 2` = COORDENACAO_CURSO, 3 ausente); `editor-fluxo.spec.ts:56-57` `toHaveValue(...)` | PASS |
+| C4 | id 999: mensagem e link, sem editor | vitest `fluxo inexistente` | `paginaDoFluxo.test.tsx:81`, `:82` `toHaveAttribute('href', '/univag/cadastros?aba=fluxos')`, `:83` região ausente | PASS |
+| C5 | Voltar do navegador leva à aba Fluxos | playwright `voltar do navegador` | `editor-fluxo.spec.ts:68` `expect(editor(page)).toHaveCount(0)`, `:71` `toBe('/univag/cadastros?aba=fluxos')`, `:70` aba `aria-selected` `true` | PASS |
+| C6 | menu ativo e `h1` Cadastros | vitest `menu ativo e título` | `paginaDoFluxo.test.tsx:92` `expect(doMenu).toHaveAttribute('aria-current', 'page')`, `:93` `h1` `toHaveTextContent('Cadastros')` | PASS |
+| C7 | Publicar e Descartar voltam à aba Fluxos e mostram `Fluxo publicado.` / `Rascunho descartado.` | vitest `simular e publicar`, `descartar o rascunho`, `avisos ao voltar à lista` exit 0 | Publicar: `paginaDoFluxo.test.tsx:102-104` (`findByText('Fluxo publicado.')`, `findByRole('tab', {name:'Fluxos', selected:true})`). **Descartar**: `fluxos.test.tsx:153-154` só espera o DELETE e que a região suma; `Rascunho descartado.` aparece só em `EdicaoDoFluxo.tsx:269`, em nenhum teste (`Select-String "Rascunho descartado"` em `web/src/administracao/*.tsx`). Mutante F5b (`navegar(lista)` no Descartar) sobreviveu: `fluxos.test.tsx -t "descartar o rascunho"` passou (1 passed) | FAIL |
+| C8 | salvar fica no editor, `Rascunho salvo.` e estado | vitest `salvar fica no editor` | `paginaDoFluxo.test.tsx:109-121`: `findByText('Rascunho salvo.')`, região presente, `getByText('Rascunho salvo')` | PASS |
+| C9 | guarda de saída com 3 saídas; Continuar mantém; Sair leva à lista | vitest `sair sem salvar` | `paginaDoFluxo.test.tsx:131` `findByRole('dialog', { name: 'Sair sem salvar?' })`, laço sobre trilha Fluxos, trilha Cadastros e Voltar; `:139-141` Sair leva à aba Fluxos. Mutante F2 morto | PASS |
+| C10 | sem alterações e após salvar não pergunta | vitest `sair sem alterações` | `paginaDoFluxo.test.tsx:152` aba Fluxos selecionada, `:162` `queryByRole('dialog', { name: 'Sair sem salvar?' })` ausente | PASS |
+| C11 | `beforeunload` `defaultPrevented` com/sem alterações | vitest `fechar a aba com alterações` | `paginaDoFluxo.test.tsx:174` `return ev.defaultPrevented`, `:177` `toBe(false)`, `:178` `toBe(true)`. Mutante F3 morto | PASS |
+| C12 | 1440x900 e 1280x800: base a ≤16 px, painel 320±1, sem rolagem | playwright `canvas ocupa a página` | `editor-fluxo.spec.ts:80` `toBeLessThanOrEqual(16)`, `:82` `Math.abs(painel.width - 320)` `<= 1`, `:85` `scrollHeight/clientHeight` `toEqual([altura, altura])`. Mutantes F6 e F7 mortos | PASS |
+| C13 | painel troca entre `Simular um aluno` e `Etapa selecionada`, dentro da janela | playwright `painel lateral troca` | `editor-fluxo.spec.ts:98` `expect(simular).toHaveCount(0)`, `:100-101` painel dentro de 0..900. Mutante F8 morto | PASS |
+| C14 | barra: estado, visões, Simular, Salvar, Publicar, Mais, Voltar, nesta ordem; sem Cancelar; mesmo centro vertical ≤2 px | vitest `barra do editor` + playwright `barra em uma linha` exit 0 | Presença: `paginaDoFluxo.test.tsx:182-192` (`Publicado v2`, 5 botões, `:188` abas `['Lista','Canvas']`, `:189` sem `Cancelar`); alinhamento: `editor-fluxo.spec.ts:114` `Math.max(...centros) - Math.min(...centros)` `<= 2`, `:115` Cancelar ausente. **A ordem não é medida**: o vitest usa `getByRole` sem posição e o e2e só compara centros. Mutante F10 (selo de estado movido para depois das visões, antes das ações) sobreviveu: `barra em uma linha` 1 passed e `barra do editor` 1 passed. Emenda do builder (topos ≤8 px -> centros ≤2 px): não enfraquece, é mais estrita e mede a mesma "uma linha". | FAIL |
+| C15 | lista em 1440: coluna ≤768 e simulador abaixo da última etapa | playwright `lista na largura de leitura` | `editor-fluxo.spec.ts:125` `toBeLessThanOrEqual(768 + 1)`, `:126` `simulacao.y >= ultima.y + ultima.height - 1` | PASS |
+| C16 | 390 px: página, Lista, frase, simulador abaixo, botões ≥44 px | playwright `celular em página` | `editor-fluxo.spec.ts:135` sem diálogo, `:138` simulador abaixo, `:139` `.height` `toBeGreaterThanOrEqual(43.9)`. Mutante F9d (frase removida) morto. F9 (tirar `min-h-11` só do Voltar) sobreviveu, mas a regra global de alvo de toque do app (`ux.spec.ts` 44 px) cobre o botão, então a classe é redundante: mutante equivalente, anotado, não conta como falha | PASS |
+| C17 | 390 px: barra em mais de uma linha, sem rolagem lateral | playwright `celular sem rolagem lateral` | `editor-fluxo.spec.ts:145` `toEqual([390, 390])`, `:149` `topos.size` `toBeGreaterThan(1)`. Mutante F9e (sem `flex-wrap`) morto; F9b (só o `flex-wrap` externo) sobreviveu porque o grupo de ações interno também quebra (equivalente) | PASS |
+| C18 | rota `/:slug/cadastros/fluxos/:id` com id numérico, declarada uma vez | vitest `endereço do editor` | `paginaDoFluxo.test.tsx:198` `/fluxos/abc` -> `Fluxo não encontrado.`, `:201` região ausente, `:202` `expect(app.match(/path="cadastros\/fluxos\/:id"/g)).toHaveLength(1)`; `App.tsx:71` `<Route path="cadastros/fluxos/:id" ...>`; `PaginaDoFluxo.tsx` `/^\d+$/.test(id)` | PASS |
+| C19 | nada além do planejado quebra | `npx vitest run` (65 files, 602 passed, 0 failed); `npm --prefix web run build` exit 0; playwright dos 5 specs: 165 passed, 5 failed | As 5 falhas são exatamente as de ambiente conhecidas: `identidade.spec.ts:36` (Public Sans/Source Serif), `:304` (PWA fontes latin), `:1281` (PWA outros alfabetos), `arranjo.spec.ts:1189` (cabeçalho 36 px), `ux.spec.ts:472` (`Avisos no celular`). Rodei contra o dev server; **não consegui reprová-las na base** (não montei worktree da base), a classificação é pela lista dada e porque todas esperam o app compilado/service worker e não tocam fluxos. `git diff 9d80016..HEAD -U0` nos testes existentes (`canvas.test.tsx`, `fluxos.test.tsx`, `textos.test.tsx`, `fluxos.spec.ts`, `fluxos-real.spec.ts`, `ux.spec.ts`): só trocas dialog->region (`canvas.test.tsx:41`, `fluxos.test.tsx:47`, `fluxos.spec.ts:25`, `fluxos-real.spec.ts:164`, `ux.spec.ts:1190`), `Cancelar`->`Voltar` (`canvas.test.tsx:196`, `fluxos.spec.ts:165`), `w-screen`->sem diálogo (`canvas.test.tsx:302`), esperas de diálogo->região (`fluxos.test.tsx:133,154`), `'Editar: Fluxos'` fora da lista de textos e `'Voltar'` somado (`textos.test.tsx:25,30`). Nenhuma asserção de regra removida. Extra do builder: `ux.spec.ts:700` abre a transcrição recolhida do assistente (resto da feature `chat-linha-do-tempo` C17), fora do escopo deste plano, mas inofensivo (só adiciona um clique) | PASS |
+| C20 | atendente que abre o editor volta à Fila | vitest `sem o papel de administrador` | `paginaDoFluxo.test.tsx:209` `findByRole('heading', { level: 1, name: 'Fila' })`, `:210` região ausente. Emenda (Fila em vez de página de acesso negado): alinhada ao `Surface` do plano ("a casca leva à tela inicial"), não enfraquece | PASS |
+| C21 | `crapper` < 9.99 e `dryer` sem candidato 0.8 | `dryer -s ... --threshold 0.8 ...` exit 0: "No duplicate candidates found."; `crapper --version`: `Program 'crapper.exe' failed to run ... Uma política de Controle de Aplicativo bloqueou este arquivo.` | metade `dryer`: PASS. metade `crapper`: **NÃO RODOU** (AD-044). O check diz que fica aberto como "não rodou", nunca PASS | FAIL (crapper não rodou) |
+
+## Coverage
+
+Recomputado dos critérios 1-17 do plano, do `Surface` e do `Landing`, não da tabela de `checks.md`.
+
+| Set (size) | Recomputed from | Member -> proof | Unproven |
+| --- | --- | --- | --- |
+| critérios do plano (17) | plan.md Criteria AC 1-17 | AC1 C1 · AC2 C2 · AC3 C3 · AC4 C4 · AC5 C5 · AC6 C6 · AC7 C7 (Publicar sim; Descartar sem destino e sem aviso) · AC8 C8 · AC9 C9 · AC10 C10 · AC11 C11 · AC12 C12 · AC13 C13 · AC14 C14 (ordem sem medida) · AC15 C15 · AC16 C16 · AC17 C17 | AC 7, parte Descartar (destino aba Fluxos e aviso `Rascunho descartado.`); AC 14, ordem dos controles |
+| `Surface` tela `/:slug/cadastros/fluxos/:id` (3) | plan.md Surface | 200 C1,C3 · 404 C4 (e C18 para id não numérico) · 403/redirect C20 | - |
+| fim de uma gravação (3) | `EdicaoDoFluxo.tsx:267-269` (`salvar`, `publicar`, `descartar`) | Salvar C8 · Publicar C7 | Descartar (destino e aviso) |
+| formas de sair do editor (5) | plan AC 5, 9, 11 | trilha Cadastros, trilha Fluxos, Voltar C9 · Voltar do navegador C5 · fechar a aba C11 | - |
+| painel lateral (2) | plan AC 13 | C13 | - |
+| visões (2) | plan AC 12, 15 | Canvas C12 · Lista C15 | - |
+| larguras (4) | plan AC 12, 14-17 | 390 C16,C17 · 1280 e 1440 C12 · lista 1440 C15 · barra 1440 C14 | - |
+| doors do `Landing` (1) | plan.md Landing | endereço do editor C18 | - |
+
+## Test policy rows
+
+| Row | Files it classifies | Required proof | Expectation met |
+| --- | --- | --- | --- |
+| Decide, na tela (achar o fluxo pelo id, guarda de saída, para onde cada fim de gravação volta) | `PaginaDoFluxo.tsx`, `EdicaoDoFluxo.tsx` (`sair`, `publicar`, `descartar`) | Vitest na própria camada, um caso por linha da tabela de decisão | no - falta o caso "Descartar volta à aba Fluxos com o aviso" (F5b sobreviveu); achar o fluxo (F1), guarda (F2), `beforeunload` (F3), trilha (F4) e destino do Publicar (F5) mortos |
+| Arranjo (alturas, larguras, uma linha, painel de 320 px) | `EdicaoDoFluxo.tsx` (altura), `Canvas.tsx` (`lg:w-80`, painel), barra | Playwright com `boundingBox`, cada largura do plano | yes - 390, 1280, 1440 medidos; altura (F6), largura do painel (F7), troca de painel (F8) e quebra da barra (F9e) mortos; a ordem dos controles não é medida (ver C14) |
+| Instrumentation (classes, ícones, textos fixos) | `Trilha`, `MaisAcoes`, textos | nenhuma própria | yes |
+
+## Faults injected
+
+Feitas na árvore real, uma de cada vez, revertidas com `git checkout -- <arquivo>`; `git status --porcelain` depois de cada rodada só mostrou os `demo-live-*.png` não rastreados que já existiam antes de eu começar.
+
+| Mutation | Location | Killed |
+| --- | --- | --- |
+| F1 PaginaDoFluxo ignora o id (`dados.fluxos[0]`) | `PaginaDoFluxo.tsx` (find por id) | yes - `abre direto pelo endereço` e `fluxo inexistente` falharam (2 failed) |
+| F2 `sair` sempre navega (`navegar(destino)`) | `EdicaoDoFluxo.tsx` `sair` | yes - `sair sem salvar` falhou |
+| F3 `useAvisoAoFechar(false)` | `EdicaoDoFluxo.tsx` | yes - `fechar a aba com alterações` falhou |
+| F4 href da trilha `?aba=fluxo` | `EdicaoDoFluxo.tsx` `fluxos` | yes - `trilha do editor` falhou |
+| F5 Publicar volta à lista sem aba (`navegar(lista)`) | `EdicaoDoFluxo.tsx` `publicar` | yes - `avisos ao voltar à lista` falhou |
+| F5b Descartar volta à lista sem aba (`navegar(lista)`) | `EdicaoDoFluxo.tsx:269` `descartar` | **no** - `fluxos.test.tsx -t "descartar o rascunho"`: 1 passed |
+| F6 altura do canvas `lg:h-[calc(100dvh-200px)]` | `EdicaoDoFluxo.tsx` | yes - `canvas ocupa a página`: base do canvas 140 > 16 |
+| F7 `lg:w-80` -> `lg:w-64` | `Canvas.tsx` | yes - `canvas ocupa a página`: painel 64 px fora de 1 px |
+| F8 painel da etapa e simulador juntos | `Canvas.tsx` `<aside>` | yes - `painel lateral troca`: `toHaveCount(0)` recebeu 1 |
+| F9 tirar `min-h-11` do Voltar | `EdicaoDoFluxo.tsx` | no (equivalente: regra global de 44 px; anotado, não conta) |
+| F9b tirar só o `flex-wrap` externo da barra | `EdicaoDoFluxo.tsx` `BarraDoEditor` | no (equivalente: o grupo de ações interno também quebra; anotado) |
+| F9d remover a frase "O canvas está disponível..." | `EdicaoDoFluxo.tsx` | yes - `celular em página` falhou |
+| F9e remover todo `flex-wrap` da barra | `EdicaoDoFluxo.tsx` | yes - `celular sem rolagem lateral` falhou |
+| F10 selo de estado depois das visões e antes das ações | `EdicaoDoFluxo.tsx` `BarraDoEditor` | **no** - `barra em uma linha` 1 passed e `barra do editor` 1 passed |
+
+## Gate
+
+`cd web && npx vitest run` - 65 files, 602 passed, 0 failed. `npm --prefix web run build` exit 0. `npx playwright test editor-fluxo.spec.ts` - 9 passed. Specs existentes - 165 passed, 5 failed (as 5 falhas de ambiente listadas em C19).
+
+## Ranked gaps
+
+1. C7 - `Rascunho descartado.` e o destino aba Fluxos do Descartar sem prova (`EdicaoDoFluxo.tsx:269`; `fluxos.test.tsx:153-154` só vê o DELETE e a região sumir). Falta um caso no `paginaDoFluxo.test.tsx` análogo a `avisos ao voltar à lista` (`:97-107`) para Descartar.
+2. C14 - "nesta ordem" sem medida nenhuma (mutante F10 sobreviveu). Ou o teste compara as posições x na ordem estado, visões, Simular, Salvar, Publicar, Mais, ou o check muda o texto (e diz onde fica o `Voltar`, hoje primeiro; o check o lista por último).
+3. C21 - `crapper` NÃO RODOU (bloqueio de Application Control, AD-044); precisa ser rodado em outra máquina ou aceito por AD do dono do projeto.

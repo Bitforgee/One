@@ -37,6 +37,7 @@ Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "me
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "simular e publicar"`
 Proof: `cd web && npx vitest run src/administracao/fluxos.test.tsx -t "descartar o rascunho"`
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "avisos ao voltar à lista"`
+Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "avisos ao descartar"`
 
 **C8** - Salvar rascunho aceito pela API mantém o editor na tela, mostra `Rascunho salvo.` e o estado `Rascunho salvo` (AC 8)
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "salvar fica no editor"`
@@ -61,7 +62,7 @@ Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor
 **C13** - No Canvas, sem etapa selecionada o painel lateral mostra `Simular um aluno`; selecionar uma etapa (Enter no nó) troca o título para `Etapa selecionada`; em ambos os casos o painel está inteiro dentro da janela (AC 13)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "painel lateral troca"`
 
-**C14** - A barra do editor tem, nesta ordem, o estado (`Publicado v2`), as visões `Lista` e `Canvas`, `Simular`, `Salvar rascunho`, `Publicar` e `Mais` (com `Descartar rascunho`), e o botão `Voltar`; não existe `Cancelar`; em 1440 px todos esses controles têm o mesmo centro vertical, com diferença de no máximo 2 px (uma linha; emenda do builder, anotada no relatório: era "o mesmo `y` do topo, ≤ 8 px", que o selo de estado, mais baixo, não cumpre mesmo estando na mesma linha) (AC 14)
+**C14** - A barra do editor tem, da esquerda para a direita, o botão `Voltar`, o estado (`Publicado v2`), as visões `Lista` e `Canvas`, `Simular`, `Salvar rascunho`, `Publicar` e `Mais` (com `Descartar rascunho`) (emenda do builder após a rodada 1: a ordem do texto antigo punha o `Voltar` por último, mas o plano e o código o põem primeiro); não existe `Cancelar`; em 1440 px todos esses controles têm o mesmo centro vertical, com diferença de no máximo 2 px (uma linha; emenda do builder, anotada no relatório: era "o mesmo `y` do topo, ≤ 8 px", que o selo de estado, mais baixo, não cumpre mesmo estando na mesma linha) (AC 14)
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "barra do editor"`
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "barra em uma linha"`
 
