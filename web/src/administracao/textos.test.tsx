@@ -21,7 +21,7 @@ const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas
 const Cadastros = [
   'Cadastros', 'Novo setor', 'Nova categoria', 'Novo curso', 'Novo fluxo', 'Nova resposta pronta', 'Detalhe',
   'Quem atende os chamados. Cada setor tem a sua fila.', 'Os assuntos dos chamados. Cada categoria pode ter um fluxo.', 'Os cursos da instituição e o setor que coordena cada um.', 'O caminho que o chamado percorre, etapa por etapa, até alguém responder.', 'Textos prontos que o atendente insere ao responder.',
-  'Publicado v1', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, ...(t === 'Fluxos' ? [] : [`Editar: ${t}`])]), // o editor de fluxo é uma página: o nome "Editar: Fluxos" é só acessível
+  'Publicado v1', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, ...(t === 'Fluxos' ? [] : [`Editar: ${t}`])]),
   'Triagem', 'Inativo', 'Padrão', 'Inativa', 'Coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Liderança de semestre', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
@@ -127,7 +127,7 @@ describe('textos', () => {
   it('textos Cadastros', async () => {
     const t = estados(Cadastros)
     const listas: Record<string, unknown[]> = {
-      setores: [...setores, { id: 4, nome: 'Reserva', triagem: true, ativo: false }], // triagem e inativo juntos mostram o ponto médio
+      setores: [...setores, { id: 4, nome: 'Reserva', triagem: true, ativo: false }],
       categorias: [{ id: 7, nome: 'Notas', ativa: true, padrao: false }, { id: 8, nome: 'Não classificado', ativa: true, padrao: true }, { id: 9, nome: 'Velha', ativa: false, padrao: false }],
       cursos: [{ id: 4, nome: 'ADS', setorCoordenacaoId: 2 }, { id: 5, nome: 'Direito', setorCoordenacaoId: null }],
       fluxos: [
@@ -145,7 +145,7 @@ describe('textos', () => {
     api({ 'GET /api/auth/me': () => [200, admin], ...leituras(true) })
     let montada = abrir('/univag/cadastros')
     await screen.findByText('Nenhum item cadastrado.')
-    expect(screen.getByRole('combobox', { name: 'Cadastro' })).toBeInTheDocument() // nome acessível novo, não é texto visível
+    expect(screen.getByRole('combobox', { name: 'Cadastro' })).toBeInTheDocument()
     t.conferir(tela())
     await userEvent.click(screen.getByRole('tab', { name: 'Fluxos' }))
     await screen.findByText('Sem fluxo, os chamados vão para a Triagem.')

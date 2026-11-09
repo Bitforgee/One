@@ -201,7 +201,7 @@ test.describe('S1 contraste', () => {
           ['Textarea', dialogo.getByLabel(/^Perguntas relacionadas/)],
           ['NativeSelect', dialogo.getByLabel('Categoria')],
         ]
-        await page.evaluate(() => (document.activeElement as HTMLElement).blur()) // o diálogo foca o Título, e o foco troca a borda por --ring
+        await page.evaluate(() => (document.activeElement as HTMLElement).blur())
         const fundo = await dialogo.evaluate((el) => window.__ux.pintar(window.__ux.pilha(el)))
         for (const [nome, campo] of campos) {
           await expect(campo).toHaveCount(1)
@@ -653,7 +653,7 @@ test.describe('S3 conversa', () => {
 
     await page.route('**/api/chamados/ONE-123', (r) => r.fulfill(json({ ...chamadoSimulado(), transcricao: [{ autor: 'ALUNO', texto: Longa, criadaEm: '2026-11-02T12:00:00Z' }], mensagens: [] })))
     await page.goto('/univag/chamados/ONE-123')
-    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click() // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click()
     const noChamado = page.getByText(Longa.trim().slice(0, 50))
     await expect(noChamado).toHaveCount(1)
     const d = await emCaracteres(noChamado)
@@ -764,7 +764,7 @@ test.describe('S4 listas', () => {
       await page.goto(`/univag/${rota}`)
       const linha = page.getByRole('main').getByRole('listitem').first()
       await expect(linha).toHaveCount(1)
-      const assunto = linha.locator('p', { hasText: Titulo104 }) // o assunto, com o número na frente
+      const assunto = linha.locator('p', { hasText: Titulo104 })
       await expect(assunto).toHaveCount(1)
       const a = await caixa(assunto)
       const altura = await assunto.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
@@ -1259,7 +1259,7 @@ test.describe('S6 varreduras', () => {
             if (s.backgroundColor !== 'rgba(0, 0, 0, 0)' && igual(s.backgroundColor, '#fff')) {
               const botao = el.matches('[data-slot=button][data-variant=default]')
               const sigla = el.getAttribute('aria-hidden') === 'true' && el.textContent!.trim().length <= 2
-              const amostra = el.getAttribute('data-testid') === 'amostra' || el.hasAttribute('data-amostra') // a cor que o administrador digitou ou as cores prontas, mostradas como dado do campo
+              const amostra = el.getAttribute('data-testid') === 'amostra' || el.hasAttribute('data-amostra')
               if (!botao && !ativo(el) && !sigla && !amostra) achados.push(`fundo ${rotulo}`)
             }
             if (igual(s.color, '#fff') && !el.closest('a, [data-variant=link], [aria-current=page], [data-active=true]')) achados.push(`texto ${rotulo}`)
@@ -1388,14 +1388,14 @@ test.describe('S7 acréscimos', () => {
         await emTema(page, tema, marca)
         await page.goto('/univag/indicadores')
         await page.getByText('Indicador principal').waitFor()
-        const barras = page.locator('[data-barra]') // estrutura-visual door 4: a barra é uma div com o fundo em --chart-1
+        const barras = page.locator('[data-barra]')
         await expect(barras).toHaveCount(2)
         await expect.poll(async () => (await Promise.all([0, 1].map((i) => barras.nth(i).boundingBox()))).every((b) => b && b.width > 0), `${tema} ${marca ?? 'sem cor'}: barras desenhadas`).toBe(true)
         const rotulo = `${tema} ${marca ?? 'sem cor'}`
         const [a, b] = await Promise.all([0, 1].map((i) => barras.nth(i).evaluate((e) => window.__ux.pintar(['#000', getComputedStyle(e).backgroundColor]))))
         expect(a, `${rotulo}: mesma cor nos dois`).toEqual(b)
         expect(a, `${rotulo}: não é --primary`).not.toEqual(await referencia(page, '--primary'))
-        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.parentElement!))) // o fundo é o do pai: a barra div tem fundo próprio
+        const fundo = await barras.first().evaluate((e) => window.__ux.pintar(window.__ux.pilha(e.parentElement!)))
         expect(contraste(a, fundo), `${rotulo}: contraste contra o fundo opaco mais próximo`).toBeGreaterThanOrEqual(3)
         const [r, g, bl] = a.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
         const [l, mm, ss] = [0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * bl, 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * bl, 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * bl].map(Math.cbrt)

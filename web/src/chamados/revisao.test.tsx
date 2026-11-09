@@ -25,7 +25,7 @@ describe('listas de chamados revisadas', () => {
       ['2026-11-04T15:00:00Z', '2026-11-04T13:00:00Z', 'aberto hoje', 0],
       ['2026-11-04T15:00:00Z', '2026-11-03T15:00:00Z', 'aberto ontem', 1],
       ['2026-11-04T15:00:00Z', '2026-11-01T15:00:00Z', 'aberto há 3 dias', 3],
-      ['2026-11-04T04:10:00Z', '2026-11-04T03:50:00Z', 'aberto ontem', 0], // 00h10 em Cuiabá; criado às 23h50 do dia 3
+      ['2026-11-04T04:10:00Z', '2026-11-04T03:50:00Z', 'aberto ontem', 0],
     ]
     for (const [escopo, caminho] of [['fila', '/univag/fila'], ['meus', '/univag/solicitacoes']] as const) {
       for (const [agora, criadoEm, texto, dias] of casos) {
@@ -57,7 +57,7 @@ describe('listas de chamados revisadas', () => {
     abrir('/univag/solicitacoes')
     await screen.findByText('ONE-3')
     const linha = linhas()[0]
-    expect(within(linha).getByText(passo).textContent).toBe(passo) // sem data junto
+    expect(within(linha).getByText(passo).textContent).toBe(passo)
   })
 
   it('Fila com categoria, data e Mais antigos primeiro', async () => {
@@ -172,12 +172,12 @@ describe('conversa com o assistente vista pela equipe', () => {
     })
     api({ 'GET /api/auth/me': () => [200, equipe], 'GET /api/chamados/ONE-1': () => [200, c] })
     abrir('/univag/chamados/ONE-1')
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const link = await screen.findByRole('link', { name: /portal\.univag\.edu\.br\/financeiro\/boletos\/segunda-via/ })
     expect(link).toHaveAttribute('href', url)
     expect(link.closest('[data-slot=button]')).not.toBeNull()
     const texto = screen.getByText(/^O boleto fica em/)
     expect(texto.textContent).not.toContain('https://')
-    expect(texto.parentElement).toContainElement(link) // o botão está no mesmo balão do texto
+    expect(texto.parentElement).toContainElement(link)
   })
 })

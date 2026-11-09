@@ -159,7 +159,7 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await editor.getByLabel('Prazo da etapa 1 (horas)').fill('48')
   await editor.getByRole('button', { name: 'Adicionar etapa' }).click()
   await editor.getByLabel('Destino da etapa 2').selectOption('COORDENACAO_CURSO')
-  await expect(editor.getByRole('button', { name: 'Publicar' })).toBeDisabled() // só depois de salvar o rascunho
+  await expect(editor.getByRole('button', { name: 'Publicar' })).toBeDisabled()
   await editor.getByRole('button', { name: 'Salvar rascunho' }).click()
   await expect(editor.getByRole('button', { name: 'Publicar' })).toBeEnabled()
 

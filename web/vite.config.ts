@@ -30,13 +30,13 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
-        globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*', '**/Canvas-*'], // e o pacote do canvas: só chega a quem abre o editor (fluxos-atendimento door 10)
+        globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese,latin-ext}-*', '**/Canvas-*'],
       },
     }),
   ],
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
   build: { outDir: '../One.Api/wwwroot', emptyOutDir: true },
-  server: { proxy: { '/api': { target: 'http://localhost:5226', ws: true } } }, // ws: o hub de tempo real
+  server: { proxy: { '/api': { target: 'http://localhost:5226', ws: true } } },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

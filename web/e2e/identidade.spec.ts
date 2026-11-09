@@ -6,7 +6,7 @@ test.use({ serviceWorkers: 'block' })
 
 const Sans = '"Public Sans Variable"'
 const Serifa = '"Source Serif 4 Variable"'
-const Nome = 'Centro Universitário de Várzea Grande' // o `nome` de simulada.ts
+const Nome = 'Centro Universitário de Várzea Grande'
 const Entradas = ['/univag', '/univag/primeiro-acesso', '/univag/definir-senha?token=t']
 const semFoto = { ...comAparencia, imagens: { ...comAparencia.imagens, login: null } }
 const caixa = async (l: Locator) => (await l.boundingBox())!
@@ -122,7 +122,7 @@ test('serifa só em títulos de 20 px ou mais', async ({ page }) => {
       const todos = [...document.querySelectorAll('body *')].filter(visivel)
       const permitida = (e: Element) =>
         (/^H[12]$/.test(e.tagName) && !e.closest('header')) ||
-        (e.matches('main div') && /^\d+(,\d)?%$/.test(e.textContent!.trim()) && e.children.length === 0) || // o número principal de Indicadores
+        (e.matches('main div') && /^\d+(,\d)?%$/.test(e.textContent!.trim()) && e.children.length === 0) ||
         (e.tagName === 'P' && !!e.closest('section[aria-label="Prévia"]'))
       return {
         serifas: todos.filter(serifa).map((e) => ({ tag: e.tagName, tam: parseFloat(getComputedStyle(e).fontSize), permitida: permitida(e), texto: (e.textContent ?? '').trim().slice(0, 30) })),
@@ -199,17 +199,17 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(1440, '/univag', (p) => p.getByLabel('CPF').waitFor())
   todos('"Entrar"', await quatro(page.getByRole('button', { name: 'Entrar' })), 6)
   await em(1440, '/univag/indicadores', (p) => p.getByText('Indicador principal').waitFor())
-  todos('"Consultar"', await quatro(page.getByRole('button', { name: 'Consultar' })), 6) // estrutura-visual door 4: o "Ver tabela" saiu
+  todos('"Consultar"', await quatro(page.getByRole('button', { name: 'Consultar' })), 6)
   await em(1440, '/univag/assistente', (p) => p.getByLabel('Mensagem').waitFor())
   await page.getByLabel('Mensagem').fill('preciso do boleto do semestre, onde encontro a segunda via?')
   await page.getByRole('button', { name: /Enviar/ }).click()
   await page.getByText('Isso resolveu?').waitFor()
   todos('"Falar com atendente"', await quatro(page.getByRole('button', { name: 'Falar com atendente' })), 6)
   todos('botão de link da resposta', await quatro(page.getByRole('link', { name: 'portal.univag.edu.br/financeiro/boletos/segunda-via' })), 6)
-  todos('"Enviar"', await quatro(page.getByRole('button', { name: /Enviar/ })), 6) // estrutura-visual AC 14: o Enviar escrito é um botão de 6 px
+  todos('"Enviar"', await quatro(page.getByRole('button', { name: /Enviar/ })), 6)
 
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
-  todos('"Tema" na barra', await quatro(page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Tema' })), 4) // estrutura-visual AC 8: a linha Tema do rodapé
+  todos('"Tema" na barra', await quatro(page.locator('[data-sidebar=footer]').getByRole('button', { name: 'Tema' })), 4)
   await pilula('selo "Aguardando aluno"', page.locator('[data-slot=badge]').filter({ hasText: 'Aguardando aluno' }).first())
   await em(1440, '/univag/matriculas', (p) => p.getByRole('heading', { level: 2 }).first().waitFor())
   await pilula('número "1" dos passos', page.locator('h2[id^=passo-] > span').first())
@@ -217,7 +217,7 @@ test('raio pelo papel do componente', async ({ page }) => {
   await em(1440, '/univag/chamados/ONE-123', (p) => p.getByText('Resumo gerado por IA').waitFor())
   todos('cartão "Ações"', await quatro(page.locator('[data-slot=card]').filter({ has: page.getByText('Ações', { exact: true }) })), 12)
   await em(1440, '/univag/fila', (p) => p.getByText('ONE-123').waitFor())
-  todos('caixa da tabela da Fila', await quatro(page.locator('[data-slot=table-container]').locator('..')), 0) // estrutura-visual AC 18: sem caixa
+  todos('caixa da tabela da Fila', await quatro(page.locator('[data-slot=table-container]').locator('..')), 0)
   await em(1440, '/univag/aparencia', (p) => p.getByLabel('Cor principal').waitFor())
   todos('painel da região "Prévia"', await quatro(page.getByRole('region', { name: 'Prévia' }).locator('> *').first()), 12)
   await em(390, '/univag/artigos', (p) => p.getByText('ARQUIVADO').first().waitFor())
@@ -252,7 +252,7 @@ test('pílula só em avatar, botão de ícone, selo e passo', async ({ page }) =
           const rotulo = (e: Element) => `${e.tagName}${e.getAttribute('aria-label') ? `[${e.getAttribute('aria-label')}]` : ''}: ${(e.textContent ?? '').trim().slice(0, 25)}`
           const cantos = (e: Element) => ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius'].map((p) => parseFloat(getComputedStyle(e)[p as 'borderTopLeftRadius']))
           const permitida = (e: Element) =>
-            e.tagName === 'IMG' || // a foto do assistente
+            e.tagName === 'IMG' ||
             e.matches('[data-slot=badge]') ||
             e.matches('button[aria-label*=avisos]') ||
             e.matches('h2[id^=passo-] > span')

@@ -158,7 +158,7 @@ describe('acesso', () => {
     expect(todas['@tailwindcss/vite']).toBe('4.3.4')
     expect(todas['lucide-react']).toBe('1.66.0')
     expect(todas['@tanstack/react-query']).toBe('5.105.3')
-    expect(todas['vaul']).toBeUndefined() // layout-painel C38: a gaveta Vaul saiu
+    expect(todas['vaul']).toBeUndefined()
     for (const proibido of ['next-themes', 'ai', '@ai-sdk/react', 'streamdown']) expect(todas[proibido], proibido).toBeUndefined()
   })
 
@@ -194,7 +194,7 @@ describe('acesso', () => {
     abrir('/univag/fila')
     const nav = await screen.findByRole('navigation')
     const links = await within(nav).findAllByRole('link')
-    expect(links.length).toBe(8) // + Aparência (AC 23)
+    expect(links.length).toBe(8)
     for (const link of links) {
       const ativo = link.textContent === 'Fila'
       expect(link.getAttribute('aria-current'), link.textContent!).toBe(ativo ? 'page' : null)
@@ -203,7 +203,7 @@ describe('acesso', () => {
   })
 
   it.each([
-    [['ALUNO'], ['Ativar avisos neste aparelho']], // estrutura-visual AC 8 e AC 13: sem Tema no topo, e o botão de menu só abaixo de 768 px
+    [['ALUNO'], ['Ativar avisos neste aparelho']],
     [['ATENDENTE'], []],
     [['ADMINISTRADOR'], []],
   ])('botões do cabeçalho por papel (%j)', async (papeis, botoes) => {
@@ -226,7 +226,7 @@ describe('acesso', () => {
       vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: escuro, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
       api({ 'GET /api/auth/me': () => [200, me()] })
       const { unmount } = abrir('/univag/trocar-senha')
-      await screen.findByRole('heading', { name: 'Trocar senha' }) // o Tema mora na barra, que abaixo de 768 px é a gaveta fechada
+      await screen.findByRole('heading', { name: 'Trocar senha' })
       expect(document.documentElement).toHaveClass(escuro ? 'dark' : 'light')
       expect(document.documentElement).not.toHaveClass(escuro ? 'light' : 'dark')
       unmount()
@@ -237,7 +237,7 @@ describe('acesso', () => {
     for (const [papel, links] of [
       ['ALUNO', ['Assistente', 'Minhas solicitações']],
       ['ATENDENTE', ['Fila', 'Indicadores']],
-      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência']], // barra-lateral-grupos: ordem dos grupos
+      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência']],
     ] as const) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
@@ -315,7 +315,7 @@ describe('acesso', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Enviar link' }))
     expect(await screen.findByText('Se o CPF estiver cadastrado, enviamos um link para o e-mail.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Enviar link' })).not.toBeInTheDocument()
-    expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.corpo)).toEqual([{ instituicao: 'univag', cpf: '12345678909' }]) // a leitura da aparência (GET) é de AC 36
+    expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => c.corpo)).toEqual([{ instituicao: 'univag', cpf: '12345678909' }])
   })
 
   it('definir senha envia o token do link e mostra Senha criada', async () => {
@@ -427,7 +427,7 @@ describe('barra lateral com grupos', () => {
     expect(grupos(nav)).toEqual(Esperado)
     for (const [nome] of Esperado) expect(within(nav).getByRole('group', { name: nome as string })).toBeInTheDocument()
     cleanup()
-    window.innerWidth = 500 // o painel lateral do celular
+    window.innerWidth = 500
     abrir('/univag/trocar-senha')
     await userEvent.click(await alternarBarra())
     const gaveta = await screen.findByRole('dialog', { name: 'Menu' })
@@ -528,7 +528,7 @@ describe('barra lateral com grupos', () => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: Todos })] })
     abrir('/univag/' + caminho)
     await screen.findByRole('heading', { level: 1, name: titulo })
-    await new Promise((r) => setTimeout(r, 50)) // dá tempo de a tela desenhar o que tiver
+    await new Promise((r) => setTimeout(r, 50))
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
 

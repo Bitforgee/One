@@ -14,7 +14,7 @@ export async function ativar(chave: string) {
   try {
     await api('/api/push/subscricao', { endpoint, chaves: { p256dh: keys?.p256dh, auth: keys?.auth } })
   } catch (e) {
-    await inscricao.unsubscribe() // sem linha no servidor a inscrição local não serve: o botão volta a "Ativar"
+    await inscricao.unsubscribe()
     throw e
   }
   return true

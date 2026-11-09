@@ -45,7 +45,7 @@ describe('editor de fluxo na casca', () => {
     const e = await editor()
     expect(e.getByLabelText('Destino da etapa 1')).toHaveValue('LIDERANCA_SEMESTRE')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getAllByRole('navigation').length).toBeGreaterThanOrEqual(2) // a barra lateral e a trilha
+    expect(screen.getAllByRole('navigation').length).toBeGreaterThanOrEqual(2)
     expect(document.querySelector('[data-sidebar=sidebar]')).not.toBeNull()
   })
 
@@ -133,7 +133,7 @@ describe('editor de fluxo na casca', () => {
       await userEvent.click(d.getByRole('button', { name: 'Continuar editando' }))
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(screen.getByRole('region', { name: 'Editar: Fluxos' })).toBeInTheDocument()
-      expect(e.getByLabelText('Destino da etapa 3')).toBeInTheDocument() // a etapa nova continua
+      expect(e.getByLabelText('Destino da etapa 3')).toBeInTheDocument()
     }
 
     await userEvent.click(e.getByRole('button', { name: 'Voltar' }))
@@ -216,7 +216,7 @@ describe('editor de fluxo na casca', () => {
     await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
     await userEvent.selectOptions(e.getByLabelText('Destino da etapa 3'), 'Coordenação do curso')
 
-    expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false) // false = o navegador não salva a página
+    expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false)
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48), etapa('COORDENACAO_CURSO')] }]]))
     expect(fireEvent.keyDown(document.body, { key: 'S', metaKey: true })).toBe(false)
     expect(gravadas(chamadas)).toHaveLength(1)
@@ -228,7 +228,7 @@ describe('editor de fluxo na casca', () => {
     const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
     abrir('/univag/cadastros/fluxos/7')
     await editor()
-    expect(fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })).toBe(true) // true = ninguém cancelou o evento
+    expect(fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })).toBe(true)
     expect(fireEvent.keyDown(document.body, { key: 's' })).toBe(true)
     expect(fireEvent.keyDown(document.body, { key: 'z', metaKey: true })).toBe(true)
     await new Promise((r) => setTimeout(r, 50))
@@ -260,8 +260,8 @@ describe('editor de fluxo na casca', () => {
     abrir('/univag/cadastros/fluxos/abc')
     expect(await screen.findByText('Fluxo não encontrado.')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cadastros') // a casca continua inteira
-    const app = readFileSync('src/App.tsx', 'utf8') // o Vitest roda na pasta web/
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cadastros')
+    const app = readFileSync('src/App.tsx', 'utf8')
     expect(app.match(/path="cadastros\/fluxos\/:id"/g)).toHaveLength(1)
   })
 

@@ -129,7 +129,7 @@ test('foco sem auréola no botão e no campo', async ({ page }) => {
     expect(await alvo.evaluate((e) => getComputedStyle(e).boxShadow), 'sem foco').toBe('none')
     await tabAte(page, alvo)
     const f = (await lerFoco(page))!
-    expect(f.estilo, 'o foco existe').toBe('solid') // controle: o contorno aparece, a sombra não
+    expect(f.estilo, 'o foco existe').toBe('solid')
     expect(f.sombra).toBe('none')
     medidas++
   }
@@ -492,7 +492,7 @@ test('borda da caixa de envio com 3:1', async ({ page }) => {
     for (const marca of DuasMarcas)
       for (const largura of [390, 1440]) {
         await abrir(page, largura, '/univag/assistente', esperaAssistente, { marca, tema, papeis: ['ALUNO'] })
-        const campo = page.getByTestId('compositor') // a borda é da caixa do compositor (chat-linha-do-tempo), não mais do campo
+        const campo = page.getByTestId('compositor')
         await expect(campo).toHaveCount(1)
         const [largBorda, borda, fundo] = (await campo.evaluate((e) => {
           const s = getComputedStyle(e)
@@ -532,7 +532,7 @@ test('Enter envia e campo vazio desabilita', async ({ page }) => {
     await expect(enviar, `"${vazio}"`).toBeDisabled()
   }
   await campo.fill('oi')
-  await expect(enviar, 'com texto').toBeEnabled() // controle: o botão habilita
+  await expect(enviar, 'com texto').toBeEnabled()
   await campo.press('Shift+Enter')
   await page.waitForTimeout(300)
   expect(envios, 'Shift+Enter não envia').toHaveLength(0)
@@ -629,7 +629,7 @@ test('barras do ranking na cor calma e sem Recharts', async ({ page }) => {
 
 test('categoria longa inteira nas 5 larguras', async ({ page }) => {
   test.setTimeout(240_000)
-  const comEspacos = 'Acadêmico > Secretaria > Declarações e históricos escolares!' // 60 caracteres
+  const comEspacos = 'Acadêmico > Secretaria > Declarações e históricos escolares!'
   const semEspacos = 'AdministrativoFinanceiroTesourariaBoletosSegundaViaAcesso202'
   expect([comEspacos.length, semEspacos.length]).toEqual([60, 60])
   const ranking = [
@@ -824,7 +824,7 @@ test('ordem do rodapé e recolher dentro da barra', async ({ page, browser }) =>
 })
 
 test('Enviar da altura do campo', async ({ page }) => {
-  test.setTimeout(90_000) // 2 páginas, sob máquina carregada
+  test.setTimeout(90_000)
   let medidas = 0
   for (const largura of [1440, 390]) {
     await abrir(page, largura, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
@@ -968,7 +968,7 @@ test('sem dica presa depois de clicar fora do menu do usuário', async ({ page }
   await usuario.hover()
   await usuario.click()
   await expect(page.getByRole('menuitem', { name: 'Sair' }), 'menu aberto').toHaveCount(1)
-  await page.waitForTimeout(400) // o clique de uma pessoa vem depois da animação de abertura
+  await page.waitForTimeout(400)
   await page.mouse.click(800, 500)
   await expect(page.getByRole('menuitem', { name: 'Sair' }), 'menu fechado').toHaveCount(0)
   for (let i = 0; i < 6; i++) {

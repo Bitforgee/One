@@ -58,7 +58,7 @@ let aluno: APIRequestContext
 let numero: string
 
 test.beforeAll(async ({ playwright, baseURL }) => {
-  test.setTimeout(240_000) // a janela do limitador pode estar ocupada pelo spec anterior
+  test.setTimeout(240_000)
   const rodada = Date.now()
   const [alunoCpf, alunoEmail] = [cpfValido(rodada), `aluno.${rodada}@e2e.one`]
   admin = await playwright.request.newContext({ baseURL })
@@ -138,8 +138,8 @@ test('Indicadores consulta o período anterior na API real', async ({ browser, b
   const dia = (a: number, m: number, d: number) => new Date(Date.UTC(a, m - 1, d)).toISOString().slice(0, 10)
   const [a, m, d] = hoje
   const [de, ate] = [dia(a, m, 1), dia(a, m, d)]
-  const anteriorAte = dia(a, m, 0) // a véspera de `de`
-  const anteriorDe = dia(a, m, 1 - d) // d dias antes de `de`
+  const anteriorAte = dia(a, m, 0)
+  const anteriorDe = dia(a, m, 1 - d)
   expect(leituras.map((l) => l.status), 'os dois GET respondem 200').toEqual([200, 200])
   expect(leituras.map((l) => new URL(l.url).search).sort()).toEqual([`?de=${anteriorDe}&ate=${anteriorAte}`, `?de=${de}&ate=${ate}`].sort())
   await contexto.close()

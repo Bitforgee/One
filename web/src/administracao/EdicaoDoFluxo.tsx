@@ -226,7 +226,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
-  const ignorarSaida = useRef(false) // Descartar e Publicar saem de propósito, sem perguntar
+  const ignorarSaida = useRef(false)
   const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && !ignorarSaida.current && currentLocation.pathname !== nextLocation.pathname)
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
@@ -242,7 +242,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
     setSimulacao(undefined)
   }
   const mudarVisao = (v: Visao) => {
-    if (v === 'canvas') setGrafo(fixarPosicoes) // o que o canvas desenha é o que a API recebe
+    if (v === 'canvas') setGrafo(fixarPosicoes)
     setVisao(v)
   }
   useAtalhoDeSalvar(() => valida && !acao.isPending && salvar())

@@ -129,7 +129,7 @@ test('aluno navega pelas abas e sai pela Conta', async ({ browser, playwright, b
 })
 
 test('atendente assume, responde e resolve no celular', async ({ browser, playwright, baseURL }) => {
-  test.setTimeout(480_000) // 6 chamadas de autenticação com o limitador de 5 por minuto (L-066): pelo menos 2 esperas de janela
+  test.setTimeout(480_000)
   const rodada = Date.now()
   const [alunoCpf, atendenteCpf] = [cpfValido(rodada), cpfValido(rodada + 7)]
   const [alunoEmail, atendenteEmail] = [`aluno.${rodada}@e2e.one`, `atendente.${rodada}@e2e.one`]

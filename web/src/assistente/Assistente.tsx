@@ -95,7 +95,7 @@ async function anexosDaUltima(conversaId: number): Promise<Anexo[]> {
     const { mensagens } = await api<{ mensagens: { autor: string; anexos: Anexo[] }[] }>(`/api/conversas/${conversaId}`)
     return mensagens.filter((m) => m.autor === 'ALUNO').at(-1)?.anexos ?? []
   } catch {
-    return [] // a mensagem já foi gravada; sem os links, o balão mostra só o texto
+    return []
   }
 }
 
@@ -423,7 +423,7 @@ export function Assistente() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [texto, setTexto] = useState('')
   const [desfecho, setDesfecho] = useState<string | null>(null)
-  const [avaliada, setAvaliada] = useState<boolean>() // só conta depois de uma resposta, e cada envio a zera
+  const [avaliada, setAvaliada] = useState<boolean>()
   const [explicar, setExplicar] = useState(false)
   const [confirmar, setConfirmar] = useState<Confirmar>()
   const { lideranca, falhou } = useLideranca(confirmar === 'atendente', conversaId, ativas, matriculaId)

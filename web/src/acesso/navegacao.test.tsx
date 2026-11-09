@@ -61,7 +61,7 @@ describe('Conta', () => {
     expect(screen.getByText('***.456.789-**')).toBeInTheDocument()
     expect(document.querySelector('main')!.textContent).not.toContain('@')
     if (esperadas.includes('Avisos no celular')) await screen.findByText('Avisos no celular')
-    else await new Promise((r) => setTimeout(r, 50)) // dá tempo da chave 404 chegar
+    else await new Promise((r) => setTimeout(r, 50))
     await waitFor(() => expect(linhas().map((l, i) => l!.startsWith(esperadas[i]))).toEqual(esperadas.map(() => true)))
     expect(linhas()).toHaveLength(esperadas.length)
   })
@@ -71,7 +71,7 @@ describe('Conta', () => {
       celular()
       api(aluno)
       abrir('/univag/conta')
-      await userEvent.click(within(await screen.findByRole('list')).getByRole('button', { name: /^Tema/ })) // o topo também tem um botão Tema
+      await userEvent.click(within(await screen.findByRole('list')).getByRole('button', { name: /^Tema/ }))
       const popover = document.querySelector('[data-slot=popover-content]') as HTMLElement
       expect(within(popover).getAllByRole('button').map((b) => b.textContent)).toEqual(['Claro', 'Escuro', 'Preto', 'Sistema'])
       await userEvent.click(within(popover).getByRole('button', { name: 'Escuro' }))

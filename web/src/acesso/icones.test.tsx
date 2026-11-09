@@ -10,7 +10,7 @@ describe('ícones do tema', () => {
     api({ 'GET /api/auth/me': () => [200, me()] })
     abrir('/univag/trocar-senha')
     const tema = await screen.findByRole('button', { name: 'Tema' })
-    expect(icone(tema)).toHaveClass('lucide-monitor') // sem tema gravado, Sistema
+    expect(icone(tema)).toHaveClass('lucide-monitor')
     await userEvent.click(tema)
     const escuro = await screen.findByRole('button', { name: 'Escuro' })
     expect(icone(escuro)).toHaveClass('lucide-moon')

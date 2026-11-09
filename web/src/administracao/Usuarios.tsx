@@ -25,7 +25,7 @@ const Papeis: [string, string][] = [
 type Ficha = Pick<Usuario, 'cpf' | 'nome' | 'email' | 'papeis' | 'setores'> & { id?: number; senhaTemporaria: string }
 type Edicao = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; setores: Setor[] }
 const Novo: Ficha = { cpf: '', nome: '', email: '', papeis: ['ATENDENTE'], setores: [], senhaTemporaria: '' }
-const daTela = (papeis: string[]) => papeis.filter((p) => Papeis.some(([valor]) => valor === p)) // OPERADOR só pelo comando
+const daTela = (papeis: string[]) => papeis.filter((p) => Papeis.some(([valor]) => valor === p))
 const ficha = (u: Usuario): Ficha => ({ id: u.id, cpf: u.cpf, nome: u.nome, email: u.email, papeis: daTela(u.papeis), setores: u.setores, senhaTemporaria: '' })
 const corpo = (u: Ficha) => ({ cpf: u.cpf, nome: u.nome, email: u.email, papeis: u.papeis, setores: u.setores, senhaTemporaria: u.senhaTemporaria || undefined })
 

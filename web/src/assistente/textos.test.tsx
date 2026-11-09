@@ -8,7 +8,7 @@ import { abrir, api, chamado, me, type Rota } from '../test/util'
 const Assistente = [
   'Assistente',
   'Suas mensagens são analisadas por um serviço externo de inteligência artificial, com servidores fora do Brasil. Não escreva CPF, matrícula, telefone ou dados de saúde.',
-  'Atendimento ao estudante · Univag', // AC 8 e AC 9: o assistente sem conversa, a frase de base, o nome e as duas perguntas de base
+  'Atendimento ao estudante · Univag',
   'Respostas com base nas normas da instituição.',
   'Assistente virtual',
   'Como emito o boleto do semestre?',

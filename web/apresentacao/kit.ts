@@ -13,7 +13,7 @@ export const Contexto = {
   locale: 'pt-BR',
   timezoneId: 'America/Cuiaba',
 }
-const Pausa = 1.2 // segundos de respiro depois de cada fala
+const Pausa = 1.2
 
 export type Passo = { id: string; texto: string; acao?: (page: Page) => Promise<void> }
 export type Cartao = { titulo: string; subtitulo?: string; nota?: string }
@@ -55,14 +55,14 @@ function camada(pulso: typeof Pulso) {
     const c = el('apr-cursor')
     if (!c) return
     c.style.display = 'block'
-    c.style.transform = `translate(${x - 3}px, ${y - 2}px)` // a ponta da seta fica no ponto do mouse
+    c.style.transform = `translate(${x - 3}px, ${y - 2}px)`
   }
   const posicionar = () => {
     const legenda = el('apr-legenda')
     if (!legenda) return
     const h1 = document.querySelector('header h1')
     const faixa = document.createRange()
-    if (h1) faixa.selectNodeContents(h1) // a largura do texto, não a do elemento
+    if (h1) faixa.selectNodeContents(h1)
     const titulo = h1 ? faixa.getBoundingClientRect() : null
     const esquerda = titulo ? titulo.right + 24 : 40
     const direita = innerWidth - (titulo ? 90 : 40)
@@ -127,7 +127,7 @@ export async function apontar(page: Page, alvo: Locator) {
 
 export async function clicar(page: Page, alvo: Locator) {
   await apontar(page, alvo)
-  await alvo.click() // o clique cai no mesmo centro, sem salto do cursor
+  await alvo.click()
 }
 
 export async function digitar(page: Page, alvo: Locator, texto: string, atraso = 55) {
@@ -178,7 +178,7 @@ export async function gravar(browser: Browser, seg: Segmento) {
   const bruto = path.join(Saida, 'bruto', seg.id)
   rmSync(bruto, { recursive: true, force: true })
   mkdirSync(pasta, { recursive: true })
-  for (const p of seg.passos) await narracao(p.texto) // sintetiza antes de começar a gravar
+  for (const p of seg.passos) await narracao(p.texto)
   const context = await browser.newContext({ ...Contexto, recordVideo: { dir: bruto, size: Tamanho } })
   await context.addInitScript(camada, Pulso)
   const page = await context.newPage()
@@ -189,7 +189,7 @@ export async function gravar(browser: Browser, seg: Segmento) {
     if (seg.selo) await selo(page, seg.selo)
     await page.mouse.move(Tamanho.width / 2, Tamanho.height / 2)
   }
-  await page.waitForTimeout(400) // fontes e animações de entrada assentam antes do corte
+  await page.waitForTimeout(400)
   await page.evaluate(() => {
     const m = document.createElement('div')
     m.id = 'apr-sinc'

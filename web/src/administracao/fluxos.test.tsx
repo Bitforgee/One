@@ -125,7 +125,7 @@ describe('fluxos', () => {
     await waitFor(() => expect(d.getByRole('button', { name: 'Publicar' })).toBeEnabled())
     await userEvent.click(d.getByRole('button', { name: 'Publicar' }))
 
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()) // voltou à lista
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
     expect(gravadas(chamadas)).toEqual([
       ['POST', '/api/admin/fluxos/6/simular', { versao: 'VIGENTE', cursoId: 4, semestre: 3 }],
       ['PUT', '/api/admin/fluxos/6/rascunho', { etapas: [{ destino: 'SETOR', setorId: 2, prazoHoras: null, x: null, y: null }, { destino: 'SETOR', setorId: null, prazoHoras: null, x: null, y: null }] }],
@@ -145,7 +145,7 @@ describe('fluxos', () => {
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
 
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]]))
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()) // voltou à lista
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
   })
 
   it('estado vazio', async () => {
@@ -165,7 +165,7 @@ describe('fluxos', () => {
 
     await userEvent.click(d.getByRole('button', { name: 'Adicionar etapa' }))
     await userEvent.selectOptions(d.getByLabelText('Destino da etapa 3'), 'Setor fixo')
-    expect(opcoes(d.getByLabelText('Setor da etapa 3'))).toEqual(['Escolha o setor', 'Triagem', 'Financeiro']) // o setor inativo não é oferecido
+    expect(opcoes(d.getByLabelText('Setor da etapa 3'))).toEqual(['Escolha o setor', 'Triagem', 'Financeiro'])
     await userEvent.selectOptions(d.getByLabelText('Setor da etapa 3'), '2')
     await userEvent.type(d.getByLabelText('Prazo da etapa 3 (horas)'), '12')
     await userEvent.click(d.getByRole('button', { name: 'Mover etapa 3 para cima' }))

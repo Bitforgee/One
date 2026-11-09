@@ -98,9 +98,9 @@ function ConfirmarRemocao({ aberto, cancelar, confirmar }: { aberto: boolean; ca
 export type CanvasProps = {
   grafo: Grafo
   setores: Setor[]
-  marcas: Record<string, string> // por id do nó: "Vai por aqui" ou "Pulada: motivo", depois de simular
+  marcas: Record<string, string>
   editar: (f: (g: Grafo) => Grafo) => void
-  lateral?: ReactNode // a coluna da direita, sob o painel da etapa (o simulador)
+  lateral?: ReactNode
 }
 
 function useEstavel<A extends unknown[]>(f: (...a: A) => void) {

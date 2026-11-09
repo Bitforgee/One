@@ -32,7 +32,7 @@ describe('um controle de período, destaques e Ver tabela', () => {
   it('um controle de período, destaques e Ver tabela: os 4 destaques', async () => {
     indicadores()
     const principal = (await screen.findByText('Indicador principal')).closest('section') as HTMLElement
-    const destaques = [principal, ...principal.nextElementSibling!.children] // 1 principal e 3 na faixa
+    const destaques = [principal, ...principal.nextElementSibling!.children]
     expect(destaques).toHaveLength(4)
     for (const cartao of destaques) {
       const [rotulo, numero, frase] = [...cartao.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent!)

@@ -9,7 +9,7 @@ export const AjudaDosAnexos = 'PDF ou foto, até 10 MB'
 export function useAnexos() {
   const [escolhidos, setEscolhidos] = useState<File[]>([])
   const [enviados, setEnviados] = useState(0)
-  const [foco, setFoco] = useState(false) // o clipe com foco mostra a ajuda
+  const [foco, setFoco] = useState(false)
   return {
     foco,
     setFoco,
@@ -52,7 +52,7 @@ export function BotaoAnexar({ anexos }: { anexos: Anexos }) {
         aria-hidden="true"
         onChange={(e) => {
           anexos.escolher([...(e.target.files ?? [])])
-          e.target.value = '' // o mesmo arquivo pode ser escolhido de novo depois de removido
+          e.target.value = ''
         }}
       />
     </>

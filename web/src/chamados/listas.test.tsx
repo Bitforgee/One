@@ -52,7 +52,7 @@ describe('listas de chamados', () => {
     expect(cabecalhos()).toEqual(['Número', 'Título', 'Categoria', 'Responsável', 'Aberto', 'Estado'])
     const celulas = within(linha).getAllByRole('cell')
     expect(celulas[0]).toHaveTextContent(/^ONE-1$/)
-    expect(celulas[1]).toHaveTextContent(/^boleto.*aberto há \d+ dias$/) // o título e, no estreito, a linha de detalhe
+    expect(celulas[1]).toHaveTextContent(/^boleto.*aberto há \d+ dias$/)
     montada.unmount()
 
     lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])

@@ -114,7 +114,7 @@ describe('service worker', () => {
     vi.doMock('workbox-routing', () => ({ registerRoute, NavigationRoute }))
     vi.doMock('workbox-precaching', () => ({ cleanupOutdatedCaches: vi.fn(), createHandlerBoundToURL: vi.fn(() => 'h'), precacheAndRoute: vi.fn() }))
     vi.doMock('workbox-core', () => ({ clientsClaim: vi.fn() }))
-    Object.assign(self, { skipWaiting: vi.fn(), addEventListener: vi.fn(), __WB_MANIFEST: [] }) // o jsdom vira "worker" só aqui
+    Object.assign(self, { skipWaiting: vi.fn(), addEventListener: vi.fn(), __WB_MANIFEST: [] })
     try {
       const { Negados: lista } = await import('./sw')
       expect(registerRoute).toHaveBeenCalledTimes(1)

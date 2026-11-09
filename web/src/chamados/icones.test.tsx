@@ -22,7 +22,7 @@ describe('ícone e lista do detalhe', () => {
     const lista = await screen.findByTestId('linha-do-tempo')
     expect(lista.tagName).toBe('OL')
     expect(within(lista).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      '02/11/2026 08:00 · Ana · ABERTURA', // historico-legivel C4: tipo fora dos 9 sai cru
+      '02/11/2026 08:00 · Ana · ABERTURA',
       '02/11/2026 08:10 · Carla mudou o estado de Aberto para Em atendimento',
     ])
   })

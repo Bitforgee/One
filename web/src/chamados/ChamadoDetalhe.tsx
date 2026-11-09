@@ -90,7 +90,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   const [nota, setNota] = useState(false)
   const [aguardaAluno, setAguardaAluno] = useState(false)
   const [arquivos, setArquivos] = useState<File[]>([])
-  const [envio, setEnvio] = useState<boolean>() // cada envio troca a chave do campo de arquivo, que volta vazio
+  const [envio, setEnvio] = useState<boolean>()
   const prontas = useProntas(equipe ? c.setorId : undefined)
   if (!pode('responder') && !pode('nota')) return null
   if (equipe && ['RESOLVIDO', 'FECHADO'].includes(c.estado)) return null
@@ -412,7 +412,7 @@ function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: 
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
   const [folha, setFolha] = useState(false)
   const acao = useMutacaoDoChamado(c, carregar, setChamado)
-  const [motivo, setMotivo] = useState('') // o mesmo motivo serve à rejeição, ao encaminhamento e ao cancelamento
+  const [motivo, setMotivo] = useState('')
   const [modal, setModal] = useState<Modal>()
   const campos = useCamposDaAcao()
   const celular = useConsulta('(max-width: 1023px)')

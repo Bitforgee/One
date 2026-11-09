@@ -135,7 +135,7 @@ describe('indicadores com período anterior', () => {
     for (const texto of [/▲/, /▼/, '= sem variação', 'vs. período anterior']) expect(screen.queryByText(texto), String(texto)).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     unmount()
-    abrirCom(com(0.712), () => [200, com(0.67, { semDados: false })]) // controle: os mesmos números
+    abrirCom(com(0.712), () => [200, com(0.67, { semDados: false })])
     abrir('/univag/indicadores')
     expect(await screen.findByText('▲ 4,2 pts')).toBeInTheDocument()
   })

@@ -7,7 +7,7 @@ class ConexaoFalsa {
   state = 'Disconnected'
   starts = 0
   stops = 0
-  segurarStop = false // stop() fica em Disconnecting até concluirStop()
+  segurarStop = false
   invocacoes: unknown[][] = []
   private ouvintes = new Map<string, ((...a: any[]) => void)[]>()
   private aoCair: (() => void)[] = []
@@ -150,7 +150,7 @@ window.matchMedia ??= (media: string) =>
 
 afterEach(() => {
   cleanup()
-  toast.dismiss() // o Sonner guarda os toasts no módulo: os de um teste não passam para o seguinte
+  toast.dismiss()
   vi.unstubAllGlobals()
 })
 

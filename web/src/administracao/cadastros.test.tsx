@@ -169,7 +169,7 @@ describe('cadastros', () => {
   })
 
   it('toast de cadastro só no sucesso', async () => {
-    await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
+    await new Promise((r) => setTimeout(r, 50))
     let tentativa = 0
     cadastros({ 'PUT /api/admin/setores/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'Já existe um setor de triagem.' }] : [200, {}]) })
     const avisos = () => screen.getByRole('region', { name: /^Notificações/ })

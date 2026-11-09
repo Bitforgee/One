@@ -297,7 +297,7 @@ describe('App instalado', () => {
     abrir('/univag/aparencia?aba=app')
     await screen.findByLabelText('Nome do app')
     expect(icones()).toEqual(['/api/instituicoes/univag/imagens/icone?v=3', '/api/instituicoes/univag/imagens/icone?v=3'])
-    expect(tela().getByText('Universidade').textContent).toBe('Universidade') // sem o espaço do 13º caractere: o corte é de 12
+    expect(tela().getByText('Universidade').textContent).toBe('Universidade')
     expect(tela().queryByText('Universidade Federal')).not.toBeInTheDocument()
     expect(barra().getByText('Univag')).toBeInTheDocument()
     expect(barra().getByTestId('barra-do-app')).toHaveStyle({ backgroundColor: Cor })

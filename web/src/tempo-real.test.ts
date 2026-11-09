@@ -58,7 +58,7 @@ describe('reabrir a conexão (AC 23)', () => {
 
     visibilidade('visible')
     document.dispatchEvent(new Event('visibilitychange'))
-    await vi.advanceTimersByTimeAsync(0) // sem avançar o relógio da espera
+    await vi.advanceTimersByTimeAsync(0)
     expect(ultima().starts).toBe(2)
   })
 

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, me } from './test/util'
 
-const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] }) // com ALUNO, a guarda de papel deixa abrir /solicitacoes
+const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })
 const vazias = ['setores', 'categorias', 'cursos', 'fluxos', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, () => [200, []]] as const)
 const Listas: [string, string, string, string, string?][] = [
   ['GET /api/chamados?escopo=fila', '/univag/fila', 'Fila em dia', 'Nenhum chamado na fila dos seus setores.'],

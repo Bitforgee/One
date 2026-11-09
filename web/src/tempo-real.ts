@@ -6,7 +6,7 @@ export const UrlDaFila = '/api/chamados?escopo=fila'
 const EsperaMaxima = 30_000
 
 let conexao: HubConnection | undefined
-let geracao = 0 // cada abertura tem a sua; os retornos de uma conexão já encerrada não valem mais
+let geracao = 0
 let temporizador: ReturnType<typeof setTimeout> | undefined
 let falhas = 0
 let estado: HubConnectionState = HubConnectionState.Disconnected

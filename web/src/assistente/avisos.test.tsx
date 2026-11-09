@@ -7,7 +7,7 @@ import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 const Ativar = 'Ativar avisos neste aparelho'
 const Endpoint = 'https://push.teste/abc'
-const Chave = 'BAEC' // base64url de 3 bytes: 0x04 0x01 0x02
+const Chave = 'BAEC'
 
 function inscricao() {
   return { endpoint: Endpoint, unsubscribe: vi.fn(async () => true), toJSON: () => ({ endpoint: Endpoint, keys: { p256dh: 'P', auth: 'A' } }) }
@@ -18,7 +18,7 @@ type Opcoes = { sw?: boolean; push?: boolean; notif?: boolean; chave?: number; p
 function ambiente({ sw = true, push = true, notif = true, chave = 200, permissao = 'granted', existente = false, papeis = ['ALUNO'], rotas = {} }: Opcoes = {}) {
   const nova = inscricao()
   let atual: ReturnType<typeof inscricao> | null = existente ? nova : null
-  nova.unsubscribe = vi.fn(async () => ((atual = null), true)) // desinscrever de verdade: getSubscription passa a devolver null
+  nova.unsubscribe = vi.fn(async () => ((atual = null), true))
   const subscribe = vi.fn(async () => (atual = nova))
   const requestPermission = vi.fn(async () => permissao)
   if (sw) Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => atual, subscribe } }) } })

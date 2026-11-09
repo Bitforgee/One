@@ -62,11 +62,11 @@ describe('chamado', () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/chamados/ONE-1')
 
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     expect(await screen.findByText('O boleto fica no portal.')).toBeInTheDocument()
     expect(screen.queryByText('Resumo gerado por IA')).not.toBeInTheDocument()
     expect(screen.queryByText('Histórico')).not.toBeInTheDocument()
-    expect(within(screen.getByTestId('linha-do-tempo')).queryAllByRole('listitem')).toHaveLength(0) // historico-legivel C7: nenhum evento na sequência do aluno
+    expect(within(screen.getByTestId('linha-do-tempo')).queryAllByRole('listitem')).toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Cancelar solicitação' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Resolver' })).not.toBeInTheDocument()
   })
@@ -88,7 +88,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const antiga = (await screen.findByText('Resposta antiga.')).closest('.is-user, .is-assistant') as HTMLElement
     const nova = screen.getByText('Resposta nova.').closest('.is-user, .is-assistant') as HTMLElement
     expect(within(antiga).getByText('Boleto (versão 1)')).toBeInTheDocument()
@@ -113,7 +113,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const balao = (await screen.findByText('esse boleto está certo?')).closest('.is-user, .is-assistant') as HTMLElement
     expect(within(balao).getAllByRole('link').map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
       ['boleto.png', '/api/conversas/anexos/41'],
@@ -146,7 +146,7 @@ describe('chamado', () => {
     })
     abrir('/univag/chamados/ONE-1')
 
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const resposta = (await screen.findByText('O estágio exige 300 horas.')).closest('.is-user, .is-assistant') as HTMLElement
     const doc = within(resposta).getByText('Regulamento de estágio').closest('div.border-t') as HTMLElement
     expect(within(doc).getByRole('img', { name: 'Documento' })).toHaveClass('lucide-file-text')
@@ -171,7 +171,7 @@ describe('chamado', () => {
       ],
     })
     abrir('/univag/chamados/ONE-1')
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const resposta = (await screen.findByText('Veja o portal.')).closest('.is-user, .is-assistant') as HTMLElement
     const citacao = resposta.querySelector('blockquote')!
     expect(citacao.textContent).toBe(`“${Trecho}”`)
@@ -218,7 +218,7 @@ describe('chamado', () => {
     const lis = within(await screen.findByTestId('linha-do-tempo')).getAllByRole('listitem')
     expect(lis.map((li) => li.textContent)).toEqual([
       '01/11/2026 23:30 · Sistema abriu a solicitação',
-      '02/11/2026 08:00 · Carla assumiu a solicitação', // historico-frases AC 5
+      '02/11/2026 08:00 · Carla assumiu a solicitação',
       '02/11/2026 08:00 · Carla mudou o estado de Aberto para Em atendimento',
     ])
     for (const li of lis) expect(within(li).getByText(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/)).toHaveClass('text-muted-foreground')
@@ -313,7 +313,7 @@ describe('chamado', () => {
         { tipo: 'TRANSICAO', de: 'ABERTO', para: 'FECHADO', detalhe: 'Aluno desistiu' },
         { tipo: 'ANEXO', detalhe: 'boleto.pdf' },
         { tipo: 'ATRIBUICAO', ator: 'Sistema', de: 'Bruno', para: null, detalhe: 'Responsável desativado' },
-        { tipo: 'LEMBRETE', ator: 'Sistema', detalhe: 'Lembrete ao aluno: 3 dias aguardando resposta' }, // o agendador sempre grava o detalhe (Agendador.cs)
+        { tipo: 'LEMBRETE', ator: 'Sistema', detalhe: 'Lembrete ao aluno: 3 dias aguardando resposta' },
         { tipo: 'NOTA' },
       ]),
     ).toEqual([

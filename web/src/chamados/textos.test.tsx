@@ -81,7 +81,7 @@ const daEquipe = chamado({
 })
 const ValoresDaEquipe = [
   'Em atendimento', 'preciso do boleto', 'O boleto fica no portal.', 'Aluna pede o boleto.', 'Regulamento', 'Boleto do semestre', 'Aluno ligou.', 'Bruno', 'Boleto',
-  'Secretaria', 'Matrícula', 'Carla mudou o estado de Aberto para Em atendimento' /* historico-legivel C8 */, data('2026-11-02T12:00:00Z'), data('2026-11-02T12:10:00Z'),
+  'Secretaria', 'Matrícula', 'Carla mudou o estado de Aberto para Em atendimento' , data('2026-11-02T12:00:00Z'), data('2026-11-02T12:10:00Z'),
 ]
 
 function detalhe(c: Chamado | Rota, quem = me({ papeis: ['ATENDENTE'], matriculas: [] }), rotas: Record<string, Rota> = {}) {
@@ -116,7 +116,7 @@ describe('textos', () => {
 
     montada = detalhe(daEquipe, undefined, { 'GET /api/respostas-prontas?setorId=5': () => [200, [{ id: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]] })
     await screen.findByLabelText('Resposta pronta')
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     expect(screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')).toHaveAttribute('placeholder', 'ONE-123')
     t.conferir(tela(), [...ValoresDaEquipe, 'Boleto pronto'])
 

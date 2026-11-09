@@ -1,6 +1,6 @@
 export class ErroApi extends Error {
   status: number
-  corpo: any // o ProblemDetails inteiro, por exemplo os `erros` por linha da importação
+  corpo: any
   constructor(status: number, detail: string, corpo?: unknown) {
     super(detail)
     this.status = status

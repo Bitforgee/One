@@ -54,7 +54,7 @@ if ('skipWaiting' in self) {
     addEventListener(n: string, f: (e: any) => void): void
     skipWaiting(): void
   }
-  escopo.skipWaiting() // registerType: 'autoUpdate'
+  escopo.skipWaiting()
   clientsClaim()
   cleanupOutdatedCaches()
   precacheAndRoute(self.__WB_MANIFEST)

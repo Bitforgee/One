@@ -144,7 +144,7 @@ describe('tempo real: chamado e fila', () => {
     await comRelogio(async () => {
       const estados: [string, () => Promise<void>][] = [
         ['Disconnected', () => act(async () => conexao().fechar())],
-        ['Connecting', async () => undefined], // o start() da conexão falsa fica pendente
+        ['Connecting', async () => undefined],
         [
           'Disconnecting',
           async () => {
@@ -229,7 +229,7 @@ describe('tempo real: chamado e fila', () => {
   it('conexão que não abre mantém a releitura de 15 s sem mensagem nova', async () => {
     await comRelogio(async () => {
       for (const erro of ['Failed to fetch', 'Unauthorized']) {
-        globalThis.recusarConexao = erro // servidor fora; negotiate recusado com 401
+        globalThis.recusarConexao = erro
         const chamadas = api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => [200, chamado()] })
         const { unmount } = abrir('/univag/chamados/ONE-1')
         await screen.findByRole('heading', titulo)

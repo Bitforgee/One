@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import pacote from '../package.json'
 import main from './main.tsx?raw'
 
-const css = readFileSync('src/index.css', 'utf8') // cwd = web/ (vitest)
+const css = readFileSync('src/index.css', 'utf8')
 const tema = css.match(/@theme inline \{([^}]*)\}/)![1]
 const declarado = (token: string) => tema.match(new RegExp(token + String.raw`:\s*([^;]+);`))?.[1].trim()
 

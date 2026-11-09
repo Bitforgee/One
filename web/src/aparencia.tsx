@@ -72,7 +72,7 @@ function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined) {
   ponto('link[rel="apple-touch-icon"]', 'link', { rel: 'apple-touch-icon' }, 'href', icone)
   ponto('meta[name="theme-color"]', 'meta', { name: 'theme-color' }, 'content', d?.cor ?? null)
   ponto('link[rel="manifest"]', 'link', { rel: 'manifest' }, 'href', slug ? `/api/instituicoes/${slug}/manifest.webmanifest` : null)
-  ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', slug && d ? (d.nomeCurto ?? d.nome) : null) // o iPhone lê o nome daqui
+  ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', slug && d ? (d.nomeCurto ?? d.nome) : null)
 }
 
 export function useAparencia(slug?: string, nome = '') {

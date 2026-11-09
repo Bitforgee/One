@@ -80,7 +80,7 @@ describe('canvas', () => {
     expect(dialogo.getByText('Etapa 3')).toBeInTheDocument()
     await userEvent.click(dialogo.getByRole('tab', { name: 'Canvas' }))
     expect(await screen.findByLabelText('Etapa 3: Setor —')).toBeInTheDocument()
-    expect(screen.queryByText('Etapa 3')).not.toBeInTheDocument() // a lista some enquanto o canvas está aberto
+    expect(screen.queryByText('Etapa 3')).not.toBeInTheDocument()
 
     await pelaMenu('Liderança do semestre')
     await screen.findByLabelText('Etapa 4: Liderança do semestre')
@@ -97,7 +97,7 @@ describe('canvas', () => {
     const primeiro = noDeEtapa(1, 'Liderança do semestre')
     const segundo = noDeEtapa(2, 'Coordenação do curso (48 h)')
     expect(within(segundo).getByText('Coordenação do curso')).toBeInTheDocument()
-    expect(within(segundo).getByText('48 h')).toBeInTheDocument() // o prazo é um chip, e o nome acessível segue inteiro
+    expect(within(segundo).getByText('48 h')).toBeInTheDocument()
     expect(primeiro.compareDocumentPosition(segundo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(primeiro.querySelector('svg.lucide-users')).not.toBeNull()
     expect(segundo.querySelector('svg.lucide-graduation-cap')).not.toBeNull()
@@ -130,13 +130,13 @@ describe('canvas', () => {
       { de: Inicio, para: 'a' },
       { de: 'a', para: 'b' },
     ]
-    expect(podeLigar(ligacoes, 'b', 'c')).toBe(true) // de um nó sem saída para um nó sem entrada
-    expect(podeLigar(ligacoes, 'c', 'c')).toBe(false) // autoligação
-    expect(podeLigar(ligacoes, 'a', 'c')).toBe(false) // segunda saída
-    expect(podeLigar(ligacoes, 'c', 'b')).toBe(false) // segunda entrada
-    expect(podeLigar([{ de: 'x', para: 'y' }, { de: 'y', para: 'z' }], 'z', 'x')).toBe(false) // ciclo
-    expect(podeLigar([{ de: 'x', para: 'y' }], 'y', 'x')).toBe(false) // ciclo de dois
-    expect(podeLigar([], 'z', Inicio)).toBe(false) // o Início não tem entrada
+    expect(podeLigar(ligacoes, 'b', 'c')).toBe(true)
+    expect(podeLigar(ligacoes, 'c', 'c')).toBe(false)
+    expect(podeLigar(ligacoes, 'a', 'c')).toBe(false)
+    expect(podeLigar(ligacoes, 'c', 'b')).toBe(false)
+    expect(podeLigar([{ de: 'x', para: 'y' }, { de: 'y', para: 'z' }], 'z', 'x')).toBe(false)
+    expect(podeLigar([{ de: 'x', para: 'y' }], 'y', 'x')).toBe(false)
+    expect(podeLigar([], 'z', Inicio)).toBe(false)
   })
 
   it('cadeia inválida desliga salvar e publicar', async () => {
@@ -145,7 +145,7 @@ describe('canvas', () => {
     expect(dialogo.queryByRole('alert')).not.toBeInTheDocument()
     expect(dialogo.getByRole('button', { name: 'Salvar rascunho' })).toBeEnabled()
 
-    largar('COORDENACAO_CURSO') // um nó solto
+    largar('COORDENACAO_CURSO')
     const alerta = await dialogo.findByRole('alert')
     expect(alerta).toHaveTextContent(FraseDaCadeia)
     expect(dialogo.getByRole('button', { name: 'Salvar rascunho' })).toBeDisabled()
@@ -179,7 +179,7 @@ describe('canvas', () => {
 
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE', null, null, 288, 80), etapa('COORDENACAO_CURSO', null, 48, 576, 80)] }]]))
 
-    await userEvent.click(dialogo.getByRole('button', { name: 'Voltar' })) // salvo: sai sem perguntar
+    await userEvent.click(dialogo.getByRole('button', { name: 'Voltar' }))
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
     await abrirNoCanvas('Notas')
     expect(posicao(noDeEtapa(1, 'Setor Financeiro (24 h)'))).toContain('translate(300px,50px)')
@@ -214,7 +214,7 @@ describe('canvas', () => {
     cadastros()
     await abrirNoCanvas('Notas')
     expect(document.querySelector('.react-flow__background')).not.toBeNull()
-    expect(document.querySelector('.react-flow__background pattern circle')).not.toBeNull() // a variante de pontos, não de linhas
+    expect(document.querySelector('.react-flow__background pattern circle')).not.toBeNull()
     expect(screen.queryByRole('region', { name: 'Etapa selecionada' })).not.toBeInTheDocument()
 
     await selecionar(noDeEtapa(1, 'Setor Financeiro (24 h)'))
@@ -277,16 +277,16 @@ describe('canvas', () => {
   it('editor na página, com o estado na barra e o simulador na coluna do canvas', async () => {
     cadastros()
     const dialogo = await abrirFluxo('Boletos')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument() // chat/editor-fluxo-integrado: página da casca, sem diálogo
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(dialogo.getByText('Publicado v1')).toBeInTheDocument()
     expect(dialogo.getByRole('button', { name: 'Mais' })).toBeInTheDocument()
-    expect(dialogo.getByRole('region', { name: 'Simulação' }).closest('aside')).toBeNull() // na lista, embaixo das etapas
+    expect(dialogo.getByRole('region', { name: 'Simulação' }).closest('aside')).toBeNull()
 
     await userEvent.click(dialogo.getByRole('tab', { name: 'Canvas' }))
     await screen.findByLabelText('Início')
     expect(dialogo.getByRole('region', { name: 'Simulação' }).closest('aside')).not.toBeNull()
     await userEvent.click(dialogo.getByRole('button', { name: 'Adicionar etapa' }))
-    expect(dialogo.queryByRole('group', { name: 'Destinos' })).not.toBeInTheDocument() // a fileira de destinos acima do canvas não existe mais
+    expect(dialogo.queryByRole('group', { name: 'Destinos' })).not.toBeInTheDocument()
   })
 
   it('inserir etapa no meio da cadeia', async () => {
@@ -316,9 +316,9 @@ describe('canvas', () => {
   it('organizar alinha a cadeia, inserir respeita o limite e o Início nunca fica coberto', () => {
     const g = deEtapas([etapa('SETOR', 2, null, 10, 20), etapa('COORDENACAO_CURSO', null, null, 700, 400)])
     expect(organizar(g).nos.map((n) => [n.x, n.y])).toEqual([[288, 80], [576, 80]])
-    expect(fixarPosicoes(g).nos.map((n) => [n.x, n.y])).toEqual([[288, 80], [576, 80]]) // etapa em cima do Início
+    expect(fixarPosicoes(g).nos.map((n) => [n.x, n.y])).toEqual([[288, 80], [576, 80]])
     const solta = deEtapas([etapa('SETOR', 2, null, 300, 50)])
-    expect(fixarPosicoes(solta).nos.map((n) => [n.x, n.y])).toEqual([[300, 50]]) // fora do Início: fica onde está
+    expect(fixarPosicoes(solta).nos.map((n) => [n.x, n.y])).toEqual([[300, 50]])
 
     const cheio = deEtapas(Array.from({ length: 5 }, () => etapa('COORDENACAO_CURSO')))
     expect(inserirEntre(cheio, Inicio, cheio.nos[0].id, novoNo('SETOR'))).toBe(cheio)

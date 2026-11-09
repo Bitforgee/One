@@ -9,7 +9,7 @@ type Gravado = { id: string; sinc: number; corte: number; fim: number; passos: P
 const Saida = path.join(import.meta.dirname, 'saida')
 const nome = process.argv[2] ?? 'principal'
 const manifesto = JSON.parse(readFileSync(path.join(Saida, `${nome}.json`), 'utf8')) as { video: string; legendas: string; segmentos: string[] }
-const so = process.argv[3] // ensaio: só este segmento, sem juntar
+const so = process.argv[3]
 const pasta = path.join(Saida, 'segmentos')
 const quadros = path.join(Saida, 'quadros')
 mkdirSync(quadros, { recursive: true })
@@ -34,7 +34,7 @@ for (const id of manifesto.segmentos.filter((s) => !so || s === so)) {
   const g = JSON.parse(readFileSync(path.join(pasta, `${id}.json`), 'utf8')) as Gravado
   const saida = path.join(pasta, `${id}.mp4`)
   const webm = path.join(pasta, `${id}.webm`)
-  const atraso = marca(webm, g.sinc + 3) - g.sinc // tempo do vídeo menos tempo do relógio
+  const atraso = marca(webm, g.sinc + 3) - g.sinc
   const entradas = ['-ss', (g.corte + atraso).toFixed(3), '-i', webm]
   const filtros: string[] = []
   g.passos.forEach((p, i) => {
@@ -51,7 +51,7 @@ for (const id of manifesto.segmentos.filter((s) => !so || s === so)) {
     ...entradas,
     '-filter_complex', filtros.join(';'),
     '-map', '0:v', '-map', '[a]',
-    '-t', (g.fim - g.corte).toFixed(3), // o vídeo vai até o fechamento do contexto; o roteiro termina em "fim"
+    '-t', (g.fim - g.corte).toFixed(3),
     '-vf', 'fps=30,format=yuv420p',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
     '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2',

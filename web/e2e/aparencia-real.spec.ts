@@ -29,7 +29,7 @@ function png(largura: number, altura: number, [r, g, b]: [number, number, number
   const cabecalho = Buffer.alloc(13)
   cabecalho.writeUInt32BE(largura, 0)
   cabecalho.writeUInt32BE(altura, 4)
-  cabecalho.set([8, 2, 0, 0, 0], 8) // 8 bits, RGB, sem entrelaçamento
+  cabecalho.set([8, 2, 0, 0, 0], 8)
   const linha = Buffer.concat([Buffer.from([0]), Buffer.from(Array.from({ length: largura }, () => [r, g, b]).flat())])
   const pixels = Buffer.concat(Array.from({ length: altura }, () => linha))
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), bloco('IHDR', cabecalho), bloco('IDAT', deflateSync(pixels)), bloco('IEND', Buffer.alloc(0))])

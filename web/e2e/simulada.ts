@@ -163,9 +163,9 @@ export async function instalar(page: Page) {
         for (let n: Element | null = el; n; n = n.parentElement) {
           const cor = getComputedStyle(n).backgroundColor
           const [sobrePreto, sobreBranco] = [pintar(['#000', cor]), pintar(['#fff', cor])]
-          if (sobrePreto.join() === '0,0,0' && sobreBranco.join() === '255,255,255') continue // transparente
+          if (sobrePreto.join() === '0,0,0' && sobreBranco.join() === '255,255,255') continue
           camadas.unshift(cor)
-          if (sobrePreto.join() === sobreBranco.join()) return camadas // opaca: acaba aqui
+          if (sobrePreto.join() === sobreBranco.join()) return camadas
         }
         return ['#fff', ...camadas]
       },

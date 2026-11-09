@@ -22,7 +22,7 @@ export type Chamado = {
   responsavel: string | null
   criadoEm: string
   resolvidoEm: string | null
-  matricula: { numero: string | null; curso: string; semestre: number } // numero é null para a liderança (AC 60)
+  matricula: { numero: string | null; curso: string; semestre: number }
   solicitante: string | null
   resumo: string | null
   origemCategoria: string | null
@@ -85,7 +85,7 @@ export function useChamado(numero?: string) {
     queryFn: () => api<Chamado>(`/api/chamados/${numero}`),
     enabled: !!numero,
     refetchInterval: conexao === HubConnectionState.Connected ? IntervaloComConexao : IntervaloAtualizacao,
-    refetchIntervalInBackground: true, // a aba em segundo plano também relê, como antes
+    refetchIntervalInBackground: true,
   })
   return {
     chamado: data,

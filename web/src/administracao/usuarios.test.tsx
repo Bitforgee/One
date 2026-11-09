@@ -32,7 +32,7 @@ describe('usuários', () => {
     const inativa = await item('Bia')
     expect(within(inativa).getByText('Desativado')).toBeInTheDocument()
     expect(inativa).toHaveTextContent('987.654.321-00 · bia@univag.edu.br · Aluno')
-    expect(within(inativa).getAllByRole('cell')[3]).toHaveTextContent(/^Aluno$/) // coluna Papéis, sem setores
+    expect(within(inativa).getAllByRole('cell')[3]).toHaveTextContent(/^Aluno$/)
     expect(within(inativa).queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText('Cadastre a equipe ou importe as matrículas.')).not.toBeInTheDocument()
   })
@@ -122,7 +122,7 @@ describe('usuários', () => {
   })
 
   it('toasts de usuário só no sucesso', async () => {
-    await new Promise((r) => setTimeout(r, 50)) // toast atrasado de um teste anterior (o Sonner é um singleton)
+    await new Promise((r) => setTimeout(r, 50))
     let tentativa = 0
     usuarios({
       'PUT /api/admin/usuarios/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'CPF repetido.' }] : [200, {}]),

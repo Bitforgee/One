@@ -38,13 +38,13 @@ test.describe('S1 celular', () => {
     await abrirTela(page, 'Artigos')
     medidos.default = await altura(page.getByRole('button', { name: 'Novo' }))
     await abrirTela(page, 'Assistente')
-    medidos.enviar = await altura(page.getByRole('button', { name: 'Enviar' })) // estrutura-visual AC 14: o Enviar escrito, de tamanho default
+    medidos.enviar = await altura(page.getByRole('button', { name: 'Enviar' }))
     medidos.sm = await altura(page.locator('[data-slot=button][data-size=sm]'))
     medidos['icon-sm'] = await altura(page.getByRole('button', { name: 'Anexar arquivo' }))
     await page.locator('input[type=file]').setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('x') })
     medidos['icon-xs'] = await altura(page.getByRole('button', { name: 'Remover foto.png' }))
     await abrirTela(page, 'Usuários')
-    medidos.icon = await altura(page.getByRole('button', { name: /^Ações de/ })) // o size="icon" em tela é o MenuAcoes
+    medidos.icon = await altura(page.getByRole('button', { name: /^Ações de/ }))
     await abrirTela(page, 'Assistente')
     for (const tamanho of nomes.filter((n) => !(n in medidos))) {
       await page.evaluate(([id, classe]) => document.body.insertAdjacentHTML('beforeend', `<button id="${id}" class="${classe}">x</button>`), [`t-${tamanho}`, buttonVariants({ size: tamanho })])
@@ -68,7 +68,7 @@ test.describe('S1 celular', () => {
     await abrirTela(page, 'Indicadores')
     await page.locator('section tbody td:first-child').first().waitFor()
     const { varridos, cortados } = await page.evaluate(() => {
-      const todos = [...document.querySelectorAll('[class*="container/main"] *')] // o conteúdo da tela: a barra do topo, que fica dentro do main, tem o título com truncate
+      const todos = [...document.querySelectorAll('[class*="container/main"] *')]
       return {
         varridos: todos.length,
         cortados: todos
@@ -90,7 +90,7 @@ test.describe('S1 celular', () => {
     const seletor = await caixa(page.getByLabel('Cadastro'))
     const novo = await caixa(page.getByRole('button', { name: /^Nov[oa] / }))
     expect(novo.y).toBeGreaterThan(seletor.y)
-    expect(novo.y - (seletor.y + seletor.height)).toBeLessThanOrEqual(120) // logo abaixo: só o título e a frase do cadastro entre os dois
+    expect(novo.y - (seletor.y + seletor.height)).toBeLessThanOrEqual(120)
     expect(novo.y + novo.height).toBeLessThanOrEqual(844)
     expect(novo.height).toBeGreaterThanOrEqual(36)
   })

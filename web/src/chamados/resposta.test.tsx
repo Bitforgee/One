@@ -156,7 +156,7 @@ describe('conversa do chamado', () => {
         ],
       }),
     )
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     expect((await screen.findByText('quantas horas?')).closest('.is-user, .is-assistant')).toHaveClass('ms-auto')
     const resposta = screen.getByText('São 300 horas.').closest('.is-user, .is-assistant') as HTMLElement
     expect(resposta).toHaveClass('me-auto')

@@ -7,7 +7,7 @@ import { useRef } from 'react'
 import { Label } from '../ui/label'
 
 export function Resposta({ valor, aoMudar }: { valor: string; aoMudar: (texto: string) => void }) {
-  const ultimo = useRef(aoMudar) // o editor guarda o onUpdate da criação; a ref entrega sempre o do último render
+  const ultimo = useRef(aoMudar)
   ultimo.current = aoMudar
   const editor = useEditor({
     extensions: [Document, Paragraph, Text, CharacterCount.configure({ limit: 8000 })],

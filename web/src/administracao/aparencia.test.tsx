@@ -109,7 +109,7 @@ describe('tela Aparência', () => {
     expect(put.url).toBe('/api/admin/aparencia')
     expect(put.corpo).toMatchObject({ nomeCurto: 'Univag', cor: Cor, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, perguntas: [] }, contato: { horario: null, telefone: null, email: null } })
     await waitFor(() => expect(document.documentElement.style.getPropertyValue('--marca')).toBe(Cor))
-    expect(chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/instituicoes/univag').length).toBeGreaterThan(1) // a consulta foi invalidada e relida
+    expect(chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/instituicoes/univag').length).toBeGreaterThan(1)
   })
 
   it('erro da API aparece e o formulário fica', async () => {
@@ -120,7 +120,7 @@ describe('tela Aparência', () => {
     await digitar('Título do login', 'Fale com a Univag')
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
     const erro = await screen.findByText('Escolha uma cor mais escura: o texto branco precisa de contraste 4,5:1 sobre ela.')
-    expect(erro.closest('div')).toContainElement(screen.getByLabelText('Cor principal')) // abaixo do campo de cor, na aba Marca que a tela abre sozinha
+    expect(erro.closest('div')).toContainElement(screen.getByLabelText('Cor principal'))
     expect(screen.getByLabelText('Cor principal')).toHaveValue(hex('767676'))
     await ir('Login')
     expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
@@ -138,8 +138,8 @@ describe('tela Aparência', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
       const alerta = await screen.findByRole('alert')
       expect(alerta, String(status)).toHaveTextContent(detail)
-      expect(alerta.closest('div')!.parentElement).toContainElement(screen.getByRole('button', { name: 'Enviar imagem: Logo' })) // no bloco da imagem
-      expect(document.querySelector('img[alt="Miniatura: Logo"]')).toHaveAttribute('src', 'blob:imagem-nova') // a escolhida continua
+      expect(alerta.closest('div')!.parentElement).toContainElement(screen.getByRole('button', { name: 'Enviar imagem: Logo' }))
+      expect(document.querySelector('img[alt="Miniatura: Logo"]')).toHaveAttribute('src', 'blob:imagem-nova')
       expect(screen.queryByText('Aparência salva.')).not.toBeInTheDocument()
       await ir('Login')
       expect(screen.getByLabelText('Título do login')).toHaveValue('Fale com a Univag')
@@ -151,7 +151,7 @@ describe('tela Aparência', () => {
     rotas()
     abrir('/univag/aparencia')
     for (const [cor, texto, habilitado] of [
-      [hex('224fa7'), 'Contraste com o branco: 7,65:1', true], // C27 pede 7,47:1; a regra do servidor dá 7,65 (ver o ## Handoff)
+      [hex('224fa7'), 'Contraste com o branco: 7,65:1', true],
       [hex('767676'), 'Contraste com o branco: 4,54:1', true],
       [hex('ffd700'), 'Contraste com o branco: 1,40:1', false],
     ] as const) {

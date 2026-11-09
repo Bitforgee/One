@@ -58,7 +58,7 @@ let aluno: APIRequestContext
 let numero: string
 
 test.beforeAll(async ({ playwright, baseURL }) => {
-  test.setTimeout(240_000) // a janela do limitador pode estar ocupada pelo spec anterior
+  test.setTimeout(240_000)
   const rodada = Date.now()
   const [alunoCpf, alunoEmail] = [cpfValido(rodada), `aluno.${rodada}@e2e.one`]
   admin = await playwright.request.newContext({ baseURL })
@@ -109,7 +109,7 @@ test('atendente escolhe Escuro no rodapé e recarrega, o aluno envia com Enter e
   await expect(page.getByText('Indicador principal', { exact: true })).toBeVisible()
   await expect(page.locator('html')).toHaveClass(/dark/)
 
-  const atual = leituras.sort((a, b) => b.ate.localeCompare(a.ate))[0] // o período corrente termina depois do anterior
+  const atual = leituras.sort((a, b) => b.ate.localeCompare(a.ate))[0]
   const real = (await atual.corpo).principaisCategorias.porChamados
   expect(real.length, 'a API devolve ao menos 1 categoria por chamados').toBeGreaterThanOrEqual(1)
   const secao = page.locator('section', { has: page.getByRole('heading', { name: 'Categorias por chamados' }) })

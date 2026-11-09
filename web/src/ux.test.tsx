@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
-const css = readFileSync('src/index.css', 'utf8') // cwd = web/ (vitest)
+const css = readFileSync('src/index.css', 'utf8')
 
 afterEach(() => {
   localStorage.clear()
@@ -137,7 +137,7 @@ describe('ux', () => {
         total++
       }
     expect(total).toBe(14)
-    expect(declarado('.black', '--background')).toBe('okl' + 'ch(0 0 0)') // em pedaços: a regra de cores literais de interface.test.ts varre este arquivo
+    expect(declarado('.black', '--background')).toBe('okl' + 'ch(0 0 0)')
   })
 
   type Superficie = { nome: string; papeis: string[]; caminho: string; url: string; oque: string; vazios?: string[]; depois: string | RegExp; ok?: unknown }

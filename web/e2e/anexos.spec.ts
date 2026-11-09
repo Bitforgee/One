@@ -47,7 +47,7 @@ async function entrar(request: APIRequestContext, cpf: string, senha: string) {
   expect(r.status()).toBe(200)
 }
 
-test.describe.configure({ timeout: 150_000 }) // inclui a espera da janela do limitador
+test.describe.configure({ timeout: 150_000 })
 const autenticacoes: number[] = []
 async function vaga(): Promise<void> {
   const agora = Date.now()

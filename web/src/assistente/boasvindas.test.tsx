@@ -53,8 +53,8 @@ describe('assistente com identidade', () => {
     await userEvent.click(await screen.findByRole('button', { name: Atestado }))
     expect(await screen.findByText('Falta não é abonada.')).toBeInTheDocument()
     expect(chamadas.filter((c) => c.metodo === 'POST').map((c) => [c.url, c.corpo])).toEqual([['/api/conversas', { mensagem: Atestado }]])
-    expect(screen.getByText(Atestado)).toBeInTheDocument() // o balão do aluno
-    expect(screen.queryByRole('button', { name: Boleto })).not.toBeInTheDocument() // as sugestões somem
+    expect(screen.getByText(Atestado)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: Boleto })).not.toBeInTheDocument()
     expect(screen.queryByText('Olá! Eu sou Assistente.')).not.toBeInTheDocument()
   })
 
@@ -69,12 +69,12 @@ describe('assistente com identidade', () => {
       expect(within(balao.parentElement!).queryAllByRole('img')).toHaveLength(fotos)
       if (fotos) {
         const foto = within(balao.parentElement!).getByRole('img', { name: 'Vagner' })
-        expect(foto).toHaveClass('size-6') // 24 px
+        expect(foto).toHaveClass('size-6')
         expect(foto).toHaveAttribute('src', '/api/instituicoes/univag/imagens/assistente?v=4')
       }
       expect(doAluno.querySelector('img')).toBeNull()
-      expect(doAluno.parentElement!.querySelector(':scope > img')).toBeNull() // a foto é só do balão do assistente
-      expect(document.querySelectorAll('img')).toHaveLength(fotos) // só o balão do assistente
+      expect(doAluno.parentElement!.querySelector(':scope > img')).toBeNull()
+      expect(document.querySelectorAll('img')).toHaveLength(fotos)
       unmount()
     }
   })

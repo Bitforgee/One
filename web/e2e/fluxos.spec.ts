@@ -55,7 +55,7 @@ test.describe('canvas dos fluxos', () => {
   test('arrastar tipo da paleta', async ({ page }) => {
     await fluxos(page, { numero: 1, etapas: [] })
     await abrirCanvas(page)
-    await expect(nos(page)).toHaveCount(1) // só o Início
+    await expect(nos(page)).toHaveCount(1)
     await expect(page.getByText('Arraste um destino para começar.')).toBeVisible()
 
     await arrastar(page, 'Coordenação do curso', { x: 320, y: 160 })
@@ -63,11 +63,11 @@ test.describe('canvas dos fluxos', () => {
     await expect(nos(page)).toHaveCount(2)
     const novo = page.getByLabel('Etapa 1: Coordenação do curso')
     await expect(novo).toBeVisible()
-    const fluxo = (await page.locator('.react-flow').boundingBox())! // medido depois: o aviso da cadeia empurra o canvas para baixo
+    const fluxo = (await page.locator('.react-flow').boundingBox())!
     const caixa = (await novo.boundingBox())!
-    expect(Math.abs(caixa.x - (fluxo.x + 320))).toBeLessThan(12) // o nó cai onde foi largado
+    expect(Math.abs(caixa.x - (fluxo.x + 320))).toBeLessThan(12)
     expect(Math.abs(caixa.y - (fluxo.y + 160))).toBeLessThan(12)
-    await expect(arestas(page)).toHaveCount(0) // sem ligação
+    await expect(arestas(page)).toHaveCount(0)
     await expect(page.getByRole('alert').filter({ hasText: 'Ligue todas as etapas ao Início' })).toBeVisible()
   })
 

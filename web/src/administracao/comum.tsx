@@ -1,6 +1,6 @@
 export type Id = { id: number }
 export type Setor = Id & { nome: string; triagem: boolean; ativo: boolean; cursoId?: number | null; semestre?: number | null }
-export const semLideranca = (s: Setor) => !s.cursoId // a liderança de um semestre nunca é destino de etapa nem coordenação (AC 54)
+export const semLideranca = (s: Setor) => !s.cursoId
 export type Categoria = Id & { nome: string; ativa: boolean; padrao: boolean }
 export type Curso = Id & { nome: string; setorCoordenacaoId: number | null }
 export type Destino = 'SETOR' | 'COORDENACAO_CURSO' | 'LIDERANCA_SEMESTRE'

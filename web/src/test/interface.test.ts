@@ -12,7 +12,7 @@ import { abrir, api, chamado, me } from './util'
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
 const arquivos = Object.keys(fontes).map((c) => c.replace('/src/', ''))
 const texto = (arquivo: string) => fontes[`/src/${arquivo}`]
-const css = readFileSync('src/index.css', 'utf8') // cwd = web/ (vitest e mutator)
+const css = readFileSync('src/index.css', 'utf8')
 const todas = { ...pacote.dependencies, ...pacote.devDependencies } as Record<string, string>
 const comBootstrap = () => arquivos.some((a) => /from 'react-bootstrap'/.test(texto(a)))
 const semEspacos = (t: string) => t.replace(/\s+/g, '')
@@ -20,7 +20,7 @@ const semEspacos = (t: string) => t.replace(/\s+/g, '')
 function bloco(seletor: string): Record<string, string> {
   const corpo = css.slice(css.indexOf(`${seletor} {`)).split('}')[0]
   const valores: Record<string, string> = {}
-  for (const [, nome, valor] of corpo.matchAll(/(--[\w-]+):\s*([^;]+);/g)) valores[nome] = valor.trim().replace(/^var\(--[\w-]+, (.*)\)$/, '$1').replace(/^oklch\((.*)\)$/, '$1') // o fallback de var(--marca, base) é o valor de base
+  for (const [, nome, valor] of corpo.matchAll(/(--[\w-]+):\s*([^;]+);/g)) valores[nome] = valor.trim().replace(/^var\(--[\w-]+, (.*)\)$/, '$1').replace(/^oklch\((.*)\)$/, '$1')
   return valores
 }
 

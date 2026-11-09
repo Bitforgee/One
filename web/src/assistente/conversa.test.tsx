@@ -231,7 +231,7 @@ describe('conversa com o assistente', () => {
     const conteudo = balao(Link)
     expect(conteudo.textContent).toBe(Link)
     const antes = [...conteudo.querySelectorAll('wbr')].map((w) => w.previousSibling?.textContent?.slice(-1))
-    expect(antes).toEqual(['/', '/', '/', '/', '?', '=', '&', '=', '#']) // https:// (2), edu.br/ e a/
+    expect(antes).toEqual(['/', '/', '/', '/', '?', '=', '&', '=', '#'])
     expect(balao('sem separador').querySelectorAll('wbr')).toHaveLength(0)
   })
 

@@ -88,7 +88,7 @@ describe('links da resposta', () => {
       ],
     })
     abrir('/univag/chamados/ONE-1')
-    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ })) // a conversa vem recolhida (chat-linha-do-tempo C17)
+    await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
     const equipe = (await screen.findByRole('link', { name: /portal\.univag\.edu\.br\/financeiro\/boletos/ })).closest('.is-assistant') as HTMLElement
     expect(equipe.querySelector('.whitespace-pre-wrap')!.textContent).toBe(Frase)
     expect(within(equipe).getAllByRole('link')).toHaveLength(1)

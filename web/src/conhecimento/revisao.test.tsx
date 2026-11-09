@@ -36,7 +36,7 @@ describe('um selo de situação e a indexação em ícone', () => {
     const linha = await linhaDe('Rematrícula')
     const icone = within(linha).getByRole('img', { name: nome })
     expect(icone.tagName.toLowerCase()).toBe('svg')
-    expect(icone.querySelector('title')).toHaveTextContent(nome) // a dica
+    expect(icone.querySelector('title')).toHaveTextContent(nome)
     expect(selos(linha)).toEqual(['Ativo'])
   })
 

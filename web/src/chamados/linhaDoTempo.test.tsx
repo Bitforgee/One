@@ -103,7 +103,7 @@ describe('linha do tempo do chamado', () => {
 
   it('ação acrescenta o evento no fim', async () => {
     const antes = daEquipe({ estado: 'ABERTO', mensagens: [resposta], eventos: [abertura] })
-    const agora = evento('ATRIBUICAO', 'Carla', '2026-11-02T13:00:00Z', null, 'Carla') // depois da última mensagem (12:10)
+    const agora = evento('ATRIBUICAO', 'Carla', '2026-11-02T13:00:00Z', null, 'Carla')
     const depois = { ...antes, estado: 'EM_ATENDIMENTO', eventos: [abertura, agora] } as Chamado
     const chamadas = api({
       'GET /api/auth/me': () => [200, equipe],

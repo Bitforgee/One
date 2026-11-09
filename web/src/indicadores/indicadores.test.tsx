@@ -86,7 +86,7 @@ describe('indicadores', () => {
     const porChamados = screen.getByText('Categorias por chamados').closest('section') as HTMLElement
     expect(Array.from(porChamados.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['—'])
     expect(screen.queryByText('Sem atendimentos neste período.')).not.toBeInTheDocument()
-    expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(2) // o período e o anterior (identidade-visual AC 12)
+    expect(chamadas.filter((c) => c.url.startsWith('/api/indicadores'))).toHaveLength(2)
     expect(conversas.parentElement).toHaveClass('grid-cols-1', '@4xl/main:grid-cols-2')
   })
 

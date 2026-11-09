@@ -8,7 +8,7 @@ import { abrir, api, instituicao, me, type Rota } from './test/util'
 
 const hex = (digitos: string) => '#' + digitos
 const Cor = hex('8a1538')
-const css = readFileSync('src/index.css', 'utf8') // cwd = web/
+const css = readFileSync('src/index.css', 'utf8')
 const base = new DOMParser().parseFromString(html, 'text/html')
 const baseDe = (seletor: string, atributo: string) => base.head.querySelector(seletor)!.getAttribute(atributo)!
 const noHead = (seletor: string, atributo: string) => document.head.querySelector(seletor)?.getAttribute(atributo)
@@ -91,7 +91,7 @@ describe('marca da instituição', () => {
     const temas: [string, string[]][] = [
       [':root', ['--primary', '--sidebar-primary', '--primary-subtle', '--ring']],
       ['.dark', ['--primary', '--sidebar-primary', '--primary-subtle', '--ring']],
-      ['.black', ['--primary-subtle']], // o .black herda o resto do .dark
+      ['.black', ['--primary-subtle']],
     ]
     for (const [seletor, tokens] of temas)
       for (const token of tokens) {
@@ -110,7 +110,7 @@ describe('marca da instituição', () => {
     const logos = await screen.findAllByRole('img', { name: 'Univag' })
     expect(logos.length).toBeGreaterThan(0)
     for (const logo of logos) expect(logo).toHaveAttribute('src', '/api/instituicoes/univag/imagens/logo?v=3')
-    expect(logos[0]).toHaveClass('h-12') // 48 px
+    expect(logos[0]).toHaveClass('h-12')
     montada.unmount()
 
     comSessao(comMarca)
@@ -138,8 +138,8 @@ describe('marca da instituição', () => {
     await waitFor(() => expect(noHead('link[rel="icon"]', 'href')).toBe(icone))
     expect(noHead('link[rel="apple-touch-icon"]', 'href')).toBe(icone)
     const barra = document.querySelector('[data-sidebar=sidebar]') as HTMLElement
-    await waitFor(() => expect(barra.querySelector(`img[src="${icone}"]`)).not.toBeNull()) // a recolhida
-    expect(document.querySelector(`header img[src="${icone}"]`)).not.toBeNull() // o topo do celular
+    await waitFor(() => expect(barra.querySelector(`img[src="${icone}"]`)).not.toBeNull())
+    expect(document.querySelector(`header img[src="${icone}"]`)).not.toBeNull()
     montada.unmount()
 
     comSessao(instituicao())
@@ -162,7 +162,7 @@ describe('marca da instituição', () => {
     comSessao(instituicao({ nomeCurto: null }))
     montada = abrir('/univag')
     await screen.findByLabelText('CPF')
-    await waitFor(() => expect(document.title).toBe('Univag')) // sem nomeCurto, o nome
+    await waitFor(() => expect(document.title).toBe('Univag'))
     expect(noHead('meta[name="theme-color"]', 'content')).toBe(baseDe('meta[name="theme-color"]', 'content'))
     montada.unmount()
 
@@ -206,7 +206,7 @@ describe('marca da instituição', () => {
     abrir('/univag')
     await screen.findByLabelText('CPF')
     const imagens = document.querySelectorAll('img[src="/api/instituicoes/univag/imagens/login?v=1"]')
-    expect(imagens).toHaveLength(2) // a faixa e o painel
+    expect(imagens).toHaveLength(2)
     for (const imagem of imagens) expect(imagem).toHaveAttribute('alt', '')
     expect(document.querySelector('svg[data-ilustracao="boas-vindas"]')).toBeNull()
   })
@@ -220,7 +220,7 @@ describe('marca da instituição', () => {
       return el
     })) as HTMLElement
     const botoes = within(barra).getAllByRole('button').map((b) => b.textContent)
-    expect(botoes.indexOf('Contato')).toBeLessThan(botoes.findIndex((t) => t?.includes('Ana'))) // acima do usuário
+    expect(botoes.indexOf('Contato')).toBeLessThan(botoes.findIndex((t) => t?.includes('Ana')))
     await userEvent.click(within(barra).getByRole('button', { name: 'Contato' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Contato do atendimento' })
     expect(within(dialogo).getByText('Seg a sex, 8h às 18h')).toBeInTheDocument()

@@ -4,10 +4,10 @@ import { describe, expect, it } from 'vitest'
 import { estados } from '../test/textos'
 import { abrir, api, me } from '../test/util'
 
-const Papeis = ['Administrador', 'Atendente', 'Aluno'] // layout-painel: o papel no botão do usuário (novo)
+const Papeis = ['Administrador', 'Atendente', 'Aluno']
 const Cabecalho = ['One', 'Assistente', 'Minhas solicitações', 'Fila', 'Artigos', 'Documentos', 'Indicadores', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Sair', 'Tema', 'Claro', 'Escuro', 'Preto', 'Sistema', 'Atendimento', 'Conhecimento', 'Administração', ...Papeis]
-const Instituicao = 'Univag' // nome da instituição do fixture
-const Nome = me().nome // barra-lateral-grupos: o nome do usuário no rodapé da barra e na gaveta
+const Instituicao = 'Univag'
+const Nome = me().nome
 
 describe('textos', () => {
   it('textos cabeçalho', async () => {
@@ -51,7 +51,7 @@ const Instituicoes = { 'GET /api/instituicoes/univag': () => [200, { nome: 'Univ
 
 describe('textos das telas de acesso', () => {
   it('textos raiz', () => {
-    const t = estados(['One', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Abra o endereço da sua instituição, por exemplo /univag.']) // AC 37: a ilustração e a frase
+    const t = estados(['One', 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.', 'Abra o endereço da sua instituição, por exemplo /univag.'])
     api({})
     const { container } = abrir('/')
     t.conferir(container)

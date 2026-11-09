@@ -252,7 +252,7 @@ const Abas = [
   { caminho: 'solicitacoes', rotulo: 'Solicitações', Icone: ListChecks },
   { caminho: 'conta', rotulo: 'Conta', Icone: CircleUser },
 ]
-const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))' // os links, a borda de cima e a área segura
+const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))'
 
 function BarraDeAbas({ slug }: { slug?: string }) {
   const { pathname } = useLocation()
@@ -326,7 +326,7 @@ export function Autenticado() {
   const cliente = useQueryClient()
   const { data: me, error, refetch } = useQuery({ queryKey: ['me'], queryFn: () => api<Me>('/api/auth/me') })
   const { data: instituicao } = useInstituicao(slug)
-  useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug) // o negotiate recusa quem deve trocar a senha
+  useTempoReal(cliente, !!me && !me.deveTrocarSenha && me.instituicao.slug === slug)
 
   const destino = desvio({ me, erro: error, slug, pathname })
   if (destino) return <Navigate to={destino} replace />
@@ -354,7 +354,7 @@ function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica
   const celular = useConsulta('(max-width: 767px)')
   const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
-  const abas = celular && me.papeis.length === 1 && me.papeis[0] === 'ALUNO' // door 1: só quem tem apenas o papel ALUNO
+  const abas = celular && me.papeis.length === 1 && me.papeis[0] === 'ALUNO'
 
   return (
     <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={abas ? ({ '--barra': AlturaDaBarra } as CSSProperties) : undefined}>
