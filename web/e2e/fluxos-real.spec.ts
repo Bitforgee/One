@@ -161,7 +161,7 @@ test('o administrador cria o fluxo da liderança, simula e publica na tela', asy
   await page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('button', { name: nomeDaCategoria }).click()
 
   // a cadeia: Liderança do semestre com prazo de 48 h, depois Coordenação do curso (a API recusa prazo na última etapa, AC 22)
-  const editor = page.getByRole('dialog', { name: 'Editar: Fluxos' })
+  const editor = page.getByRole('region', { name: 'Editar: Fluxos' })
   await editor.getByRole('button', { name: 'Adicionar etapa' }).click()
   await editor.getByLabel('Destino da etapa 1').selectOption('LIDERANCA_SEMESTRE')
   await editor.getByLabel('Prazo da etapa 1 (horas)').fill('48')

@@ -22,12 +22,12 @@ const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas
 const Cadastros = [
   'Cadastros', 'Novo setor', 'Nova categoria', 'Novo curso', 'Novo fluxo', 'Nova resposta pronta', 'Detalhe',
   'Quem atende os chamados. Cada setor tem a sua fila.', 'Os assuntos dos chamados. Cada categoria pode ter um fluxo.', 'Os cursos da instituição e o setor que coordena cada um.', 'O caminho que o chamado percorre, etapa por etapa, até alguém responder.', 'Textos prontos que o atendente insere ao responder.',
-  'Publicado v1', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, `Editar: ${t}`]),
+  'Publicado v1', ...Titulos, ...Titulos.flatMap((t) => [`Novo: ${t}`, ...(t === 'Fluxos' ? [] : [`Editar: ${t}`])]), // o editor de fluxo é uma página: o nome "Editar: Fluxos" é só acessível
   'Triagem', 'Inativo', 'Padrão', 'Inativa', 'Coordenação:', 'Setor', 'Todos os cursos', ...Array.from({ length: 12 }, (_, i) => `${i + 1}º semestre`), 'Liderança do semestre', 'Coordenação do curso', '(48 h)', 'Nada cadastrado', 'Nenhum item cadastrado.', 'Nenhum fluxo', 'Sem fluxo, os chamados vão para a Triagem.',
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Liderança de semestre', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
   'Etapa 1', 'Setor fixo', 'Lista', 'Canvas', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho', 'Mais',
-  'Cancelar', 'Salvar', 'Cadastro salvo.',
+  'Cancelar', 'Salvar', 'Cadastro salvo.', 'Voltar',
 ]
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -178,18 +178,25 @@ describe('textos', () => {
       t.conferir(tela(), Fixture)
 
       await userEvent.click(within(within(screen.getByRole('tabpanel', { name: titulo })).getByRole('table')).getAllByRole('button')[0])
-      t.conferir(await screen.findByRole('dialog', { name: `Editar: ${titulo}` }), Fixture)
       if (titulo === 'Fluxos') {
-        await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Mais' }))
+        // o editor de fluxo é uma página da casca (região), não um diálogo
+        const editor = await screen.findByRole('region', { name: 'Editar: Fluxos' })
+        t.conferir(editor, Fixture)
+        await userEvent.click(within(editor).getByRole('button', { name: 'Mais' }))
         t.conferir(await screen.findByRole('menu'), Fixture)
         await userEvent.keyboard('{Escape}')
+        await userEvent.click(within(editor).getByRole('button', { name: 'Voltar' }))
+        await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
+        await screen.findByRole('tabpanel', { name: 'Fluxos' })
+      } else {
+        t.conferir(await screen.findByRole('dialog', { name: `Editar: ${titulo}` }), Fixture)
+        if (titulo === 'Setores') {
+          await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+          await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
+          t.conferir(avisos())
+        } else await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       }
-      if (titulo === 'Setores') {
-        await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
-        await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
-        t.conferir(avisos())
-      } else await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
       await userEvent.click(within(tela()).getByRole('button', { name: /^Nov[oa] / }))
       t.conferir(await screen.findByRole('dialog', { name: `Novo: ${titulo}` }), Fixture)

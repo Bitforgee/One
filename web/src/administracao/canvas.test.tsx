@@ -38,7 +38,7 @@ function cadastros(rotas: Record<string, Rota> = {}) {
 async function abrirFluxo(nome: string) {
   await userEvent.click(await screen.findByRole('tab', { name: 'Fluxos' }))
   await userEvent.click(await within(screen.getByRole('tabpanel', { name: 'Fluxos' })).findByRole('button', { name: nome }))
-  return within(await screen.findByRole('dialog', { name: 'Editar: Fluxos' }))
+  return within(await screen.findByRole('region', { name: 'Editar: Fluxos' }))
 }
 
 async function abrirNoCanvas(nome: string) {
@@ -193,8 +193,8 @@ describe('canvas', () => {
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE', null, null, 288, 80), etapa('COORDENACAO_CURSO', null, 48, 576, 80)] }]]))
 
     // o rascunho que já tem posição abre com cada nó no seu lugar
-    await userEvent.click(dialogo.getByRole('button', { name: 'Cancelar' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await userEvent.click(dialogo.getByRole('button', { name: 'Voltar' })) // salvo: sai sem perguntar
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
     await abrirNoCanvas('Notas')
     expect(posicao(noDeEtapa(1, 'Setor Financeiro (24 h)'))).toContain('translate(300px,50px)')
     expect(posicao(noDeEtapa(2, 'Coordenação do curso'))).toContain('translate(600px,50px)')
@@ -296,10 +296,10 @@ describe('canvas', () => {
   })
 
   // cadastros-fluxo-visual K7 e K13
-  it('editor em tela cheia, com o estado na barra e o simulador na coluna do canvas', async () => {
+  it('editor na página, com o estado na barra e o simulador na coluna do canvas', async () => {
     cadastros()
     const dialogo = await abrirFluxo('Boletos')
-    expect(screen.getByRole('dialog', { name: 'Editar: Fluxos' }).className).toContain('w-screen')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument() // chat/editor-fluxo-integrado: página da casca, sem diálogo
     expect(dialogo.getByText('Publicado v1')).toBeInTheDocument()
     expect(dialogo.getByRole('button', { name: 'Mais' })).toBeInTheDocument()
     expect(dialogo.getByRole('region', { name: 'Simulação' }).closest('aside')).toBeNull() // na lista, embaixo das etapas

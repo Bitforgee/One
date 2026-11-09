@@ -697,6 +697,7 @@ test.describe('S3 conversa', () => {
 
     await page.route('**/api/chamados/ONE-123', (r) => r.fulfill(json({ ...chamadoSimulado(), transcricao: [{ autor: 'ALUNO', texto: Longa, criadaEm: '2026-11-02T12:00:00Z' }], mensagens: [] })))
     await page.goto('/univag/chamados/ONE-123')
+    await page.getByRole('button', { name: /^Conversa com o assistente/ }).click() // a conversa vem recolhida (chat-linha-do-tempo C17)
     const noChamado = page.getByText(Longa.trim().slice(0, 50))
     await expect(noChamado).toHaveCount(1)
     const d = await emCaracteres(noChamado)
@@ -1186,7 +1187,8 @@ test.describe('S5 diálogos e administração', () => {
         const c = await caixa(linhas.first())
         expect(c.height, `${aba} a ${largura}: altura da linha`).toBeGreaterThanOrEqual(47.9)
         await page.mouse.click(c.x + c.width - 4, c.y + c.height / 2)
-        await expect(page.getByRole('dialog', { name: titulo }), `${aba} a ${largura}: abre a edição`).toHaveCount(1)
+        // o editor de fluxo é uma página da casca (região); os outros cadastros abrem diálogo
+        await expect(page.getByRole(titulo === 'Editar: Fluxos' ? 'region' : 'dialog', { name: titulo }), `${aba} a ${largura}: abre a edição`).toHaveCount(1)
         casos++
       }
     }

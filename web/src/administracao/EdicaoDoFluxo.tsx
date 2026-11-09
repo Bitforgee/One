@@ -1,12 +1,13 @@
-import { Component, lazy, Suspense, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { ChevronRight } from 'lucide-react'
+import { Component, lazy, Suspense, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
 import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
-import { Editor } from '../Editor'
 import { ErroDe } from '../ErroDe'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Dialog, DialogContent, DialogTitle } from '../ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { Spinner } from '../ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
@@ -121,36 +122,46 @@ function MaisAcoes({ podeDescartar, descartar }: { podeDescartar: boolean; desca
   )
 }
 
-type PropsDaJanela = { titulo: string; fechar: () => void; salvar: () => void; topo: ReactNode; corpo: ReactNode }
+const rotuloDoEstado = (alterado: boolean, salvo: boolean, fluxo: Fluxo) => (alterado ? 'Alterações não salvas' : salvo ? 'Rascunho salvo' : estadoDoFluxo(fluxo))
 
-// A tela cheia do editor, como a de um editor de automações: a barra com o estado e as ações em cima, o desenho ocupando o resto.
-function JanelaCheia({ fechar, salvar, topo, corpo }: Omit<PropsDaJanela, 'titulo'>) {
-  const enviar = (e: FormEvent) => {
+type PropsDaTrilha = { contexto: string; sair: (destino: string) => void; lista: string; fluxos: string }
+
+// Cadastros › Fluxos › Boletos · ADS, 3º semestre: a trilha leva de volta à lista; com alterações não salvas, sair pede confirmação.
+function Trilha({ contexto, sair, lista, fluxos }: PropsDaTrilha) {
+  const ir = (destino: string) => (e: React.MouseEvent) => {
     e.preventDefault()
-    salvar()
+    sair(destino)
   }
   return (
-    <Dialog open onOpenChange={(a) => !a && fechar()}>
-      <DialogContent showCloseButton={false} aria-describedby={undefined} className="top-0 left-0 flex h-dvh max-h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none">
-        <form className="contents" onSubmit={enviar}>
-          <header className="flex flex-wrap items-center gap-2 border-b px-4 py-2">{topo}</header>
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">{corpo}</div>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <nav aria-label="Trilha">
+      <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0 text-sm text-muted-foreground">
+        <li>
+          <Link to={lista} onClick={ir(lista)} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
+            Cadastros
+          </Link>
+        </li>
+        <ChevronRight aria-hidden="true" className="size-4" />
+        <li>
+          <Link to={fluxos} onClick={ir(fluxos)} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
+            Fluxos
+          </Link>
+        </li>
+        <ChevronRight aria-hidden="true" className="size-4" />
+        <li aria-current="page" className="min-w-0 truncate font-medium text-foreground">
+          {contexto}
+        </li>
+      </ol>
+    </nav>
   )
 }
 
-const rotuloDoEstado = (alterado: boolean, salvo: boolean, fluxo: Fluxo) => (alterado ? 'Alterações não salvas' : salvo ? 'Rascunho salvo' : estadoDoFluxo(fluxo))
-
 type PropsDoTopo = {
-  contexto: string
   estado: string
   alterado: boolean
   visao: Visao
   mudarVisao: (v: Visao) => void
   simulador: EstadoDoSimulador
-  fechar: () => void
+  voltar: () => void
   salvando: boolean
   valida: boolean
   publicar: ReactNode
@@ -158,43 +169,82 @@ type PropsDoTopo = {
   descartar: () => void
 }
 
-// A barra de cima da tela cheia: o nome e o estado do fluxo, as duas visões e as ações.
-function TopoDoFluxo(p: PropsDoTopo) {
+// A barra do editor, abaixo da trilha: o estado do fluxo, as duas visões e as ações. Quebra em mais de uma linha no celular.
+function BarraDoEditor(p: PropsDoTopo) {
   return (
-    <>
-      <div className="min-w-0 flex-1 basis-48">
-        <DialogTitle className="text-base">Editar: Fluxos</DialogTitle>
-        <p className="m-0 truncate text-xs text-muted-foreground">{p.contexto}</p>
-      </div>
-      <Badge variant={p.alterado ? 'default' : 'secondary'}>{p.estado}</Badge>
-      <Alternador visao={p.visao} mudar={p.mudarVisao} />
-      <BotaoSimular s={p.simulador} />
-      <Button type="button" variant="outline" onClick={p.fechar}>
-        Cancelar
+    <div className="flex flex-wrap items-center gap-2">
+      <Button type="button" variant="outline" className="min-h-11" onClick={p.voltar}>
+        Voltar
       </Button>
-      <BotaoAcao type="submit" variant="outline" pendente={p.salvando} disabled={!p.valida}>
-        Salvar rascunho
-      </BotaoAcao>
-      {p.publicar}
-      <MaisAcoes podeDescartar={p.podeDescartar} descartar={p.descartar} />
-    </>
+      <Badge variant={p.alterado ? 'default' : 'secondary'}>{p.estado}</Badge>
+      <div className="hidden md:block">
+        <Alternador visao={p.visao} mudar={p.mudarVisao} />
+      </div>
+      <div className="ms-auto flex flex-wrap items-center gap-2">
+        <BotaoSimular s={p.simulador} />
+        <BotaoAcao type="submit" variant="outline" pendente={p.salvando} disabled={!p.valida}>
+          Salvar rascunho
+        </BotaoAcao>
+        {p.publicar}
+        <MaisAcoes podeDescartar={p.podeDescartar} descartar={p.descartar} />
+      </div>
+    </div>
   )
 }
-type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; fechar: () => void; recarregar: () => Promise<unknown> }
 
-// A janela de edição do fluxo: o rascunho em lista ou no canvas, o simulador, e a barra Simular, Publicar, Cancelar e Salvar rascunho; Descartar fica no menu Mais.
-// Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API) e a cadeia está inteira.
-export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, recarregar }: Props) {
+// "Sair sem salvar?": o que foi editado e não salvo se perde.
+function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar: () => void; sair: () => void }) {
+  return (
+    <Dialog open={aberto} onOpenChange={(a) => !a && continuar()}>
+      <DialogContent aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>Sair sem salvar?</DialogTitle>
+        </DialogHeader>
+        <p className="m-0 text-sm">As alterações deste fluxo que não foram salvas como rascunho serão perdidas.</p>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={continuar}>
+            Continuar editando
+          </Button>
+          <Button type="button" variant="destructive" onClick={sair}>
+            Sair sem salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Fechar ou recarregar a aba com alterações não salvas pede a confirmação do navegador.
+function useAvisoAoFechar(ativo: boolean) {
+  useEffect(() => {
+    if (!ativo) return
+    const aviso = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', aviso)
+    return () => window.removeEventListener('beforeunload', aviso)
+  }, [ativo])
+}
+
+type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; recarregar: () => Promise<unknown> }
+
+// A página de edição do fluxo, dentro da casca: a trilha, a barra (estado, Lista e Canvas, Simular, Salvar rascunho, Publicar e o menu Mais com Descartar),
+// o rascunho em lista ou no canvas e o painel lateral. Publicar só liga depois que a API aceitou o rascunho como está na tela (a validação é a da API) e a cadeia está inteira.
+export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }: Props) {
+  const { slug } = useParams()
+  const navegar = useNavigate()
+  const lista = `/${slug}/cadastros`
+  const fluxos = `${lista}?aba=fluxos`
   const [grafo, setGrafo] = useState<Grafo>(() => deEtapas((fluxo.rascunho ?? fluxo.vigente)?.etapas ?? []))
   const [visao, setVisao] = useState<Visao>('lista')
   const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
+  const [saindo, setSaindo] = useState<string>()
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
   const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
   const valida = cadeiaValida(grafo)
   const simulador = useSimulador({ fluxo, versao: versaoParaSimular(salvo, alterado, fluxo), aoSimular: setSimulacao })
+  useAvisoAoFechar(alterado)
 
   function editar(f: (g: Grafo) => Grafo) {
     setGrafo(f)
@@ -206,36 +256,38 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, fechar, reca
     if (v === 'canvas') setGrafo(fixarPosicoes) // o que o canvas desenha é o que a API recebe
     setVisao(v)
   }
+  // com alterações não salvas, sair pergunta antes
+  const sair = (destino: string) => (alterado ? setSaindo(destino) : navegar(destino))
+  const aoEnviar = (e: FormEvent) => {
+    e.preventDefault()
+    salvar()
+  }
 
   const salvar = () =>
     acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, { etapas: etapasParaApi(grafo) }, 'PUT'), aviso: 'Rascunho salvo.', depois: () => { setSalvo(true); setAlterado(false) } })
-  const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: fechar })
-  const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: fechar })
+  const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: () => navegar(fluxos) })
+  const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: () => navegar(fluxos) })
 
   const contexto = `${categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · ${abrangenciaDoFluxo(fluxo, cursos)}`
-  const corpo = (
-    <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} estreito={estreito} simulador={<Simulador s={simulador} cursos={cursos} resultado={simulacao} />} />
-  )
+  const noCanvas = visao === 'canvas' && !estreito
   const publicarBotao = (
     <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || acao.isPending} onClick={publicar}>
       Publicar
     </BotaoAcao>
   )
-
-  if (estreito)
-    return (
-      <Editor titulo="Editar: Fluxos" aberto fechar={fechar} salvar={salvar} pendente={acao.isPending} botao="Salvar rascunho" desabilitado={!valida} acoes={<><BotaoSimular s={simulador} />{publicarBotao}</>} alerta={<ErroDe erro={acao.error} />}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="m-0 text-sm text-muted-foreground">{contexto}</p>
-          <BotaoAcao type="button" variant="ghost" pendente={false} className="text-destructive hover:text-destructive" disabled={!fluxo.rascunho || acao.isPending} onClick={descartar}>
-            Descartar rascunho
-          </BotaoAcao>
-        </div>
-        {corpo}
-      </Editor>
-    )
-  const topo = <TopoDoFluxo contexto={contexto} estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} fechar={fechar} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={!!fluxo.rascunho && !acao.isPending} descartar={descartar} />
+  // no canvas o editor tem a altura da janela (menos o cabeçalho da casca) e o desenho enche o que sobra
+  const altura = noCanvas ? 'lg:h-[calc(100dvh-49px-1.5rem)] lg:-mb-6 lg:pb-3' : ''
   return (
-    <JanelaCheia fechar={fechar} salvar={salvar} topo={topo} corpo={<><ErroDe erro={acao.error} />{corpo}</>} />
+    <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${altura}`}>
+      <Trilha contexto={contexto} sair={sair} lista={lista} fluxos={fluxos} />
+      <form className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={aoEnviar}>
+        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => sair(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={!!fluxo.rascunho && !acao.isPending} descartar={descartar} />
+        <div className={`flex min-h-0 flex-1 flex-col gap-3 ${noCanvas ? '' : 'max-w-3xl'}`}>
+          <ErroDe erro={acao.error} />
+          <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} estreito={estreito} simulador={<Simulador s={simulador} cursos={cursos} resultado={simulacao} />} />
+        </div>
+      </form>
+      <SairSemSalvar aberto={saindo !== undefined} continuar={() => setSaindo(undefined)} sair={() => navegar(saindo!)} />
+    </section>
   )
 }

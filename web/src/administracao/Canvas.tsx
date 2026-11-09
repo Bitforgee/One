@@ -196,8 +196,8 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   const removida = grafo.nos.find((n) => n.id === removendo)
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row">
-      <div className="relative h-[clamp(24rem,calc(100dvh-12rem),60rem)] min-w-0 overflow-hidden rounded-lg border text-muted-foreground lg:flex-1" style={Tokens}>
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
+      <div className="relative h-[clamp(24rem,calc(100dvh-12rem),60rem)] min-w-0 overflow-hidden rounded-lg border text-muted-foreground lg:h-auto lg:flex-1" style={Tokens}>
         <ReactFlow
           nodes={nodes}
           edges={arestas}
@@ -234,9 +234,8 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
         </ReactFlow>
         {grafo.nos.length === 0 && <p className="pointer-events-none absolute inset-x-0 bottom-4 m-0 px-4 text-center text-sm">Arraste um destino para começar.</p>}
       </div>
-      <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-72">
-        {atual && <PainelDoNo no={atual} setores={setores} mudar={(p) => editar((g) => mudar(g, atual.id, p))} remover={() => pedirRemocao(atual.id)} fechar={fecharPainel} />}
-        {lateral}
+      <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-80 lg:overflow-y-auto">
+        {atual ? <PainelDoNo no={atual} setores={setores} mudar={(p) => editar((g) => mudar(g, atual.id, p))} remover={() => pedirRemocao(atual.id)} fechar={fecharPainel} /> : lateral}
       </aside>
       <ConfirmarRemocao aberto={!!removida} cancelar={() => setRemovendo(undefined)} confirmar={() => { tirar(removendo!); setRemovendo(undefined) }} />
     </div>

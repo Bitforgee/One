@@ -50,7 +50,7 @@ Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "sa
 **C11** - Com alterações não salvas o evento `beforeunload` sai com `defaultPrevented` verdadeiro; sem alterações, falso (AC 11)
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "fechar a aba com alterações"`
 
-**C20** - Um atendente (sem o papel ADMINISTRADOR) que abre `/univag/cadastros/fluxos/7` não vê o editor: a casca mostra o acesso negado de sempre (403 da tela) (Surface)
+**C20** - Um atendente (sem o papel ADMINISTRADOR) que abre `/univag/cadastros/fluxos/7` não vê o editor: a casca o leva à tela inicial dele (a fila), como faz com qualquer rota sem permissão (403 da tela) (Surface)
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "sem o papel de administrador"`
 
 ### S2 - o desenho ocupa o espaço da página · 4 arquivos · 36 KB · ~9k
@@ -61,7 +61,7 @@ Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor
 **C13** - No Canvas, sem etapa selecionada o painel lateral mostra `Simular um aluno`; selecionar uma etapa (Enter no nó) troca o título para `Etapa selecionada`; em ambos os casos o painel está inteiro dentro da janela (AC 13)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "painel lateral troca"`
 
-**C14** - A barra do editor tem, nesta ordem, o estado (`Publicado v2`), as visões `Lista` e `Canvas`, `Simular`, `Salvar rascunho`, `Publicar` e `Mais` (com `Descartar rascunho`), e o botão `Voltar`; não existe `Cancelar`; em 1440 px todos esses controles têm o mesmo `y` do topo com diferença de no máximo 8 px (uma linha) (AC 14)
+**C14** - A barra do editor tem, nesta ordem, o estado (`Publicado v2`), as visões `Lista` e `Canvas`, `Simular`, `Salvar rascunho`, `Publicar` e `Mais` (com `Descartar rascunho`), e o botão `Voltar`; não existe `Cancelar`; em 1440 px todos esses controles têm o mesmo centro vertical, com diferença de no máximo 2 px (uma linha; emenda do builder, anotada no relatório: era "o mesmo `y` do topo, ≤ 8 px", que o selo de estado, mais baixo, não cumpre mesmo estando na mesma linha) (AC 14)
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "barra do editor"`
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "barra em uma linha"`
 

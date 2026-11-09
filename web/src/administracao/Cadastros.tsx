@@ -1,5 +1,6 @@
 import { Plus, Search, SearchX, Workflow } from 'lucide-react'
 import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
 import { ErroDoCampo } from '../Campo'
@@ -16,7 +17,6 @@ import { TableCell, TableRow } from '../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { Textarea } from '../ui/textarea'
 import { abrangenciaDoFluxo, semLideranca, SemestresDe1a12, type Fluxo } from './comum'
-import { EdicaoDoFluxo } from './EdicaoDoFluxo'
 import { linhas, type Aba, type Linha, type Listas } from './LinhasDosCadastros'
 
 // O formulário guarda o registro com texto no lugar de null; a API trata texto vazio e null do mesmo jeito.
@@ -313,9 +313,14 @@ export function Cadastros() {
     fluxos: '/api/admin/fluxos',
     prontas: '/api/admin/respostas-prontas',
   })
-  const [aba, setAba] = useState<Aba>('setores')
+  // a aba vive na URL (?aba=fluxos): o Voltar do editor de fluxo e a trilha dele chegam na aba certa
+  const [params, setParams] = useSearchParams()
+  const { slug } = useParams()
+  const navegar = useNavigate()
+  const pedida = params.get('aba') as Aba | null
+  const aba: Aba = pedida && pedida in Titulos ? pedida : 'setores'
+  const setAba = (k: Aba) => setParams(k === 'setores' ? {} : { aba: k }, { replace: true })
   const [editando, setEditando] = useState<Ficha>()
-  const [fluxoAberto, setFluxoAberto] = useState<number>()
   const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
   const abas = Object.keys(Titulos) as Aba[]
@@ -324,7 +329,7 @@ export function Cadastros() {
     const { id, ...resto } = editando!
     acao.mutate({ chamar: () => gravar(`/api/admin/${Rotas[aba]}`, id, Corpos[aba](resto)), aviso: 'Cadastro salvo.', depois: () => setEditando(undefined) })
   }
-  const editar = (x: object) => (aba === 'fluxos' ? setFluxoAberto((x as Fluxo).id) : setEditando(ficha(x)))
+  const editar = (x: object) => (aba === 'fluxos' ? navegar(`/${slug}/cadastros/fluxos/${(x as Fluxo).id}`) : setEditando(ficha(x)))
 
   return (
     <div className="flex flex-col gap-2">
@@ -347,9 +352,6 @@ export function Cadastros() {
         ))}
       </Tabs>
 
-      {dados && fluxoAberto && dados.fluxos.some((f) => f.id === fluxoAberto) && (
-        <EdicaoDoFluxo key={fluxoAberto} fluxo={dados.fluxos.find((f) => f.id === fluxoAberto)!} categorias={dados.categorias} cursos={dados.cursos} setores={dados.setores.filter(semLideranca)} fechar={() => setFluxoAberto(undefined)} recarregar={recarregar} />
-      )}
       <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>

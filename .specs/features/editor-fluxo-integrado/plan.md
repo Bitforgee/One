@@ -41,7 +41,7 @@ Rota de tela que esta feature adiciona. Nenhuma rota de API nova nem alterada: `
 
 | Route | In | Out | Status |
 | --- | --- | --- | --- |
-| tela `/:slug/cadastros/fluxos/:id` | `id` do fluxo na URL; papel ADMINISTRADOR | editor do fluxo com trilha, barra, desenho e painel lateral | `200` editor (fluxo existe), `404` "Fluxo não encontrado." na tela (id fora da lista), `403` tela de acesso negado da casca (quem não é administrador) |
+| tela `/:slug/cadastros/fluxos/:id` | `id` do fluxo na URL; papel ADMINISTRADOR | editor do fluxo com trilha, barra, desenho e painel lateral | `200` editor (fluxo existe), `404` "Fluxo não encontrado." na tela (id fora da lista), `403` a casca leva quem não é administrador à tela inicial dele |
 
 ## Landing
 
@@ -124,7 +124,7 @@ O canvas e o painel lateral usam a altura e a largura que a casca deixa.
 | screen editor de fluxo | empty state (fluxo sem etapas) | existing - a lista e o canvas já mostram "Arraste um destino para começar." |
 | screen editor de fluxo | loading state | existing - `Carregando` enquanto as listas chegam |
 | screen editor de fluxo | error state | AC 4 (id inexistente) e existing `ErroDe` (leitura que falha, gravação que falha) |
-| screen editor de fluxo | unauthorised | existing - a casca barra quem não é administrador (`Autenticado`) |
+| screen editor de fluxo | unauthorised | existing - a casca leva quem não é administrador à tela inicial dele (`Autenticado`) |
 | screen editor de fluxo | density and ordering | AC 12, AC 14, AC 15 |
 | screen editor de fluxo | destructive action confirms | AC 9 (sair sem salvar) e existing - Descartar rascunho e remover etapa com setor ou prazo |
 | screen editor de fluxo | focus and keyboard | existing - a trilha e os botões são links e botões nativos; "Voltar" e a trilha são alcançáveis por Tab |

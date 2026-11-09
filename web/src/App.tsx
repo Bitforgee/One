@@ -7,6 +7,7 @@ import { Conta } from './acesso/Conta'
 import { AplicaAparencia } from './aparencia'
 import { Aparencia } from './administracao/Aparencia'
 import { Cadastros } from './administracao/Cadastros'
+import { PaginaDoFluxo } from './administracao/PaginaDoFluxo'
 import { Instituicoes } from './administracao/Instituicoes'
 import { Matriculas } from './administracao/Matriculas'
 import { Usuarios } from './administracao/Usuarios'
@@ -67,6 +68,7 @@ function Rotas() {
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="matriculas" element={<Matriculas />} />
             <Route path="cadastros" element={<Cadastros />} />
+            <Route path="cadastros/fluxos/:id" element={<PaginaDoFluxo />} />
             <Route path="aparencia" element={<Aparencia />} />
             <Route path="instituicoes" element={<Instituicoes />} />
           </Route>

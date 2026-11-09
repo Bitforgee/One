@@ -22,7 +22,7 @@ async function abrirEditor(page: Page) {
   if (await aba.isVisible()) await aba.click()
   else await page.getByLabel('Cadastro').selectOption('fluxos')
   await page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('button', { name: categoria.nome }).click()
-  return page.getByRole('dialog', { name: 'Editar: Fluxos' })
+  return page.getByRole('region', { name: 'Editar: Fluxos' })
 }
 
 async function abrirCanvas(page: Page) {
@@ -162,7 +162,7 @@ test.describe('canvas dos fluxos', () => {
     const editor = await abrirEditor(page)
 
     const caixas: Record<string, { x: number; y: number; width: number; height: number }> = {}
-    for (const nome of ['Simular', 'Publicar', 'Salvar rascunho', 'Cancelar']) caixas[nome] = (await editor.getByRole('button', { name: nome, exact: true }).boundingBox())!
+    for (const nome of ['Simular', 'Publicar', 'Salvar rascunho', 'Voltar']) caixas[nome] = (await editor.getByRole('button', { name: nome, exact: true }).boundingBox())!
     expect(Math.abs(caixas['Simular'].y - caixas['Publicar'].y)).toBeLessThanOrEqual(1)
     expect(Math.abs(caixas['Simular'].height - caixas['Publicar'].height)).toBeLessThanOrEqual(1)
     for (const [nome, c] of Object.entries(caixas)) {
