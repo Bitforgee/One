@@ -2,9 +2,11 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: 9d80016..HEAD (a381a04); rodada 2: 8579e27..a381a04
-**Round**: 2 - scoped (C7, C14 re-verificados em a381a04; o resto carried from 8579e27)
+**Diff range**: 9d80016..HEAD (5eaf9e8); rodada 2: 8579e27..a381a04; rodada 3: a381a04..5eaf9e8
+**Round**: 3 - scoped (C5, C9, C10, C11, C19, C22-C25 re-verificados em 5eaf9e8; C7 e C14 carried from a381a04; o resto carried from 8579e27)
 **Verifier**: independent sub-agent (author != verifier)
+
+Resumo da rodada 3: FAIL. C22, C23, C25 PASS; **C24 FAIL** (a prova de Playwright da cadeia inválida é vazia: mutante sobrevive, ver Round 3); **mutante a1 sobrevive** (`!ignorarSaida.current` sem prova: Descartar com edições não salvas); C21 NÃO RODOU (crapper, AD-044, nenhum AD cobre esta feature).
 
 Resumo (rodada 1; atualizado na rodada 2 abaixo): 18 de 21 checks PASS; 3 não PASS: C7 (o fim "Descartar rascunho" não tem prova do destino nem do aviso; mutante sobreviveu), C14 (a ordem dos controles é afirmada pelo check e nenhum teste a mede; mutante sobreviveu), C21 (`crapper` NÃO RODOU, AD-044; `dryer` saiu 0).
 
@@ -44,6 +46,10 @@ Provas rodadas em HEAD, em um comando por alvo. Vitest: `npx vitest run src/admi
 | C19 | nada além do planejado quebra | `npx vitest run` (65 files, 602 passed, 0 failed); `npm --prefix web run build` exit 0; playwright dos 5 specs: 165 passed, 5 failed | As 5 falhas são exatamente as de ambiente conhecidas: `identidade.spec.ts:36` (Public Sans/Source Serif), `:304` (PWA fontes latin), `:1281` (PWA outros alfabetos), `arranjo.spec.ts:1189` (cabeçalho 36 px), `ux.spec.ts:472` (`Avisos no celular`). Rodei contra o dev server; **não consegui reprová-las na base** (não montei worktree da base), a classificação é pela lista dada e porque todas esperam o app compilado/service worker e não tocam fluxos. `git diff 9d80016..HEAD -U0` nos testes existentes (`canvas.test.tsx`, `fluxos.test.tsx`, `textos.test.tsx`, `fluxos.spec.ts`, `fluxos-real.spec.ts`, `ux.spec.ts`): só trocas dialog->region (`canvas.test.tsx:41`, `fluxos.test.tsx:47`, `fluxos.spec.ts:25`, `fluxos-real.spec.ts:164`, `ux.spec.ts:1190`), `Cancelar`->`Voltar` (`canvas.test.tsx:196`, `fluxos.spec.ts:165`), `w-screen`->sem diálogo (`canvas.test.tsx:302`), esperas de diálogo->região (`fluxos.test.tsx:133,154`), `'Editar: Fluxos'` fora da lista de textos e `'Voltar'` somado (`textos.test.tsx:25,30`). Nenhuma asserção de regra removida. Extra do builder: `ux.spec.ts:700` abre a transcrição recolhida do assistente (resto da feature `chat-linha-do-tempo` C17), fora do escopo deste plano, mas inofensivo (só adiciona um clique) | PASS |
 | C20 | atendente que abre o editor volta à Fila | vitest `sem o papel de administrador` | `paginaDoFluxo.test.tsx:209` `findByRole('heading', { level: 1, name: 'Fila' })`, `:210` região ausente. Emenda (Fila em vez de página de acesso negado): alinhada ao `Surface` do plano ("a casca leva à tela inicial"), não enfraquece | PASS |
 | C21 | `crapper` < 9.99 e `dryer` sem candidato 0.8 | `dryer -s ... --threshold 0.8 ...` exit 0: "No duplicate candidates found."; `crapper --version`: `Program 'crapper.exe' failed to run ... Uma política de Controle de Aplicativo bloqueou este arquivo.` | metade `dryer`: PASS. metade `crapper`: **NÃO RODOU** (AD-044). O check diz que fica aberto como "não rodou", nunca PASS | FAIL (crapper não rodou) |
+| C22 | link `Usuários` da barra lateral com etapa não salva abre `Sair sem salvar?`; Continuar mantém; Sair leva à tela | vitest `barra lateral com alterações` (rodada 3) | `paginaDoFluxo.test.tsx:194-210` `findByRole('dialog', { name: 'Sair sem salvar?' })`, `getByLabelText('Destino da etapa 3')` após Continuar, `findByRole('heading', { level: 1, name: 'Usuários' })` após Sair. Mutante a2 morto | PASS |
+| C23 | Voltar do navegador com etapa não salva abre o diálogo; Continuar mantém `/univag/cadastros/fluxos/7`; sem alterações sai direto | playwright `voltar do navegador com alterações` (rodada 3) | `editor-fluxo.spec.ts:75-98` `expect(d).toBeVisible()`, `expect(new URL(page.url()).pathname).toBe('/univag/cadastros/fluxos/7')`, `expect(page.getByRole('dialog')).toHaveCount(0)` no fim. Mutante a2 morto (diálogo não aparece); mutante d morto (editor nem monta) | PASS |
+| C24 | Ctrl+S/⌘+S: cadeia válida envia PUT igual ao botão e `defaultPrevented`; cadeia inválida ou gravando: nada enviado e `defaultPrevented` | vitest `Ctrl+S salva o rascunho` + playwright `Ctrl+S com cadeia inválida` (rodada 3) | Válida e gravando: `paginaDoFluxo.test.tsx:222` `expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false)`, `:223` corpo do PUT, `:225-226` ⌘+S durante a gravação `toBe(false)` e `toHaveLength(1)`. Mutante b morto. **Inválida: `editor-fluxo.spec.ts:102-114` `expect(gravacoes).toBe(0)` é vazio**: o `page.route('**/api/admin/fluxos/7/rascunho')` do teste é registrado ANTES de `noCanvas`/`preparar` → `simularApi` (`simulada.ts:49` `**/api/**`) é registrado depois e tem precedência, então `gravacoes` nunca sobe. Mutante c (sem `valida &&`) sobrevive; num spec temporário com a rota registrada depois de `noCanvas`: código original `gravacoes=0`, mutante c `gravacoes=1`. Além disso o Playwright não assere `defaultPrevented` na cadeia inválida (o Vitest só cobre a válida): a metade "inválida + defaultPrevented" do AC 20 não tem prova | FAIL |
+| C25 | `main.tsx` com `createBrowserRouter`+`RouterProvider`, `util.tsx` com `createMemoryRouter` | vitest `roteador de dados` (1 passed) | `paginaDoFluxo.test.tsx:232-239` `expect(principal).not.toMatch(/<BrowserRouter/)`, `expect(util).toMatch(/createMemoryRouter\(/)`. Prova textual (lê o fonte), mas o comportamento é provado por C22/C23 (useBlocker lança fora de roteador de dados). Mutante d morto (2 provas: este e o e2e) | PASS |
 
 ## Coverage
 
@@ -58,7 +64,9 @@ Recomputado dos critérios 1-17 do plano, do `Surface` e do `Landing`, não da t
 | painel lateral (2) | plan AC 13 | C13 | - |
 | visões (2) | plan AC 12, 15 | Canvas C12 · Lista C15 | - |
 | larguras (4) | plan AC 12, 14-17 | 390 C16,C17 · 1280 e 1440 C12 · lista 1440 C15 · barra 1440 C14 | - |
-| doors do `Landing` (1) | plan.md Landing | endereço do editor C18 | - |
+| doors do `Landing` (2) | endereço do editor C18 · roteador de dados C25 | - |
+| critérios da emenda (3) | plan.md AC 18-20 | AC 18 C22 (barra lateral), C23 (Voltar do navegador) · AC 19 C24 válida (Vitest) · AC 20 gravando (Vitest) | AC 20 cadeia inválida: sem prova que falhe (Playwright vazio, mutante c vivo; sem `defaultPrevented`) |
+| formas de sair do editor, rodada 3 (7) | `EdicaoDoFluxo.tsx` `useBlocker`, `sairDeVez` | trilha Cadastros/Fluxos e Voltar C9 · Voltar do navegador C5, C23 · fechar a aba C11 · link da barra lateral C22 · Publicar/Descartar (saem sem perguntar) C7 | Descartar com edições não salvas: nenhum teste (mutante a1 vivo) |
 
 ## Test policy rows
 
@@ -67,6 +75,7 @@ Recomputado dos critérios 1-17 do plano, do `Surface` e do `Landing`, não da t
 | Decide, na tela (achar o fluxo pelo id, guarda de saída, para onde cada fim de gravação volta) | `PaginaDoFluxo.tsx`, `EdicaoDoFluxo.tsx` (`sair`, `publicar`, `descartar`) | Vitest na própria camada, um caso por linha da tabela de decisão | yes (rodada 2) - o caso `avisos ao descartar` existe e mata F5b/F5c; achar o fluxo (F1), guarda (F2), `beforeunload` (F3), trilha (F4) e destino do Publicar (F5) seguem mortos |
 | Arranjo (alturas, larguras, uma linha, painel de 320 px) | `EdicaoDoFluxo.tsx` (altura), `Canvas.tsx` (`lg:w-80`, painel), barra | Playwright com `boundingBox`, cada largura do plano | yes - 390, 1280, 1440 medidos; altura (F6), largura do painel (F7), troca de painel (F8) e quebra da barra (F9e) mortos; a ordem dos controles é medida desde a rodada 2 (F10b morto, ver C14) |
 | Instrumentation (classes, ícones, textos fixos) | `Trilha`, `MaisAcoes`, textos | nenhuma própria | yes |
+| Decide, na tela - rodada 3 (guarda de saída com `useBlocker`, atalho Ctrl+S) | `EdicaoDoFluxo.tsx` (`useBlocker`, `ignorarSaida`, `useAtalhoDeSalvar`) | Vitest na própria camada, um caso por linha da tabela de decisão | **no** - faltam os casos "Descartar com edições não salvas sai sem perguntar" (a1) e "Ctrl+S com cadeia inválida não envia" (c); o caso no Playwright é vazio |
 
 ## Faults injected
 
@@ -88,6 +97,11 @@ Feitas na árvore real, uma de cada vez, revertidas com `git checkout -- <arquiv
 | F9d remover a frase "O canvas está disponível..." | `EdicaoDoFluxo.tsx` | yes - `celular em página` falhou |
 | F9e remover todo `flex-wrap` da barra | `EdicaoDoFluxo.tsx` | yes - `celular sem rolagem lateral` falhou |
 | F10 selo de estado depois das visões e antes das ações | `EdicaoDoFluxo.tsx` `BarraDoEditor` | no na rodada 1 (corrigido: ver F10b, yes) - `barra em uma linha` 1 passed e `barra do editor` 1 passed |
+| a1 (rodada 3) sem `!ignorarSaida.current` no `useBlocker` | `EdicaoDoFluxo.tsx:254` | **no** - `paginaDoFluxo.test.tsx` + `fluxos.test.tsx`: 24 passed |
+| a2 (rodada 3) condição do bloqueio sempre falsa (`false && ...`) | `EdicaoDoFluxo.tsx:254` | yes - `sair sem salvar` e `barra lateral com alterações` falharam; playwright `voltar do navegador com alterações` falhou (diálogo invisível) |
+| b (rodada 3) sem `e.preventDefault()` em `useAtalhoDeSalvar` | `EdicaoDoFluxo.tsx:~233` | yes - `Ctrl+S salva o rascunho` falhou |
+| c (rodada 3) salva mesmo com `!valida` | `EdicaoDoFluxo.tsx:~277` | **no** - playwright `Ctrl+S com cadeia inválida` 1 passed (prova vazia); vitest `Ctrl+S` 1 passed (não cobre cadeia inválida) |
+| d (rodada 3) `main.tsx` volta a `<BrowserRouter>` | `main.tsx` | yes - `roteador de dados` falhou e o e2e `voltar do navegador` expirou (editor não monta) |
 
 ## Gate
 
@@ -152,3 +166,44 @@ Os mutantes sobreviventes da rodada 1 (F5b, F10) agora estão mortos; F9 e F9b c
 C1-C20: 20 de 20 PASS (C7 e C14 agora PASS; os outros carried from 8579e27). C21: não rodou. Coverage: 0 membros sem prova. Test policy: 3 de 3 atendidas. Faults: 4 injetadas na rodada 2, 4 mortas. Gate desta rodada: vitest 5 passed, playwright 1 passed (escopo C7/C14; o gate completo da rodada 1 - 602 vitest, 165+5 playwright - é carried from 8579e27, e a rodada 2 só mexeu em 2 arquivos de teste e no checks.md).
 
 Fechamento: `Verdict` permanece FAIL só por C21.
+
+## Round 3 (scoped: C22-C25 and the mechanism change)
+
+**Base da rodada**: a381a04 (rodada 2) .. 5eaf9e8 (`feat(web): guard every exit of the flow editor with a data router and save the draft with Ctrl+S`). Escopo do diff: `plan.md` (AC 18-20, Landing door 2), `checks.md` (C22-C25), `STATE.md` (AD-047), `EdicaoDoFluxo.tsx`, `main.tsx`, `test/util.tsx`, `paginaDoFluxo.test.tsx`, `editor-fluxo.spec.ts`, `casca.spec.ts`. Seções carried from rodadas anteriores dizem de onde vêm; as tabelas Checks/Coverage/Test policy/Faults acima foram atualizadas com as linhas desta rodada.
+
+### Provas (HEAD 5eaf9e8; dev server Vite em 5173, parado no fim)
+
+- Vitest `paginaDoFluxo.test.tsx` inteiro, verbose: 17 passed, cada nome aparece (inclui `barra lateral com alterações`, `Ctrl+S salva o rascunho`, `roteador de dados`, `sair sem salvar`, `sair sem alterações`, `fechar a aba com alterações`). Contagem > 0 em todos.
+- Playwright `editor-fluxo.spec.ts`: 11 passed (inclui `voltar do navegador`, `voltar do navegador com alterações`, `Ctrl+S com cadeia inválida`).
+- Vitest inteiro: 65 files, 606 passed, 0 failed. `npm --prefix web run build`: exit 0.
+- Playwright `fluxos arranjo identidade celular ux casca chat editor-fluxo`: 219 passed, 5 failed na primeira execução (exatamente as 5 de ambiente: `identidade.spec.ts:36`, `:304`, `:1281`, `arranjo.spec.ts:1189`, `ux.spec.ts:472`). Numa segunda execução completa `identidade.spec.ts:1154` (campos do form da resposta, borda de 3:1) falhou além das 5; rodado sozinho 3 vezes: 3 passed. Classificado como instável sob carga, não causado por esta feature (não toca fluxos). `casca.spec.ts` 'borda da caixa de envio com 3:1' passa. Não rodei `anexos.spec.ts`, `plataforma.spec.ts`, `push.spec.ts` (precisam do app compilado ou da API real). Não montei worktree da base para reprovar as 5 de ambiente: classificação pela lista dada.
+
+### Veredito por check
+
+| Check | Result | Nota |
+| --- | --- | --- |
+| C5 | PASS | `voltar do navegador` 1 passed com `useBlocker` (sem alterações não bloqueia); mutante a2/d não o torna vacuoso (d o derruba) |
+| C9 | PASS | `sair sem salvar` passa; mutante a2 o derruba (trilha Fluxos/Cadastros e Voltar) |
+| C10 | PASS | `sair sem alterações` passa (inclui após Salvar rascunho) |
+| C11 | PASS | `fechar a aba com alterações` passa; `:174-178` inalterado |
+| C19 | PASS (com ressalva de ambiente) | Vitest 606, build 0, Playwright só as falhas de ambiente conhecidas (+1 instável que passa isolada). `git diff a381a04..HEAD` nos testes existentes: `casca.spec.ts` (+/-1 linha, corrige a medição do compositor, não enfraquece: mede a borda real) |
+| C22 | PASS | asserção de diálogo, Continuar e Sair com destino; mutante a2 morto |
+| C23 | PASS | mutantes a2 e d mortos; o ramo "sem alterações sai direto" está no mesmo teste |
+| C24 | **FAIL** | metade Vitest (válida, ⌘+S, gravando, `defaultPrevented`) prova e mutante b morre. Metade Playwright (cadeia inválida) é vazia: a rota `**/api/admin/fluxos/7/rascunho` é registrada antes de `preparar()`, `simularApi` (`**/api/**`) a sombreia, `gravacoes` fica 0 mesmo com a cadeia válida (verificado: spec temporário, apagado). Mutante c sobrevive. Também não há asserção de `defaultPrevented` na cadeia inválida (AC 20 pede) |
+| C25 | PASS | prova textual; mutante d morto; o comportamento real vem de C22/C23 |
+
+### Emenda de C24 (prova da cadeia inválida movida para o Playwright)
+
+Mover a prova para o navegador é defensável: criar o nó solto exige o canvas (`@xyflow`) e `dragTo`, que o jsdom não faz. Mas a emenda **enfraquece** o check na prática: o texto do check promete "nada é enviado e `defaultPrevented` verdadeiro" para a cadeia inválida e a prova movida (a) conta chamadas por uma rota que nunca é atingida, (b) não lê `defaultPrevented`. Sem a emenda um teste Vitest com um nó solto de verdade não existe; a única prova do ramo `!valida` hoje não pega o mutante c. Conserto sugerido ao builder: registrar o `page.route` depois de `noCanvas` (ou usar `page.on('request')`), provar a rota com um Ctrl+S de cadeia válida que dá `gravacoes === 1` no mesmo spec, e disparar o `keydown` por `page.evaluate` para ler `defaultPrevented`.
+
+### Mutante a1 (sobrevivente): `!ignorarSaida.current`
+
+Sem ele, `Descartar rascunho` depois de editar a tela (Descartar fica ligado com rascunho e sem gravação, mesmo com alterações) faria o `useBlocker` abrir `Sair sem salvar?` depois de o DELETE ter dado certo (raciocinado pelo código, não demonstrado no navegador). Publicar não depende dele (Publicar só liga com `salvo`, que implica `alterado === false`). O AC 7 diz que Descartar volta à lista e o plano de AC 18-20 e a Landing door 2 afirmam que Descartar/Publicar saem sem perguntar; nenhum check e nenhum teste exercita Descartar com `alterado`. Falta um caso Vitest (em `paginaDoFluxo.test.tsx`: editar, Mais › Descartar, esperar `Rascunho descartado.` e a aba Fluxos sem diálogo).
+
+### C21
+
+`crapper` segue bloqueado por Application Control (AD-044); não tentei de novo. Nenhum AD cobre `editor-fluxo-integrado`: C21 fica NÃO RODOU (FAIL na tabela), nunca PASS. O AD-047 desta emenda trata do roteador, não do `crapper`.
+
+### Resumo da rodada 3
+
+C1-C20 e C22, C23, C25: PASS (C1-C4, C6-C8, C12-C13, C15-C18, C20 carried; C5, C9-C11, C19, C22, C23, C25 verificados em 5eaf9e8). C24: FAIL. C21: não rodou. Faults: 5 injetadas, 3 mortas (a2, b, d), 2 sobreviveram (a1, c). Gate: Vitest 606 passed; Playwright 219 passed + 5 de ambiente. Verdict: FAIL.

@@ -100,21 +100,31 @@ test.describe('editor de fluxo na casca', () => {
 
   // C24 (cadeia inválida; os outros casos estão no Vitest)
   test('Ctrl+S com cadeia inválida', async ({ page }) => {
+    await noCanvas(page, 1440)
+    // a rota da gravação vem depois de simularApi: a última registrada vale primeiro
     let gravacoes = 0
     await page.route('**/api/admin/fluxos/7/rascunho', (r) => {
       gravacoes++
       return r.fulfill(json({ numero: 3, etapas: [] }))
     })
-    await noCanvas(page, 1440)
+    const atalho = () => page.evaluate(() => {
+      const ev = new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true })
+      document.body.dispatchEvent(ev)
+      return ev.defaultPrevented
+    })
+    // controle: com a cadeia válida o atalho grava uma vez
+    expect(await atalho()).toBe(true)
+    await expect.poll(() => gravacoes).toBe(1)
+
     // um nó solto fora da cadeia: arrastar do menu "Adicionar etapa" até o canvas
     await page.getByRole('button', { name: 'Adicionar etapa', exact: true }).click()
     await page.getByRole('button', { name: /^Coordenação do curso/ }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 500, y: 300 } })
     await page.keyboard.press('Escape')
     await expect(page.getByRole('alert').filter({ hasText: 'Ligue todas as etapas' })).toBeVisible()
-    await page.keyboard.press('Control+s')
+    await expect(editor(page).getByRole('button', { name: 'Salvar rascunho' })).toBeDisabled()
+    expect(await atalho(), 'a janela não salva a página').toBe(true)
     await page.waitForTimeout(300)
-    expect(gravacoes).toBe(0)
-    await expect(page.getByRole('dialog')).toHaveCount(0) // nem a janela de salvar a página nem outro diálogo
+    expect(gravacoes, 'nada é enviado com a cadeia inválida').toBe(1)
   })
   // C12
   test('canvas ocupa a página', async ({ page }) => {

@@ -210,6 +210,20 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Usuários' })).toBeInTheDocument()
   })
 
+  // C22 (Descartar de propósito não pergunta, mesmo com alterações não salvas)
+  it('descartar depois de editar sai sem perguntar', async () => {
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
+    abrir('/univag/cadastros/fluxos/6')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    expect(e.getByText('Alterações não salvas')).toBeInTheDocument()
+    await userEvent.click(e.getByRole('button', { name: 'Mais' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
+    expect(await screen.findByText('Rascunho descartado.')).toBeInTheDocument()
+    await semEditor()
+    expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()
+    expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
+  })
   // C24
   it('Ctrl+S salva o rascunho', async () => {
     let solta: () => void = () => undefined
