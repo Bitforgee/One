@@ -2,11 +2,11 @@
 
 **Verdict**: FAIL
 **Profile**: ui
-**Diff range**: 9d80016..HEAD (5eaf9e8); rodada 2: 8579e27..a381a04; rodada 3: a381a04..5eaf9e8
-**Round**: 3 - scoped (C5, C9, C10, C11, C19, C22-C25 re-verificados em 5eaf9e8; C7 e C14 carried from a381a04; o resto carried from 8579e27)
+**Diff range**: 9d80016..HEAD (eb9a457); rodada 2: 8579e27..a381a04; rodada 3: a381a04..5eaf9e8; rodada 4: 5eaf9e8..eb9a457
+**Round**: 4 - scoped (C22, C24 re-verificados em eb9a457; C5, C9-C11, C19, C23, C25 carried from 5eaf9e8; C7 e C14 carried from a381a04; o resto carried from 8579e27)
 **Verifier**: independent sub-agent (author != verifier)
 
-Resumo da rodada 3: FAIL. C22, C23, C25 PASS; **C24 FAIL** (a prova de Playwright da cadeia inválida é vazia: mutante sobrevive, ver Round 3); **mutante a1 sobrevive** (`!ignorarSaida.current` sem prova: Descartar com edições não salvas); C21 NÃO RODOU (crapper, AD-044, nenhum AD cobre esta feature).
+Resumo da rodada 4: FAIL só por C21 (crapper não rodou, nenhum AD cobre a feature). C22 e C24 PASS; mutantes a1 e c mortos; ver Round 4. (Resumo da rodada 3, superado: FAIL. C22, C23, C25 PASS; **C24 FAIL** (a prova de Playwright da cadeia inválida é vazia: mutante sobrevive, ver Round 3); **mutante a1 sobrevive** (`!ignorarSaida.current` sem prova: Descartar com edições não salvas); C21 NÃO RODOU (crapper, AD-044, nenhum AD cobre esta feature).)
 
 Resumo (rodada 1; atualizado na rodada 2 abaixo): 18 de 21 checks PASS; 3 não PASS: C7 (o fim "Descartar rascunho" não tem prova do destino nem do aviso; mutante sobreviveu), C14 (a ordem dos controles é afirmada pelo check e nenhum teste a mede; mutante sobreviveu), C21 (`crapper` NÃO RODOU, AD-044; `dryer` saiu 0).
 
@@ -46,9 +46,9 @@ Provas rodadas em HEAD, em um comando por alvo. Vitest: `npx vitest run src/admi
 | C19 | nada além do planejado quebra | `npx vitest run` (65 files, 602 passed, 0 failed); `npm --prefix web run build` exit 0; playwright dos 5 specs: 165 passed, 5 failed | As 5 falhas são exatamente as de ambiente conhecidas: `identidade.spec.ts:36` (Public Sans/Source Serif), `:304` (PWA fontes latin), `:1281` (PWA outros alfabetos), `arranjo.spec.ts:1189` (cabeçalho 36 px), `ux.spec.ts:472` (`Avisos no celular`). Rodei contra o dev server; **não consegui reprová-las na base** (não montei worktree da base), a classificação é pela lista dada e porque todas esperam o app compilado/service worker e não tocam fluxos. `git diff 9d80016..HEAD -U0` nos testes existentes (`canvas.test.tsx`, `fluxos.test.tsx`, `textos.test.tsx`, `fluxos.spec.ts`, `fluxos-real.spec.ts`, `ux.spec.ts`): só trocas dialog->region (`canvas.test.tsx:41`, `fluxos.test.tsx:47`, `fluxos.spec.ts:25`, `fluxos-real.spec.ts:164`, `ux.spec.ts:1190`), `Cancelar`->`Voltar` (`canvas.test.tsx:196`, `fluxos.spec.ts:165`), `w-screen`->sem diálogo (`canvas.test.tsx:302`), esperas de diálogo->região (`fluxos.test.tsx:133,154`), `'Editar: Fluxos'` fora da lista de textos e `'Voltar'` somado (`textos.test.tsx:25,30`). Nenhuma asserção de regra removida. Extra do builder: `ux.spec.ts:700` abre a transcrição recolhida do assistente (resto da feature `chat-linha-do-tempo` C17), fora do escopo deste plano, mas inofensivo (só adiciona um clique) | PASS |
 | C20 | atendente que abre o editor volta à Fila | vitest `sem o papel de administrador` | `paginaDoFluxo.test.tsx:209` `findByRole('heading', { level: 1, name: 'Fila' })`, `:210` região ausente. Emenda (Fila em vez de página de acesso negado): alinhada ao `Surface` do plano ("a casca leva à tela inicial"), não enfraquece | PASS |
 | C21 | `crapper` < 9.99 e `dryer` sem candidato 0.8 | `dryer -s ... --threshold 0.8 ...` exit 0: "No duplicate candidates found."; `crapper --version`: `Program 'crapper.exe' failed to run ... Uma política de Controle de Aplicativo bloqueou este arquivo.` | metade `dryer`: PASS. metade `crapper`: **NÃO RODOU** (AD-044). O check diz que fica aberto como "não rodou", nunca PASS | FAIL (crapper não rodou) |
-| C22 | link `Usuários` da barra lateral com etapa não salva abre `Sair sem salvar?`; Continuar mantém; Sair leva à tela | vitest `barra lateral com alterações` (rodada 3) | `paginaDoFluxo.test.tsx:194-210` `findByRole('dialog', { name: 'Sair sem salvar?' })`, `getByLabelText('Destino da etapa 3')` após Continuar, `findByRole('heading', { level: 1, name: 'Usuários' })` após Sair. Mutante a2 morto | PASS |
+| C22 | link `Usuários` da barra lateral com etapa não salva abre `Sair sem salvar?`; Continuar mantém; Sair leva à tela | vitest `barra lateral com alterações` (rodada 3) | `paginaDoFluxo.test.tsx:194-210` `findByRole('dialog', { name: 'Sair sem salvar?' })`, `getByLabelText('Destino da etapa 3')` após Continuar, `findByRole('heading', { level: 1, name: 'Usuários' })` após Sair. Mutante a2 morto | PASS (rodada 4: + `descartar depois de editar sai sem perguntar`, `paginaDoFluxo.test.tsx:213-225`: `findByText('Rascunho descartado.')`, `queryByRole('dialog', { name: 'Sair sem salvar?' })` ausente, DELETE único; mutante a1 morto) |
 | C23 | Voltar do navegador com etapa não salva abre o diálogo; Continuar mantém `/univag/cadastros/fluxos/7`; sem alterações sai direto | playwright `voltar do navegador com alterações` (rodada 3) | `editor-fluxo.spec.ts:75-98` `expect(d).toBeVisible()`, `expect(new URL(page.url()).pathname).toBe('/univag/cadastros/fluxos/7')`, `expect(page.getByRole('dialog')).toHaveCount(0)` no fim. Mutante a2 morto (diálogo não aparece); mutante d morto (editor nem monta) | PASS |
-| C24 | Ctrl+S/⌘+S: cadeia válida envia PUT igual ao botão e `defaultPrevented`; cadeia inválida ou gravando: nada enviado e `defaultPrevented` | vitest `Ctrl+S salva o rascunho` + playwright `Ctrl+S com cadeia inválida` (rodada 3) | Válida e gravando: `paginaDoFluxo.test.tsx:222` `expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false)`, `:223` corpo do PUT, `:225-226` ⌘+S durante a gravação `toBe(false)` e `toHaveLength(1)`. Mutante b morto. **Inválida: `editor-fluxo.spec.ts:102-114` `expect(gravacoes).toBe(0)` é vazio**: o `page.route('**/api/admin/fluxos/7/rascunho')` do teste é registrado ANTES de `noCanvas`/`preparar` → `simularApi` (`simulada.ts:49` `**/api/**`) é registrado depois e tem precedência, então `gravacoes` nunca sobe. Mutante c (sem `valida &&`) sobrevive; num spec temporário com a rota registrada depois de `noCanvas`: código original `gravacoes=0`, mutante c `gravacoes=1`. Além disso o Playwright não assere `defaultPrevented` na cadeia inválida (o Vitest só cobre a válida): a metade "inválida + defaultPrevented" do AC 20 não tem prova | FAIL |
+| C24 | Ctrl+S/⌘+S: cadeia válida envia PUT igual ao botão e `defaultPrevented`; cadeia inválida ou gravando: nada enviado e `defaultPrevented` | vitest `Ctrl+S salva o rascunho` + playwright `Ctrl+S com cadeia inválida` (rodada 4, eb9a457) | Vitest inalterado (`paginaDoFluxo.test.tsx` `Ctrl+S salva o rascunho`, válida/⌘+S/gravando, mutante b morto). Playwright `editor-fluxo.spec.ts:102-127`: rota do PUT registrada depois de `noCanvas`; controle `expect(await atalho()).toBe(true)` + `expect.poll(() => gravacoes).toBe(1)`; nó solto, `expect(editor(page).getByRole('button', { name: 'Salvar rascunho' })).toBeDisabled()`, `expect(await atalho(), 'a janela não salva a página').toBe(true)`, `expect(gravacoes, 'nada é enviado com a cadeia inválida').toBe(1)` (o `1` é o do controle). Mutante c morto (playwright falha) | PASS |
 | C25 | `main.tsx` com `createBrowserRouter`+`RouterProvider`, `util.tsx` com `createMemoryRouter` | vitest `roteador de dados` (1 passed) | `paginaDoFluxo.test.tsx:232-239` `expect(principal).not.toMatch(/<BrowserRouter/)`, `expect(util).toMatch(/createMemoryRouter\(/)`. Prova textual (lê o fonte), mas o comportamento é provado por C22/C23 (useBlocker lança fora de roteador de dados). Mutante d morto (2 provas: este e o e2e) | PASS |
 
 ## Coverage
@@ -65,8 +65,8 @@ Recomputado dos critérios 1-17 do plano, do `Surface` e do `Landing`, não da t
 | visões (2) | plan AC 12, 15 | Canvas C12 · Lista C15 | - |
 | larguras (4) | plan AC 12, 14-17 | 390 C16,C17 · 1280 e 1440 C12 · lista 1440 C15 · barra 1440 C14 | - |
 | doors do `Landing` (2) | endereço do editor C18 · roteador de dados C25 | - |
-| critérios da emenda (3) | plan.md AC 18-20 | AC 18 C22 (barra lateral), C23 (Voltar do navegador) · AC 19 C24 válida (Vitest) · AC 20 gravando (Vitest) | AC 20 cadeia inválida: sem prova que falhe (Playwright vazio, mutante c vivo; sem `defaultPrevented`) |
-| formas de sair do editor, rodada 3 (7) | `EdicaoDoFluxo.tsx` `useBlocker`, `sairDeVez` | trilha Cadastros/Fluxos e Voltar C9 · Voltar do navegador C5, C23 · fechar a aba C11 · link da barra lateral C22 · Publicar/Descartar (saem sem perguntar) C7 | Descartar com edições não salvas: nenhum teste (mutante a1 vivo) |
+| critérios da emenda (3) | plan.md AC 18-20 | AC 18 C22 (barra lateral), C23 (Voltar do navegador) · AC 19 C24 válida (Vitest + Playwright controle) · AC 20 gravando (Vitest), cadeia inválida (Playwright, contador e `defaultPrevented`) | - (rodada 4) |
+| formas de sair do editor, rodada 3 (7) | `EdicaoDoFluxo.tsx` `useBlocker`, `sairDeVez` | trilha Cadastros/Fluxos e Voltar C9 · Voltar do navegador C5, C23 · fechar a aba C11 · link da barra lateral C22 · Publicar C7 · Descartar com edições não salvas C22 (`descartar depois de editar sai sem perguntar`) | - (rodada 4) |
 
 ## Test policy rows
 
@@ -75,7 +75,7 @@ Recomputado dos critérios 1-17 do plano, do `Surface` e do `Landing`, não da t
 | Decide, na tela (achar o fluxo pelo id, guarda de saída, para onde cada fim de gravação volta) | `PaginaDoFluxo.tsx`, `EdicaoDoFluxo.tsx` (`sair`, `publicar`, `descartar`) | Vitest na própria camada, um caso por linha da tabela de decisão | yes (rodada 2) - o caso `avisos ao descartar` existe e mata F5b/F5c; achar o fluxo (F1), guarda (F2), `beforeunload` (F3), trilha (F4) e destino do Publicar (F5) seguem mortos |
 | Arranjo (alturas, larguras, uma linha, painel de 320 px) | `EdicaoDoFluxo.tsx` (altura), `Canvas.tsx` (`lg:w-80`, painel), barra | Playwright com `boundingBox`, cada largura do plano | yes - 390, 1280, 1440 medidos; altura (F6), largura do painel (F7), troca de painel (F8) e quebra da barra (F9e) mortos; a ordem dos controles é medida desde a rodada 2 (F10b morto, ver C14) |
 | Instrumentation (classes, ícones, textos fixos) | `Trilha`, `MaisAcoes`, textos | nenhuma própria | yes |
-| Decide, na tela - rodada 3 (guarda de saída com `useBlocker`, atalho Ctrl+S) | `EdicaoDoFluxo.tsx` (`useBlocker`, `ignorarSaida`, `useAtalhoDeSalvar`) | Vitest na própria camada, um caso por linha da tabela de decisão | **no** - faltam os casos "Descartar com edições não salvas sai sem perguntar" (a1) e "Ctrl+S com cadeia inválida não envia" (c); o caso no Playwright é vazio |
+| Decide, na tela - rodada 3 (guarda de saída com `useBlocker`, atalho Ctrl+S) | `EdicaoDoFluxo.tsx` (`useBlocker`, `ignorarSaida`, `useAtalhoDeSalvar`) | Vitest na própria camada, um caso por linha da tabela de decisão | yes (rodada 4) - `descartar depois de editar sai sem perguntar` mata a1; `Ctrl+S com cadeia inválida` (Playwright, com controle) mata c; o caso "cadeia inválida" fica no navegador porque o jsdom não cria o nó solto |
 
 ## Faults injected
 
@@ -97,10 +97,10 @@ Feitas na árvore real, uma de cada vez, revertidas com `git checkout -- <arquiv
 | F9d remover a frase "O canvas está disponível..." | `EdicaoDoFluxo.tsx` | yes - `celular em página` falhou |
 | F9e remover todo `flex-wrap` da barra | `EdicaoDoFluxo.tsx` | yes - `celular sem rolagem lateral` falhou |
 | F10 selo de estado depois das visões e antes das ações | `EdicaoDoFluxo.tsx` `BarraDoEditor` | no na rodada 1 (corrigido: ver F10b, yes) - `barra em uma linha` 1 passed e `barra do editor` 1 passed |
-| a1 (rodada 3) sem `!ignorarSaida.current` no `useBlocker` | `EdicaoDoFluxo.tsx:254` | **no** - `paginaDoFluxo.test.tsx` + `fluxos.test.tsx`: 24 passed |
+| a1 (rodada 3) sem `!ignorarSaida.current` no `useBlocker` | `EdicaoDoFluxo.tsx:254` | **no** na rodada 3 (corrigido: ver a1-r4, yes) - `paginaDoFluxo.test.tsx` + `fluxos.test.tsx`: 24 passed |
 | a2 (rodada 3) condição do bloqueio sempre falsa (`false && ...`) | `EdicaoDoFluxo.tsx:254` | yes - `sair sem salvar` e `barra lateral com alterações` falharam; playwright `voltar do navegador com alterações` falhou (diálogo invisível) |
 | b (rodada 3) sem `e.preventDefault()` em `useAtalhoDeSalvar` | `EdicaoDoFluxo.tsx:~233` | yes - `Ctrl+S salva o rascunho` falhou |
-| c (rodada 3) salva mesmo com `!valida` | `EdicaoDoFluxo.tsx:~277` | **no** - playwright `Ctrl+S com cadeia inválida` 1 passed (prova vazia); vitest `Ctrl+S` 1 passed (não cobre cadeia inválida) |
+| c (rodada 3) salva mesmo com `!valida` | `EdicaoDoFluxo.tsx:~277` | **no** na rodada 3 (corrigido: ver c-r4, yes) - playwright `Ctrl+S com cadeia inválida` 1 passed (prova vazia) |
 | d (rodada 3) `main.tsx` volta a `<BrowserRouter>` | `main.tsx` | yes - `roteador de dados` falhou e o e2e `voltar do navegador` expirou (editor não monta) |
 
 ## Gate
@@ -207,3 +207,48 @@ Sem ele, `Descartar rascunho` depois de editar a tela (Descartar fica ligado com
 ### Resumo da rodada 3
 
 C1-C20 e C22, C23, C25: PASS (C1-C4, C6-C8, C12-C13, C15-C18, C20 carried; C5, C9-C11, C19, C22, C23, C25 verificados em 5eaf9e8). C24: FAIL. C21: não rodou. Faults: 5 injetadas, 3 mortas (a2, b, d), 2 sobreviveram (a1, c). Gate: Vitest 606 passed; Playwright 219 passed + 5 de ambiente. Verdict: FAIL.
+
+## Round 4 (scoped: C22, C24)
+
+**Base da rodada**: rodada 3 em 5eaf9e8; correção do builder em eb9a457 (`test(web): prove Descartar skips the leave guard and Ctrl+S sends nothing on an invalid chain`). Escopo do diff (`git diff 5eaf9e8..eb9a457 --stat`): `checks.md` (+1 Proof em C22, cláusula do controle em C24), `web/e2e/editor-fluxo.spec.ts`, `web/src/administracao/paginaDoFluxo.test.tsx`, `verification.md`. Nenhum arquivo de produção mudou. As emendas de checks.md não enfraquecem: C22 ganha uma prova, C24 ganha o controle positivo. Tudo fora de C22/C24 está `carried from` a rodada anterior, como marcado no cabeçalho.
+
+### Provas (HEAD eb9a457; dev server Vite em 5173, parado no fim)
+
+- Vitest `paginaDoFluxo.test.tsx` inteiro: 18 passed (1 file). Os três de C22/C24 em uma chamada com `-t "descartar depois de editar sai sem perguntar|Ctrl\+S salva o rascunho|barra lateral com alterações"`: 3 passed, 15 skipped (contagem > 0; cada nome aparece com ✓).
+- Playwright `editor-fluxo.spec.ts` inteiro: 11 passed, incluindo `Ctrl+S com cadeia inválida` (1.3s).
+
+### Evidência
+
+| Check | Claim | Proof run | Evidence | Result |
+| --- | --- | --- | --- | --- |
+| C22 | barra lateral com etapa não salva pergunta; Continuar mantém; Sair leva à tela; Descartar com edições sai sem perguntar | os 2 Vitest do check, passed | `paginaDoFluxo.test.tsx:194-210` (rodada 3, inalterado) e o novo `:213-225`: `expect(e.getByText('Alterações não salvas')).toBeInTheDocument()` (precondição), `expect(await screen.findByText('Rascunho descartado.')).toBeInTheDocument()`, `expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()`, `expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])` | PASS |
+| C24 | Ctrl+S válido grava uma vez e `defaultPrevented`; inválido ou gravando não envia e `defaultPrevented` | Vitest `Ctrl+S salva o rascunho` + Playwright `Ctrl+S com cadeia inválida`, ambos passed | `editor-fluxo.spec.ts`: controle `expect(await atalho()).toBe(true)` e `expect.poll(() => gravacoes).toBe(1)`; depois do nó solto `toBeDisabled()`, `expect(await atalho(), 'a janela não salva a página').toBe(true)`, `expect(gravacoes, 'nada é enviado com a cadeia inválida').toBe(1)`. `atalho()` lê `ev.defaultPrevented` de um `KeyboardEvent` cancelável. A rota agora é atingida (controle 0 -> 1), o que fechava a falha da rodada 3 | PASS |
+
+Observação (não reprova): a asserção final `toBe(1)` mede "não subiu além do controle"; o controle com `poll` prova que o contador se move, então 1 depois do atalho inválido só se explica por não ter havido segundo PUT. `waitForTimeout(300)` é uma espera fixa, mas a mutação c é pega com ela (ver abaixo).
+
+### Faults injected (round 4)
+
+Na árvore real, `web/src/administracao/EdicaoDoFluxo.tsx`, uma de cada vez, revertidas com `git checkout -- <arquivo>`; `git status --porcelain` depois só mostra os `demo-live-*.png` não rastreados anteriores.
+
+| Mutation | Location | Killed |
+| --- | --- | --- |
+| a1-r4 sem `!ignorarSaida.current` no `useBlocker` | `EdicaoDoFluxo.tsx:254` | yes - Vitest (`paginaDoFluxo` + `fluxos`): 1 failed, 24 passed; o que falha é `descartar depois de editar sai sem perguntar` |
+| c-r4 `() => !acao.isPending && salvar()` (sem `valida &&`) | `EdicaoDoFluxo.tsx:272` | yes - Vitest 25 passed (não o pega), Playwright `Ctrl+S com cadeia inválida`: 1 failed (contador sobe para 2) |
+| e-r4 `if (!(e.ctrlKey \|\| e.metaKey)) return` (sem a checagem da tecla `s`) | `EdicaoDoFluxo.tsx:229` | **no** - Vitest 25 passed, Playwright 1 passed. Ctrl+qualquer tecla salvaria; nenhuma prova envia Ctrl+outra tecla. Sobrevive |
+| e2-r4 guarda inteira removida (qualquer tecla salva e dá `preventDefault`) | `EdicaoDoFluxo.tsx:229` | yes - Vitest 1 failed (`fluxos.test.tsx > lista tem todas as operações do canvas`, pega por acidente, ao digitar); Playwright 1 passed |
+
+### Achado novo: mutante e sobrevive (fora de C22/C24 como escritos)
+
+O AC 19 diz Ctrl+S/⌘+S; nenhum check afirma que outra tecla com Ctrl NÃO salva. É uma lacuna dos checks (precision gap), não uma falha de C22/C24: se o dono quiser a proteção, falta um caso "Ctrl+A não envia PUT" (e uma linha em C24). Remover só a checagem da tecla é um mutante realista (Ctrl+Z, Ctrl+C disparariam gravação e `preventDefault`, quebrando copiar/desfazer), por isso o registro como achado e não como equivalente.
+
+### Gate (rodada 4)
+
+Vitest `paginaDoFluxo.test.tsx`: 18 passed. Playwright `editor-fluxo.spec.ts`: 11 passed. O gate amplo (Vitest 606, build, specs existentes) é carried from 5eaf9e8: eb9a457 só tocou testes e markdown.
+
+### C21 (carried, NÃO RODOU)
+
+`crapper` segue bloqueado por Application Control (AD-044) e não foi tentado de novo; nenhum AD cobre `editor-fluxo-integrado`. C21 fica NÃO RODOU (FAIL na tabela). Resolver: rodar `crapper` noutro computador ou o dono do projeto estender o AD-044.
+
+### Resumo da rodada 4
+
+C22 e C24: PASS. C1-C20, C23, C25: PASS (carried, ver cabeçalho). Faults da rodada 4: 4 injetadas, 3 mortas (a1, c, e2), 1 sobreviveu (e, lacuna de check, não de C22/C24). C21: não rodou. Verdict: FAIL (por C21 e pelo mutante e vivo).

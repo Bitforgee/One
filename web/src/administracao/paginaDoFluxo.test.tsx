@@ -242,6 +242,17 @@ describe('editor de fluxo na casca', () => {
     expect(await screen.findByText('Rascunho salvo.')).toBeInTheDocument()
   })
 
+  // C24 (só Ctrl/⌘ + S: as outras teclas seguem com o navegador)
+  it('outras teclas não salvam', async () => {
+    const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
+    abrir('/univag/cadastros/fluxos/7')
+    await editor()
+    expect(fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })).toBe(true) // true = ninguém cancelou o evento
+    expect(fireEvent.keyDown(document.body, { key: 's' })).toBe(true)
+    expect(fireEvent.keyDown(document.body, { key: 'z', metaKey: true })).toBe(true)
+    await new Promise((r) => setTimeout(r, 50))
+    expect(gravadas(chamadas)).toEqual([])
+  })
   // C25
   it('roteador de dados', () => {
     const principal = readFileSync('src/main.tsx', 'utf8')

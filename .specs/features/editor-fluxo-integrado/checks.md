@@ -86,8 +86,9 @@ Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "de
 **C23** - Com uma etapa adicionada e não salva, o Voltar do navegador abre `Sair sem salvar?`; `Continuar editando` deixa o endereço em `/univag/cadastros/fluxos/7`; sem alterações o Voltar do navegador sai direto (AC 18)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "voltar do navegador com alterações"`
 
-**C24** - Ctrl+S (e ⌘+S) no editor com cadeia válida envia `PUT /api/admin/fluxos/7/rascunho` com o mesmo corpo do botão `Salvar rascunho` e o evento sai com `defaultPrevented` verdadeiro (e a cadeia válida grava uma vez no navegador); com a cadeia inválida (um nó solto no canvas, que desliga o botão Salvar rascunho) ou durante uma gravação, nada é enviado e `defaultPrevented` continua verdadeiro (AC 19, AC 20)
+**C24** - Ctrl+S (e ⌘+S) no editor com cadeia válida envia `PUT /api/admin/fluxos/7/rascunho` com o mesmo corpo do botão `Salvar rascunho` e o evento sai com `defaultPrevented` verdadeiro (e a cadeia válida grava uma vez no navegador); com a cadeia inválida (um nó solto no canvas, que desliga o botão Salvar rascunho) ou durante uma gravação, nada é enviado e `defaultPrevented` continua verdadeiro (AC 19, AC 20); Ctrl+A, Ctrl/⌘+Z e a tecla S sozinha não salvam e não cancelam o evento
 Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "Ctrl+S salva o rascunho"`
+Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "outras teclas não salvam"`
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "Ctrl+S com cadeia inválida"``
 
 **C25** - O roteador é de dados: `main.tsx` usa `createBrowserRouter` e `RouterProvider` uma vez cada e não usa `<BrowserRouter`; `abrir()` de `test/util.tsx` usa `createMemoryRouter` (Landing, door 2)
