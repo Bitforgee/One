@@ -314,14 +314,18 @@ describe('App instalado', () => {
     abrir('/univag/aparencia?aba=app')
     await screen.findByLabelText('Nome do app')
     expect(icones()).toEqual(['/api/instituicoes/univag/imagens/icone?v=3', '/api/instituicoes/univag/imagens/icone?v=3'])
-    expect(tela().getByText('Universidade')).toBeInTheDocument()
+    expect(tela().getByText('Universidade').textContent).toBe('Universidade') // sem o espaço do 13º caractere: o corte é de 12
     expect(tela().queryByText('Universidade Federal')).not.toBeInTheDocument()
     expect(barra().getByText('Univag')).toBeInTheDocument()
     expect(barra().getByTestId('barra-do-app')).toHaveStyle({ backgroundColor: Cor })
 
-    // escolhido e não salvo: o blob
+    // escolhido e não salvo: o blob; e a cor digitada na Marca pinta a barra
     await userEvent.upload(screen.getByLabelText('Arquivo: Ícone do app'), arquivo('icone.png'))
     expect(icones()).toEqual(['blob:imagem-nova', 'blob:imagem-nova'])
+    await ir('Marca')
+    await digitar('Cor principal', hex('123456'))
+    await ir('App instalado')
+    expect(barra().getByTestId('barra-do-app')).toHaveStyle({ backgroundColor: hex('123456') })
   })
 
   it('tela inicial sem ícone usa o do One', async () => {
