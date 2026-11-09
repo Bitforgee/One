@@ -43,7 +43,7 @@ test.describe('compositor do aluno', () => {
       const falar = await caixa(page.getByRole('button', { name: 'Falar com atendente' }))
       const enviar = await caixa(page.getByRole('button', { name: /Enviar/ }))
       perto(falar.x, c.x, 1, `${largura} esquerda de Falar com atendente`)
-      perto(enviar.x + enviar.width, c.x + c.width, 8, `${largura} direita de Enviar`) // o recuo interno da caixa é de 6 px
+      perto(enviar.x + enviar.width, c.x + c.width, 1, ` direita de Enviar`)
     }
   })
 
