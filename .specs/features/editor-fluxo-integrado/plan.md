@@ -60,7 +60,7 @@ O gestor edita o fluxo sem perder o menu, e o endereço e o botão Voltar funcio
 **Acceptance Criteria**
 
 1. WHEN o gestor clica no nome de um fluxo em Cadastros THEN the system SHALL navegar para `/univag/cadastros/fluxos/{id}` e mostrar o editor com a barra lateral e o cabeçalho da casca visíveis, sem nenhum elemento `role="dialog"` aberto
-2. The system SHALL mostrar acima do editor a trilha `Cadastros › Fluxos › {categoria} · {abrangência}`, em que "Cadastros" leva a `/univag/cadastros` e "Fluxos" leva à mesma tela com a aba Fluxos selecionada
+2. The system SHALL mostrar acima do editor a trilha `Cadastros › Fluxos › {categoria} · {abrangência}`, em que "Cadastros" leva a `/univag/cadastros` e "Fluxos" leva a `/univag/cadastros?aba=fluxos`, a mesma tela com a aba Fluxos selecionada
 3. WHEN o gestor abre `/univag/cadastros/fluxos/{id}` direto (recarregando a página ou colando o endereço) THEN the system SHALL mostrar o editor do mesmo fluxo, com a mesma cadeia
 4. IF o `id` da URL não é de nenhum fluxo da instituição THEN the system SHALL mostrar "Fluxo não encontrado." e o link "Voltar aos fluxos", sem o editor
 5. WHEN o gestor aciona o botão Voltar do navegador no editor THEN the system SHALL mostrar a lista de Cadastros com a aba Fluxos selecionada
