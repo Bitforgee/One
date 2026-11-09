@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
@@ -190,6 +190,54 @@ describe('editor de fluxo na casca', () => {
     expect(fechar()).toBe(true)
   })
 
+  // C22
+  it('barra lateral com alterações', async () => {
+    montar({ 'GET /api/admin/usuarios': () => [200, []] })
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    const doMenu = () => screen.getAllByRole('link', { name: 'Usuários' }).find((l) => l.closest('[data-sidebar=sidebar]'))!
+
+    await userEvent.click(doMenu())
+    const d = within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' }))
+    await userEvent.click(d.getByRole('button', { name: 'Continuar editando' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(e.getByLabelText('Destino da etapa 3')).toBeInTheDocument()
+
+    await userEvent.click(doMenu())
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' })).getByRole('button', { name: 'Sair sem salvar' }))
+    await semEditor()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Usuários' })).toBeInTheDocument()
+  })
+
+  // C24
+  it('Ctrl+S salva o rascunho', async () => {
+    let solta: () => void = () => undefined
+    const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => new Promise((r) => (solta = () => r([200, { numero: 3, etapas: [] }]))) })
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    await userEvent.selectOptions(e.getByLabelText('Destino da etapa 3'), 'Coordenação do curso')
+
+    expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false) // false = o navegador não salva a página
+    await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48), etapa('COORDENACAO_CURSO')] }]]))
+    // durante a gravação, outro Ctrl+S (⌘+S) não envia nada
+    expect(fireEvent.keyDown(document.body, { key: 'S', metaKey: true })).toBe(false)
+    expect(gravadas(chamadas)).toHaveLength(1)
+    solta()
+    expect(await screen.findByText('Rascunho salvo.')).toBeInTheDocument()
+  })
+
+  // C25
+  it('roteador de dados', () => {
+    const principal = readFileSync('src/main.tsx', 'utf8')
+    const util = readFileSync('src/test/util.tsx', 'utf8')
+    expect(principal.match(/createBrowserRouter\(/g)).toHaveLength(1)
+    expect(principal.match(/<RouterProvider /g)).toHaveLength(1)
+    expect(principal).not.toMatch(/<BrowserRouter/)
+    expect(util).toMatch(/createMemoryRouter\(/)
+    expect(util).not.toMatch(/<MemoryRouter/)
+  })
   // C14
   it('barra do editor', async () => {
     montar()

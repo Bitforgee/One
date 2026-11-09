@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
-import { Component, lazy, Suspense, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Link, useBlocker, useNavigate, useParams } from 'react-router'
 import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
 import { ErroDe } from '../ErroDe'
@@ -124,25 +124,21 @@ function MaisAcoes({ podeDescartar, descartar }: { podeDescartar: boolean; desca
 
 const rotuloDoEstado = (alterado: boolean, salvo: boolean, fluxo: Fluxo) => (alterado ? 'Alterações não salvas' : salvo ? 'Rascunho salvo' : estadoDoFluxo(fluxo))
 
-type PropsDaTrilha = { contexto: string; sair: (destino: string) => void; lista: string; fluxos: string }
+type PropsDaTrilha = { contexto: string; lista: string; fluxos: string }
 
-// Cadastros › Fluxos › Boletos · ADS, 3º semestre: a trilha leva de volta à lista; com alterações não salvas, sair pede confirmação.
-function Trilha({ contexto, sair, lista, fluxos }: PropsDaTrilha) {
-  const ir = (destino: string) => (e: React.MouseEvent) => {
-    e.preventDefault()
-    sair(destino)
-  }
+// Cadastros › Fluxos › Boletos · ADS, 3º semestre: a trilha leva de volta à lista (com alterações não salvas, o useBlocker da página pergunta).
+function Trilha({ contexto, lista, fluxos }: PropsDaTrilha) {
   return (
     <nav aria-label="Trilha">
       <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0 text-sm text-muted-foreground">
         <li>
-          <Link to={lista} onClick={ir(lista)} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
+          <Link to={lista} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
             Cadastros
           </Link>
         </li>
         <ChevronRight aria-hidden="true" className="size-4" />
         <li>
-          <Link to={fluxos} onClick={ir(fluxos)} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
+          <Link to={fluxos} className="inline-flex min-h-11 items-center hover:text-foreground hover:underline">
             Fluxos
           </Link>
         </li>
@@ -224,6 +220,21 @@ function useAvisoAoFechar(ativo: boolean) {
   }, [ativo])
 }
 
+// Ctrl+S (⌘+S) salva o rascunho como o botão e impede a janela de salvar a página; o corpo roda a cada tecla com o estado atual.
+function useAtalhoDeSalvar(salvar: () => unknown) {
+  const atual = useRef(salvar)
+  atual.current = salvar
+  useEffect(() => {
+    const tecla = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's') return
+      e.preventDefault()
+      atual.current()
+    }
+    window.addEventListener('keydown', tecla)
+    return () => window.removeEventListener('keydown', tecla)
+  }, [])
+}
+
 type Props = { fluxo: Fluxo; categorias: Categoria[]; cursos: Curso[]; setores: Setor[]; recarregar: () => Promise<unknown> }
 
 // A página de edição do fluxo, dentro da casca: a trilha, a barra (estado, Lista e Canvas, Simular, Salvar rascunho, Publicar e o menu Mais com Descartar),
@@ -238,7 +249,9 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
-  const [saindo, setSaindo] = useState<string>()
+  const ignorarSaida = useRef(false) // Descartar e Publicar saem de propósito, sem perguntar
+  // qualquer saída da página com alterações não salvas (trilha, Voltar, barra lateral, Voltar do navegador) pergunta antes
+  const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && !ignorarSaida.current && currentLocation.pathname !== nextLocation.pathname)
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
   const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
@@ -256,17 +269,20 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
     if (v === 'canvas') setGrafo(fixarPosicoes) // o que o canvas desenha é o que a API recebe
     setVisao(v)
   }
-  // com alterações não salvas, sair pergunta antes
-  const sair = (destino: string) => (alterado ? setSaindo(destino) : navegar(destino))
+  useAtalhoDeSalvar(() => valida && !acao.isPending && salvar())
   const aoEnviar = (e: FormEvent) => {
     e.preventDefault()
     salvar()
   }
 
+  const sairDeVez = (destino: string) => {
+    ignorarSaida.current = true
+    navegar(destino)
+  }
   const salvar = () =>
     acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, { etapas: etapasParaApi(grafo) }, 'PUT'), aviso: 'Rascunho salvo.', depois: () => { setSalvo(true); setAlterado(false) } })
-  const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: () => navegar(fluxos) })
-  const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: () => navegar(fluxos) })
+  const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: () => sairDeVez(fluxos) })
+  const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: () => sairDeVez(fluxos) })
 
   const contexto = `${categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · ${abrangenciaDoFluxo(fluxo, cursos)}`
   const noCanvas = visao === 'canvas' && !estreito
@@ -279,15 +295,15 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const altura = noCanvas ? 'lg:h-[calc(100dvh-49px-1.5rem)] lg:-mb-6 lg:pb-3' : ''
   return (
     <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${altura}`}>
-      <Trilha contexto={contexto} sair={sair} lista={lista} fluxos={fluxos} />
+      <Trilha contexto={contexto} lista={lista} fluxos={fluxos} />
       <form className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={aoEnviar}>
-        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => sair(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={!!fluxo.rascunho && !acao.isPending} descartar={descartar} />
+        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => navegar(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={!!fluxo.rascunho && !acao.isPending} descartar={descartar} />
         <div className={`flex min-h-0 flex-1 flex-col gap-3 ${noCanvas ? '' : 'max-w-3xl'}`}>
           <ErroDe erro={acao.error} />
           <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} estreito={estreito} simulador={<Simulador s={simulador} cursos={cursos} resultado={simulacao} />} />
         </div>
       </form>
-      <SairSemSalvar aberto={saindo !== undefined} continuar={() => setSaindo(undefined)} sair={() => navegar(saindo!)} />
+      <SairSemSalvar aberto={bloqueio.state === 'blocked'} continuar={() => bloqueio.reset?.()} sair={() => bloqueio.proceed?.()} />
     </section>
   )
 }

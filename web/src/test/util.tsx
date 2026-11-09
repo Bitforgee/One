@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 import { expect, vi } from 'vitest'
 import { App } from '../App'
 import type { Me } from '../api'
@@ -33,11 +33,7 @@ export function api(rotas: Record<string, Rota>) {
 }
 
 export function abrir(caminho: string) {
-  return render(
-    <MemoryRouter initialEntries={[caminho]}>
-      <App />
-    </MemoryRouter>,
-  )
+  return render(<RouterProvider router={createMemoryRouter([{ path: '*', element: <App /> }], { initialEntries: [caminho] })} />)
 }
 
 export function me(parcial: Partial<Me> = {}): Me {

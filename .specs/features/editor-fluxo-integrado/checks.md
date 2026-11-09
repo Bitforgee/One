@@ -3,7 +3,7 @@
 Profile: ui
 Plan: `.specs/features/editor-fluxo-integrado/plan.md`
 
-21 checks em 3 slices · 1 one-way door (o endereço do editor) · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado pode fazer")
+25 checks em 3 slices e 1 emenda · 2 one-way doors (o endereço do editor e o roteador de dados) · 0 perguntas abertas (plano aprovado pelo usuário em 08/11: "aprovado pode fazer")
 
 **Como as provas rodam.** Na raiz `D:\one-system`. Vitest: `cd web && npx vitest run <arquivo> -t "<nome>"`; um filtro que não seleciona teste sai com 0 (L-002), então confira a contagem no relatório. Playwright mede com `boundingBox()` (px CSS, tolerância dita em cada check) contra o servidor de desenvolvimento: `npm --prefix web run dev` em outro terminal e, na raiz, `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "<nome>"`. A API é simulada por `page.route`; nada chama IA nem e-mail real. Mutação suspensa (AD-025).
 
@@ -77,6 +77,20 @@ Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor
 **C17** - Em 390 px a barra do editor quebra em mais de uma linha e `scrollWidth` do documento é igual a `clientWidth` (AC 17)
 Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "celular sem rolagem lateral"`
 
+### Emenda de 08/11 (melhor usabilidade) - guarda de saída total e atalho · 4 arquivos · 20 KB · ~5k
+
+**C22** - Com uma etapa adicionada e não salva, clicar no link `Fila` da barra lateral abre `Sair sem salvar?`; `Continuar editando` mantém a `region` "Editar: Fluxos" com a etapa; `Sair sem salvar` leva à Fila (AC 18)
+Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "barra lateral com alterações"`
+
+**C23** - Com uma etapa adicionada e não salva, o Voltar do navegador abre `Sair sem salvar?`; `Continuar editando` deixa o endereço em `/univag/cadastros/fluxos/7`; sem alterações o Voltar do navegador sai direto (AC 18)
+Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "voltar do navegador com alterações"`
+
+**C24** - Ctrl+S (e ⌘+S) no editor com cadeia válida envia `PUT /api/admin/fluxos/7/rascunho` com o mesmo corpo do botão `Salvar rascunho` e o evento sai com `defaultPrevented` verdadeiro; com a cadeia inválida (um nó solto no canvas, que desliga o botão Salvar rascunho) ou durante uma gravação, nada é enviado e `defaultPrevented` continua verdadeiro (AC 19, AC 20)
+Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "Ctrl+S salva o rascunho"`
+Proof: `$env:E2E_URL='http://localhost:5173'; npm --prefix web run e2e -- editor-fluxo.spec.ts -g "Ctrl+S com cadeia inválida"``
+
+**C25** - O roteador é de dados: `main.tsx` usa `createBrowserRouter` e `RouterProvider` uma vez cada e não usa `<BrowserRouter`; `abrir()` de `test/util.tsx` usa `createMemoryRouter` (Landing, door 2)
+Proof: `cd web && npx vitest run src/administracao/paginaDoFluxo.test.tsx -t "roteador de dados"`
 ### Fechamento
 
 **C18** - O endereço do editor é exatamente `/:slug/cadastros/fluxos/:id` com `id` numérico: `/univag/cadastros/fluxos/abc` não abre o editor e não quebra a casca, e a rota está declarada uma vez em `App.tsx` (Landing, door 1)
@@ -97,14 +111,15 @@ Proof: `cd web; dryer -s src/acesso -s src/assistente -s src/chamados -s src/con
 | --- | --- | --- |
 | tela `/:slug/cadastros/fluxos/:id` statuses (3) | 200 C1, C3 · 404 C4 · 403 C20 | - |
 | formas de chegar ao editor (3) | clique na lista C1 · endereço direto C3 · recarregar C3 | - |
-| formas de sair do editor (5) | trilha Cadastros C9 · trilha Fluxos C9 · Voltar C9 · Voltar do navegador C5 · fechar a aba C11 | - |
+| formas de sair do editor (7) | trilha Cadastros C9 · trilha Fluxos C9 · Voltar C9 · Voltar do navegador C5, C23 · fechar a aba C11 · link da barra lateral C22 · link do cabeçalho C22 | - |
 | saída com e sem alterações (2) | com alterações C9 · sem alterações C10 | - |
 | fim de uma gravação (3) | Publicar C7 · Descartar C7 · Salvar rascunho C8 | - |
 | painel lateral (2) | Simular um aluno C13 · Etapa selecionada C13 | - |
 | visões (2) | Canvas C12 · Lista C15 | - |
 | larguras (4) | 390 C16, C17 · 1024 ou mais C12 (1280 e 1440) · lista em 1440 C15 · barra em 1440 C14 | - |
-| critérios do plano (17) | AC 1 C1 · AC 2 C2 · AC 3 C3 · AC 4 C4 · AC 5 C5 · AC 6 C6 · AC 7 C7 · AC 8 C8 · AC 9 C9 · AC 10 C10 · AC 11 C11 · AC 12 C12 · AC 13 C13 · AC 14 C14 · AC 15 C15 · AC 16 C16 · AC 17 C17 | - |
-| doors do `Landing` (1) | endereço do editor C18 | - |
+| teclas (2) | Ctrl+S C24 · ⌘+S C24 | - |
+| critérios do plano (20) | AC 18 C22, C23 · AC 19 C24 · AC 20 C24 · AC 1 C1 · AC 2 C2 · AC 3 C3 · AC 4 C4 · AC 5 C5 · AC 6 C6 · AC 7 C7 · AC 8 C8 · AC 9 C9 · AC 10 C10 · AC 11 C11 · AC 12 C12 · AC 13 C13 · AC 14 C14 · AC 15 C15 · AC 16 C16 · AC 17 C17 | - |
+| doors do `Landing` (2) | endereço do editor C18 · roteador de dados C25 | - |
 
 - Afirmam arranjo medido em navegador real: C5, C12 a C17, todos com `boundingBox()` ou `getComputedStyle`
 - Afirmam texto e comportamento em jsdom: C1 a C4, C6 a C11, C14, C18, C20
@@ -141,7 +156,6 @@ Cost: 1 arquivo de Vitest novo (`paginaDoFluxo.test.tsx`) e 1 spec novo de Playw
 ## Out of scope
 
 - Autosave do rascunho (n8n 2.4) - muda quando o rascunho existe
-- Bloquear a saída pelos links da barra lateral - o roteador é o `BrowserRouter`; `useBlocker` pede roteador de dados
 - Histórico de versões e bloqueio por duas pessoas - capacidade nova
 - Editar a etapa num modal ao dar duplo clique - o painel lateral já cumpre o papel
 - Regras do fluxo, limite de 5 etapas, destinos e simulação - não mudam (AD-041, AD-042)
@@ -156,4 +170,4 @@ Estimativa por `wc -c` dos arquivos que cada fatia toca, dividida por 4:
 - Emendas em `fluxos.test.tsx` 12 KB, `canvas.test.tsx` 20 KB, `cadastros.test.tsx` 16 KB e 3 specs e2e ≈ 80 KB ≈ 20k; total ≈ 45k, abaixo do orçamento de 150k
 - Mechanism: one builder (cabe no orçamento, sem pergunta)
 
-Base da feature: `9d80016`.
+Base da feature: `9d80016`. A emenda de 08/11 (C22 a C25) foi pedida pelo usuário ("aplique o que for melhor pra usabilidade") depois da rodada 2 do Verificador.

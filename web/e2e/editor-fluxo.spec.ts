@@ -71,6 +71,51 @@ test.describe('editor de fluxo na casca', () => {
     expect(url.pathname + url.search).toBe('/univag/cadastros?aba=fluxos')
   })
 
+  // C23
+  test('voltar do navegador com alterações', async ({ page }) => {
+    await preparar(page, 1440)
+    await page.goto('/univag/cadastros')
+    await page.getByRole('tab', { name: 'Fluxos' }).click()
+    await page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('button', { name: categoria }).click()
+    await editor(page).waitFor()
+    await editor(page).getByRole('button', { name: 'Adicionar etapa' }).click()
+    await page.goBack()
+    const d = page.getByRole('dialog', { name: 'Sair sem salvar?' })
+    await expect(d).toBeVisible()
+    await d.getByRole('button', { name: 'Continuar editando' }).click()
+    await expect(d).toHaveCount(0)
+    expect(new URL(page.url()).pathname).toBe('/univag/cadastros/fluxos/7')
+    await expect(editor(page).getByLabel('Destino da etapa 3')).toBeVisible()
+
+    // sem alterações o Voltar do navegador sai direto (depois de descartar a etapa nova)
+    await page.goBack()
+    await page.getByRole('dialog', { name: 'Sair sem salvar?' }).getByRole('button', { name: 'Sair sem salvar' }).click()
+    await expect(editor(page)).toHaveCount(0)
+    await page.getByRole('tabpanel', { name: 'Fluxos' }).getByRole('button', { name: categoria }).click()
+    await editor(page).waitFor()
+    await page.goBack()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(editor(page)).toHaveCount(0)
+  })
+
+  // C24 (cadeia inválida; os outros casos estão no Vitest)
+  test('Ctrl+S com cadeia inválida', async ({ page }) => {
+    let gravacoes = 0
+    await page.route('**/api/admin/fluxos/7/rascunho', (r) => {
+      gravacoes++
+      return r.fulfill(json({ numero: 3, etapas: [] }))
+    })
+    await noCanvas(page, 1440)
+    // um nó solto fora da cadeia: arrastar do menu "Adicionar etapa" até o canvas
+    await page.getByRole('button', { name: 'Adicionar etapa', exact: true }).click()
+    await page.getByRole('button', { name: /^Coordenação do curso/ }).dragTo(page.locator('.react-flow'), { targetPosition: { x: 500, y: 300 } })
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('alert').filter({ hasText: 'Ligue todas as etapas' })).toBeVisible()
+    await page.keyboard.press('Control+s')
+    await page.waitForTimeout(300)
+    expect(gravacoes).toBe(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0) // nem a janela de salvar a página nem outro diálogo
+  })
   // C12
   test('canvas ocupa a página', async ({ page }) => {
     for (const [largura, altura] of [[1440, 900], [1280, 800]]) {

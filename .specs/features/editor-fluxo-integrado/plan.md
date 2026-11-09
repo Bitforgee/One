@@ -49,6 +49,8 @@ Rota de tela que esta feature adiciona. Nenhuma rota de API nova nem alterada: `
 | --- | --- | --- |
 | endereço do editor | `/:slug/cadastros/fluxos/:id` (`id` numérico do fluxo) | `/:slug/fluxos/:id`: "Fluxos" é uma aba de Cadastros, e o menu ativo e o título do cabeçalho vêm do primeiro segmento (`cadastros`), então ficaria sem menu ativo; `/:slug/cadastros?fluxo=3`: não tem tela própria, o botão Voltar e o título do cabeçalho não distinguem lista de editor |
 
+| roteador da aplicação (emenda de 08/11, melhor usabilidade) | `createBrowserRouter([{ path: '*', element: <App /> }])` com `<RouterProvider>` em `main.tsx`, e `createMemoryRouter` no `abrir()` dos testes: o `App` continua com os seus `<Routes>`; só o roteador passa a ser de dados, para `useBlocker` valer para a barra lateral e para o Voltar do navegador | interceptar o clique em qualquer `<a>` da página: não pega o Voltar do navegador nem o atalho de teclado, e deixa a guarda fora do roteador |
+
 - Nada além disso é difícil de desfazer: sem schema, sem contrato de API, sem dependência nova (o `Canvas` e o `@xyflow/react` ficam como estão)
 
 ## Criteria
@@ -70,6 +72,10 @@ O gestor edita o fluxo sem perder o menu, e o endereço e o botão Voltar funcio
 9. WHILE há alterações não salvas, WHEN o gestor aciona a trilha ("Cadastros" ou "Fluxos") ou "Voltar" THEN the system SHALL abrir o diálogo "Sair sem salvar?" com os botões "Continuar editando" e "Sair sem salvar", e só "Sair sem salvar" deixa o editor
 10. WHILE não há alterações não salvas the system SHALL deixar o editor pela trilha ou por "Voltar" sem nenhum diálogo
 11. WHILE há alterações não salvas, WHEN o gestor fecha ou recarrega a aba THEN the system SHALL pedir a confirmação nativa do navegador (`beforeunload`)
+
+18. WHILE há alterações não salvas, WHEN o gestor aciona um link da barra lateral ou do cabeçalho, ou o Voltar do navegador THEN the system SHALL abrir o diálogo "Sair sem salvar?" (como no AC 9) e só "Sair sem salvar" deixa o editor; "Continuar editando" mantém o endereço do editor
+19. WHEN o gestor aperta Ctrl+S (⌘+S no Mac) no editor THEN the system SHALL salvar o rascunho como o botão "Salvar rascunho" e impedir a janela de salvar a página do navegador
+20. IF a cadeia está inválida ou uma gravação está em andamento WHEN o gestor aperta Ctrl+S THEN the system SHALL não enviar nada e ainda impedir a janela de salvar a página
 
 **Independent test:** logado como administrador, abrir Cadastros › Fluxos, clicar num fluxo e ver o menu lateral, o endereço e a trilha; apertar Voltar do navegador.
 
@@ -100,7 +106,6 @@ O canvas e o painel lateral usam a altura e a largura que a casca deixa.
 | Excluded | Why |
 | --- | --- |
 | Salvar o rascunho sozinho a cada 2 s, como o autosave do n8n 2.4 | muda quando o rascunho existe e quando "Publicar" liga; é decisão de produto separada, e o rascunho já é separado da versão vigente |
-| Bloquear a saída pelos links da barra lateral quando há alterações | o roteador é o `BrowserRouter`, e `useBlocker` só existe em roteador de dados; trocar o roteador mexe em todos os testes. O aviso cobre a trilha, "Voltar" e fechar a aba |
 | Histórico de versões e bloqueio de edição por duas pessoas (n8n) | capacidade nova, sem pedido |
 | Editar a etapa num modal ao dar duplo clique (n8n "node details") | o painel lateral já é o "focus panel" do n8n e basta |
 | Regras do fluxo, limite de 5 etapas, destinos, simulação | não mudam (AD-041, AD-042) |

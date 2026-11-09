@@ -525,7 +525,7 @@ test('borda da caixa de envio com 3:1', async ({ page }) => {
     for (const marca of DuasMarcas)
       for (const largura of [390, 1440]) {
         await abrir(page, largura, '/univag/assistente', esperaAssistente, { marca, tema, papeis: ['ALUNO'] })
-        const campo = page.getByLabel('Mensagem')
+        const campo = page.getByTestId('compositor') // a borda é da caixa do compositor (chat-linha-do-tempo), não mais do campo
         await expect(campo).toHaveCount(1)
         const [largBorda, borda, fundo] = (await campo.evaluate((e) => {
           const s = getComputedStyle(e)
