@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 116,
+  "next_id": 117,
   "lessons": [
     {
       "id": "L-001",
@@ -2088,6 +2088,24 @@
       ],
       "created": "2026-11-10T14:26:59Z",
       "last_seen": "2026-11-10T14:26:59Z"
+    },
+    {
+      "id": "L-116",
+      "key": "spec_precision_gap::prove uma mudanca de endereco lendo a localizacao do roteador no teste nao um atributo da tela que so repete o parametro",
+      "text": "Prove uma mudança de endereço lendo a localização do roteador no teste, não um atributo da tela que só repete o parâmetro.",
+      "signal": "spec_precision_gap",
+      "scope": "web",
+      "status": "candidate",
+      "features": [
+        "integracoes-admin"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "web/src/administracao/integracoes.test.tsx:45 (web)"
+      ],
+      "created": "2026-11-10T15:24:49Z",
+      "last_seen": "2026-11-10T15:24:49Z"
     }
   ]
 }

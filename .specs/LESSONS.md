@@ -702,6 +702,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: One.Api/Acesso/LancamentoMoodle.cs:31 (F2) (specs/checks)
 - last seen: 2026-11-10T14:26:59Z
 
+### L-116 - Prove uma mudança de endereço lendo a localização do roteador no teste, não um atributo da tela que só repete o parâmetro.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web` · harmful: 0
+- features: integracoes-admin
+- evidence: web/src/administracao/integracoes.test.tsx:45 (web)
+- last seen: 2026-11-10T15:24:49Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
