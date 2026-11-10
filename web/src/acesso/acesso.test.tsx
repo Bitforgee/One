@@ -194,7 +194,7 @@ describe('acesso', () => {
     abrir('/univag/fila')
     const nav = await screen.findByRole('navigation')
     const links = await within(nav).findAllByRole('link')
-    expect(links.length).toBe(8)
+    expect(links.length).toBe(9)
     for (const link of links) {
       const ativo = link.textContent === 'Fila'
       expect(link.getAttribute('aria-current'), link.textContent!).toBe(ativo ? 'page' : null)
@@ -237,7 +237,7 @@ describe('acesso', () => {
     for (const [papel, links] of [
       ['ALUNO', ['Assistente', 'Minhas solicitações']],
       ['ATENDENTE', ['Fila', 'Indicadores']],
-      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência']],
+      ['ADMINISTRADOR', ['Indicadores', 'Artigos', 'Documentos', 'Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Moodle']],
     ] as const) {
       api({ 'GET /api/auth/me': () => [200, me({ papeis: [papel] })] })
       const { unmount } = abrir('/univag/trocar-senha')
@@ -269,6 +269,7 @@ describe('acesso', () => {
       ['Matrículas', 'lucide-upload'],
       ['Cadastros', 'lucide-settings'],
       ['Aparência', 'lucide-palette'],
+      ['Moodle', 'lucide-plug'],
     ]) {
       const svg = icone(nav.getByRole('link', { name: rotulo }))
       expect(svg, rotulo).toHaveClass(classe)
@@ -416,7 +417,7 @@ describe('barra lateral com grupos', () => {
   const Esperado = [
     ['Atendimento', ['Assistente', 'Minhas solicitações', 'Fila', 'Indicadores']],
     ['Conhecimento', ['Artigos', 'Documentos']],
-    ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência']],
+    ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Moodle']],
   ]
   const grupos = (raiz: HTMLElement) => within(raiz).getAllByRole('group').map((g) => [g.getAttribute('aria-labelledby') && document.getElementById(g.getAttribute('aria-labelledby')!)?.textContent, within(g).getAllByRole('link').map((l) => l.textContent)])
 
@@ -438,7 +439,7 @@ describe('barra lateral com grupos', () => {
   it.each([
     [['ALUNO'], [['Atendimento', ['Assistente', 'Minhas solicitações']]]],
     [['ATENDENTE'], [['Atendimento', ['Fila', 'Indicadores']]]],
-    [['ADMINISTRADOR'], [['Atendimento', ['Indicadores']], ['Conhecimento', ['Artigos', 'Documentos']], ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência']]]],
+    [['ADMINISTRADOR'], [['Atendimento', ['Indicadores']], ['Conhecimento', ['Artigos', 'Documentos']], ['Administração', ['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Moodle']]]],
   ])('grupos por papel (%j)', async (papeis, esperado) => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis })] })
     abrir('/univag/trocar-senha')
@@ -522,6 +523,7 @@ describe('barra lateral com grupos', () => {
     ['matriculas', 'Matrículas'],
     ['cadastros', 'Cadastros'],
     ['aparencia', 'Aparência'],
+    ['moodle', 'Moodle'],
     ['chamados/ONE-7', 'ONE-7'],
     ['trocar-senha', 'Trocar senha'],
   ])('título do cabeçalho por rota (%s)', async (caminho, titulo) => {

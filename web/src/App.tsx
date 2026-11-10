@@ -10,6 +10,7 @@ import { Cadastros } from './administracao/Cadastros'
 import { PaginaDoFluxo } from './administracao/PaginaDoFluxo'
 import { Instituicoes } from './administracao/Instituicoes'
 import { Matriculas } from './administracao/Matriculas'
+import { Moodle } from './administracao/Moodle'
 import { Usuarios } from './administracao/Usuarios'
 import { Assistente } from './assistente/Assistente'
 import { Autenticado } from './Autenticado'
@@ -69,6 +70,7 @@ function Rotas() {
             <Route path="cadastros" element={<Cadastros />} />
             <Route path="cadastros/fluxos/:id" element={<PaginaDoFluxo />} />
             <Route path="aparencia" element={<Aparencia />} />
+            <Route path="moodle" element={<Moodle />} />
             <Route path="instituicoes" element={<Instituicoes />} />
           </Route>
         </Route>

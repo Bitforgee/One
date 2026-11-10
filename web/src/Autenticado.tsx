@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, Building2, ChartColumn, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, Building2, ChartColumn, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
@@ -27,6 +27,7 @@ const Menu = [
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'matriculas', rotulo: 'Matrículas', Icone: Upload },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'cadastros', rotulo: 'Cadastros', Icone: Settings },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'aparencia', rotulo: 'Aparência', Icone: Palette },
+  { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'moodle', rotulo: 'Moodle', Icone: Plug },
   { grupo: 'Plataforma', papeis: ['OPERADOR'], caminho: 'instituicoes', rotulo: 'Instituições', Icone: Building2 },
 ]
 const Grupos = ['Atendimento', 'Conhecimento', 'Administração', 'Plataforma']

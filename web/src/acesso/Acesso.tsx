@@ -169,10 +169,18 @@ function Formulario<T extends FieldValues>({ schema, enviar, botao, className, c
 
 const schemaLogin = z.object({ cpf: obrigatorio, senha: obrigatorio })
 
+const VoltaDoMoodle: Record<string, string> = {
+  'sem-cadastro': 'Não encontramos seu cadastro no One. Fale com a secretaria.',
+  inativo: 'Seu acesso ao One está desativado. Fale com a secretaria.',
+  'use-senha': 'Equipe entra com CPF e senha.',
+}
+
 export function Login() {
   const { slug } = useParams()
   const navigate = useNavigate()
+  const [busca] = useSearchParams()
   const { isError, isPending, error, refetch } = useInstituicao(slug)
+  const motivo = Object.hasOwn(VoltaDoMoodle, busca.get('moodle') ?? '') ? VoltaDoMoodle[busca.get('moodle')!] : undefined
 
   if (isError)
     return (
@@ -189,6 +197,7 @@ export function Login() {
 
   return (
     <Entrada>
+      {motivo && <Alert>{motivo}</Alert>}
       <Formulario
         schema={schemaLogin}
         botao="Entrar"
