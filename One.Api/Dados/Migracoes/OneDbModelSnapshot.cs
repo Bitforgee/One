@@ -1304,6 +1304,155 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("instituicao");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.Moodle.LtiLancamento", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("Nonce")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("nonce");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTime?>("UsadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("usado_em");
+
+                    b.HasKey("Id")
+                        .HasName("pk_lti_lancamento");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_lti_lancamento_instituicao_id");
+
+                    b.HasIndex("State")
+                        .IsUnique()
+                        .HasDatabaseName("ix_lti_lancamento_state");
+
+                    b.ToTable("lti_lancamento");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Moodle.PlataformaMoodle", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ativa");
+
+                    b.Property<string>("AuthUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("auth_url");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("client_id");
+
+                    b.Property<string>("DeploymentId")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("deployment_id");
+
+                    b.Property<string>("Emissor")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("emissor");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("JwksUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("jwks_url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plataforma_moodle");
+
+                    b.HasIndex("InstituicaoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_plataforma_moodle_instituicao_id");
+
+                    b.ToTable("plataforma_moodle");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Moodle.VinculoMoodle", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Emissor")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("emissor");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("Sub")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sub");
+
+                    b.Property<long>("UsuarioId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_vinculo_moodle");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_vinculo_moodle_usuario_id");
+
+                    b.HasIndex("InstituicaoId", "Emissor", "Sub")
+                        .IsUnique()
+                        .HasDatabaseName("ix_vinculo_moodle_instituicao_id_emissor_sub");
+
+                    b.ToTable("vinculo_moodle");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Push.PushSaida", b =>
                 {
                     b.Property<long>("Id")
@@ -2107,6 +2256,43 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_imagem_instituicao_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Moodle.LtiLancamento", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_lti_lancamento_instituicao_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Moodle.PlataformaMoodle", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plataforma_moodle_instituicao_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Moodle.VinculoMoodle", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vinculo_moodle_instituicao_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_vinculo_moodle_usuario_usuario_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Push.PushSaida", b =>

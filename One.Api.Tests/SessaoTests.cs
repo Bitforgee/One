@@ -11,7 +11,7 @@ namespace One.Api.Tests;
 
 public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
 {
-    static readonly string[] Publicas = ["/api/instituicoes/{slug}", "/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"];
+    static readonly string[] Publicas = ["/api/instituicoes/{slug}", "/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest", "/api/moodle/{slug}/login", "/api/moodle/{slug}/lancamento", "/api/moodle/{slug}/jwks"];
     static readonly string[] LivresDaTroca = ["/api/auth/login", "/api/auth/logout", "/api/auth/me", "/api/auth/senha"];
 
     List<(string metodo, string padrao)> Rotas() =>
@@ -30,7 +30,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Sem_cookie_401_em_toda_rota_privada()
     {
         var privadas = Rotas().Where(r => !Publicas.Contains(r.padrao)).ToList();
-        Assert.Equal(75, privadas.Count);
+        Assert.Equal(77, privadas.Count);
 
         foreach (var (metodo, padrao) in privadas)
         {

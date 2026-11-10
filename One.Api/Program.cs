@@ -60,6 +60,9 @@ public class Program
         s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
         s.AddSingleton<Email>();
         s.AddHttpClient("push");
+        s.AddHttpClient("moodle", c => c.Timeout = TimeSpan.FromSeconds(10));
+        s.AddSingleton<ChaveLti>();
+        s.AddScoped<ValidadorLti>();
         s.AddSingleton<IEnviadorPush, EnviadorPush>();
         s.AddSingleton<IAmazonS3>(sp =>
         {

@@ -38,6 +38,9 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<SubscricaoPush> SubscricoesPush => Set<SubscricaoPush>();
     public DbSet<PushSaida> PushesSaida => Set<PushSaida>();
     public DbSet<ImagemInstituicao> ImagensInstituicao => Set<ImagemInstituicao>();
+    public DbSet<PlataformaMoodle> PlataformasMoodle => Set<PlataformaMoodle>();
+    public DbSet<VinculoMoodle> VinculosMoodle => Set<VinculoMoodle>();
+    public DbSet<LtiLancamento> LtiLancamentos => Set<LtiLancamento>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -51,6 +54,25 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         {
             e.Property(x => x.Hash).HasColumnType("char(64)");
             e.HasIndex(nameof(ImagemInstituicao.InstituicaoId), nameof(ImagemInstituicao.Tipo)).IsUnique();
+        });
+        mb.Entity<PlataformaMoodle>(e =>
+        {
+            e.HasIndex(x => x.InstituicaoId).IsUnique();
+            foreach (var campo in new[] { nameof(PlataformaMoodle.Emissor), nameof(PlataformaMoodle.ClientId), nameof(PlataformaMoodle.DeploymentId), nameof(PlataformaMoodle.AuthUrl), nameof(PlataformaMoodle.JwksUrl) })
+                e.Property(campo).HasMaxLength(500);
+        });
+        mb.Entity<VinculoMoodle>(e =>
+        {
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
+            e.Property(x => x.Emissor).HasMaxLength(500);
+            e.Property(x => x.Sub).HasMaxLength(100);
+            e.HasIndex(nameof(VinculoMoodle.InstituicaoId), nameof(VinculoMoodle.Emissor), nameof(VinculoMoodle.Sub)).IsUnique();
+        });
+        mb.Entity<LtiLancamento>(e =>
+        {
+            e.Property(x => x.State).HasMaxLength(64);
+            e.Property(x => x.Nonce).HasMaxLength(64);
+            e.HasIndex(x => x.State).IsUnique();
         });
         mb.Entity<Usuario>(e =>
         {

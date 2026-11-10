@@ -38,7 +38,7 @@ public class AdminTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(36, rotas.Count);
+        Assert.Equal(38, rotas.Count);
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)

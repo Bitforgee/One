@@ -15,6 +15,9 @@ public static class AuthRotas
         api.MapPost("/auth/logout", (Delegate)Logout).AllowAnonymous();
         Eu.Mapear(api);
         TrocarSenha.Mapear(api);
+        IniciarLoginMoodle.Mapear(api);
+        LancamentoMoodle.Mapear(api);
+        ChavesMoodle.Mapear(api);
     }
 
     static async Task<IResult> Logout(HttpContext ctx)

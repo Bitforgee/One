@@ -30,7 +30,19 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         }
     }
 
-    public async Task Executar(CancellationToken parar = default) => await Processar(await Ler(), parar);
+    public async Task Executar(CancellationToken parar = default)
+    {
+        await Processar(await Ler(), parar);
+        await ApagarLancamentosVencidos(parar);
+    }
+
+    async Task ApagarLancamentosVencidos(CancellationToken parar)
+    {
+        using var escopo = escopos.CreateScope();
+        var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
+        var limite = relogio.GetUtcNow().UtcDateTime - TimeSpan.FromDays(1);
+        await db.LtiLancamentos.IgnoreQueryFilters().Where(l => l.ExpiraEm < limite).ExecuteDeleteAsync(parar);
+    }
 
     public async Task<List<Item>> Ler()
     {

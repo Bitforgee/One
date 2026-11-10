@@ -21,5 +21,7 @@ public static class AdminRotas
         ArtigoRotas.MapearAdmin(admin);
         DocumentoRotas.MapearAdmin(admin);
         Instituicoes.AparenciaRotas.MapearAdmin(admin);
+        VerMoodle.Mapear(admin);
+        AlterarMoodle.Mapear(admin);
     }
 }

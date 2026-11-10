@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Amazon.Runtime;
@@ -32,6 +33,8 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public AtrasoDoCommit Commit { get; } = new();
     public static readonly ParVapid Vapid = ParVapid.Gerar();
     public EnviadorFalso Push { get; } = new();
+    public MoodleFalso Moodle { get; } = new();
+    public static readonly string PemDaFerramenta = RSA.Create(2048).ExportRSAPrivateKeyPem();
     protected virtual bool EnviadorPushReal => false;
     protected virtual bool LimitesReais => false;
     protected virtual int PortaSmtp => 1025;
@@ -69,6 +72,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Push:ChavePrivada", Vapid.PrivateKey);
         builder.UseSetting("Push:Assunto", "mailto:teste@one.test");
         builder.UseSetting("Agendador:Ativo", "false");
+        builder.UseSetting("Moodle:ChavePrivada", PemDaFerramenta);
         if (!LimitesReais)
         {
             builder.UseSetting("Limites:AuthPorMinuto", "100000");
@@ -87,6 +91,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.RemoveAll<IPasswordHasher<Usuario>>();
             s.AddSingleton<IPasswordHasher<Usuario>>(Hasher);
             s.AddHttpClient("llm").ConfigurePrimaryHttpMessageHandler(() => Llm);
+            s.AddHttpClient("moodle").ConfigurePrimaryHttpMessageHandler(() => Moodle);
             s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes, Commit));
             if (!EnviadorPushReal) s.AddSingleton<IEnviadorPush>(Push);
             s.RemoveAll<Armazenamento>();
@@ -180,6 +185,7 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
     public int Total => total;
     public void Zerar() => Interlocked.Exchange(ref total, 0);
     public bool FalharAoGravarEmail { get; set; }
+    public TimeSpan Atraso { get; set; }
 
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
@@ -187,11 +193,12 @@ public class ContadorDeGravacoes : SaveChangesInterceptor
         return base.SavingChanges(eventData, result);
     }
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
     {
         Interlocked.Increment(ref total);
         if (FalharAoGravarEmail && eventData.Context!.ChangeTracker.Entries<EmailSaida>().Any(e => e.State == EntityState.Added)) throw new InvalidOperationException("gravação do e-mail simulada");
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        if (Atraso > TimeSpan.Zero) await Task.Delay(Atraso, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }
 

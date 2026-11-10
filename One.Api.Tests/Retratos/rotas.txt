@@ -4,6 +4,9 @@ POST /api/auth/definir-senha anonimo=True autorizacao=True limite=-
 POST /api/auth/logout anonimo=True autorizacao=True limite=-
 GET /api/auth/me anonimo=False autorizacao=True limite=-
 POST /api/auth/senha anonimo=False autorizacao=True limite=-
+GET,POST /api/moodle/{slug}/login anonimo=True autorizacao=True limite=auth
+POST /api/moodle/{slug}/lancamento anonimo=True autorizacao=True limite=auth
+GET /api/moodle/{slug}/jwks anonimo=True autorizacao=True limite=-
 GET /api/instituicoes/{slug} anonimo=True autorizacao=True limite=-
 GET /api/instituicoes/{slug}/imagens/{tipo} anonimo=True autorizacao=True limite=-
 GET /api/instituicoes/{slug}/manifest.webmanifest anonimo=True autorizacao=True limite=-
@@ -71,6 +74,8 @@ GET /api/admin/aparencia anonimo=False autorizacao=True limite=-
 PUT /api/admin/aparencia anonimo=False autorizacao=True limite=-
 POST /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
 DELETE /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
+GET /api/admin/moodle anonimo=False autorizacao=True limite=-
+PUT /api/admin/moodle anonimo=False autorizacao=True limite=-
 GET /api/push/chave anonimo=False autorizacao=True limite=-
 POST /api/push/subscricao anonimo=False autorizacao=True limite=-
 DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-

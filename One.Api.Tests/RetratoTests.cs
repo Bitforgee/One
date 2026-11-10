@@ -34,15 +34,15 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var viva = endpoints.Select(Linha).ToList();
         File.WriteAllLines(Path.Combine(AppContext.BaseDirectory, "rotas.viva.txt"), viva);
 
-        Assert.Equal(84, viva.Count);
+        Assert.Equal(89, viva.Count);
         var fallbacks = endpoints.Where(e => e.Order == int.MaxValue).Select(e => e.RoutePattern.RawText).ToList();
         Assert.Equal(["/api/{**resto}", "{*path:nonfile}"], fallbacks);
-        Assert.Equal(81, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
-        Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/instituicoes/{slug}", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"],
+        Assert.Equal(85, endpoints.Count(e => e.Order != int.MaxValue && e.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Count == 1));
+        Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso", "/api/auth/definir-senha", "/api/auth/logout", "/api/moodle/{slug}/login", "/api/moodle/{slug}/lancamento", "/api/moodle/{slug}/jwks", "/api/instituicoes/{slug}", "/api/instituicoes/{slug}/imagens/{tipo}", "/api/instituicoes/{slug}/manifest.webmanifest"],
             endpoints.Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is not null).Select(e => e.RoutePattern.RawText));
-        Assert.Equal(82, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
+        Assert.Equal(87, endpoints.Count(e => e.Metadata.GetOrderedMetadata<IAuthorizeData>().Any()));
         string[] Com(string politica) => [.. endpoints.Where(e => e.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == politica).Select(e => e.RoutePattern.RawText!)];
-        Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso"], Com("auth"));
+        Assert.Equal(["/api/auth/login", "/api/auth/primeiro-acesso", "/api/moodle/{slug}/login", "/api/moodle/{slug}/lancamento"], Com("auth"));
         Assert.Equal(["/api/conversas", "/api/conversas/{id:long}/mensagens", "/api/atendimento-direto"], Com("mensagens"));
 
         Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva);
@@ -57,7 +57,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var rotas = Endpoints(f).Where(e => e.RoutePattern.RawText!.StartsWith("/api/admin/"))
             .SelectMany(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Select(m => (m, e.RoutePattern.RawText!)))
             .ToList();
-        Assert.Equal(36, rotas.Count);
+        Assert.Equal(38, rotas.Count);
 
         foreach (var c in clientes)
             foreach (var (metodo, padrao) in rotas)

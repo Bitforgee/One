@@ -22,6 +22,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="PdfPig" Version="0.1.16" />
     <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
@@ -39,5 +40,6 @@
     <Using Include="One.Api.Dados.Emails" />
     <Using Include="One.Api.Dados.Push" />
     <Using Include="One.Api.Dados.Fluxos" />
+    <Using Include="One.Api.Dados.Moodle" />
   </ItemGroup>
 </Project>
