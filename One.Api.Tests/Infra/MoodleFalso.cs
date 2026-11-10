@@ -46,6 +46,10 @@ public sealed class MoodleFalso : HttpMessageHandler
         return d;
     }
 
+    public string AssinarHs256(Dictionary<string, object?> corpo) =>
+        new JsonWebTokenHandler().CreateToken(JsonSerializer.Serialize(corpo),
+            new SigningCredentials(new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32)) { KeyId = Kid }, SecurityAlgorithms.HmacSha256));
+
     public string Assinar(Dictionary<string, object?> corpo, bool comOutraChave = false) =>
         new JsonWebTokenHandler().CreateToken(JsonSerializer.Serialize(corpo),
             new SigningCredentials(new RsaSecurityKey(comOutraChave ? OutraChave : chave) { KeyId = Kid }, SecurityAlgorithms.RsaSha256));

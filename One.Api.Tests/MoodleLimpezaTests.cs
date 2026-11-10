@@ -15,8 +15,8 @@ public class MoodleLimpezaTests(OneFactory f) : IClassFixture<OneFactory>
         var manter = new List<string>();
         foreach (var i in new[] { a, b })
         {
-            apagar.Add((await f.NovoLancamento(i, agora => agora - TimeSpan.FromDays(1) - TimeSpan.FromMinutes(11))).State);
-            manter.Add((await f.NovoLancamento(i, agora => agora - TimeSpan.FromHours(23) - TimeSpan.FromMinutes(49))).State);
+            apagar.Add((await f.NovoLancamento(i, agora => agora - LtiLancamento.Validade - TimeSpan.FromDays(1) - TimeSpan.FromMinutes(1))).State);
+            manter.Add((await f.NovoLancamento(i, agora => agora - LtiLancamento.Validade - TimeSpan.FromHours(23) - TimeSpan.FromMinutes(59))).State);
             manter.Add((await f.NovoLancamento(i)).State);
         }
 
@@ -25,5 +25,7 @@ public class MoodleLimpezaTests(OneFactory f) : IClassFixture<OneFactory>
         var restantes = await f.Db(null, db => db.LtiLancamentos.IgnoreQueryFilters().Select(x => x.State).ToListAsync());
         Assert.Equal(manter.Order(), restantes.Order());
         Assert.Empty(restantes.Intersect(apagar));
+        var vencimentos = await f.Db(null, db => db.LtiLancamentos.IgnoreQueryFilters().Select(x => x.ExpiraEm).ToListAsync());
+        Assert.Contains(f.Relogio.GetUtcNow().UtcDateTime - TimeSpan.FromHours(23) - TimeSpan.FromMinutes(59), vencimentos);
     }
 }

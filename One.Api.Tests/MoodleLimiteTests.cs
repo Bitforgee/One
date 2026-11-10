@@ -21,6 +21,13 @@ public class MoodleLimiteTests : IAsyncLifetime
         for (var n = 0; n < 5; n++) Assert.Equal(HttpStatusCode.Redirect, (await c.GetAsync(login)).StatusCode);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, (await c.GetAsync(login)).StatusCode);
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await c.Lancar(i.Slug, "x.y.z", "estado")).StatusCode);
+
+        await using var outra = new OneFactoryComLimites();
+        await outra.InitializeAsync();
+        var j = await outra.Instituicao();
+        await outra.PlataformaMoodle(j);
+        var c2 = outra.Cliente();
+        for (var n = 0; n < 5; n++) Assert.Equal(HttpStatusCode.BadRequest, (await c2.Lancar(j.Slug, "x.y.z", "estado")).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await c2.Lancar(j.Slug, "x.y.z", "estado")).StatusCode);
     }
 }

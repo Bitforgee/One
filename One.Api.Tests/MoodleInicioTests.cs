@@ -57,6 +57,7 @@ public class MoodleInicioTests(OneFactory f) : IClassFixture<OneFactory>
     [InlineData("client")]
     [InlineData("inativa")]
     [InlineData("sem-plataforma")]
+    [InlineData("sem-login-hint")]
     public async Task Login_recusa_com_400(string caso)
     {
         var i = await f.Instituicao();
@@ -65,6 +66,7 @@ public class MoodleInicioTests(OneFactory f) : IClassFixture<OneFactory>
         {
             "iss" => Consulta(iss: "https://outro.teste"),
             "client" => Consulta(client: "outro-cliente"),
+            "sem-login-hint" => Consulta().Replace("&login_hint=hint-1", ""),
             _ => Consulta(),
         };
 

@@ -21,12 +21,14 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
             await db.SaveChangesAsync();
         });
 
-    async Task<HttpResponseMessage> Entrar(Instituicao i, string sub, string? username, HttpClient? c = null, Action<Dictionary<string, object?>>? ajustar = null, bool outraChave = false)
+    async Task<HttpResponseMessage> Entrar(Instituicao i, string sub, string? username, HttpClient? c = null, Action<Dictionary<string, object?>>? ajustar = null,
+        bool outraChave = false, bool simetrica = false)
     {
         var (state, nonce) = await f.NovoLancamento(i);
         var corpo = f.Moodle.Corpo(nonce, f.Relogio.GetUtcNow(), sub, username);
         ajustar?.Invoke(corpo);
-        return await (c ?? f.Cliente()).Lancar(i.Slug, f.Moodle.Assinar(corpo, outraChave), state);
+        var token = simetrica ? f.Moodle.AssinarHs256(corpo) : f.Moodle.Assinar(corpo, outraChave);
+        return await (c ?? f.Cliente()).Lancar(i.Slug, token, state);
     }
 
     static void SemSessao(HttpResponseMessage r) => Assert.Equal("", r.Sessao());
@@ -61,6 +63,8 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
     [InlineData("message_type")]
     [InlineData("version")]
     [InlineData("chaves-fora")]
+    [InlineData("sub-vazio")]
+    [InlineData("alg-hs256")]
     public async Task Token_invalido_400(string caso)
     {
         var i = await Univag();
@@ -81,13 +85,30 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
                     case "deployment_id": d[MoodleFalso.Lti + "deployment_id"] = "99"; break;
                     case "message_type": d[MoodleFalso.Lti + "message_type"] = "LtiDeepLinkingRequest"; break;
                     case "version": d[MoodleFalso.Lti + "version"] = "1.2.0"; break;
+                    case "sub-vazio": d["sub"] = ""; break;
                 }
-            }, outraChave: caso == "assinatura");
+            }, outraChave: caso == "assinatura", simetrica: caso == "alg-hs256");
 
             Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
             SemSessao(r);
         }
         finally { f.Moodle.JwksFora = false; }
+    }
+
+    [Theory]
+    [InlineData("inativa")]
+    [InlineData("sem-plataforma")]
+    public async Task Lancamento_sem_plataforma_ativa_400(string caso)
+    {
+        var i = await f.Instituicao();
+        if (caso == "inativa") await f.PlataformaMoodle(i, ativa: false);
+        var u = await f.Usuario(i, [Papeis.Aluno]);
+        await Vincular(i, u, "42");
+
+        var r = await Entrar(i, "42", null);
+
+        Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
+        SemSessao(r);
     }
 
     [Fact]
@@ -215,13 +236,18 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(antes, (await f.Vinculos(i)).Count);
     }
 
+    public static TheoryData<string> PapeisDeEquipe() =>
+    [
+        Papeis.Atendente, $"{Papeis.Aluno},{Papeis.Atendente}", Papeis.Administrador, $"{Papeis.Aluno},{Papeis.Administrador}",
+        Papeis.Operador, $"{Papeis.Aluno},{Papeis.Operador}",
+    ];
+
     [Theory]
-    [InlineData("atendente")]
-    [InlineData("aluno-e-atendente")]
-    public async Task Equipe_nao_entra_pelo_moodle(string caso)
+    [MemberData(nameof(PapeisDeEquipe))]
+    public async Task Equipe_nao_entra_pelo_moodle(string papeis)
     {
         var i = await Univag();
-        var u = await f.Usuario(i, caso == "atendente" ? [Papeis.Atendente] : [Papeis.Aluno, Papeis.Atendente]);
+        var u = await f.Usuario(i, papeis.Split(','));
 
         var r = await Entrar(i, "42", u.Cpf);
 
