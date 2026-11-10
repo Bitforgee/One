@@ -1,3 +1,4 @@
+POST /api/mcp/{slug}/ anonimo=False autorizacao=True limite=mcp
 POST /api/auth/login anonimo=True autorizacao=True limite=auth
 POST /api/auth/primeiro-acesso anonimo=True autorizacao=True limite=auth
 POST /api/auth/definir-senha anonimo=True autorizacao=True limite=-
@@ -76,6 +77,9 @@ POST /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
 DELETE /api/admin/aparencia/imagens/{tipo} anonimo=False autorizacao=True limite=-
 GET /api/admin/moodle anonimo=False autorizacao=True limite=-
 PUT /api/admin/moodle anonimo=False autorizacao=True limite=-
+GET /api/admin/mcp anonimo=False autorizacao=True limite=-
+POST /api/admin/mcp/tokens anonimo=False autorizacao=True limite=-
+DELETE /api/admin/mcp/tokens/{id:long} anonimo=False autorizacao=True limite=-
 GET /api/push/chave anonimo=False autorizacao=True limite=-
 POST /api/push/subscricao anonimo=False autorizacao=True limite=-
 DELETE /api/push/subscricao anonimo=False autorizacao=True limite=-

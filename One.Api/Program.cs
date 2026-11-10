@@ -2,10 +2,12 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Amazon.Runtime;
 using Amazon.S3;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using ModelContextProtocol.AspNetCore;
 using One.Api.Acesso;
 using One.Api.Administracao;
 using One.Api.Assistente;
@@ -14,6 +16,7 @@ using One.Api.Conhecimento;
 using One.Api.Dados;
 using One.Api.Indicadores;
 using One.Api.Instituicoes;
+using One.Api.Mcp;
 
 namespace One.Api;
 
@@ -84,6 +87,7 @@ public class Program
         s.AddHttpClient("llm", Llm);
         s.AddMediator(o => { o.ServiceLifetime = ServiceLifetime.Scoped; o.PipelineBehaviors = [typeof(AgirNoChamado<,>)]; });
         s.AddScoped<AcessoChamado>();
+        s.AddMcpServer().WithHttpTransport(o => o.SessionMode = HttpServerSessionMode.Stateless).WithTools<FerramentasMcp>();
         s.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = false);
 
         s.AddProblemDetails(o => o.CustomizeProblemDetails = c =>
@@ -121,6 +125,7 @@ public class Program
             o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
             o.Events.OnValidatePrincipal = Sessao.Validar;
         });
+        s.AddAuthentication().AddScheme<AuthenticationSchemeOptions, AutenticacaoMcp>(AutenticacaoMcp.Esquema, null);
         s.AddAuthorization();
 
         s.AddRateLimiter(o =>
@@ -128,6 +133,8 @@ public class Program
             o.RejectionStatusCode = 429;
             o.AddPolicy("auth", c => RateLimitPartition.GetFixedWindowLimiter(c.Connection.RemoteIpAddress?.ToString() ?? "",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:AuthPorMinuto", 5), Window = TimeSpan.FromSeconds(60) }));
+            o.AddPolicy("mcp", c => RateLimitPartition.GetFixedWindowLimiter(Tokens.Hash(c.Request.Headers.Authorization.ToString()),
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:McpPorMinuto", 60), Window = TimeSpan.FromSeconds(60) }));
             o.AddPolicy("mensagens", c => RateLimitPartition.GetFixedWindowLimiter(c.User.FindFirstValue("sub") ?? "",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = Limite(c, "Limites:MensagensPorMinuto", 10), Window = TimeSpan.FromSeconds(60) }));
         });
@@ -137,6 +144,7 @@ public class Program
 
     static void Rotas(WebApplication app)
     {
+        McpRotas.Mapear(app);
         var api = app.MapGroup("/api").RequireAuthorization();
         AuthRotas.Mapear(api);
         InstituicaoRotas.Mapear(api);

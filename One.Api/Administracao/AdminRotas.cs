@@ -23,5 +23,8 @@ public static class AdminRotas
         Instituicoes.AparenciaRotas.MapearAdmin(admin);
         VerMoodle.Mapear(admin);
         AlterarMoodle.Mapear(admin);
+        VerMcp.Mapear(admin);
+        CriarTokenMcp.Mapear(admin);
+        RevogarTokenMcp.Mapear(admin);
     }
 }

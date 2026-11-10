@@ -479,6 +479,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
             .Select(p => Path.GetRelativePath(api, p).Replace(sep, '/'))
             .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/InstituicaoComando.cs"))
             .Where(p => atribui.IsMatch(File.ReadAllText(Path.Combine(api, p))));
-        Assert.Equal(["Chamados/TempoRealHub.cs"], fora);
+        Assert.Equal(["Chamados/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/FerramentasMcp.cs"], fora);
     }
 }

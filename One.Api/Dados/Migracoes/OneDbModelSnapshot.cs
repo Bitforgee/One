@@ -1304,6 +1304,72 @@ namespace One.Api.Dados.Migracoes
                     b.ToTable("instituicao");
                 });
 
+            modelBuilder.Entity("One.Api.Dados.Mcp.TokenMcp", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expira_em");
+
+                    b.Property<string>("Final")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)")
+                        .HasColumnName("final");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("char(64)")
+                        .HasColumnName("hash");
+
+                    b.Property<long>("InstituicaoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("instituicao_id");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nome");
+
+                    b.Property<DateTime?>("RevogadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revogado_em");
+
+                    b.Property<DateTime?>("UltimoUsoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultimo_uso_em");
+
+                    b.Property<long>("UsuarioId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_token_mcp");
+
+                    b.HasIndex("Hash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_token_mcp_hash");
+
+                    b.HasIndex("InstituicaoId")
+                        .HasDatabaseName("ix_token_mcp_instituicao_id");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_token_mcp_usuario_id");
+
+                    b.ToTable("token_mcp");
+                });
+
             modelBuilder.Entity("One.Api.Dados.Moodle.LtiLancamento", b =>
                 {
                     b.Property<long>("Id")
@@ -2256,6 +2322,23 @@ namespace One.Api.Dados.Migracoes
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_imagem_instituicao_instituicoes_instituicao_id");
+                });
+
+            modelBuilder.Entity("One.Api.Dados.Mcp.TokenMcp", b =>
+                {
+                    b.HasOne("One.Api.Dados.Instituicao", null)
+                        .WithMany()
+                        .HasForeignKey("InstituicaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_token_mcp_instituicao_instituicao_id");
+
+                    b.HasOne("One.Api.Dados.Usuarios.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_token_mcp_usuarios_usuario_id");
                 });
 
             modelBuilder.Entity("One.Api.Dados.Moodle.LtiLancamento", b =>

@@ -36,6 +36,7 @@
     <Using Include="One.Api.Dados.Push" />
     <Using Include="One.Api.Dados.Fluxos" />
     <Using Include="One.Api.Dados.Moodle" />
+    <Using Include="One.Api.Dados.Mcp" />
   </ItemGroup>
 
 </Project>

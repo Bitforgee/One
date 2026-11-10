@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.8" />
     <PackageReference Include="MailKit" Version="4.18.2" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
     <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
     <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2" PrivateAssets="all" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4">
@@ -41,5 +42,6 @@
     <Using Include="One.Api.Dados.Push" />
     <Using Include="One.Api.Dados.Fluxos" />
     <Using Include="One.Api.Dados.Moodle" />
+    <Using Include="One.Api.Dados.Mcp" />
   </ItemGroup>
 </Project>

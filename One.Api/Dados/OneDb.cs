@@ -41,6 +41,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     public DbSet<PlataformaMoodle> PlataformasMoodle => Set<PlataformaMoodle>();
     public DbSet<VinculoMoodle> VinculosMoodle => Set<VinculoMoodle>();
     public DbSet<LtiLancamento> LtiLancamentos => Set<LtiLancamento>();
+    public DbSet<TokenMcp> TokensMcp => Set<TokenMcp>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -73,6 +74,14 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
             e.Property(x => x.State).HasMaxLength(64);
             e.Property(x => x.Nonce).HasMaxLength(64);
             e.HasIndex(x => x.State).IsUnique();
+        });
+        mb.Entity<TokenMcp>(e =>
+        {
+            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
+            e.Property(x => x.Nome).HasMaxLength(60);
+            e.Property(x => x.Hash).HasColumnType("char(64)");
+            e.Property(x => x.Final).HasMaxLength(4);
+            e.HasIndex(x => x.Hash).IsUnique();
         });
         mb.Entity<Usuario>(e =>
         {
