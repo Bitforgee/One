@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { BotaoAcao } from '../acao'
@@ -8,9 +8,8 @@ import { Marca } from '../Marca'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Skeleton } from '../ui/skeleton'
 
-type Plataforma = {
+export type Plataforma = {
   configurada: boolean
   ativa: boolean
   emissor: string
@@ -36,7 +35,7 @@ type Valores = Record<Chave, string> & { ativa: boolean }
 
 const valoresDe = (p: Plataforma): Valores => ({ ativa: p.configurada ? p.ativa : true, emissor: p.emissor, clientId: p.clientId, deploymentId: p.deploymentId, authUrl: p.authUrl, jwksUrl: p.jwksUrl })
 
-function Url({ rotulo, valor }: { rotulo: string; valor: string }) {
+export function Url({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium">{rotulo}</span>
@@ -55,7 +54,7 @@ function Url({ rotulo, valor }: { rotulo: string; valor: string }) {
   )
 }
 
-function Formulario({ dados }: { dados: Plataforma }) {
+export function FormularioMoodle({ dados }: { dados: Plataforma }) {
   const cliente = useQueryClient()
   const [v, setV] = useState(() => valoresDe(dados))
   useEffect(() => setV(valoresDe(dados)), [dados])
@@ -114,25 +113,5 @@ function Formulario({ dados }: { dados: Plataforma }) {
         Salvar
       </BotaoAcao>
     </form>
-  )
-}
-
-export function AbaMoodle() {
-  const { data, error, refetch } = useQuery({ queryKey: ['moodle-admin'], queryFn: () => api<Plataforma>('/api/admin/moodle') })
-  return (
-    <div className="flex flex-col gap-6">
-      <p className="m-0 text-muted-foreground">Alunos que entram pela atividade One no Moodle chegam ao assistente sem digitar CPF nem senha. A equipe continua entrando com CPF e senha.</p>
-      {error ? (
-        <ErroDe erro={error} oque="a integração com o Moodle" tentar={() => void refetch()} />
-      ) : data ? (
-        <Formulario dados={data} />
-      ) : (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-10" />
-          <Skeleton className="h-10" />
-          <Skeleton className="h-10" />
-        </div>
-      )}
-    </div>
   )
 }

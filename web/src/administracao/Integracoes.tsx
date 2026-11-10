@@ -1,7 +1,8 @@
 import { useSearchParams } from 'react-router'
-import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
-import { AbaMoodle } from './Moodle'
+import { AbaIntegracao } from './AbaIntegracao'
+import { ConteudoMcp, type Dados } from './Mcp'
+import { FormularioMoodle, type Plataforma } from './Moodle'
 
 const Abas = ['moodle', 'mcp'] as const
 type Aba = (typeof Abas)[number]
@@ -12,19 +13,30 @@ export function Integracoes() {
   const [params, setParams] = useSearchParams()
   const aba = abaPedida(params.get('aba'))
   return (
-    <Tabs value={aba} onValueChange={(v) => setParams({ aba: v })} className="flex max-w-2xl flex-col gap-6" data-aba-ativa={params.get('aba') ?? ''}>
+    <Tabs value={aba} onValueChange={(v) => setParams({ aba: v })} className={`flex flex-col gap-6 ${aba === 'mcp' ? 'max-w-4xl' : 'max-w-2xl'}`} data-aba-ativa={params.get('aba') ?? ''}>
       <TabsList>
         <TabsTrigger value="moodle">Moodle</TabsTrigger>
-        <TabsTrigger value="mcp" className="gap-2">
-          MCP
-          <Badge variant="secondary">Em breve</Badge>
-        </TabsTrigger>
+        <TabsTrigger value="mcp">MCP</TabsTrigger>
       </TabsList>
       <TabsContent value="moodle">
-        <AbaMoodle />
+        <AbaIntegracao<Plataforma>
+          introducao="Alunos que entram pela atividade One no Moodle chegam ao assistente sem digitar CPF nem senha. A equipe continua entrando com CPF e senha."
+          oque="a integração com o Moodle"
+          chave="moodle-admin"
+          url="/api/admin/moodle"
+        >
+          {(dados) => <FormularioMoodle dados={dados} />}
+        </AbaIntegracao>
       </TabsContent>
       <TabsContent value="mcp">
-        <p className="m-0 text-muted-foreground">A integração com o MCP do One chega em uma próxima versão.</p>
+        <AbaIntegracao<Dados>
+          introducao="Conecte a IA que você já usa (Claude Code, Cursor) aos chamados, à base de conhecimento e aos indicadores do One. O acesso é só de leitura e segue o seu papel."
+          oque="a integração com o MCP"
+          chave="mcp-admin"
+          url="/api/admin/mcp"
+        >
+          {(dados) => <ConteudoMcp dados={dados} />}
+        </AbaIntegracao>
       </TabsContent>
     </Tabs>
   )

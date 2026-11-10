@@ -10,13 +10,13 @@ const Urls = {
   urlJwks: 'https://one.teste/api/moodle/univag/jwks',
 }
 const vazia = { configurada: false, ativa: false, emissor: '', clientId: '', deploymentId: '', authUrl: '', jwksUrl: '', ...Urls }
-const EmBreve = 'A integração com o MCP do One chega em uma próxima versão.'
 
 const rotas = (get: Rota, extra: Record<string, Rota> = {}) =>
   api({
     'GET /api/auth/me': () => [200, admin],
     'GET /api/instituicoes/univag': () => [200, instituicao()],
     'GET /api/admin/moodle': get,
+    'GET /api/admin/mcp': () => [200, { url: 'https://one.teste/api/mcp/univag', tokens: [] }],
     ...extra,
   })
 
@@ -30,9 +30,8 @@ describe('tela Integrações', () => {
       await screen.findByLabelText('Emissor (iss)')
       const titulos = screen.getAllByRole('heading', { level: 1 })
       expect(titulos.map((h) => h.textContent), caminho).toEqual(['Integrações'])
-      expect(nomesDasAbas(), caminho).toEqual(['Moodle', 'MCPEm breve'])
+      expect(nomesDasAbas(), caminho).toEqual(['Moodle', 'MCP'])
       expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
-      expect(within(screen.getByRole('tab', { name: /^MCP/ })).getByText('Em breve')).toHaveAttribute('data-slot', 'badge')
       unmount()
     }
 
@@ -40,19 +39,9 @@ describe('tela Integrações', () => {
     abrir('/univag/integracoes')
     await screen.findByLabelText('Emissor (iss)')
     await userEvent.click(screen.getByRole('tab', { name: /^MCP/ }))
-    expect(await screen.findByText(EmBreve)).toBeInTheDocument()
+    expect(await screen.findByText('Nenhum token ainda.')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /^MCP/ })).toHaveAttribute('aria-selected', 'true')
     expect(document.querySelector('[data-aba-ativa]')?.getAttribute('data-aba-ativa')).toBe('mcp')
-  })
-
-  it('aba MCP em breve', async () => {
-    const chamadas = rotas(() => [200, vazia])
-    abrir('/univag/integracoes?aba=mcp')
-    expect(await screen.findByText(EmBreve)).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /^MCP/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument()
-    expect(chamadas.some((c) => c.url === '/api/admin/moodle')).toBe(false)
   })
 
   it('estados da aba Moodle', async () => {
