@@ -125,6 +125,11 @@ public sealed class FerramentasMcp(OneDb db, IMediator mediator, Embeddings embe
             Registrar(ferramenta, usuario, instituicao, "erro");
             return new CallToolResult { IsError = true, Content = [new TextContentBlock { Text = e.Message }] };
         }
+        catch (Exception)
+        {
+            Registrar(ferramenta, usuario, instituicao, "erro");
+            throw;
+        }
     }
 
     void Registrar(string ferramenta, Usuario usuario, Instituicao instituicao, string resultado) =>

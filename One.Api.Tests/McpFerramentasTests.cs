@@ -78,6 +78,21 @@ public class McpFerramentasTests(OneFactory f) : IClassFixture<OneFactory>
     }
 
     [Fact]
+    public async Task Listar_chamados_filtra_por_estado()
+    {
+        var (b, token) = await Mundo();
+        var aberto = await b.Chamado();
+        var emAtendimento = await b.Chamado(EstadosChamado.EmAtendimento);
+
+        var r = await f.Chamar(b.Instituicao.Slug, token, "listar_chamados", new { estado = "EM_ATENDIMENTO" });
+
+        Assert.False(r.Erro, r.Texto);
+        var numeros = r.Json().GetProperty("itens").EnumerateArray().Select(x => x.GetProperty("numero").GetString()).ToList();
+        Assert.Equal([emAtendimento], numeros);
+        Assert.DoesNotContain(aberto, numeros);
+    }
+
+    [Fact]
     public async Task Listar_chamados_recusa_argumento_invalido()
     {
         var (b, token) = await Mundo();
@@ -193,6 +208,11 @@ public class McpFerramentasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains("boleto vencido", fontes[0].GetProperty("texto").GetString());
         Assert.DoesNotContain("arquivado", dois.Texto);
         Assert.DoesNotContain("outra instituição", dois.Texto);
+
+        await f.Chamar(i.Slug, token, "buscar_conhecimento", new { consulta = "boleto de aluno@teste.one" });
+        var enviado = f.Llm.CorposEmbeddings[^1];
+        Assert.DoesNotContain("aluno@teste.one", enviado);
+        Assert.Contains("[e-mail removido]", enviado);
 
         for (var n = 1; n <= 6; n++) await f.Artigo(i, $"Boleto vencido parte {n}", $"Detalhe {n} do boleto vencido.");
         var padrao = await f.Chamar(i.Slug, token, "buscar_conhecimento", new { consulta = "boleto vencido" });

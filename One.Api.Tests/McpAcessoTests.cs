@@ -18,6 +18,10 @@ public class McpAcessoTests(OneFactory f, OneFactoryMcpComLimite limitada) : ICl
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         Assert.DoesNotContain("Mcp-Session-Id", resposta.Headers.Select(h => h.Key));
 
+        var c = f.Cliente();
+        c.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {token}");
+        foreach (var metodo in new[] { HttpMethod.Get, HttpMethod.Delete })
+            Assert.Equal(HttpStatusCode.NotFound, (await c.SendAsync(new HttpRequestMessage(metodo, $"/api/mcp/{i.Slug}"))).StatusCode);
         var (_, listagem) = await f.Rpc(i.Slug, $"Bearer {token}", "tools/list");
         var ferramentas = listagem.GetProperty("result").GetProperty("tools").EnumerateArray().Select(t => t.GetProperty("name").GetString()).Order().ToList();
         Assert.Equal(["buscar_conhecimento", "listar_chamados", "ver_chamado", "ver_indicadores"], ferramentas);
@@ -26,13 +30,13 @@ public class McpAcessoTests(OneFactory f, OneFactoryMcpComLimite limitada) : ICl
     [Theory]
     [InlineData("")]
     [InlineData("Bearer lixo")]
-    [InlineData("Bearer onemcp_teste.")]
-    [InlineData("Bearer onemcp_teste.ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr")]
+    [InlineData("Bearer onemcp_{slug}.")]
+    [InlineData("Bearer onemcp_{slug}.ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq")]
     [InlineData("Basic dXNlcjpwYXNz")]
     public async Task Recusa_token_ausente_malformado_ou_desconhecido(string valor)
     {
         var i = await f.Instituicao();
-        var r = await f.RpcStatus(i.Slug, valor.Length > 0 ? valor : null);
+        var r = await f.RpcStatus(i.Slug, valor.Length > 0 ? valor.Replace("{slug}", i.Slug) : null);
         Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode);
         Assert.Contains("Bearer", r.Headers.WwwAuthenticate.ToString());
     }
