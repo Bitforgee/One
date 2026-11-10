@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 113,
+  "next_id": 116,
   "lessons": [
     {
       "id": "L-001",
@@ -2034,6 +2034,60 @@
       ],
       "created": "2026-11-08T14:50:40Z",
       "last_seen": "2026-11-08T14:50:40Z"
+    },
+    {
+      "id": "L-113",
+      "key": "surviving_mutant::monte o registro de um teste de prazo para que o vencimento caia no valor exato do check um caso a minutos do limite deixa o limite mudar sem teste falhar",
+      "text": "Monte o registro de um teste de prazo para que o vencimento caia no valor exato do check; um caso a minutos do limite deixa o limite mudar sem teste falhar.",
+      "signal": "surviving_mutant",
+      "scope": "api/tests",
+      "status": "candidate",
+      "features": [
+        "integracao-moodle"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "One.Api.Tests/MoodleLimpezaTests.cs:19 (F1) (api/tests)"
+      ],
+      "created": "2026-11-10T14:26:59Z",
+      "last_seen": "2026-11-10T14:26:59Z"
+    },
+    {
+      "id": "L-114",
+      "key": "surviving_mutant::quando uma regra recusa todo papel alem de um teste cada papel recusado sozinho e junto do aceito nao so o primeiro da lista",
+      "text": "Quando uma regra recusa todo papel além de um, teste cada papel recusado, sozinho e junto do aceito, não só o primeiro da lista.",
+      "signal": "surviving_mutant",
+      "scope": "api/acesso",
+      "status": "candidate",
+      "features": [
+        "integracao-moodle"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "One.Api.Tests/MoodleLancamentoTests.cs:239 (F3) (api/acesso)"
+      ],
+      "created": "2026-11-10T14:26:59Z",
+      "last_seen": "2026-11-10T14:26:59Z"
+    },
+    {
+      "id": "L-115",
+      "key": "ac_gap::um interruptor ativo inativo que vale em duas rotas precisa de um check em cada rota provar so a primeira deixa a segunda ignorar o interruptor",
+      "text": "Um interruptor ativo/inativo que vale em duas rotas precisa de um check em cada rota; provar só a primeira deixa a segunda ignorar o interruptor.",
+      "signal": "ac_gap",
+      "scope": "specs/checks",
+      "status": "candidate",
+      "features": [
+        "integracao-moodle"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "One.Api/Acesso/LancamentoMoodle.cs:31 (F2) (specs/checks)"
+      ],
+      "created": "2026-11-10T14:26:59Z",
+      "last_seen": "2026-11-10T14:26:59Z"
     }
   ]
 }

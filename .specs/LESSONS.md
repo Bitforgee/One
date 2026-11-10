@@ -684,6 +684,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: checks.md Screens: Simular e Publicar na mesma barra; verification.md (web-tests)
 - last seen: 2026-11-08T14:50:40Z
 
+### L-113 - Monte o registro de um teste de prazo para que o vencimento caia no valor exato do check; um caso a minutos do limite deixa o limite mudar sem teste falhar.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/tests` · harmful: 0
+- features: integracao-moodle
+- evidence: One.Api.Tests/MoodleLimpezaTests.cs:19 (F1) (api/tests)
+- last seen: 2026-11-10T14:26:59Z
+
+### L-114 - Quando uma regra recusa todo papel além de um, teste cada papel recusado, sozinho e junto do aceito, não só o primeiro da lista.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/acesso` · harmful: 0
+- features: integracao-moodle
+- evidence: One.Api.Tests/MoodleLancamentoTests.cs:239 (F3) (api/acesso)
+- last seen: 2026-11-10T14:26:59Z
+
+### L-115 - Um interruptor ativo/inativo que vale em duas rotas precisa de um check em cada rota; provar só a primeira deixa a segunda ignorar o interruptor.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `specs/checks` · harmful: 0
+- features: integracao-moodle
+- evidence: One.Api/Acesso/LancamentoMoodle.cs:31 (F2) (specs/checks)
+- last seen: 2026-11-10T14:26:59Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
