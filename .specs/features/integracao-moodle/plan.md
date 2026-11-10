@@ -14,10 +14,10 @@ Reusa a sessão por cookie (`Sessao.Principal`, `Sessao.Validar`) e a mesma resp
 
 1. Moodle (aluno clica na atividade "One") -> `GET` ou `POST /api/moodle/{slug}/login` (door 5) - confere `iss` e `client_id` com a plataforma da instituição, grava `state` e `nonce` em `lti_lancamento` (door 3) e responde 302 para o `authUrl` do Moodle
 2. Moodle autentica o aluno (já está logado) -> `POST /api/moodle/{slug}/lancamento` (door 5) com `id_token` e `state` (form post)
-3. `LancamentoMoodle` (new, no door - placement per conventions, em `One.Api/Acesso/`) - consome o `state` (uso único), valida o `id_token` com as chaves de `jwksUrl` do Moodle (door 4) e extrai `sub` e o parâmetro personalizado `username`
+3. `LancamentoMoodle` (new, no door - placement per conventions, em `One.Api/Acesso/`) - consome o `state` (uso único, `UPDATE ... WHERE usado_em IS NULL`), e `ValidadorLti` (new, no door) valida o `id_token` com as chaves de `jwksUrl` do Moodle, lidas pelo cliente HTTP nomeado `moodle` (door 4), e extrai `sub` e o parâmetro personalizado `username`
 4. `LancamentoMoodle` - acha o usuário por `vinculo_moodle` (door 2); sem vínculo, acha o aluno ativo cujo CPF é o `username` e cria o vínculo
 5. `Sessao.Principal` (exists) + `SignInAsync` (exists) - grava o cookie `one.auth` e responde 302 para `/{slug}`
-6. `PlataformaMoodleRotas` (new, no door - `One.Api/Administracao/`) - o admin cadastra e lê a plataforma (door 1) e recebe as 3 URLs para colar no Moodle
+6. `VerMoodle` e `AlterarMoodle` (new, no door - `One.Api/Administracao/`, montados em `AdminRotas`) - o admin cadastra e lê a plataforma (door 1) e recebe as 3 URLs para colar no Moodle
 7. `Agendador` (exists) - apaga `lti_lancamento` expirado há mais de 1 dia
 
 ## Impact
