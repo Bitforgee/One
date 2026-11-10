@@ -110,6 +110,28 @@ function Entrada({ tela, children }: { tela?: string; children: ReactNode }) {
 
 type Props<T extends FieldValues> = { f: UseFormReturn<T>; nome: Path<T>; rotulo: string; dica?: string } & ComponentProps<'input'>
 
+function BotaoVerSenha({ visivel, alternar }: { visivel: boolean; alternar: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={visivel ? 'Ocultar senha' : 'Mostrar senha'}
+      aria-pressed={visivel}
+      className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+      onClick={alternar}
+    >
+      {visivel ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
+    </button>
+  )
+}
+
+function DicaDoCampo({ nome, dica }: { nome: string; dica?: string }) {
+  return dica ? (
+    <p id={`${nome}-dica`} className="text-sm text-muted-foreground">
+      {dica}
+    </p>
+  ) : null
+}
+
 function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }: Props<T>) {
   const [visivel, setVisivel] = useState(false)
   const senha = type === 'password'
@@ -119,28 +141,14 @@ function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }:
       <Label htmlFor={nome}>{rotulo}</Label>
       <div className="relative">
         <Input id={nome} type={senha && visivel ? 'text' : type} aria-invalid={!!f.formState.errors[nome]} aria-describedby={dica ? `${nome}-dica` : undefined} className={senha ? 'pr-12' : undefined} {...props} {...f.register(nome)} />
-        {senha && (
-          <button
-            type="button"
-            aria-label={visivel ? 'Ocultar senha' : 'Mostrar senha'}
-            aria-pressed={visivel}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
-            onClick={() => setVisivel((v) => !v)}
-          >
-            {visivel ? <EyeOff aria-hidden="true" className="size-4" /> : <Eye aria-hidden="true" className="size-4" />}
-          </button>
-        )}
+        {senha && <BotaoVerSenha visivel={visivel} alternar={() => setVisivel((v) => !v)} />}
       </div>
       {erro && (
         <p id={`-erro`} className="text-sm text-destructive">
           {erro}
         </p>
       )}
-      {dica && (
-        <p id={`${nome}-dica`} className="text-sm text-muted-foreground">
-          {dica}
-        </p>
-      )}
+      <DicaDoCampo nome={nome} dica={dica} />
     </div>
   )
 }

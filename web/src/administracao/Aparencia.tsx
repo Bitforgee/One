@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { BotaoAcao } from '../acao'
 import { api, ErroApi } from '../api'
 import { contraste, CorValida, MinimoDeContraste, normalizar, urlDaImagem } from '../aparencia'
+import { ErroDoCampo } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { useSessao } from '../sessao'
@@ -101,31 +102,42 @@ function Amostra({ cor }: { cor: string }) {
 
 const corProibida = (cor: string) => cor !== '' && (!CorValida.test(cor) || contraste(cor) < MinimoDeContraste)
 
+function descricaoDe(campo: Campo, id: string, erro?: string) {
+  return [campo.dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
+}
+
+type PropsDaEntrada = { area?: boolean; props: { id: string; value: string; 'aria-invalid': boolean; 'aria-describedby': string | undefined }; mudar: (v: string) => void }
+
+function Entrada({ area, props, mudar }: PropsDaEntrada) {
+  return area ? <Textarea rows={3} {...props} onChange={(e) => mudar(e.target.value)} /> : <Input {...props} onChange={(e) => mudar(e.target.value)} />
+}
+
+function RodapeDoCampo({ campo, id, tamanho }: { campo: Campo; id: string; tamanho: number }) {
+  if (!(campo.dica || campo.limite)) return null
+  return (
+    <div className="flex items-start justify-between gap-2 text-xs text-muted-foreground">
+      {campo.dica && (
+        <p id={`${id}-dica`} className="m-0">
+          {campo.dica}
+        </p>
+      )}
+      {campo.limite && <span className={tamanho > campo.limite ? 'text-destructive' : undefined}>{`${tamanho}/${campo.limite}`}</span>}
+    </div>
+  )
+}
+
 function CampoDeTexto({ campo, valor, mudar, erro }: { campo: Campo; valor: string; mudar: (v: string) => void; erro?: string }) {
   const id = `ap-${campo.chave}`
-  const descricao = [campo.dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
+  const descricao = descricaoDe(campo, id, erro)
   const props = { id, value: valor, 'aria-invalid': !!erro, 'aria-describedby': descricao }
   const tamanho = valor.trim().length
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <Label htmlFor={id}>{campo.rotulo}</Label>
-      {campo.area ? <Textarea rows={3} {...props} onChange={(e) => mudar(e.target.value)} /> : <Input {...props} onChange={(e) => mudar(e.target.value)} />}
+      <Entrada area={campo.area} props={props} mudar={mudar} />
       {campo.chave === 'cor' && <Amostra cor={valor} />}
-      {(campo.dica || campo.limite) && (
-        <div className="flex items-start justify-between gap-2 text-xs text-muted-foreground">
-          {campo.dica && (
-            <p id={`${id}-dica`} className="m-0">
-              {campo.dica}
-            </p>
-          )}
-          {campo.limite && <span className={tamanho > campo.limite ? 'text-destructive' : undefined}>{`${tamanho}/${campo.limite}`}</span>}
-        </div>
-      )}
-      {erro && (
-        <p id={`${id}-erro`} className="m-0 text-sm text-destructive">
-          {erro}
-        </p>
-      )}
+      <RodapeDoCampo campo={campo} id={id} tamanho={tamanho} />
+      <ErroDoCampo id={id} erro={erro} />
     </div>
   )
 }
@@ -200,6 +212,70 @@ function ComErro() {
   return <span role="img" aria-label="com erro" className="size-2 rounded-full bg-destructive" />
 }
 
+function houveAlteracao(valores: Valores, dados: Dados, escolhidas: Partial<Record<Tipo, File>>) {
+  return JSON.stringify(corpoDe(valores)) !== JSON.stringify(corpoDe(valoresDe(dados))) || Object.keys(escolhidas).length > 0
+}
+
+function miniaturaDe(blobs: Partial<Record<Tipo, string>>, dados: Dados, slug: string, tipo: Tipo) {
+  return blobs[tipo] ?? (dados.imagens[tipo] ? urlDaImagem(slug, tipo, dados.imagens[tipo]!) : undefined)
+}
+
+function semEnviadas(escolhidas: Partial<Record<Tipo, File>>, enviadas: Tipo[]) {
+  return Object.fromEntries(Object.entries(escolhidas).filter(([t]) => !enviadas.includes(t as Tipo)))
+}
+
+function avisarGravacao(f: Falhas, irPara: (id: string) => void) {
+  const primeira = abasComErro(f.campos, f.imagens)[0]
+  if (primeira) irPara(primeira)
+  if (semFalhas(f)) toast.success('Aparência salva.')
+}
+
+function GatilhoDaAba({ aba, comErro }: { aba: (typeof Abas)[number]; comErro: string[] }) {
+  return (
+    <TabsTrigger value={aba.id} className="min-h-11 flex-none px-4 md:min-h-9">
+      {aba.titulo}
+      {comErro.includes(aba.id) && <ComErro />}
+    </TabsTrigger>
+  )
+}
+
+type PropsDoConteudo = {
+  aba: (typeof Abas)[number]
+  valores: Valores
+  muda: (chave: string) => (v: string) => void
+  falhas: Falhas
+  miniatura: (t: Tipo) => string | undefined
+  escolher: (t: Tipo, f: File) => void
+  tirar: (t: Tipo) => void
+}
+
+function ConteudoDaAba({ aba, valores, muda, falhas, miniatura, escolher, tirar }: PropsDoConteudo) {
+  return (
+    <TabsContent value={aba.id} className="flex flex-col gap-4">
+      {aba.id === 'marca' && <CoresProntas cor={valores.cor} escolher={muda('cor')} />}
+      {aba.campos.map((c) => (
+        <CampoDeTexto key={c.chave} campo={c} valor={valores[c.chave]} mudar={muda(c.chave)} erro={falhas.campos[c.chave]} />
+      ))}
+      {aba.imagens.map((t) => (
+        <CampoImagem key={t} rotulo={Rotulos[t][0]} dica={Rotulos[t][1]} extra={Rotulos[t][2]} miniatura={miniatura(t)} escolher={(f) => escolher(t, f)} remover={() => tirar(t)} erro={falhas.imagens[t]} />
+      ))}
+      {aba.nota && <p className="m-0 text-sm text-muted-foreground">{aba.nota}</p>}
+    </TabsContent>
+  )
+}
+
+function ErroDaRemocao({ erro }: { erro: Error | null }) {
+  return erro ? <Alert variant="destructive">{erro.message}</Alert> : null
+}
+
+function SairSemSalvar({ bloqueio }: { bloqueio: ReturnType<typeof useBlocker> }) {
+  return (
+    <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo="Sair sem salvar?" botao="Sair sem salvar" voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
+      O que você alterou e não salvou nesta tela será perdido.
+    </Confirmar>
+  )
+}
+
 function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: string }) {
   const cliente = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -221,7 +297,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
     setParams({ aba: id })
   }
 
-  const alterado = JSON.stringify(corpoDe(valores)) !== JSON.stringify(corpoDe(valoresDe(dados))) || Object.keys(escolhidas).length > 0
+  const alterado = houveAlteracao(valores, dados, escolhidas)
   const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && currentLocation.pathname !== nextLocation.pathname)
   useAvisoAoFechar(alterado)
 
@@ -229,11 +305,9 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
     mutationFn: () => gravarTudo(valores, escolhidas),
     onSuccess: async ({ enviadas, ...f }) => {
       setFalhas(f)
-      setEscolhidas((e) => Object.fromEntries(Object.entries(e).filter(([t]) => !enviadas.includes(t as Tipo))))
+      setEscolhidas((e) => semEnviadas(e, enviadas))
       await reler()
-      const primeira = abasComErro(f.campos, f.imagens)[0]
-      if (primeira) irPara(primeira)
-      if (semFalhas(f)) toast.success('Aparência salva.')
+      avisarGravacao(f, irPara)
     },
   })
   const remover = useMutation({
@@ -244,9 +318,10 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
     },
   })
 
-  const miniatura = (tipo: Tipo) => blobs[tipo] ?? (dados.imagens[tipo] ? urlDaImagem(slug, tipo, dados.imagens[tipo]!) : undefined)
+  const miniatura = (tipo: Tipo) => miniaturaDe(blobs, dados, slug, tipo)
   const muda = (chave: string) => (v: string) => setValores((x) => ({ ...x, [chave]: v }))
   const tirar = (tipo: Tipo) => (escolhidas[tipo] ? setEscolhidas(({ [tipo]: _, ...resto }) => resto) : setRemovendo(tipo))
+  const escolher = (t: Tipo, f: File) => setEscolhidas((e) => ({ ...e, [t]: f }))
   const descartar = () => {
     setValores(valoresDe(dados))
     setEscolhidas({})
@@ -268,27 +343,15 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
         <Tabs value={aba} onValueChange={irPara} className="gap-6">
           <TabsList aria-label="Seções da aparência" className="h-auto w-full justify-start overflow-x-auto">
             {Abas.map((a) => (
-              <TabsTrigger key={a.id} value={a.id} className="min-h-11 flex-none px-4 md:min-h-9">
-                {a.titulo}
-                {comErro.includes(a.id) && <ComErro />}
-              </TabsTrigger>
+              <GatilhoDaAba key={a.id} aba={a} comErro={comErro} />
             ))}
           </TabsList>
           {Abas.map((a) => (
-            <TabsContent key={a.id} value={a.id} className="flex flex-col gap-4">
-              {a.id === 'marca' && <CoresProntas cor={valores.cor} escolher={muda('cor')} />}
-              {a.campos.map((c) => (
-                <CampoDeTexto key={c.chave} campo={c} valor={valores[c.chave]} mudar={muda(c.chave)} erro={falhas.campos[c.chave]} />
-              ))}
-              {a.imagens.map((t) => (
-                <CampoImagem key={t} rotulo={Rotulos[t][0]} dica={Rotulos[t][1]} extra={Rotulos[t][2]} miniatura={miniatura(t)} escolher={(f) => setEscolhidas((e) => ({ ...e, [t]: f }))} remover={() => tirar(t)} erro={falhas.imagens[t]} />
-              ))}
-              {a.nota && <p className="m-0 text-sm text-muted-foreground">{a.nota}</p>}
-            </TabsContent>
+            <ConteudoDaAba key={a.id} aba={a} valores={valores} muda={muda} falhas={falhas} miniatura={miniatura} escolher={escolher} tirar={tirar} />
           ))}
         </Tabs>
         <ErroDe erro={falhas.geral} />
-        {remover.error && <Alert variant="destructive">{remover.error.message}</Alert>}
+        <ErroDaRemocao erro={remover.error} />
         <BarraDeSalvar alterado={alterado} pendente={salvar.isPending} bloqueado={corProibida(valores.cor)} descartar={descartar} previa={estreito && <VerPrevia dados={previa} />} />
       </form>
       {!estreito && <PreviaLateral dados={previa} />}
@@ -305,9 +368,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
       >
         A instituição volta a usar a imagem padrão. O arquivo antigo fica guardado.
       </Confirmar>
-      <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo="Sair sem salvar?" botao="Sair sem salvar" voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
-        O que você alterou e não salvou nesta tela será perdido.
-      </Confirmar>
+      <SairSemSalvar bloqueio={bloqueio} />
     </div>
   )
 }

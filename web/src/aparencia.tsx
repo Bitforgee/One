@@ -64,15 +64,27 @@ function titular(d?: InstituicaoPublica) {
   document.title = d ? (d.nomeCurto ?? d.nome) : raiz.dataset.titulo
 }
 
+function iconeDe(slug: string | undefined, d: InstituicaoPublica | undefined) {
+  return slug && d?.imagens.icone ? urlDaImagem(slug, 'icone', d.imagens.icone) : null
+}
+
+function manifestoDe(slug: string | undefined) {
+  return slug ? `/api/instituicoes/${slug}/manifest.webmanifest` : null
+}
+
+function tituloDoApp(slug: string | undefined, d: InstituicaoPublica | undefined) {
+  return slug && d ? (d.nomeCurto ?? d.nome) : null
+}
+
 function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined) {
   marcar(d?.cor)
   titular(d)
-  const icone = slug && d?.imagens.icone ? urlDaImagem(slug, 'icone', d.imagens.icone) : null
+  const icone = iconeDe(slug, d)
   ponto('link[rel="icon"]', 'link', { rel: 'icon', type: 'image/png' }, 'href', icone)
   ponto('link[rel="apple-touch-icon"]', 'link', { rel: 'apple-touch-icon' }, 'href', icone)
   ponto('meta[name="theme-color"]', 'meta', { name: 'theme-color' }, 'content', d?.cor ?? null)
-  ponto('link[rel="manifest"]', 'link', { rel: 'manifest' }, 'href', slug ? `/api/instituicoes/${slug}/manifest.webmanifest` : null)
-  ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', slug && d ? (d.nomeCurto ?? d.nome) : null)
+  ponto('link[rel="manifest"]', 'link', { rel: 'manifest' }, 'href', manifestoDe(slug))
+  ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', tituloDoApp(slug, d))
 }
 
 export function useAparencia(slug?: string, nome = '') {

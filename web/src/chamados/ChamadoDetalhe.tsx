@@ -409,6 +409,25 @@ function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: 
   )
 }
 
+function montarBarra(celular: boolean, principal: string | undefined, temMais: boolean, executar: Executar, pendente: boolean, abrirMais: () => void): Barra | undefined {
+  return celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais } : undefined
+}
+
+function lugarDasAcoesDoAluno(pode: Acoes['pode'], equipe: boolean) {
+  if (!doAluno(pode, equipe)) return null
+  return pode('confirmar') ? 'antes' : 'depois'
+}
+
+function AcoesDoAluno({ lugar, aqui, erro, painel }: { lugar: 'antes' | 'depois' | null; aqui: 'antes' | 'depois'; erro: ReactNode; painel: ReactNode }) {
+  if (lugar !== aqui) return null
+  return (
+    <div className="flex flex-col gap-4">
+      {erro}
+      {painel}
+    </div>
+  )
+}
+
 function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; carregar: () => Promise<void>; setChamado: (c: Chamado) => void }) {
   const [folha, setFolha] = useState(false)
   const acao = useMutacaoDoChamado(c, carregar, setChamado)
@@ -428,24 +447,18 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
     setModal(m)
   }
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
-  const barra: Barra | undefined = celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais: () => setFolha(true) } : undefined
+  const barra = montarBarra(celular, principal, temMais, executar, pendente, () => setFolha(true))
   const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
-  const decisao = !equipe && pode('confirmar')
-  const acoesDoAluno = doAluno(pode, equipe) && (
-    <div className="flex flex-col gap-4">
-      {erro}
-      {painel}
-    </div>
-  )
+  const lugar = lugarDasAcoesDoAluno(pode, equipe)
   return (
     <div className={gradeDoDetalhe(equipe, !!barra)}>
       <div className="flex min-w-0 flex-col gap-8">
         <Cabecalho c={c} />
         <Transcricao c={c} fuso={fuso} />
         <LinhaDoTempo mensagens={c.mensagens} eventos={c.eventos} fuso={fuso} />
-        {decisao && acoesDoAluno}
+        <AcoesDoAluno lugar={lugar} aqui="antes" erro={erro} painel={painel} />
         <Responder c={c} equipe={equipe} {...acoes} />
-        {!decisao && acoesDoAluno}
+        <AcoesDoAluno lugar={lugar} aqui="depois" erro={erro} painel={painel} />
       </div>
       {equipe && <ColunaDaEquipe c={c} fuso={fuso} erro={erro} folha={folha} setFolha={setFolha} barra={barra} tem={!!(principal || temMais)} painel={painel} />}
       <Dialogos c={c} modal={modal} fechar={() => setModal(undefined)} executar={executar} motivo={motivo} setMotivo={setMotivo} />

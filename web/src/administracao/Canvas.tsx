@@ -6,7 +6,7 @@ import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { BotaoDeAdicionar, BotaoFlutuante, TipoArrastado } from './AdicionarEtapa'
 import { Destinos, rotuloDaEtapa, type Destino, type Setor } from './comum'
-import { acrescentar, caminho, comoEtapa, desligar, inserirEntre, Inicio, ligar, limites, MaximoDeEtapas, mudar, nosInvalidos, novoNo, ordenados, organizar, podeLigar, posicaoDoProximo, posicaoPadrao, remover, type Grafo } from './grafo'
+import { acrescentar, caminho, comoEtapa, desligar, inserirEntre, Inicio, ligar, limites, MaximoDeEtapas, mudar, nosInvalidos, novoNo, ordenados, organizar, podeLigar, posicaoDoProximo, posicaoPadrao, remover, type Grafo, type No } from './grafo'
 import { TiposDeLigacao, type DadosDaLigacao } from './LigacaoComMais'
 import { TiposDeNo, type DadosDaEtapa } from './NosDoCanvas'
 import { PainelDoNo } from './PainelDoNo'
@@ -109,6 +109,61 @@ function useEstavel<A extends unknown[]>(f: (...a: A) => void) {
   return useCallback((...a: A) => ref.current(...a), [])
 }
 
+function precisaConfirmar(n: No) {
+  return n.setorId !== '' || n.prazoHoras !== ''
+}
+
+function preservarMedidas(anteriores: Node[], desenhados: Node[]): Node[] {
+  return desenhados.map((d) => {
+    const a = anteriores.find((x) => x.id === d.id)
+    return { ...d, measured: a?.measured, selected: a?.selected }
+  })
+}
+
+function ficouSolto(m: NodeChange) {
+  return m.type === 'position' && m.dragging === false
+}
+
+function nosSoltos(mudancas: NodeChange[], nos: Node[]) {
+  return mudancas.filter(ficouSolto).map((m) => nos.find((n) => n.id === (m as { id: string }).id)!)
+}
+
+function gravarPosicoes(g: Grafo, prontas: Node[]) {
+  return prontas.reduce((acc, n) => mudar(acc, n.id, { x: Math.round(n.position.x), y: Math.round(n.position.y) }), g)
+}
+
+function desligarRemovida(m: EdgeChange, editar: (f: (g: Grafo) => Grafo) => void) {
+  if (m.type === 'remove') editar((g) => desligar(g, ...(m.id.split('>') as [string, string])))
+}
+
+function destinoArrastado(e: DragEvent) {
+  return Destinos.find(([d]) => d === e.dataTransfer.getData(TipoArrastado))?.[0]
+}
+
+function etapaSelecionada(grafo: Grafo, nodes: Node[]) {
+  const id = nodes.find((n) => n.selected && n.id !== Inicio)?.id
+  return grafo.nos.find((n) => n.id === id)
+}
+
+function desligarRemovidas(mudancas: EdgeChange[], editar: (f: (g: Grafo) => Grafo) => void) {
+  for (const m of mudancas) desligarRemovida(m, editar)
+}
+
+type Adicionar = (destino: Destino) => void
+
+function AdicionarNoProximo({ grafo, cheia, adicionar }: { grafo: Grafo; cheia: boolean; adicionar: Adicionar }) {
+  const proximo = posicaoDoProximo(grafo)
+  return cheia ? null : <BotaoDeAdicionar x={proximo.x} y={proximo.y} vazio={grafo.nos.length === 0} adicionar={adicionar} />
+}
+
+function Lateral({ atual, setores, lateral, mudarAtual, remover, fechar }: { atual: No | undefined; setores: Setor[]; lateral: ReactNode; mudarAtual: (p: Partial<No>) => void; remover: () => void; fechar: () => void }) {
+  return atual ? <PainelDoNo no={atual} setores={setores} mudar={mudarAtual} remover={remover} fechar={fechar} /> : lateral
+}
+
+function AreaVazia({ vazio }: { vazio: boolean }) {
+  return vazio ? <p className="pointer-events-none absolute inset-x-0 bottom-4 m-0 px-4 text-center text-sm">Arraste um destino para começar.</p> : null
+}
+
 function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   const { screenToFlowPosition, setViewport } = useReactFlow()
   const largura = useStore((s) => s.width)
@@ -117,7 +172,7 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   const tirar = (id: string) => editar((g) => remover(g, id, false))
   const pedirRemocao = useEstavel((id: string) => {
     const n = grafo.nos.find((x) => x.id === id)
-    if (n) n.setorId !== '' || n.prazoHoras !== '' ? setRemovendo(id) : tirar(id)
+    if (n) precisaConfirmar(n) ? setRemovendo(id) : tirar(id)
   })
   const inserir = useEstavel((de: string, para: string, destino: Destino) => editar((g) => inserirEntre(g, de, para, novoNo(destino))))
   const desenhados = useMemo(() => desenhar(grafo, setores, marcas, pedirRemocao), [grafo, setores, marcas, pedirRemocao])
@@ -129,10 +184,10 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   const enquadrar = useCallback(() => {
     if (largura > 0) setViewport(getViewportForBounds(limites(grafo, !cheia), largura, altura, 0.4, 1, 0.2))
   }, [setViewport, largura, altura, grafo, cheia])
-  const atual = grafo.nos.find((n) => n.id === nodes.find((n) => n.selected && n.id !== Inicio)?.id)
+  const atual = etapaSelecionada(grafo, nodes)
 
   useEffect(() => {
-    ref.current = desenhados.map((d) => ({ ...d, measured: ref.current.find((a) => a.id === d.id)?.measured, selected: ref.current.find((a) => a.id === d.id)?.selected }))
+    ref.current = preservarMedidas(ref.current, desenhados)
     setNodes(ref.current)
     if (reenquadrar.current) {
       reenquadrar.current = false
@@ -149,12 +204,12 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
   function aoMudarNos(mudancas: NodeChange[]) {
     ref.current = applyNodeChanges(mudancas, ref.current)
     setNodes(ref.current)
-    const prontas = mudancas.filter((m) => m.type === 'position' && m.dragging === false).map((m) => ref.current.find((n) => n.id === (m as { id: string }).id)!)
-    if (prontas.length > 0) editar((g) => prontas.reduce((acc, n) => mudar(acc, n.id, { x: Math.round(n.position.x), y: Math.round(n.position.y) }), g))
+    const prontas = nosSoltos(mudancas, ref.current)
+    if (prontas.length > 0) editar((g) => gravarPosicoes(g, prontas))
   }
 
   const aoMudarArestas = (mudancas: EdgeChange[]) => {
-    for (const m of mudancas) if (m.type === 'remove') editar((g) => desligar(g, ...(m.id.split('>') as [string, string])))
+    desligarRemovidas(mudancas, editar)
   }
   const aoLigar = (c: Connection) => editar((g) => ligar(g, c.source, c.target))
   const adicionar = (destino: Destino) => {
@@ -171,7 +226,7 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
 
   function aoLargar(e: DragEvent) {
     e.preventDefault()
-    const destino = Destinos.find(([d]) => d === e.dataTransfer.getData(TipoArrastado))?.[0]
+    const destino = destinoArrastado(e)
     if (!destino) return
     const p = screenToFlowPosition({ x: e.clientX, y: e.clientY })
     editar((g) => acrescentar(g, novoNo(destino, Math.round(p.x), Math.round(p.y)), false))
@@ -181,7 +236,6 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
     ref.current = ref.current.map((n) => ({ ...n, selected: false }))
     setNodes(ref.current)
   }
-  const proximo = posicaoDoProximo(grafo)
   const removida = grafo.nos.find((n) => n.id === removendo)
 
   return (
@@ -219,12 +273,12 @@ function Corpo({ grafo, setores, marcas, editar, lateral }: CanvasProps) {
               Organizar
             </Button>
           </Panel>
-          {!cheia && <BotaoDeAdicionar x={proximo.x} y={proximo.y} vazio={grafo.nos.length === 0} adicionar={adicionar} />}
+          <AdicionarNoProximo grafo={grafo} cheia={cheia} adicionar={adicionar} />
         </ReactFlow>
-        {grafo.nos.length === 0 && <p className="pointer-events-none absolute inset-x-0 bottom-4 m-0 px-4 text-center text-sm">Arraste um destino para começar.</p>}
+        <AreaVazia vazio={grafo.nos.length === 0} />
       </div>
       <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-80 lg:overflow-y-auto">
-        {atual ? <PainelDoNo no={atual} setores={setores} mudar={(p) => editar((g) => mudar(g, atual.id, p))} remover={() => pedirRemocao(atual.id)} fechar={fecharPainel} /> : lateral}
+        <Lateral atual={atual} setores={setores} lateral={lateral} mudarAtual={(p) => editar((g) => mudar(g, atual!.id, p))} remover={() => pedirRemocao(atual!.id)} fechar={fecharPainel} />
       </aside>
       <ConfirmarRemocao aberto={!!removida} cancelar={() => setRemovendo(undefined)} confirmar={() => { tirar(removendo!); setRemovendo(undefined) }} />
     </div>

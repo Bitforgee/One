@@ -43,6 +43,34 @@ function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
   return marcas
 }
 
+function emCanvas(visao: Visao, estreito: boolean) {
+  return visao === 'canvas' && !estreito
+}
+
+function grafoInicial(fluxo: Fluxo) {
+  return deEtapas((fluxo.rascunho ?? fluxo.vigente)?.etapas ?? [])
+}
+
+function contextoDoFluxo(fluxo: Fluxo, categorias: Categoria[], cursos: Curso[]) {
+  return `${categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · ${abrangenciaDoFluxo(fluxo, cursos)}`
+}
+
+function deveBloquear(alterado: boolean, ignorar: boolean, atual: string, proximo: string) {
+  return alterado && !ignorar && atual !== proximo
+}
+
+function semPendencia(condicao: boolean, pendente: boolean) {
+  return condicao && !pendente
+}
+
+function classeDaSecao(noCanvas: boolean) {
+  return noCanvas ? 'lg:h-[calc(100dvh-49px-1.5rem)] lg:-mb-6 lg:pb-3' : ''
+}
+
+function classeDoCorpo(noCanvas: boolean) {
+  return noCanvas ? '' : 'max-w-3xl'
+}
+
 function versaoParaSimular(salvo: boolean, alterado: boolean, fluxo: Fluxo) {
   if (salvo) return 'RASCUNHO'
   return !alterado && fluxo.vigente ? 'VIGENTE' : null
@@ -93,7 +121,7 @@ function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, estreito, si
           {FraseDaCadeia}
         </p>
       )}
-      {visao === 'canvas' && !estreito ? canvas : lista}
+      {emCanvas(visao, estreito) ? canvas : lista}
     </>
   )
 }
@@ -200,14 +228,22 @@ function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar
   )
 }
 
-function useAtalhoDeSalvar(salvar: () => unknown) {
-  const atual = useRef(salvar)
-  atual.current = salvar
+function PublicarBotao({ salvo, valida, pendente, publicar }: { salvo: boolean; valida: boolean; pendente: boolean; publicar: () => void }) {
+  return (
+    <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || pendente} onClick={publicar}>
+      Publicar
+    </BotaoAcao>
+  )
+}
+
+function useAtalhoDeSalvar(salvar: () => unknown, habilitado: boolean) {
+  const atual = useRef({ salvar, habilitado })
+  atual.current = { salvar, habilitado }
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's') return
       e.preventDefault()
-      atual.current()
+      if (atual.current.habilitado) atual.current.salvar()
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
@@ -221,13 +257,13 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const navegar = useNavigate()
   const lista = `/${slug}/cadastros`
   const fluxos = `${lista}?aba=fluxos`
-  const [grafo, setGrafo] = useState<Grafo>(() => deEtapas((fluxo.rascunho ?? fluxo.vigente)?.etapas ?? []))
+  const [grafo, setGrafo] = useState<Grafo>(() => grafoInicial(fluxo))
   const [visao, setVisao] = useState<Visao>('lista')
   const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
   const ignorarSaida = useRef(false)
-  const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado && !ignorarSaida.current && currentLocation.pathname !== nextLocation.pathname)
+  const bloqueio = useBlocker(({ currentLocation, nextLocation }) => deveBloquear(alterado, ignorarSaida.current, currentLocation.pathname, nextLocation.pathname))
   const estreito = useConsulta('(max-width: 767px)')
   const acao = useGravacao(recarregar)
   const caminhoDaApi = `/api/admin/fluxos/${fluxo.id}`
@@ -245,7 +281,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
     if (v === 'canvas') setGrafo(fixarPosicoes)
     setVisao(v)
   }
-  useAtalhoDeSalvar(() => valida && !acao.isPending && salvar())
+  useAtalhoDeSalvar(() => salvar(), semPendencia(valida, acao.isPending))
   const aoEnviar = (e: FormEvent) => {
     e.preventDefault()
     salvar()
@@ -260,20 +296,15 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const publicar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/publicar`, {}), aviso: 'Fluxo publicado.', depois: () => sairDeVez(fluxos) })
   const descartar = () => acao.mutate({ chamar: () => api(`${caminhoDaApi}/rascunho`, undefined, 'DELETE'), aviso: 'Rascunho descartado.', depois: () => sairDeVez(fluxos) })
 
-  const contexto = `${categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · ${abrangenciaDoFluxo(fluxo, cursos)}`
-  const noCanvas = visao === 'canvas' && !estreito
-  const publicarBotao = (
-    <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || acao.isPending} onClick={publicar}>
-      Publicar
-    </BotaoAcao>
-  )
-  const altura = noCanvas ? 'lg:h-[calc(100dvh-49px-1.5rem)] lg:-mb-6 lg:pb-3' : ''
+  const contexto = contextoDoFluxo(fluxo, categorias, cursos)
+  const noCanvas = emCanvas(visao, estreito)
+  const publicarBotao = <PublicarBotao salvo={salvo} valida={valida} pendente={acao.isPending} publicar={publicar} />
   return (
-    <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${altura}`}>
+    <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${classeDaSecao(noCanvas)}`}>
       <Trilha contexto={contexto} lista={lista} fluxos={fluxos} />
       <form className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={aoEnviar}>
-        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => navegar(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={!!fluxo.rascunho && !acao.isPending} descartar={descartar} />
-        <div className={`flex min-h-0 flex-1 flex-col gap-3 ${noCanvas ? '' : 'max-w-3xl'}`}>
+        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => navegar(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={semPendencia(!!fluxo.rascunho, acao.isPending)} descartar={descartar} />
+        <div className={`flex min-h-0 flex-1 flex-col gap-3 ${classeDoCorpo(noCanvas)}`}>
           <ErroDe erro={acao.error} />
           <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} estreito={estreito} simulador={<Simulador s={simulador} cursos={cursos} resultado={simulacao} />} />
         </div>

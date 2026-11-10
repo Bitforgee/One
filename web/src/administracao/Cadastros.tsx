@@ -264,12 +264,20 @@ const tituloDaJanela = (aba: Aba, f?: Ficha) => `${f?.id ? 'Editar' : 'Novo'}: $
 
 type Painel = { aba: Aba; dados?: Listas; erro?: Error; novo: () => void; editar: (x: object) => void }
 
+function filtrarItens(todos: { id: number }[] | undefined, linha: ((x: any) => Linha) | undefined, busca: string) {
+  return busca.trim() && todos && linha ? todos.filter((x) => simples(linha(x)[0]).includes(simples(busca.trim()))) : todos
+}
+
+function vazioDaAba(aba: Aba, busca: string, todos: { id: number }[] | undefined, limpar: () => void) {
+  return busca.trim() && todos?.length ? SemResultado(busca.trim(), limpar) : aba === 'fluxos' ? SemFluxo : undefined
+}
+
 function PainelDaAba({ aba, dados, erro, novo, editar }: Painel) {
   const [busca, setBusca] = useState('')
   const linha = dados ? linhas(dados)[aba] : undefined
   const todos = dados?.[aba] as { id: number }[] | undefined
-  const itens = busca.trim() && todos && linha ? todos.filter((x) => simples(linha(x)[0]).includes(simples(busca.trim()))) : todos
-  const vazio = busca.trim() && todos?.length ? SemResultado(busca.trim(), () => setBusca('')) : aba === 'fluxos' ? SemFluxo : undefined
+  const itens = filtrarItens(todos, linha, busca)
+  const vazio = vazioDaAba(aba, busca, todos, () => setBusca(''))
   return (
     <>
       <CabecalhoDaAba aba={aba} busca={busca} buscar={setBusca} novo={novo} />
