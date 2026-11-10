@@ -27,7 +27,7 @@ const Menu = [
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'matriculas', rotulo: 'Matrículas', Icone: Upload },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'cadastros', rotulo: 'Cadastros', Icone: Settings },
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'aparencia', rotulo: 'Aparência', Icone: Palette },
-  { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'moodle', rotulo: 'Moodle', Icone: Plug },
+  { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'integracoes', rotulo: 'Integrações', Icone: Plug },
   { grupo: 'Plataforma', papeis: ['OPERADOR'], caminho: 'instituicoes', rotulo: 'Instituições', Icone: Building2 },
 ]
 const Grupos = ['Atendimento', 'Conhecimento', 'Administração', 'Plataforma']

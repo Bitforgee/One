@@ -10,6 +10,7 @@ const Urls = {
   urlJwks: 'https://one.teste/api/moodle/univag/jwks',
 }
 const vazia = { configurada: false, ativa: false, emissor: '', clientId: '', deploymentId: '', authUrl: '', jwksUrl: '', ...Urls }
+const EmBreve = 'A integração com o MCP do One chega em uma próxima versão.'
 
 const rotas = (get: Rota, extra: Record<string, Rota> = {}) =>
   api({
@@ -19,23 +20,57 @@ const rotas = (get: Rota, extra: Record<string, Rota> = {}) =>
     ...extra,
   })
 
-describe('tela Moodle', () => {
-  it('estados da tela', async () => {
+const nomesDasAbas = () => screen.getAllByRole('tab').map((t) => t.textContent)
+
+describe('tela Integrações', () => {
+  it('abas', async () => {
+    for (const caminho of ['/univag/integracoes', '/univag/integracoes?aba=moodle', '/univag/integracoes?aba=qualquer-coisa']) {
+      rotas(() => [200, vazia])
+      const { unmount } = abrir(caminho)
+      await screen.findByLabelText('Emissor (iss)')
+      const titulos = screen.getAllByRole('heading', { level: 1 })
+      expect(titulos.map((h) => h.textContent), caminho).toEqual(['Integrações'])
+      expect(nomesDasAbas(), caminho).toEqual(['Moodle', 'MCPEm breve'])
+      expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
+      expect(within(screen.getByRole('tab', { name: /^MCP/ })).getByText('Em breve')).toHaveAttribute('data-slot', 'badge')
+      unmount()
+    }
+
+    rotas(() => [200, vazia])
+    abrir('/univag/integracoes')
+    await screen.findByLabelText('Emissor (iss)')
+    await userEvent.click(screen.getByRole('tab', { name: /^MCP/ }))
+    expect(await screen.findByText(EmBreve)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^MCP/ })).toHaveAttribute('aria-selected', 'true')
+    expect(document.querySelector('[data-aba-ativa]')?.getAttribute('data-aba-ativa')).toBe('mcp')
+  })
+
+  it('aba MCP em breve', async () => {
+    const chamadas = rotas(() => [200, vazia])
+    abrir('/univag/integracoes?aba=mcp')
+    expect(await screen.findByText(EmBreve)).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^MCP/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument()
+    expect(chamadas.some((c) => c.url === '/api/admin/moodle')).toBe(false)
+  })
+
+  it('estados da aba Moodle', async () => {
     rotas(() => new Promise(() => {}))
-    let montada = abrir('/univag/moodle')
-    await screen.findByRole('heading', { name: 'Moodle', level: 1 })
+    let montada = abrir('/univag/integracoes')
+    await screen.findByRole('heading', { name: 'Integrações', level: 1 })
     expect(document.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0)
     montada.unmount()
 
     let tentativas = 0
     rotas(() => (++tentativas === 1 ? [500, { title: 'Erro interno', status: 500, detail: 'falhou' }] : [200, vazia]))
-    montada = abrir('/univag/moodle')
+    montada = abrir('/univag/integracoes')
     await userEvent.click(await screen.findByRole('button', { name: 'Tentar de novo' }))
     await screen.findByLabelText('Emissor (iss)')
     montada.unmount()
 
     rotas(() => [200, vazia])
-    abrir('/univag/moodle')
+    abrir('/univag/integracoes?aba=moodle')
     for (const rotulo of ['Emissor (iss)', 'Client ID', 'Deployment ID', 'URL de autenticação', 'URL das chaves (JWKS)'])
       expect(await screen.findByLabelText(rotulo)).toHaveValue('')
     for (const url of Object.values(Urls)) expect(screen.getByText(url)).toBeInTheDocument()
@@ -52,7 +87,7 @@ describe('tela Moodle', () => {
         return [200, { ...vazia, ...c, configurada: true }]
       },
     })
-    abrir('/univag/moodle')
+    abrir('/univag/integracoes')
     const valores = {
       'Emissor (iss)': 'https://ava.teste',
       'Client ID': 'cliente-1',
@@ -83,16 +118,19 @@ describe('tela Moodle', () => {
       const { unmount } = abrir('/univag/trocar-senha')
       await screen.findByRole('button', { name: 'Alternar barra lateral' })
       const nav = within(await screen.findByRole('navigation'))
+      expect(nav.queryByRole('link', { name: 'Moodle' }), papel).not.toBeInTheDocument()
       if (papel === 'ADMINISTRADOR') {
         const grupo = within(nav.getByRole('group', { name: 'Administração' }))
-        expect(grupo.getAllByRole('link').map((l) => l.textContent)).toEqual(['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Moodle'])
-        expect(grupo.getByRole('link', { name: 'Moodle' })).toHaveAttribute('href', '/univag/moodle')
-      } else expect(nav.queryByRole('link', { name: 'Moodle' }), papel).not.toBeInTheDocument()
+        expect(grupo.getAllByRole('link').map((l) => l.textContent)).toEqual(['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Integrações'])
+        const link = grupo.getByRole('link', { name: 'Integrações' })
+        expect(link).toHaveAttribute('href', '/univag/integracoes')
+        expect(link.querySelector('svg')).toHaveClass('lucide-plug')
+      } else expect(nav.queryByRole('link', { name: 'Integrações' }), papel).not.toBeInTheDocument()
       unmount()
     }
 
     const chamadas = api({ 'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE'] })], 'GET /api/instituicoes/univag': () => [200, instituicao()] })
-    abrir('/univag/moodle')
+    abrir('/univag/integracoes')
     expect(await screen.findByRole('heading', { name: 'Fila', level: 1 })).toBeInTheDocument()
     expect(chamadas.some((c) => c.url === '/api/admin/moodle')).toBe(false)
   })

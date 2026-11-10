@@ -50,7 +50,7 @@ describe('tela Aparência', () => {
         expect(link).toHaveAttribute('href', '/univag/aparencia')
         expect(link.querySelector('svg')).toHaveClass('lucide-palette')
         const grupo = within(nav.getByRole('group', { name: 'Administração' }))
-        expect(grupo.getAllByRole('link').map((l) => l.textContent)).toEqual(['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Moodle'])
+        expect(grupo.getAllByRole('link').map((l) => l.textContent)).toEqual(['Usuários', 'Matrículas', 'Cadastros', 'Aparência', 'Integrações'])
       }
       unmount()
     }

@@ -117,10 +117,10 @@ function Formulario({ dados }: { dados: Plataforma }) {
   )
 }
 
-export function Moodle() {
+export function AbaMoodle() {
   const { data, error, refetch } = useQuery({ queryKey: ['moodle-admin'], queryFn: () => api<Plataforma>('/api/admin/moodle') })
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <p className="m-0 text-muted-foreground">Alunos que entram pela atividade One no Moodle chegam ao assistente sem digitar CPF nem senha. A equipe continua entrando com CPF e senha.</p>
       {error ? (
         <ErroDe erro={error} oque="a integração com o Moodle" tentar={() => void refetch()} />
