@@ -397,6 +397,8 @@ describe('decisões do editor de fluxo e da Aparência', () => {
     const grafo = deEtapas([etapa('SETOR', 2)])
     expect(AdicionarNoProximo({ grafo, cheia: true, adicionar: vi.fn() })).toBeNull()
     expect(AdicionarNoProximo({ grafo, cheia: false, adicionar: vi.fn() })).not.toBeNull()
+    expect(AdicionarNoProximo({ grafo, cheia: false, adicionar: vi.fn() })?.props.vazio).toBe(false)
+    expect(AdicionarNoProximo({ grafo: deEtapas([]), cheia: false, adicionar: vi.fn() })?.props.vazio).toBe(true)
   })
 
   it('Publicar só habilitado salvo, válido e sem pendência', () => {
