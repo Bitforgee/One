@@ -43,7 +43,7 @@ function marcasDaSimulacao(g: Grafo, simulacao?: Simulacao) {
   return marcas
 }
 
-function emCanvas(visao: Visao, estreito: boolean) {
+export function emCanvas(visao: Visao, estreito: boolean) {
   return visao === 'canvas' && !estreito
 }
 
@@ -55,11 +55,11 @@ function contextoDoFluxo(fluxo: Fluxo, categorias: Categoria[], cursos: Curso[])
   return `${categorias.find((c) => c.id === fluxo.categoriaId)?.nome} · ${abrangenciaDoFluxo(fluxo, cursos)}`
 }
 
-function deveBloquear(alterado: boolean, ignorar: boolean, atual: string, proximo: string) {
+export function deveBloquear(alterado: boolean, ignorar: boolean, atual: string, proximo: string) {
   return alterado && !ignorar && atual !== proximo
 }
 
-function semPendencia(condicao: boolean, pendente: boolean) {
+export function semPendencia(condicao: boolean, pendente: boolean) {
   return condicao && !pendente
 }
 

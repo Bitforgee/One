@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 import type { Destino } from './comum'
-import { Carga } from './EdicaoDoFluxo'
+import { descricaoDe } from './Aparencia'
+import { Carga, deveBloquear, emCanvas, semPendencia } from './EdicaoDoFluxo'
 import { deEtapas, FraseDaCadeia, fixarPosicoes, inserirEntre, Inicio, novoNo, organizar, podeLigar, type Ligacao } from './grafo'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -350,5 +351,34 @@ describe('canvas', () => {
     expect(posicao(noDeEtapa(1, 'Setor Financeiro'))).toContain('translate(288px,80px)')
     expect(posicao(noDeEtapa(2, 'Coordenação do curso'))).toContain('translate(576px,80px)')
     expect(screen.getByRole('button', { name: 'Organizar' })).toBeEnabled()
+  })
+})
+
+describe('decisões do editor de fluxo e da Aparência', () => {
+  it('canvas só em tela larga', () => {
+    expect(emCanvas('canvas', false)).toBe(true)
+    expect(emCanvas('canvas', true)).toBe(false)
+    expect(emCanvas('lista', false)).toBe(false)
+  })
+
+  it('sair sem salvar só bloqueia com alteração, sem ignorar e para outra rota', () => {
+    expect(deveBloquear(true, false, '/a', '/b')).toBe(true)
+    expect(deveBloquear(true, false, '/a', '/a')).toBe(false)
+    expect(deveBloquear(true, true, '/a', '/b')).toBe(false)
+    expect(deveBloquear(false, false, '/a', '/b')).toBe(false)
+  })
+
+  it('ação liberada só sem requisição pendente', () => {
+    expect(semPendencia(true, false)).toBe(true)
+    expect(semPendencia(true, true)).toBe(false)
+    expect(semPendencia(false, false)).toBe(false)
+  })
+
+  it('descrição do campo junta dica e erro', () => {
+    const campo = { chave: 'nome', rotulo: 'Nome', dica: 'Até 30 letras' }
+    expect(descricaoDe(campo, 'nome', 'Obrigatório')).toBe('nome-dica nome-erro')
+    expect(descricaoDe({ chave: 'nome', rotulo: 'Nome' }, 'nome', 'Obrigatório')).toBe('nome-erro')
+    expect(descricaoDe(campo, 'nome')).toBe('nome-dica')
+    expect(descricaoDe({ chave: 'nome', rotulo: 'Nome' }, 'nome')).toBeUndefined()
   })
 })

@@ -409,7 +409,7 @@ function ColunaDaEquipe({ c, fuso, erro, folha, setFolha, barra, tem, painel }: 
   )
 }
 
-function montarBarra(celular: boolean, principal: string | undefined, temMais: boolean, executar: Executar, pendente: boolean, abrirMais: () => void): Barra | undefined {
+export function montarBarra(celular: boolean, principal: string | undefined, temMais: boolean, executar: Executar, pendente: boolean, abrirMais: () => void): Barra | undefined {
   return celular && (principal || temMais) ? { principal, executar, pendente, temMais, abrirMais } : undefined
 }
 

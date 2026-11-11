@@ -1,7 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Chamado } from '../chamado'
+import { montarBarra } from './ChamadoDetalhe'
 import { abrir, api, chamado, me, type Rota } from '../test/util'
 
 const atendente = me({ papeis: ['ATENDENTE'], matriculas: [] })
@@ -194,5 +195,16 @@ describe('mobile m0 no chamado', () => {
     const confirmar = await screen.findByRole('button', { name: 'Confirmar resolução' })
     const responder = screen.getByLabelText('Responder (reabre a solicitação)')
     expect(confirmar.compareDocumentPosition(responder) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+})
+
+describe('barra do chamado no celular', () => {
+  it('aparece com ação principal ou com mais ações, só no celular', () => {
+    const executar = vi.fn()
+    const abrirMais = vi.fn()
+    expect(montarBarra(true, 'Assumir', false, executar, false, abrirMais)).toEqual({ principal: 'Assumir', executar, pendente: false, temMais: false, abrirMais })
+    expect(montarBarra(true, undefined, true, executar, true, abrirMais)).toEqual({ principal: undefined, executar, pendente: true, temMais: true, abrirMais })
+    expect(montarBarra(true, undefined, false, executar, false, abrirMais)).toBeUndefined()
+    expect(montarBarra(false, 'Assumir', true, executar, false, abrirMais)).toBeUndefined()
   })
 })

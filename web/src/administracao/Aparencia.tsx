@@ -102,7 +102,7 @@ function Amostra({ cor }: { cor: string }) {
 
 const corProibida = (cor: string) => cor !== '' && (!CorValida.test(cor) || contraste(cor) < MinimoDeContraste)
 
-function descricaoDe(campo: Campo, id: string, erro?: string) {
+export function descricaoDe(campo: Campo, id: string, erro?: string) {
   return [campo.dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
 }
 
