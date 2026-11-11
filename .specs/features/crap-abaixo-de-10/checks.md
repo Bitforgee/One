@@ -5,7 +5,7 @@ Plan: `.specs/features/crap-abaixo-de-10/plan.md`
 
 9 checks · 0 one-way doors · plano e checks aprovados pelo dono em 10/11/2026 (ver `plan.md`, Aprovação)
 
-`<base>`: `4b809c8`, o commit da `main` imediatamente antes do primeiro commit desta feature. Provas em `web/` salvo indicação; provas com `comm` e `<(...)` rodam no Git Bash na raiz. No Windows, `dryer` e `crapper` rodam com `PYTHONUTF8=1`. Ferramentas: `crapper` `6fd92c4c9bcc56efb64a2f8743d5a2993bcfd42d`, `dryer` `66ff6d21a42c04afcad89c78a80066176d1294b0`, `tree-sitter==0.26.1`, `tree-sitter-language-pack==1.25.0`.
+`<base>`: `8cd91fd`, o commit da `main` imediatamente antes do primeiro commit desta feature. Provas em `web/` salvo indicação; provas com `comm` e `<(...)` rodam no Git Bash na raiz. No Windows, `dryer` e `crapper` rodam com `PYTHONUTF8=1`. Ferramentas: `crapper` `6fd92c4c9bcc56efb64a2f8743d5a2993bcfd42d`, `dryer` `66ff6d21a42c04afcad89c78a80066176d1294b0`, `tree-sitter==0.26.1`, `tree-sitter-language-pack==1.25.0`.
 
 ## Checks
 
@@ -17,7 +17,7 @@ Plan: `.specs/features/crap-abaixo-de-10/plan.md`
 | K4 | `npm --prefix web run coverage -- --maxWorkers=4` sai 0 nas mesmas condições do K3 e grava `web/coverage/lcov.info` com entrada `SF:` para cada um dos 7 arquivos tocados | o comando, exit 0, e `grep -c` de cada `SF:` |
 | K5 | Uma execução, dentro de `web/`: `dryer -s src/acesso -s src/assistente -s src/chamados -s src/conhecimento -s src/indicadores -s src/administracao` mais um `-s` por arquivo de produto da raiz de `web/src` (`git ls-files 'src/*.ts' 'src/*.tsx'` sem subpasta e sem `.test.`) e `--threshold 0.8` imprime exatamente `No duplicate candidates found.`; o escopo, tirado das funções `select_files`/`scan_files` do dryer com os mesmos argumentos, é o conjunto das 6 fatias e da raiz sem testes, sem `src/ui/`, `src/ilustracoes/` e `src/test/` (critério 3, AD-023) | o comando e a lista do escopo |
 | K6 | `npm --prefix web run build` sai 0 (inclui `tsc --noEmit`) | o comando, exit 0 |
-| K7 | Com a imagem do `HEAD` (`docker compose up -d --build`), `npx playwright test aparencia.spec.ts arranjo.spec.ts casca.spec.ts celular.spec.ts chat.spec.ts editor-fluxo.spec.ts fluxos.spec.ts identidade.spec.ts ux.spec.ts` sai 0 com os mesmos 233 testes que passaram na `<base>` em 10/11/2026 (`233 passed (5.0m)`, imagem de `4b809c8`) (critério 4) | o comando, exit 0, e a contagem de passados |
+| K7 | Com a imagem do `HEAD` (`docker compose up -d --build`), `npx playwright test aparencia.spec.ts arranjo.spec.ts casca.spec.ts celular.spec.ts chat.spec.ts editor-fluxo.spec.ts fluxos.spec.ts identidade.spec.ts ux.spec.ts` sai 0 com os mesmos 233 testes que passaram na `<base>` em 10/11/2026 (`233 passed (5.0m)`, imagem de `8cd91fd`) (critério 4) | o comando, exit 0, e a contagem de passados |
 | K8 | `git diff --name-only <base>..HEAD` lista só arquivos em `web/src/` (os 7 do plano e testes novos `*.test.tsx`) e em `.specs/` (esta feature, o C8 e o handoff de `sessao-erro-transitorio` e o `STATE.md`); `git diff --quiet <base> HEAD -- One.Api One.Api.Tests web/src/ui web/package.json web/package-lock.json web/vite.config.ts web/src/index.css` sai 0 (critério 5) | os dois comandos |
 | K9 | Nenhuma linha acrescentada em `.ts`/`.tsx` tem comentário: `git diff <base>..HEAD -- 'web/src/*.ts' 'web/src/*.tsx' \| grep -E '^\+' \| grep -E '//\|/\*'` não imprime nada além de URLs dentro de strings já existentes (critério 5, decisão de 09/11 `remover-comentarios`) | o comando |
 

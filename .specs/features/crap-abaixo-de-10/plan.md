@@ -17,7 +17,7 @@ Com `crapper` e `dryer` instalados neste computador (commits auditados no C8 de 
 | `aplicar` | `web/src/aparencia.tsx` | 11 | 100% | 11,0 |
 | `PainelDaAba` | `web/src/administracao/Cadastros.tsx` | 10 | 100% | 10,0 |
 
-Medido em `3c2f134` com `crapper --use-existing-coverage -s src --threshold 9.99` sobre `npm --prefix web run coverage -- --maxWorkers=4`.
+Medido em `a1cd3bf` com `crapper --use-existing-coverage -s src --threshold 9.99` sobre `npm --prefix web run coverage -- --maxWorkers=4`.
 
 ## Flow
 1. Em cada um dos 7 arquivos, a lógica de ramos da função é extraída, no mesmo arquivo, para funções ou componentes menores (por exemplo, decisões de texto e de classe em funções puras, blocos condicionais de JSX em subcomponentes, manipuladores de evento do canvas em funções nomeadas). Nada muda de fatia nem de pasta.
@@ -55,4 +55,4 @@ O `crapper` mede cada função e cada arrow function nomeada separadamente; extr
 `crapper` com exit 0; suíte e cobertura com exit 0; `dryer` sem candidato; E2E das 9 specs das telas tocadas com exit 0.
 
 ## Sources
-`.specs/features/sessao-erro-transitorio/checks.md` (C8 e ferramentas), AD-018, AD-023, AD-044, AD-049.
+`.specs/features/sessao-erro-transitorio/checks.md` (C8 e ferramentas), AD-018, AD-023, AD-044, AD-050.
