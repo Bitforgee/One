@@ -151,7 +151,7 @@ function desligarRemovidas(mudancas: EdgeChange[], editar: (f: (g: Grafo) => Gra
 
 type Adicionar = (destino: Destino) => void
 
-function AdicionarNoProximo({ grafo, cheia, adicionar }: { grafo: Grafo; cheia: boolean; adicionar: Adicionar }) {
+export function AdicionarNoProximo({ grafo, cheia, adicionar }: { grafo: Grafo; cheia: boolean; adicionar: Adicionar }) {
   const proximo = posicaoDoProximo(grafo)
   return cheia ? null : <BotaoDeAdicionar x={proximo.x} y={proximo.y} vazio={grafo.nos.length === 0} adicionar={adicionar} />
 }

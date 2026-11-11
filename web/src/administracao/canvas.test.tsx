@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
 import type { Destino } from './comum'
 import { descricaoDe } from './Aparencia'
-import { Carga, deveBloquear, emCanvas, semPendencia } from './EdicaoDoFluxo'
+import { AdicionarNoProximo } from './Canvas'
+import { vazioDaAba } from './Cadastros'
+import { Carga, deveBloquear, emCanvas, PublicarBotao, semPendencia } from './EdicaoDoFluxo'
 import { deEtapas, FraseDaCadeia, fixarPosicoes, inserirEntre, Inicio, novoNo, organizar, podeLigar, type Ligacao } from './grafo'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -380,5 +382,28 @@ describe('decisões do editor de fluxo e da Aparência', () => {
     expect(descricaoDe({ chave: 'nome', rotulo: 'Nome' }, 'nome', 'Obrigatório')).toBe('nome-erro')
     expect(descricaoDe(campo, 'nome')).toBe('nome-dica')
     expect(descricaoDe({ chave: 'nome', rotulo: 'Nome' }, 'nome')).toBeUndefined()
+  })
+
+  it('busca sem itens mostra o vazio da aba, não o sem resultado', () => {
+    const limpar = vi.fn()
+    const semFluxo = vazioDaAba('fluxos', '', [], limpar)
+    expect(semFluxo).toBeDefined()
+    expect(vazioDaAba('fluxos', 'x', [], limpar)).toBe(semFluxo)
+    expect(vazioDaAba('fluxos', 'x', [{ id: 1 }], limpar)).not.toBe(semFluxo)
+    expect(vazioDaAba('setores', 'x', [], limpar)).toBeUndefined()
+  })
+
+  it('canvas cheio não oferece adicionar o próximo nó', () => {
+    const grafo = deEtapas([etapa('SETOR', 2)])
+    expect(AdicionarNoProximo({ grafo, cheia: true, adicionar: vi.fn() })).toBeNull()
+    expect(AdicionarNoProximo({ grafo, cheia: false, adicionar: vi.fn() })).not.toBeNull()
+  })
+
+  it('Publicar só habilitado salvo, válido e sem pendência', () => {
+    const desabilitado = (salvo: boolean, valida: boolean, pendente: boolean) => PublicarBotao({ salvo, valida, pendente, publicar: vi.fn() }).props.disabled
+    expect(desabilitado(true, true, false)).toBe(false)
+    expect(desabilitado(true, false, false)).toBe(true)
+    expect(desabilitado(false, true, false)).toBe(true)
+    expect(desabilitado(true, true, true)).toBe(true)
   })
 })

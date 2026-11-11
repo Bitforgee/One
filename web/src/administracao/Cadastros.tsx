@@ -268,7 +268,7 @@ function filtrarItens(todos: { id: number }[] | undefined, linha: ((x: any) => L
   return busca.trim() && todos && linha ? todos.filter((x) => simples(linha(x)[0]).includes(simples(busca.trim()))) : todos
 }
 
-function vazioDaAba(aba: Aba, busca: string, todos: { id: number }[] | undefined, limpar: () => void) {
+export function vazioDaAba(aba: Aba, busca: string, todos: { id: number }[] | undefined, limpar: () => void) {
   return busca.trim() && todos?.length ? SemResultado(busca.trim(), limpar) : aba === 'fluxos' ? SemFluxo : undefined
 }
 

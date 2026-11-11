@@ -228,7 +228,7 @@ function SairSemSalvar({ aberto, continuar, sair }: { aberto: boolean; continuar
   )
 }
 
-function PublicarBotao({ salvo, valida, pendente, publicar }: { salvo: boolean; valida: boolean; pendente: boolean; publicar: () => void }) {
+export function PublicarBotao({ salvo, valida, pendente, publicar }: { salvo: boolean; valida: boolean; pendente: boolean; publicar: () => void }) {
   return (
     <BotaoAcao type="button" pendente={false} disabled={!salvo || !valida || pendente} onClick={publicar}>
       Publicar
