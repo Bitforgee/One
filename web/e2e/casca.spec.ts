@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { comAparencia, instalar, referencia, simularApi } from './simulada'
+import { comAparencia, instalar, referencia, simularApi, trocaObrigatoria } from './simulada'
 
 test.use({ serviceWorkers: 'block' })
 
@@ -348,8 +348,8 @@ test('Tema no rodapé da barra e fora do topo', async ({ page }) => {
   await expect(page.locator('html')).toHaveClass(/dark/)
   await abrir(page, 390, '/univag/fila', async (p) => void (await p.locator('header').getByRole('heading', { name: 'Fila' }).waitFor()), { papeis: ['ATENDENTE'] })
   await expect(page.locator('header').getByRole('button', { name: 'Tema' }), 'topo do atendente a 390').toHaveCount(0)
-  await page.locator('header').getByRole('button', { name: 'Alternar barra lateral' }).click()
-  await expect(page.getByRole('dialog').getByRole('button', { name: 'Tema' }), 'Tema na gaveta').toHaveCount(1)
+  await page.getByRole('navigation', { name: 'Navegação' }).getByRole('link', { name: 'Conta' }).click()
+  await expect(page.getByRole('button', { name: /^Tema/ }), 'Tema na Conta do atendente').toHaveCount(1)
   await abrir(page, 390, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
   await expect(page.locator('header').getByRole('button', { name: 'Tema' }), 'topo do aluno a 390').toHaveCount(0)
   await page.getByRole('link', { name: 'Conta' }).click()
@@ -436,11 +436,11 @@ test('recolher no rodapé a partir de 768', async ({ page }) => {
   expect(medidas).toBe(2)
 })
 
-test('menu no topo abaixo de 768 para quem não é aluno', async ({ page }) => {
+test('menu no topo abaixo de 768 para quem não é aluno na troca de senha obrigatória', async ({ page }) => {
   await instalar(page)
   let medidas = 0
   for (const largura of [390, 767]) {
-    await abrir(page, largura, '/univag/fila', async (p) => void (await p.locator('header').getByRole('heading', { name: 'Fila' }).waitFor()), { papeis: ['ATENDENTE'] })
+    await abrir(page, largura, '/univag/trocar-senha', async (p) => void (await p.locator('header').getByRole('heading', { name: 'Trocar senha' }).waitFor()), { papeis: ['ATENDENTE'], rotas: (p) => trocaObrigatoria(p, ['ATENDENTE']) })
     const menu = page.locator('header button:has(svg.lucide-menu)')
     await expect(menu, `${largura}: botão de menu`).toHaveCount(1)
     await menu.click()
@@ -993,7 +993,7 @@ test('link do cartão abre o chamado com 1 entrada no histórico', async ({ page
 
 test('Esc fecha a gaveta em 1 toque a partir do usuário', async ({ page }) => {
   await instalar(page)
-  await abrir(page, 390, '/univag/fila', esperaFila, { papeis: ['ATENDENTE'] })
+  await abrir(page, 390, '/univag/trocar-senha', async (p) => void (await p.locator('header').getByRole('heading', { name: 'Trocar senha' }).waitFor()), { papeis: ['ATENDENTE'], rotas: (p) => trocaObrigatoria(p, ['ATENDENTE']) })
   await page.locator('header button:has(svg.lucide-menu)').click()
   const gaveta = page.getByRole('dialog')
   await expect(gaveta, 'gaveta aberta').toHaveCount(1)

@@ -6,7 +6,7 @@ import { App } from '../App'
 import { abrir, api, instituicao, me, type Rota } from '../test/util'
 
 const celular = () =>
-  vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+  vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
 
 const Chave = 'BAEC'
 const Contato = { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: null }
@@ -118,7 +118,7 @@ describe('Conta', () => {
 })
 
 describe('operador', () => {
-  it.each(['fila', 'assistente', 'solicitacoes', 'indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia', 'conta'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
+  it.each(['fila', 'assistente', 'solicitacoes', 'indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia'])('operador sem outro papel vai para Instituições (/%s)', async (rota) => {
     api({ 'GET /api/auth/me': () => [200, me({ papeis: ['OPERADOR'] })] })
     const Local = () => <output data-testid="local">{useLocation().pathname}</output>
     render(

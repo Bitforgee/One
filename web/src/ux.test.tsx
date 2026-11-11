@@ -77,16 +77,16 @@ describe('ux', () => {
 
   const Rotas: Record<string, string[]> = {
     ALUNO: ['assistente', 'solicitacoes', 'conta'],
-    ATENDENTE: ['fila', 'indicadores'],
-    ADMINISTRADOR: ['indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia'],
+    ATENDENTE: ['fila', 'indicadores', 'conta'],
+    ADMINISTRADOR: ['indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia', 'conta'],
   }
   const Inicial: Record<string, string> = { ALUNO: 'assistente', ATENDENTE: 'fila', ADMINISTRADOR: 'artigos' }
   const Todas = ['assistente', 'solicitacoes', 'conta', 'fila', 'indicadores', 'artigos', 'documentos', 'usuarios', 'matriculas', 'cadastros', 'aparencia', 'instituicoes']
   const fora = Object.entries(Rotas).flatMap(([papel, minhas]) => Todas.filter((r) => !minhas.includes(r)).map((rota) => [papel, rota] as const))
 
-  it('rota de outro papel volta à tela inicial (24 casos)', () => {
-    expect(['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'].map((p) => fora.filter(([papel]) => papel === p).length)).toEqual([9, 10, 5])
-    expect(fora).toHaveLength(24)
+  it('rota de outro papel volta à tela inicial (22 casos)', () => {
+    expect(['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'].map((p) => fora.filter(([papel]) => papel === p).length)).toEqual([9, 9, 4])
+    expect(fora).toHaveLength(22)
   })
 
   it.each(fora)('rota de outro papel volta à tela inicial (%s em /%s)', async (papel, rota) => {

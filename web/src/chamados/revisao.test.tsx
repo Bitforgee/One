@@ -6,7 +6,7 @@ import { abrir, api, chamado, me } from '../test/util'
 
 const equipe = me({ papeis: ['ALUNO', 'ATENDENTE'] })
 const celular = () =>
-  vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)' || media === '(max-width: 1023px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+  vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)') || media === '(max-width: 1023px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
 const relogio = (iso: string) => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date(iso))

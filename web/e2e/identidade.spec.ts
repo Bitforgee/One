@@ -100,11 +100,12 @@ test('texto e controles em Public Sans', async ({ page }) => {
         await page.keyboard.press('Escape')
       }
       if (nome === 'Fila') {
-        if (largura < 768) await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
-        await page.locator('[data-sidebar=sidebar]').getByRole('button', { name: /Ana/ }).click()
-        await page.getByRole('menuitem').first().waitFor()
-        await medir(`${nome} com o menu do usuário`, largura)
-        await page.keyboard.press('Escape')
+        if (largura >= 768) {
+          await page.locator('[data-sidebar=sidebar]').getByRole('button', { name: /Ana/ }).click()
+          await page.getByRole('menuitem').first().waitFor()
+          await medir(`${nome} com o menu do usuário`, largura)
+          await page.keyboard.press('Escape')
+        }
       }
     })
   }

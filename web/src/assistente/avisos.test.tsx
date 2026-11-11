@@ -57,7 +57,7 @@ describe('avisos', () => {
 
   it('push desligado com 204 esconde os avisos', async () => {
     const erro = vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media === '(max-width: 767px)', addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
     const { chamadas } = ambiente({ chave: 204, rotas: { 'GET /api/instituicoes/univag': () => [200, instituicao()], 'GET /api/chamados?escopo=meus': () => [200, []] } })
     const { unmount } = abrir('/univag/assistente')
     await screen.findByLabelText('Mensagem')

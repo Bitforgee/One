@@ -36,6 +36,24 @@ export const InstituicoesSimuladas = [
   { slug: 'faculdade-antiga', nome: 'Faculdade Antiga', fuso: 'America/Sao_Paulo', ativa: false, criadaEm: '2026-09-15T12:00:00Z', administradores: 0 },
 ]
 
+export async function trocaObrigatoria(page: Page, papeis: string[]) {
+  await page.route('**/api/auth/me', (rota) =>
+    rota.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 1,
+        nome: 'Ana',
+        cpfMascarado: '***.456.789-**',
+        papeis,
+        deveTrocarSenha: true,
+        instituicao: { slug: 'univag', nome: 'Centro Universitário de Várzea Grande', fuso: 'America/Cuiaba' },
+        matriculas: [],
+      }),
+    }),
+  )
+}
+
 export async function simularApi(page: Page, papeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'], extremos = false, aparencia: object = semAparencia) {
   const mais = <T,>(linhas: T[], extra: T) => (extremos ? [...linhas, extra] : linhas)
   await page.route('**/api/**', (rota) => {

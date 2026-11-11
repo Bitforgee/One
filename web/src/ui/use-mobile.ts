@@ -2,6 +2,9 @@ import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+export const Celular = '(max-width: 767px), (max-height: 479px) and (pointer: coarse)'
+export const Deitado = '(max-height: 479px)'
+
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 

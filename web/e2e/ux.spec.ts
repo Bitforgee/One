@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Locator, type Page } from '@playwright/test'
-import { abrirTela, chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, Telas, varrer } from './simulada'
+import { abrirTela, chamadoSimulado, comAparencia, instalar, referencia, semAparencia, simularApi, Telas, trocaObrigatoria, varrer } from './simulada'
 
 test.use({ serviceWorkers: 'block' })
 
@@ -99,7 +99,15 @@ test.describe('S1 toque, campos e contraste', () => {
     await instalar(page)
     await page.setViewportSize({ width: 390, height: 844 })
     const todas: Medida[] = []
-    await medirTudo(page, (r) => todas.push(...r.medidas), true)
+    await medirTudo(page, (r) => todas.push(...r.medidas), false)
+    await page.unroute('**/api/**')
+    await simularApi(page)
+    await trocaObrigatoria(page, ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'])
+    await page.goto('/univag/trocar-senha')
+    await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
+    await page.locator('[data-sidebar=menu-button]').first().waitFor()
+    const itens = await medir(page, 'Gaveta da troca de senha')
+    todas.push(...itens.medidas.filter((m) => m.tipo === 'item da barra lateral'))
     conferirAlturas(todas)
   })
 
@@ -423,12 +431,13 @@ test.describe('S2 barra de abas', () => {
     expect(Math.abs(s.y + s.height / 2 - (h.y + h.height / 2)), 'mesmo centro vertical').toBeLessThanOrEqual(2)
   })
 
-  test('sem barra de abas a 768 px e para a equipe', async ({ page }) => {
+  test('sem barra de abas a 768 px e na troca de senha obrigatória da equipe', async ({ page }) => {
     await instalar(page)
     for (const [papeis, largura] of [[['ALUNO'], 768], [['ATENDENTE'], 390], [['ADMINISTRADOR'], 390], [['ALUNO', 'ATENDENTE'], 390]] as const) {
       await page.unroute('**/api/**')
       await page.setViewportSize({ width: largura, height: 844 })
       await simularApi(page, [...papeis])
+      await trocaObrigatoria(page, [...papeis])
       await page.goto('/univag/trocar-senha')
       await expect(page.getByRole('button', { name: 'Alternar barra lateral' }), `${papeis} a ${largura} px`).toBeVisible()
       await expect(page.getByRole('navigation', { name: 'Navegação' }), `${papeis} a ${largura} px`).toHaveCount(0)

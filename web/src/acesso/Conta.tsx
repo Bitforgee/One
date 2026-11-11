@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { DialogoDeContato, temContato, useAparencia } from '../aparencia'
 import { useAvisos } from '../AvisosPush'
-import { OpcoesDeTema } from '../Autenticado'
+import { OpcoesDeTema, papelDe } from '../Autenticado'
 import { useSair, useSessao } from '../sessao'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { useTheme } from '../ui/theme-provider'
@@ -36,6 +36,7 @@ export function Conta() {
       <div>
         <p className="m-0 text-base font-medium">{me.nome}</p>
         <p className="m-0 text-sm text-muted-foreground">{me.cpfMascarado}</p>
+        <p className="m-0 text-sm text-muted-foreground">{papelDe(me.papeis)}</p>
       </div>
       <ul className="m-0 flex list-none flex-col divide-y rounded-md border p-0">
         <li>
@@ -50,7 +51,7 @@ export function Conta() {
             </PopoverContent>
           </Popover>
         </li>
-        {avisos.disponivel && (
+        {avisos.disponivel && me.papeis.includes('ALUNO') && (
           <li>
             <button type="button" className={Linha} disabled={avisos.ocupado} onClick={avisos.alternar}>
               <Conteudo Icone={Bell} rotulo="Avisos no celular" valor={avisos.inscrito ? 'Ativados' : 'Desativados'} />

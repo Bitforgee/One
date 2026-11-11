@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { simularApi, Telas } from './simulada'
+import { simularApi, Telas, trocaObrigatoria } from './simulada'
 
 test.use({ serviceWorkers: 'block' })
 
@@ -64,7 +64,9 @@ test.describe('Assistente', () => {
     for (const ate of ['topo', 'fim']) {
       await page.evaluate((fim) => window.scrollTo(0, fim ? document.documentElement.scrollHeight : 0), ate === 'fim')
       const falar = await caixa(page.locator('form').filter({ has: page.getByLabel('Mensagem') }))
-      expect(740 - (falar.y + falar.height), `${ate} compositor perto do fundo`).toBeLessThanOrEqual(16)
+      const abas = await caixa(page.getByRole('navigation', { name: 'Navegação' }))
+      expect(abas.y - (falar.y + falar.height), `${ate} compositor perto da barra`).toBeLessThanOrEqual(16)
+      expect(abas.y - (falar.y + falar.height), `${ate} compositor acima da barra`).toBeGreaterThanOrEqual(-1)
       for (const nome of [/Enviar/, /Falar com atendente/]) {
         const c = await caixa(page.getByRole('button', { name: nome }))
         expect(c.y, `${ate} ${nome}`).toBeGreaterThanOrEqual(0)
@@ -790,6 +792,22 @@ test.describe('painel', () => {
       await page.setViewportSize({ width: w, height: 740 })
       await page.goto('/univag/indicadores')
       await page.getByRole('heading', { level: 1, name: 'Indicadores' }).waitFor()
+      await expect(page.getByRole('button', { name: 'Alternar barra lateral' }), `${w} px: sem botão de menu`).toHaveCount(0)
+      await expect(page.locator('[data-sidebar=sidebar]'), `${w} px: sem barra lateral`).toHaveCount(0)
+      const abas = page.getByRole('navigation', { name: 'Navegação' })
+      await expect(abas.getByRole('link'), `${w} px: abas`).toHaveText(['Assistente', 'Solicitações', 'Fila', 'Gerir', 'Conta'])
+      await abas.getByRole('link', { name: 'Fila' }).click()
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fila')
+    }
+  })
+
+  test('gaveta do painel na troca de senha obrigatória', async ({ page }) => {
+    await simularApi(page)
+    await trocaObrigatoria(page, ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'])
+    for (const w of [360, 390, 767]) {
+      await page.setViewportSize({ width: w, height: 740 })
+      await page.goto('/univag/trocar-senha')
+      await page.getByRole('heading', { level: 1, name: 'Trocar senha' }).waitFor()
       await expect(page.getByRole('link', { name: 'Fila' }), `${w} px: sem barra fixa`).toBeHidden()
       await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
       const painel = page.getByRole('dialog', { name: 'Menu' })
@@ -805,13 +823,11 @@ test.describe('painel', () => {
       const o = await caixa(camada)
       expect([o.x, o.y, o.width, o.height], `${w} px: camada cobre a janela`).toEqual([0, 0, w, 740])
       expect(await camada.evaluate((e) => Number(getComputedStyle(e).backgroundColor.match(/[\d.]+/g)![3] ?? 1)), `${w} px: alfa`).toBeGreaterThan(0)
-
       await painel.getByRole('link', { name: 'Fila' }).click()
       await expect(page.getByRole('dialog'), `${w} px: painel fechado`).toHaveCount(0)
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fila')
+      await expect(page.getByRole('heading', { level: 1 }), `${w} px: troca obrigatória`).toHaveText('Trocar senha')
     }
   })
-
   test('painel cabeçalho', async ({ page }) => {
     await simularApi(page)
     for (const w of [360, 1280]) {
@@ -828,9 +844,10 @@ test.describe('painel', () => {
       const t = await caixa(h1)
       await expect(cabecalho.locator('[data-orientation=vertical]'), `${w} px: sem separador`).toHaveCount(0)
       await expect(cabecalho.getByRole('button', { name: 'Tema' }), `${w} px: sem Tema`).toHaveCount(0)
-      const menu = cabecalho.getByRole('button', { name: 'Alternar barra lateral' })
-      await expect(menu, `${w} px: botão de menu`).toHaveCount(w < 768 ? 1 : 0)
-      if (w < 768) expect((await caixa(menu)).x + (await caixa(menu)).width, `${w} px: botão antes do h1`).toBeLessThanOrEqual(t.x + 1)
+      await expect(cabecalho.getByRole('button', { name: 'Alternar barra lateral' }), `${w} px: sem botão de menu`).toHaveCount(0)
+      const voltar = cabecalho.getByRole('button', { name: 'Voltar' })
+      await expect(voltar, `${w} px: Voltar`).toHaveCount(w < 768 ? 1 : 0)
+      if (w < 768) expect((await caixa(voltar)).x + (await caixa(voltar)).width, `${w} px: Voltar antes do h1`).toBeLessThanOrEqual(t.x + 1)
       expect(await h1.evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(e).fontWeight]), `${w} px: h1`).toEqual(['16px', '500'])
     }
   })
@@ -887,8 +904,9 @@ test.describe('painel', () => {
     await page.goto('/univag/fila')
     await conferir(page.locator(Conteiner).getByRole('button', { name: /Ana/ }), 'direita')
 
+    await trocaObrigatoria(page, ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'])
     await page.setViewportSize({ width: 360, height: 740 })
-    await page.goto('/univag/fila')
+    await page.goto('/univag/trocar-senha')
     await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
     await conferir(page.getByRole('dialog', { name: 'Menu' }).getByRole('button', { name: /Ana/ }), 'acima')
   })
@@ -1023,6 +1041,7 @@ test.describe('painel', () => {
 
       await page.setViewportSize({ width: 1280, height: 800 })
       await assentar(page)
+      for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 1280 px: ${l}`).toHaveCount(1)
       const fundos = await page.evaluate(() => {
         const sonda = document.createElement('div')
         sonda.style.background = 'var(--muted)'
@@ -1033,7 +1052,6 @@ test.describe('painel', () => {
       })
       expect(fundos[1], `${caminho}: controle`).not.toBe('rgba(0, 0, 0, 0)')
       expect(fundos[0], caminho).toBe('rgba(0, 0, 0, 0)')
-      for (const l of largos) await expect(cabecalhos.filter({ hasText: l }), `${caminho} a 1280 px: ${l}`).toHaveCount(1)
       await expect(page.locator('tbody div.text-xs').first(), caminho).toBeHidden()
     }
   })
@@ -1133,7 +1151,7 @@ test.describe('painel', () => {
         expect(h.x + h.width, `${w} px: título longo não passa dos Avisos`).toBeLessThanOrEqual(t.x + 1)
         expect(h.height, `${w} px: título numa linha`).toBeLessThanOrEqual(24)
         const botoes: [string, Locator][] = [['Avisos', avisos]]
-        if (w < 768) botoes.push(['Menu', cabecalho.getByRole('button', { name: 'Alternar barra lateral' })])
+        await expect(cabecalho.getByRole('button', { name: 'Alternar barra lateral' }), `${w} px: sem botão de menu`).toHaveCount(0)
         for (const [nome, botao] of botoes) {
           const b = await caixa(botao)
           const lado = w < 768 ? 44 : 36

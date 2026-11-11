@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookText, Building2, ChartColumn, CircleAlert, CircleUser, FileText, Inbox, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
+import { BookText, Building2, ChartColumn, ChevronLeft, CircleAlert, CircleUser, FileText, Inbox, LayoutGrid, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
 import { useId, useState, type CSSProperties } from 'react'
-import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useParams } from 'react-router'
+import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
 import { ErroDe } from './ErroDe'
 import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
@@ -15,11 +15,11 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from './ui/sidebar'
 import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
-import { useConsulta } from './ui/use-mobile'
+import { Celular, Deitado, useConsulta } from './ui/use-mobile'
 
 const Menu = [
   { grupo: 'Atendimento', papeis: ['ALUNO'], caminho: 'assistente', rotulo: 'Assistente', Icone: MessageCircle },
-  { grupo: 'Atendimento', papeis: ['ALUNO'], caminho: 'solicitacoes', rotulo: 'Minhas solicitações', Icone: ListChecks },
+  { grupo: 'Atendimento', papeis: ['ALUNO'], caminho: 'solicitacoes', rotulo: 'Minhas solicitações', abrev: 'Solicitações', Icone: ListChecks },
   { grupo: 'Atendimento', papeis: ['ATENDENTE'], caminho: 'fila', rotulo: 'Fila', Icone: Inbox },
   { grupo: 'Atendimento', papeis: ['ATENDENTE', 'ADMINISTRADOR'], caminho: 'indicadores', rotulo: 'Indicadores', Icone: ChartColumn },
   { grupo: 'Conhecimento', papeis: ['ADMINISTRADOR'], caminho: 'artigos', rotulo: 'Artigos', Icone: BookText },
@@ -31,11 +31,25 @@ const Menu = [
   { grupo: 'Administração', papeis: ['ADMINISTRADOR'], caminho: 'integracoes', rotulo: 'Integrações', Icone: Plug },
   { grupo: 'Plataforma', papeis: ['OPERADOR'], caminho: 'instituicoes', rotulo: 'Instituições', Icone: Building2 },
 ]
-const Grupos = ['Atendimento', 'Conhecimento', 'Administração', 'Plataforma']
+export const Grupos = ['Atendimento', 'Conhecimento', 'Administração', 'Plataforma']
+const TodosOsPapeis = ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR', 'OPERADOR']
+const LimiteDeAbas = 5
 
 export { iniciais }
 
-type Item = (typeof Menu)[number]
+export type Item = (typeof Menu)[number] & { abrev?: string }
+
+export const itensDo = (papeis: string[]): Item[] => Menu.filter((m) => m.papeis.some((p) => papeis.includes(p)))
+
+export function distribuir(papeis: string[]) {
+  const itens = itensDo(papeis)
+  const cabe = (n: number) => n + (itens.length > n ? 1 : 0) + 1 <= LimiteDeAbas
+  let fixas = itens.filter((i) => i.grupo === 'Atendimento')
+  while (!cabe(fixas.length)) fixas = fixas.slice(0, -1)
+  return { fixas, gerir: itens.filter((i) => !fixas.includes(i)) }
+}
+
+export const destinosDaGerir = (papeis: string[]) => distribuir(papeis).gerir
 
 const Temas: ['light' | 'dark' | 'black' | 'system', string, typeof Sun][] = [
   ['light', 'Claro', Sun],
@@ -94,6 +108,7 @@ export function tituloDaRota(pathname: string, numero?: string) {
   if (numero) return numero
   if (caminho === 'trocar-senha') return 'Trocar senha'
   if (caminho === 'conta') return 'Conta'
+  if (caminho === 'gerir') return 'Gerir'
   return Menu.find((m) => m.caminho === caminho)?.rotulo ?? ''
 }
 
@@ -102,7 +117,7 @@ const Papeis = [
   ['ATENDENTE', 'Atendente'],
   ['ALUNO', 'Aluno'],
 ]
-const papelDe = (papeis: string[]) => Papeis.find(([p]) => papeis.includes(p))?.[1]
+export const papelDe = (papeis: string[]) => Papeis.find(([p]) => papeis.includes(p))?.[1]
 
 function Link({ item: { caminho, rotulo, Icone }, slug }: { item: Item; slug?: string }) {
   const ativo = !!useMatch({ path: `/${slug}/${caminho}`, end: false })
@@ -230,7 +245,7 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
   )
 }
 
-function Topo({ titulo, aluno, abas, slug, icone, nome }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string }) {
+function Topo({ titulo, aluno, abas, slug, icone, nome, voltar }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string; voltar?: () => void }) {
   const { isMobile, toggleSidebar } = useSidebar()
   return (
     <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background">
@@ -241,33 +256,44 @@ function Topo({ titulo, aluno, abas, slug, icone, nome }: { titulo: string; alun
             <span className="sr-only">Alternar barra lateral</span>
           </Button>
         )}
-        <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />
-        <h1 className="truncate text-base font-medium">{titulo}</h1>
+        {voltar && (
+          <Button variant="ghost" size="icon" className="-ms-1" onClick={voltar}>
+            <ChevronLeft aria-hidden="true" />
+            <span className="sr-only">Voltar</span>
+          </Button>
+        )}
+        {!voltar && <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />}        <h1 className="truncate text-base font-medium">{titulo}</h1>
         <div className="ms-auto flex shrink-0 items-center gap-1">{aluno && <AvisosPush />}</div>
       </div>
     </header>
   )
 }
 
-const Abas = [
-  { caminho: 'assistente', rotulo: 'Assistente', Icone: MessageCircle },
-  { caminho: 'solicitacoes', rotulo: 'Solicitações', Icone: ListChecks },
-  { caminho: 'conta', rotulo: 'Conta', Icone: CircleUser },
-]
-const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))'
+type Aba = { caminho: string; rotulo: string; Icone: typeof Sun; ativas: string[] }
 
-function BarraDeAbas({ slug }: { slug?: string }) {
-  const { pathname } = useLocation()
+function abasDe(papeis: string[]): Aba[] {
+  const { fixas, gerir } = distribuir(papeis)
+  const doMenu = fixas.map(({ caminho, rotulo, abrev, Icone }) => ({ caminho, rotulo: abrev ?? rotulo, Icone, ativas: caminho === 'solicitacoes' ? [caminho, 'chamados'] : [caminho] }))
+  const deGerir = gerir.length > 0 ? [{ caminho: 'gerir', rotulo: 'Gerir', Icone: LayoutGrid, ativas: ['gerir', ...gerir.map((g) => g.caminho)] }] : []
+  return [...doMenu, ...deGerir, { caminho: 'conta', rotulo: 'Conta', Icone: CircleUser, ativas: ['conta'] }]
+}
+
+const AlturaDaBarra = 'calc(3.5rem + 1px + env(safe-area-inset-bottom))'
+const AlturaDaBarraDeitada = 'calc(3rem + 1px + env(safe-area-inset-bottom))'
+
+function BarraDeAbas({ slug, papeis, deitado }: { slug?: string; papeis: string[]; deitado: boolean }) {
+  const segmento = useLocation().pathname.split('/')[2]
+  const abas = abasDe(papeis)
   return (
-    <nav aria-label="Navegação" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t bg-background pb-[env(safe-area-inset-bottom)]">
-      {Abas.map(({ caminho, rotulo, Icone }) => {
-        const ativo = pathname.startsWith(`/${slug}/${caminho}`) || (caminho === 'solicitacoes' && pathname.startsWith(`/${slug}/chamados/`))
+    <nav aria-label="Navegação" style={{ gridTemplateColumns: `repeat(${abas.length}, minmax(0, 1fr))` }} className="fixed inset-x-0 bottom-0 z-20 grid border-t bg-background pb-[env(safe-area-inset-bottom)]">
+      {abas.map(({ caminho, rotulo, Icone, ativas }) => {
+        const ativo = ativas.includes(segmento)
         return (
           <RouterLink
             key={caminho}
             to={`/${slug}/${caminho}`}
             aria-current={ativo ? 'page' : undefined}
-            className={`flex h-14 flex-col items-center justify-center gap-0.5 text-xs ${ativo ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
+            className={`flex items-center justify-center ${deitado ? 'h-12 flex-row gap-2 text-sm' : 'h-14 flex-col gap-0.5 text-xs'} ${ativo ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
           >
             <Icone aria-hidden="true" className="size-5" />
             <span>{rotulo}</span>
@@ -293,8 +319,9 @@ function PularParaOConteudo() {
   )
 }
 
-const Rotas = [...Menu.map(({ caminho, papeis }) => [caminho, papeis] as const), ['conta', ['ALUNO']] as const]
+const Rotas = [...Menu.map(({ caminho, papeis }) => [caminho, papeis] as const), ['conta', TodosOsPapeis] as const]
 const rotaPermitida = (papeis: string[], caminho: string) => {
+  if (caminho === 'gerir') return destinosDaGerir(papeis).length > 0
   const rota = Rotas.find(([c]) => c === caminho)
   return !rota || rota[1].some((p) => papeis.includes(p))
 }
@@ -370,28 +397,45 @@ export function Autenticado() {
   return <Casca me={me} slug={slug} ap={instituicao ?? normalizar({ nome: me.instituicao.nome })} />
 }
 
+function useModo(me: Me, slug?: string) {
+  const { pathname, key } = useLocation()
+  const navegar = useNavigate()
+  const celular = useConsulta(Celular)
+  const deitado = useConsulta(Deitado)
+  const soAluno = me.papeis.length === 1 && me.papeis[0] === 'ALUNO'
+  const equipe = me.papeis.some((p) => p === 'ATENDENTE' || p === 'ADMINISTRADOR')
+  const noChamado = pathname.split('/')[2] === 'chamados'
+  const abas = celular && (soAluno || !me.deveTrocarSenha)
+  const lista = me.papeis.includes('ATENDENTE') ? 'fila' : 'solicitacoes'
+  return {
+    abas,
+    deitado,
+    comBarra: abas && !(noChamado && equipe),
+    voltar: celular && noChamado ? () => (key === 'default' ? navegar(`/${slug}/${lista}`, { replace: true }) : navegar(-1)) : undefined,
+  }
+}
+
 function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
   const { numero } = useParams()
   const { pathname } = useLocation()
   const cliente = useQueryClient()
   const barra = useBarra()
   const sair = useSair()
-  const celular = useConsulta('(max-width: 767px)')
-  const itens = Menu.filter((m) => m.papeis.some((p) => me.papeis.includes(p)))
+  const { abas, comBarra, deitado, voltar } = useModo(me, slug)
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
-  const abas = celular && me.papeis.length === 1 && me.papeis[0] === 'ALUNO'
+  const altura = deitado ? AlturaDaBarraDeitada : AlturaDaBarra
 
   return (
-    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={abas ? ({ '--barra': AlturaDaBarra } as CSSProperties) : undefined}>
+    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={comBarra ? ({ '--barra': altura } as CSSProperties) : undefined}>
       <PularParaOConteudo />
-      {!abas && <Barra me={me} itens={itens} slug={slug} sair={sair} ap={ap} />}
+      {!abas && <Barra me={me} itens={itensDo(me.papeis)} slug={slug} sair={sair} ap={ap} />}
       <SidebarInset id="conteudo" tabIndex={-1} className="min-w-0 outline-none">
-        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} abas={abas} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} />
-        <div className={`@container/main flex-1 px-4 py-4 md:py-6 lg:px-6 ${abas ? 'pb-[calc(var(--barra)+1rem)]' : ''}`}>
+        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} abas={abas} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} voltar={voltar} />
+        <div className={`@container/main flex-1 px-4 py-4 md:py-6 lg:px-6 ${comBarra ? 'pb-[calc(var(--barra)+1rem)]' : ''}`}>
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </div>
       </SidebarInset>
-      {abas && <BarraDeAbas slug={slug} />}
+      {comBarra && <BarraDeAbas slug={slug} papeis={me.papeis} deitado={deitado} />}
     </SidebarProvider>
   )
 }
