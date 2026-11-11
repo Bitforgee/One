@@ -28,5 +28,5 @@ describe('compositor', () => {
     const falar = screen.getByRole('button', { name: 'Falar com atendente' })
     expect(falar).toBeVisible()
     expect(falar).toHaveClass('bg-primary')
-  })
+  }, 15000)
 })

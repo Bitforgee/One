@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me, type Rota } from '../test/util'
@@ -302,6 +302,22 @@ describe('canvas', () => {
     await waitFor(() =>
       expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('SETOR', null, null, 288, 80), etapa('LIDERANCA_SEMESTRE', null, null, 576, 80), etapa('COORDENACAO_CURSO', null, 48, 864, 80)] }]]),
     )
+  })
+
+  it('remover pede confirmação com só prazo ou só setor', async () => {
+    cadastros()
+    await abrirNoCanvas('Boletos')
+    await selecionar(noDeEtapa(2, 'Coordenação do curso (48 h)'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    expect(await screen.findByRole('dialog', { name: 'Remover a etapa?' })).toBeInTheDocument()
+    cleanup()
+
+    const soSetor = listas.fluxos.map((f: any) => (f.id === 8 ? { ...f, rascunho: { numero: 1, etapas: [etapa('SETOR', 2, null, 300, 50)] } } : f))
+    cadastros({ 'GET /api/admin/fluxos': () => [200, soSetor] })
+    await abrirNoCanvas('Notas')
+    await selecionar(noDeEtapa(1, 'Setor Financeiro'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    expect(await screen.findByRole('dialog', { name: 'Remover a etapa?' })).toBeInTheDocument()
   })
 
   it('a barra da etapa remove sem confirmar quando a etapa está em branco', async () => {

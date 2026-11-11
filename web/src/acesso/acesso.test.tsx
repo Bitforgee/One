@@ -33,6 +33,20 @@ describe('acesso', () => {
     expect(screen.getByLabelText('CPF')).toBeInTheDocument()
   })
 
+  it('botão do olho mostra e oculta a senha', async () => {
+    api(instituicao)
+    abrir('/univag')
+    const senha = await screen.findByLabelText('Senha')
+    expect(senha).toHaveAttribute('type', 'password')
+    const mostrar = screen.getByRole('button', { name: 'Mostrar senha' })
+    expect(mostrar).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(mostrar)
+    expect(senha).toHaveAttribute('type', 'text')
+    expect(screen.getByRole('button', { name: 'Ocultar senha' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(screen.getByRole('button', { name: 'Ocultar senha' }))
+    expect(senha).toHaveAttribute('type', 'password')
+  })
+
   it('painel de entrada sem foco e sem ícones', async () => {
     api({ ...instituicao, 'POST /api/auth/primeiro-acesso': () => [200, { mensagem: 'x' }] })
     for (const [caminho, links] of [

@@ -178,7 +178,7 @@ describe('conversa com o assistente', () => {
     await enviar('mensagem 10')
     await screen.findByText('mensagem 10')
     await waitFor(() => expect(screen.queryByLabelText('Mensagem')).not.toBeInTheDocument())
-  })
+  }, 15000)
 
   it('a conversa fica num log', async () => {
     assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })

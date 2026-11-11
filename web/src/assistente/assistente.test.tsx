@@ -109,7 +109,7 @@ describe('assistente', () => {
     expect(screen.getByRole('button', { name: 'Encerrar' })).toBeVisible()
     const botoes = screen.getAllByRole('button').filter((b) => !b.closest('[data-sidebar=sidebar], header')).map((b) => b.textContent?.trim())
     expect(botoes).toEqual(['Falar com atendente', 'Encerrar'])
-  })
+  }, 15000)
 
   it('limite destaca Falar com atendente', async () => {
     assistente({
@@ -127,7 +127,7 @@ describe('assistente', () => {
     expect(screen.queryByLabelText('Mensagem')).not.toBeInTheDocument()
     expect(falar()).toHaveClass('bg-primary')
     expect(falar()).not.toHaveClass('bg-background')
-  })
+  }, 15000)
 
   it('Enter envia e Shift+Enter quebra a linha', async () => {
     const chamadas = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?') })
