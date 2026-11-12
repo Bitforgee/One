@@ -13,7 +13,7 @@ const tokenCriado = { id: 1, nome: 'Cursor', token: 'onemcp_univag.AbCdEfGhIjKlM
 async function abrir(page: Page, largura: number, altura: number, caminho = '/univag/integracoes') {
   await page.setViewportSize({ width: largura, height: altura })
   await simularApi(page, ['ADMINISTRADOR'])
-  await page.route('**/api/admin/moodle', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(moodleVazio) }))
+  await page.route('**/api/admin/moodle', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().method() === 'PUT' ? { ...moodleVazio, ...r.request().postDataJSON(), configurada: true } : moodleVazio) }))
   await page.route('**/api/admin/mcp', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mcpVazio) }))
   await page.route('**/api/admin/mcp/tokens', (r) => r.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(tokenCriado) }))
   await page.goto(caminho)
@@ -84,6 +84,50 @@ const revelar = async (page: Page) => {
 }
 const alturaDe = async (l: ReturnType<Page['locator']>) => (await l.boundingBox())!.height
 
+test('estado dentro de cada item da coluna', async ({ page }) => {
+  await abrir(page, 1440, 900)
+  const esperado = { Moodle: 'Não configurado', MCP: 'Sem tokens ativos' }
+  for (const [nome, estado] of Object.entries(esperado)) {
+    const aba = page.getByRole('tab', { name: nome })
+    const id = await aba.getAttribute('aria-describedby')
+    const linha = page.locator(`[id="${id}"]`)
+    await expect(linha).toHaveText(estado)
+    const a = (await aba.boundingBox())!
+    const l = (await linha.boundingBox())!
+    expect(l.y).toBeGreaterThanOrEqual(a.y + a.height / 2)
+    expect(l.y + l.height).toBeLessThanOrEqual(a.y + a.height)
+    expect(l.x).toBeGreaterThanOrEqual(a.x)
+  }
+})
+
+test('Novo token no cabeçalho e aviso do Moodle abaixo do botão', async ({ page }) => {
+  await abrir(page, 1440, 900, '/univag/integracoes?aba=mcp')
+  const titulo = (await page.getByRole('heading', { name: 'MCP', level: 2 }).boundingBox())!
+  const botao = (await page.getByRole('button', { name: 'Novo token' }).boundingBox())!
+  expect(botao.x).toBeGreaterThan(titulo.x + titulo.width)
+  expect(Math.abs(botao.y + botao.height / 2 - (titulo.y + titulo.height / 2))).toBeLessThan(40)
+  await page.getByRole('tab', { name: 'Moodle' }).click()
+  for (const [rotulo, valor] of [['Emissor (iss)', 'https://ava.teste'], ['Client ID', 'c1'], ['Deployment ID', '7'], ['URL de autenticação', 'https://ava.teste/a'], ['URL das chaves (JWKS)', 'https://ava.teste/k']]) await page.getByLabel(rotulo).fill(valor)
+  const salvar = page.getByRole('button', { name: 'Salvar' })
+  await salvar.click()
+  const aviso = page.getByRole('status').filter({ hasText: 'Moodle salvo e ativo.' })
+  await expect(aviso).toBeVisible()
+  const b = (await salvar.boundingBox())!
+  expect((await aviso.boundingBox())!.y).toBeGreaterThanOrEqual(b.y + b.height)
+})
+
+test('revelação no computador ignora clique fora e Esc', async ({ page }) => {
+  await abrir(page, 1440, 900, '/univag/integracoes?aba=mcp')
+  const revelacao = await revelar(page)
+  await expect(revelacao.getByRole('button', { name: /fechar|close/i })).toHaveCount(0)
+  await page.mouse.click(5, 5)
+  await expect(revelacao).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(revelacao).toBeVisible()
+  await revelacao.getByRole('button', { name: 'Já copiei' }).click()
+  await expect(revelacao).toBeHidden()
+})
+
 test.describe('celular', () => {
   test.use({ hasTouch: true, isMobile: true })
 
@@ -117,6 +161,16 @@ test.describe('celular', () => {
     await expect(revelacao.getByText(tokenCriado.token, { exact: true })).toBeVisible()
     expect(await revelacao.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true)
     expect(await semRolagemHorizontal(page)).toBe(true)
+  })
+
+  test('revelação no celular ignora Esc e não tem botão de fechar', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/integracoes?aba=mcp')
+    const revelacao = await revelar(page)
+    await expect(revelacao.getByRole('button', { name: /fechar|close/i })).toHaveCount(0)
+    await page.keyboard.press('Escape')
+    await expect(revelacao).toBeVisible()
+    await revelacao.getByRole('button', { name: 'Já copiei' }).click()
+    await expect(revelacao).toBeHidden()
   })
 
   test('diálogo deitado', async ({ page }) => {

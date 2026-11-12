@@ -122,6 +122,8 @@ describe('aba MCP', () => {
     const copiado = await within(dialogo).findByRole('button', { name: 'Token copiado' })
     expect(copiado).toHaveTextContent('Copiado')
     expect(await navigator.clipboard.readText()).toBe(token)
+    await new Promise((r) => setTimeout(r, 1500))
+    expect(within(dialogo).getByRole('button', { name: 'Token copiado' })).toHaveTextContent('Copiado')
     await waitFor(() => expect(within(dialogo).getByRole('button', { name: 'Copiar Token' })).toHaveTextContent('Copiar'), { timeout: 3500 })
   })
 
@@ -139,6 +141,31 @@ describe('aba MCP', () => {
 
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Já copiei' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+  it('reabrir depois da revelação ou do erro começa limpo', async () => {
+    let resposta: [number, unknown] = [201, criado]
+    rotas(() => [200, { url, tokens: [] }], { 'POST /api/admin/mcp/tokens': () => resposta })
+    await abrirNovo()
+    const revelacao = await criarToken()
+    await userEvent.click(within(revelacao).getByRole('button', { name: 'Já copiei' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Novo token' }))
+    let dialogo = await screen.findByRole('dialog', { name: 'Novo token' })
+    expect(within(dialogo).getByLabelText('Nome')).toHaveValue('')
+    expect(document.body.textContent).not.toContain(token)
+
+    resposta = problema(400, 'O nome é obrigatório e aceita até 60 caracteres.', { nome: ['O nome é obrigatório e aceita até 60 caracteres.'] })
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'x')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Criar token' }))
+    expect(await within(dialogo).findByText('O nome é obrigatório e aceita até 60 caracteres.')).toBeInTheDocument()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Novo token' }))
+    dialogo = await screen.findByRole('dialog', { name: 'Novo token' })
+    expect(within(dialogo).queryByText('O nome é obrigatório e aceita até 60 caracteres.')).not.toBeInTheDocument()
+    expect(within(dialogo).getByLabelText('Nome')).not.toHaveAttribute('aria-invalid', 'true')
   })
   it('revoga com confirmação', async () => {
     let lista = [ativo, expirado, revogado] as unknown[]

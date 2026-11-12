@@ -11,6 +11,7 @@ Plan: `.specs/features/integracoes-guiadas/plan.md`
 
 **C1** - Ao abrir `/univag/integracoes`, a coluna mostra sob `Moodle` uma linha de estado `Não configurado` (`configurada=false`), `Ativo` (`configurada=true`, `ativa=true`) ou `Desativado` (`configurada=true`, `ativa=false`), e sob `MCP` `Sem tokens ativos` (0 tokens `ATIVO`), `1 token ativo` ou `2 tokens ativos` (tokens `EXPIRADO` e `REVOGADO` não contam); o nome acessível de cada aba continua `Moodle` e `MCP`, e o estado é a descrição da aba (`aria-describedby`) (AC 1)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "estado de cada integração"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "estado dentro de cada item da coluna"`
 
 **C2** - Com a leitura do Moodle pendente, o item `Moodle` não mostra linha de estado; com `GET /api/admin/mcp` respondendo `500`, o item `MCP` mostra `Indisponível`, o item `Moodle` mostra o estado dele e o painel aberto segue usável (AC 2)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "estado carregando e indisponível"`
@@ -35,6 +36,7 @@ Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t
 
 **C8** - Salvar o Moodle com `Permitir a entrada pelo Moodle` marcado mostra, com `role="status"`, `Moodle salvo e ativo.` e `Para testar, abra a atividade One no Moodle com uma conta de aluno.` (AC 8)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "aviso fixo com a entrada ligada"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "aviso do Moodle abaixo do botão"`
 
 **C9** - Salvar o Moodle com a entrada desmarcada mostra `Moodle salvo, mas a entrada pelo Moodle está desligada.` e não mostra `Para testar` (AC 9)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "aviso fixo com a entrada desligada"`
@@ -49,18 +51,22 @@ Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t
 
 **C12** - O cabeçalho do painel MCP tem o botão `Novo token`, e a página não tem mais o campo `Nome` nem o botão `Criar token` fora de um diálogo (AC 12)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "botão Novo token e sem formulário fixo"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "Novo token no cabeçalho"`
 
 **C13** - `Novo token` abre o diálogo `Novo token` com `Nome` (dica `Ex.: Cursor no meu notebook` como texto fora do campo, sem `placeholder`), `Validade` com `30 dias`, `90 dias`, `365 dias` e `90 dias` selecionado, e os botões `Criar token` e `Cancelar`; `Cancelar` fecha sem chamar a API (AC 13)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "diálogo Novo token"`
 
 **C14** - Criar o token (`POST /api/admin/mcp/tokens` com `{ nome, dias: 90 }`) troca o diálogo para `Copie o token agora`, com `Copie agora: o token não será mostrado de novo.`, o token inteiro, o comando do Claude Code e o `mcp.json` do Cursor com o token real e o botão `Já copiei`, sem `Cancelar` nem o botão `Criar token`; `Já copiei` fecha o diálogo e o token sai do DOM (AC 14)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "revelação única"`
+Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "reabrir depois da revelação ou do erro começa limpo"`
 
 **C15** - Clicar em `Copiar` na revelação grava o valor na área de transferência e troca o texto do botão para `Copiado` (nome acessível `Token copiado`); passados 2 segundos volta a `Copiar` (AC 15)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "botão Copiado"`
 
 **C16** - Com a revelação aberta, clicar fora, apertar Esc e não ter botão `Fechar` do canto deixam o diálogo aberto; `Já copiei` fecha (AC 16)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "revelação não fecha fora nem com Esc"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "revelação no computador ignora clique fora e Esc"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "revelação no celular ignora Esc e não tem botão de fechar"`
 
 **C17** - Um `400` (`errors.nome`) e um `409` na criação mostram o erro dentro do diálogo, mantêm `Nome` digitado e não mostram a revelação (AC 17)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "erros da criação"`
@@ -146,3 +152,4 @@ Nenhuma linha nova: a decisão da tela é uma função pura de dados que a API j
 - **Boundary:** C1-C24 fechados em `4f3d3e4`; C25 (`dryer`): sem candidato fora de `src/ui`; `crapper` não roda neste computador (AD-044)
 - **Settled mid-build:** a linha de estado da coluna fica num `span` fora do `TabsTrigger` (ligado por `aria-describedby`), para o nome acessível da aba seguir `Moodle`/`MCP` e os testes de `coluna lateral` e `item pelo endereço e pelo teclado` ficarem idênticos; o botão de copiar ganhou o nome acessível `<rótulo> copiado` enquanto mostra `Copiado`; o toast `Copiado.` saiu (o botão confirma); no cabeçalho do painel o `p` da frase vem logo depois do `h2` no DOM (`order-last`), para o teste `cabeçalho do painel` seguir idêntico; as dicas e o texto `…` do token (reticências em `…wxyz`) vêm do código existente
 - **Abandoned:** nada
+- **Reforço depois da rodada 1 do Verificador (6 de 14 falhas sobreviveram):** 5 testes acrescentados e listados nas linhas `Proof` de C1, C8, C12, C14 e C16 (lição L-029), mais o aperto do teste `botão Copiado` (o botão segue `Copiado` por pelo menos 1,5 s) em C15; as 6 falhas foram reinjetadas e todas morreram
