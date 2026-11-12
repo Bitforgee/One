@@ -210,6 +210,8 @@ describe('tela Integrações', () => {
     await waitFor(() => expect(estadoDe('MCP')).toBe('1 token ativo'))
     expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
+    const cabecalho = screen.getByRole('heading', { name: 'Moodle', level: 2 }).parentElement!
+    expect(within(cabecalho).getByText('Indisponível')).toHaveAttribute('data-variant', 'secondary')
   })
   it('estado no seletor', async () => {
     rotas(() => new Promise(() => {}), { 'GET /api/admin/mcp': () => new Promise(() => {}) })

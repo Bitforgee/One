@@ -98,6 +98,10 @@ test('estado dentro de cada item da coluna', async ({ page }) => {
     expect(l.y + l.height).toBeLessThanOrEqual(a.y + a.height)
     expect(l.x).toBeGreaterThanOrEqual(a.x)
   }
+  const mcp = (await page.locator('[id="estado-mcp"]').boundingBox())!
+  await page.mouse.click(mcp.x + mcp.width / 2, mcp.y + mcp.height / 2)
+  await expect(page.getByRole('tab', { name: 'MCP' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page).toHaveURL(/\?aba=mcp$/)
 })
 
 test('Novo token no cabeçalho e aviso do Moodle abaixo do botão', async ({ page }) => {
@@ -105,6 +109,8 @@ test('Novo token no cabeçalho e aviso do Moodle abaixo do botão', async ({ pag
   const titulo = (await page.getByRole('heading', { name: 'MCP', level: 2 }).boundingBox())!
   const botao = (await page.getByRole('button', { name: 'Novo token' }).boundingBox())!
   expect(botao.x).toBeGreaterThan(titulo.x + titulo.width)
+  const painel = (await page.getByRole('tabpanel').boundingBox())!
+  expect(painel.x + painel.width - (botao.x + botao.width)).toBeLessThan(8)
   expect(Math.abs(botao.y + botao.height / 2 - (titulo.y + titulo.height / 2))).toBeLessThan(40)
   await page.getByRole('tab', { name: 'Moodle' }).click()
   for (const [rotulo, valor] of [['Emissor (iss)', 'https://ava.teste'], ['Client ID', 'c1'], ['Deployment ID', '7'], ['URL de autenticação', 'https://ava.teste/a'], ['URL das chaves (JWKS)', 'https://ava.teste/k']]) await page.getByLabel(rotulo).fill(valor)
@@ -183,9 +189,26 @@ test.describe('celular', () => {
     const c = (await botao.boundingBox())!
     expect(c.y).toBeGreaterThanOrEqual(0)
     expect(c.y + c.height).toBeLessThanOrEqual(390)
+    const json = revelacao.getByText('mcp.json do Cursor')
+    await json.scrollIntoViewIfNeeded()
+    const j = (await json.boundingBox())!
+    expect(j.y).toBeGreaterThanOrEqual(0)
+    expect(j.y + j.height).toBeLessThanOrEqual(390)
     expect(await semRolagemHorizontal(page)).toBe(true)
   })
 
+  test('revelação rola no celular baixo', async ({ page }) => {
+    await abrir(page, 360, 300, '/univag/integracoes?aba=mcp')
+    const revelacao = await revelar(page)
+    const json = revelacao.getByText('mcp.json do Cursor')
+    await json.scrollIntoViewIfNeeded()
+    const j = (await json.boundingBox())!
+    expect(j.y).toBeGreaterThanOrEqual(0)
+    expect(j.y + j.height).toBeLessThanOrEqual(300)
+    const botao = (await revelacao.getByRole('button', { name: 'Já copiei' }).boundingBox())!
+    expect(botao.y + botao.height).toBeLessThanOrEqual(300)
+    expect(await semRolagemHorizontal(page)).toBe(true)
+  })
   test('teclado aberto 360×400', async ({ page }) => {
     await abrir(page, 360, 400, '/univag/integracoes?aba=mcp')
     expect(await semRolagemHorizontal(page)).toBe(true)

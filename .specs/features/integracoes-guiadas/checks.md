@@ -85,6 +85,7 @@ Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "diálogo em pé"
 
 **C21** - A 844×390 com toque, a revelação abre e o botão `Já copiei` fica dentro da janela depois de rolar o diálogo, sem rolagem horizontal da página (AC 14)
 Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "diálogo deitado"`
+Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "revelação rola no celular baixo"`
 
 **C22** - A 360×400 (teclado aberto), com `Novo token` aberto e `Nome` focado, o campo fica dentro da janela e `Criar token` alcança-se rolando o diálogo (AC 13)
 Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "teclado aberto 360×400"`
@@ -155,3 +156,4 @@ Nenhuma linha nova: a decisão da tela é uma função pura de dados que a API j
 - **Abandoned:** nada
 - **Reforço depois da rodada 1 do Verificador (6 de 14 falhas sobreviveram):** 5 testes acrescentados e listados nas linhas `Proof` de C1, C8, C12, C14 e C16 (lição L-029), mais o aperto do teste `botão Copiado` (o botão segue `Copiado` por pelo menos 1,5 s) em C15; as 6 falhas foram reinjetadas e todas morreram
 - **Reforço depois da rodada 2 do Verificador (3 de 20 falhas novas sobreviveram):** o teste e2e da revelação passa a exigir que `Cancelar` não exista (desktop e celular); `Moodle indisponível` prova o `Indisponível` do Moodle (C2); o teste do cabeçalho do painel lê a variante da etiqueta (C4); as 3 falhas foram reinjetadas e morreram
+- **Reforço depois da rodada 3 do Verificador (7 de 39 falhas sobreviveram):** a revelação ganhou prova de rolagem em celular baixo (`revelação rola no celular baixo`, 360×300, listada em C21) e de `mcp.json` alcançável em 844×390; o clique na linha de estado da coluna seleciona a aba; `Novo token` fica na borda direita do painel; a etiqueta `Indisponível` é `secondary`; a frase `Se você não copiar, apague este token e crie outro.` passa a ter asserção em `revelação única` (C14), sem critério próprio: é o caminho de recuperação que a pesquisa P4 pede; as falhas foram reinjetadas e morreram

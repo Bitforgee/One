@@ -100,6 +100,7 @@ describe('aba MCP', () => {
     const dialogo = await criarToken()
     expect(screen.queryByRole('dialog', { name: 'Novo token' })).not.toBeInTheDocument()
     expect(within(dialogo).getByText('Copie agora: o token não será mostrado de novo.')).toBeInTheDocument()
+    expect(within(dialogo).getByText('Se você não copiar, apague este token e crie outro.')).toBeInTheDocument()
     expect(within(dialogo).getByText(token)).toBeInTheDocument()
     expect(within(dialogo).getByText(comando(token))).toBeInTheDocument()
     expect(within(dialogo).getByText(`{"mcpServers":{"one":{"url":"${url}","headers":{"Authorization":"Bearer ${token}"}}}}`)).toBeInTheDocument()
