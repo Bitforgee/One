@@ -79,6 +79,7 @@ log(`instituição ${slug}`)
 const g = dados.gestor
 const criada = cli('criar', '--slug', slug, '--nome', dados.instituicao, '--fuso', 'America/Cuiaba', '--admin-cpf', g.cpf, '--admin-nome', g.nome, '--admin-email', g.email)
 await api('/api/auth/definir-senha', { token: criada.match(/token=(\S+)/)![1], novaSenha: g.senha })
+log(cli('operador', '--slug', slug, '--cpf', g.cpf).trim())
 log(cli('carga', '--slug', slug, '--arquivo', path.join(Aqui, 'dados', 'carga.json')).trim().replace(/\n/g, ', '))
 await login(g.cpf, g.senha)
 const admin = (caminho: string, corpo?: unknown) => api(caminho, corpo, g.cpf)

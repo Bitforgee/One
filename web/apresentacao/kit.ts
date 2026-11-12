@@ -5,6 +5,7 @@ import { narracao } from './tts'
 
 
 export const Tamanho = { width: 1280, height: 720 }
+export const Celular = { width: 390, height: 844 }
 export const Saida = path.join(import.meta.dirname, 'saida')
 export const Contexto = {
   baseURL: process.env.APRESENTACAO_URL ?? 'http://localhost:5179',
@@ -17,7 +18,7 @@ const Pausa = 1.2
 
 export type Passo = { id: string; texto: string; acao?: (page: Page) => Promise<void> }
 export type Cartao = { titulo: string; subtitulo?: string; nota?: string }
-export type Segmento = { id: string; cartao?: Cartao; selo?: string; preparar?: (page: Page) => Promise<void>; passos: Passo[] }
+export type Segmento = { id: string; cartao?: Cartao; celular?: boolean; selo?: string; preparar?: (page: Page) => Promise<void>; passos: Passo[] }
 export type Roteiro = { video: string; legendas: string; segmentos: Segmento[] }
 
 const Pulso = {
@@ -34,16 +35,17 @@ function camada(pulso: typeof Pulso) {
     raiz.innerHTML = `<style>
       #apr-camada, #apr-camada * { pointer-events: none !important; }
       #apr-legenda { position: fixed; top: 8px; width: fit-content; margin: 0 auto; z-index: 2147483646; box-sizing: border-box;
-        padding: 10px 22px; border-radius: 10px; background: rgba(17, 24, 39, .82); color: #fff; font: 500 20px/1.4 'Inter Variable', Inter, system-ui, sans-serif;
+        padding: 10px 22px; border-radius: 10px; background: rgba(17, 24, 39, .82); color: #fff; font: 500 20px/1.4 'Public Sans Variable', system-ui, sans-serif;
         text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
       #apr-legenda:empty, #apr-selo:empty { display: none; }
-      #apr-selo { position: fixed; left: 14px; bottom: 64px; z-index: 2147483646; padding: 5px 12px; border-radius: 999px; background: #224fa7;
-        color: #fff; font: 600 13px/1.4 'Inter Variable', Inter, system-ui, sans-serif; letter-spacing: .02em; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+      #apr-selo { position: fixed; left: 14px; bottom: 124px; z-index: 2147483646; padding: 5px 12px; border-radius: 999px; background: #224fa7;
+        color: #fff; font: 600 13px/1.4 'Public Sans Variable', system-ui, sans-serif; letter-spacing: .02em; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
       #apr-cursor { position: fixed; left: 0; top: 0; z-index: 2147483647; width: 24px; height: 24px; display: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
       .apr-onda { position: fixed; z-index: 2147483646; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%;
         border: 3px solid #224fa7; animation: apr-onda .5s ease-out forwards; }
       @keyframes apr-onda { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
       [data-slot="alert"]:not(:has(> svg)):not(:has(> [data-slot])) { grid-template-columns: 1fr; }
+      @media (pointer: coarse) { #apr-cursor, #apr-legenda, #apr-selo { display: none !important; } }
       ${pulso.css}
     </style>${pulso.html}<div id="apr-legenda"></div><div id="apr-selo"></div>
     <svg id="apr-cursor" viewBox="0 0 24 24"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`
@@ -143,13 +145,13 @@ export async function rolar(page: Page, dy: number, ms = 800) {
   }
 }
 
-const Inter = readFileSync(path.join(import.meta.dirname, '..', 'node_modules', '@fontsource-variable', 'inter', 'files', 'inter-latin-wght-normal.woff2')).toString('base64')
+const Inter = readFileSync(path.join(import.meta.dirname, '..', 'node_modules', '@fontsource-variable', 'public-sans', 'files', 'public-sans-latin-wght-normal.woff2')).toString('base64')
 const escapar = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)
 export function htmlCartao({ titulo, subtitulo, nota }: Cartao) {
   return `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><style>
-    @font-face { font-family: Inter; src: url(data:font/woff2;base64,${Inter}) format('woff2'); font-weight: 100 900; }
+    @font-face { font-family: PublicSans; src: url(data:font/woff2;base64,${Inter}) format('woff2'); font-weight: 100 900; }
     html, body { margin: 0; height: 100%; }
-    body { display: flex; flex-direction: column; justify-content: center; padding: 0 120px; background: #f6f7f9; color: #111827; font-family: Inter, sans-serif; }
+    body { display: flex; flex-direction: column; justify-content: center; padding: 0 120px; background: #f6f7f9; color: #111827; font-family: PublicSans, sans-serif; }
     .marca { width: 56px; height: 6px; border-radius: 3px; background: #224fa7; margin-bottom: 28px; }
     h1 { margin: 0; font-size: 52px; font-weight: 650; letter-spacing: -.02em; line-height: 1.15; }
     p { margin: 18px 0 0; font-size: 24px; color: #4b5563; line-height: 1.45; max-width: 900px; }
@@ -159,13 +161,13 @@ export function htmlCartao({ titulo, subtitulo, nota }: Cartao) {
 }
 
 type PassoGravado = { id: string; texto: string; inicio: number; arquivo: string; duracao: number; motor: string }
-const gravacoes = new WeakMap<Page, { t0: number; cartao: boolean; passos: PassoGravado[] }>()
+const gravacoes = new WeakMap<Page, { t0: number; cartao: boolean; celular: boolean; passos: PassoGravado[] }>()
 const agora = (page: Page) => (Date.now() - gravacoes.get(page)!.t0) / 1000
 
 export async function passo(page: Page, p: Passo) {
   const g = gravacoes.get(page)!
   const audio = await narracao(p.texto)
-  if (!g.cartao) await legendar(page, p.texto)
+  if (!g.cartao && !g.celular) await legendar(page, p.texto)
   const inicio = agora(page)
   g.passos.push({ id: p.id, texto: p.texto, inicio, ...audio })
   await p.acao?.(page)
@@ -179,14 +181,18 @@ export async function gravar(browser: Browser, seg: Segmento) {
   rmSync(bruto, { recursive: true, force: true })
   mkdirSync(pasta, { recursive: true })
   for (const p of seg.passos) await narracao(p.texto)
-  const context = await browser.newContext({ ...Contexto, recordVideo: { dir: bruto, size: Tamanho } })
+  const context = await browser.newContext(
+    seg.celular
+      ? { ...Contexto, viewport: Celular, isMobile: true, hasTouch: true, deviceScaleFactor: 2, recordVideo: { dir: bruto, size: Celular } }
+      : { ...Contexto, recordVideo: { dir: bruto, size: Tamanho } },
+  )
   await context.addInitScript(camada, Pulso)
   const page = await context.newPage()
-  gravacoes.set(page, { t0: Date.now(), cartao: !!seg.cartao, passos: [] })
+  gravacoes.set(page, { t0: Date.now(), cartao: !!seg.cartao, celular: !!seg.celular, passos: [] })
   if (seg.cartao) await page.setContent(htmlCartao(seg.cartao))
   else {
     await seg.preparar?.(page)
-    if (seg.selo) await selo(page, seg.selo)
+    if (seg.selo && !seg.celular) await selo(page, seg.selo)
     await page.mouse.move(Tamanho.width / 2, Tamanho.height / 2)
   }
   await page.waitForTimeout(400)
@@ -207,5 +213,5 @@ export async function gravar(browser: Browser, seg: Segmento) {
   await context.close()
   await page.video()!.saveAs(path.join(pasta, `${seg.id}.webm`))
   rmSync(bruto, { recursive: true, force: true })
-  writeFileSync(path.join(pasta, `${seg.id}.json`), JSON.stringify({ id: seg.id, sinc, corte, fim, passos }, null, 2))
+  writeFileSync(path.join(pasta, `${seg.id}.json`), JSON.stringify({ id: seg.id, celular: !!seg.celular, selo: seg.selo, sinc, corte, fim, passos }, null, 2))
 }

@@ -4,7 +4,25 @@ import path from 'node:path'
 import { duracao } from './tts.ts'
 
 type PassoGravado = { id: string; texto: string; inicio: number; arquivo: string; duracao: number }
-type Gravado = { id: string; sinc: number; corte: number; fim: number; passos: PassoGravado[] }
+type Gravado = { id: string; celular?: boolean; selo?: string; sinc: number; corte: number; fim: number; passos: PassoGravado[] }
+
+const Fontes = 'C\\:/Windows/Fonts'
+const quebrar = (texto: string, max = 32) => {
+  const linhas: string[] = []
+  for (const palavra of texto.split(/\s+/)) {
+    const atual = linhas.at(-1)
+    if (atual !== undefined && atual.length + 1 + palavra.length <= max) linhas[linhas.length - 1] = `${atual} ${palavra}`
+    else linhas.push(palavra)
+  }
+  return linhas.join('\n')
+}
+const txt = (nome: string, conteudo: string) => {
+  const dir = path.join(import.meta.dirname, 'saida', 'txt')
+  mkdirSync(dir, { recursive: true })
+  const arquivo = path.join(dir, nome)
+  writeFileSync(arquivo, conteudo)
+  return path.relative(process.cwd(), arquivo).replace(/\\/g, '/')
+}
 
 const Saida = path.join(import.meta.dirname, 'saida')
 const nome = process.argv[2] ?? 'principal'
@@ -47,12 +65,35 @@ for (const id of manifesto.segmentos.filter((s) => !so || s === so)) {
     entradas.push('-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo')
     filtros.push('[1:a]anull[a]')
   }
+  const total0 = g.fim - g.corte
+  let mapaVideo = '0:v'
+  let filtroVideo = ['-vf', 'fps=30,format=yuv420p']
+  if (g.celular) {
+    const bg = g.passos.length + 1
+    entradas.push('-f', 'lavfi', '-i', 'color=c=0xf6f7f9:s=1280x720:r=30')
+    const cadeia = [`[0:v]scale=-2:690:flags=lanczos,setsar=1,pad=iw+16:ih+16:8:8:color=0x111827[ph]`, `[${bg}:v][ph]overlay=x=130:y=(H-h)/2[b0]`]
+    let ultimo = 'b0'
+    const tag = txt(`${g.id}-tag.txt`, `Versão mobile${g.selo ? `  ·  ${g.selo}` : ''}`)
+    cadeia.push(`[${ultimo}]drawtext=fontfile='${Fontes}/seguisb.ttf':textfile=${tag}:fontcolor=0x224fa7:fontsize=24:x=540:y=110[bt]`)
+    ultimo = 'bt'
+    g.passos.forEach((p, i) => {
+      const a = Math.max(0, p.inicio - g.corte)
+      const b = g.passos[i + 1] ? g.passos[i + 1].inicio - g.corte : total0
+      const arq = txt(`${g.id}-${i}.txt`, quebrar(p.texto))
+      cadeia.push(`[${ultimo}]drawtext=fontfile='${Fontes}/segoeui.ttf':textfile=${arq}:fontcolor=0x111827:fontsize=38:line_spacing=14:x=540:y=(h-text_h)/2:enable='between(t,${a.toFixed(2)},${b.toFixed(2)})'[bt${i}]`)
+      ultimo = `bt${i}`
+    })
+    cadeia.push(`[${ultimo}]fps=30,format=yuv420p[v]`)
+    filtros.push(...cadeia)
+    mapaVideo = '[v]'
+    filtroVideo = []
+  }
   ffmpeg([
     ...entradas,
     '-filter_complex', filtros.join(';'),
-    '-map', '0:v', '-map', '[a]',
+    '-map', mapaVideo, '-map', '[a]',
     '-t', (g.fim - g.corte).toFixed(3),
-    '-vf', 'fps=30,format=yuv420p',
+    ...filtroVideo,
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
     '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2',
     '-movflags', '+faststart', saida,

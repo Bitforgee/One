@@ -3,9 +3,10 @@ import path from 'node:path'
 import { test } from '@playwright/test'
 import { gravar, Saida, type Roteiro } from './kit'
 import { roteiro as amostra } from './cenas/amostra'
+import { roteiro as completo } from './cenas/completo'
 import { roteiro as principal } from './cenas/principal'
 
-const Roteiros: Record<string, Roteiro> = { amostra, principal }
+const Roteiros: Record<string, Roteiro> = { amostra, principal, completo }
 const nome = process.env.ROTEIRO ?? 'principal'
 const roteiro = Roteiros[nome]
 if (!roteiro) throw new Error(`Roteiro desconhecido: ${nome}`)

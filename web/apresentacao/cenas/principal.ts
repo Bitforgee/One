@@ -6,54 +6,54 @@ import type { Roteiro, Segmento } from '../kit'
 import { apontar, clicar, digitar, rolar, Saida } from '../kit'
 
 
-type Pessoa = { nome: string; cpf: string; senha: string }
+export type Pessoa = { nome: string; cpf: string; senha: string }
 type Execucao = { slug: string; aluna: Pessoa; lucas: Pessoa; atendente: Pessoa; gestora: Pessoa }
-const execucao = (): Execucao => JSON.parse(readFileSync(path.join(Saida, 'execucao.json'), 'utf8'))
-const dados = () => JSON.parse(readFileSync(path.join(import.meta.dirname, '..', 'dados.json'), 'utf8'))
+export const execucao = (): Execucao => JSON.parse(readFileSync(path.join(Saida, 'execucao.json'), 'utf8'))
+export const dados = () => JSON.parse(readFileSync(path.join(import.meta.dirname, '..', 'dados.json'), 'utf8'))
 const Coordenacao = 'Coordenação de Análise e Desenvolvimento de Sistemas'
 
-const respiro = (page: Page, ms = 1000) => page.waitForTimeout(ms)
-const abrirLogin = async (page: Page) => {
+export const respiro = (page: Page, ms = 1000) => page.waitForTimeout(ms)
+export const abrirLogin = async (page: Page) => {
   await page.goto(`/${execucao().slug}`)
   await page.getByLabel('CPF').waitFor()
 }
 
-async function entrar(page: Page, quem: Pessoa, inicial: string) {
+export async function entrar(page: Page, quem: Pessoa, inicial: string) {
   await digitar(page, page.getByLabel('CPF'), quem.cpf)
-  await digitar(page, page.getByLabel('Senha'), quem.senha, 40)
+  await digitar(page, page.getByLabel('Senha', { exact: true }), quem.senha, 40)
   await clicar(page, page.getByRole('button', { name: 'Entrar' }))
   await page.waitForURL(`**/${inicial}`)
   await respiro(page)
 }
 
-async function entrarDireto(page: Page, quem: Pessoa, inicial: string) {
+export async function entrarDireto(page: Page, quem: Pessoa, inicial: string) {
   await abrirLogin(page)
   await page.getByLabel('CPF').fill(quem.cpf)
-  await page.getByLabel('Senha').fill(quem.senha)
+  await page.getByLabel('Senha', { exact: true }).fill(quem.senha)
   await page.getByRole('button', { name: 'Entrar' }).click()
   await page.waitForURL(`**/${inicial}`)
 }
 
-async function menu(page: Page, nome: string) {
+export async function menu(page: Page, nome: string) {
   await clicar(page, page.getByRole('link', { name: nome, exact: true }))
   await page.waitForLoadState('networkidle')
   await respiro(page)
 }
 
-async function perguntar(page: Page, texto: string) {
+export async function perguntar(page: Page, texto: string) {
   const caixa = page.getByLabel('Mensagem')
   await digitar(page, caixa, texto)
   await respiro(page, 300)
   await page.keyboard.press('Enter')
 }
 
-const cartao = (id: string, titulo: string, subtitulo: string, falas: string[]): Segmento => ({
+export const cartao = (id: string, titulo: string, subtitulo: string, falas: string[]): Segmento => ({
   id,
   cartao: { titulo, subtitulo },
   passos: falas.map((texto, i) => ({ id: `${id}-${i + 1}`, texto })),
 })
 
-const aluna: Segmento = {
+export const aluna: Segmento = {
   id: '11-aluna',
   selo: 'Visão do aluno',
   preparar: abrirLogin,
@@ -118,7 +118,7 @@ const aluna: Segmento = {
       id: 'protocolo',
       texto: 'Pronto: protocolo gerado, e o pedido vai para a Coordenação de ADS, pela regra da categoria.',
       acao: async (page) => {
-        const aviso = page.getByText(/Transferido para .*Protocolo/)
+        const aviso = page.getByRole('heading', { name: /Sua solicitação ONE-\d+ foi para/ })
         await expect(aviso).toContainText(Coordenacao, { timeout: 30_000 })
         await apontar(page, aviso)
       },
@@ -134,7 +134,7 @@ const aluna: Segmento = {
   ],
 }
 
-const coordenador: Segmento = {
+export const coordenador: Segmento = {
   id: '21-coordenador',
   selo: 'Visão do coordenador',
   preparar: abrirLogin,
@@ -205,7 +205,7 @@ const coordenador: Segmento = {
   ],
 }
 
-const alunaVolta: Segmento = {
+export const alunaVolta: Segmento = {
   id: '25-aluna',
   selo: 'Visão do aluno',
   preparar: (page) => entrarDireto(page, execucao().aluna, 'assistente'),
@@ -234,7 +234,7 @@ const alunaVolta: Segmento = {
   ],
 }
 
-const gestora: Segmento = {
+export const gestora: Segmento = {
   id: '31-gestora',
   selo: 'Visão do gestor',
   preparar: abrirLogin,
@@ -298,12 +298,12 @@ const gestora: Segmento = {
     },
     {
       id: 'cadastros',
-      texto: 'Em Cadastros ficam setores, categorias e as regras que levam cada pedido ao setor certo.',
+      texto: 'Em Cadastros ficam setores, categorias, cursos e os fluxos que levam cada pedido ao setor certo.',
       acao: async (page) => {
         await menu(page, 'Cadastros')
-        await clicar(page, page.getByRole('tab', { name: 'Regras' }))
+        await clicar(page, page.getByRole('tab', { name: /Fluxos/ }))
         await respiro(page)
-        await apontar(page, page.getByRole('row').filter({ hasText: 'coordenação do curso' }).first())
+        await apontar(page, page.getByRole('row').filter({ hasText: 'Coordenação do curso' }).first())
       },
     },
     {
@@ -354,7 +354,7 @@ async function indexado(page: Page) {
   }
 }
 
-const lucas: Segmento = {
+export const lucas: Segmento = {
   id: '35-lucas',
   selo: 'Visão do aluno',
   preparar: async (page) => {
