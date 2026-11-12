@@ -56,10 +56,12 @@ Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "Novo token no ca
 
 **C13** - `Novo token` abre o diálogo `Novo token` com `Nome` (dica `Ex.: Cursor no meu notebook` como texto fora do campo, sem `placeholder`), `Validade` com `30 dias`, `90 dias`, `365 dias` e `90 dias` selecionado, e os botões `Criar token` e `Cancelar`; `Cancelar` fecha sem chamar a API (AC 13)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "diálogo Novo token"`
+Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "validade escolhida segue no corpo"`
 
 **C14** - Criar o token (`POST /api/admin/mcp/tokens` com `{ nome, dias: 90 }`) troca o diálogo para `Copie o token agora`, com `Copie agora: o token não será mostrado de novo.`, o token inteiro, o comando do Claude Code e o `mcp.json` do Cursor com o token real e o botão `Já copiei`, sem `Cancelar` nem o botão `Criar token`; `Já copiei` fecha o diálogo e o token sai do DOM (AC 14)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "revelação única"`
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "reabrir depois da revelação ou do erro começa limpo"`
+Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "criar token desabilita o botão enquanto envia"`
 
 **C15** - Clicar em `Copiar` na revelação grava o valor na área de transferência e troca o texto do botão para `Copiado` (nome acessível `Token copiado`); passados 2 segundos volta a `Copiar` (AC 15)
 Proof: `npm --prefix web test -- --run src/administracao/mcp.test.tsx -t "botão Copiado"`
@@ -157,3 +159,4 @@ Nenhuma linha nova: a decisão da tela é uma função pura de dados que a API j
 - **Reforço depois da rodada 1 do Verificador (6 de 14 falhas sobreviveram):** 5 testes acrescentados e listados nas linhas `Proof` de C1, C8, C12, C14 e C16 (lição L-029), mais o aperto do teste `botão Copiado` (o botão segue `Copiado` por pelo menos 1,5 s) em C15; as 6 falhas foram reinjetadas e todas morreram
 - **Reforço depois da rodada 2 do Verificador (3 de 20 falhas novas sobreviveram):** o teste e2e da revelação passa a exigir que `Cancelar` não exista (desktop e celular); `Moodle indisponível` prova o `Indisponível` do Moodle (C2); o teste do cabeçalho do painel lê a variante da etiqueta (C4); as 3 falhas foram reinjetadas e morreram
 - **Reforço depois da rodada 3 do Verificador (7 de 39 falhas sobreviveram):** a revelação ganhou prova de rolagem em celular baixo (`revelação rola no celular baixo`, 360×300, listada em C21) e de `mcp.json` alcançável em 844×390; o clique na linha de estado da coluna seleciona a aba; `Novo token` fica na borda direita do painel; a etiqueta `Indisponível` é `secondary`; a frase `Se você não copiar, apague este token e crie outro.` passa a ter asserção em `revelação única` (C14), sem critério próprio: é o caminho de recuperação que a pesquisa P4 pede; as falhas foram reinjetadas e morreram
+- **Reforço depois da rodada 4 do Verificador (3 de 33 falhas sobreviveram, as demais mortas, equivalentes ou fora do escopo):** `validade escolhida segue no corpo` (C13: 30 e 365 dias chegam ao `POST`), `criar token desabilita o botão enquanto envia` (C14: um clique, uma chamada) e o texto exato do aviso fixo do Moodle (C8 e C9); as 3 falhas foram reinjetadas pelo construtor e morreram. **A rodada 4 passou do limite de 3 rodadas do `verify.md` e o reforço depois dela não teve nova verificação independente**

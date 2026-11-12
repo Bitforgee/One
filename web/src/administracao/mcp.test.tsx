@@ -168,6 +168,32 @@ describe('aba MCP', () => {
     expect(within(dialogo).queryByText('O nome é obrigatório e aceita até 60 caracteres.')).not.toBeInTheDocument()
     expect(within(dialogo).getByLabelText('Nome')).not.toHaveAttribute('aria-invalid', 'true')
   })
+  it('validade escolhida segue no corpo', async () => {
+    const corpos: any[] = []
+    rotas(() => [200, { url, tokens: [] }], { 'POST /api/admin/mcp/tokens': (c) => (corpos.push(c), [201, criado]) })
+    for (const dias of ['30', '365']) {
+      const { unmount } = abrir('/univag/integracoes?aba=mcp')
+      await userEvent.click(await screen.findByRole('button', { name: 'Novo token' }))
+      await userEvent.selectOptions(await screen.findByLabelText('Validade'), dias)
+      await userEvent.type(screen.getByLabelText('Nome'), 'Cursor')
+      await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
+      await screen.findByRole('dialog', { name: 'Copie o token agora' })
+      unmount()
+    }
+    expect(corpos).toEqual([{ nome: 'Cursor', dias: 30 }, { nome: 'Cursor', dias: 365 }])
+  })
+
+  it('criar token desabilita o botão enquanto envia', async () => {
+    let chamadas = 0
+    rotas(() => [200, { url, tokens: [] }], { 'POST /api/admin/mcp/tokens': () => (++chamadas, new Promise(() => {})) })
+    const dialogo = await abrirNovo()
+    await userEvent.type(within(dialogo).getByLabelText('Nome'), 'Cursor')
+    const botao = within(dialogo).getByRole('button', { name: 'Criar token' })
+    await userEvent.click(botao)
+    await waitFor(() => expect(botao).toBeDisabled())
+    await userEvent.click(botao)
+    expect(chamadas).toBe(1)
+  })
   it('revoga com confirmação', async () => {
     let lista = [ativo, expirado, revogado] as unknown[]
     const chamadas = rotas(() => [200, { url, tokens: lista }], {

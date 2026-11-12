@@ -312,6 +312,7 @@ describe('tela Integrações', () => {
     expect(screen.queryByText('Moodle salvo e ativo.')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
     const aviso = (await screen.findByText('Moodle salvo e ativo.')).closest('[role="status"]')!
+    expect(aviso.textContent).toBe('Moodle salvo e ativo.Para testar, abra a atividade One no Moodle com uma conta de aluno.')
     expect(aviso).toHaveTextContent('Para testar, abra a atividade One no Moodle com uma conta de aluno.')
   })
 
@@ -321,7 +322,7 @@ describe('tela Integrações', () => {
     await preencher()
     await userEvent.click(screen.getByLabelText('Permitir a entrada pelo Moodle'))
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
-    expect(await screen.findByText('Moodle salvo, mas a entrada pelo Moodle está desligada.')).toBeInTheDocument()
+    expect((await screen.findByText('Moodle salvo, mas a entrada pelo Moodle está desligada.')).closest('[role="status"]')?.textContent).toBe('Moodle salvo, mas a entrada pelo Moodle está desligada.')
     expect(screen.queryByText(/Para testar/)).not.toBeInTheDocument()
   })
 
