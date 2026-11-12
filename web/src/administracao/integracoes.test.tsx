@@ -203,6 +203,14 @@ describe('tela Integrações', () => {
     expect(screen.getByRole('tab', { name: 'MCP' })).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('Moodle indisponível', async () => {
+    rotas(() => [500, { title: 'Erro interno', status: 500, detail: 'falhou' }], { 'GET /api/admin/mcp': comTokens([token(1, 'ATIVO')]) })
+    abrir('/univag/integracoes')
+    await waitFor(() => expect(estadoDe('Moodle')).toBe('Indisponível'))
+    await waitFor(() => expect(estadoDe('MCP')).toBe('1 token ativo'))
+    expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
+  })
   it('estado no seletor', async () => {
     rotas(() => new Promise(() => {}), { 'GET /api/admin/mcp': () => new Promise(() => {}) })
     let montada = abrir('/univag/integracoes')
@@ -221,10 +229,11 @@ describe('tela Integrações', () => {
     abrir('/univag/integracoes')
     const moodle = await screen.findByRole('heading', { name: 'Moodle', level: 2 })
     await waitFor(() => expect(within(moodle.parentElement!).getByText('Desativado')).toBeInTheDocument())
+    expect(within(moodle.parentElement!).getByText('Desativado')).toHaveAttribute('data-variant', 'secondary')
     expect(estadoDe('Moodle')).toBe('Desativado')
     await userEvent.click(screen.getByRole('tab', { name: 'MCP' }))
     const mcp = await screen.findByRole('heading', { name: 'MCP', level: 2 })
-    expect(within(mcp.parentElement!).getByText('2 tokens ativos')).toBeInTheDocument()
+    expect(within(mcp.parentElement!).getByText('2 tokens ativos')).toHaveAttribute('data-variant', 'default')
     expect(estadoDe('MCP')).toBe('2 tokens ativos')
   })
 

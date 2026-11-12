@@ -15,6 +15,7 @@ Proof: `npm --prefix web run e2e -- e2e/integracoes.spec.ts -g "estado dentro de
 
 **C2** - Com a leitura do Moodle pendente, o item `Moodle` não mostra linha de estado; com `GET /api/admin/mcp` respondendo `500`, o item `MCP` mostra `Indisponível`, o item `Moodle` mostra o estado dele e o painel aberto segue usável (AC 2)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "estado carregando e indisponível"`
+Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "Moodle indisponível"`
 
 **C3** - O seletor `Integração` traz as opções `Moodle · Ativo` e `MCP · 1 token ativo` quando as leituras respondem, e `Moodle` e `MCP` sem sufixo enquanto carregam (AC 3)
 Proof: `npm --prefix web test -- --run src/administracao/integracoes.test.tsx -t "estado no seletor"`
@@ -153,3 +154,4 @@ Nenhuma linha nova: a decisão da tela é uma função pura de dados que a API j
 - **Settled mid-build:** a linha de estado da coluna fica num `span` fora do `TabsTrigger` (ligado por `aria-describedby`), para o nome acessível da aba seguir `Moodle`/`MCP` e os testes de `coluna lateral` e `item pelo endereço e pelo teclado` ficarem idênticos; o botão de copiar ganhou o nome acessível `<rótulo> copiado` enquanto mostra `Copiado`; o toast `Copiado.` saiu (o botão confirma); no cabeçalho do painel o `p` da frase vem logo depois do `h2` no DOM (`order-last`), para o teste `cabeçalho do painel` seguir idêntico; as dicas e o texto `…` do token (reticências em `…wxyz`) vêm do código existente
 - **Abandoned:** nada
 - **Reforço depois da rodada 1 do Verificador (6 de 14 falhas sobreviveram):** 5 testes acrescentados e listados nas linhas `Proof` de C1, C8, C12, C14 e C16 (lição L-029), mais o aperto do teste `botão Copiado` (o botão segue `Copiado` por pelo menos 1,5 s) em C15; as 6 falhas foram reinjetadas e todas morreram
+- **Reforço depois da rodada 2 do Verificador (3 de 20 falhas novas sobreviveram):** o teste e2e da revelação passa a exigir que `Cancelar` não exista (desktop e celular); `Moodle indisponível` prova o `Indisponível` do Moodle (C2); o teste do cabeçalho do painel lê a variante da etiqueta (C4); as 3 falhas foram reinjetadas e morreram
