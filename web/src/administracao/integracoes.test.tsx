@@ -23,27 +23,71 @@ const rotas = (get: Rota, extra: Record<string, Rota> = {}) =>
 const nomesDasAbas = () => screen.getAllByRole('tab').map((t) => t.textContent)
 
 describe('tela Integrações', () => {
-  it('abas', async () => {
-    for (const caminho of ['/univag/integracoes', '/univag/integracoes?aba=moodle', '/univag/integracoes?aba=qualquer-coisa']) {
+  it('coluna lateral', async () => {
+    rotas(() => [200, vazia])
+    abrir('/univag/integracoes')
+    await screen.findByLabelText('Emissor (iss)')
+    expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Integrações'])
+    const lista = screen.getByRole('tablist')
+    expect(lista).toHaveAttribute('aria-orientation', 'vertical')
+    expect(nomesDasAbas()).toEqual(['Moodle', 'MCP'])
+    expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'MCP' })).toHaveAttribute('aria-selected', 'false')
+  })
+
+  it('cabeçalho do painel', async () => {
+    rotas(() => [200, vazia])
+    abrir('/univag/integracoes')
+    await screen.findByLabelText('Emissor (iss)')
+    const moodle = screen.getByRole('heading', { name: 'Moodle', level: 2 })
+    expect(moodle.nextElementSibling).toHaveTextContent(/^Alunos que entram pela atividade One no Moodle chegam ao assistente sem digitar CPF nem senha\./)
+    expect(screen.getAllByText(/^Alunos que entram pela atividade One/)).toHaveLength(1)
+    await userEvent.click(screen.getByRole('tab', { name: 'MCP' }))
+    const mcp = await screen.findByRole('heading', { name: 'MCP', level: 2 })
+    expect(mcp.nextElementSibling).toHaveTextContent(/^Conecte a IA que você já usa/)
+    expect(screen.getAllByText(/^Conecte a IA que você já usa/)).toHaveLength(1)
+  })
+
+  it('item pelo endereço e pelo teclado', async () => {
+    for (const [caminho, esperado] of [
+      ['/univag/integracoes', 'Moodle'],
+      ['/univag/integracoes?aba=moodle', 'Moodle'],
+      ['/univag/integracoes?aba=mcp', 'MCP'],
+      ['/univag/integracoes?aba=qualquer-coisa', 'Moodle'],
+    ]) {
       rotas(() => [200, vazia])
       const { unmount } = abrir(caminho)
-      await screen.findByLabelText('Emissor (iss)')
-      const titulos = screen.getAllByRole('heading', { level: 1 })
-      expect(titulos.map((h) => h.textContent), caminho).toEqual(['Integrações'])
-      expect(nomesDasAbas(), caminho).toEqual(['Moodle', 'MCP'])
-      expect(screen.getByRole('tab', { name: 'Moodle' })).toHaveAttribute('aria-selected', 'true')
+      await screen.findByRole('heading', { name: esperado, level: 2 })
+      expect(screen.getByRole('tab', { name: esperado }), caminho).toHaveAttribute('aria-selected', 'true')
       unmount()
     }
 
     rotas(() => [200, vazia])
     abrir('/univag/integracoes')
     await screen.findByLabelText('Emissor (iss)')
-    await userEvent.click(screen.getByRole('tab', { name: /^MCP/ }))
+    await userEvent.click(screen.getByRole('tab', { name: 'MCP' }))
     expect(await screen.findByText('Nenhum token ainda.')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /^MCP/ })).toHaveAttribute('aria-selected', 'true')
     expect(document.querySelector('[data-aba-ativa]')?.getAttribute('data-aba-ativa')).toBe('mcp')
+
+    screen.getByRole('tab', { name: 'Moodle' }).focus()
+    await userEvent.click(screen.getByRole('tab', { name: 'Moodle' }))
+    await userEvent.keyboard('{ArrowDown}')
+    expect(await screen.findByRole('heading', { name: 'MCP', level: 2 })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'MCP' })).toHaveAttribute('aria-selected', 'true')
   })
 
+  it('seletor sem coluna', async () => {
+    rotas(() => [200, vazia])
+    abrir('/univag/integracoes')
+    await screen.findByLabelText('Emissor (iss)')
+    const seletor = screen.getByRole('combobox', { name: 'Integração' })
+    expect(within(seletor).getAllByRole('option').map((o) => o.textContent)).toEqual(['Moodle', 'MCP'])
+    expect(seletor).toHaveValue('moodle')
+    await userEvent.selectOptions(seletor, 'mcp')
+    expect(await screen.findByText('Nenhum token ainda.')).toBeInTheDocument()
+    expect(document.querySelector('[data-aba-ativa]')?.getAttribute('data-aba-ativa')).toBe('mcp')
+    expect(seletor).toHaveValue('mcp')
+  })
   it('estados da aba Moodle', async () => {
     rotas(() => new Promise(() => {}))
     let montada = abrir('/univag/integracoes')
