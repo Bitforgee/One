@@ -38,6 +38,44 @@ describe('aba MCP', () => {
     expect(linhas.map((l) => within(l).getByText(/^(ATIVO|EXPIRADO|REVOGADO)$/).textContent)).toEqual(['ATIVO', 'EXPIRADO', 'REVOGADO'])
   })
 
+  const abrirNovo = async () => {
+    abrir('/univag/integracoes?aba=mcp')
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo token' }))
+    return screen.findByRole('dialog', { name: 'Novo token' })
+  }
+  const criado = { id: 1, nome: 'Cursor', token, final: 'wxyz', criadoEm: base.criadoEm, expiraEm: base.expiraEm }
+  const criarToken = async () => {
+    await userEvent.type(await screen.findByLabelText('Nome'), 'Cursor')
+    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
+    return screen.findByRole('dialog', { name: 'Copie o token agora' })
+  }
+
+  it('botão Novo token e sem formulário fixo', async () => {
+    rotas(() => [200, { url, tokens: [ativo] }])
+    abrir('/univag/integracoes?aba=mcp')
+    expect(await screen.findByRole('button', { name: 'Novo token' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Criar token' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Novo token' })).not.toBeInTheDocument()
+  })
+
+  it('diálogo Novo token', async () => {
+    const chamadas = rotas(() => [200, { url, tokens: [] }])
+    const dialogo = await abrirNovo()
+    const nome = within(dialogo).getByLabelText('Nome')
+    expect(nome).not.toHaveAttribute('placeholder')
+    const dica = document.getElementById(nome.getAttribute('aria-describedby')!)
+    expect(dica).toHaveTextContent('Ex.: Cursor no meu notebook')
+    expect(nome.contains(dica)).toBe(false)
+    const validade = within(dialogo).getByLabelText('Validade')
+    expect(within(validade).getAllByRole('option').map((o) => o.textContent)).toEqual(['30 dias', '90 dias', '365 dias'])
+    expect(validade).toHaveValue('90')
+    expect(within(dialogo).getByRole('button', { name: 'Criar token' })).toBeInTheDocument()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(chamadas.some((c) => c.metodo === 'POST')).toBe(false)
+  })
+
   it('cria o token e mostra uma vez', async () => {
     let tokens: unknown[] = []
     let corpo: any
@@ -45,43 +83,63 @@ describe('aba MCP', () => {
       'POST /api/admin/mcp/tokens': (c) => {
         corpo = c
         tokens = [ativo]
-        return [201, { id: 1, nome: 'Cursor', token, final: 'wxyz', criadoEm: base.criadoEm, expiraEm: base.expiraEm }]
+        return [201, criado]
       },
     })
-    abrir('/univag/integracoes?aba=mcp')
-    const validade = await screen.findByLabelText('Validade')
-    expect(within(validade).getAllByRole('option').map((o) => o.textContent)).toEqual(['30 dias', '90 dias', '365 dias'])
-    expect(validade).toHaveValue('90')
-
-    await userEvent.type(screen.getByLabelText('Nome'), 'Cursor')
-    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
-
-    const painel = await screen.findByRole('region', { name: 'Token criado' })
+    await abrirNovo()
+    const dialogo = await criarToken()
     expect(corpo).toEqual({ nome: 'Cursor', dias: 90 })
-    expect(within(painel).getByText('Copie agora: o token não será mostrado de novo.')).toBeInTheDocument()
-    expect(within(painel).getByText(token)).toBeInTheDocument()
-    expect(within(painel).getByText(comando(token))).toBeInTheDocument()
-    expect(within(painel).getByRole('button', { name: 'Copiar Token' })).toBeInTheDocument()
+    expect(within(dialogo).getByText(token)).toBeInTheDocument()
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Já copiei' }))
     expect(await screen.findByRole('cell', { name: /^Cursor/ })).toBeInTheDocument()
   })
 
-  it('fecha o painel e esconde o token', async () => {
-    rotas(() => [200, { url, tokens: [ativo] }], {
-      'POST /api/admin/mcp/tokens': () => [201, { id: 1, nome: 'Cursor', token, final: 'wxyz', criadoEm: base.criadoEm, expiraEm: base.expiraEm }],
-    })
-    abrir('/univag/integracoes?aba=mcp')
-    await userEvent.type(await screen.findByLabelText('Nome'), 'Cursor')
-    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
-    const painel = await screen.findByRole('region', { name: 'Token criado' })
+  it('revelação única', async () => {
+    rotas(() => [200, { url, tokens: [ativo] }], { 'POST /api/admin/mcp/tokens': () => [201, criado] })
+    await abrirNovo()
+    const dialogo = await criarToken()
+    expect(screen.queryByRole('dialog', { name: 'Novo token' })).not.toBeInTheDocument()
+    expect(within(dialogo).getByText('Copie agora: o token não será mostrado de novo.')).toBeInTheDocument()
+    expect(within(dialogo).getByText(token)).toBeInTheDocument()
+    expect(within(dialogo).getByText(comando(token))).toBeInTheDocument()
+    expect(within(dialogo).getByText(`{"mcpServers":{"one":{"url":"${url}","headers":{"Authorization":"Bearer ${token}"}}}}`)).toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Criar token' })).not.toBeInTheDocument()
 
-    await userEvent.click(within(painel).getByRole('button', { name: 'Fechar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Já copiei' }))
 
-    expect(screen.queryByRole('region', { name: 'Token criado' })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(document.body.textContent).not.toContain(token)
-    expect(screen.queryByText(comando(token))).not.toBeInTheDocument()
-    expect(screen.getByText('…wxyz')).toBeInTheDocument()
+    expect((await screen.findAllByText('…wxyz')).length).toBeGreaterThan(0)
   })
 
+  it('botão Copiado', async () => {
+    const usuario = userEvent.setup()
+    rotas(() => [200, { url, tokens: [ativo] }], { 'POST /api/admin/mcp/tokens': () => [201, criado] })
+    await abrirNovo()
+    const dialogo = await criarToken()
+    await usuario.click(within(dialogo).getByRole('button', { name: 'Copiar Token' }))
+    const copiado = await within(dialogo).findByRole('button', { name: 'Token copiado' })
+    expect(copiado).toHaveTextContent('Copiado')
+    expect(await navigator.clipboard.readText()).toBe(token)
+    await waitFor(() => expect(within(dialogo).getByRole('button', { name: 'Copiar Token' })).toHaveTextContent('Copiar'), { timeout: 3500 })
+  })
+
+  it('revelação não fecha fora nem com Esc', async () => {
+    rotas(() => [200, { url, tokens: [ativo] }], { 'POST /api/admin/mcp/tokens': () => [201, criado] })
+    await abrirNovo()
+    const dialogo = await criarToken()
+    expect(within(dialogo).queryByRole('button', { name: /fechar|close/i })).not.toBeInTheDocument()
+
+    await userEvent.click(document.querySelector('[data-slot="dialog-overlay"]')!)
+    expect(screen.getByRole('dialog', { name: 'Copie o token agora' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByRole('dialog', { name: 'Copie o token agora' })).toBeInTheDocument()
+    expect(within(dialogo).getByText(token)).toBeInTheDocument()
+
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Já copiei' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
   it('revoga com confirmação', async () => {
     let lista = [ativo, expirado, revogado] as unknown[]
     const chamadas = rotas(() => [200, { url, tokens: lista }], {
@@ -116,10 +174,11 @@ describe('aba MCP', () => {
     await userEvent.click(await screen.findByRole('tab', { name: 'MCP' }))
 
     expect(await screen.findByText('Nenhum token ainda.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Nome')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Criar token' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Nome')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Novo token' })
+    expect(within(dialogo).getByLabelText('Nome')).toBeInTheDocument()
   })
-
   it('carregando e erro', async () => {
     rotas(() => new Promise(() => {}))
     let montada = abrir('/univag/integracoes?aba=mcp')
@@ -138,24 +197,23 @@ describe('aba MCP', () => {
   it('erros da criação', async () => {
     let resposta = problema(400, 'O nome é obrigatório e aceita até 60 caracteres.', { nome: ['O nome é obrigatório e aceita até 60 caracteres.'] })
     rotas(() => [200, { url, tokens: [] }], { 'POST /api/admin/mcp/tokens': () => resposta })
-    abrir('/univag/integracoes?aba=mcp')
-    const nome = await screen.findByLabelText('Nome')
+    const dialogo = await abrirNovo()
+    const nome = within(dialogo).getByLabelText('Nome')
     await userEvent.type(nome, 'Cursor')
-    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Criar token' }))
 
-    expect(await screen.findByText('O nome é obrigatório e aceita até 60 caracteres.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('O nome é obrigatório e aceita até 60 caracteres.')).toBeInTheDocument()
     expect(nome).toHaveAttribute('aria-invalid', 'true')
     expect(nome).toHaveValue('Cursor')
-    expect(screen.queryByRole('region', { name: 'Token criado' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Copie o token agora' })).not.toBeInTheDocument()
 
     resposta = problema(409, 'Você já tem 5 tokens ativos. Revogue um para criar outro.')
-    await userEvent.click(screen.getByRole('button', { name: 'Criar token' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Criar token' }))
 
-    expect(await screen.findByText('Você já tem 5 tokens ativos. Revogue um para criar outro.')).toBeInTheDocument()
+    expect(await within(dialogo).findByText('Você já tem 5 tokens ativos. Revogue um para criar outro.')).toBeInTheDocument()
     expect(nome).toHaveValue('Cursor')
-    expect(screen.queryByRole('region', { name: 'Token criado' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Copie o token agora' })).not.toBeInTheDocument()
   })
-
   it('como conectar', async () => {
     rotas(() => [200, { url, tokens: [] }])
     abrir('/univag/integracoes?aba=mcp')

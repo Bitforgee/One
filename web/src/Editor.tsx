@@ -6,16 +6,18 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle }
 import { useConsulta } from './ui/use-mobile'
 import { XIcon } from 'lucide-react'
 
-type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; acoes?: ReactNode; children: ReactNode }
+type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; acoes?: ReactNode; bloqueado?: boolean; semCancelar?: boolean; children: ReactNode }
 
-function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado' | 'acoes'> & { botao: string; cheios?: boolean }) {
+function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes, semCancelar }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado' | 'acoes' | 'semCancelar'> & { botao: string; cheios?: boolean }) {
   const c = cheios ? 'flex-1' : undefined
   return (
     <>
       {acoes}
-      <Button type="button" variant="outline" className={c} onClick={fechar}>
-        Cancelar
-      </Button>
+      {!semCancelar && (
+        <Button type="button" variant="outline" className={c} onClick={fechar}>
+          Cancelar
+        </Button>
+      )}
       <BotaoAcao type="submit" className={c} pendente={pendente} disabled={desabilitado}>
         {botao}
       </BotaoAcao>
@@ -23,13 +25,13 @@ function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes }: Pick<P
   )
 }
 
-export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, acoes, children }: Props) {
+export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, acoes, bloqueado, semCancelar, children }: Props) {
   const celular = useConsulta('(max-width: 767px)')
   const enviar = (e: FormEvent) => {
     e.preventDefault()
     salvar()
   }
-  const aoMudar = (a: boolean) => !a && fechar()
+  const aoMudar = (a: boolean) => !a && !bloqueado && fechar()
   if (celular)
     return (
       <Sheet open={aberto} onOpenChange={aoMudar}>
@@ -37,7 +39,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={enviar}>
             <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b py-1 pl-4 pr-1">
               <SheetTitle className="text-base">{titulo}</SheetTitle>
-              <SheetClose className="flex size-11 shrink-0 items-center justify-center rounded-sm focus:ring-2 focus:ring-ring focus:outline-hidden">
+              <SheetClose hidden={bloqueado} className="flex size-11 shrink-0 items-center justify-center rounded-sm focus:ring-2 focus:ring-ring focus:outline-hidden">
                 <XIcon className="size-4" aria-hidden="true" />
                 <span className="sr-only">Fechar</span>
               </SheetClose>
@@ -47,7 +49,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
               {alerta}
             </div>
             <SheetFooter className="mt-0 shrink-0 flex-row flex-wrap border-t pb-[calc(1rem+env(safe-area-inset-bottom))]">
-              <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} cheios />
+              <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} semCancelar={semCancelar} cheios />
             </SheetFooter>
           </form>
         </SheetContent>
@@ -55,7 +57,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
     )
   return (
     <Dialog open={aberto} onOpenChange={aoMudar}>
-      <DialogContent aria-describedby={undefined} className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${largo ? 'sm:max-w-5xl' : ''}`}>
+      <DialogContent aria-describedby={undefined} showCloseButton={!bloqueado} className={`max-h-[calc(100dvh-2rem)] overflow-y-auto ${largo ? 'sm:max-w-5xl' : ''}`}>
         <form className="contents" onSubmit={enviar}>
           <DialogHeader>
             <DialogTitle>{titulo}</DialogTitle>
@@ -63,7 +65,7 @@ export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao
           {children}
           {alerta}
           <DialogFooter className="flex-wrap">
-            <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} />
+            <Botoes fechar={fechar} pendente={pendente} botao={botao} desabilitado={desabilitado} acoes={acoes} semCancelar={semCancelar} />
           </DialogFooter>
         </form>
       </DialogContent>

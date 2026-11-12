@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { KeyRound } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { Confirmar } from '../Confirmar'
+import { Editor } from '../Editor'
 import { formatarData } from '../datas'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { useSessao } from '../sessao'
@@ -23,7 +23,6 @@ type Criado = { id: number; nome: string; token: string; final: string; criadoEm
 
 const Validades = [30, 90, 365]
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Dono', largo: true }, { titulo: 'Final', largo: true }, { titulo: 'Criado', largo: true }, { titulo: 'Vence', largo: true }, { titulo: 'Último uso', largo: true }, { titulo: 'Estado' }, { titulo: '' }]
-const Vazio = { Icone: KeyRound, frase: 'Nenhum token ainda.' }
 
 const comandoClaude = (url: string, token: string) => `claude mcp add --transport http one ${url} --header "Authorization: Bearer ${token}"`
 const jsonDoCliente = (url: string, token: string) => JSON.stringify({ mcpServers: { one: { url, headers: { Authorization: `Bearer ${token}` } } } })
@@ -59,20 +58,45 @@ function LinhaDoToken({ t, fuso, revogar }: { t: Item; fuso: string; revogar: ()
   )
 }
 
-function TokenCriado({ url, criado, fechar }: { url: string; criado: Criado; fechar: () => void }) {
+function Revelacao({ url, criado }: { url: string; criado: Criado }) {
   return (
-    <section aria-label="Token criado" className="flex flex-col gap-3 rounded-md border border-primary p-4">
+    <div className="flex flex-col gap-3">
       <p className="m-0 text-sm font-medium">Copie agora: o token não será mostrado de novo.</p>
+      <p className="m-0 text-xs text-muted-foreground">Se você não copiar, apague este token e crie outro.</p>
       <Url rotulo="Token" valor={criado.token} />
       <Url rotulo="Comando do Claude Code" valor={comandoClaude(url, criado.token)} />
-      <Button type="button" variant="outline" className="self-start" onClick={fechar}>
-        Fechar
-      </Button>
-    </section>
+      <Url rotulo="mcp.json do Cursor" valor={jsonDoCliente(url, criado.token)} />
+    </div>
   )
 }
 
-function NovoToken({ url }: { url: string }) {
+function FormularioNovo({ nome, setNome, dias, setDias, erros }: { nome: string; setNome: (v: string) => void; dias: number; setDias: (v: number) => void; erros: Record<string, string> }) {
+  return (
+    <>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="mcp-nome">Nome</Label>
+        <Input id="mcp-nome" value={nome} aria-invalid={!!erros.nome} aria-describedby="mcp-nome-dica" onChange={(e) => setNome(e.target.value)} />
+        <p id="mcp-nome-dica" className="m-0 text-xs text-muted-foreground">
+          Ex.: Cursor no meu notebook
+        </p>
+        {erros.nome && <p className="m-0 text-sm text-destructive">{erros.nome}</p>}
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="mcp-validade">Validade</Label>
+        <NativeSelect id="mcp-validade" value={dias} aria-invalid={!!erros.dias} onChange={(e) => setDias(Number(e.target.value))}>
+          {Validades.map((v) => (
+            <NativeSelectOption key={v} value={v}>
+              {v} dias
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+        {erros.dias && <p className="m-0 text-sm text-destructive">{erros.dias}</p>}
+      </div>
+    </>
+  )
+}
+
+function NovoToken({ url, aberto, fechar }: { url: string; aberto: boolean; fechar: () => void }) {
   const cliente = useQueryClient()
   const [nome, setNome] = useState('')
   const [dias, setDias] = useState(90)
@@ -85,46 +109,27 @@ function NovoToken({ url }: { url: string }) {
       await cliente.invalidateQueries({ queryKey: ['mcp-admin'] })
     },
   })
-  const erros = errosDeCampo(criar.error)
+  const sair = () => {
+    setCriado(undefined)
+    criar.reset()
+    fechar()
+  }
   return (
-    <section aria-labelledby="mcp-novo" className="flex flex-col gap-3">
-      <h2 id="mcp-novo" className="text-base font-semibold">
-        Novo token
-      </h2>
-      {criado && <TokenCriado url={url} criado={criado} fechar={() => setCriado(undefined)} />}
-      <form
-        noValidate
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          e.preventDefault()
-          criar.mutate()
-        }}
-      >
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="mcp-nome">Nome</Label>
-          <Input id="mcp-nome" value={nome} aria-invalid={!!erros.nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Cursor no meu notebook" />
-          {erros.nome && <p className="m-0 text-sm text-destructive">{erros.nome}</p>}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="mcp-validade">Validade</Label>
-          <NativeSelect id="mcp-validade" value={dias} aria-invalid={!!erros.dias} onChange={(e) => setDias(Number(e.target.value))}>
-            {Validades.map((v) => (
-              <NativeSelectOption key={v} value={v}>
-                {v} dias
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-          {erros.dias && <p className="m-0 text-sm text-destructive">{erros.dias}</p>}
-        </div>
-        <ErroDe erro={criar.error} campos={['nome', 'dias']} />
-        <BotaoAcao type="submit" pendente={criar.isPending} className="self-start">
-          Criar token
-        </BotaoAcao>
-      </form>
-    </section>
+    <Editor
+      titulo={criado ? 'Copie o token agora' : 'Novo token'}
+      aberto={aberto}
+      fechar={sair}
+      salvar={criado ? sair : () => criar.mutate()}
+      pendente={criar.isPending}
+      botao={criado ? 'Já copiei' : 'Criar token'}
+      bloqueado={!!criado}
+      semCancelar={!!criado}
+      alerta={criado ? null : <ErroDe erro={criar.error} campos={['nome', 'dias']} />}
+    >
+      {criado ? <Revelacao url={url} criado={criado} /> : <FormularioNovo nome={nome} setNome={setNome} dias={dias} setDias={setDias} erros={errosDeCampo(criar.error)} />}
+    </Editor>
   )
 }
-
 function ComoConectar({ url }: { url: string }) {
   return (
     <section aria-labelledby="mcp-conectar" className="flex flex-col gap-3">
@@ -138,7 +143,7 @@ function ComoConectar({ url }: { url: string }) {
   )
 }
 
-export function ConteudoMcp({ dados }: { dados: Dados }) {
+export function ConteudoMcp({ dados, novo, abrirNovo, fecharNovo }: { dados: Dados; novo: boolean; abrirNovo: () => void; fecharNovo: () => void }) {
   const cliente = useQueryClient()
   const { me } = useSessao()
   const [revogando, setRevogando] = useState<Item>()
@@ -157,13 +162,13 @@ export function ConteudoMcp({ dados }: { dados: Dados }) {
           Tokens
         </h2>
         <ErroDe erro={revogar.error} />
-        <Tabela colunas={Colunas} itens={dados.tokens} vazio={Vazio}>
+        <Tabela colunas={Colunas} itens={dados.tokens} vazio={{ Icone: KeyRound, frase: 'Nenhum token ainda.', acao: <Button onClick={abrirNovo}>Criar token</Button> }}>
           {dados.tokens.map((t) => (
             <LinhaDoToken key={t.id} t={t} fuso={me.instituicao.fuso} revogar={() => setRevogando(t)} />
           ))}
         </Tabela>
       </section>
-      <NovoToken url={dados.url} />
+      <NovoToken url={dados.url} aberto={novo} fechar={fecharNovo} />
       <ComoConectar url={dados.url} />
       <Confirmar
         aberto={!!revogando}

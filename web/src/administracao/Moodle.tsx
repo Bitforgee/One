@@ -35,21 +35,59 @@ type Valores = Record<Chave, string> & { ativa: boolean }
 
 const valoresDe = (p: Plataforma): Valores => ({ ativa: p.configurada ? p.ativa : true, emissor: p.emissor, clientId: p.clientId, deploymentId: p.deploymentId, authUrl: p.authUrl, jwksUrl: p.jwksUrl })
 
-export function Url({ rotulo, valor }: { rotulo: string; valor: string }) {
+const AvisoDeSalvo = {
+  ligado: ['Moodle salvo e ativo.', 'Para testar, abra a atividade One no Moodle com uma conta de aluno.'],
+  desligado: ['Moodle salvo, mas a entrada pelo Moodle está desligada.', ''],
+} as const
+
+export function Url({ rotulo, valor, campo }: { rotulo: string; valor: string; campo?: string }) {
+  const [copiado, setCopiado] = useState(false)
+  useEffect(() => {
+    if (!copiado) return
+    const tempo = setTimeout(() => setCopiado(false), 2000)
+    return () => clearTimeout(tempo)
+  }, [copiado])
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium">{rotulo}</span>
+      {campo && <span className="text-xs text-muted-foreground">{`No Moodle, cole em «${campo}».`}</span>}
       <div className="flex items-center gap-2">
         <code className="min-w-0 flex-1 rounded-sm border bg-muted px-2 py-1.5 text-sm break-all">{valor}</code>
         <Button
           type="button"
           variant="outline"
-          aria-label={`Copiar ${rotulo}`}
-          onClick={() => void navigator.clipboard?.writeText(valor).then(() => toast.success('Copiado.'))}
+          aria-label={copiado ? `${rotulo} copiado` : `Copiar ${rotulo}`}
+          onClick={() => void navigator.clipboard?.writeText(valor).then(() => setCopiado(true))}
         >
-          Copiar
+          {copiado ? 'Copiado' : 'Copiar'}
         </Button>
       </div>
+    </div>
+  )
+}
+
+function Enderecos({ dados }: { dados: Plataforma }) {
+  return (
+    <section aria-labelledby="moodle-no-moodle" className="flex flex-col gap-3">
+      <h2 id="moodle-no-moodle" className="text-base font-semibold">
+        1. No Moodle
+      </h2>
+      <p className="m-0 text-sm text-muted-foreground">
+        Em Administração do site &gt; Plugins &gt; Ferramenta externa &gt; Gerenciar ferramentas, configure uma ferramenta LTI 1.3 com estes endereços, abra em nova janela e acrescente o parâmetro personalizado username=$User.username.
+      </p>
+      <Url rotulo="URL de login" campo="Initiate login URL" valor={dados.urlLogin} />
+      <Url rotulo="URL de redirecionamento" campo="Redirection URI(s)" valor={dados.urlLancamento} />
+      <Url rotulo="URL das chaves públicas" campo="Public keyset" valor={dados.urlJwks} />
+    </section>
+  )
+}
+
+function Aviso({ tipo }: { tipo: keyof typeof AvisoDeSalvo }) {
+  const [titulo, proximo] = AvisoDeSalvo[tipo]
+  return (
+    <div role="status" className="flex flex-col gap-1 rounded-md border border-primary p-3 text-sm">
+      <p className="m-0 font-medium">{titulo}</p>
+      {proximo && <p className="m-0 text-muted-foreground">{proximo}</p>}
     </div>
   )
 }
@@ -57,11 +95,17 @@ export function Url({ rotulo, valor }: { rotulo: string; valor: string }) {
 export function FormularioMoodle({ dados }: { dados: Plataforma }) {
   const cliente = useQueryClient()
   const [v, setV] = useState(() => valoresDe(dados))
+  const [salvo, setSalvo] = useState<keyof typeof AvisoDeSalvo>()
   useEffect(() => setV(valoresDe(dados)), [dados])
+  const mudar = (parte: Partial<Valores>) => {
+    setSalvo(undefined)
+    setV({ ...v, ...parte })
+  }
   const salvar = useMutation({
     mutationFn: () => api<Plataforma>('/api/admin/moodle', v, 'PUT'),
     onSuccess: (novo) => {
       cliente.setQueryData(['moodle-admin'], novo)
+      setSalvo(novo.ativa ? 'ligado' : 'desligado')
       toast.success('Moodle salvo.')
     },
   })
@@ -75,17 +119,7 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
         salvar.mutate()
       }}
     >
-      <section aria-labelledby="moodle-no-moodle" className="flex flex-col gap-3">
-        <h2 id="moodle-no-moodle" className="text-base font-semibold">
-          1. No Moodle
-        </h2>
-        <p className="m-0 text-sm text-muted-foreground">
-          Em Administração do site › Plugins › Ferramenta externa › Gerenciar ferramentas, configure uma ferramenta LTI 1.3 com estes endereços, abra em nova janela e acrescente o parâmetro personalizado username=$User.username.
-        </p>
-        <Url rotulo="URL de login" valor={dados.urlLogin} />
-        <Url rotulo="URL de redirecionamento" valor={dados.urlLancamento} />
-        <Url rotulo="URL das chaves públicas" valor={dados.urlJwks} />
-      </section>
+      <Enderecos dados={dados} />
       <section aria-labelledby="moodle-no-one" className="flex flex-col gap-4">
         <h2 id="moodle-no-one" className="text-base font-semibold">
           2. No One
@@ -93,25 +127,20 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
         {Campos.map(([chave, rotulo, dica]) => (
           <div key={chave} className="flex flex-col gap-2">
             <Label htmlFor={`moodle-${chave}`}>{rotulo}</Label>
-            <Input
-              id={`moodle-${chave}`}
-              value={v[chave]}
-              aria-invalid={!!erros[chave]}
-              aria-describedby={`moodle-${chave}-dica`}
-              onChange={(e) => setV({ ...v, [chave]: e.target.value })}
-            />
+            <Input id={`moodle-${chave}`} value={v[chave]} aria-invalid={!!erros[chave]} aria-describedby={`moodle-${chave}-dica`} onChange={(e) => mudar({ [chave]: e.target.value })} />
             <p id={`moodle-${chave}-dica`} className="m-0 text-xs text-muted-foreground">
               {dica}
             </p>
             {erros[chave] && <p className="m-0 text-sm text-destructive">{erros[chave]}</p>}
           </div>
         ))}
-        <Marca id="moodle-ativa" rotulo="Permitir a entrada pelo Moodle" marcado={v.ativa} mudar={(ativa) => setV({ ...v, ativa })} />
+        <Marca id="moodle-ativa" rotulo="Permitir a entrada pelo Moodle" marcado={v.ativa} mudar={(ativa) => mudar({ ativa })} />
       </section>
       <ErroDe erro={salvar.error} campos={Campos.map(([c]) => c)} />
       <BotaoAcao type="submit" pendente={salvar.isPending} className="self-start">
         Salvar
       </BotaoAcao>
+      {salvo && <Aviso tipo={salvo} />}
     </form>
   )
 }

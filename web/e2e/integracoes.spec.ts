@@ -8,12 +8,14 @@ const moodleVazio = {
   urlLogin: 'http://localhost:8080/api/moodle/univag/login', urlLancamento: 'http://localhost:8080/api/moodle/univag/lancamento', urlJwks: 'http://localhost:8080/api/moodle/univag/jwks',
 }
 const mcpVazio = { url: 'http://localhost:8080/api/mcp/univag', tokens: [] }
+const tokenCriado = { id: 1, nome: 'Cursor', token: 'onemcp_univag.AbCdEfGhIjKlMnOpQrStUvWxYz0123456789_-AbCdE', final: 'abcde', criadoEm: '2026-11-11T12:00:00Z', expiraEm: '2027-02-09T12:00:00Z' }
 
 async function abrir(page: Page, largura: number, altura: number, caminho = '/univag/integracoes') {
   await page.setViewportSize({ width: largura, height: altura })
   await simularApi(page, ['ADMINISTRADOR'])
   await page.route('**/api/admin/moodle', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(moodleVazio) }))
   await page.route('**/api/admin/mcp', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mcpVazio) }))
+  await page.route('**/api/admin/mcp/tokens', (r) => r.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(tokenCriado) }))
   await page.goto(caminho)
   await page.locator('header h1').waitFor()
 }
@@ -68,6 +70,20 @@ test('limite de 896 px de largura útil', async ({ page }) => {
   await expect(page.getByRole('tablist')).toBeVisible()
 })
 
+const novoToken = async (page: Page) => {
+  await page.getByRole('button', { name: 'Novo token' }).click()
+  const dialogo = page.getByRole('dialog', { name: 'Novo token' })
+  await dialogo.getByLabel('Nome').fill('Cursor')
+  return dialogo
+}
+const revelar = async (page: Page) => {
+  await (await novoToken(page)).getByRole('button', { name: 'Criar token' }).click()
+  const revelacao = page.getByRole('dialog', { name: 'Copie o token agora' })
+  await revelacao.waitFor()
+  return revelacao
+}
+const alturaDe = async (l: ReturnType<Page['locator']>) => (await l.boundingBox())!.height
+
 test.describe('celular', () => {
   test.use({ hasTouch: true, isMobile: true })
 
@@ -81,8 +97,8 @@ test.describe('celular', () => {
       await expect(page.getByRole('tablist')).toBeHidden()
       const seletor = page.getByRole('combobox', { name: 'Integração' })
       await expect(seletor).toBeVisible()
-      await expect(seletor.locator('option')).toHaveText(['Moodle', 'MCP'])
-      expect((await seletor.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      await expect(seletor.locator('option')).toHaveText(['Moodle · Não configurado', 'MCP · Sem tokens ativos'])
+      expect(await alturaDe(seletor)).toBeGreaterThanOrEqual(44)
       expect(await semRolagemHorizontal(page)).toBe(true)
       await seletor.selectOption('mcp')
       await expect(page).toHaveURL(/\/univag\/integracoes\?aba=mcp$/)
@@ -91,19 +107,53 @@ test.describe('celular', () => {
     })
   }
 
+  test('diálogo em pé', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/integracoes?aba=mcp')
+    const dialogo = await novoToken(page)
+    expect(await alturaDe(dialogo)).toBeCloseTo(780, 0)
+    expect(await semRolagemHorizontal(page)).toBe(true)
+    await dialogo.getByRole('button', { name: 'Criar token' }).click()
+    const revelacao = page.getByRole('dialog', { name: 'Copie o token agora' })
+    await expect(revelacao.getByText(tokenCriado.token, { exact: true })).toBeVisible()
+    expect(await revelacao.evaluate((e) => e.scrollWidth <= e.clientWidth)).toBe(true)
+    expect(await semRolagemHorizontal(page)).toBe(true)
+  })
+
+  test('diálogo deitado', async ({ page }) => {
+    await abrir(page, 844, 390, '/univag/integracoes?aba=mcp')
+    const revelacao = await revelar(page)
+    const botao = revelacao.getByRole('button', { name: 'Já copiei' })
+    await botao.scrollIntoViewIfNeeded()
+    const c = (await botao.boundingBox())!
+    expect(c.y).toBeGreaterThanOrEqual(0)
+    expect(c.y + c.height).toBeLessThanOrEqual(390)
+    expect(await semRolagemHorizontal(page)).toBe(true)
+  })
+
   test('teclado aberto 360×400', async ({ page }) => {
     await abrir(page, 360, 400, '/univag/integracoes?aba=mcp')
     expect(await semRolagemHorizontal(page)).toBe(true)
-    const nome = page.getByLabel('Nome')
+    await page.getByRole('button', { name: 'Novo token' }).click()
+    const dialogo = page.getByRole('dialog', { name: 'Novo token' })
+    const nome = dialogo.getByLabel('Nome')
     await nome.focus()
     const campo = (await nome.boundingBox())!
     expect(campo.y).toBeGreaterThanOrEqual(0)
     expect(campo.y + campo.height).toBeLessThanOrEqual(400)
-    const criar = page.getByRole('button', { name: 'Criar token' })
+    const criar = dialogo.getByRole('button', { name: 'Criar token' })
     await criar.scrollIntoViewIfNeeded()
     const botao = (await criar.boundingBox())!
     expect(botao.y).toBeGreaterThanOrEqual(0)
     expect(botao.y + botao.height).toBeLessThanOrEqual(400)
     expect(await semRolagemHorizontal(page)).toBe(true)
+  })
+
+  test('alvos de toque', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/integracoes?aba=mcp')
+    expect(await alturaDe(page.getByRole('combobox', { name: 'Integração' }))).toBeGreaterThanOrEqual(44)
+    expect(await alturaDe(page.getByRole('button', { name: 'Novo token' }))).toBeGreaterThanOrEqual(44)
+    const revelacao = await revelar(page)
+    for (const copiar of await revelacao.getByRole('button', { name: /^Copiar/ }).all()) expect(await alturaDe(copiar)).toBeGreaterThanOrEqual(44)
+    expect(await alturaDe(revelacao.getByRole('button', { name: 'Já copiei' }))).toBeGreaterThanOrEqual(44)
   })
 })
