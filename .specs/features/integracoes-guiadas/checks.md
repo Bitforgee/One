@@ -142,3 +142,7 @@ Nenhuma linha nova: a decisão da tela é uma função pura de dados que a API j
 - Arquivos: `Integracoes.tsx` 3,6 KB · `AbaIntegracao.tsx` 1,1 KB · `Moodle.tsx` 6,2 KB · `Mcp.tsx` 9,1 KB · `Editor.tsx` 4,1 KB · `integracoes.test.tsx` 9,8 KB · `mcp.test.tsx` 8,6 KB · `e2e/integracoes.spec.ts` 5,0 KB = ~48 KB ≈ 12k, abaixo dos 150k - um construtor
 - Mecanismo: one builder (cabe no orçamento)
 - Decisão do plano que a construção precisa registrar: `Editor` ganha duas propriedades opcionais, `bloqueado` e `semCancelar`, para a revelação ser o mesmo diálogo (AC 14, 16)
+
+- **Boundary:** C1-C24 fechados em `4f3d3e4`; C25 (`dryer`): sem candidato fora de `src/ui`; `crapper` não roda neste computador (AD-044)
+- **Settled mid-build:** a linha de estado da coluna fica num `span` fora do `TabsTrigger` (ligado por `aria-describedby`), para o nome acessível da aba seguir `Moodle`/`MCP` e os testes de `coluna lateral` e `item pelo endereço e pelo teclado` ficarem idênticos; o botão de copiar ganhou o nome acessível `<rótulo> copiado` enquanto mostra `Copiado`; o toast `Copiado.` saiu (o botão confirma); no cabeçalho do painel o `p` da frase vem logo depois do `h2` no DOM (`order-last`), para o teste `cabeçalho do painel` seguir idêntico; as dicas e o texto `…` do token (reticências em `…wxyz`) vêm do código existente
+- **Abandoned:** nada
