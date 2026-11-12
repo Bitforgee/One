@@ -41,6 +41,33 @@ test('coluna a 1440', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'MCP', level: 2 })).toBeVisible()
 })
 
+test('item ativo com fundo de destaque', async ({ page }) => {
+  await abrir(page, 1440, 900)
+  const fundo = (nome: string) => page.getByRole('tab', { name: nome }).evaluate((e) => getComputedStyle(e).backgroundColor)
+  const transparente = 'rgba(0, 0, 0, 0)'
+  const destaque = await page.evaluate(() => { const e = document.createElement('div'); e.style.backgroundColor = 'var(--accent)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c })
+  expect(destaque).not.toBe(transparente)
+  await expect.poll(() => fundo('Moodle')).toBe(destaque)
+  await expect.poll(() => fundo('MCP')).toBe(transparente)
+  await page.getByRole('tab', { name: 'MCP' }).click()
+  await expect.poll(() => fundo('MCP')).toBe(destaque)
+  await expect.poll(() => fundo('Moodle')).toBe(transparente)
+})
+
+test('limite de 896 px de largura útil', async ({ page }) => {
+  const seletor = page.getByRole('combobox', { name: 'Integração' })
+  const util = () => page.locator('[class*="@container/main"]').evaluate((e) => { const c = getComputedStyle(e); return e.clientWidth - parseFloat(c.paddingLeft) - parseFloat(c.paddingRight) })
+  await abrir(page, 1199, 900)
+  const largura = await util()
+  expect(largura).toBe(895)
+  await expect(seletor).toBeVisible()
+  await expect(page.getByRole('tablist')).toBeHidden()
+  await page.setViewportSize({ width: 1200, height: 900 })
+  expect(await util()).toBeGreaterThanOrEqual(896)
+  await expect(seletor).toBeHidden()
+  await expect(page.getByRole('tablist')).toBeVisible()
+})
+
 test.describe('celular', () => {
   test.use({ hasTouch: true, isMobile: true })
 
