@@ -300,7 +300,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         ("Chamados", "Conhecimento"),
         ("Indicadores", "Conhecimento"),
         ("Mcp", "Assistente"), ("Mcp", "Chamados"), ("Mcp", "Conhecimento"), ("Mcp", "Indicadores"),
-        ("Instituicoes", "Assistente"), ("Instituicoes", "Conhecimento"),
     ];
 
     [Fact]

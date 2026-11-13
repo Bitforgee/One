@@ -20,7 +20,6 @@ public static class InstituicaoComando
         {
             "criar" => await ActivatorUtilities.CreateInstance<ComandoCriar>(sp).Executar(opcoes, saida),
             "carga" => await ActivatorUtilities.CreateInstance<ComandoCarga>(sp).Executar(opcoes, saida),
-            "avaliar-busca" => await ActivatorUtilities.CreateInstance<ComandoAvaliarBusca>(sp).Executar(opcoes, saida),
             "operador" => await ActivatorUtilities.CreateInstance<ComandoOperador>(sp).Executar(opcoes, remover, saida),
             _ => ["uso: instituicao criar --slug --nome --fuso --admin-cpf --admin-nome --admin-email | instituicao carga --slug --arquivo | instituicao avaliar-busca --slug --arquivo | instituicao operador --slug --cpf [--remover]"],
         };

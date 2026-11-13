@@ -30,7 +30,10 @@ public class Program
             scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
 
         if (comando)
+        {
+            if (args is ["instituicao", "avaliar-busca", ..]) return await ComandoAvaliarBusca.Rodar(app.Services, args[1..]);
             return await InstituicaoComando.Rodar(app.Services, args[1..]);
+        }
 
         await app.Services.GetRequiredService<Armazenamento>().Preparar();
 
