@@ -24,21 +24,6 @@ public class Instituicao
     public string? ContatoTelefone { get; private set; }
     public string? ContatoEmail { get; private set; }
 
-    public sealed record Aparencia
-    {
-        public string? NomeCurto { get; init; }
-        public string? Cor { get; init; }
-        public string? LoginTitulo { get; init; }
-        public string? LoginFrase { get; init; }
-        public IReadOnlyList<string>? LoginItens { get; init; }
-        public string? AssistenteNome { get; init; }
-        public string? AssistenteBoasVindas { get; init; }
-        public IReadOnlyList<string>? AssistentePerguntas { get; init; }
-        public string? ContatoHorario { get; init; }
-        public string? ContatoTelefone { get; init; }
-        public string? ContatoEmail { get; init; }
-    }
-
     public static Instituicao Criar(string slug, string nome, string fuso, DateTime agora) =>
         new() { Slug = slug, Nome = nome, Fuso = fuso, CriadaEm = agora };
 
@@ -46,7 +31,7 @@ public class Instituicao
 
     public void Reativar() => Ativa = true;
 
-    public void AlterarAparencia(Aparencia a)
+    public void AlterarAparencia(DadosDeAparencia a)
     {
         (NomeCurto, Cor) = (a.NomeCurto, a.Cor);
         (LoginTitulo, LoginFrase, LoginItens) = (a.LoginTitulo, a.LoginFrase, Itens(a.LoginItens));

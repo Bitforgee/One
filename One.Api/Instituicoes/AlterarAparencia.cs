@@ -59,7 +59,7 @@ public sealed record AlterarAparencia(AlterarAparencia.Entrada Corpo) : IRequest
         return null;
     }
 
-    public static void Aplicar(Instituicao i, Entrada e) => i.AlterarAparencia(new Instituicao.Aparencia
+    public static void Aplicar(Instituicao i, Entrada e) => i.AlterarAparencia(new DadosDeAparencia
     {
         NomeCurto = e.NomeCurto, Cor = e.Cor,
         LoginTitulo = e.Login!.Titulo, LoginFrase = e.Login.Frase, LoginItens = e.Login.Itens,
