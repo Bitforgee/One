@@ -1235,7 +1235,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Administracao/AlterarCurso.cs",
         "Administracao/AlterarRespostaPronta.cs",
         "Administracao/AlterarSetor.cs",
-        "Assistente/ConversaRotas.cs",
     ];
 
     static readonly string[] Excecoes_Sem_balde_horizontal =

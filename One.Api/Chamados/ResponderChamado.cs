@@ -8,8 +8,6 @@ namespace One.Api.Chamados;
 
 public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuario Usuario, Instituicao Instituicao) : IAcaoChamado
 {
-    const long MaxAnexo = 10 * 1024 * 1024;
-
     public static void Mapear(RouteGroupBuilder g) =>
         g.MapPost("/chamados/{numero}/mensagens", async (string numero, HttpRequest req, HttpContext ctx, IMediator m) =>
             await m.Send(new ResponderChamado(numero, req.HasFormContentType ? await req.ReadFormAsync() : FormCollection.Empty, ctx.Usuario(), ctx.Instituicao())));
@@ -26,12 +24,9 @@ public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuar
         if (AcoesChamado.Texto(Texto, "texto", "A mensagem deve ter de 1 a 4000 caracteres.") is { } erro) return erro;
         if (Anexos.Count > 0 && Tipo == TiposMensagem.Nota) return Problemas.Invalido("Nota interna não aceita anexos.", "anexos");
         foreach (var f in Anexos)
-            if ((await LerAnexo(f)).Item2 is { } recusa) return recusa;
+            if ((await AnexoDeFormulario.Ler(f)).Item2 is { } recusa) return recusa;
         return null;
     }
-
-    public static Task<(Arquivos.Lido?, IResult?)> LerAnexo(IFormFile f) =>
-        Arquivos.Ler(f, MaxAnexo, [Arquivos.Pdf, Arquivos.Jpeg, Arquivos.Png], $"O arquivo {f.FileName} passa de 10 MB.", $"O arquivo {f.FileName} não é PDF, JPG nem PNG.");
 }
 
 public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenamento armazenamento) : IRequestHandler<ResponderChamado, IResult>
@@ -44,7 +39,7 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenam
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)
         {
-            var lido = (await ResponderChamado.LerAnexo(f)).Item1!;
+            var lido = (await AnexoDeFormulario.Ler(f)).Item1!;
             lidos.Add(lido);
             anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = Armazenamento.NovaChave(a.Instituicao.Id, "anexos"), Hash = Armazenamento.Hash(lido.Bytes) });
         }

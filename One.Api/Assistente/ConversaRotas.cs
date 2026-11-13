@@ -10,9 +10,8 @@ public static class ConversaRotas
 {
     public const string Aluno = MensagemConversa.AutorAluno;
     public const int LimiteAnexos = 3;
-    const long MaxAnexo = 10 * 1024 * 1024;
 
-    public static readonly Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute LimiteDoCorpo = new(LimiteAnexos * MaxAnexo + 1024 * 1024);
+    public static readonly Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute LimiteDoCorpo = new(LimiteAnexos * AnexoDeFormulario.MaxAnexo + 1024 * 1024);
 
     record CorpoJson(string? Mensagem);
 
@@ -54,7 +53,7 @@ public static class ConversaRotas
         var lidos = new List<Arquivos.Lido>();
         foreach (var f in arquivos)
         {
-            var (lido, recusa) = await ResponderChamado.LerAnexo(f);
+            var (lido, recusa) = await AnexoDeFormulario.Ler(f);
             if (recusa is not null) return ([], recusa);
             lidos.Add(lido!);
         }
