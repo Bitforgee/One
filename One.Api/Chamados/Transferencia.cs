@@ -50,7 +50,8 @@ public static class Transferencia
         var numero = await db.Database
             .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")
             .ToListAsync();
-        var chamado = Chamado.Abrir($"ONE-{numero.Single()}", conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre, titulo, resumo, categoria.Id, origem, rota.SetorId, agora, rota.Fluxo?.Vigente?.Id, rota.Passo?.Etapa.Ordem);
+        var chamado = Chamado.Abrir(new($"ONE-{numero.Single()}", titulo, resumo, new(conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre),
+            new(categoria.Id, origem, rota.SetorId, rota.Fluxo?.Vigente?.Id, rota.Passo?.Etapa.Ordem)), agora);
         db.Chamados.Add(chamado);
         await db.SaveChangesAsync();
         await tx.CommitAsync();

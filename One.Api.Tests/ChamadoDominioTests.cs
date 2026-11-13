@@ -12,7 +12,7 @@ public class ChamadoDominioTests
 
     static string Nome(long id) => id == Ator ? "Ana" : "Beto";
 
-    static Chamado ChamadoAberto() => Chamado.Abrir("ONE-1", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes.AddHours(-1));
+    static Chamado ChamadoAberto() => Chamado.Abrir(new("ONE-1", "Titulo", null, new(1, 2, 3, 4), new(10, "IA", 20)), Antes.AddHours(-1));
 
     static Chamado EmAtend(long resp = Ator) { var c = ChamadoAberto(); c.Assumir(resp, null, Nome(resp), Antes); return c; }
 
@@ -54,16 +54,16 @@ public class ChamadoDominioTests
             [new("RESPOSTA"), new("ATRIBUICAO", null, "Ana"), new("TRANSICAO", Aberto, Resolvido)], [("PUBLICA", "feito", 0)], c => Assert.Equal(Agora, c.ResolvidoEm)),
         new("10 Confirmar RESOLVIDO", ChamadoResolvido(), c => c.Confirmar(Ator, Agora), Fechado, ["Estado", "FechadoEm", "MotivoFechamento"],
             [new("TRANSICAO", Resolvido, Fechado)], [], c => { Assert.Equal("CONFIRMADO", c.MotivoFechamento); Assert.Equal(Agora, c.FechadoEm); }),
-        new("11 Rejeitar RESOLVIDO com responsável ativo", ChamadoResolvido(), c => Assert.Null(c.Rejeitar(Ator, "nao resolveu", [], true, "Ana", 7, Agora)), EmAtendimento,
+        new("11 Rejeitar RESOLVIDO com responsável ativo", ChamadoResolvido(), c => Assert.Null(c.Rejeitar(Ator, new("nao resolveu", [], true, "Ana", 7), Agora)), EmAtendimento,
             ["Estado", "Reaberturas"], [new("RESPOSTA"), new("TRANSICAO", Resolvido, EmAtendimento)], [("PUBLICA", "nao resolveu", 0)], c => Assert.Equal(1, c.Reaberturas)),
-        new("12 Rejeitar RESOLVIDO com responsável inativo", ChamadoResolvido(), c => Assert.Null(c.Rejeitar(Ator, "nao resolveu", [], false, "Ana", 7, Agora)), Aberto,
+        new("12 Rejeitar RESOLVIDO com responsável inativo", ChamadoResolvido(), c => Assert.Null(c.Rejeitar(Ator, new("nao resolveu", [], false, "Ana", 7), Agora)), Aberto,
             ["Estado", "Reaberturas", "ResponsavelId"], [new("RESPOSTA"), new("ATRIBUICAO", "Ana", null), new("TRANSICAO", Resolvido, Aberto)], [("PUBLICA", "nao resolveu", 0)],
             c => { Assert.Null(c.ResponsavelId); Assert.Equal(1, c.Reaberturas); }),
         new("13 Cancelar AGUARDANDO_ALUNO", Aguardando(), c => c.Cancelar(Ator, "desisti", Agora), Fechado, ["AguardandoDesde", "Estado", "FechadoEm", "MotivoFechamento"],
             [new("TRANSICAO", AguardandoAluno, Fechado, "desisti")], [], c => { Assert.Equal("CANCELADO", c.MotivoFechamento); Assert.Null(c.AguardandoDesde); }),
         new("13b Cancelar com justificativa em branco", EmAtend(), c => c.Cancelar(Ator, "  ", Agora), Fechado, ["Estado", "FechadoEm", "MotivoFechamento"],
             [new("TRANSICAO", EmAtendimento, Fechado)], []),
-        new("14 Encaminhar AGUARDANDO_ALUNO com responsável", Aguardando(), c => c.Encaminhar(Ator, 21, "Secretaria", "Coordenação", "melhor com eles", "Ana", Agora), Aberto,
+        new("14 Encaminhar AGUARDANDO_ALUNO com responsável", Aguardando(), c => c.Encaminhar(Ator, new(21, "Secretaria", "Coordenação", "Ana"), "melhor com eles", Agora), Aberto,
             ["AguardandoDesde", "Encaminhamentos", "Estado", "ResponsavelId", "SetorId"],
             [new("NOTA"), new("ENCAMINHAMENTO", "Secretaria", "Coordenação"), new("ATRIBUICAO", "Ana", null), new("TRANSICAO", AguardandoAluno, Aberto)],
             [("NOTA", "melhor com eles", 0)], c => { Assert.Equal(21, c.SetorId); Assert.Equal(1, c.Encaminhamentos); }),
@@ -125,18 +125,18 @@ public class ChamadoDominioTests
             ("Anotar FECHADO", ChamadoFechado(), c => c.Anotar(Ator, "x", Agora)),
             ("Resolver FECHADO", ChamadoFechado(), c => c.Resolver(Ator, "Ana", "x", Agora)),
             ("Confirmar FECHADO", ChamadoFechado(), c => c.Confirmar(Ator, Agora)),
-            ("Rejeitar FECHADO", ChamadoFechado(), c => c.Rejeitar(Ator, "x", [], true, "Ana", 7, Agora)),
+            ("Rejeitar FECHADO", ChamadoFechado(), c => c.Rejeitar(Ator, new("x", [], true, "Ana", 7), Agora)),
             ("Cancelar FECHADO", ChamadoFechado(), c => c.Cancelar(Ator, "x", Agora)),
-            ("Encaminhar FECHADO", ChamadoFechado(), c => c.Encaminhar(Ator, 21, "A", "B", "x", null, Agora)),
+            ("Encaminhar FECHADO", ChamadoFechado(), c => c.Encaminhar(Ator, new(21, "A", "B", null), "x", Agora)),
             ("Reclassificar FECHADO", ChamadoFechado(), c => c.Reclassificar(Ator, 11, "A", "B", Agora)),
             ("MarcarDuplicado FECHADO", ChamadoFechado(), c => c.MarcarDuplicado(Ator, "ONE-9", Agora)),
             ("DevolverAFila FECHADO", ChamadoFechado(), c => c.DevolverAFila(Ator, "Ana", Agora)),
             ("Confirmar ABERTO", ChamadoAberto(), c => c.Confirmar(Ator, Agora)),
             ("Confirmar EM_ATENDIMENTO", EmAtend(), c => c.Confirmar(Ator, Agora)),
             ("Confirmar AGUARDANDO_ALUNO", Aguardando(), c => c.Confirmar(Ator, Agora)),
-            ("Rejeitar ABERTO", ChamadoAberto(), c => c.Rejeitar(Ator, "x", [], true, "Ana", 7, Agora)),
-            ("Rejeitar EM_ATENDIMENTO", EmAtend(), c => c.Rejeitar(Ator, "x", [], true, "Ana", 7, Agora)),
-            ("Rejeitar AGUARDANDO_ALUNO", Aguardando(), c => c.Rejeitar(Ator, "x", [], true, "Ana", 7, Agora)),
+            ("Rejeitar ABERTO", ChamadoAberto(), c => c.Rejeitar(Ator, new("x", [], true, "Ana", 7), Agora)),
+            ("Rejeitar EM_ATENDIMENTO", EmAtend(), c => c.Rejeitar(Ator, new("x", [], true, "Ana", 7), Agora)),
+            ("Rejeitar AGUARDANDO_ALUNO", Aguardando(), c => c.Rejeitar(Ator, new("x", [], true, "Ana", 7), Agora)),
         };
         Assert.Equal(18, casos.Length);
         foreach (var (nome, c, age) in casos)
@@ -151,16 +151,16 @@ public class ChamadoDominioTests
 
     static void Aplicar(string acao, string papel, Chamado c) => _ = (acao, papel) switch
     {
-        ("responder", "ALUNO") when c.Estado == Resolvido => c.Rejeitar(Outro, "x", [], true, "Ana", 7, Agora),
+        ("responder", "ALUNO") when c.Estado == Resolvido => c.Rejeitar(Outro, new("x", [], true, "Ana", 7), Agora),
         ("responder", "ALUNO") => Faz(() => c.ResponderComoAluno(Outro, "x", [], Agora)),
         ("responder", _) => Faz(() => c.ResponderComoEquipe(Outro, "Beto", "x", [], false, Agora)),
         ("nota", _) => Faz(() => c.Anotar(Outro, "x", Agora)),
         ("assumir", _) => c.Assumir(Outro, "Ana", "Beto", Agora),
         ("resolver", _) => Faz(() => c.Resolver(Outro, "Beto", "x", Agora)),
         ("confirmar", _) => Faz(() => c.Confirmar(Outro, Agora)),
-        ("rejeitar", _) => c.Rejeitar(Outro, "x", [], true, "Ana", 7, Agora),
+        ("rejeitar", _) => c.Rejeitar(Outro, new("x", [], true, "Ana", 7), Agora),
         ("cancelar", _) => Faz(() => c.Cancelar(Outro, "x", Agora)),
-        ("encaminhar", _) => Faz(() => c.Encaminhar(Outro, 21, "A", "B", "x", "Ana", Agora)),
+        ("encaminhar", _) => Faz(() => c.Encaminhar(Outro, new(21, "A", "B", "Ana"), "x", Agora)),
         ("reclassificar", _) => Faz(() => c.Reclassificar(Outro, 11, "A", "B", Agora)),
         ("duplicado", _) => Faz(() => c.MarcarDuplicado(Outro, "ONE-9", Agora)),
         _ => throw new InvalidOperationException(acao),
@@ -203,21 +203,21 @@ public class ChamadoDominioTests
     {
         var limite = Antes.AddDays(7);
         var noLimite = ChamadoResolvido();
-        Assert.Null(noLimite.Rejeitar(Ator, "nao resolveu", [], true, "Ana", 7, limite));
+        Assert.Null(noLimite.Rejeitar(Ator, new("nao resolveu", [], true, "Ana", 7), limite));
         Assert.Equal(EmAtendimento, noLimite.Estado);
 
         var depois = ChamadoResolvido();
         var antes = Colunas(depois);
         var (mensagens, eventos) = (depois.Mensagens.ToList(), depois.Eventos.ToList());
-        var recusa = depois.Rejeitar(Ator, "nao resolveu", [], true, "Ana", 7, limite.AddTicks(1));
+        var recusa = depois.Rejeitar(Ator, new("nao resolveu", [], true, "Ana", 7), limite.AddTicks(1));
         Assert.Equal("O prazo de 7 dias para rejeitar a resolução terminou.", recusa?.Motivo);
         Assert.Empty(Mudaram(antes, depois));
         Assert.True(mensagens.SequenceEqual(depois.Mensagens) && eventos.SequenceEqual(depois.Eventos));
 
-        Assert.Equal("O prazo de 10 dias para rejeitar a resolução terminou.", ChamadoResolvido().Rejeitar(Ator, "x", [], true, "Ana", 10, Antes.AddDays(10).AddTicks(1))?.Motivo);
+        Assert.Equal("O prazo de 10 dias para rejeitar a resolução terminou.", ChamadoResolvido().Rejeitar(Ator, new("x", [], true, "Ana", 10), Antes.AddDays(10).AddTicks(1))?.Motivo);
     }
 
-    static Chamado NoFluxo() => Chamado.Abrir("ONE-1", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes, versaoFluxoId: 5, etapaOrdem: 1);
+    static Chamado NoFluxo() => Chamado.Abrir(new("ONE-1", "Titulo", null, new(1, 2, 3, 4), new(10, "IA", 20, VersaoFluxoId: 5, EtapaOrdem: 1)), Antes);
 
     [Fact]
     public void Subir_move_a_etapa_registra_SUBIDA_e_nao_soma_encaminhamento()
@@ -226,7 +226,7 @@ public class ChamadoDominioTests
         c.Assumir(Ator, null, "Ana", Antes);
         var eventosAntes = c.Eventos.Count;
 
-        c.Subir(Ator, "Líderes", "Coordenação", 21, 2, "A coordenação resolve", "Ana", Agora);
+        c.Subir(Ator, new(21, "Líderes", "Coordenação", "Ana"), 2, "A coordenação resolve", Agora);
 
         Assert.Equal((Aberto, 21L, (int?)2, 0), (c.Estado, c.SetorId, c.EtapaOrdem, c.Encaminhamentos));
         Assert.Equal(((long?)5, (DateTime?)Agora, (long?)null), (c.VersaoFluxoId, c.EtapaDesde, c.ResponsavelId));
@@ -241,7 +241,7 @@ public class ChamadoDominioTests
     {
         var c = NoFluxo();
 
-        c.Subir(null, "Líderes", "Coordenação", 21, 2, "Sem resposta em 48 horas", null, Agora);
+        c.Subir(null, new(21, "Líderes", "Coordenação", null), 2, "Sem resposta em 48 horas", Agora);
 
         Assert.Empty(c.Mensagens);
         var subida = Assert.Single(c.Eventos, e => e.Tipo == "SUBIDA");
@@ -253,17 +253,17 @@ public class ChamadoDominioTests
     public void Subir_so_nos_estados_abertos()
     {
         var aguardando = Aguardando();
-        aguardando.Subir(Ator, "A", "B", 21, 2, "x", "Ana", Agora);
+        aguardando.Subir(Ator, new(21, "A", "B", "Ana"), 2, "x", Agora);
         Assert.Equal(Aberto, aguardando.Estado);
-        Assert.Throws<InvalidOperationException>(() => ChamadoResolvido().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
-        Assert.Throws<InvalidOperationException>(() => ChamadoFechado().Subir(Ator, "A", "B", 21, 2, "x", null, Agora));
+        Assert.Throws<InvalidOperationException>(() => ChamadoResolvido().Subir(Ator, new(21, "A", "B", null), 2, "x", Agora));
+        Assert.Throws<InvalidOperationException>(() => ChamadoFechado().Subir(Ator, new(21, "A", "B", null), 2, "x", Agora));
     }
 
     [Fact]
     public void Reclassificar_em_fluxo_sai_da_etapa()
     {
         var c = NoFluxo();
-        c.Subir(Ator, "A", "B", 21, 2, "x", null, Antes);
+        c.Subir(Ator, new(21, "A", "B", null), 2, "x", Antes);
         var (setor, eventos) = (c.SetorId, c.Eventos.Count);
 
         c.Reclassificar(Ator, 11, "Boleto", "Matrícula", Agora);
@@ -280,10 +280,10 @@ public class ChamadoDominioTests
         var c = NoFluxo();
         Assert.Equal(((long?)5, (int?)1, (DateTime?)Antes), (c.VersaoFluxoId, c.EtapaOrdem, c.EtapaDesde));
 
-        c.Encaminhar(Ator, 21, "A", "B", "melhor com eles", null, Agora);
+        c.Encaminhar(Ator, new(21, "A", "B", null), "melhor com eles", Agora);
 
         Assert.Equal((null, null, 1), (c.EtapaOrdem, c.EtapaDesde, c.Encaminhamentos));
-        var fora = Chamado.Abrir("ONE-2", 1, 2, 3, 4, "Titulo", null, 10, "IA", 20, Antes, versaoFluxoId: 5, etapaOrdem: null);
+        var fora = Chamado.Abrir(new("ONE-2", "Titulo", null, new(1, 2, 3, 4), new(10, "IA", 20, VersaoFluxoId: 5, EtapaOrdem: null)), Antes);
         Assert.Equal((null, null, null), (fora.VersaoFluxoId, fora.EtapaOrdem, fora.EtapaDesde));
     }
 }

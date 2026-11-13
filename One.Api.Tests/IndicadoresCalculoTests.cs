@@ -34,12 +34,12 @@ public class IndicadoresCalculoTests
     [Fact]
     public void Subida_nao_derruba_o_roteamento_correto()
     {
-        var subiu = One.Api.Dados.Chamados.Chamado.Abrir("ONE-1", 1, 100, 3, 4, "Duvida", null, CatSecretaria, "IA", Triagem, Base, versaoFluxoId: 5, etapaOrdem: 1);
+        var subiu = One.Api.Dados.Chamados.Chamado.Abrir(new("ONE-1", "Duvida", null, new(1, 100, 3, 4), new(CatSecretaria, "IA", Triagem, VersaoFluxoId: 5, EtapaOrdem: 1)), Base);
         subiu.Assumir(Atendente, null, "Ana", Base.AddHours(1));
-        subiu.Subir(Atendente, "Líderes", "Coordenação", Financeiro, 2, "A coordenação resolve", "Ana", Base.AddHours(2));
+        subiu.Subir(Atendente, new(Financeiro, "Líderes", "Coordenação", "Ana"), 2, "A coordenação resolve", Base.AddHours(2));
         subiu.Resolver(Atendente, "Beto", "Resolvido pela coordenação.", Base.AddHours(3));
-        var encaminhado = One.Api.Dados.Chamados.Chamado.Abrir("ONE-2", 2, 101, 3, 4, "Duvida", null, CatSecretaria, "IA", Triagem, Base);
-        encaminhado.Encaminhar(Atendente, Financeiro, "Triagem", "Financeiro", "Não é daqui", null, Base.AddHours(2));
+        var encaminhado = One.Api.Dados.Chamados.Chamado.Abrir(new("ONE-2", "Duvida", null, new(2, 101, 3, 4), new(CatSecretaria, "IA", Triagem)), Base);
+        encaminhado.Encaminhar(Atendente, new(Financeiro, "Triagem", "Financeiro", null), "Não é daqui", Base.AddHours(2));
         encaminhado.Resolver(Atendente, "Beto", "Resolvido pelo financeiro.", Base.AddHours(3));
 
         double? Roteamento(One.Api.Dados.Chamados.Chamado c) => CalculoIndicadores.Calcular(

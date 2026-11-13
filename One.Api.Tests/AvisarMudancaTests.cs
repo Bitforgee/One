@@ -265,7 +265,7 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
 
         await f.Db(b.Instituicao.Id, async db =>
         {
-            (await Carregar(db, numero)).Encaminhar(b.A.Usuario.Id, b.Outro.Id, "Triagem", "Financeiro", "É do financeiro.", null, Agora);
+            (await Carregar(db, numero)).Encaminhar(b.A.Usuario.Id, new(b.Outro.Id, "Triagem", "Financeiro", null), "É do financeiro.", Agora);
             await db.SaveChangesAsync();
         });
         Igual(Par(b.Instituicao.Id, numero, b.Outro.Id, b.Triagem.Id), f.Hub.Tirar());

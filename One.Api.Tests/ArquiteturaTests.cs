@@ -1180,11 +1180,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Dados_ate_5_parametros =
     [
-        "Dados.Chamados.Chamado.Abrir",
-        "Dados.Chamados.Chamado.Encaminhar",
-        "Dados.Chamados.Chamado.Rejeitar",
         "Dados.Chamados.Chamado.ResponderComoEquipe",
-        "Dados.Chamados.Chamado.Subir",
         "Dados.Mcp.TokenMcp.Criar",
         "Dados.Moodle.PlataformaMoodle.Configurar",
         "Dados.Push.SubscricaoPush.Registrar",

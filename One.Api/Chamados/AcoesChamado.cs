@@ -29,7 +29,7 @@ public static class AcoesChamado
     {
         var c = a.Chamado;
         var ativo = c.ResponsavelId is { } r && await db.Usuarios.AnyAsync(u => u.Id == r && u.Ativo);
-        var recusa = c.Rejeitar(a.Usuario.Id, motivo, anexos ?? [], ativo, await NomeDoResponsavel(db, c), a.Prazos.RejeicaoDias, a.Agora);
+        var recusa = c.Rejeitar(a.Usuario.Id, new(motivo, anexos ?? [], ativo, await NomeDoResponsavel(db, c), a.Prazos.RejeicaoDias), a.Agora);
         return recusa is null ? Results.Empty : Problemas.Erro(409, recusa.Motivo);
     }
 }

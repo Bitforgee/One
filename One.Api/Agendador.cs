@@ -222,7 +222,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         if (chamado is null || await ConsultasDeFluxo.Seguinte(db, chamado) is not { } passo) return;
         var horas = await db.EtapasFluxo.Where(e => e.VersaoFluxoId == chamado.VersaoFluxoId && e.Ordem == chamado.EtapaOrdem).Select(e => e.PrazoHoras).SingleAsync();
         var nomes = await db.Setores.Where(s => s.Id == chamado.SetorId || s.Id == passo.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
-        chamado.Subir(null, nomes[chamado.SetorId], nomes[passo.SetorId], passo.SetorId, passo.Etapa.Ordem, $"Sem resposta em {horas} horas", await AcoesChamado.NomeDoResponsavel(db, chamado), agora);
+        chamado.Subir(null, new(passo.SetorId, nomes[chamado.SetorId], nomes[passo.SetorId], await AcoesChamado.NomeDoResponsavel(db, chamado)), passo.Etapa.Ordem, $"Sem resposta em {horas} horas", agora);
         try { await db.SaveChangesAsync(); }
         catch (DbUpdateConcurrencyException) { return; }
         log.LogInformation("Chamado {ChamadoId} subiu para a etapa {Etapa} por prazo (instituição {InstituicaoId})", id, passo.Etapa.Ordem, db.InstituicaoAtual);

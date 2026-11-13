@@ -45,14 +45,24 @@ public class Chamado : IDaInstituicao
 
     readonly record struct Ato(long? AtorId, DateTime Agora);
 
-    public static Chamado Abrir(string numero, long conversaId, long solicitanteId, long matriculaId, int semestre, string titulo,
-        string? resumo, long categoriaId, string origemCategoria, long setorId, DateTime agora, long? versaoFluxoId = null, int? etapaOrdem = null)
+    public sealed record DoAluno(long ConversaId, long SolicitanteId, long MatriculaId, int Semestre);
+
+    public sealed record Destinado(long CategoriaId, string OrigemCategoria, long SetorId, long? VersaoFluxoId = null, int? EtapaOrdem = null);
+
+    public sealed record NovoChamado(string Numero, string Titulo, string? Resumo, DoAluno Aluno, Destinado Destino);
+
+    public sealed record Rejeicao(string Motivo, IEnumerable<Anexo> Anexos, bool ResponsavelAtivo, string? NomeResponsavel, int PrazoDias);
+
+    public sealed record MudancaDeSetor(long SetorId, string NomeSetorAtual, string NomeSetorNovo, string? NomeResponsavel);
+
+    public static Chamado Abrir(NovoChamado novo, DateTime agora)
     {
         var c = new Chamado
         {
-            Numero = numero, ConversaId = conversaId, SolicitanteId = solicitanteId, MatriculaId = matriculaId, Semestre = semestre,
-            Titulo = titulo, Resumo = resumo, CategoriaId = categoriaId, CategoriaOriginalId = categoriaId, OrigemCategoria = origemCategoria,
-            SetorId = setorId, CriadoEm = agora, VersaoFluxoId = etapaOrdem is null ? null : versaoFluxoId, EtapaOrdem = etapaOrdem, EtapaDesde = etapaOrdem is null ? null : agora,
+            Numero = novo.Numero, ConversaId = novo.Aluno.ConversaId, SolicitanteId = novo.Aluno.SolicitanteId, MatriculaId = novo.Aluno.MatriculaId, Semestre = novo.Aluno.Semestre,
+            Titulo = novo.Titulo, Resumo = novo.Resumo, CategoriaId = novo.Destino.CategoriaId, CategoriaOriginalId = novo.Destino.CategoriaId, OrigemCategoria = novo.Destino.OrigemCategoria,
+            SetorId = novo.Destino.SetorId, CriadoEm = agora, VersaoFluxoId = novo.Destino.EtapaOrdem is null ? null : novo.Destino.VersaoFluxoId, EtapaOrdem = novo.Destino.EtapaOrdem,
+            EtapaDesde = novo.Destino.EtapaOrdem is null ? null : agora,
         };
         c._eventos.Add(new EventoChamado { Tipo = TiposEvento.Criacao, Para = c.Estado, CriadoEm = agora });
         return c;
@@ -107,14 +117,14 @@ public class Chamado : IDaInstituicao
         Fechar(MotivosFechamento.Confirmado, null, new Ato(atorId, agora));
     }
 
-    public Recusa? Rejeitar(long atorId, string motivo, IEnumerable<Anexo> anexos, bool responsavelAtivo, string? nomeResponsavel, int prazoDias, DateTime agora)
+    public Recusa? Rejeitar(long atorId, Rejeicao rejeicao, DateTime agora)
     {
         Exigir([Resolvido]);
-        if (agora > ResolvidoEm!.Value + TimeSpan.FromDays(prazoDias)) return new Recusa($"O prazo de {prazoDias} dias para rejeitar a resolução terminou.");
+        if (agora > ResolvidoEm!.Value + TimeSpan.FromDays(rejeicao.PrazoDias)) return new Recusa($"O prazo de {rejeicao.PrazoDias} dias para rejeitar a resolução terminou.");
         var ato = new Ato(atorId, agora);
-        Anexar(Mensagem(TiposMensagem.Publica, motivo, ato), anexos, ato);
-        if (!responsavelAtivo) Atribuir(null, nomeResponsavel, null, ato);
-        Mudar(responsavelAtivo ? EmAtendimento : Aberto, ato);
+        Anexar(Mensagem(TiposMensagem.Publica, rejeicao.Motivo, ato), rejeicao.Anexos, ato);
+        if (!rejeicao.ResponsavelAtivo) Atribuir(null, rejeicao.NomeResponsavel, null, ato);
+        Mudar(rejeicao.ResponsavelAtivo ? EmAtendimento : Aberto, ato);
         Reaberturas++;
         return null;
     }
@@ -125,29 +135,29 @@ public class Chamado : IDaInstituicao
         Fechar(MotivosFechamento.Cancelado, string.IsNullOrWhiteSpace(justificativa) ? null : justificativa, new Ato(atorId, agora));
     }
 
-    public void Encaminhar(long atorId, long setorId, string nomeSetorAtual, string nomeSetorNovo, string motivo, string? nomeResponsavel, DateTime agora)
+    public void Encaminhar(long atorId, MudancaDeSetor para, string motivo, DateTime agora)
     {
         Exigir(Abertos);
         var ato = new Ato(atorId, agora);
         Mensagem(TiposMensagem.Nota, motivo, ato);
-        Evento(TiposEvento.Encaminhamento, ato, nomeSetorAtual, nomeSetorNovo);
-        Atribuir(null, nomeResponsavel, null, ato);
+        Evento(TiposEvento.Encaminhamento, ato, para.NomeSetorAtual, para.NomeSetorNovo);
+        Atribuir(null, para.NomeResponsavel, null, ato);
         Mudar(Aberto, ato);
-        SetorId = setorId;
+        SetorId = para.SetorId;
         Encaminhamentos++;
         EtapaOrdem = null;
         EtapaDesde = null;
     }
 
-    public void Subir(long? atorId, string nomeSetorAtual, string nomeSetorNovo, long setorId, int etapaOrdem, string detalhe, string? nomeResponsavel, DateTime agora)
+    public void Subir(long? atorId, MudancaDeSetor para, int etapaOrdem, string detalhe, DateTime agora)
     {
         Exigir(Abertos);
         var ato = new Ato(atorId, agora);
         if (atorId is not null) Mensagem(TiposMensagem.Nota, detalhe, ato);
-        Evento(TiposEvento.Subida, ato, nomeSetorAtual, nomeSetorNovo, detalhe);
-        Atribuir(null, nomeResponsavel, null, ato);
+        Evento(TiposEvento.Subida, ato, para.NomeSetorAtual, para.NomeSetorNovo, detalhe);
+        Atribuir(null, para.NomeResponsavel, null, ato);
         Mudar(Aberto, ato);
-        SetorId = setorId;
+        SetorId = para.SetorId;
         EtapaOrdem = etapaOrdem;
         EtapaDesde = agora;
     }
