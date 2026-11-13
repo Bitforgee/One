@@ -1,6 +1,7 @@
 import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
+import { inflateSync } from 'node:zlib'
 import { describe, expect, it, vi } from 'vitest'
 import html from '../index.html?raw'
 import { abrir, api, instituicao, me } from './test/util'
@@ -19,6 +20,34 @@ const Maskable = '/icons/icon-maskable-512.png'
 const dimensoesDoPng = (arquivo: string) => {
   const b = readFileSync(arquivo)
   return [b.readUInt32BE(16), b.readUInt32BE(20)]
+}
+const Moldura = [34, 79, 167, 255]
+function pixelsDoPng(arquivo: string) {
+  const b = readFileSync(arquivo)
+  const [largura, altura] = [b.readUInt32BE(16), b.readUInt32BE(20)]
+  expect([b[24], b[25], b[28]]).toEqual([8, 6, 0])
+  const partes: Buffer[] = []
+  for (let o = 8; o < b.length; o += 12 + b.readUInt32BE(o)) if (b.toString('ascii', o + 4, o + 8) === 'IDAT') partes.push(b.subarray(o + 8, o + 8 + b.readUInt32BE(o)))
+  const bruto = inflateSync(Buffer.concat(partes))
+  const passo = largura * 4
+  const saida = Buffer.alloc(passo * altura)
+  const paeth = (a: number, c: number, d: number) => {
+    const p = a + c - d
+    const [pa, pb, pc] = [Math.abs(p - a), Math.abs(p - c), Math.abs(p - d)]
+    return pa <= pb && pa <= pc ? a : pb <= pc ? c : d
+  }
+  for (let y = 0; y < altura; y++) {
+    const filtro = bruto[y * (passo + 1)]
+    for (let x = 0; x < passo; x++) {
+      const v = bruto[y * (passo + 1) + 1 + x]
+      const a = x >= 4 ? saida[y * passo + x - 4] : 0
+      const c = y > 0 ? saida[(y - 1) * passo + x] : 0
+      const d = x >= 4 && y > 0 ? saida[(y - 1) * passo + x - 4] : 0
+      const previsto = [0, a, c, (a + c) >> 1, paeth(a, c, d)][filtro]
+      saida[y * passo + x] = (v + previsto) & 255
+    }
+  }
+  return { largura, altura, pixel: (x: number, y: number) => [...saida.subarray(y * passo + x * 4, y * passo + x * 4 + 4)] }
 }
 type Regra = { contexto: string[]; seletor: string; corpo: string }
 
@@ -235,6 +264,22 @@ describe('base global do css', () => {
     expect(icons.filter((i) => i.purpose === 'maskable').map((i) => i.src)).toEqual([Maskable])
     expect(icons.filter((i) => i.src === '/icons/icon-512.png').map((i) => i.purpose)).toEqual(['any'])
     expect(dimensoesDoPng(`public${Maskable}`)).toEqual([512, 512])
+  })
+
+  it('C17 todo pixel do maskable diferente da moldura fica no círculo central de raio 40% do lado (zona segura do W3C)', () => {
+    const { largura, altura, pixel } = pixelsDoPng(`public${Maskable}`)
+    expect(pixel(0, 0)).toEqual(Moldura)
+    const raio = 0.4 * largura
+    const fora: string[] = []
+    let arte = 0
+    for (let y = 0; y < altura; y++)
+      for (let x = 0; x < largura; x++) {
+        if (pixel(x, y).every((v, i) => v === Moldura[i])) continue
+        arte++
+        if (Math.hypot(x + 0.5 - largura / 2, y + 0.5 - altura / 2) > raio) fora.push(`(${x},${y})`)
+      }
+    expect(arte).toBeGreaterThan(0)
+    expect(fora.length, fora.slice(0, 5).join(' ')).toBe(0)
   })
 
   it('C21 o manifest estático e o da API apontam o mesmo arquivo maskable', () => {
