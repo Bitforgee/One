@@ -478,7 +478,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
             .Select(p => Path.GetRelativePath(api, p).Replace(sep, '/'))
             .OrderBy(p => p, StringComparer.Ordinal)
-            .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/InstituicaoComando.cs"))
+            .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/ComandoCarga.cs" or "Instituicoes/ComandoOperador.cs" or "Instituicoes/ComandoAvaliarBusca.cs"))
             .Where(p => atribui.IsMatch(File.ReadAllText(Path.Combine(api, p))));
         Assert.Equal(["Chamados/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/FerramentasMcp.cs"], fora);
     }

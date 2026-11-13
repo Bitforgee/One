@@ -74,7 +74,7 @@ public sealed class FerramentasMcp(OneDb db, IMediator mediator, Embeddings embe
             if (string.IsNullOrWhiteSpace(consulta) || consulta.Length > MaximoDaConsulta) throw new McpException($"A consulta deve ter de 1 a {MaximoDaConsulta} caracteres.");
             if (k is < 1 or > LimiteMaximo) throw new McpException($"O limite deve ficar entre 1 e {LimiteMaximo}.");
             if (await db.SoLideranca(usuario)) throw new McpException("Seu papel não tem acesso à base de conhecimento.");
-            var fontes = await Fontes.Buscar(db, await Vetor(consulta), Hoje(instituicao), k);
+            var fontes = await BuscarFontes.Buscar(db, await Vetor(consulta), Hoje(instituicao), k);
             return new ResultadoDaBusca([.. fontes.Select(f => new FonteDeConhecimento(f.ArtigoId is null ? "DOCUMENTO" : "ARTIGO", f.Titulo, f.Texto, f.Links))]);
         });
 

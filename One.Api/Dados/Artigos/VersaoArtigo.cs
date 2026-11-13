@@ -12,4 +12,18 @@ public class VersaoArtigo : IDaInstituicao
     public string Resposta { get; init; } = "";
     public List<string> Links { get; init; } = [];
     public DateTime CriadaEm { get; init; }
+
+    public sealed record Dados(string Titulo, IEnumerable<string> Perguntas, string Resposta, IEnumerable<string>? Links);
+
+    public static VersaoArtigo Criar(Dados dados, int numero, DateTime agora) => new()
+    {
+        Numero = numero,
+        Titulo = dados.Titulo,
+        Perguntas = [.. dados.Perguntas.Where(p => !string.IsNullOrWhiteSpace(p))],
+        Resposta = dados.Resposta,
+        Links = [.. dados.Links ?? []],
+        CriadaEm = agora,
+    };
+
+    public string TextoParaBusca() => $"{Titulo}\n{string.Join("\n", Perguntas)}\n{Resposta}";
 }

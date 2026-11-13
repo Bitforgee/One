@@ -35,11 +35,7 @@ public static class ConferirResposta
         if (!Conferencia.LinksConferem(saida.Texto!, citadas.SelectMany(f => f!.Links))) return ([], "link_invalido");
         if (!Conferencia.NumerosConferem(saida.Texto!, citadas.Select(f => f!.Texto))) return ([], "numero_sem_fonte");
 
-        return (citadas.Select(f => new CitacaoArtigo
-        {
-            TrechoFonteId = f!.Id,
-            Trechos = trechos.Where(t => t.FonteId == f.Id).Select(t => t.Texto!).ToList(),
-        }).ToList(), null);
+        return (citadas.Select(f => CitacaoArtigo.DoTrecho(f!.Id, trechos.Where(t => t.FonteId == f.Id).Select(t => t.Texto!).ToList())).ToList(), null);
     }
 
     public static string TextoFinal(string tipoFinal, SaidaModelo? saida) => tipoFinal switch

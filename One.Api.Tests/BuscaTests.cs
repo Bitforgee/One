@@ -67,7 +67,7 @@ public class IndexacaoTests(OneFactory f) : IClassFixture<OneFactory>
             await f.Db(i.Id, async db =>
             {
                 var versao = await db.VersoesArtigo.Where(v => v.ArtigoId == artigo.Id).Select(v => v.Id).SingleAsync();
-                db.TrechosFonte.AddRange(Enumerable.Range(0, 125).Select(n => new TrechoFonte { VersaoArtigoId = versao, Ordem = n, Texto = $"trecho {n}", ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime.AddDays(-1) }));
+                db.TrechosFonte.AddRange(Enumerable.Range(0, 125).Select(n => TrechoFonte.DaVersaoDeArtigo(versao, n, $"trecho {n}", f.Relogio.GetUtcNow().UtcDateTime.AddDays(-1))));
                 await db.SaveChangesAsync();
             });
         }
@@ -158,7 +158,7 @@ public class BuscaTests(OneFactory f) : IClassFixture<OneFactory>
     Task<TrechoFonte> Trecho(Instituicao i, long versaoArtigoId, string texto, bool comEmbedding = true) =>
         f.Db(i.Id, async db =>
         {
-            var t = new TrechoFonte { VersaoArtigoId = versaoArtigoId, Ordem = 1, Texto = texto, ProximaTentativa = DateTime.UtcNow, Embedding = comEmbedding ? new Pgvector.Vector(LlmFalso.Vetor(texto)) : null };
+            var t = TrechoFonte.DaVersaoDeArtigo(versaoArtigoId, 1, texto, DateTime.UtcNow, comEmbedding ? new Pgvector.Vector(LlmFalso.Vetor(texto)) : null);
             db.TrechosFonte.Add(t);
             await db.SaveChangesAsync();
             return t;

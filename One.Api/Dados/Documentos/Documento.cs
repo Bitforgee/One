@@ -27,6 +27,8 @@ public class Documento : IDaInstituicao
         return null;
     }
 
+    public VersaoDocumento UltimaVersao => _versoes.MaxBy(v => v.Numero)!;
+
     public Recusa? Arquivar()
     {
         if (Estado == EstadosDocumento.Arquivado) return new Recusa("O documento já está arquivado.");

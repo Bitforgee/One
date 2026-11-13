@@ -16,7 +16,7 @@ public sealed class ListarArtigosHandler(OneDb db) : IRequestHandler<ListarArtig
     {
         var categorias = await db.Categorias.ToDictionaryAsync(c => c.Id, c => c.Nome);
         var artigos = await db.Artigos.Include(a => a.Versoes).OrderBy(a => a.Id).ToListAsync();
-        var indexacao = await Fontes.Indexacao(db, artigos.Select(a => a.Ultima().Id).ToList());
+        var indexacao = await BuscarFontes.Indexacao(db, artigos.Select(a => a.UltimaVersao.Id).ToList());
         return Results.Ok(artigos.Select(a => ArtigoResposta.De(a, categorias[a.CategoriaId], indexacao)));
     }
 }

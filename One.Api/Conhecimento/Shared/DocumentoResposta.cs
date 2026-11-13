@@ -11,7 +11,7 @@ public sealed record DocumentoResposta(long Id, string Titulo, long CategoriaId,
 
     public static async Task<DocumentoResposta> De(OneDb db, Documento d)
     {
-        var v = d.Ultima();
+        var v = d.UltimaVersao;
         var trechos = await db.TrechosFonte.Where(t => t.VersaoDocumentoId == v.Id).Select(t => new Trecho(t.Embedding != null, t.Tentativas)).ToListAsync();
         return new(d.Id, d.Titulo, d.CategoriaId, await db.Categorias.Where(c => c.Id == d.CategoriaId).Select(c => c.Nome).SingleAsync(), d.Estado,
             new(v.Id, v.Numero, v.NomeArquivo, v.Paginas, v.CriadaEm),

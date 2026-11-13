@@ -22,9 +22,9 @@ public sealed class AlterarArtigoHandler(OneDb db, TimeProvider relogio) : IRequ
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (await Validar(db, i.Titulo, i.Perguntas, i.CategoriaId, i.Resposta, i.Links, i.VisivelDe, i.VisivelAte) is { } erro) return erro;
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var nova = Versao(i.Titulo, i.Perguntas, i.Resposta, i.Links, a.Ultima().Numero + 1, agora);
+        var nova = Versao(i.Titulo, i.Perguntas, i.Resposta, i.Links, a.UltimaVersao.Numero + 1, agora);
         a.NovaVersao(nova, i.CategoriaId!.Value, i.VisivelDe, i.VisivelAte);
-        if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(Fontes.DoArtigo(nova, agora));
+        if (a.Estado == EstadosArtigo.Ativo) db.TrechosFonte.Add(TrechoFonte.DoArtigo(nova, agora));
         await db.SaveChangesAsync();
         return Results.Ok(await ArtigoResposta.De(db, a));
     }

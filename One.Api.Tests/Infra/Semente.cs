@@ -110,9 +110,7 @@ public static class Semente
             await db.SaveChangesAsync();
             if (estado == EstadosArtigo.Ativo)
             {
-                var trecho = Fontes.DoArtigo(versao, f.Relogio.GetUtcNow().UtcDateTime);
-                trecho.Id = Fonte(a.Id);
-                trecho.Embedding = new Pgvector.Vector(LlmFalso.Vetor(trecho.Texto));
+                var trecho = TrechoFonte.DoArtigo(versao, f.Relogio.GetUtcNow().UtcDateTime, new Pgvector.Vector(LlmFalso.Vetor(versao.TextoParaBusca()))).ComId(Fonte(a.Id));
                 db.TrechosFonte.Add(trecho);
                 await db.SaveChangesAsync();
             }

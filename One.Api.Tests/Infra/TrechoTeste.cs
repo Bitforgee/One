@@ -11,7 +11,7 @@ public static class TrechoTeste
         return await f.Db(i.Id, async db =>
         {
             var versaoId = await db.VersoesArtigo.Where(v => v.ArtigoId == artigo.Id).Select(v => v.Id).FirstAsync();
-            var trecho = new TrechoFonte { VersaoArtigoId = versaoId, Ordem = 99, Texto = "A segunda via do boleto sai no Portal do Aluno.", ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime.AddDays(-1) };
+            var trecho = TrechoFonte.DaVersaoDeArtigo(versaoId, 99, "A segunda via do boleto sai no Portal do Aluno.", f.Relogio.GetUtcNow().UtcDateTime.AddDays(-1));
             db.TrechosFonte.Add(trecho);
             await db.SaveChangesAsync();
             return trecho.Id;

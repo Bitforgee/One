@@ -16,7 +16,7 @@ public sealed record DetalheChamado(
 
     public sealed record DaMatricula(string? Numero, string Curso, int Semestre);
 
-    public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<Fontes.FonteCitada>? Fontes, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DoAnexo>? Anexos);
+    public sealed record TranscricaoDaEquipe(string Autor, string Texto, DateTime CriadaEm, IEnumerable<CitacoesDeFontes.FonteCitada>? Fontes, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<DoAnexo>? Anexos);
 
     public sealed record TranscricaoDoAluno(string Autor, string Texto, DateTime CriadaEm);
 
@@ -28,7 +28,7 @@ public sealed record DetalheChamado(
 
     public sealed record Destino(long Id, string Nome);
 
-    record DaEquipe(IReadOnlyList<DoEvento>? Eventos, Dictionary<long, IEnumerable<Fontes.FonteCitada>> Fontes, IReadOnlyList<Destino>? Setores, IReadOnlyList<Destino>? Categorias)
+    record DaEquipe(IReadOnlyList<DoEvento>? Eventos, Dictionary<long, IEnumerable<CitacoesDeFontes.FonteCitada>> Fontes, IReadOnlyList<Destino>? Setores, IReadOnlyList<Destino>? Categorias)
     {
         public static readonly DaEquipe Nada = new(null, [], null, null);
     }
@@ -82,7 +82,7 @@ public sealed record DetalheChamado(
             .Select(e => new DoEvento(e.Tipo, e.AtorId is null ? "Sistema" : e.Ator!, e.AtorId == c.SolicitanteId, e.De, e.Para, e.Detalhe, e.CriadoEm)).ToList();
         if (!completa) return new DaEquipe(eventos, [], null, null);
         var comCitacao = transcricao.Where(m => m.Citacoes.Count > 0).ToList();
-        var fonte = comCitacao.Count > 0 ? await Fontes.Citadas(db, comCitacao.SelectMany(m => m.Citacoes).ToList()) : null;
+        var fonte = comCitacao.Count > 0 ? await CitacoesDeFontes.Citadas(db, comCitacao.SelectMany(m => m.Citacoes).ToList()) : null;
         var fontes = comCitacao.ToDictionary(m => m.Id, m => m.Citacoes.Select(fonte!));
         return new DaEquipe(eventos, fontes, cabecalho.Setores, cabecalho.Categorias);
     }

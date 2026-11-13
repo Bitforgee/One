@@ -30,11 +30,11 @@ public static class CargaInicial
         }
         foreach (var (a, categoria) in plano.Artigos)
         {
-            var versao = new VersaoArtigo { Numero = 1, Titulo = a.Titulo!, Perguntas = a.Perguntas!, Resposta = a.Resposta!, Links = a.Links ?? [], CriadaEm = agora };
+            var versao = VersaoArtigo.Criar(new(a.Titulo!, a.Perguntas!, a.Resposta!, a.Links), 1, agora);
             var artigo = Artigo.Criar(categoria.Id, null, null, versao);
             artigo.Ativar();
             db.Artigos.Add(artigo);
-            db.TrechosFonte.Add(Fontes.DoArtigo(versao, agora));
+            db.TrechosFonte.Add(TrechoFonte.DoArtigo(versao, agora));
         }
         await db.SaveChangesAsync();
         await tx.CommitAsync();

@@ -63,29 +63,29 @@ public class DivisaoTests
     [Fact]
     public void Trechos_de_ate_1500_com_sobreposicao()
     {
-        Assert.Single(DocumentoRotas.Dividir(new string('a', 1500)));
-        Assert.Equal(2, DocumentoRotas.Dividir(new string('a', 1501)).Count);
+        Assert.Single(DivisorDeTexto.Dividir(new string('a', 1500)));
+        Assert.Equal(2, DivisorDeTexto.Dividir(new string('a', 1501)).Count);
 
         var corrido = string.Concat(Enumerable.Range(0, 400).Select(i => (char)('a' + i % 26)));
         corrido = string.Concat(Enumerable.Repeat(corrido, 8));
-        var t = DocumentoRotas.Dividir(corrido);
+        var t = DivisorDeTexto.Dividir(corrido);
         Assert.All(t, x => Assert.True(x.Length <= 1500));
         Assert.Equal(1500, t[0].Length);
         for (var i = 1; i < t.Count; i++) Assert.StartsWith(t[i - 1][^200..], t[i]);
 
         var paragrafos = new string('p', 900) + "\n\n" + new string('q', 900);
-        var p = DocumentoRotas.Dividir(paragrafos);
+        var p = DivisorDeTexto.Dividir(paragrafos);
         Assert.Equal(new string('p', 900) + "\n\n", p[0]);
         Assert.StartsWith(p[0][^200..], p[1]);
 
         var frases = new string('f', 1000) + ". " + new string('g', 900);
-        var f = DocumentoRotas.Dividir(frases);
+        var f = DivisorDeTexto.Dividir(frases);
         Assert.Equal(new string('f', 1000) + ".", f[0]);
         Assert.StartsWith(f[0][^200..], f[1]);
         Assert.EndsWith(new string('g', 900), f[^1]);
 
-        Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + "\n\n" + new string('b', 1600))[0].Length);
-        Assert.Equal(1500, DocumentoRotas.Dividir(new string('a', 100) + ". " + new string('b', 1600))[0].Length);
+        Assert.Equal(1500, DivisorDeTexto.Dividir(new string('a', 100) + "\n\n" + new string('b', 1600))[0].Length);
+        Assert.Equal(1500, DivisorDeTexto.Dividir(new string('a', 100) + ". " + new string('b', 1600))[0].Length);
     }
 }
 
@@ -187,7 +187,7 @@ public class DocumentoTests(OneFactory f) : IClassFixture<OneFactory>
         {
             var r = await pedir();
             Assert.True(r.StatusCode == esperado, $"{caso}: {(int)r.StatusCode}");
-            if (caso.EndsWith("sem texto")) Assert.Equal(DocumentoRotas.SemTexto, (await r.Json()).GetProperty("detail").GetString());
+            if (caso.EndsWith("sem texto")) Assert.Equal(LeitorDePdf.SemTexto, (await r.Json()).GetProperty("detail").GetString());
             if (caso == "PDF ilegível") Assert.Equal("Não foi possível ler o PDF.", (await r.Json()).GetProperty("detail").GetString());
             if (caso.Contains("título com")) Assert.Equal("Informe o título, com até 200 caracteres.", (await r.Json()).GetProperty("detail").GetString());
             if (caso.Contains("categoria não") || caso == "sem categoria") Assert.Equal("Escolha uma categoria ativa.", (await r.Json()).GetProperty("detail").GetString());

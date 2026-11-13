@@ -27,6 +27,8 @@ public class Artigo : IDaInstituicao
         (CategoriaId, VisivelDe, VisivelAte) = (categoriaId, visivelDe, visivelAte);
     }
 
+    public VersaoArtigo UltimaVersao => _versoes.MaxBy(v => v.Numero)!;
+
     public Recusa? Ativar()
     {
         if (Estado == EstadosArtigo.Ativo) return new Recusa("O artigo já está ativo.");

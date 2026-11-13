@@ -19,10 +19,10 @@ public sealed class CriarDocumentoHandler(OneDb db, TimeProvider relogio, Armaze
     {
         var form = m.Form;
         var titulo = form["titulo"].ToString();
-        if (string.IsNullOrWhiteSpace(titulo) || titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
+        if (!TituloDeConhecimento.Valido(titulo)) return Problemas.Invalido(TituloDeConhecimento.Recusa, "titulo");
         if (!long.TryParse(form["categoriaId"], out var categoriaId) || !await db.Categorias.AnyAsync(c => c.Id == categoriaId && c.Ativa))
             return Problemas.Invalido("Escolha uma categoria ativa.", "categoriaId");
-        var (pdf, erro) = await LerPdf(form.Files["arquivo"]);
+        var (pdf, erro) = await LeitorDePdf.Ler(form.Files["arquivo"]);
         if (erro is not null) return erro;
 
         var agora = relogio.GetUtcNow().UtcDateTime;

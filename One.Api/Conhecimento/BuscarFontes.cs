@@ -7,17 +7,8 @@ namespace One.Api.Conhecimento;
 
 public record Fonte(long Id, string Titulo, string Texto, List<string> Links, double Distancia, long? ArtigoId);
 
-public static class Fontes
+public static class BuscarFontes
 {
-    public static string TextoDoArtigo(VersaoArtigo v) => $"{v.Titulo}\n{string.Join("\n", v.Perguntas)}\n{v.Resposta}";
-
-    public static TrechoFonte DoArtigo(VersaoArtigo v, DateTime agora) =>
-        new() { VersaoArtigo = v, Ordem = 0, Texto = TextoDoArtigo(v), ProximaTentativa = agora };
-
-    public static VersaoArtigo Ultima(this Artigo a) => a.Versoes.OrderByDescending(v => v.Numero).First();
-
-    public static VersaoDocumento Ultima(this Documento d) => d.Versoes.OrderByDescending(v => v.Numero).First();
-
     public static IQueryable<Documento> ComUltimaVersao(this IQueryable<Documento> documentos) =>
         documentos.Include(d => d.Versoes.OrderByDescending(v => v.Numero).Take(1));
 
@@ -61,52 +52,6 @@ public static class Fontes
         var idsArtigo = achados.Where(a => a.VersaoArtigoId != null).Select(a => a.VersaoArtigoId!.Value).ToList();
         var links = await db.VersoesArtigo.Where(v => idsArtigo.Contains(v.Id)).ToDictionaryAsync(v => v.Id, v => v.Links);
         return achados.Select(a => new Fonte(a.Id, a.Titulo, a.Texto, a.VersaoArtigoId is { } v ? links[v] : [], a.Distancia, a.ArtigoId)).ToList();
-    }
-
-    public record FonteCitada(string Tipo, long? VersaoArtigoId, long? VersaoDocumentoId, string Titulo, int Numero, List<string> Trechos, bool Atualizado);
-
-    record VersaoCitada(string Titulo, int Numero, long Atual);
-
-    public static async Task<Func<CitacaoArtigo, FonteCitada>> Citadas(OneDb db, List<CitacaoArtigo> citacoes)
-    {
-        var idsTrecho = citacoes.Where(x => x.TrechoFonteId != null).Select(x => x.TrechoFonteId!.Value).Distinct().ToList();
-        var trechos = await db.TrechosFonte.Where(t => idsTrecho.Contains(t.Id)).ToDictionaryAsync(t => t.Id, t => (t.VersaoArtigoId, t.VersaoDocumentoId));
-        long? VersaoArtigo(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoArtigoId : x.VersaoArtigoId;
-        long? VersaoDocumento(CitacaoArtigo x) => x.TrechoFonteId is { } t ? trechos[t].VersaoDocumentoId : null;
-        var artigos = await VersoesDeArtigo(db, citacoes.Select(VersaoArtigo).OfType<long>().Distinct().ToList());
-        var documentos = await VersoesDeDocumento(db, citacoes.Select(VersaoDocumento).OfType<long>().Distinct().ToList());
-        return x => VersaoDocumento(x) is { } d
-            ? new FonteCitada("DOCUMENTO", null, d, documentos[d].Titulo, documentos[d].Numero, x.Trechos, documentos[d].Atual != d)
-            : Artigo(VersaoArtigo(x)!.Value, artigos, x.Trechos);
-    }
-
-    static FonteCitada Artigo(long v, Dictionary<long, VersaoCitada> artigos, List<string> trechos) =>
-        new("ARTIGO", v, null, artigos[v].Titulo, artigos[v].Numero, trechos, artigos[v].Atual != v);
-
-    static Task<Dictionary<long, VersaoCitada>> VersoesDeArtigo(OneDb db, List<long> ids)
-    {
-        var atuais = db.VersoesAtuais();
-        return db.VersoesArtigo.Where(v => ids.Contains(v.Id))
-            .Select(v => new
-            {
-                v.Id,
-                v.Titulo,
-                v.Numero,
-                Atual = v.Artigo!.Estado == EstadosArtigo.Ativo ? atuais.Where(x => x.ArtigoId == v.ArtigoId).Select(x => x.Id).First() : v.Id,
-            }).ToDictionaryAsync(v => v.Id, v => new VersaoCitada(v.Titulo, v.Numero, v.Atual));
-    }
-
-    static Task<Dictionary<long, VersaoCitada>> VersoesDeDocumento(OneDb db, List<long> ids)
-    {
-        var atuais = db.VersoesDocumentoAtuais();
-        return db.VersoesDocumento.Where(v => ids.Contains(v.Id))
-            .Select(v => new
-            {
-                v.Id,
-                v.Documento!.Titulo,
-                v.Numero,
-                Atual = v.Documento.Estado == EstadosDocumento.Ativo ? atuais.Where(x => x.DocumentoId == v.DocumentoId).Select(x => x.Id).First() : v.Id,
-            }).ToDictionaryAsync(v => v.Id, v => new VersaoCitada(v.Titulo, v.Numero, v.Atual));
     }
 
     public class CategoriaCitada

@@ -177,7 +177,7 @@ public class McpFerramentasTests(OneFactory f) : IClassFixture<OneFactory>
             var versao = new VersaoDocumento { Numero = 1, NomeArquivo = "d.pdf", Chave = $"{i.Id}/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = texto, Paginas = 1, CriadaEm = f.Relogio.GetUtcNow().UtcDateTime };
             db.Documentos.Add(Documento.Criar(titulo, (await db.Categorias.FirstAsync()).Id, versao));
             await db.SaveChangesAsync();
-            db.TrechosFonte.Add(new TrechoFonte { VersaoDocumento = versao, Ordem = 0, Texto = texto, ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime, Embedding = new Pgvector.Vector(LlmFalso.Vetor(texto)) });
+            db.TrechosFonte.Add(TrechoFonte.DoDocumento(versao, 0, texto, f.Relogio.GetUtcNow().UtcDateTime, new Pgvector.Vector(LlmFalso.Vetor(texto))));
             await db.SaveChangesAsync();
         });
 

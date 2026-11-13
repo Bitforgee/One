@@ -167,7 +167,7 @@ public class ImutabilidadeRagTests(OneFactory f) : IClassFixture<OneFactory>
                 new VersaoDocumento { Numero = 1, NomeArquivo = "r.pdf", Chave = $"1/documentos/{Guid.NewGuid():N}", Hash = new string('a', 64), Tamanho = 1, Texto = "t", Paginas = 1, CriadaEm = DateTime.UtcNow });
             db.Documentos.Add(d);
             await db.SaveChangesAsync();
-            db.TrechosFonte.Add(new TrechoFonte { VersaoDocumentoId = d.Versoes.Single().Id, Texto = "pendente", ProximaTentativa = DateTime.UtcNow });
+            db.TrechosFonte.Add(TrechoFonte.DaVersaoDeDocumento(d.Versoes.Single().Id, 0, "pendente", DateTime.UtcNow));
             await db.SaveChangesAsync();
         });
         var indexado = Semente.Fonte(c.Boleto.Id);

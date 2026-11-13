@@ -50,7 +50,7 @@ public class IndicadoresTests(OneFactory f) : IClassFixture<OneFactory>
                 c.Registrar(MensagemConversa.DoAssistente(new()
                 {
                     Texto = "texto", TipoFinal = t, CriadaEm = em,
-                    Citacoes = t == "resposta" && citar ? [new CitacaoArtigo { VersaoArtigoId = versao, Trechos = ["o portal"] }] : [],
+                    Citacoes = t == "resposta" && citar ? [CitacaoArtigo.DaVersao(versao, ["o portal"])] : [],
                 }));
             db.Conversas.Add(c);
             await db.SaveChangesAsync();

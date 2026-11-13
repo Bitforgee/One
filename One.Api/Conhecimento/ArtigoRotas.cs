@@ -16,7 +16,7 @@ public static class ArtigoRotas
 
     static IResult? TituloEPerguntas(string? titulo, string[]? perguntas)
     {
-        if (string.IsNullOrWhiteSpace(titulo) || titulo.Length > 200) return Problemas.Invalido("Informe o título, com até 200 caracteres.", "titulo");
+        if (!TituloDeConhecimento.Valido(titulo)) return Problemas.Invalido(TituloDeConhecimento.Recusa, "titulo");
         if (perguntas is null || !perguntas.Any(p => !string.IsNullOrWhiteSpace(p))) return Problemas.Invalido("Informe ao menos uma pergunta relacionada.", "perguntas");
         return null;
     }
@@ -32,15 +32,8 @@ public static class ArtigoRotas
 
     static bool LinkInvalido(string l) => !Uri.TryCreate(l, UriKind.Absolute, out var u) || u.Scheme is not ("http" or "https");
 
-    public static VersaoArtigo Versao(string? titulo, string[]? perguntas, string? resposta, string[]? links, int numero, DateTime agora) => new()
-    {
-        Numero = numero,
-        Titulo = titulo!,
-        Perguntas = perguntas!.Where(p => !string.IsNullOrWhiteSpace(p)).ToList(),
-        Resposta = resposta!,
-        Links = [.. links ?? []],
-        CriadaEm = agora,
-    };
+    public static VersaoArtigo Versao(string? titulo, string[]? perguntas, string? resposta, string[]? links, int numero, DateTime agora) =>
+        VersaoArtigo.Criar(new(titulo!, perguntas!, resposta!, links), numero, agora);
 
     public static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
 

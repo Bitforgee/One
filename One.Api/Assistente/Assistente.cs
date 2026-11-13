@@ -18,7 +18,7 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         var k = cfg.GetValue("Rag:K", 5);
         var fuso = await db.Instituicoes.Where(i => i.Id == instituicaoId).Select(i => i.Fuso).SingleAsync();
         var hoje = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(relogio.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(fuso)));
-        return await Fontes.Buscar(db, vetor, hoje, k);
+        return await BuscarFontes.Buscar(db, vetor, hoje, k);
     }
 
     public async Task<MensagemConversa> Responder(Conversa conversa)

@@ -699,7 +699,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var esperado = new Dictionary<string, int>
         {
             ["Agendador.cs"] = 1,
-            ["Conhecimento/Fontes.cs"] = 4, ["Dados/OneDb.cs"] = 15,
+            ["Conhecimento/BuscarFontes.cs"] = 2, ["Conhecimento/CitacoesDeFontes.cs"] = 2, ["Dados/OneDb.cs"] = 15,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
@@ -1135,9 +1135,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Entidade_sem_setter_publico =
     [
-        "CitacaoArtigo",
         "OneDb",
-        "TrechoFonte",
     ];
 
     static readonly string[] Excecoes_Raiz_sem_fatias =
@@ -1149,11 +1147,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "Administracao/AlterarMoodle.cs",
         "Agendador.cs",
-        "Assistente/ConferirResposta.cs",
         "Assistente/ConversaRotas.cs",
         "Chamados/ResponderChamado.cs",
-        "Conhecimento/DocumentoRotas.cs",
-        "Instituicoes/CargaInicial.cs",
 
     ];
 
