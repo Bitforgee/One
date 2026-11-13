@@ -35,7 +35,7 @@ public class SenhaTests(OneFactory f) : IClassFixture<OneFactory>
         var r = await c.PostAsJsonAsync("/api/auth/senha", new { senhaAtual = Semente.Senha, novaSenha = "12345678" });
 
         Assert.Equal(HttpStatusCode.NoContent, r.StatusCode);
-        var login = await f.Cliente().Login(i.Slug, u.Cpf, "12345678");
+        var login = await f.Cliente().Login(i.Slug, u.Cpf.Valor, "12345678");
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         Assert.False((await login.Json()).GetProperty("deveTrocarSenha").GetBoolean());
     }
@@ -54,7 +54,7 @@ public class SenhaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.BadRequest, errada.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, curta.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, longa.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, u.Cpf, Semente.Senha)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, u.Cpf.Valor, Semente.Senha)).StatusCode);
     }
 
     [Fact]

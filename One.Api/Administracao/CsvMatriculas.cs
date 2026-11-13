@@ -24,7 +24,7 @@ public static class CsvMatriculas
         foreach (var (numero, c) in linhas)
         {
             if (c.Length != 7) { erros.Add(new(numero, "A linha deve ter 7 campos separados por ponto e vírgula.")); continue; }
-            var cpf = Cpf.Normalizar(c[0]);
+            var cpf = Cpf.Tentar(c[0])?.Valor;
             var motivos = DaPessoa(c, cpf, emails).Concat(DaMatricula(c, cpf, cursos, matriculas)).ToList();
             if (motivos.Count > 0) { erros.Add(new(numero, string.Join("; ", motivos))); continue; }
             matriculas[c[3]] = cpf!;

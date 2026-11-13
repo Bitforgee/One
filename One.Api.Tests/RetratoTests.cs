@@ -83,7 +83,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var respostas = new List<(int, HttpResponseMessage)>
         {
             (400, await c.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "" })),
-            (401, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf, "senha-errada")),
+            (401, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf.Valor, "senha-errada")),
             (403, await atendente.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })),
             (404, await f.Cliente().GetAsync("/api/instituicoes/nao-existe")),
             (409, await c.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null)),
@@ -196,7 +196,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         var admin = await n.Entrar(i, await Pessoa(n, i, "Carla Admin", "33344455508", [Papeis.Administrador]));
         var (anonimo, aluno) = (n.Cliente(), n.Cliente());
 
-        await R("POST", "/api/auth/login", "aluno", 200, aluno.Login(i.Slug, ana.Cpf));
+        await R("POST", "/api/auth/login", "aluno", 200, aluno.Login(i.Slug, ana.Cpf.Valor));
         await R("POST", "/api/auth/primeiro-acesso", "anonimo", 202, anonimo.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = "44455566619" }));
         await R("GET", "/api/auth/me", "aluno", 200, aluno.GetAsync("/api/auth/me"));
         await R("GET", "/api/instituicoes/{slug}", "anonimo", 200, anonimo.GetAsync($"/api/instituicoes/{i.Slug}"));

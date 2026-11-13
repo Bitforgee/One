@@ -48,7 +48,7 @@ public static class PushSemente
     public static async Task<HttpClient> EntrarEm(this WebApplicationFactory<Program> fx, Instituicao i, Usuario u)
     {
         var c = fx.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-        Assert.Equal(System.Net.HttpStatusCode.OK, (await c.Login(i.Slug, u.Cpf)).StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, (await c.Login(i.Slug, u.Cpf.Valor)).StatusCode);
         return c;
     }
 }

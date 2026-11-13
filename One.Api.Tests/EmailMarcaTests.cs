@@ -51,7 +51,7 @@ public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotNull(await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Destinatario == para).Select(e => e.EnviadoEm).SingleAsync()));
 
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null);
-        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor });
         var acesso = (await PrimeiroAcessoTests.EmailNoMailpit(u.Email))!.Value;
         Assert.Contains("background-color:#8a1538", acesso.GetProperty("HTML").GetString());
         Assert.Contains("Crie sua senha", acesso.GetProperty("Subject").GetString());

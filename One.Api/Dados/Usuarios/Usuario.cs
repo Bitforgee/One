@@ -6,7 +6,7 @@ public class Usuario : IDaInstituicao
 
     public long Id { get; private set; }
     public long InstituicaoId { get; set; }
-    public string Cpf { get; private set; } = "";
+    public Cpf Cpf { get; private set; } = Cpf.Ler("");
     public string Nome { get; private set; } = "";
     public string Email { get; private set; } = "";
     public string? SenhaHash { get; private set; }
@@ -15,12 +15,12 @@ public class Usuario : IDaInstituicao
     public List<UsuarioPapel> Papeis { get; private set; } = [];
     public List<Matricula> Matriculas { get; private set; } = [];
 
-    public static Usuario Criar(string cpf, string nome, string email, IEnumerable<string>? papeis = null) =>
+    public static Usuario Criar(Cpf cpf, string nome, string email, IEnumerable<string>? papeis = null) =>
         new() { Cpf = cpf, Nome = nome, Email = email, Papeis = [.. (papeis ?? []).Select(p => new UsuarioPapel { Papel = p })] };
 
     public bool Tem(string papel) => Papeis.Any(p => p.Papel == papel);
 
-    public void Atualizar(string cpf, string nome, string email)
+    public void Atualizar(Cpf cpf, string nome, string email)
     {
         Cpf = cpf;
         AlterarContato(nome, email);

@@ -35,7 +35,7 @@ public static class InstituicaoComando
         var db = sp.GetRequiredService<OneDb>();
         var agora = sp.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         string Valor(string chave) => o.GetValueOrDefault(chave)?.Trim() ?? "";
-        var n = new NovaInstituicao(Valor("slug"), Valor("nome"), Valor("fuso"), Cpf.Normalizar(Valor("admin-cpf")), Valor("admin-nome"), Valor("admin-email"));
+        var n = new NovaInstituicao(Valor("slug"), Valor("nome"), Valor("fuso"), Cpf.Tentar(Valor("admin-cpf")), Valor("admin-nome"), Valor("admin-email"));
         var erros = await Criacao.Validar(db, n);
         if (erros.Count > 0) return [.. erros.Select(e => $"--{e.Campo.Replace('.', '-')}: {e.Mensagem}")];
 
@@ -85,7 +85,7 @@ public static class InstituicaoComando
         if (instituicao is null) return [$"--slug: instituição \"{slug}\" não existe"];
 
         db.InstituicaoAtual = instituicao.Id;
-        var cpf = Cpf.Normalizar(o.GetValueOrDefault("cpf"));
+        var cpf = Cpf.Tentar(o.GetValueOrDefault("cpf"));
         var usuario = await db.Usuarios.Include(u => u.Papeis).FirstOrDefaultAsync(u => u.Cpf == cpf);
         if (usuario is null) return [$"--cpf: não há usuário com o CPF \"{o.GetValueOrDefault("cpf")}\" em \"{slug}\""];
         if (!usuario.Ativo) return [$"--cpf: o usuário {usuario.Nome} está inativo"];

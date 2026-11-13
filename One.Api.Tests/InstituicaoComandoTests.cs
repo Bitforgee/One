@@ -60,7 +60,7 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.True(setor.Triagem);
             Assert.Equal("Não classificado", (await db.Categorias.SingleAsync()).Nome);
             var admin = await db.Usuarios.Include(u => u.Papeis).SingleAsync();
-            Assert.Equal(cpf, admin.Cpf);
+            Assert.Equal(cpf, admin.Cpf.Valor);
             Assert.Null(admin.SenhaHash);
             Assert.True(admin.Ativo);
             Assert.Equal([Papeis.Administrador], admin.Papeis.Select(p => p.Papel));

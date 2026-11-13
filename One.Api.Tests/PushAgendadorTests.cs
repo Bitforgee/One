@@ -89,7 +89,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal("""{"titulo":"Univag","corpo":"Sua solicitação ONE-12 tem uma resposta nova.","url":"/univag/chamados/ONE-12","icone":"/icons/icon-192.png"}""", payload);
         Assert.Equal(["titulo", "corpo", "url", "icone"], System.Text.Json.JsonDocument.Parse(payload).RootElement.EnumerateObject().Select(p => p.Name));
         var titulo = await f.Db(univag.Id, db => db.Chamados.Where(x => x.Id == c.ChamadoId).Select(x => x.Titulo).SingleAsync());
-        foreach (var dado in new[] { c.B.Aluno.Usuario.Nome, c.B.Aluno.Usuario.Email, c.B.Aluno.Usuario.Cpf, "Texto privado da mensagem", titulo })
+        foreach (var dado in new[] { c.B.Aluno.Usuario.Nome, c.B.Aluno.Usuario.Email, c.B.Aluno.Usuario.Cpf.Valor, "Texto privado da mensagem", titulo })
             Assert.DoesNotContain(dado, payload);
         var raiz = System.Text.Json.JsonDocument.Parse(payload).RootElement;
         Assert.NotEqual("One", raiz.GetProperty("titulo").GetString());

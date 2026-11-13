@@ -27,7 +27,7 @@ public sealed class EuHandler(OneDb db) : IRequestHandler<Eu, IResult>
         var matriculas = await db.Matriculas.Where(x => x.UsuarioId == u.Id).OrderBy(x => x.Numero)
             .Select(x => new Eu.Resposta.DaMatricula(x.Id, x.Numero, x.Curso!.Nome, x.Semestre, x.Situacao))
             .ToListAsync();
-        return Results.Ok(new Eu.Resposta(u.Id, u.Nome, Cpf.Mascarar(u.Cpf), [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,
+        return Results.Ok(new Eu.Resposta(u.Id, u.Nome, u.Cpf.Mascarado, [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,
             new Eu.Resposta.DaInstituicao(i.Slug, i.Nome, i.Fuso), matriculas));
     }
 }

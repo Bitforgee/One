@@ -25,7 +25,7 @@ public class CpfTests(OneFactory f) : IClassFixture<OneFactory>
         var id = (await criada.Json()).GetProperty("conversaId").GetInt64();
         await Guardar(c.PostAsJsonAsync($"/api/conversas/{id}/mensagens", new { mensagem = "oi" }));
         await Guardar(c.GetAsync($"/api/conversas/{id}"));
-        await Guardar(c.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf }));
+        await Guardar(c.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor }));
         var numero = (await (await c.PostAsJsonAsync($"/api/conversas/{id}/transferir", new { })).Json()).GetProperty("numero").GetString();
         await Guardar(c.GetAsync("/api/chamados?escopo=meus"));
         await Guardar(c.GetAsync($"/api/chamados/{numero}"));

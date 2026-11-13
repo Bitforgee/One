@@ -19,11 +19,11 @@ public class RateLimitTests : IAsyncLifetime
         var u = await f.Usuario(i, [Papeis.Aluno]);
         var c = f.Cliente();
 
-        for (var n = 0; n < 3; n++) Assert.Equal(HttpStatusCode.OK, (await c.Login(i.Slug, u.Cpf)).StatusCode);
+        for (var n = 0; n < 3; n++) Assert.Equal(HttpStatusCode.OK, (await c.Login(i.Slug, u.Cpf.Valor)).StatusCode);
         for (var n = 0; n < 2; n++)
             Assert.Equal(HttpStatusCode.Accepted, (await c.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = Semente.NovoCpf() })).StatusCode);
 
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await c.Login(i.Slug, u.Cpf)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await c.Login(i.Slug, u.Cpf.Valor)).StatusCode);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await c.PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = Semente.NovoCpf() })).StatusCode);
     }
 

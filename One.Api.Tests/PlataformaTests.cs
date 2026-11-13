@@ -104,11 +104,11 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var alvo = await f.Usuario(i, [Papeis.Administrador, Papeis.Operador]);
         Task<List<string>> PapeisDe() => f.Db(i.Id, db => db.UsuarioPapeis.Where(p => p.UsuarioId == alvo.Id).Select(p => p.Papel).OrderBy(p => p).ToListAsync());
 
-        var r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf, nome = alvo.Nome, email = alvo.Email, papeis = new[] { Papeis.Administrador } });
+        var r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf.Valor, nome = alvo.Nome, email = alvo.Email, papeis = new[] { Papeis.Administrador } });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         Assert.Equal(["ADMINISTRADOR", "OPERADOR"], await PapeisDe());
 
-        r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf, nome = alvo.Nome, email = alvo.Email, papeis = new[] { Papeis.Atendente }, setores = new[] { setor.Id } });
+        r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf.Valor, nome = alvo.Nome, email = alvo.Email, papeis = new[] { Papeis.Atendente }, setores = new[] { setor.Id } });
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         Assert.Equal(["ATENDENTE", "OPERADOR"], await PapeisDe());
     }
@@ -125,13 +125,13 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         {
             var cpf = Semente.NovoCpf();
             var criar = await admin.PostAsJsonAsync("/api/admin/usuarios", new { cpf, nome = "Novo", email = $"{Guid.NewGuid():N}@teste.one", senhaTemporaria = "temporaria-1", papeis });
-            var editar = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf, nome = alvo.Nome, email = alvo.Email, papeis });
+            var editar = await admin.PutAsJsonAsync($"/api/admin/usuarios/{alvo.Id}", new { cpf = alvo.Cpf.Valor, nome = alvo.Nome, email = alvo.Email, papeis });
             foreach (var r in new[] { criar, editar })
             {
                 Assert.Equal(HttpStatusCode.BadRequest, r.StatusCode);
                 Assert.Equal("Escolha ao menos um papel.", (await r.Json()).GetProperty("errors").GetProperty("papeis")[0].GetString());
             }
-            Assert.False(await f.Db(i.Id, db => db.Usuarios.AnyAsync(u => u.Cpf == cpf)));
+            Assert.False(await f.Db(i.Id, db => db.Usuarios.AnyAsync(u => u.Cpf == Cpf.Ler(cpf))));
         }
         Assert.Equal(antes, await f.Db(i.Id, db => db.UsuarioPapeis.CountAsync()));
     }
@@ -186,7 +186,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
             var categoria = await db.Categorias.SingleAsync();
             Assert.Equal(("Não classificado", true), (categoria.Nome, categoria.Padrao));
             var admin = await db.Usuarios.Include(u => u.Papeis).SingleAsync();
-            Assert.Equal((cpf, "Dona Admin", "admin@demo.edu.br"), (admin.Cpf, admin.Nome, admin.Email));
+            Assert.Equal((cpf, "Dona Admin", "admin@demo.edu.br"), (admin.Cpf.Valor, admin.Nome, admin.Email));
             Assert.Equal([Papeis.Administrador], admin.Papeis.Select(p => p.Papel));
             Assert.Equal(admin.Id, (await db.Tokens.SingleAsync()).UsuarioId);
         });
@@ -338,7 +338,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var demo = await f.Instituicao();
         var adminDemo = await f.Usuario(demo, [Papeis.Administrador]);
         var clienteAdmin = await f.Entrar(demo, adminDemo);
-        var base_ = await f.Cliente().Login("nao-existe", adminDemo.Cpf);
+        var base_ = await f.Cliente().Login("nao-existe", adminDemo.Cpf.Valor);
         Assert.Equal(HttpStatusCode.OK, (await clienteAdmin.GetAsync("/api/auth/me")).StatusCode);
 
         var r = await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/desativar", null);
@@ -347,7 +347,7 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var j = await r.Json();
         Assert.Equal((demo.Slug, false), (j.GetProperty("slug").GetString(), j.GetProperty("ativa").GetBoolean()));
         Assert.Equal(HttpStatusCode.NotFound, (await f.Cliente().GetAsync($"/api/instituicoes/{demo.Slug}")).StatusCode);
-        var login = await f.Cliente().Login(demo.Slug, adminDemo.Cpf);
+        var login = await f.Cliente().Login(demo.Slug, adminDemo.Cpf.Valor);
         Assert.Equal(base_.StatusCode, login.StatusCode);
         Assert.Equal((await base_.Json()).GetProperty("detail").GetString(), (await login.Json()).GetProperty("detail").GetString());
         Assert.Equal(HttpStatusCode.Unauthorized, (await clienteAdmin.GetAsync("/api/auth/me")).StatusCode);
@@ -362,11 +362,11 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var adminDemo = await f.Usuario(demo, [Papeis.Administrador]);
         Task<int> Tokens() => f.Db(demo.Id, db => db.Tokens.CountAsync());
         Task<int> Emails() => f.Db(demo.Id, db => db.EmailsSaida.CountAsync());
-        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
+        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf.Valor });
         Assert.Equal(1, await Tokens());
 
         await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/desativar", null);
-        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf });
+        await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = demo.Slug, cpf = adminDemo.Cpf.Valor });
 
         Assert.Equal((1, 0), (await Tokens(), await Emails()));
     }
@@ -390,14 +390,14 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
         var demo = await f.Instituicao();
         var adminDemo = await f.Usuario(demo, [Papeis.Administrador]);
         await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/desativar", null);
-        Assert.NotEqual(HttpStatusCode.OK, (await f.Cliente().Login(demo.Slug, adminDemo.Cpf)).StatusCode);
+        Assert.NotEqual(HttpStatusCode.OK, (await f.Cliente().Login(demo.Slug, adminDemo.Cpf.Valor)).StatusCode);
 
         var r = await op.Cliente.PostAsync($"{Lista}/{demo.Slug}/reativar", null);
 
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         var j = await r.Json();
         Assert.Equal((demo.Slug, true), (j.GetProperty("slug").GetString(), j.GetProperty("ativa").GetBoolean()));
-        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(demo.Slug, adminDemo.Cpf)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(demo.Slug, adminDemo.Cpf.Valor)).StatusCode);
     }
 
 

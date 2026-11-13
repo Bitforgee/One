@@ -231,7 +231,7 @@ public class IndicadoresTests(OneFactory f) : IClassFixture<OneFactory>
 
         var corpo = await (await m.Admin.GetAsync($"/api/indicadores?{Periodo}")).Content.ReadAsStringAsync();
 
-        foreach (var proibido in new[] { a.Nome, a.Cpf, "2000999888", "MENSAGEM-SECRETA", a.Email })
+        foreach (var proibido in new[] { a.Nome, a.Cpf.Valor, "2000999888", "MENSAGEM-SECRETA", a.Email })
             Assert.DoesNotContain(proibido, corpo);
     }
 

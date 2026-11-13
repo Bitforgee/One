@@ -33,7 +33,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await f.Instituicao();
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null);
 
-        foreach (var cpf in new[] { u.Cpf, Semente.NovoCpf() })
+        foreach (var cpf in new[] { u.Cpf.Valor, Semente.NovoCpf() })
         {
             var r = await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf });
             Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
@@ -61,7 +61,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         var email = $"aluno-{Guid.NewGuid():N}@teste.one";
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null, email: email);
 
-        var r = await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+        var r = await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor });
 
         Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
         var msg = await EmailNoMailpit(email);
@@ -85,7 +85,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await f.Instituicao();
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null);
 
-        var r = await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+        var r = await f.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor });
 
         Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
         Assert.NotNull(await EmailNoMailpit(u.Email));
@@ -100,7 +100,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await fora.Instituicao();
         var u = await fora.Usuario(i, [Papeis.Aluno], senha: null);
 
-        var r = await fora.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+        var r = await fora.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor });
 
         Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
         Assert.Equal(Mensagem, (await r.Json()).GetProperty("mensagem").GetString());
@@ -115,7 +115,7 @@ public class PrimeiroAcessoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await fora.Instituicao();
         var u = await fora.Usuario(i, [Papeis.Aluno], senha: null);
 
-        var r = await fora.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf });
+        var r = await fora.Cliente().PostAsJsonAsync("/api/auth/primeiro-acesso", new { instituicao = i.Slug, cpf = u.Cpf.Valor });
 
         Assert.Equal(HttpStatusCode.Accepted, r.StatusCode);
         var log = Assert.Single(fora.Logs.Entradas, l => l.Nivel == LogLevel.Error && Equals(l.Campos.GetValueOrDefault("InstituicaoId"), i.Id));

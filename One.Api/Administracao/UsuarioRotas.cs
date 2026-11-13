@@ -22,7 +22,7 @@ public static class UsuarioRotas
 
     static IResult? Pessoa(string? cpf, string? nome, string? email)
     {
-        if (Cpf.Normalizar(cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
+        if (Cpf.Tentar(cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
         if (!AdminRotas.Nome(nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
         if (email is null || !Email.Valido().IsMatch(email)) return Problemas.Invalido("E-mail inválido.", "email");
         return null;
@@ -41,7 +41,7 @@ public static class UsuarioRotas
 
     static async Task<IResult?> Repetidos(OneDb db, string? cpfInformado, string? email, long id)
     {
-        var cpf = Cpf.Normalizar(cpfInformado);
+        var cpf = Cpf.Tentar(cpfInformado);
         if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return AdminRotas.Repetido("Já existe um usuário com este CPF na instituição.");
         if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == email)) return AdminRotas.Repetido("Já existe um usuário com este e-mail na instituição.");
         return null;
@@ -49,7 +49,7 @@ public static class UsuarioRotas
 
     public static async Task Gravar(OneDb db, Usuario u, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, IPasswordHasher<Usuario> hasher)
     {
-        u.Atualizar(Cpf.Normalizar(cpf)!, nome!, email!);
+        u.Atualizar(Cpf.Tentar(cpf)!, nome!, email!);
         u.Papeis.RemoveAll(p => p.Papel != Papeis.Operador && !papeis!.Contains(p.Papel));
         u.Papeis.AddRange(papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
         if (senhaTemporaria is not null)

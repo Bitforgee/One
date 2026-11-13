@@ -24,12 +24,12 @@ public class ProblemDetailsTests(OneFactory f) : IClassFixture<OneFactory>
             (400, await c.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "" })),
             (400, await f.Cliente().PostAsync("/api/auth/login", new StringContent("{ não é json", Encoding.UTF8, "application/json"))),
             (401, await f.Cliente().GetAsync("/api/auth/me")),
-            (401, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf, "senha-errada")),
+            (401, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf.Valor, "senha-errada")),
             (403, await atendente.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })),
             (404, await f.Cliente().GetAsync("/api/instituicoes/nao-existe")),
             (404, await f.Cliente().GetAsync("/api/rota-que-nao-existe")),
             (409, await c.Cliente.PostAsync($"/api/conversas/{id}/encerrar", null)),
-            (500, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf, "explode-500")),
+            (500, await f.Cliente().Login(c.Instituicao.Slug, c.Aluno.Usuario.Cpf.Valor, "explode-500")),
         };
 
         var numero = (await (await c.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "oi" })).Json()).GetProperty("numero").GetString()!;

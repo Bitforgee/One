@@ -95,7 +95,7 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var (novo1, novo2) = (Semente.NovoCpf(), Semente.NovoCpf());
         var csv = $"""
             {Cabecalho}
-            {existente.Cpf};Nome Novo;novo@aluno.com;2000000001;Direito;5;INATIVA
+            {existente.Cpf.Valor};Nome Novo;novo@aluno.com;2000000001;Direito;5;INATIVA
             {novo1};Bia;bia@aluno.com;2000000002;ADS;1;ATIVA
             {novo1};Bia;bia@aluno.com;2000000003;Direito;2;ATIVA
             {novo2};Caio;caio@aluno.com;2000000004;ADS;12;ATIVA
@@ -109,15 +109,15 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal((3, 1), (j.GetProperty("criados").GetInt32(), j.GetProperty("atualizados").GetInt32()));
         var alunos = await f.Db(i.Id, db => db.Usuarios.Include(u => u.Papeis).Include(u => u.Matriculas).ThenInclude(m => m.Curso).Where(u => u.Papeis.Any(p => p.Papel == Papeis.Aluno)).ToListAsync());
         Assert.Equal(3, alunos.Count);
-        var atualizado = alunos.Single(u => u.Cpf == existente.Cpf);
+        var atualizado = alunos.Single(u => u.Cpf.Valor == existente.Cpf.Valor);
         Assert.Equal(("Nome Novo", "novo@aluno.com"), (atualizado.Nome, atualizado.Email));
         Assert.NotNull(atualizado.SenhaHash);
         var m = Assert.Single(atualizado.Matriculas);
         Assert.Equal(("Direito", 5, "INATIVA"), (m.Curso!.Nome, m.Semestre, m.Situacao));
-        var bia = alunos.Single(u => u.Cpf == novo1);
+        var bia = alunos.Single(u => u.Cpf.Valor == novo1);
         Assert.Null(bia.SenhaHash);
         Assert.Equal(["2000000002", "2000000003"], bia.Matriculas.Select(x => x.Numero).Order());
-        Assert.Equal(ads.Id, alunos.Single(u => u.Cpf == novo2).Matriculas.Single().CursoId);
+        Assert.Equal(ads.Id, alunos.Single(u => u.Cpf.Valor == novo2).Matriculas.Single().CursoId);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var m = await f.Db(i.Id, db => db.Matriculas.Include(x => x.Curso).SingleAsync(x => x.UsuarioId == aluno.Usuario.Id));
         var antigo = (await (await aluno.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "antes" })).Json()).GetProperty("numero").GetString();
 
-        var r = await admin.Importar($"{Cabecalho}\n{aluno.Usuario.Cpf};{aluno.Usuario.Nome};{aluno.Usuario.Email};{m.Numero};{m.Curso!.Nome};3;INATIVA\n");
+        var r = await admin.Importar($"{Cabecalho}\n{aluno.Usuario.Cpf.Valor};{aluno.Usuario.Nome};{aluno.Usuario.Email};{m.Numero};{m.Curso!.Nome};3;INATIVA\n");
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
 
         var id = await f.Db(i.Id, async db =>
@@ -239,7 +239,7 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.True(uCom.Ativo && uCom.DeveTrocarSenha && uCom.SenhaHash is not null);
         Assert.True(uSem.Ativo && uSem.SenhaHash is null);
         Assert.Equal([triagem.Id], await f.Db(i.Id, db => db.AtendenteSetores.Where(a => a.UsuarioId == uCom.Id).Select(a => a.SetorId).ToListAsync()));
-        var login = await f.Cliente().Login(i.Slug, uCom.Cpf, "12345678");
+        var login = await f.Cliente().Login(i.Slug, uCom.Cpf.Valor, "12345678");
         Assert.True((await login.Json()).GetProperty("deveTrocarSenha").GetBoolean());
     }
 
@@ -298,10 +298,10 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         var deOutra = await f.Usuario(demo, [Papeis.Aluno]);
         var antes = await f.Db(i.Id, db => db.Usuarios.CountAsync());
 
-        Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(existente.Cpf, papeis: [Papeis.Administrador]))).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(existente.Cpf.Valor, papeis: [Papeis.Administrador]))).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(Semente.NovoCpf(), existente.Email, [Papeis.Administrador]))).StatusCode);
         Assert.Equal(antes, await f.Db(i.Id, db => db.Usuarios.CountAsync()));
-        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(deOutra.Cpf, deOutra.Email, [Papeis.Administrador]))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await admin.PostAsJsonAsync("/api/admin/usuarios", Corpo(deOutra.Cpf.Valor, deOutra.Email, [Papeis.Administrador]))).StatusCode);
     }
 
     [Fact]
@@ -310,11 +310,11 @@ public class UsuarioAdminTests(OneFactory f) : IClassFixture<OneFactory>
         var (i, admin) = await Admin.Criar(f);
         var aluno = await f.Usuario(i, [Papeis.Aluno]);
 
-        var r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{aluno.Id}", new { cpf = aluno.Cpf, nome = aluno.Nome, email = aluno.Email, papeis = new[] { Papeis.Aluno }, senhaTemporaria = "temporaria-1" });
+        var r = await admin.PutAsJsonAsync($"/api/admin/usuarios/{aluno.Id}", new { cpf = aluno.Cpf.Valor, nome = aluno.Nome, email = aluno.Email, papeis = new[] { Papeis.Aluno }, senhaTemporaria = "temporaria-1" });
 
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         Assert.True((await f.Db(i.Id, db => db.Usuarios.SingleAsync(u => u.Id == aluno.Id))).DeveTrocarSenha);
-        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, aluno.Cpf, "temporaria-1")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await f.Cliente().Login(i.Slug, aluno.Cpf.Valor, "temporaria-1")).StatusCode);
     }
 
     [Fact]

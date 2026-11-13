@@ -21,7 +21,7 @@ public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email 
     public async ValueTask<IResult> Handle(PrimeiroAcesso m, CancellationToken ct)
     {
         var i = m.Corpo;
-        var cpf = Cpf.Normalizar(i.Cpf);
+        var cpf = Cpf.Tentar(i.Cpf);
         if (cpf is null) return Problemas.Invalido(AuthRotas.CpfInvalido, "cpf");
 
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(x => x.Slug == i.Instituicao && x.Ativa);

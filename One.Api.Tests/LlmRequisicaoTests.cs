@@ -50,7 +50,7 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
         await c.Cliente.PostAsJsonAsync($"/api/conversas/{conversaId}/mensagens", new { mensagem = "mensagem-12" });
 
         var corpo = f.Llm.Corpos[^1];
-        foreach (var proibido in new[] { u.Nome, u.Cpf, matricula.Numero, matricula.Curso!.Nome, "outra instituição", "rascunho", "arquivado", "Categoria desativada" })
+        foreach (var proibido in new[] { u.Nome, u.Cpf.Valor, matricula.Numero, matricula.Curso!.Nome, "outra instituição", "rascunho", "arquivado", "Categoria desativada" })
             Assert.DoesNotContain(proibido, corpo);
         foreach (var permitido in new[] { "Como emitir o boleto do semestre", "Faltas não são abonadas", Cenario.RespostaBoleto, Cenario.LinkBoleto, "Categoria ativa", "Não classificado" })
             Assert.Contains(permitido, corpo);

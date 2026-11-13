@@ -171,7 +171,7 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
         await Vincular(i, dono, "42");
         var c = f.Cliente();
 
-        var r = await Entrar(i, "42", outro.Cpf, c, d =>
+        var r = await Entrar(i, "42", outro.Cpf.Valor, c, d =>
         {
             d["email"] = outro.Email;
             d["name"] = outro.Nome;
@@ -189,7 +189,7 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var u = await f.Usuario(i, [Papeis.Aluno]);
         var c = f.Cliente();
 
-        var primeiro = await Entrar(i, "77", u.Cpf, c);
+        var primeiro = await Entrar(i, "77", u.Cpf.Valor, c);
 
         Assert.Equal($"/{i.Slug}", primeiro.Destino());
         Assert.StartsWith("one.auth=", primeiro.Sessao());
@@ -229,7 +229,7 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, db => db.Usuarios.Where(x => x.Id == u.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativo, false)));
         var antes = (await f.Vinculos(i)).Count;
 
-        var r = await Entrar(i, "42", u.Cpf);
+        var r = await Entrar(i, "42", u.Cpf.Valor);
 
         Assert.Equal($"/{i.Slug}?moodle=inativo", r.Destino());
         SemSessao(r);
@@ -249,7 +249,7 @@ public class MoodleLancamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await Univag();
         var u = await f.Usuario(i, papeis.Split(','));
 
-        var r = await Entrar(i, "42", u.Cpf);
+        var r = await Entrar(i, "42", u.Cpf.Valor);
 
         Assert.Equal($"/{i.Slug}?moodle=use-senha", r.Destino());
         SemSessao(r);

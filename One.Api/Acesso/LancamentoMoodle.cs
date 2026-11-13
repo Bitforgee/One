@@ -51,7 +51,7 @@ public sealed class LancamentoMoodleHandler(OneDb db, ValidadorLti validador, Ti
     async Task<ResultadoLogin> Entrar(Instituicao i, PlataformaMoodle p, DadosLti d, CancellationToken ct)
     {
         var vinculo = await db.VinculosMoodle.FirstOrDefaultAsync(x => x.Emissor == p.Emissor && x.Sub == d.Sub, ct);
-        var u = await Achar(vinculo, Cpf.Normalizar(d.Username), ct);
+        var u = await Achar(vinculo, Cpf.Tentar(d.Username), ct);
         if (u is null) return Voltar(i, "sem-cadastro");
         if (!u.Ativo) return Voltar(i, "inativo");
         if (u.Papeis.Count != 1 || !u.Tem(Papeis.Aluno)) return Voltar(i, "use-senha");
@@ -59,7 +59,7 @@ public sealed class LancamentoMoodleHandler(OneDb db, ValidadorLti validador, Ti
         return new(Sessao.Principal(u), Results.Redirect($"/{i.Slug}"));
     }
 
-    async Task<Usuario?> Achar(VinculoMoodle? vinculo, string? cpf, CancellationToken ct)
+    async Task<Usuario?> Achar(VinculoMoodle? vinculo, Cpf? cpf, CancellationToken ct)
     {
         var usuarios = db.Usuarios.Include(x => x.Papeis);
         if (vinculo is not null) return await usuarios.FirstOrDefaultAsync(x => x.Id == vinculo.UsuarioId, ct);

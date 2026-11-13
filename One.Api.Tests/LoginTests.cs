@@ -90,10 +90,10 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
 
         var respostas = new[]
         {
-            await f.Cliente().Login("instituicao-inexistente", u.Cpf),
-            await f.Cliente().Login(inativa.Slug, daInativa.Cpf),
+            await f.Cliente().Login("instituicao-inexistente", u.Cpf.Valor),
+            await f.Cliente().Login(inativa.Slug, daInativa.Cpf.Valor),
             await f.Cliente().Login(i.Slug, Semente.NovoCpf()),
-            await f.Cliente().Login(i.Slug, u.Cpf, "senha-errada-1"),
+            await f.Cliente().Login(i.Slug, u.Cpf.Valor, "senha-errada-1"),
         };
 
         foreach (var r in respostas)
@@ -111,7 +111,7 @@ public class LoginTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, db => db.Usuarios.Where(u => u.Id == desativada.Id).ExecuteUpdateAsync(s => s.SetProperty(u => u.Ativo, false)));
         var semSenha = await f.Usuario(i, [Papeis.Aluno], senha: null);
 
-        foreach (var cpf in new[] { desativada.Cpf, semSenha.Cpf })
+        foreach (var cpf in new[] { desativada.Cpf.Valor, semSenha.Cpf.Valor })
         {
             var r = await f.Cliente().Login(i.Slug, cpf);
             Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode);

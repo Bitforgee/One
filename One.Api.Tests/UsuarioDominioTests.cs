@@ -6,7 +6,7 @@ public class UsuarioDominioTests
 {
     static readonly DateTime Agora = new(2026, 11, 12, 12, 0, 0, DateTimeKind.Utc);
 
-    static Usuario Novo() => Usuario.Criar("11144477735", "Maria Teste", "maria@teste.one", [Papeis.Aluno]);
+    static Usuario Novo() => Usuario.Criar(Cpf.Tentar("11144477735")!, "Maria Teste", "maria@teste.one", [Papeis.Aluno]);
 
     [Fact]
     public void Definir_senha_grava_hash_zera_a_troca_e_marca_o_token_usado()
@@ -48,7 +48,7 @@ public class UsuarioDominioTests
     {
         var u = Novo();
 
-        Assert.Equal(("11144477735", "Maria Teste", "maria@teste.one", true, (string?)null, false), (u.Cpf, u.Nome, u.Email, u.Ativo, u.SenhaHash, u.DeveTrocarSenha));
+        Assert.Equal(("11144477735", "Maria Teste", "maria@teste.one", true, (string?)null, false), (u.Cpf.Valor, u.Nome, u.Email, u.Ativo, u.SenhaHash, u.DeveTrocarSenha));
         Assert.True(u.Tem(Papeis.Aluno));
         Assert.False(u.Tem(Papeis.Atendente));
     }
@@ -58,8 +58,8 @@ public class UsuarioDominioTests
     {
         var u = Novo();
 
-        u.Atualizar("52998224725", "Maria Souza", "souza@teste.one");
+        u.Atualizar(Cpf.Tentar("52998224725")!, "Maria Souza", "souza@teste.one");
 
-        Assert.Equal(("52998224725", "Maria Souza", "souza@teste.one"), (u.Cpf, u.Nome, u.Email));
+        Assert.Equal(("52998224725", "Maria Souza", "souza@teste.one"), (u.Cpf.Valor, u.Nome, u.Email));
     }
 }

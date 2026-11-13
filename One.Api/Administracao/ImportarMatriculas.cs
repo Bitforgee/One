@@ -32,7 +32,7 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         return Results.Ok(new ImportarMatriculas.Resposta(criados, atualizados));
     }
 
-    record DonoDaMatricula(string Numero, string Cpf);
+    record DonoDaMatricula(string Numero, Cpf Cpf);
 
     static string Campo(LinhaCsv l, int i) => l.Campos.ElementAtOrDefault(i) ?? "";
 
@@ -41,20 +41,20 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         var numeros = linhas.Select(l => Campo(l, 3)).ToList();
         var emails = linhas.Select(l => Campo(l, 2)).ToList();
         var matriculas = await db.Matriculas.Where(m => numeros.Contains(m.Numero))
-            .Select(m => new DonoDaMatricula(m.Numero, db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single())).ToDictionaryAsync(m => m.Numero, m => m.Cpf);
-        return (matriculas, await db.Usuarios.Where(u => emails.Contains(u.Email)).ToDictionaryAsync(u => u.Email, u => u.Cpf));
+            .Select(m => new DonoDaMatricula(m.Numero, db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single())).ToDictionaryAsync(m => m.Numero, m => m.Cpf.Valor);
+        return (matriculas, await db.Usuarios.Where(u => emails.Contains(u.Email)).ToDictionaryAsync(u => u.Email, u => u.Cpf.Valor));
     }
 
     async Task<(int, int)> Gravar(List<Linha> validas, List<LinhaCsv> linhas)
     {
-        var cpfs = linhas.Select(l => Cpf.Normalizar(Campo(l, 0)) ?? "").ToList();
+        var cpfs = linhas.Select(l => Cpf.Tentar(Campo(l, 0))).OfType<Cpf>().ToList();
         var numeros = linhas.Select(l => Campo(l, 3)).ToList();
-        var alunos = await db.Usuarios.Include(u => u.Papeis).Where(u => cpfs.Contains(u.Cpf)).ToDictionaryAsync(u => u.Cpf);
+        var alunos = await db.Usuarios.Include(u => u.Papeis).Where(u => cpfs.Contains(u.Cpf)).ToDictionaryAsync(u => u.Cpf.Valor);
         var matriculas = await db.Matriculas.Where(m => numeros.Contains(m.Numero)).ToDictionaryAsync(m => m.Numero);
         var (criados, atualizados) = (0, 0);
         foreach (var l in validas)
         {
-            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(Usuario.Criar(l.Cpf, l.Nome, l.Email)).Entity;
+            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(Usuario.Criar(Cpf.Ler(l.Cpf), l.Nome, l.Email)).Entity;
             u.AlterarContato(l.Nome, l.Email);
             if (!u.Tem(Papeis.Aluno)) u.Papeis.Add(new UsuarioPapel { Papel = Papeis.Aluno });
             if (matriculas.TryGetValue(l.Matricula, out var m)) atualizados++;

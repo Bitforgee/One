@@ -5,7 +5,7 @@ using One.Api.Dados.Emails;
 
 namespace One.Api.Instituicoes;
 
-public record NovaInstituicao(string Slug, string Nome, string Fuso, string? Cpf, string AdminNome, string Email);
+public record NovaInstituicao(string Slug, string Nome, string Fuso, Cpf? Cpf, string AdminNome, string Email);
 
 public record ErroDeCampo(string Campo, string Mensagem, bool Repetido = false);
 

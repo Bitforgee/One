@@ -15,7 +15,7 @@ public static class TempoRealCliente
     public static async Task<string> Cookie(this OneFactory f, Instituicao i, Usuario u, string senha = Semente.Senha)
     {
         using var c = f.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = false, AllowAutoRedirect = false });
-        var r = await c.Login(i.Slug, u.Cpf, senha);
+        var r = await c.Login(i.Slug, u.Cpf.Valor, senha);
         Assert.Equal(System.Net.HttpStatusCode.OK, r.StatusCode);
         return r.Headers.GetValues("Set-Cookie").First(x => x.StartsWith("one.auth=")).Split(';')[0];
     }

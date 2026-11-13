@@ -46,7 +46,7 @@ public static class Semente
         string? email = null, string? matricula = null, string situacao = "ATIVA", bool deveTrocarSenha = false) =>
         f.Db(i.Id, async db =>
         {
-            var u = One.Api.Dados.Usuarios.Usuario.Criar(cpf ?? NovoCpf(), "Pessoa " + Guid.NewGuid().ToString("N")[..6], email ?? $"{Guid.NewGuid():N}@teste.one", papeis);
+            var u = One.Api.Dados.Usuarios.Usuario.Criar(Cpf.Ler(cpf ?? NovoCpf()), "Pessoa " + Guid.NewGuid().ToString("N")[..6], email ?? $"{Guid.NewGuid():N}@teste.one", papeis);
             if (senha is not null)
             {
                 var hash = new PasswordHasher<Usuario>().HashPassword(u, senha);
@@ -69,7 +69,7 @@ public static class Semente
     public static async Task<HttpClient> Entrar(this OneFactory f, Instituicao i, Usuario u, string senha = Senha)
     {
         var c = f.Cliente();
-        var r = await c.Login(i.Slug, u.Cpf, senha);
+        var r = await c.Login(i.Slug, u.Cpf.Valor, senha);
         Assert.Equal(System.Net.HttpStatusCode.OK, r.StatusCode);
         return c;
     }

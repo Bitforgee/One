@@ -332,11 +332,11 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
                 (new { cpf, nome = "Zé", email, papeis = new[] { Papeis.Atendente }, setores = Array.Empty<long>(), senhaTemporaria = "abc" }, "setores",
                     "Escolha ao menos um setor para o atendente."),
                 (new { cpf, nome = "Zé", email, papeis = new[] { Papeis.Atendente }, setores = new long[] { 999999 }, senhaTemporaria = "abc" }, "setores", "Setor inexistente."),
-                (new { cpf = outro.Cpf, nome = "Zé", email, papeis = new[] { Papeis.Aluno }, senhaTemporaria = "abc" }, "senhaTemporaria", null),
+                (new { cpf = outro.Cpf.Valor, nome = "Zé", email, papeis = new[] { Papeis.Aluno }, senhaTemporaria = "abc" }, "senhaTemporaria", null),
             })
                 await Recusa400(await Enviar(admin, metodo, rota, corpo), campo, $"{metodo} {rota} {campo}", mensagem);
 
-            await Recusa(await Enviar(admin, metodo, rota, new { cpf = outro.Cpf, nome = "Zé", email = outro.Email, papeis = new[] { Papeis.Aluno } }),
+            await Recusa(await Enviar(admin, metodo, rota, new { cpf = outro.Cpf.Valor, nome = "Zé", email = outro.Email, papeis = new[] { Papeis.Aluno } }),
                 HttpStatusCode.Conflict, $"{metodo} {rota} CPF e e-mail repetidos", "Já existe um usuário com este CPF na instituição.");
         }
     }

@@ -36,14 +36,14 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await f.Instituicao(slug: "univag");
         var u = await f.Usuario(i, [Papeis.Administrador]);
 
-        var (codigo, saida, erro) = await Rodar("operador", "--slug", "univag", "--cpf", u.Cpf);
+        var (codigo, saida, erro) = await Rodar("operador", "--slug", "univag", "--cpf", u.Cpf.Valor);
 
         Assert.Equal(0, codigo);
         Assert.Equal("", erro);
         Assert.Equal($"Operador {u.Nome} adicionado.{Environment.NewLine}", saida);
         Assert.Equal(1, await LinhasOperador(u.Id));
 
-        var (segundo, _, _) = await Rodar("operador", "--slug", "univag", "--cpf", u.Cpf);
+        var (segundo, _, _) = await Rodar("operador", "--slug", "univag", "--cpf", u.Cpf.Valor);
         Assert.Equal(0, segundo);
         Assert.Equal(1, await LinhasOperador(u.Id));
     }
@@ -54,7 +54,7 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await f.Instituicao();
         var u = await f.Usuario(i, [Papeis.Administrador, Papeis.Operador]);
 
-        var (codigo, saida, erro) = await Rodar("operador", "--slug", i.Slug, "--cpf", u.Cpf, "--remover");
+        var (codigo, saida, erro) = await Rodar("operador", "--slug", i.Slug, "--cpf", u.Cpf.Valor, "--remover");
 
         Assert.Equal(0, codigo);
         Assert.Equal("", erro);
@@ -62,7 +62,7 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(0, await LinhasOperador(u.Id));
         Assert.Equal([Papeis.Administrador], await f.Db(i.Id, db => db.UsuarioPapeis.Where(p => p.UsuarioId == u.Id).Select(p => p.Papel).ToListAsync()));
 
-        var (daNovo, _, _) = await Rodar("operador", "--remover", "--slug", i.Slug, "--cpf", u.Cpf);
+        var (daNovo, _, _) = await Rodar("operador", "--remover", "--slug", i.Slug, "--cpf", u.Cpf.Valor);
         Assert.Equal(0, daNovo);
     }
 
@@ -78,9 +78,9 @@ public class OperadorComandoTests(OneFactory f) : IClassFixture<OneFactory>
 
         var casos = new[]
         {
-            new[] { "operador", "--slug", "nao-existe", "--cpf", inativo.Cpf },
-            new[] { "operador", "--slug", i.Slug, "--cpf", deOutra.Cpf },
-            new[] { "operador", "--slug", i.Slug, "--cpf", inativo.Cpf },
+            new[] { "operador", "--slug", "nao-existe", "--cpf", inativo.Cpf.Valor },
+            new[] { "operador", "--slug", i.Slug, "--cpf", deOutra.Cpf.Valor },
+            new[] { "operador", "--slug", i.Slug, "--cpf", inativo.Cpf.Valor },
         };
         foreach (var args in casos)
         {

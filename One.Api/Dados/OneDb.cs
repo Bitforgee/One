@@ -85,7 +85,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         });
         mb.Entity<Usuario>(e =>
         {
-            e.Property(x => x.Cpf).HasColumnType("char(11)");
+            e.Property(x => x.Cpf).HasConversion(c => c.Valor, v => Cpf.Ler(v)).HasColumnType("char(11)");
             e.HasIndex(x => new { x.InstituicaoId, x.Cpf }).IsUnique();
             e.HasIndex(x => new { x.InstituicaoId, x.Email }).IsUnique();
         });
