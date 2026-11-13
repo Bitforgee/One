@@ -5,7 +5,7 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-public sealed class EnviarPushes(IEnviadorPush envio, TimeProvider relogio, ILogger<EnviarPushes> log) : ITarefaAgendada
+public sealed class EnviarPushes(IEnviadorPush envio, TimeProvider relogio, ILogger<Agendador> log) : ITarefaAgendada
 {
     static readonly TimeSpan LimiteDoPush = TimeSpan.FromSeconds(30);
 

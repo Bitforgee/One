@@ -4,7 +4,7 @@ using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
-public sealed class FecharResolvidos(Prazos prazos, ILogger<FecharResolvidos> log) : ITarefaAgendada
+public sealed class FecharResolvidos(Prazos prazos, ILogger<Agendador> log) : ITarefaAgendada
 {
     public string Tipo => "chamado";
 

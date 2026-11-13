@@ -4,7 +4,7 @@ using One.Api.Dados.Conversas;
 
 namespace One.Api.Assistente;
 
-public sealed class AbandonarConversas(Prazos prazos, ILogger<AbandonarConversas> log) : ITarefaAgendada
+public sealed class AbandonarConversas(Prazos prazos, ILogger<Agendador> log) : ITarefaAgendada
 {
     public string Tipo => "conversa";
 

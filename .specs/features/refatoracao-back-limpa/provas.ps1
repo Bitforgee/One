@@ -239,7 +239,9 @@ switch ($Modo) {
         Write-Host "base: $($doBase.Count) modelos; agora: $($agora.Count) em $($arquivos.Count) arquivo(s)"
         if ($doBase.Count -ne 11) { Falha "esperava 11 modelos de log no Agendador.cs de $Base, achei $($doBase.Count)" }
         if ((($doBase | Sort-Object) -join "|") -ne (($agora | Sort-Object) -join "|")) { Falha 'os modelos de log diferem do base' }
-        Ok '11 modelos de log identicos ao base'
+        $categorias = @($arquivos | Where-Object { $_.Name -ne 'Agendador.cs' } | Where-Object { Select-String -Path $_.FullName -Pattern 'ILogger<(?!Agendador>)' -Quiet } | ForEach-Object Name)
+        if ($categorias) { Falha "tarefas com categoria de log diferente de ILogger<Agendador>: $($categorias -join ', ')" }
+        Ok '11 modelos de log identicos ao base, todos na categoria ILogger<Agendador>'
     }
     default { Falha "modo desconhecido: $Modo" }
 }

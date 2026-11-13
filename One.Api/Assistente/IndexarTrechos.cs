@@ -5,7 +5,7 @@ using Pgvector;
 
 namespace One.Api.Assistente;
 
-public sealed class IndexarTrechos(Embeddings embeddings, ILogger<IndexarTrechos> log) : ITarefaAgendada
+public sealed class IndexarTrechos(Embeddings embeddings, ILogger<Agendador> log) : ITarefaAgendada
 {
     record Pendente(long Id, string Texto, long InstituicaoId, int Tentativas);
 

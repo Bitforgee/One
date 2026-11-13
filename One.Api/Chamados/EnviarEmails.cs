@@ -3,7 +3,7 @@ using One.Api.Dados;
 
 namespace One.Api.Chamados;
 
-public sealed class EnviarEmails(EnviadorSmtp email, ILogger<EnviarEmails> log) : ITarefaAgendada
+public sealed class EnviarEmails(EnviadorSmtp email, ILogger<Agendador> log) : ITarefaAgendada
 {
     public string Tipo => "email";
 

@@ -6,7 +6,7 @@ using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Chamados;
 
-public sealed class SubirPorPrazo(ILogger<SubirPorPrazo> log) : ITarefaAgendada
+public sealed class SubirPorPrazo(ILogger<Agendador> log) : ITarefaAgendada
 {
     static readonly Expression<Func<Chamado, bool>> EmFluxoEAberto = c => (c.Estado == Aberto || c.Estado == EmAtendimento) && c.EtapaOrdem != null;
 
