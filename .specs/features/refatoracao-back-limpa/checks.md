@@ -225,7 +225,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-sem -Regra Arquivo_ate_150_linhas -Nomes Assistente.cs # lista-sem`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Arquivo_ate_150_linhas|FullyQualifiedName~AssistenteTests"`
 
-**C47** - `ConferirResposta.Classificar` devolve `resposta` com citações quando a conferência passa, `sem_base` quando falha, `pergunta` quando `Pergunta.Aceita`, `sem_base` com motivo `pergunta_invalida` quando não aceita, `transferir` para o tipo transferir e `sem_base` sem motivo para outro tipo (5 casos), sem banco e sem HTTP (AC 22)
+**C47** - `ConferirResposta.Classificar` devolve `resposta` com citações quando a conferência passa, `sem_base` quando falha, `pergunta` quando `Pergunta.Aceita`, `sem_base` com motivo `pergunta_invalida` quando não aceita, `transferir` para o tipo transferir e `sem_base` sem motivo para outro tipo (6 casos), sem banco e sem HTTP (AC 22)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ConferirRespostaTests.Classificar_cada_tipo"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'OneFactory|HttpClient' -Caminho One.Api.Tests/ConferirRespostaTests.cs -Esperado 0 # grep`
 
@@ -247,8 +247,16 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~TransferenciaTest
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~NumeracaoTests.Vinte_transferencias_paralelas_numeros_distintos|FullyQualifiedName~NumeracaoTests.Numero_por_instituicao"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'UPDATE instituicao SET ultimo_numero_chamado' -Caminho One.Api -Esperado 1 # grep`
 
-**C52** - `DetalheChamado.Montar` faz no máximo 4 consultas ao banco (hoje 9 a 10), nenhum arquivo do detalhe passa de 150 linhas e o JSON do detalhe segue igual a `Retratos/sucessos.txt` (AC 26)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~DetalheChamadoTests.Montar_faz_no_maximo_4_consultas"`
+**C52** - `DetalheChamado.Montar` faz no máximo as consultas da tabela abaixo (contador de comandos SQL; base `683e6a6` entre parênteses) e, no cenário simples (sem fluxo e sem citação), no máximo 4 para qualquer papel; nenhum arquivo do detalhe passa de 150 linhas e o JSON do detalhe segue igual a `Retratos/sucessos.txt` (AC 26)
+
+| Papel | simples | com citação | com fluxo | com citação e fluxo |
+| --- | --- | --- | --- | --- |
+| aluno | 3 (7) | 3 (7) | 3 (8) | 3 (8) |
+| líder | 3 (7) | 3 (7) | 5 (11) | 5 (11) |
+| atendente | 4 (14) | 7 (14) | 6 (18) | 9 (18) |
+
+"Com citação" é uma mensagem do assistente com `Fontes.Citadas` no histórico da conversa; "com fluxo" é chamado com `VersaoFluxoId` (para o aluno o fluxo não aparece no JSON).
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~DetalheChamadoTests.Montar_faz_no_maximo_4_consultas|FullyQualifiedName~DetalheChamadoTests.Montar_consultas_por_cenario"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 linhas -Caminho 'One.Api/Chamados/*Detalhe*.cs,One.Api/Chamados/Shared/*Detalhe*.cs' -Max 150 # linhas`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base|FullyQualifiedName~ArmazenamentoTests.Detalhe_do_chamado_nao_expoe_chave_nem_hash"`
 
@@ -647,3 +655,10 @@ Aprovadas pelo humano em 2026-11-13: "ok aplique". Checks aprovados só mudam po
 | E6 | C54, AC 28, plano (Impact e Assumptions) | `Reclassificar` entre os métodos a reduzir; 8 ofensores a sair da lista | AC 28 e C54 citam só `Abrir`, `Rejeitar`, `Subir` e `Encaminhar`; os outros 4 ofensores (`ResponderComoEquipe`, `TokenMcp.Criar`, `PlataformaMoodle.Configurar`, `SubscricaoPush.Registrar`) são exceção permanente, lista fixa de 4 (igualdade exata), motivo "cadastro de uso único, record não paga" | `Chamado.Reclassificar` já tem 5 parâmetros na base e não é ofensor |
 
 E4 e E5 fechadas em 2026-11-13 por delegação do humano ("siga o que for recomendado"); detalhes em notas-build.md.
+
+Aprovadas pelo humano em 2026-11-13: "pode aplicar e seguir".
+
+| Emenda | Check | Antes | Depois | Motivo |
+| --- | --- | --- | --- | --- |
+| E7 | C47 | "(5 casos)" | "(6 casos)"; asserção e prova iguais | o texto enumera 6 saídas (`resposta`, `sem_base`, `pergunta`, `sem_base` com `pergunta_invalida`, `transferir`, `sem_base` sem motivo), conferidas contra o AC 22 e `ConferirRespostaTests.Classificar_cada_tipo` (6 cenários) |
+| E8 | C52 | "no máximo 4 consultas (hoje 9 a 10)", provado só no cenário simples | tabela de limites por papel e cenário (simples, citação, fluxo, os dois), com a base `683e6a6` ao lado; teoria `Montar_consultas_por_cenario` acrescentada; `Montar_faz_no_maximo_4_consultas` intacto | medido: com citação ou fluxo o atendente passa de 4 (7, 6 e 9), sempre abaixo da base (14, 18 e 18); a base também não fazia 9 a 10 (media 14 no simples) |
