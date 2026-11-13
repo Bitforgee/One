@@ -25,11 +25,9 @@ const listas: Record<string, unknown[]> = {
   'respostas-prontas': [],
 }
 
-function montar(caminho: string, rotas: Record<string, Rota> = {}) {
+function montar(rotas: Record<string, Rota> = {}) {
   const leituras = Object.fromEntries(Object.entries(listas).map(([k, v]) => [`GET /api/admin/${k}`, (() => [200, v]) as Rota]))
-  const chamadas = api({ 'GET /api/auth/me': () => [200, admin], ...leituras, ...rotas })
-  abrir(caminho)
-  return chamadas
+  return api({ 'GET /api/auth/me': () => [200, admin], ...leituras, ...rotas })
 }
 
 const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url])
@@ -43,7 +41,8 @@ async function selecionar(no: HTMLElement) {
 }
 
 async function noCanvas(rota: string, etapaN: number, rotulo: string) {
-  montar(`/univag/cadastros/fluxos/${rota}`)
+  montar()
+  abrir('/univag/cadastros/fluxos/' + rota)
   const e = await editor()
   await userEvent.click(e.getByRole('tab', { name: 'Canvas' }))
   await screen.findByLabelText('Início')
@@ -53,7 +52,8 @@ async function noCanvas(rota: string, etapaN: number, rotulo: string) {
 
 describe('descartar rascunho do fluxo', () => {
   it('C19 abre Confirmar e só chama o DELETE depois do botão Descartar rascunho', async () => {
-    const chamadas = montar('/univag/cadastros/fluxos/6', { 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] })
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] })
+    abrir('/univag/cadastros/fluxos/6')
     const e = await editor()
     await userEvent.click(e.getByRole('button', { name: 'Mais' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
@@ -67,7 +67,8 @@ describe('descartar rascunho do fluxo', () => {
   })
 
   it('C19 recusar a confirmação não chama o DELETE e mantém o editor', async () => {
-    const chamadas = montar('/univag/cadastros/fluxos/6', { 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] })
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] })
+    abrir('/univag/cadastros/fluxos/6')
     const e = await editor()
     await userEvent.click(e.getByRole('button', { name: 'Mais' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))

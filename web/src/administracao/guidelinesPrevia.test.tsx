@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { abrir, api, instituicao, me } from '../test/util'
 import type { IdAba } from './abasDaAparencia'
@@ -55,7 +56,8 @@ describe('prévia da aparência não interativa', () => {
       'GET /api/admin/aparencia': () => [200, resto],
       'GET /api/instituicoes/univag': () => [200, instituicao()],
     })
-    abrir('/univag/aparencia?aba=contato')
+    abrir('/univag/aparencia')
+    await userEvent.click(await screen.findByRole('tab', { name: /^Contato/ }))
     const regiao = await screen.findByRole('region', { name: 'Prévia' })
     const raiz = regiao.querySelector('[inert]')
     expect(raiz).toHaveAttribute('aria-hidden', 'true')
