@@ -1,8 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 using One.Api.Dados;
+using One.Api.Dados.Chamados;
 using One.Api.Tests.Infra;
 using static One.Api.Dados.Chamados.EstadosChamado;
 
@@ -197,4 +202,75 @@ public class AgendadorConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory
         Assert.Equal(concorrente.ToArray(), trecho.Embedding!.ToArray());
         Assert.Equal(0, trecho.Tentativas);
     }
-}
+
+    sealed class ConflitoDeXmin(string conexao, long chamadoId) : SaveChangesInterceptor
+    {
+        int armado = 1;
+
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken ct = default)
+        {
+            eventData.Context!.ChangeTracker.DetectChanges();
+            if (eventData.Context.ChangeTracker.Entries<Chamado>().Any(e => e.State == EntityState.Modified) && Interlocked.Exchange(ref armado, 0) == 1)
+            {
+                await using var con = new NpgsqlConnection(conexao);
+                await con.OpenAsync(ct);
+                await new NpgsqlCommand($"UPDATE chamado SET resumo = resumo WHERE id = {chamadoId}", con).ExecuteNonQueryAsync(ct);
+            }
+            return result;
+        }
+    }
+
+    int Erros() => f.Logs.Entradas.Count(l => l.Nivel == LogLevel.Error);
+
+    async Task<string> Pendente(Balcao b, string tipo)
+    {
+        var numero = await b.Chamado(tipo == "chamado" ? Resolvido : AguardandoAluno);
+        if (tipo == "chamado") await b.Recuar(numero, TimeSpan.FromDays(7));
+        else await Aguardando(b, numero, TimeSpan.FromDays(tipo == "aguardando" ? 10 : 4));
+        return numero;
+    }
+
+    static (string, DateTime?, DateTime?, DateTime?, string?) Linha(Chamado c) => (c.Estado, c.LembreteEm, c.ResolvidoEm, c.FechadoEm, c.MotivoFechamento);
+
+    [Theory]
+    [InlineData("chamado")]
+    [InlineData("aguardando")]
+    [InlineData("lembrete")]
+    public async Task Conflito_de_xmin_nao_muda_nada_e_nao_registra_erro(string tipo)
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await Pendente(b, tipo);
+        var original = await b.Ler(numero);
+        await using var derivada = f.WithWebHostBuilder(h => h.ConfigureTestServices(s => s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(new ConflitoDeXmin(f.ConnectionString, original.Id)))));
+        var agendador = derivada.Services.GetRequiredService<Agendador>();
+        var lidos = await agendador.Ler();
+        Assert.NotEmpty(Do(lidos, tipo, original.Id));
+        var (contagem, erros) = (await Contar(b, numero), Erros());
+
+        await agendador.Processar(Do(lidos, tipo, original.Id));
+
+        Assert.Equal(Linha(original), Linha(await b.Ler(numero)));
+        Assert.Equal(contagem, await Contar(b, numero));
+        Assert.Equal(erros, Erros());
+    }
+
+    [Theory]
+    [InlineData("chamado")]
+    [InlineData("aguardando")]
+    [InlineData("lembrete")]
+    public async Task Recusa_do_dominio_nao_muda_nada_e_nao_registra_erro(string tipo)
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await Pendente(b, tipo);
+        var chamadoId = (await b.Ler(numero)).Id;
+        var lidos = await Agendador.Ler();
+        Assert.NotEmpty(Do(lidos, tipo, chamadoId));
+        await f.Db(b.Instituicao.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, EmAtendimento)));
+        var (original, contagem, erros) = (await b.Ler(numero), await Contar(b, numero), Erros());
+
+        await Agendador.Processar(Do(lidos, tipo, chamadoId));
+
+        Assert.Equal(Linha(original), Linha(await b.Ler(numero)));
+        Assert.Equal(contagem, await Contar(b, numero));
+        Assert.Equal(erros, Erros());
+    }}
