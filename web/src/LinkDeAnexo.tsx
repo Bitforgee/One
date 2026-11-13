@@ -1,4 +1,5 @@
 import { Paperclip } from 'lucide-react'
+import { tamanhoDoArquivo } from './formatos'
 
 export function LinkDeAnexo({ href, nome, tamanho }: { href: string; nome: string; tamanho?: number }) {
   return (
@@ -7,7 +8,7 @@ export function LinkDeAnexo({ href, nome, tamanho }: { href: string; nome: strin
       <a href={href} target="_blank" rel="noreferrer" className="text-primary underline">
         {nome}
       </a>{' '}
-      {tamanho !== undefined && <span className="text-muted-foreground">({Math.ceil(tamanho / 1024)} KB)</span>}
+      {tamanho !== undefined && <span className="text-muted-foreground">({tamanhoDoArquivo(tamanho)})</span>}
     </div>
   )
 }

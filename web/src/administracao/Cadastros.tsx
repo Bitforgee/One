@@ -56,7 +56,7 @@ const Botoes: Record<Aba, string> = { setores: 'Novo setor', categorias: 'Nova c
 const simples = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 const SemResultado = (busca: string, limpar: () => void): Vazio => ({
   Icone: SearchX,
-  titulo: `Nenhum resultado para «${busca}»`,
+  titulo: `Nenhum resultado para “${busca}”`,
   frase: 'Confira a grafia ou limpe a busca.',
   acao: (
     <Button type="button" variant="outline" onClick={limpar}>

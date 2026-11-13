@@ -7,7 +7,7 @@ const Indicadores = [
   'Indicadores', 'De', 'Até', 'Consultar', 'Sem atendimentos neste período.',
   'Indicador principal', 'Alunos ativos', 'Conversas', 'Autoatendimento', 'Escalonamento', 'Abandono', 'Perguntas sem artigo',
   'Chamados abertos agora', 'Chamados resolvidos', 'Tempo até a 1ª resposta', 'Tempo de resolução', 'Roteamento correto', 'Reabertura',
-  '12,3%', '1,5 h', '—',
+  '12,3\u00a0%', '1,5\u00a0h', '—',
   'Categorias por conversas', 'Categorias por chamados', 'Categoria', 'Total', 'Boleto3',
   'Resolvidas sem reabertura, sobre as conversas com desfecho.', 'Chamados não fechados neste momento.', 'Resolvidas pelo assistente, sobre as conversas com desfecho.', 'Da abertura à primeira resposta pública.',
 ]

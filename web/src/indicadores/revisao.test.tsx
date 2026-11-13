@@ -35,7 +35,7 @@ describe('um controle de período, destaques e Ver tabela', () => {
     const destaques = [principal, ...principal.nextElementSibling!.children]
     expect(destaques).toHaveLength(4)
     for (const cartao of destaques) {
-      const [rotulo, numero, frase] = [...cartao.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent!)
+      const [rotulo, numero, frase] = [...cartao.querySelectorAll('dt, dd, div')].filter((e) => e.querySelector('dt, dd, div') === null).map((e) => e.textContent!)
       expect(numero, `número de ${rotulo}`).toMatch(/\d/)
       expect(rotulo.length, `rótulo ${rotulo}`).toBeLessThanOrEqual(24)
       expect(frase.length, `frase de ${rotulo}`).toBeLessThanOrEqual(70)

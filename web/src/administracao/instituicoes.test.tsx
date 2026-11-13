@@ -60,7 +60,7 @@ describe('instituições', () => {
   it('lista com selo, administradores e ações', async () => {
     tela()
     const ativa = await linha('Faculdade Demo')
-    expect(cabecalhos()).toEqual(['Nome', 'Situação', 'Administradores', 'Criada em', ''])
+    expect(cabecalhos()).toEqual(['Nome', 'Situação', 'Administradores', 'Criada em', 'Ações'])
     const celulas = within(ativa).getAllByRole('cell')
     expect(celulas[0]).toHaveTextContent('Faculdade Demo/demo')
     expect(within(celulas[0]).getByText('/demo')).toHaveClass('text-xs')
@@ -200,7 +200,7 @@ describe('instituições', () => {
     const arquivo = new File(['{}'], 'carga.json', { type: 'application/json' })
     await userEvent.upload(campo, arquivo)
     await userEvent.click(d.getByRole('button', { name: 'Importar' }))
-    expect(await d.findByText('Importados: 2 setores, 1 cursos, 3 categorias, 2 regras, 5 artigos.')).toBeInTheDocument()
+    expect(await d.findByText('Importados: 2 setores, 1 curso, 3 categorias, 2 regras, 5 artigos.')).toBeInTheDocument()
     expect(gravacoes(chamadas)).toEqual([['POST', `${Lista}/demo/carga`, { arquivo }]])
 
     await userEvent.click(d.getByRole('button', { name: 'Importar' }))

@@ -18,7 +18,7 @@ const Artigos = [
 const Documentos = [
   'Documentos', 'Enviar PDF', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
   'Indexado', 'Ativo', 'Arquivado', 'versão', 'página', 'páginas', 'Nova versão', 'Arquivar', 'Versão', 'Arquivo', 'Situação',
-  'PDF com texto (não digitalizado), até 20 MB.', 'A nova versão de “', '” substitui a atual na busca; as anteriores ficam guardadas.',
+  'PDF com texto (não digitalizado), até 20\u00a0MB.', 'A nova versão de “', '” substitui a atual na busca; as anteriores ficam guardadas.',
   'Título', 'Categoria', 'Escolha a categoria', 'Arquivo PDF', 'Cancelar', 'Enviar',
   'Arquivar o documento?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
   'Documento enviado.', 'Documento arquivado.',

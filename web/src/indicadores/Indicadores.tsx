@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { ErroDe } from '../ErroDe'
+import { comUnidade, decimalFixo, numero, porcentagem } from '../formatos'
 import { dia } from '../Periodo'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -31,10 +32,10 @@ type Indicadores = {
   indicadorPrincipal: number | null
 }
 
-const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 1000) / 10}%`.replace('.', ','))
-const horas = (v: number | null) => (v === null ? '—' : `${String(v).replace('.', ',')} h`)
-const inteiro = new Intl.NumberFormat('pt-BR')
-const num = (v: number | null) => (v === null ? '—' : inteiro.format(v))
+const ou = (v: number | null, formatar: (v: number) => string) => (v === null ? '—' : formatar(v))
+const pct = (v: number | null) => ou(v, porcentagem)
+const horas = (v: number | null) => ou(v, (h) => comUnidade(h, 'h'))
+const num = (v: number | null) => ou(v, numero)
 
 function cartoes(dados: Indicadores): [string, string][] {
   return [
@@ -118,23 +119,23 @@ const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª re
 export function variacao(atual: number, anterior: number) {
   const pontos = Math.round((atual - anterior) * 1000) / 10
   if (pontos === 0) return '= sem variação'
-  return `${pontos > 0 ? '▲' : '▼'} ${Math.abs(pontos).toFixed(1).replace('.', ',')} ${Math.abs(pontos) < 2 ? 'pt' : 'pts'}`
+  return `${pontos > 0 ? '▲' : '▼'} ${decimalFixo(Math.abs(pontos))} ${Math.abs(pontos) < 2 ? 'pt' : 'pts'}`
 }
 
 function Principal({ valor, variacaoDe }: { valor: string; variacaoDe?: string }) {
   return (
     <section className="flex flex-col gap-1">
-      <div className="flex flex-col gap-1">
-        <div className="text-sm text-muted-foreground">Indicador principal</div>
-        <div className="flex flex-wrap items-baseline gap-x-4">
+      <dl className="m-0 flex flex-col gap-1">
+        <dt className="text-sm text-muted-foreground">Indicador principal</dt>
+        <dd className="m-0 flex flex-wrap items-baseline gap-x-3">
           <div className="font-heading text-[40px] leading-tight font-semibold tabular-nums">{valor}</div>
           {variacaoDe && (
             <span className="text-base font-medium tabular-nums">
               {variacaoDe} <span className="font-normal text-muted-foreground">vs. período anterior</span>
             </span>
           )}
-        </div>
-      </div>
+        </dd>
+      </dl>
       <div className="text-sm text-muted-foreground">{Rodapes['Indicador principal']}</div>
     </section>
   )
@@ -151,25 +152,23 @@ function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string
   return (
     <div className="flex flex-col gap-8">
       <Principal valor={valores.get('Indicador principal')!} variacaoDe={variacaoDe} />
-      <div className="grid grid-cols-1 divide-y @3xl/main:grid-cols-3 @3xl/main:divide-x @3xl/main:divide-y-0">
+      <dl className="m-0 grid grid-cols-1 divide-y @3xl/main:grid-cols-3 @3xl/main:divide-x @3xl/main:divide-y-0">
         {Faixa.map((rotulo) => (
           <div key={rotulo} className="flex flex-col gap-1 py-3 @3xl/main:px-6 @3xl/main:py-0 @3xl/main:first:ps-0">
-            <div className="flex flex-col gap-1">
-              <div className="text-sm text-muted-foreground">{rotulo}</div>
-              <div className="text-2xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</div>
-            </div>
-            <div className="text-sm text-muted-foreground">{Rodapes[rotulo]}</div>
+            <dt className="text-sm text-muted-foreground">{rotulo}</dt>
+            <dd className="m-0 text-2xl font-semibold tracking-tight tabular-nums">{valores.get(rotulo)}</dd>
+            <dd className="m-0 text-sm text-muted-foreground">{Rodapes[rotulo]}</dd>
           </div>
         ))}
-      </div>
-      <ul className="m-0 grid list-none grid-cols-1 p-0 @3xl/main:grid-cols-2 @3xl/main:gap-x-10">
+      </dl>
+      <dl className="m-0 grid grid-cols-1 @3xl/main:grid-cols-2 @3xl/main:gap-x-10">
         {resto.map(([rotulo, valor]) => (
-          <li key={rotulo} className="flex items-baseline justify-between gap-4 border-b py-3">
-            <span className="text-sm text-muted-foreground">{rotulo}</span>
-            <span className="font-semibold tabular-nums">{valor}</span>
-          </li>
+          <div key={rotulo} className="flex items-baseline justify-between gap-4 border-b py-3">
+            <dt className="text-sm text-muted-foreground">{rotulo}</dt>
+            <dd className="m-0 font-semibold tabular-nums">{valor}</dd>
+          </div>
         ))}
-      </ul>
+      </dl>
       <div className="grid grid-cols-1 gap-8 @4xl/main:grid-cols-2">
         {rankings
           .filter(([, r]) => r !== null)
@@ -180,7 +179,6 @@ function Painel({ dados, variacaoDe }: { dados: Indicadores; variacaoDe?: string
     </div>
   )
 }
-
 export function periodoAnterior(de: string, ate: string) {
   if (!de || !ate) return null
   const [d, a] = [de, ate].map((v) => v.split('-').map(Number))

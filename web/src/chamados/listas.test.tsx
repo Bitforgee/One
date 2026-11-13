@@ -26,7 +26,7 @@ describe('listas de chamados', () => {
     ])
     abrir('/univag/fila')
     const primeiro = (await screen.findByText('ONE-1')).closest('tr') as HTMLElement
-    expect(within(primeiro).getByText('ONE-1')).toHaveAttribute('href', '/univag/chamados/ONE-1')
+    expect(within(primeiro).getByText('ONE-1').closest('a')).toHaveAttribute('href', '/univag/chamados/ONE-1')
     expect(within(primeiro).getByText('Aberto')).toBeInTheDocument()
     expect(primeiro).toHaveTextContent('Boleto · sem responsável · aberto há 3 dias')
     const segundo = screen.getByText('ONE-2').closest('tr') as HTMLElement
@@ -40,7 +40,7 @@ describe('listas de chamados', () => {
     lista('meus', () => [200, [{ numero: 'ONE-3', titulo: 'histórico', estado: 'RESOLVIDO', criadoEm: '2026-11-02T12:00:00Z' }]])
     abrir('/univag/solicitacoes')
     const item = (await screen.findByText('ONE-3')).closest('tr') as HTMLElement
-    expect(within(item).getByText('ONE-3')).toHaveAttribute('href', '/univag/chamados/ONE-3')
+    expect(within(item).getByText('ONE-3').closest('a')).toHaveAttribute('href', '/univag/chamados/ONE-3')
     expect(item).toHaveTextContent('ONE-3históricoResolvido')
     expect(screen.queryByText(/Você ainda não tem solicitações/)).not.toBeInTheDocument()
   })

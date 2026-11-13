@@ -6,6 +6,7 @@ import { api, ErroApi } from '../api'
 import { Carregando } from '../Carregando'
 import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
+import { comUnidade } from '../formatos'
 import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
 import { useConsulta } from '../ui/use-mobile'
@@ -116,7 +117,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
         <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
         <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
         <Textarea id="resposta" name="resposta" autoComplete="off" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
-        {!nota && <CampoArquivo key={String(envio)} id="anexos" rotulo="Anexos (PDF, JPG ou PNG, até 10 MB cada)" accept=".pdf,.jpg,.jpeg,.png" arquivos={arquivos} setArquivos={setArquivos} />}
+        {!nota && <CampoArquivo key={String(envio)} id="anexos" rotulo={`Anexos (PDF, JPG ou PNG, até ${comUnidade(10, 'MB')} cada)`} accept=".pdf,.jpg,.jpeg,.png" arquivos={arquivos} setArquivos={setArquivos} />}
         <MarcasDaEquipe equipe={equipe} nota={nota} pode={pode} setNota={setNota} aguardaAluno={aguardaAluno} setAguardaAluno={setAguardaAluno} />
         <BotaoAcao type="submit" pendente={pendente} className="self-start" disabled={semEnvio(texto, nota, pode('responder'))}>
           Enviar

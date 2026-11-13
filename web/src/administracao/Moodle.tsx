@@ -23,11 +23,11 @@ export type Plataforma = {
 }
 
 const Campos = [
-  ['emissor', 'Emissor (iss)', 'Endereço do Moodle, como aparece em "ID da plataforma".'],
+  ['emissor', 'Emissor (iss)', 'Endereço do Moodle, como aparece em “ID da plataforma”.'],
   ['clientId', 'Client ID', 'Gerado pelo Moodle ao salvar a ferramenta externa.'],
   ['deploymentId', 'Deployment ID', 'Também mostrado pelo Moodle na lista de ferramentas.'],
-  ['authUrl', 'URL de autenticação', 'Em "URL de solicitação de autenticação".'],
-  ['jwksUrl', 'URL das chaves (JWKS)', 'Em "URL do conjunto de chaves públicas".'],
+  ['authUrl', 'URL de autenticação', 'Em “URL de solicitação de autenticação”.'],
+  ['jwksUrl', 'URL das chaves (JWKS)', 'Em “URL do conjunto de chaves públicas”.'],
 ] as const
 
 type Chave = (typeof Campos)[number][0]
@@ -53,7 +53,7 @@ export function Url({ rotulo, valor, campo }: { rotulo: string; valor: string; c
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium">{rotulo}</span>
-      {campo && <span className="text-xs text-muted-foreground">{`No Moodle, cole em «${campo}».`}</span>}
+      {campo && <span className="text-xs text-muted-foreground">{`No Moodle, cole em “${campo}”.`}</span>}
       <div className="flex items-center gap-2">
         <code className="min-w-0 flex-1 rounded-sm border bg-muted px-2 py-1.5 text-sm break-all">{valor}</code>
         <Button

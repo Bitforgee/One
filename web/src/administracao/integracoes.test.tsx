@@ -285,7 +285,7 @@ describe('tela Integrações', () => {
       const botao = await screen.findByRole('button', { name: `Copiar ${rotulo}` })
       const bloco = botao.closest('div.flex-col')!
       expect(bloco).toHaveTextContent(rotulo)
-      expect(bloco).toHaveTextContent(`No Moodle, cole em «${campo}».`)
+      expect(bloco).toHaveTextContent(`No Moodle, cole em “${campo}”.`)
       await usuario.click(botao)
       expect(await navigator.clipboard.readText()).toBe(valor)
     }

@@ -67,19 +67,22 @@ describe('indicadores', () => {
     const chamadas = api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/indicadores?de=2026-11-01&ate=2026-11-15': () => [200, dados] })
     abrir('/univag/indicadores')
 
-    const cartao = async (rotulo: string) => (await screen.findByText(rotulo)).parentElement!.textContent
-    expect(await cartao('Indicador principal')).toBe('Indicador principal12,3%')
+    const cartao = async (rotulo: string) => {
+      const termo = await screen.findByText(rotulo)
+      return termo.textContent! + termo.nextElementSibling!.textContent!
+    }
+    expect(await cartao('Indicador principal')).toBe('Indicador principal12,3\u00a0%')
     expect(await cartao('Alunos ativos')).toBe('Alunos ativos12')
     expect(await cartao('Conversas')).toBe('Conversas—')
-    expect(await cartao('Autoatendimento')).toBe('Autoatendimento45,6%')
+    expect(await cartao('Autoatendimento')).toBe('Autoatendimento45,6\u00a0%')
     expect(await cartao('Escalonamento')).toBe('Escalonamento—')
-    expect(await cartao('Abandono')).toBe('Abandono0%')
-    expect(await cartao('Perguntas sem artigo')).toBe('Perguntas sem artigo100%')
+    expect(await cartao('Abandono')).toBe('Abandono0\u00a0%')
+    expect(await cartao('Perguntas sem artigo')).toBe('Perguntas sem artigo100\u00a0%')
     expect(await cartao('Chamados abertos agora')).toBe('Chamados abertos agora4')
     expect(await cartao('Chamados resolvidos')).toBe('Chamados resolvidos0')
-    expect(await cartao('Tempo até a 1ª resposta')).toBe('Tempo até a 1ª resposta1,5 h')
+    expect(await cartao('Tempo até a 1ª resposta')).toBe('Tempo até a 1ª resposta1,5\u00a0h')
     expect(await cartao('Tempo de resolução')).toBe('Tempo de resolução—')
-    expect(await cartao('Roteamento correto')).toBe('Roteamento correto50%')
+    expect(await cartao('Roteamento correto')).toBe('Roteamento correto50\u00a0%')
     expect(await cartao('Reabertura')).toBe('Reabertura—')
     const conversas = screen.getByText('Categorias por conversas').closest('section') as HTMLElement
     expect(Array.from(conversas.querySelectorAll('tbody tr')).map((li) => li.textContent)).toEqual(['Boleto3'])
@@ -95,7 +98,7 @@ describe('indicadores', () => {
     chamadosAbertos: 4, chamadosResolvidos: 2, tempoPrimeiraRespostaHoras: 1.5, tempoResolucaoHoras: 3, roteamentoCorreto: 0.5, taxaReabertura: 0.1,
     principaisCategorias: { porConversas: null, porChamados: null }, indicadorPrincipal: 0.123,
   }
-  const folhas = (c: Element) => [...c.querySelectorAll('div')].filter((d) => d.children.length === 0).map((d) => d.textContent)
+  const folhas = (c: Element) => [...c.querySelectorAll('dt, dd, div')].filter((e) => e.querySelector('dt, dd, div') === null).map((e) => e.textContent)
   const cartoesDe = (grade: Element) => Array.from(grade.children).map(folhas)
 
   async function painel() {
@@ -108,12 +111,12 @@ describe('indicadores', () => {
 
   it('destaques de Indicadores', async () => {
     const principal = await painel()
-    expect(folhas(principal)).toEqual(['Indicador principal', '12,3%', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'])
+    expect(folhas(principal)).toEqual(['Indicador principal', '12,3\u00a0%', 'Resolvidas sem reabertura, sobre as conversas com desfecho.'])
     const destaques = principal.nextElementSibling!
     expect(cartoesDe(destaques)).toEqual([
       ['Chamados abertos agora', '4', 'Chamados não fechados neste momento.'],
-      ['Autoatendimento', '45,6%', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
-      ['Tempo até a 1ª resposta', '1,5 h', 'Da abertura à primeira resposta pública.'],
+      ['Autoatendimento', '45,6\u00a0%', 'Resolvidas pelo assistente, sobre as conversas com desfecho.'],
+      ['Tempo até a 1ª resposta', '1,5\u00a0h', 'Da abertura à primeira resposta pública.'],
     ])
     expect(principal.parentElement!.previousElementSibling?.tagName).toBe('FORM')
   })
@@ -123,13 +126,13 @@ describe('indicadores', () => {
     expect(Array.from(compactos.children).map((li) => [...li.children].map((c) => c.textContent))).toEqual([
       ['Alunos ativos', '12'],
       ['Conversas', '5'],
-      ['Escalonamento', '20%'],
-      ['Abandono', '10%'],
-      ['Perguntas sem artigo', '10%'],
+      ['Escalonamento', '20\u00a0%'],
+      ['Abandono', '10\u00a0%'],
+      ['Perguntas sem artigo', '10\u00a0%'],
       ['Chamados resolvidos', '2'],
-      ['Tempo de resolução', '3 h'],
-      ['Roteamento correto', '50%'],
-      ['Reabertura', '10%'],
+      ['Tempo de resolução', '3\u00a0h'],
+      ['Roteamento correto', '50\u00a0%'],
+      ['Reabertura', '10\u00a0%'],
     ])
   })
 

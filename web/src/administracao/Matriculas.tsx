@@ -5,6 +5,7 @@ import { BotaoAcao } from '../acao'
 import { api, ErroApi } from '../api'
 import { CampoArquivo } from '../CampoArquivo'
 import { Confirmar } from '../Confirmar'
+import { plural } from '../formatos'
 import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
@@ -94,7 +95,7 @@ export function Matriculas() {
       </Card>
       {resultado && (
         <Alert>
-          Importação concluída: {resultado.criados} matrículas criadas e {resultado.atualizados} atualizadas.
+          Importação concluída: {plural(resultado.criados, 'matrícula criada', 'matrículas criadas')} e {plural(resultado.atualizados, 'atualizada', 'atualizadas')}.
         </Alert>
       )}
       {error && <Alert variant="destructive">{error.message}</Alert>}

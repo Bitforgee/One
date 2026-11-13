@@ -32,10 +32,10 @@ describe('aba MCP', () => {
     expect(screen.getByRole('tab', { name: 'MCP' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.queryByText('Em breve')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copiar URL do servidor' })).toBeInTheDocument()
-    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Nome', 'Dono', 'Final', 'Criado', 'Vence', 'Último uso', 'Estado', ''])
+    expect(screen.getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Nome', 'Dono', 'Final', 'Criado', 'Vence', 'Último uso', 'Estado', 'Ações'])
     const linhas = screen.getAllByRole('row').slice(1)
     expect(linhas.map((l) => within(l).getAllByRole('cell')[0].textContent)).toEqual([expect.stringMatching(/^Cursor/), expect.stringMatching(/^Antigo/), expect.stringMatching(/^Perdido/)])
-    expect(linhas.map((l) => within(l).getByText(/^(ATIVO|EXPIRADO|REVOGADO)$/).textContent)).toEqual(['ATIVO', 'EXPIRADO', 'REVOGADO'])
+    expect(linhas.map((l) => within(l).getByText(/^(Ativo|Expirado|Revogado)$/).textContent)).toEqual(['Ativo', 'Expirado', 'Revogado'])
   })
 
   const abrirNovo = async () => {
@@ -209,17 +209,17 @@ describe('aba MCP', () => {
     expect(screen.queryByRole('button', { name: 'Revogar Perdido' })).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Revogar Cursor' }))
-    const dialogo = await screen.findByRole('dialog', { name: 'Revogar o token «Cursor»?' })
+    const dialogo = await screen.findByRole('dialog', { name: 'Revogar o token “Cursor”?' })
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(chamadas.some((c) => c.metodo === 'DELETE')).toBe(false)
 
     await userEvent.click(screen.getByRole('button', { name: 'Revogar Cursor' }))
-    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Revogar o token «Cursor»?' })).getByRole('button', { name: 'Revogar' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Revogar o token “Cursor”?' })).getByRole('button', { name: 'Revogar' }))
 
     expect(await screen.findByText('Token revogado.')).toBeInTheDocument()
     expect(chamadas.filter((c) => c.metodo === 'DELETE').map((c) => c.url)).toEqual(['/api/admin/mcp/tokens/1'])
-    await waitFor(() => expect(screen.getAllByText('REVOGADO')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByText('Revogado')).toHaveLength(2))
     expect(screen.queryByRole('button', { name: 'Revogar Cursor' })).not.toBeInTheDocument()
   })
 
@@ -269,6 +269,15 @@ describe('aba MCP', () => {
     expect(nome).toHaveValue('Cursor')
     expect(screen.queryByRole('dialog', { name: 'Copie o token agora' })).not.toBeInTheDocument()
   })
+  it('C46 o estado do token sai como Ativo, Expirado e Revogado', async () => {
+    rotas(() => [200, { url, tokens: [ativo, expirado, revogado] }])
+    abrir('/univag/integracoes?aba=mcp')
+    const linhas = (await screen.findAllByRole('row')).slice(1)
+    const selos = linhas.map((l) => l.querySelector('[data-celula=selo]')!.textContent)
+    expect(selos).toEqual(['Ativo', 'Expirado', 'Revogado'])
+    expect(screen.queryByText(/^(ATIVO|EXPIRADO|REVOGADO)$/)).not.toBeInTheDocument()
+  })
+
   it('como conectar', async () => {
     rotas(() => [200, { url, tokens: [] }])
     abrir('/univag/integracoes?aba=mcp')

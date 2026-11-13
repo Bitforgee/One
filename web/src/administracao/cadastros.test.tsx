@@ -245,7 +245,7 @@ describe('cadastros', () => {
     expect(linhas('Setores')).toEqual([['Financeiro']])
     await userEvent.clear(busca)
     await userEvent.type(busca, 'zzz')
-    expect(painel.getByText('Nenhum resultado para «zzz»')).toBeInTheDocument()
+    expect(painel.getByText('Nenhum resultado para “zzz”')).toBeInTheDocument()
     await userEvent.click(painel.getByRole('button', { name: 'Limpar busca' }))
     expect(linhas('Setores')).toHaveLength(3)
     for (const [aba, botao] of [['Categorias', 'Nova categoria'], ['Cursos', 'Novo curso'], ['Fluxos', 'Novo fluxo'], ['Respostas prontas', 'Nova resposta pronta']]) {

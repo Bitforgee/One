@@ -74,7 +74,7 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
         <TableRow className="hover:bg-transparent">
           {colunas.map((c) => (
             <TableHead key={c.titulo} className={c.largo ? Largo : undefined}>
-              {c.titulo}
+              {c.titulo || <span className="sr-only">Ações</span>}
             </TableHead>
           ))}
         </TableRow>

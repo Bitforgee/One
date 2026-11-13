@@ -88,4 +88,15 @@ describe('Tabela', () => {
     expect(cartoes).toHaveLength(3)
     for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
   })
+
+  it('C39 o cabeçalho vazio de ações traz Ações em sr-only', async () => {
+    const usuario = { id: 7, cpf: '12345678909', nome: 'Ana Souza', email: 'a@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ALUNO'], setores: [] }
+    api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, [usuario]], 'GET /api/admin/setores': () => [200, []] })
+    abrir('/univag/usuarios')
+    await screen.findByText('Ana Souza')
+    const cabecalhos = [...document.querySelectorAll('thead th')]
+    const acoes = cabecalhos[cabecalhos.length - 1]
+    expect(acoes.innerHTML).toBe('<span class="sr-only">Ações</span>')
+    for (const th of cabecalhos.slice(0, -1)) expect(th.querySelector('.sr-only')).toBeNull()
+  })
 })

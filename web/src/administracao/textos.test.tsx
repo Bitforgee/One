@@ -14,7 +14,7 @@ const Usuarios = [
 const Matriculas = [
   'Matrículas', 'Baixe o modelo', 'Baixar modelo (CSV)', 'Preencha uma linha por aluno', 'Envie o arquivo', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
   '. Alunos são atualizados pelo CPF e matrículas pelo número. Se alguma linha tiver erro, nada é importado.', 'Arquivo CSV', 'Importar',
-  'Importação concluída: ', ' matrículas criadas e ', ' atualizadas.', 'Linha',
+  'Importação concluída: ', ' matrículas criadas e ', ' atualizada.', 'Linha',
   'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Voltar',
 ]
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas']

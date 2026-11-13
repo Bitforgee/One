@@ -58,7 +58,7 @@ export function Balao({ doAluno, autor, nota, texto, em, fuso, foto, comLinks, c
   if (!foto) return balao
   return (
     <div className="me-auto flex w-fit max-w-[90%] items-start gap-2">
-      <img src={foto.src} alt={foto.alt} className="size-6 shrink-0 rounded-full object-cover" />
+      <img src={foto.src} alt={foto.alt} width={24} height={24} className="size-6 shrink-0 rounded-full object-cover" />
       {balao}
     </div>
   )

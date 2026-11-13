@@ -8,6 +8,7 @@ import { TableCell, TableRow } from '../ui/table'
 import { Inbox, MessageSquare } from 'lucide-react'
 import { Button } from '../ui/button'
 import { abertoHa } from '../datas'
+import { Literal } from '../Literal'
 import { useSessao } from '../sessao'
 import { CelulaLargo, Detalhe, Principal, Tabela, useEstreito, useMostrarMais, type Vazio } from '../Tabela'
 import { UrlDaFila, useFilaAberta } from '../tempo-real'
@@ -42,7 +43,7 @@ function LinhaCompacta({ c, caminho, meta }: { c: ItemMeu; caminho: string; meta
       <p className="m-0 [overflow-wrap:anywhere]" data-linha="assunto">
         <Link to={caminho} className="block text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
           <span className="line-clamp-2">
-            <span className="font-medium">{c.numero}</span> <span>{c.titulo}</span>
+            <Literal className="font-medium">{c.numero}</Literal> <span>{c.titulo}</span>
           </span>
         </Link>
       </p>
@@ -66,7 +67,7 @@ function LinhaDaTabela<T extends ItemMeu>({ c, caminho, aberto, largas, fila }: 
     <>
       <TableCell className="font-medium">
         <Link to={caminho} className="text-foreground no-underline hover:underline" onClick={(e) => e.stopPropagation()}>
-          {c.numero}
+          <Literal>{c.numero}</Literal>
         </Link>
       </TableCell>
       <TableCell className={Principal}>

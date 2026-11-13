@@ -1,10 +1,11 @@
 import { Paperclip, X } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { comUnidade } from '../formatos'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 
 export const LimiteDeAnexos = 3
-export const AjudaDosAnexos = 'PDF ou foto, até 10 MB'
+export const AjudaDosAnexos = `PDF ou foto, até ${comUnidade(10, 'MB')}`
 
 export function useAnexos() {
   const [escolhidos, setEscolhidos] = useState<File[]>([])

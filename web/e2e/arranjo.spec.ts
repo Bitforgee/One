@@ -254,17 +254,17 @@ test.describe('Indicadores', () => {
       }
     }
 
-    const numero = page.getByRole('main').getByText('71,2%', { exact: true })
+    const numero = page.getByRole('main').getByText(/^71,2\s%$/)
     expect(parseFloat(await estilo(numero, 'font-size'))).toBe(40)
     expect(await estilo(numero, 'font-variant-numeric')).toContain('tabular-nums')
     for (const r of Destaques.slice(1)) {
-      const valor = rotulo(r).locator('xpath=following-sibling::div[1]')
+      const valor = rotulo(r).locator('xpath=following-sibling::dd[1]')
       expect(parseFloat(await estilo(valor, 'font-size')), r).toBeGreaterThanOrEqual(24)
       expect(await estilo(valor, 'font-variant-numeric'), r).toContain('tabular-nums')
       expect(parseFloat(await estilo(rotulo(r), 'font-size')), r).toBe(14)
       expect((await caixa(rotulo(r))).y, r).toBeLessThan((await caixa(rotulo('Alunos ativos'))).y)
     }
-    for (const r of Compactos) expect(Math.abs(parseFloat(await estilo(rotulo(r).locator('xpath=following-sibling::span[1]'), 'font-size')) - 16), r).toBeLessThanOrEqual(0.5)
+    for (const r of Compactos) expect(Math.abs(parseFloat(await estilo(rotulo(r).locator('xpath=following-sibling::dd[1]'), 'font-size')) - 16), r).toBeLessThanOrEqual(0.5)
 
     for (const titulo of ['Categorias por conversas', 'Categorias por chamados']) {
       const bloco = ranking(titulo)
@@ -954,8 +954,8 @@ test.describe('painel', () => {
       await page.goto('/univag/indicadores')
       const rotulo = page.getByRole('main').getByText('Autoatendimento', { exact: true })
       await rotulo.waitFor()
-      expect((await caixa(rotulo.locator('xpath=ancestor::div[2]'))).width, `destaque a ${w}`).toBeGreaterThanOrEqual(w === 360 ? 150 : 250)
-      expect(await rotulo.locator('xpath=following-sibling::div[1]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('24px')
+      expect((await caixa(rotulo.locator('xpath=ancestor::div[1]'))).width, `destaque a ${w}`).toBeGreaterThanOrEqual(w === 360 ? 150 : 250)
+      expect(await rotulo.locator('xpath=following-sibling::dd[1]').evaluate((e) => getComputedStyle(e).fontSize), `valor a ${w} px`).toBe('24px')
     }
   })
 
@@ -1213,9 +1213,9 @@ test.describe('painel', () => {
       expect(e.grampo === '1' || e.quebra === 'nowrap', `rodapé "${texto}" sem corte`).toBe(false)
       expect((await caixa(l)).height, `rodapé "${texto}" renderiza em até 2 linhas (AC 5)`).toBeLessThanOrEqual(48)
     }
-    expect((await estilo(page.getByText('Autoatendimento', { exact: true }).locator('xpath=following-sibling::div[1]'))).peso, 'valor do destaque').toBe('600')
+    expect((await estilo(page.getByText('Autoatendimento', { exact: true }).locator('xpath=following-sibling::dd[1]'))).peso, 'valor do destaque').toBe('600')
     const compacto = page.getByText('Alunos ativos', { exact: true }).locator('..')
-    const [rotulo, valor] = [await estilo(compacto.locator('> span').nth(0)), await estilo(compacto.locator('> span').nth(1))]
+    const [rotulo, valor] = [await estilo(compacto.locator('> dt')), await estilo(compacto.locator('> dd'))]
     expect(rotulo.tam, 'rótulo do compacto').toBe('14px')
     expect(valor.peso, 'valor do compacto').toBe('600')
     expect(valor.num, 'valor do compacto').toContain('tabular-nums')

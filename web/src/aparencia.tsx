@@ -64,7 +64,8 @@ const marcar = (cor?: string | null) => (cor ? document.documentElement.style.se
 function titular(d?: InstituicaoPublica) {
   const raiz = document.documentElement
   raiz.dataset.titulo ??= document.title
-  document.title = d ? (d.nomeCurto ?? d.nome) : raiz.dataset.titulo
+  const nome = d ? (d.nomeCurto ?? d.nome) : raiz.dataset.titulo
+  document.title = d && raiz.dataset.rota ? `${raiz.dataset.rota} · ${nome}` : nome
 }
 
 function iconeDe(slug: string | undefined, d: InstituicaoPublica | undefined) {
@@ -100,6 +101,17 @@ function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined, te
   ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', tituloDoApp(slug, d))
 }
 
+export function useRota(titulo: string, d: InstituicaoPublica) {
+  useEffect(() => {
+    document.documentElement.dataset.rota = titulo
+    titular(d)
+    return () => {
+      delete document.documentElement.dataset.rota
+      titular(d)
+    }
+  }, [titulo, d.nomeCurto, d.nome])
+}
+
 export function useAparencia(slug?: string, nome = '') {
   return useInstituicao(slug).data ?? normalizar({ nome })
 }
@@ -130,7 +142,7 @@ export function iniciais(nome: string) {
 }
 
 export function Sigla({ slug, nome, icone, className = 'size-8' }: { slug?: string; nome: string; icone: number | null; className?: string }) {
-  if (slug && icone) return <img src={urlDaImagem(slug, 'icone', icone)} alt="" className={`${className} shrink-0 rounded-sm object-cover`} />
+  if (slug && icone) return <img src={urlDaImagem(slug, 'icone', icone)} alt="" width={32} height={32} className={`${className} shrink-0 rounded-sm object-cover`} />
   return (
     <span aria-hidden="true" className={`${className} flex shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-bold text-primary-foreground`}>
       {iniciais(nome)}
@@ -145,12 +157,12 @@ export function Contato({ contato }: { contato: Aparencia['contato'] }) {
     <div className="flex flex-col gap-1 text-sm">
       {contato.horario && <p className="m-0">{contato.horario}</p>}
       {contato.telefone && (
-        <a href={`tel:${contato.telefone.replace(/\D/g, '')}`} className="text-primary">
+        <a href={`tel:${contato.telefone.replace(/\D/g, '')}`} translate="no" className="text-primary">
           {contato.telefone}
         </a>
       )}
       {contato.email && (
-        <a href={`mailto:${contato.email}`} className="text-primary [overflow-wrap:anywhere]">
+        <a href={`mailto:${contato.email}`} translate="no" className="text-primary [overflow-wrap:anywhere]">
           {contato.email}
         </a>
       )}

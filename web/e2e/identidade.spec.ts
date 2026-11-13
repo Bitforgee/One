@@ -123,7 +123,7 @@ test('serifa só em títulos de 20 px ou mais', async ({ page }) => {
       const todos = [...document.querySelectorAll('body *')].filter(visivel)
       const permitida = (e: Element) =>
         (/^H[12]$/.test(e.tagName) && !e.closest('header')) ||
-        (e.matches('main div') && /^\d+(,\d)?%$/.test(e.textContent!.trim()) && e.children.length === 0) ||
+        (e.matches('main div') && /^\d+(,\d)?\s%$/.test(e.textContent!.trim()) && e.children.length === 0) ||
         (e.tagName === 'P' && !!e.closest('section[aria-label="Prévia"]'))
       return {
         serifas: todos.filter(serifa).map((e) => ({ tag: e.tagName, tam: parseFloat(getComputedStyle(e).fontSize), permitida: permitida(e), texto: (e.textContent ?? '').trim().slice(0, 30) })),
@@ -689,7 +689,7 @@ const comPrincipal = async (p: Page) => {
   await p.clock.setFixedTime(new Date('2026-11-05T13:00:00Z'))
   await p.route('**/api/indicadores*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoIndicadores(new URL(r.request().url()).searchParams.get('de') === '2026-10-27' ? 0.67 : 0.712)) }))
 }
-const esperaIndicadores = (p: Page) => p.getByText('71,2%', { exact: true }).waitFor()
+const esperaIndicadores = (p: Page) => p.getByText(/^71,2\s%$/).waitFor()
 const Faixa = ['Chamados abertos agora', 'Autoatendimento', 'Tempo até a 1ª resposta']
 const Lista = ['Alunos ativos', 'Conversas', 'Escalonamento', 'Abandono', 'Perguntas sem artigo', 'Chamados resolvidos', 'Tempo de resolução', 'Roteamento correto', 'Reabertura']
 
@@ -722,7 +722,7 @@ test('Indicador principal em serifa de 40 px com a variação ao lado', async ({
   for (const largura of [390, 1440]) {
     await em(page, largura, '/univag/indicadores', esperaIndicadores, { rotas: comPrincipal })
     await expect(page.getByText('Indicador principal', { exact: true })).toBeVisible()
-    const numero = page.getByText('71,2%', { exact: true })
+    const numero = page.getByText(/^71,2\s%$/)
     expect(await familia(numero), `${largura}: serifa`).toMatch(/^"Source Serif 4 Variable"/)
     const [tam, numeros] = await estilo(numero, 'font-size', 'font-variant-numeric')
     expect(tam, `${largura}: 40 px`).toBe('40px')
@@ -1203,7 +1203,7 @@ test('variação abaixo do número a 360', async ({ page }) => {
         await p.route('**/api/indicadores*', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(corpoIndicadores(new URL(r.request().url()).searchParams.get('de') === '2026-10-27' ? anterior : 0.712)) }))
       },
     })
-    const [numero, variacao] = [page.getByText('71,2%', { exact: true }), page.getByText(texto).filter({ hasText: 'vs. período anterior' })]
+    const [numero, variacao] = [page.getByText(/^71,2\s%$/), page.getByText(texto).filter({ hasText: 'vs. período anterior' })]
     await expect(variacao, `${texto}: variação`).toHaveCount(1)
     const [n, v] = [await caixa(numero), await caixa(variacao)]
     expect(v.y, `${texto}: abaixo do número`).toBeGreaterThanOrEqual(n.y + n.height - 1)

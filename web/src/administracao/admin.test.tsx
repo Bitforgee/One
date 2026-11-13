@@ -33,7 +33,7 @@ describe('administração', () => {
     })
     let montada = abrir('/univag/usuarios')
     await screen.findByText('Cadastre a equipe ou importe as matrículas.')
-    expect(cabecalhos()).toEqual(['Nome', 'CPF', 'E-mail', 'Papéis', 'Situação', ''])
+    expect(cabecalhos()).toEqual(['Nome', 'CPF', 'E-mail', 'Papéis', 'Situação', 'Ações'])
     montada.unmount()
 
     montada = abrir('/univag/cadastros')
@@ -133,7 +133,7 @@ describe('administração', () => {
     expect(chamadas.some((c) => c.metodo === 'POST')).toBe(false)
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
-    expect(await screen.findByText('Importação concluída: 2 matrículas criadas e 1 atualizadas.')).toBeInTheDocument()
+    expect(await screen.findByText('Importação concluída: 2 matrículas criadas e 1 atualizada.')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
@@ -182,7 +182,7 @@ describe('administração', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Importar' })).toBeEnabled())
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Importar' }))
-    await screen.findByText('Importação concluída: 1 matrículas criadas e 0 atualizadas.')
+    await screen.findByText('Importação concluída: 1 matrícula criada e 0 atualizadas.')
     const enviada = chamadas.find((c) => c.metodo === 'POST')!
     expect(enviada.url).toBe('/api/admin/matriculas/importacao')
     expect((enviada.corpo.arquivo as File).name).toBe('alunos.csv')

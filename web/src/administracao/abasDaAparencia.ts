@@ -1,4 +1,5 @@
 import type { Imagens } from '../aparencia'
+import { comUnidade } from '../formatos'
 
 export type Tipo = keyof Imagens
 export type Campo = { chave: string; rotulo: string; area?: boolean; dica?: string; limite?: number; tipo?: 'tel' | 'email' }
@@ -6,10 +7,10 @@ export type IdAba = 'marca' | 'app' | 'login' | 'assistente' | 'contato'
 export type Aba = { id: IdAba; titulo: string; campos: Campo[]; imagens: Tipo[]; nota?: string }
 
 export const Rotulos: Record<Tipo, [string, string, string?]> = {
-  logo: ['Logo', 'PNG ou JPEG, até 1 MB.'],
-  icone: ['Ícone do app', 'PNG quadrado de pelo menos 512 px, até 1 MB.', 'PNG quadrado, sem transparência, com o desenho a pelo menos 10% das bordas. O Android recorta as pontas.'],
-  login: ['Imagem do login', 'PNG ou JPEG, até 3 MB.'],
-  assistente: ['Foto do assistente', 'PNG ou JPEG, até 1 MB.'],
+  logo: ['Logo', `PNG ou JPEG, até ${comUnidade(1, 'MB')}.`],
+  icone: ['Ícone do app', `PNG quadrado de pelo menos ${comUnidade(512, 'px')}, até ${comUnidade(1, 'MB')}.`, 'PNG quadrado, sem transparência, com o desenho a pelo menos 10% das bordas. O Android recorta as pontas.'],
+  login: ['Imagem do login', `PNG ou JPEG, até ${comUnidade(3, 'MB')}.`],
+  assistente: ['Foto do assistente', `PNG ou JPEG, até ${comUnidade(1, 'MB')}.`],
 }
 
 export const LimiteDoNomeDoApp = 12

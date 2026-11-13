@@ -7,6 +7,7 @@ import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
+import { comUnidade } from '../formatos'
 import { Opcoes } from '../Opcoes'
 import { Button } from '../ui/button'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela, useMostrarMais } from '../Tabela'
@@ -76,7 +77,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias, erros }: { envio: Envio; s
   return (
     <>
       <p className="text-sm text-muted-foreground">
-        {envio.id ? `A nova versão de “${envio.titulo}” substitui a atual na busca; as anteriores ficam guardadas.` : 'PDF com texto (não digitalizado), até 20 MB.'}
+        {envio.id ? `A nova versão de “${envio.titulo}” substitui a atual na busca; as anteriores ficam guardadas.` : `PDF com texto (não digitalizado), até ${comUnidade(20, 'MB')}.`}
       </p>
       {!envio.id && (
         <>

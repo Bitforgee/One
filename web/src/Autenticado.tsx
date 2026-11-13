@@ -1,11 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookText, Building2, ChartColumn, ChevronLeft, CircleAlert, CircleUser, FileText, Inbox, LayoutGrid, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
-import { useId, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
 import { Carregando } from './Carregando'
 import { ErroDe } from './ErroDe'
-import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
+import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, useRota, type InstituicaoPublica } from './aparencia'
 import { AvisosPush } from './AvisosPush'
 import { telaInicial, useSair, type Sessao } from './sessao'
 import { useTempoReal } from './tempo-real'
@@ -204,16 +204,16 @@ function CabecalhoDaBarra({ me, slug, ap }: { me: Me; slug?: string; ap: Institu
   const logo = ap.imagens.logo
   return (
     <div className="flex items-center gap-2 p-1.5">
-      {logo && slug && <img src={urlDaImagem(slug, 'logo', logo)} alt={ap.nome} className="h-8 w-auto max-w-40 object-contain group-data-[collapsible=icon]:hidden" />}
+      {logo && slug && <img src={urlDaImagem(slug, 'logo', logo)} alt={ap.nome} width={160} height={32} className="h-8 w-auto max-w-40 object-contain group-data-[collapsible=icon]:hidden" />}
       <span className={logo ? 'hidden group-data-[collapsible=icon]:flex' : 'flex'}>
         <Sigla slug={slug} nome={me.instituicao.nome} icone={ap.imagens.icone} />
       </span>
       {!logo && (
         <div className="grid min-w-0 text-sm leading-tight">
-          <span className="font-semibold group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
+          <span translate="no" className="font-semibold group-data-[collapsible=icon]:sr-only" data-testid="instituicao">
             {me.instituicao.nome}
           </span>
-          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:sr-only">One</span>
+          <span translate="no" className="text-xs text-muted-foreground group-data-[collapsible=icon]:sr-only">One</span>
         </div>
       )}
     </div>
@@ -262,7 +262,7 @@ function Topo({ titulo, aluno, abas, slug, icone, nome, voltar }: { titulo: stri
             <span className="sr-only">Voltar</span>
           </Button>
         )}
-        {!voltar && <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />}        <h1 className="truncate text-base font-medium">{titulo}</h1>
+        {!voltar && <Sigla slug={slug} nome={nome} icone={icone} className="size-6 md:hidden" />}        <h1 translate={/^ONE-\d+$/.test(titulo) ? 'no' : undefined} className="truncate text-base font-medium">{titulo}</h1>
         <div className="ms-auto flex shrink-0 items-center gap-1">{aluno && <AvisosPush />}</div>
       </div>
     </header>
@@ -413,9 +413,21 @@ function useModo(me: Me, slug?: string) {
   }
 }
 
+function useFocoNaRota(pathname: string) {
+  const anterior = useRef(pathname)
+  useEffect(() => {
+    if (anterior.current === pathname) return
+    anterior.current = pathname
+    document.getElementById('conteudo')?.focus({ preventScroll: true })
+  }, [pathname])
+}
+
 function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
   const { numero } = useParams()
   const { pathname } = useLocation()
+  const titulo = tituloDaRota(pathname, numero)
+  useRota(titulo, ap)
+  useFocoNaRota(pathname)
   const cliente = useQueryClient()
   const barra = useBarra()
   const sair = useSair()
@@ -428,7 +440,7 @@ function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica
       <PularParaOConteudo />
       {!abas && <Barra me={me} itens={itensDo(me.papeis)} slug={slug} sair={sair} ap={ap} />}
       <SidebarInset id="conteudo" tabIndex={-1} className="min-w-0 outline-none">
-        <Topo titulo={tituloDaRota(pathname, numero)} aluno={me.papeis.includes('ALUNO')} abas={abas} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} voltar={voltar} />
+        <Topo titulo={titulo} aluno={me.papeis.includes('ALUNO')} abas={abas} slug={slug} icone={ap.imagens.icone} nome={me.instituicao.nome} voltar={voltar} />
         <div className={`@container/main flex-1 px-4 py-4 md:py-6 lg:px-6 ${comBarra ? 'pb-[calc(var(--barra)+1rem)]' : ''}`}>
           <Outlet context={{ me, setMe } satisfies Sessao} />
         </div>

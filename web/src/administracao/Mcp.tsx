@@ -6,6 +6,7 @@ import { api } from '../api'
 import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
 import { formatarData } from '../datas'
+import { dataCurta } from '../formatos'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { useSessao } from '../sessao'
 import { CelulaLargo, Detalhe, Principal, Tabela } from '../Tabela'
@@ -22,14 +23,15 @@ export type Dados = { url: string; tokens: Item[] }
 type Criado = { id: number; nome: string; token: string; final: string; criadoEm: string; expiraEm: string }
 
 const Validades = [30, 90, 365]
+const Estados: Record<Item['estado'], string> = { ATIVO: 'Ativo', EXPIRADO: 'Expirado', REVOGADO: 'Revogado' }
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Dono', largo: true }, { titulo: 'Final', largo: true }, { titulo: 'Criado', largo: true }, { titulo: 'Vence', largo: true }, { titulo: 'Último uso', largo: true }, { titulo: 'Estado' }, { titulo: '' }]
 
 const comandoClaude = (url: string, token: string) => `claude mcp add --transport http one ${url} --header "Authorization: Bearer ${token}"`
 const jsonDoCliente = (url: string, token: string) => JSON.stringify({ mcpServers: { one: { url, headers: { Authorization: `Bearer ${token}` } } } })
 
 function LinhaDoToken({ t, fuso, revogar }: { t: Item; fuso: string; revogar: () => void }) {
-  const criado = formatarData(t.criadoEm, fuso).slice(0, 10)
-  const vence = formatarData(t.expiraEm, fuso).slice(0, 10)
+  const criado = dataCurta(t.criadoEm, fuso)
+  const vence = dataCurta(t.expiraEm, fuso)
   const uso = t.ultimoUsoEm ? formatarData(t.ultimoUsoEm, fuso) : 'Nunca'
   return (
     <TableRow>
@@ -45,7 +47,7 @@ function LinhaDoToken({ t, fuso, revogar }: { t: Item; fuso: string; revogar: ()
       <CelulaLargo>{vence}</CelulaLargo>
       <CelulaLargo>{uso}</CelulaLargo>
       <TableCell data-celula="selo">
-        <Badge variant={t.estado === 'ATIVO' ? 'default' : 'secondary'}>{t.estado}</Badge>
+        <Badge variant={t.estado === 'ATIVO' ? 'default' : 'secondary'}>{Estados[t.estado]}</Badge>
       </TableCell>
       <TableCell data-celula="acoes" className="text-end">
         {t.estado === 'ATIVO' && (
@@ -174,7 +176,7 @@ export function ConteudoMcp({ dados, novo, abrirNovo, fecharNovo }: { dados: Dad
       <Confirmar
         aberto={!!revogando}
         fechar={() => setRevogando(undefined)}
-        titulo={`Revogar o token «${revogando?.nome}»?`}
+        titulo={`Revogar o token “${revogando?.nome}”?`}
         botao="Revogar"
         voltar="Cancelar"
         destrutivo

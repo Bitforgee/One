@@ -7,6 +7,7 @@ import { Campo } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
+import { Literal } from '../Literal'
 import { Marca } from '../Marca'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela, useMostrarMais } from '../Tabela'
 import { Badge } from '../ui/badge'
@@ -44,8 +45,12 @@ function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario;
         {u.nome}
         <Detalhe>{[cpfFormatado(u.cpf), u.email, perfil].join(' · ')}</Detalhe>
       </TableCell>
-      <CelulaLargo>{cpfFormatado(u.cpf)}</CelulaLargo>
-      <CelulaLargo>{u.email}</CelulaLargo>
+      <CelulaLargo>
+        <Literal>{cpfFormatado(u.cpf)}</Literal>
+      </CelulaLargo>
+      <CelulaLargo>
+        <Literal>{u.email}</Literal>
+      </CelulaLargo>
       <CelulaLargo>{perfil}</CelulaLargo>
       <TableCell data-celula="selo">{!u.ativo && <Badge variant="secondary">Desativado</Badge>}</TableCell>
       <TableCell data-celula="acoes" className="text-end">

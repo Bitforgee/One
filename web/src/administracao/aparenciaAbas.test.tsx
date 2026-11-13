@@ -346,7 +346,7 @@ describe('App instalado', () => {
     await digitar('Nome do app', 'Nova')
     await userEvent.click(salvar())
     await waitFor(() => expect(document.head.querySelector('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'Nova'))
-    expect(document.title).toBe('Nova')
+    expect(document.title).toBe('Aparência · Nova')
   })
 })
 

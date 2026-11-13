@@ -31,13 +31,28 @@ const TituloBase = 'Atendimento ao estudante'
 const Frase = 'Dúvidas, solicitações e respostas da sua instituição em um só lugar.'
 const Itens = ['Tire dúvidas com o assistente a qualquer hora', 'Acompanhe suas solicitações até a resposta', 'Fale com a equipe da instituição quando precisar']
 
-const H1 = ({ children }: { children: ReactNode }) => <h1 className="font-heading text-[28px] leading-tight font-semibold tracking-tight">{children}</h1>
+const H1 = ({ children, translate }: { children: ReactNode; translate?: 'no' }) => <h1 translate={translate} className="font-heading text-[28px] leading-tight font-semibold tracking-tight">{children}</h1>
+
+export function NaoEncontrada() {
+  const { slug } = useParams()
+  return (
+    <Centro>
+      <div className="flex flex-col items-start gap-3">
+        <H1>Página não encontrada</H1>
+        <p className="m-0 text-muted-foreground">O endereço que você abriu não existe.</p>
+        <Button asChild className="h-11">
+          <Link to={`/${slug}`}>Voltar ao início</Link>
+        </Button>
+      </div>
+    </Centro>
+  )
+}
 
 export function Raiz() {
   return (
     <Centro>
       <div className="flex flex-col items-center gap-3 text-center">
-        <H1>One</H1>
+        <H1 translate="no">One</H1>
         <p className="m-0 text-muted-foreground">{Frase}</p>
         <p className="m-0 text-muted-foreground">Abra o endereço da sua instituição, por exemplo /univag.</p>
       </div>
@@ -49,7 +64,7 @@ function Identidade({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   const logo = slug && d?.imagens.logo
   return (
     <div className="mb-3 flex h-12 items-center">
-      {logo ? <img src={urlDaImagem(slug, 'logo', logo)} alt={d.nome} className="h-12 w-auto max-w-full object-contain" /> : d && <Sigla nome={d.nome} icone={null} className="size-12" />}
+      {logo ? <img src={urlDaImagem(slug, 'logo', logo)} alt={d.nome} width={192} height={48} className="h-12 w-auto max-w-full object-contain" /> : d && <Sigla nome={d.nome} icone={null} className="size-12" />}
     </div>
   )
 }
@@ -58,7 +73,7 @@ function Nome({ slug, d }: { slug?: string; d?: InstituicaoPublica }) {
   return (
     <div className="flex flex-col gap-1">
       <Identidade slug={slug} d={d} />
-      {d && <H1>{d.nome}</H1>}
+      {d && <H1 translate="no">{d.nome}</H1>}
     </div>
   )
 }
@@ -84,7 +99,7 @@ function ListaDeItens({ d }: { d?: InstituicaoPublica }) {
 
 function Foto({ foto, className, lateral }: { foto: string | null; className: string; lateral?: boolean }) {
   if (!foto) return null
-  const img = <img src={foto} alt="" className={className} />
+  const img = <img src={foto} alt="" width={800} height={lateral ? 1200 : 160} className={className} />
   return lateral ? <div className="relative hidden lg:block">{img}</div> : img
 }
 

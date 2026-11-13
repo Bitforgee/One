@@ -8,9 +8,9 @@ import { Cabecalho } from '../Cabecalho'
 import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Confirmar } from '../Confirmar'
-import { formatarData } from '../datas'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
+import { dataCurta, plural } from '../formatos'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
@@ -88,7 +88,7 @@ function ResultadoDaCarga({ r, erro }: { r?: Contagens; erro: Error | null }) {
   if (r)
     return (
       <Alert>
-        Importados: {r.setores} setores, {r.cursos} cursos, {r.categorias} categorias, {r.regras} regras, {r.artigos} artigos.
+        Importados: {plural(r.setores, 'setor', 'setores')}, {plural(r.cursos, 'curso', 'cursos')}, {plural(r.categorias, 'categoria', 'categorias')}, {plural(r.regras, 'regra', 'regras')}, {plural(r.artigos, 'artigo', 'artigos')}.
       </Alert>
     )
   if (erros.length > 0)
@@ -134,14 +134,14 @@ function ImportarCarga({ alvo, fechar }: { alvo: Item; fechar: () => void }) {
 const Colunas = [{ titulo: 'Nome' }, { titulo: 'Situação' }, { titulo: 'Administradores', largo: true }, { titulo: 'Criada em', largo: true }, { titulo: '' }]
 
 function Linha({ i, importar, desativar, agir, pendente }: { i: Item; importar: () => void; desativar: () => void; agir: (aviso: string | ((r: unknown) => string), url: string) => void; pendente: boolean }) {
-  const criada = formatarData(i.criadaEm, i.fuso).slice(0, 10)
+  const criada = dataCurta(i.criadaEm, i.fuso)
   return (
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>
         {i.nome}
-        <div className="text-xs font-normal text-muted-foreground">/{i.slug}</div>
+        <div translate="no" className="text-xs font-normal text-muted-foreground">/{i.slug}</div>
         <Detalhe>
-          {i.administradores} {i.administradores === 1 ? 'administrador' : 'administradores'} · criada em {criada}
+          {plural(i.administradores, 'administrador', 'administradores')} · criada em {criada}
         </Detalhe>
       </TableCell>
       <TableCell data-celula="selo">{i.ativa ? <Badge className="bg-accent text-foreground">Ativa</Badge> : <Badge variant="secondary">Desativada</Badge>}</TableCell>
@@ -190,7 +190,7 @@ function useCriacao(recarregar: () => Promise<unknown>) {
 const AvisoDeCriacao = ({ criada }: { criada: Ficha }) => (
   <Alert>
     <div>
-      Instituição {criada.nome} criada. Enviamos o link de primeiro acesso para {criada.email}. <Link to={`/${criada.slug}`}>/{criada.slug}</Link>
+      Instituição {criada.nome} criada. Enviamos o link de primeiro acesso para {criada.email}. <Link to={`/${criada.slug}`} translate="no">/{criada.slug}</Link>
     </div>
   </Alert>
 )

@@ -37,7 +37,7 @@ const Assistente = [
   'Ver solicitação',
   'Que bom que resolveu! Conversa encerrada.',
   'Conversa encerrada.',
-  'PDF ou foto, até 10 MB',
+  'PDF ou foto, até 10\u00a0MB',
   'Reenviar',
 ]
 

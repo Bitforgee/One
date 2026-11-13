@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MotionConfig } from 'motion/react'
 import { useState } from 'react'
 import { Route, Routes } from 'react-router'
-import { DefinirSenha, Login, PrimeiroAcesso, Raiz, TrocarSenha } from './acesso/Acesso'
+import { DefinirSenha, Login, NaoEncontrada, PrimeiroAcesso, Raiz, TrocarSenha } from './acesso/Acesso'
 import { Conta } from './acesso/Conta'
 import { Gerir } from './administracao/Gerir'
 import { AplicaAparencia } from './aparencia'
@@ -75,6 +75,7 @@ function Rotas() {
             <Route path="integracoes" element={<Integracoes />} />
             <Route path="instituicoes" element={<Instituicoes />} />
           </Route>
+          <Route path="*" element={<NaoEncontrada />} />
         </Route>
       </Routes>
     </>

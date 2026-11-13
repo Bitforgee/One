@@ -42,7 +42,7 @@ describe('indicadores com período anterior', () => {
     ]
     const chamadas = abrirCom(com(0.712), () => [200, com(0.67)])
     abrir('/univag/indicadores')
-    await screen.findByText('71,2%')
+    await screen.findByText('71,2 %')
     await waitFor(() => expect(leituras(chamadas)).toEqual(['/api/indicadores?de=2026-11-01&ate=2026-11-05', '/api/indicadores?de=2026-10-27&ate=2026-10-31']))
     for (const [de, ate, anterior, atual] of casos) {
       const antes = leituras(chamadas).length
@@ -58,7 +58,7 @@ describe('indicadores com período anterior', () => {
     for (const [anterior, texto] of casos) {
       abrirCom(com(0.712), () => [200, com(anterior)])
       const { unmount } = abrir('/univag/indicadores')
-      expect(await screen.findByText('71,2%')).toBeInTheDocument()
+      expect(await screen.findByText('71,2 %')).toBeInTheDocument()
       expect(await screen.findByText(texto), texto).toBeInTheDocument()
       expect(screen.getByText('vs. período anterior')).toBeInTheDocument()
       unmount()
@@ -74,7 +74,7 @@ describe('indicadores com período anterior', () => {
     for (const [rotulo, rota] of casos) {
       const chamadas = abrirCom(com(0.712), rota)
       const { unmount } = abrir('/univag/indicadores')
-      expect(await screen.findByText('71,2%')).toBeInTheDocument()
+      expect(await screen.findByText('71,2 %')).toBeInTheDocument()
       await waitFor(() => expect(leituras(chamadas)).toHaveLength(2))
       await pausa()
       for (const texto of [/▲/, /▼/, '= sem variação', 'vs. período anterior']) expect(screen.queryByText(texto), `${rotulo} ${texto}`).not.toBeInTheDocument()
@@ -130,7 +130,7 @@ describe('indicadores com período anterior', () => {
   it('semDados com número no anterior esconde a variação', async () => {
     abrirCom(com(0.712), () => [200, com(0.67, { semDados: true })])
     const { unmount } = abrir('/univag/indicadores')
-    expect(await screen.findByText('71,2%')).toBeInTheDocument()
+    expect(await screen.findByText('71,2 %')).toBeInTheDocument()
     await pausa()
     for (const texto of [/▲/, /▼/, '= sem variação', 'vs. período anterior']) expect(screen.queryByText(texto), String(texto)).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

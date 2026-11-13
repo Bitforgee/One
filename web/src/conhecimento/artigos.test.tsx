@@ -53,13 +53,13 @@ describe('artigos', () => {
     servir('artigos', [artigo(1, 'Faltas', 'ATIVO')])
     let montada = abrir('/univag/artigos')
     await screen.findByText('Faltas')
-    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Validade', 'Situação', ''])
+    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Validade', 'Situação', 'Ações'])
     montada.unmount()
 
     servir('documentos', [documento('ATIVO')])
     montada = abrir('/univag/documentos')
     await screen.findByText('Edital')
-    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Arquivo', 'Situação', ''])
+    expect(cabecalhos()).toEqual(['Título', 'Categoria', 'Versão', 'Arquivo', 'Situação', 'Ações'])
   })
 
   it('lista vazia numa linha', async () => {
