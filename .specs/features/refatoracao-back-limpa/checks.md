@@ -25,7 +25,7 @@ Proof: `dotnet test One.Api.Tests` # sai 0
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 contagem -Min 810 # contagem`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 sem-skip # sem-skip`
 
-**C2** - Os cinco retratos `rotas.txt` (93 linhas), `erros.txt` (9), `sucessos.txt` (56), `gravacoes.txt` (24) e `importacao.txt` (1) ficam byte a byte iguais aos da base e as 6 comparações de `RetratoTests` passam (AC 2)
+**C2** - Os cinco retratos `rotas.txt` (93 linhas), `erros.txt` (9), `sucessos.txt` (56), `gravacoes.txt` (24) e `importacao.txt` (1) ficam byte a byte iguais aos da base e as 6 comparações de `RetratoTests` passam (AC 2); o modo `retratos` compara só esses 5 arquivos contra a base, e os goldens novos `provedor.txt`, `servicos.txt` e `instituicao-publica.txt` são provados pelos seus próprios checks (C5-C7, C20 e C21)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 retratos # retratos`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests"`
 
@@ -56,8 +56,8 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorConcorre
 **C10** - Chamado aguardando que o aluno responde entre `Ler()` e `Processar(lidos)` fica com `LembreteEm` nulo, 0 `EventoChamado` de lembrete e 0 aviso (AC 6)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorConcorrenciaTests.Lembrete_mudado_entre_Ler_e_Processar_fica_intacto"`
 
-**C11** - Chamado aguardando que o aluno responde entre `Ler()` e `Processar(lidos)` continua `AGUARDANDO_ALUNO`, com 0 `MensagemChamado` de `TextoSemResposta`, 0 `EventoChamado` e 0 aviso (AC 6)
-Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorConcorrenciaTests.SemResposta_mudado_entre_Ler_e_Processar_fica_intacto"`
+**C11** - Chamado em `AGUARDANDO_ALUNO` cujo `AguardandoDesde` é renovado entre `Ler()` e `Processar(lidos)` (nova resposta da equipe com `aguardaAluno=true`) continua `AGUARDANDO_ALUNO`; e chamado em que o aluno responde (pela rota) entre as duas chamadas fica `EM_ATENDIMENTO`; nos dois casos o `Processar` acrescenta 0 `MensagemChamado` de `TextoSemResposta`, 0 `EventoChamado` e 0 aviso (AC 6)
+Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorConcorrenciaTests.SemResposta_mudado_entre_Ler_e_Processar_fica_intacto|FullyQualifiedName~AgendadorConcorrenciaTests.SemResposta_com_resposta_do_aluno_entre_Ler_e_Processar_fica_em_atendimento"`
 
 **C12** - Dois `Agendador.Executar()` simultâneos sobre a mesma conversa parada há 30 minutos deixam `Desfecho` = `ABANDONADA` e exatamente 1 log "Conversa {id} abandonada" (AC 7)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorConcorrenciaTests.Duas_execucoes_conversa_um_abandono"`
@@ -124,7 +124,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~EmailSaidaDominioTests.Registrar_falha_soma_uma_tentativa_e_agenda_2_elevado_a_tentativas_minutos"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~EmailFalhaTests.Retry_2_a_n_e_desiste_em_5"`
 
-**C27** - Os 7 tipos `Usuario`, `Conversa`, `MensagemConversa`, `TokenAcesso`, `Instituicao`, `ImagemInstituicao` e `EmailSaida` não têm setter público (exceto `InstituicaoId`): `Entidade_sem_setter_publico` passa e a lista cai de 17 para 10 nomes (AC 12)
+**C27** - Os 7 tipos `Usuario`, `Conversa`, `MensagemConversa`, `TokenAcesso`, `Instituicao`, `ImagemInstituicao` e `EmailSaida` não têm setter público (exceto `InstituicaoId`): `Entidade_sem_setter_publico` passa e a lista cai de 17 para 10 nomes e `UsuarioPapel` continua nela; a prova `lista-sem` compara por igualdade exata do nome (`UsuarioPapel` não casa com `Usuario`) (AC 12)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Entidade_sem_setter_publico"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-sem -Regra Entidade_sem_setter_publico -Nomes Usuario,Conversa,MensagemConversa,TokenAcesso,Instituicao,ImagemInstituicao,EmailSaida # lista-sem`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Entidade_sem_setter_publico -Esperado 10 # lista`
@@ -145,11 +145,11 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~SenhaTests|FullyQ
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~UsuarioDominioTests.Desativar_marca_inativo"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~SessaoTests.Conta_desativada_401_na_proxima_requisicao|FullyQualifiedName~UsuarioAdminTests"`
 
-**C32** - `Conversa.Encerrar(agora)` grava `Desfecho` = `ENCERRADA` e `DesfechoEm` = agora, e devolve `Recusa` quando `Desfecho` já existe; a rota devolve 200 e, com desfecho, 409, sem banco no teste de domínio (AC 14)
+**C32** - `Conversa.Encerrar(agora)` grava `Desfecho` = `ENCERRADA_PELO_ALUNO` e `DesfechoEm` = agora, e devolve `Recusa` quando `Desfecho` já existe; a rota devolve 200 e, com desfecho, 409, sem banco no teste de domínio (AC 14)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ConversaDominioTests.Encerrar_grava_ENCERRADA_e_a_data|FullyQualifiedName~ConversaDominioTests.Encerrar_com_desfecho_devolve_Recusa"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ConversaTests.Encerrar_200|FullyQualifiedName~ConversaTests.Conversa_com_desfecho_409"`
 
-**C33** - `Conversa.Avaliar(resolveu, agora)` com `true` grava `RESOLVIDA` e a data, com `false` não muda nada, e com `Desfecho` existente devolve `Recusa`; as rotas continuam em 200 e 409, sem banco no teste de domínio (AC 14)
+**C33** - `Conversa.Avaliar(resolveu, agora)` com `true` grava `RESOLVIDA_AUTOATENDIMENTO` e a data, com `false` não muda nada, e com `Desfecho` existente devolve `Recusa`; as rotas continuam em 200 e 409, sem banco no teste de domínio (AC 14)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ConversaDominioTests.Avaliar_resolveu_grava_RESOLVIDA|FullyQualifiedName~ConversaDominioTests.Avaliar_nao_resolveu_nao_muda|FullyQualifiedName~ConversaDominioTests.Avaliar_com_desfecho_devolve_Recusa"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ConversaTests.Sim_resolve_sem_chamado|FullyQualifiedName~ConversaTests.Nao_mantem_aberta|FullyQualifiedName~ConversaTests.Avaliacao_sem_resolveu_400"`
 
@@ -246,8 +246,11 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 pares -Tipo inversos -Max 15 # pares`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Referencias_entre_fatias"`
 
-**C54** - `Chamado.Abrir` (13 parâmetros hoje), `Rejeitar` (7), `Subir` (8), `Encaminhar` (7) e `Reclassificar` ficam com no máximo 5 parâmetros e `Dados_ate_5_parametros` não os lista (AC 28)
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-sem -Regra Dados_ate_5_parametros -Nomes Abrir,Rejeitar,Subir,Encaminhar,Reclassificar # lista-sem`
+**C54** - `Chamado.Abrir` (13 parâmetros hoje), `Rejeitar` (7), `Subir` (8) e `Encaminhar` (7) ficam com no máximo 5 parâmetros e saem de `Dados_ate_5_parametros` na S4; a lista fica só com `Chamado.ResponderComoEquipe`, `TokenMcp.Criar`, `PlataformaMoodle.Configurar` e `SubscricaoPush.Registrar` (4 itens, igualdade exata), exceção permanente "cadastro de uso único, record não paga" registrada no plano (Assumptions); `Reclassificar` já tem 5 parâmetros na base e não é ofensor (AC 28)
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-sem -Regra Dados_ate_5_parametros -Nomes Abrir,Rejeitar,Subir,Encaminhar # lista-sem`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-contem -Regra Dados_ate_5_parametros -Nomes ResponderComoEquipe,TokenMcp.Criar,PlataformaMoodle.Configurar,SubscricaoPush.Registrar # lista-contem`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Dados_ate_5_parametros -Esperado 4 # lista`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Dados_ate_5_parametros -Justificativa .specs/features/refatoracao-back-limpa/plan.md # lista`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Dados_ate_5_parametros|FullyQualifiedName~ChamadoDominioTests|FullyQualifiedName~EncaminharTests|FullyQualifiedName~ReclassificarSaiDoFluxoTests"`
 
 **C55** - `MaxAnexo` é declarado 1 vez em `One.Api/` (hoje 2) e `ResponderChamado` e a rota de conversa leem o anexo pelo mesmo tipo: um anexo de 10 MiB + 1 byte devolve 413 nas duas rotas e o retrato de erros segue igual (AC 29)
@@ -515,7 +518,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 | tarefas do Agendador (9) | conversa C8 C12 C76 · chamado C9 C13 C74 · aguardando C11 C15 C74 · lembrete C10 C14 C74 · subir C16 C71 · email C26 C71 · trecho C17 C19 C76 · push C78 C71 · limpeza de lançamentos C71 C18 | - |
 | tipos de item em Ler() (8) | conversa C18 C72 · chamado C18 C72 · aguardando C18 C72 · lembrete C18 C72 · subir C18 C72 · email C18 C72 · trecho C18 C72 · push C18 C72 | - |
 | requisições ao provedor de IA (3) | sem anexo C5 · com anexo C6 · embedding C7 | - |
-| métodos de Chamado com mais de 5 parâmetros (5) | Abrir C54 · Rejeitar C54 · Subir C54 · Encaminhar C54 · Reclassificar C54 | - |
+| métodos de Chamado que saem da lista de mais de 5 parâmetros (4) | Abrir C54 · Rejeitar C54 · Subir C54 · Encaminhar C54 | - |
 | decisões do Agendador sobre Chamado (3) | FecharPorInatividade C74 C13 · LembrarAluno C74 C14 · ResolverPorFaltaDeResposta C74 C15 | - |
 | entradas inválidas de Cpf.Tentar (6) | null C36 · 10 dígitos C36 · letra no meio C36 · primeiro dígito verificador errado C36 · segundo dígito verificador errado C36 · válido com pontuação C35 | - |
 | motivos de rejeição do roteamento (4) | Curso sem coordenação C44 C41 · Sem liderança disponível C44 C41 · Setor inativo C44 C41 · Atendimento direto não passa pela liderança C44 C41 | - |
@@ -618,3 +621,17 @@ Cada builder acrescenta aqui, ao fechar o lote, três linhas: `Boundary` (checks
 
 - Lote A, S1: Boundary `ad7cf78` (C1-C25: suíte 837/837 no commit; listas 6/19/17/5/2/1 conferidas por `provas.ps1 lista`; `git diff 97524d1 ad7cf78 -- One.Api` vazio; mutação das 11 listas pega no container). C2 só vale para os cinco retratos originais (ver notas-build.md, item 2).
 - Lote A, S2: Boundary `967860a` (C26-C38: suíte 862/862; C27 `lista-sem` e C28 grep conferidos, C27 `lista-sem` não fecha pela prova escrita, ver notas-build.md, item 6). Settled mid-build: vocabulários em arquivo próprio na pasta da entidade; `Invalido` e `DadosDeAparencia` criados em `Dados/`. Abandoned: nenhum item; o lote B (S3 e S4) não foi iniciado.
+
+## Emendas aprovadas
+
+Aprovadas pelo humano em 2026-11-13: "ok aplique". Checks aprovados só mudam por aprovação humana; cada linha registra o que mudou.
+
+| Emenda | Check | Antes | Depois | Motivo |
+| --- | --- | --- | --- | --- |
+| E1 | C2 (e a linha do C97 que reusa o modo) | `provas.ps1 retratos` fazia `git diff` do diretório `Retratos/` inteiro | o modo compara só `rotas`, `erros`, `sucessos`, `gravacoes` e `importacao` (.txt) contra a base; os goldens `provedor`, `servicos` e `instituicao-publica` são provados por C5-C7, C20 e C21 | os 3 goldens novos nascem na S1 e fazem o diretório diferir da base por construção |
+| E2 | C27 | `lista-sem` e `lista-contem` casavam por `-like "*nome*"`; `Usuario` casava com `UsuarioPapel` | igualdade exata do nome, aceitando para métodos o sufixo qualificado (`-eq $n -or -like "*.$n"`); `UsuarioPapel` continua na lista de 10 | a prova escrita não fechava (notas-build.md, item 6) |
+| E3 | C32, C33 | `ENCERRADA`, `RESOLVIDA` | `ENCERRADA_PELO_ALUNO`, `RESOLVIDA_AUTOATENDIMENTO` | são os valores de `One.Api/Dados/Conversas/Desfechos.cs` |
+| E4 | C11 | "aluno responde ... continua `AGUARDANDO_ALUNO`" | dois casos: `AguardandoDesde` renovado pela equipe continua `AGUARDANDO_ALUNO`; aluno responde pela rota fica `EM_ATENDIMENTO`; `Proof:` lista os dois testes | responder pela rota tira o chamado de `AGUARDANDO_ALUNO` (notas-build.md, item 4) |
+| E6 | C54, AC 28, plano (Impact e Assumptions) | `Reclassificar` entre os métodos a reduzir; 8 ofensores a sair da lista | AC 28 e C54 citam só `Abrir`, `Rejeitar`, `Subir` e `Encaminhar`; os outros 4 ofensores (`ResponderComoEquipe`, `TokenMcp.Criar`, `PlataformaMoodle.Configurar`, `SubscricaoPush.Registrar`) são exceção permanente, lista fixa de 4 (igualdade exata), motivo "cadastro de uso único, record não paga" | `Chamado.Reclassificar` já tem 5 parâmetros na base e não é ofensor |
+
+E5 (C20, C81) está aplicada só no teste (`ServicosTests` aceita `Adicionadas`/`Removidas`, listas fechadas e hoje vazias); o texto dos checks C20/C81 fica como está até o humano fechar os nomes das tarefas da S6 (ver notas-build.md).

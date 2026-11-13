@@ -71,11 +71,12 @@ switch ($Modo) {
         Ok 'modelo sem mudanca pendente'
     }
     'retratos' {
-        git diff --exit-code --quiet $Base -- One.Api.Tests/Retratos
-        if ($LASTEXITCODE -ne 0) { Falha "Retratos difere de $Base" }
+        $cinco = 'rotas','erros','sucessos','gravacoes','importacao' | ForEach-Object { "One.Api.Tests/Retratos/$_.txt" }
+        git diff --exit-code --quiet $Base -- @cinco
+        if ($LASTEXITCODE -ne 0) { Falha "um dos 5 retratos originais difere de $Base" }
         $n = @(Get-Content One.Api.Tests/Retratos/rotas.txt).Count
         if ($n -ne 93) { Falha "rotas.txt tem $n linhas, esperado 93" }
-        Ok 'Retratos identicos ao base, rotas.txt com 93 linhas'
+        Ok '5 retratos originais identicos ao base, rotas.txt com 93 linhas'
     }
     'grep' {
         $excluir = $Excluir
@@ -132,13 +133,13 @@ switch ($Modo) {
     }
     'lista-contem' {
         $itens = @(ItensDaLista (CampoDaLista (TextoDoArquivo $Rev $Arquivo) $Regra))
-        $faltam = $Nomes | Where-Object { $n = $_; -not ($itens | Where-Object { $_ -like "*$n*" }) }
+        $faltam = $Nomes | Where-Object { $n = $_; -not ($itens | Where-Object { $_ -eq $n -or $_ -like "*.$n" }) }
         if ($faltam) { Falha "Excecoes_$Regra sem: $($faltam -join ', ')" }
         Ok "Excecoes_$Regra contem os $(@($Nomes).Count) nomes"
     }
     'lista-sem' {
         $itens = @(ItensDaLista (CampoDaLista (TextoDoArquivo $Rev $Arquivo) $Regra))
-        $tem = $Nomes | Where-Object { $n = $_; $itens | Where-Object { $_ -like "*$n*" } }
+        $tem = $Nomes | Where-Object { $n = $_; $itens | Where-Object { $_ -eq $n -or $_ -like "*.$n" } }
         if ($tem) { Falha "Excecoes_$Regra ainda lista: $($tem -join ', ')" }
         Ok "Excecoes_$Regra nao lista nenhum dos $(@($Nomes).Count) nomes"
     }
