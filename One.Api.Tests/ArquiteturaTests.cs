@@ -678,7 +678,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Setor_so_pelo_ResolverFluxo()
     {
-        Assert.Equal(["Administracao/SalvarRascunho.cs", "Dados/Fluxos/RoteamentoDeFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
+        Assert.Equal(["Dados/Fluxos/Fluxo.cs", "Dados/Fluxos/RoteamentoDeFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
         foreach (var usa in new[] { "Chamados/AbrirChamado.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Agendador.cs" })
         {
             var codigo = CodigoDe(usa.Split('/'));
