@@ -10,7 +10,7 @@ import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Periodo } from '../Periodo'
 import { Button } from '../ui/button'
-import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela, useMostrarMais } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
@@ -126,6 +126,7 @@ const tituloDaJanela = (r?: Rascunho) => (r?.id ? 'Editar artigo' : 'Novo artigo
 export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
   const vazia = artigos?.length === 0
+  const { visiveis, mais } = useMostrarMais(artigos)
   const [editando, setEditando] = useState<Rascunho>()
   const [arquivar, setArquivar] = useState<Artigo>()
   const [ativar, setAtivar] = useState<Artigo>()
@@ -154,10 +155,11 @@ export function Artigos() {
         erro={erro}
         vazio={{ Icone: BookText, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
       >
-        {artigos?.map((a) => (
+        {visiveis?.map((a) => (
           <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => setAtivar(a)} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
         ))}
       </Tabela>
+      {mais}
 
       <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} erros={errosDeCampo(acao.error)} />}

@@ -181,6 +181,7 @@
 [data-cartoes] [data-celula] { display: flex; justify-content: flex-end; grid-row: 1; align-self: start; margin-inline-start: 0.5rem; }
 [data-cartoes] [data-celula='selo'] { grid-column: 2; margin-top: 1px; }
 [data-cartoes] [data-celula='acoes'] { grid-column: 3; }
+[data-slot='table-body'] > [data-slot='table-row'], [data-cartoes] > [data-slot='table-row'], [data-linhas] > [data-slot='table-row'] { content-visibility: auto; contain-intrinsic-size: auto 56px; }
 
 [data-slot='sheet-content'], [data-slot='dialog-content'], [data-slot='popover-content'], [data-slot='editor-corpo'] { overscroll-behavior: contain; }
 @media (pointer: fine) { html { overscroll-behavior: none; } }

@@ -10,7 +10,7 @@ import { Inbox, MessageSquare } from 'lucide-react'
 import { Button } from '../ui/button'
 import { abertoHa } from '../datas'
 import { useSessao } from '../sessao'
-import { CelulaLargo, Detalhe, Principal, Tabela, useEstreito, type Vazio } from '../Tabela'
+import { CelulaLargo, Detalhe, Principal, Tabela, useEstreito, useMostrarMais, type Vazio } from '../Tabela'
 import { UrlDaFila, useFilaAberta } from '../tempo-real'
 
 type ItemMeu = { numero: string; titulo: string; estado: string; criadoEm: string }
@@ -102,13 +102,14 @@ function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas, fila }: { url:
   const navegar = useNavigate()
   const estreito = useEstreito()
   const { data: itens, error, refetch } = useQuery({ queryKey: [url], queryFn: () => api<T[]>(url) })
+  const { visiveis, mais } = useMostrarMais(itens)
   const colunas = [{ titulo: 'Número' }, { titulo: 'Título' }, ...(largas ?? []).map(({ titulo }) => ({ titulo, largo: true })), { titulo: 'Estado' }]
   return (
     <div className="flex flex-col gap-2">
       <ErroDe erro={error} oque={fila ? 'a fila' : 'suas solicitações'} tentar={() => void refetch()} />
       {fila && !!itens?.length && <p className="m-0 text-sm text-muted-foreground">Mais antigos primeiro</p>}
       <Tabela colunas={colunas} itens={itens} vazio={vazio} erro={error} densa>
-        {itens?.map((c) => {
+        {visiveis?.map((c) => {
           const caminho = `/${slug}/chamados/${c.numero}`
           const aberto = abertoHa(c.criadoEm, me.instituicao.fuso)
           const meta = metaDa(c, aberto, fila)
@@ -119,6 +120,7 @@ function ListaDeChamados<T extends ItemMeu>({ url, vazio, largas, fila }: { url:
           )
         })}
       </Tabela>
+      {mais}
     </div>
   )
 }

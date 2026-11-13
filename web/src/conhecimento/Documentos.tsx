@@ -9,7 +9,7 @@ import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Button } from '../ui/button'
-import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela, useMostrarMais } from '../Tabela'
 import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
@@ -109,6 +109,7 @@ const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes
 
 export function Documentos() {
   const { itens: documentos, categorias, erro, recarregar } = useCatalogo<Documento>('/api/admin/documentos')
+  const { visiveis, mais } = useMostrarMais(documentos)
   const [envio, setEnvio] = useState<Envio>()
   const [arquivar, setArquivar] = useState<Documento>()
   const acao = useGravacao(recarregar)
@@ -140,10 +141,11 @@ export function Documentos() {
           acao: <Button onClick={() => setEnvio({ titulo: '', categoriaId: '' })}>Novo documento</Button>,
         }}
       >
-        {documentos?.map((d) => (
+        {visiveis?.map((d) => (
           <LinhaDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
         ))}
       </Tabela>
+      {mais}
 
       <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} erros={errosDeCampo(acao.error)} />}

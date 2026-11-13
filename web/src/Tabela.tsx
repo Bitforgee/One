@@ -1,5 +1,5 @@
 import { ClipboardList, EllipsisVertical, type LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useConsulta } from './ui/use-mobile'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -24,6 +24,19 @@ export function BlocoVazio({ Icone, titulo, frase, acao }: Vazio) {
       {acao}
     </div>
   )
+}
+
+const PorVez = 50
+
+export function useMostrarMais<T>(itens?: T[]) {
+  const [limite, setLimite] = useState(PorVez)
+  const visiveis = itens?.slice(0, limite)
+  const mais = itens && itens.length > limite && (
+    <Button type="button" variant="outline" className="self-center" onClick={() => setLimite((l) => l + PorVez)}>
+      {`Mostrar mais ${PorVez}`}
+    </Button>
+  )
+  return { visiveis, mais }
 }
 
 export const useEstreito = () => useConsulta('(max-width: 767px)')

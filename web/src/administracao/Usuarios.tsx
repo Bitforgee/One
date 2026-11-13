@@ -8,7 +8,7 @@ import { Confirmar } from '../Confirmar'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
-import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
+import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela, useMostrarMais } from '../Tabela'
 import { Badge } from '../ui/badge'
 import { DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu'
 import { Input } from '../ui/input'
@@ -124,6 +124,7 @@ export function Usuarios() {
   const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
   const usuarios = dados?.usuarios.filter((u) => casa(u, busca))
+  const { visiveis, mais } = useMostrarMais(usuarios)
 
   const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/usuarios', editando!.id, corpo(editando!)), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
 
@@ -145,10 +146,11 @@ export function Usuarios() {
         erro={erro}
         vazio={busca.trim() ? { Icone: Users, titulo: 'Nenhum resultado', frase: 'Nenhum usuário combina com a busca.' } : { Icone: Users, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
       >
-        {usuarios?.map((u) => (
+        {visiveis?.map((u) => (
           <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}
       </Tabela>
+      {mais}
 
       <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} erros={errosDeCampo(acao.error)} />}

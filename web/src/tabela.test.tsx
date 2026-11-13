@@ -1,6 +1,7 @@
-import { screen, within } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from './test/util'
 
 const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })
@@ -57,5 +58,34 @@ describe('Tabela', () => {
     }
     await userEvent.click(botoes[0])
     expect(await screen.findByRole('dialog', { name: botao === 'Novo artigo' ? 'Novo artigo' : 'Enviar PDF' })).toBeInTheDocument()
+  })
+
+  it('C51 cada linha de dados, em tabela e em cartão, declara content-visibility e contain-intrinsic-size', async () => {
+    const css = readFileSync('src/index.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+    const regra = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, , corpo]) => /content-visibility:\s*auto/.test(corpo) && /contain-intrinsic-size:\s*auto 56px/.test(corpo))
+    expect(regra).toBeDefined()
+    const seletor = regra![1].trim()
+    const dados = () =>
+      api({
+        'GET /api/auth/me': () => [200, atendente],
+        'GET /api/chamados?escopo=fila': () => [200, fila(['ABERTO', 'EM_ATENDIMENTO', 'RESOLVIDO'])],
+      })
+
+    dados()
+    abrir('/univag/fila')
+    await screen.findByText('ONE-1')
+    const linhasDeDados = [...document.querySelectorAll('[data-slot=table-body] > [data-slot=table-row]')]
+    expect(linhasDeDados).toHaveLength(3)
+    for (const linha of linhasDeDados) expect(linha.matches(seletor)).toBe(true)
+    expect(document.querySelector('[data-slot=table-header] [data-slot=table-row]')!.matches(seletor)).toBe(false)
+    cleanup()
+
+    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+    dados()
+    abrir('/univag/fila')
+    await screen.findByText('ONE-1')
+    const cartoes = [...document.querySelectorAll('[data-slot=table-row]')]
+    expect(cartoes).toHaveLength(3)
+    for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
   })
 })
