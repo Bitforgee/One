@@ -277,7 +277,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   )
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1">
         {atendente}
         {encerrar}
       </div>
