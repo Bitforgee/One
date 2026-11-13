@@ -1200,7 +1200,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Chamados.SubirChamado",
         "Chamados.VerChamado",
         "Conhecimento.BaixarVersaoDocumento",
-        "Conhecimento.VerVersaoArtigo",
         "Indicadores.ConsultarIndicadores",
     ];
 
