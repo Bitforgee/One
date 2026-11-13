@@ -698,12 +698,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var anonimo = new Regex(@"\bnew\s*\{");
         var esperado = new Dictionary<string, int>
         {
-            ["Agendador.cs"] = 1, ["Assistente/Assistente.cs"] = 8,
+            ["Agendador.cs"] = 1,
             ["Conhecimento/Fontes.cs"] = 4, ["Dados/OneDb.cs"] = 15,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
-        Assert.Equal(28, achados.Values.Sum());
+        Assert.Equal(20, achados.Values.Sum());
         foreach (var arquivo in esperado.Keys.Except(["Indicadores/ConsultarIndicadores.cs"]))
             Assert.DoesNotMatch(@"\b(Typed)?Results\.", CodigoDe(arquivo.Split('/')));
         var indicadores = CodigoDe("Indicadores", "ConsultarIndicadores.cs");
@@ -970,7 +970,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Baixar_so_com_chave_de_coluna_do_banco()
     {
         var chamam = CodigoApi().Where(p => Regex.IsMatch(SemComentarios(p), @"\.Baixar\(")).Select(Relativo).Order().ToList();
-        Assert.Equal(["Assistente/Assistente.cs", "Assistente/BaixarAnexoConversa.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs", "Email.cs", "Instituicoes/BaixarImagemInstituicao.cs"], chamam);
+        Assert.Equal(["Assistente/BaixarAnexoConversa.cs", "Assistente/LerAnexosDaJanela.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs", "Email.cs", "Instituicoes/BaixarImagemInstituicao.cs"], chamam);
         foreach (var arquivo in chamam)
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));
@@ -1158,7 +1158,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Administracao/ImportarMatriculas.cs",
         "Administracao/UsuarioRotas.cs",
         "Agendador.cs",
-        "Assistente/Assistente.cs",
+        "Assistente/ConferirResposta.cs",
         "Assistente/ConversaRotas.cs",
         "Chamados/ResponderChamado.cs",
         "Conhecimento/DocumentoRotas.cs",
@@ -1171,7 +1171,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Arquivo_ate_150_linhas =
     [
         "Agendador.cs",
-        "Assistente/Assistente.cs",
         "Dados/Chamados/Chamado.cs",
         "Dados/OneDb.cs",
         "Instituicoes/InstituicaoComando.cs",

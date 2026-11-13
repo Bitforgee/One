@@ -147,7 +147,7 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         var projeto = File.ReadAllText(Path.Combine(raiz, "One.Api", "One.Api.csproj"));
         Assert.DoesNotContain("Microsoft.Agents.AI", projeto);
         Assert.DoesNotContain("Microsoft.Extensions.AI", projeto);
-        foreach (var arquivo in new[] { "Assistente.cs", "Embeddings.cs" })
+        foreach (var arquivo in new[] { "ChamarProvedor.cs", "Embeddings.cs" })
             Assert.Contains("CreateClient(\"llm\")", File.ReadAllText(Path.Combine(raiz, "One.Api", "Assistente", arquivo)));
     }
 }
