@@ -192,6 +192,16 @@ public class Chamado : IDaInstituicao
         AguardandoDesde = null;
     }
 
+    public Recusa? LembrarAluno(int dias, DateTime agora)
+    {
+        if (Estado != AguardandoAluno || LembreteEm is not null || !AguardandoHaPeloMenos(dias, agora)) return new Recusa("Este chamado não pede lembrete.");
+        Evento(TiposEvento.Lembrete, new Ato(null, agora), detalhe: $"Lembrete ao aluno: {dias} dias aguardando resposta");
+        LembreteEm = agora;
+        return null;
+    }
+
+    bool AguardandoHaPeloMenos(int dias, DateTime agora) => AguardandoDesde is { } desde && desde <= agora - TimeSpan.FromDays(dias);
+
     void Exigir(string[] estados)
     {
         if (!estados.Contains(Estado)) throw new InvalidOperationException($"A transição não existe no estado {Estado}.");

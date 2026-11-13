@@ -71,11 +71,9 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(c => new ItemAgendado("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
             .Select(c => new ItemAgendado("chamado", c.Id, c.InstituicaoId)).ToListAsync());
-        var (limiteResolver, limiteLembrete) = (agora - prazos.ResolverAguardando, agora - prazos.Lembrete);
+        var limiteResolver = agora - prazos.ResolverAguardando;
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.AguardandoDesde <= limiteResolver)
             .Select(c => new ItemAgendado("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
-        itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limiteLembrete && c.AguardandoDesde > limiteResolver)
-            .Select(c => new ItemAgendado("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
         return itens;
     }
 
@@ -136,7 +134,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         {
             case "conversa": await Abandonar(db, item.Id, agora); break;
             case "chamado": await FecharResolvido(db, item.Id, agora); break;
-            case "lembrete": await Lembrar(db, item.Id, agora); break;
             case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
         }
     }
@@ -160,20 +157,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
-    }
-
-    async Task Lembrar(OneDb db, long id, DateTime agora)
-    {
-        var limite = agora - prazos.Lembrete;
-        await using var tx = await db.Database.BeginTransactionAsync();
-        var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limite)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.LembreteEm, agora));
-        if (n == 0) return;
-        var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
-        await Avisos.AguardaResposta(db, cfg, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, agora);
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Lembrete, Detalhe = $"Lembrete ao aluno: {prazos.LembreteAguardandoDias} dias aguardando resposta", CriadoEm = agora });
-        await db.SaveChangesAsync();
-        await tx.CommitAsync();
     }
 
     async Task ResolverSemResposta(OneDb db, long id, DateTime agora)

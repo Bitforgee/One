@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "SubirPorPrazo.cs"), Path.Combine(api, "Chamados", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
+        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "LembrarAguardando.cs"), Path.Combine(api, "Chamados", "SubirPorPrazo.cs"), Path.Combine(api, "Chamados", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
@@ -607,14 +607,14 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var publicos = new Dictionary<Type, string[]>
         {
-            [typeof(Chamado)] = ["Abrir", "Assumir", "ResponderComoAluno", "ResponderComoEquipe", "Anotar", "Resolver", "Confirmar", "Rejeitar", "Cancelar", "Encaminhar", "Subir", "Reclassificar", "MarcarDuplicado", "DevolverAFila"],
+            [typeof(Chamado)] = ["Abrir", "Assumir", "ResponderComoAluno", "ResponderComoEquipe", "Anotar", "Resolver", "Confirmar", "Rejeitar", "Cancelar", "Encaminhar", "Subir", "Reclassificar", "MarcarDuplicado", "DevolverAFila", "LembrarAluno"],
             [typeof(Artigo)] = ["Criar", "NovaVersao", "Ativar", "Arquivar"],
             [typeof(Documento)] = ["Criar", "NovaVersao", "Arquivar"],
         };
         foreach (var (entidade, metodos) in publicos)
         {
             var classe = entidade.Name + "DominioTests";
-            var texto = File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", classe + ".cs"));
+            var texto = string.Concat(Directory.GetFiles(Path.Combine(Raiz(), "One.Api.Tests"), entidade.Name + "*DominioTests.cs").Select(File.ReadAllText));
             Assert.Contains($"public class {classe}", texto);
             foreach (var proibido in new[] { "OneFactory", "OneDb", "HttpClient" })
                 Assert.False(texto.Contains(proibido), $"{classe} usa {proibido}");
