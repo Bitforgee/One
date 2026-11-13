@@ -1133,8 +1133,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Categoria",
         "CitacaoArtigo",
         "Curso",
-        "ImagemInstituicao",
-        "Instituicao",
         "Matricula",
         "OneDb",
         "RespostaPronta",
@@ -1161,7 +1159,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Instituicoes/CargaInicial.cs",
         "Instituicoes/CargaValidacao.cs",
         "Instituicoes/Criacao.cs",
-        "Instituicoes/EnviarImagemInstituicao.cs",
         "Instituicoes/InstituicaoComando.cs",
     ];
 

@@ -29,7 +29,7 @@ public static partial class Criacao
     public static async Task<(Instituicao, string)> Gravar(OneDb db, NovaInstituicao n, DateTime agora, IConfiguration? cfg)
     {
         await using var tx = await db.Database.BeginTransactionAsync();
-        var instituicao = new Instituicao { Slug = n.Slug, Nome = n.Nome, Fuso = n.Fuso, CriadaEm = agora };
+        var instituicao = Instituicao.Criar(n.Slug, n.Nome, n.Fuso, agora);
         db.Instituicoes.Add(instituicao);
         await db.SaveChangesAsync();
         db.InstituicaoAtual = instituicao.Id;

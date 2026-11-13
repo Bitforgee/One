@@ -45,9 +45,8 @@ public sealed class EnviarImagemInstituicaoHandler(OneDb db, Armazenamento armaz
         var chave = Armazenamento.NovaChave(db.InstituicaoAtual!.Value, "aparencia");
         await armazenamento.Gravar(chave, lido.Bytes);
         var imagem = await db.ImagensInstituicao.FirstOrDefaultAsync(x => x.Tipo == tipo, ct);
-        if (imagem is null) db.ImagensInstituicao.Add(imagem = new ImagemInstituicao { Tipo = tipo });
-        (imagem.Conteudo, imagem.Tamanho, imagem.Hash, imagem.Chave, imagem.Versao) = (lido.Tipo, lido.Bytes.Length, Armazenamento.Hash(lido.Bytes), chave, imagem.Versao + 1);
-        imagem.RemovidaEm = null;
+        if (imagem is null) db.ImagensInstituicao.Add(imagem = ImagemInstituicao.Criar(tipo));
+        imagem.Substituir(lido.Tipo, lido.Bytes.Length, Armazenamento.Hash(lido.Bytes), chave);
         await db.SaveChangesAsync(ct);
         return Results.Ok(new EnviarImagemInstituicao.Resposta(tipo, imagem.Versao));
     }

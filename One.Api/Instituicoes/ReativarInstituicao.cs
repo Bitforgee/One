@@ -17,7 +17,7 @@ public sealed class ReativarInstituicaoHandler(OneDb db) : IRequestHandler<Reati
     {
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == m.Slug, ct);
         if (instituicao is null) return Problemas.Erro(404, PlataformaRotas.NaoEncontrada);
-        instituicao.Ativa = true;
+        instituicao.Reativar();
         await db.SaveChangesAsync(ct);
         return Results.Ok(new ReativarInstituicao.Resposta(instituicao.Slug, instituicao.Ativa));
     }

@@ -32,7 +32,7 @@ public static class Semente
     public static Task<Instituicao> Instituicao(this OneFactory f, string? slug = null, string? nome = null, string fuso = "America/Cuiaba") =>
         f.Db(null, async db =>
         {
-            var i = new Instituicao { Slug = slug ?? NovoSlug(), Nome = nome ?? "Instituição de teste", Fuso = fuso, CriadaEm = f.Relogio.GetUtcNow().UtcDateTime };
+            var i = One.Api.Dados.Instituicao.Criar(slug ?? NovoSlug(), nome ?? "Instituição de teste", fuso, f.Relogio.GetUtcNow().UtcDateTime);
             db.Instituicoes.Add(i);
             await db.SaveChangesAsync();
             db.InstituicaoAtual = i.Id;

@@ -2,23 +2,57 @@ namespace One.Api.Dados;
 
 public class Instituicao
 {
-    public long Id { get; set; }
-    public string Slug { get; set; } = "";
-    public string Nome { get; set; } = "";
-    public string Fuso { get; set; } = "";
-    public bool Ativa { get; set; } = true;
-    public DateTime CriadaEm { get; set; }
-    public long UltimoNumeroChamado { get; set; }
+    Instituicao() { }
 
-    public string? NomeCurto { get; set; }
-    public string? Cor { get; set; }
-    public string? LoginTitulo { get; set; }
-    public string? LoginFrase { get; set; }
-    public string[]? LoginItens { get; set; }
-    public string? AssistenteNome { get; set; }
-    public string? AssistenteBoasVindas { get; set; }
-    public string[]? AssistentePerguntas { get; set; }
-    public string? ContatoHorario { get; set; }
-    public string? ContatoTelefone { get; set; }
-    public string? ContatoEmail { get; set; }
+    public long Id { get; private set; }
+    public string Slug { get; private set; } = "";
+    public string Nome { get; private set; } = "";
+    public string Fuso { get; private set; } = "";
+    public bool Ativa { get; private set; } = true;
+    public DateTime CriadaEm { get; private set; }
+    public long UltimoNumeroChamado { get; private set; }
+
+    public string? NomeCurto { get; private set; }
+    public string? Cor { get; private set; }
+    public string? LoginTitulo { get; private set; }
+    public string? LoginFrase { get; private set; }
+    public string[]? LoginItens { get; private set; }
+    public string? AssistenteNome { get; private set; }
+    public string? AssistenteBoasVindas { get; private set; }
+    public string[]? AssistentePerguntas { get; private set; }
+    public string? ContatoHorario { get; private set; }
+    public string? ContatoTelefone { get; private set; }
+    public string? ContatoEmail { get; private set; }
+
+    public sealed record Aparencia
+    {
+        public string? NomeCurto { get; init; }
+        public string? Cor { get; init; }
+        public string? LoginTitulo { get; init; }
+        public string? LoginFrase { get; init; }
+        public IReadOnlyList<string>? LoginItens { get; init; }
+        public string? AssistenteNome { get; init; }
+        public string? AssistenteBoasVindas { get; init; }
+        public IReadOnlyList<string>? AssistentePerguntas { get; init; }
+        public string? ContatoHorario { get; init; }
+        public string? ContatoTelefone { get; init; }
+        public string? ContatoEmail { get; init; }
+    }
+
+    public static Instituicao Criar(string slug, string nome, string fuso, DateTime agora) =>
+        new() { Slug = slug, Nome = nome, Fuso = fuso, CriadaEm = agora };
+
+    public void Desativar() => Ativa = false;
+
+    public void Reativar() => Ativa = true;
+
+    public void AlterarAparencia(Aparencia a)
+    {
+        (NomeCurto, Cor) = (a.NomeCurto, a.Cor);
+        (LoginTitulo, LoginFrase, LoginItens) = (a.LoginTitulo, a.LoginFrase, Itens(a.LoginItens));
+        (AssistenteNome, AssistenteBoasVindas, AssistentePerguntas) = (a.AssistenteNome, a.AssistenteBoasVindas, Itens(a.AssistentePerguntas));
+        (ContatoHorario, ContatoTelefone, ContatoEmail) = (a.ContatoHorario, a.ContatoTelefone, a.ContatoEmail);
+    }
+
+    static string[]? Itens(IReadOnlyList<string>? l) => l is { Count: > 0 } ? [.. l] : null;
 }

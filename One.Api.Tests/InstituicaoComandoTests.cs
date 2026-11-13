@@ -301,9 +301,7 @@ public class InstituicaoComandoTests(OneFactory f) : IClassFixture<OneFactory>
 
         await Assert.ThrowsAnyAsync<Exception>(() => f.Db(null, async db =>
         {
-            var i = await db.Instituicoes.SingleAsync(x => x.Id == id);
-            i.Slug = "outro-slug";
-            await db.SaveChangesAsync();
+            await db.Instituicoes.Where(x => x.Id == id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Slug, "outro-slug"));
         }));
 
         Assert.Equal(slug, await f.Db(null, db => db.Instituicoes.Where(x => x.Id == id).Select(x => x.Slug).SingleAsync()));

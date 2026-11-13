@@ -18,7 +18,7 @@ public sealed class DesativarInstituicaoHandler(OneDb db) : IRequestHandler<Desa
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == m.Slug, ct);
         if (instituicao is null) return Problemas.Erro(404, PlataformaRotas.NaoEncontrada);
         if (instituicao.Id == db.InstituicaoAtual) return Problemas.Erro(409, "Você não pode desativar a instituição em que está.");
-        instituicao.Ativa = false;
+        instituicao.Desativar();
         await db.SaveChangesAsync(ct);
         return Results.Ok(new DesativarInstituicao.Resposta(instituicao.Slug, instituicao.Ativa));
     }

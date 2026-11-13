@@ -1,3 +1,5 @@
+using One.Api.Dados;
+
 namespace One.Api.Tests.Infra;
 
 public static class ImagemTeste
@@ -11,6 +13,14 @@ public static class ImagemTeste
         System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(b.AsSpan(16), (uint)largura);
         System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(b.AsSpan(20), (uint)altura);
         return b;
+    }
+
+    public static ImagemInstituicao Icone(int versao = 2, DateTimeOffset? removidaEm = null)
+    {
+        var imagem = ImagemInstituicao.Criar("icone");
+        for (var n = 0; n < versao; n++) imagem.Substituir("image/png", 1, new string('a', 64), "x/aparencia/y");
+        if (removidaEm is { } quando) imagem.Remover(quando);
+        return imagem;
     }
 
     public static byte[] Jpeg(int tamanho = 64) => Balcao.Arquivo(Balcao.Jpg, tamanho);

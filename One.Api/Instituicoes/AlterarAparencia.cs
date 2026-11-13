@@ -59,15 +59,13 @@ public sealed record AlterarAparencia(AlterarAparencia.Entrada Corpo) : IRequest
         return null;
     }
 
-    public static void Aplicar(Instituicao i, Entrada e)
+    public static void Aplicar(Instituicao i, Entrada e) => i.AlterarAparencia(new Instituicao.Aparencia
     {
-        (i.NomeCurto, i.Cor) = (e.NomeCurto, e.Cor);
-        (i.LoginTitulo, i.LoginFrase, i.LoginItens) = (e.Login!.Titulo, e.Login.Frase, Vazia(e.Login.Itens));
-        (i.AssistenteNome, i.AssistenteBoasVindas, i.AssistentePerguntas) = (e.Assistente!.Nome, e.Assistente.BoasVindas, Vazia(e.Assistente.Perguntas));
-        (i.ContatoHorario, i.ContatoTelefone, i.ContatoEmail) = (e.Contato!.Horario, e.Contato.Telefone, e.Contato.Email);
-    }
-
-    static string[]? Vazia(IReadOnlyList<string>? l) => l is { Count: > 0 } ? [.. l] : null;
+        NomeCurto = e.NomeCurto, Cor = e.Cor,
+        LoginTitulo = e.Login!.Titulo, LoginFrase = e.Login.Frase, LoginItens = e.Login.Itens,
+        AssistenteNome = e.Assistente!.Nome, AssistenteBoasVindas = e.Assistente.BoasVindas, AssistentePerguntas = e.Assistente.Perguntas,
+        ContatoHorario = e.Contato!.Horario, ContatoTelefone = e.Contato.Telefone, ContatoEmail = e.Contato.Email,
+    });
 }
 
 public sealed class AlterarAparenciaHandler(OneDb db) : IRequestHandler<AlterarAparencia, IResult>

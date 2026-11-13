@@ -16,7 +16,7 @@ public sealed class RemoverImagemInstituicaoHandler(OneDb db) : IRequestHandler<
     {
         var imagem = await db.ImagensInstituicao.FirstOrDefaultAsync(x => x.Tipo == m.Tipo && x.RemovidaEm == null, ct);
         if (imagem is null) return Problemas.Erro(404, "Imagem não encontrada.");
-        imagem.RemovidaEm = DateTimeOffset.UtcNow;
+        imagem.Remover(DateTimeOffset.UtcNow);
         await db.SaveChangesAsync(ct);
         return Results.NoContent();
     }

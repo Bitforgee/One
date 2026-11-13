@@ -103,7 +103,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, async db =>
         {
             await db.Instituicoes.Where(x => x.Id == i.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.NomeCurto, "Univag"));
-            db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 2 });
+            db.ImagensInstituicao.Add(ImagemTeste.Icone());
             await db.SaveChangesAsync();
         });
         var c = await NovaCena(i);
@@ -143,7 +143,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         if (iconeRemovido)
             await f.Db(i.Id, async db =>
             {
-                db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 3, RemovidaEm = Agora });
+                db.ImagensInstituicao.Add(ImagemTeste.Icone(3, Agora));
                 await db.SaveChangesAsync();
             });
         var c = await NovaCena(i);
@@ -288,7 +288,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.NotEqual(c1.B.Instituicao.Slug, c2.B.Instituicao.Slug);
         await f.Db(c1.B.Instituicao.Id, async db =>
         {
-            db.ImagensInstituicao.Add(new ImagemInstituicao { Tipo = "icone", Conteudo = "image/png", Tamanho = 1, Hash = new string('a', 64), Chave = "x/aparencia/y", Versao = 2 });
+            db.ImagensInstituicao.Add(ImagemTeste.Icone());
             await db.SaveChangesAsync();
         });
         await Fila(c1);
