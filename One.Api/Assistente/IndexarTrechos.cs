@@ -7,6 +7,8 @@ namespace One.Api.Assistente;
 
 public sealed class IndexarTrechos(Embeddings embeddings, ILogger<IndexarTrechos> log) : ITarefaAgendada
 {
+    record Pendente(long Id, string Texto, long InstituicaoId, int Tentativas);
+
     public string Tipo => "trecho";
 
     public int Lote => Embeddings.Lote;
@@ -19,7 +21,7 @@ public sealed class IndexarTrechos(Embeddings embeddings, ILogger<IndexarTrechos
     {
         var ids = itens.Select(i => i.Id).ToList();
         var trechos = await db.TrechosFonte.IgnoreQueryFilters().Where(t => ids.Contains(t.Id)).Where(TrechoFonte.SemEmbedding).OrderBy(t => t.Id)
-            .Select(t => new { t.Id, t.Texto, t.InstituicaoId, t.Tentativas }).ToListAsync();
+            .Select(t => new Pendente(t.Id, t.Texto, t.InstituicaoId, t.Tentativas)).ToListAsync();
         if (trechos.Count == 0) return;
         try
         {

@@ -697,7 +697,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var anonimo = new Regex(@"\bnew\s*\{");
         var esperado = new Dictionary<string, int>
         {
-            ["Assistente/IndexarTrechos.cs"] = 1,
             ["Conhecimento/BuscarFontes.cs"] = 2, ["Conhecimento/CitacoesDeFontes.cs"] = 2,
             ["Dados/Mapeamento/CategoriaMapeamento.cs"] = 1, ["Dados/Mapeamento/ChamadoMapeamento.cs"] = 1, ["Dados/Mapeamento/CursoMapeamento.cs"] = 1,
             ["Dados/Mapeamento/EtapaFluxoMapeamento.cs"] = 1, ["Dados/Mapeamento/FluxoMapeamento.cs"] = 1, ["Dados/Mapeamento/MatriculaMapeamento.cs"] = 1,
@@ -707,7 +706,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
-        Assert.Equal(20, achados.Values.Sum());
+        Assert.Equal(19, achados.Values.Sum());
         foreach (var arquivo in esperado.Keys.Except(["Indicadores/ConsultarIndicadores.cs"]))
             Assert.DoesNotMatch(@"\b(Typed)?Results\.", CodigoDe(arquivo.Split('/')));
         var indicadores = CodigoDe("Indicadores", "ConsultarIndicadores.cs");
