@@ -146,17 +146,24 @@ switch ($Modo) {
     'listas-encolhem' {
         $antes = TextoDoArquivo $Base $Arquivo
         $agora = TextoDoArquivo '.' $Arquivo
+        $emendas = ((Get-Content $checks -Raw -Encoding utf8) -split '(?m)^## Emendas aprovadas')[-1]
+        $renomeacoes = [regex]::Matches($emendas, 'Renomeacao permitida \(listas-encolhem\): (\w+): (\S+) -> (\S+)') | ForEach-Object { "$($_.Groups[1].Value)|$($_.Groups[2].Value)|$($_.Groups[3].Value)" }
         $campos = [regex]::Matches($antes, 'static readonly string\[\]\s+Excecoes_(\w+)') | ForEach-Object { $_.Groups[1].Value }
         if (@($campos).Count -lt 11) { Falha "$Base tem $(@($campos).Count) listas Excecoes_*, esperado ao menos 11" }
         $erros = foreach ($r in $campos) {
             $b = @(ItensDaLista (CampoDaLista $antes $r))
             $mAgora = CampoDaLista $agora $r
             if (-not $mAgora) { "Excecoes_$r sumiu"; continue }
-            $novos = @(ItensDaLista $mAgora) | Where-Object { $b -notcontains $_ }
-            if ($novos) { "Excecoes_$r ganhou: $($novos -join ', ')" }
+            $a = @(ItensDaLista $mAgora)
+            if ($a.Count -gt $b.Count) { "Excecoes_$r cresceu de $($b.Count) para $($a.Count) item(ns)"; continue }
+            $novos = $a | Where-Object { $b -notcontains $_ }
+            foreach ($n in $novos) {
+                $saiu = $b | Where-Object { $a -notcontains $_ -and $renomeacoes -contains "${r}|${_}|${n}" }
+                if (-not $saiu) { "Excecoes_$r ganhou sem renomeacao documentada em ## Emendas aprovadas: $n" }
+            }
         }
         if ($erros) { Falha ($erros -join '; ') }
-        Ok "$(@($campos).Count) listas Excecoes_* so perderam linhas desde $Base"
+        Ok "$(@($campos).Count) listas Excecoes_* nunca cresceram desde $Base (renomeacoes documentadas: $(@($renomeacoes).Count))"
     }
     'ratchet-falha' {
         $texto = TextoDoArquivo '.' $Arquivo
