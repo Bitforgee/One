@@ -13,7 +13,7 @@ public static class Tokens
     public static (string token, TokenAcesso registro) Novo(string slug, long usuarioId, DateTime agora)
     {
         var token = slug + "." + WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
-        return (token, new TokenAcesso { UsuarioId = usuarioId, Hash = Hash(token), CriadoEm = agora, ExpiraEm = agora + Validade });
+        return (token, TokenAcesso.Criar(usuarioId, Hash(token), agora, Validade));
     }
 
     public static string Hash(string token) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(token)));

@@ -1141,7 +1141,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "OneDb",
         "RespostaPronta",
         "Setor",
-        "TokenAcesso",
         "TrechoFonte",
         "Usuario",
         "UsuarioPapel",
@@ -1171,7 +1170,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Instituicoes/Criacao.cs",
         "Instituicoes/EnviarImagemInstituicao.cs",
         "Instituicoes/InstituicaoComando.cs",
-        "Tokens.cs",
     ];
 
     static readonly string[] Excecoes_Arquivo_ate_150_linhas =

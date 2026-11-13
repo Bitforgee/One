@@ -27,7 +27,7 @@ public sealed class DefinirSenhaHandler(OneDb db, TimeProvider relogio, IPasswor
 
         u.SenhaHash = hasher.HashPassword(u, i.NovaSenha!);
         u.DeveTrocarSenha = false;
-        token.UsadoEm = agora;
+        token.Usar(agora);
         await db.SaveChangesAsync();
         return Results.NoContent();
     }
@@ -40,7 +40,7 @@ public sealed class DefinirSenhaHandler(OneDb db, TimeProvider relogio, IPasswor
         db.InstituicaoAtual = instituicao.Id;
         var hash = Tokens.Hash(texto!);
         var token = await db.Tokens.FirstOrDefaultAsync(t => t.Hash == hash);
-        if (token is null || token.UsadoEm is not null || token.ExpiraEm <= agora) return (null, null);
+        if (token is null || !token.Valido(agora)) return (null, null);
         return (token, await db.Usuarios.FirstOrDefaultAsync(x => x.Id == token.UsuarioId && x.Ativo));
     }
 }
