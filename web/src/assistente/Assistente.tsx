@@ -363,9 +363,12 @@ function PedidoAoAtendente({ emConversa, lideranca, falhou, descricao, setDescri
   )
 }
 
+const rotulosDaConfirmacao = (encerrar: boolean, lideranca: boolean) => (encerrar ? ['Cancelar', 'Confirmar'] : ['Voltar à conversa', lideranca ? 'Enviar à liderança' : 'Falar com atendente'])
+
 function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: ModalProps) {
   const encerrar = confirmar === 'encerrar'
   const aLideranca = !encerrar && pedido.lideranca
+  const [recusar, aceitar] = rotulosDaConfirmacao(encerrar, aLideranca)
   return (
     <Dialog open={!!confirmar} onOpenChange={fechar}>
       <DialogContent aria-describedby={undefined}>
@@ -375,10 +378,10 @@ function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: Mo
         {encerrar ? <p>A conversa será encerrada.</p> : <PedidoAoAtendente {...pedido} />}
         <DialogFooter>
           <Button variant="outline" onClick={fechar}>
-            {encerrar ? 'Cancelar' : 'Voltar à conversa'}
+            {recusar}
           </Button>
           <Button onClick={confirmarAcao} disabled={!pronto || (!encerrar && pedido.falhou)}>
-            {aLideranca ? 'Enviar à liderança' : encerrar ? 'Confirmar' : 'Falar com atendente'}
+            {aceitar}
           </Button>
         </DialogFooter>
       </DialogContent>

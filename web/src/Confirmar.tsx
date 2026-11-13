@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { Blocker } from 'react-router'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 
@@ -22,5 +23,13 @@ export function Confirmar({ aberto, fechar, titulo, botao, voltar, destrutivo, c
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+export function ConfirmarSaida({ bloqueio, titulo, botao, children }: { bloqueio: Blocker; titulo: string; botao: string; children: ReactNode }) {
+  return (
+    <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo={titulo} botao={botao} voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
+      {children}
+    </Confirmar>
   )
 }

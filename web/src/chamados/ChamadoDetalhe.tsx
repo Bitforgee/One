@@ -4,7 +4,7 @@ import { useBlocker, useParams } from 'react-router'
 import { BotaoAcao as Acao } from '../acao'
 import { api, ErroApi } from '../api'
 import { Carregando } from '../Carregando'
-import { Confirmar } from '../Confirmar'
+import { Confirmar, ConfirmarSaida } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { comUnidade } from '../formatos'
 import { CampoArquivo } from '../CampoArquivo'
@@ -82,14 +82,6 @@ function corpoDaResposta(texto: string, nota: boolean, aguardaAluno: boolean, ar
   return f
 }
 
-function DescartarResposta({ bloqueio }: { bloqueio: ReturnType<typeof useBlocker> }) {
-  return (
-    <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo="Descartar resposta?" botao="Descartar resposta" voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
-      O texto que você escreveu e ainda não enviou será perdido.
-    </Confirmar>
-  )
-}
-
 function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado; equipe: boolean }) {
   const [texto, setTexto] = useState('')
   const [nota, setNota] = useState(false)
@@ -123,7 +115,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
           Enviar
         </BotaoAcao>
       </form>
-      <DescartarResposta bloqueio={bloqueio} />
+      <ConfirmarSaida bloqueio={bloqueio} titulo="Descartar resposta?" botao="Descartar resposta">O texto que você escreveu e ainda não enviou será perdido.</ConfirmarSaida>
     </>
   )
 }

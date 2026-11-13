@@ -7,7 +7,7 @@ import { api, ErroApi } from '../api'
 import { Carregando } from '../Carregando'
 import { contraste, CorValida, MinimoDeContraste, normalizar, urlDaImagem } from '../aparencia'
 import { ErroDoCampo } from '../Campo'
-import { Confirmar } from '../Confirmar'
+import { Confirmar, ConfirmarSaida } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
@@ -269,14 +269,6 @@ function ErroDaRemocao({ erro }: { erro: Error | null }) {
   return erro ? <Alert variant="destructive">{erro.message}</Alert> : null
 }
 
-function SairSemSalvar({ bloqueio }: { bloqueio: ReturnType<typeof useBlocker> }) {
-  return (
-    <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo="Sair sem salvar?" botao="Sair sem salvar" voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
-      O que você alterou e não salvou nesta tela será perdido.
-    </Confirmar>
-  )
-}
-
 function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: string }) {
   const cliente = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -369,7 +361,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
       >
         A instituição volta a usar a imagem padrão. O arquivo antigo fica guardado.
       </Confirmar>
-      <SairSemSalvar bloqueio={bloqueio} />
+      <ConfirmarSaida bloqueio={bloqueio} titulo="Sair sem salvar?" botao="Sair sem salvar">O que você alterou e não salvou nesta tela será perdido.</ConfirmarSaida>
     </div>
   )
 }
