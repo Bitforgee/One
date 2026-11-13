@@ -240,7 +240,7 @@ Proof: `cd web && npx vitest run src/assistente/guidelinesRotulos.test.tsx -t "C
 **C71** - Nenhum botão de `ChamadoDetalhe` tem o texto exato `Salvar`; o botão que salva a categoria ou a edição declara o objeto (`Salvar categoria`) (rodada 2)
 Proof: `cd web && npx vitest run src/chamados/guidelinesRotulos.test.tsx -t "C71 "`
 
-**C72** - Em 360×780, a caixa de `Falar com atendente` e de `Encerrar conversa` no `Assistente` tem 8 px ou mais entre si (horizontal ou vertical), e em `Indicadores` o valor e a variação mantêm o `gap-x-4` de antes da feature, quebrando de linha se não couberem; nenhum alvo de toque da feature fica a menos de 8 px de outro (pesquisa.md §4) (rodada 2)
+**C72** - Em 360×780, a caixa de `Falar com atendente` e de `Encerrar conversa` no `Assistente` tem 8 px ou mais entre si (horizontal ou vertical), e em `Indicadores` o valor e a variação mantêm o `gap-x-4` de antes da feature, quebrando de linha se não couberem; nenhum alvo de toque do compositor e das ações do `Assistente` fica a menos de 8 px de outro; ficam fora a barra de abas e as perguntas sugeridas, que são grupos de itens colados por desenho (pesquisa.md §4) (rodada 2, emenda 2)
 Proof: `npm --prefix web run e2e -- guidelines.spec.ts -g "C72 "`
 
 ### Fechamento
@@ -304,7 +304,7 @@ Rodada 2, a pedido do usuário ("ajuste, não me pergunte nada"), depois do FAIL
 - C20, C22, C31, C33, C34, C51, C54: texto alinhado ao comportamento e à tela que existem
 - C8: o manifest por instituição da API (`ManifestoInstituicao.cs`) fica fora, por exigir mudança de API
 - AC 59 a 61 do plano: o ator é o aluno em "Confirmar resolução" e "Rejeitar resolução"
-- C68: segue aberto; o `crapper` está bloqueado pelo Windows e não há AD do dono aceitando o risco
+- C72 (emenda 2): a regra de 8 px vale para o compositor e as ações; barra de abas e perguntas sugeridas são grupos colados por desenho\n- C11, C10, C13, C15 (rodada 3): o contrato também vale para `Moodle`, `Mcp` e `Aparencia`, provado sob os ids C10, C13 e C15\n- `arranjo.spec.ts` "movimento reduzido": a amostragem ignora os 3 primeiros quadros do balão (o `motion` o cria em y=8 antes de assentar), mantém identidade depois e nenhum valor intermediário; passa 40 de 40\n- C68: segue aberto; o `crapper` está bloqueado pelo Windows e não há AD do dono aceitando o risco
 
 ## Swept
 
@@ -375,3 +375,4 @@ Nenhum slice sozinho passa de 150k (o maior é S2, com 105k).
 **Boundary:** rodada 3 (C20, C33, C72, tema Sistema do C7, C10, C13, C15, C44 e o e2e `arranjo` "movimento reduzido") closed at d2fd887
 **Settled mid-build:** C72: `gap-2` no contêiner do Assistente, na linha do compositor (Anexar, Mensagem e Enviar) e nos Selos de anexo (`pb-2`), com o e2e medindo todos os pares de alvos de toque de `main` a 360×780 e 390×844 (com e sem arquivo escolhido) e contra a barra de abas, e Indicadores a 16 px na mesma linha ou empilhado sem sobrepor; C33: fluxo 9 sem versão no teste do Simulador; C20: fluxo 10 com etapa só com setor, só com prazo e em branco; C7: teste do tema Sistema (o código de `aparencia.tsx:123-124` já acompanhava `prefers-color-scheme`); Moodle, MCP e Aparência ligam o erro por `id="<id>-erro"`, `role="alert"` e `aria-describedby` e focam o primeiro inválido (`useFocoNoPrimeiroErro` ganhou o escopo e a Aparência foca depois de trocar de aba); placeholders do prazo e da Mensagem terminam em `…` (os dois de Buscar ficam: são rótulos); matrícula com `translate="no"` no `<option>` e em `Literal` nos dados do aluno; `arranjo` ignora os 3 primeiros quadros do balão (o `y: 8` inicial do motion antes de assentar) e continua exigindo identidade depois deles e nenhum valor intermediário em todas as amostras.
 **Abandoned:** C68 segue aberto (crapper bloqueado pelo Windows; o `dryer` sai sem candidato); nenhuma decisão nova de UI; `plan.md` não ganhou a citação de `pesquisa.md` §4 para o 8 px.
+

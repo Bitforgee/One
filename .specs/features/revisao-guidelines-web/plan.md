@@ -260,7 +260,8 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 ## Sources
 
 - Web Interface Guidelines (Vercel) - `https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`, lista de regras aplicada pelos 4 revisores
-- `.specs/features/revisao-ux/pesquisa.md` - alvo de 44 px e 16 px de campo no iOS (WCAG 2.5.5, HIG), já registrados
+- `.specs/features/revisao-ux/pesquisa.md` §4 - 8 px entre alvos de toque (C72), alvo de 44 px e 16 px de campo no iOS (WCAG 2.5.5, HIG), já registrados
+
 
 
 
