@@ -1,5 +1,5 @@
 import { BookText, ChevronRight, FileText } from 'lucide-react'
-import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Balao, Quebravel } from '../Balao'
 import { frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
@@ -110,14 +110,20 @@ function sequencia(mensagens: MensagemChamado[], eventos: Evento[] | null, comEv
   return itens.sort((a, b) => Date.parse(a.em) - Date.parse(b.em) || Number(!!b.evento) - Number(!!a.evento))
 }
 
-function useMaisQueUmaTela(lista: RefObject<HTMLOListElement | null>, n: number) {
+function useMaisQueUmaTela(lista: RefObject<HTMLOListElement | null>) {
   const [longa, setLonga] = useState(false)
-  useLayoutEffect(() => {
-    const medir = () => setLonga((lista.current?.offsetHeight ?? 0) > window.innerHeight)
-    medir()
-    window.addEventListener('resize', medir)
-    return () => window.removeEventListener('resize', medir)
-  }, [lista, n])
+  useEffect(() => {
+    const alvo = lista.current
+    if (!alvo) return
+    let altura = 0
+    const observador = new ResizeObserver((entradas) => {
+      for (const e of entradas) if (e.target === alvo) altura = e.contentRect.height
+      setLonga(altura > window.innerHeight)
+    })
+    observador.observe(alvo)
+    observador.observe(document.documentElement)
+    return () => observador.disconnect()
+  }, [lista])
   return longa
 }
 
@@ -125,7 +131,7 @@ export function LinhaDoTempo({ mensagens, eventos, fuso }: { mensagens: Mensagem
   const [comEventos, setComEventos] = useState(true)
   const lista = useRef<HTMLOListElement>(null)
   const itens = sequencia(mensagens, eventos, comEventos)
-  const longa = useMaisQueUmaTela(lista, itens.length)
+  const longa = useMaisQueUmaTela(lista)
   return (
     <section className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
       <h2 className="font-semibold">Atendimento</h2>

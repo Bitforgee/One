@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
@@ -97,14 +97,19 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
   const cliente = useQueryClient()
   const [v, setV] = useState(() => valoresDe(dados))
   const [salvo, setSalvo] = useState<keyof typeof AvisoDeSalvo>()
-  useEffect(() => setV(valoresDe(dados)), [dados])
+  const editados = useRef(new Set<keyof Valores>())
+  useEffect(() => {
+    setV((atual) => ({ ...valoresDe(dados), ...Object.fromEntries([...editados.current].map((k) => [k, atual[k]])) }))
+  }, [dados])
   const mudar = (parte: Partial<Valores>) => {
+    for (const k of Object.keys(parte)) editados.current.add(k as keyof Valores)
     setSalvo(undefined)
     setV({ ...v, ...parte })
   }
   const salvar = useMutation({
     mutationFn: () => api<Plataforma>('/api/admin/moodle', v, 'PUT'),
     onSuccess: (novo) => {
+      editados.current.clear()
       cliente.setQueryData(['moodle-admin'], novo)
       setSalvo(novo.ativa ? 'ligado' : 'desligado')
       toast.success('Moodle salvo.')

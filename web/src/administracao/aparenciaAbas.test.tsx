@@ -237,9 +237,9 @@ describe('Aparência em abas', () => {
     abrir('/univag/aparencia')
     await screen.findByLabelText('Cor principal')
     const blocos = {
-      entrar: () => previa().queryByRole('button', { name: 'Entrar' }),
-      telaInicial: () => screen.queryByRole('region', { name: 'Tela inicial' }),
-      janela: () => screen.queryByRole('region', { name: 'Janela do computador' }),
+      entrar: () => previa().queryByRole('button', { name: 'Entrar', hidden: true }),
+      telaInicial: () => screen.queryByRole('region', { name: 'Tela inicial', hidden: true }),
+      janela: () => screen.queryByRole('region', { name: 'Janela do computador', hidden: true }),
       assistente: () => previa().queryByText('Atendimento ao estudante · Univag'),
       contato: () => previa().queryByText('Contato do atendimento'),
     }
@@ -261,8 +261,8 @@ describe('Aparência em abas', () => {
     expect(previa().getByText('Atendimento ao estudante')).toBeInTheDocument()
     await ir('Contato')
     expect(previa().getByText('Seg a sex, 8h às 18h')).toBeInTheDocument()
-    expect(previa().getByRole('link', { name: '(65) 3688-6000' })).toHaveAttribute('href', expect.stringMatching(/^tel:/))
-    expect(previa().getByRole('link', { name: 'atendimento@univag.edu.br' })).toHaveAttribute('href', 'mailto:atendimento@univag.edu.br')
+    expect(previa().getByText('(65) 3688-6000')).toBeInTheDocument()
+    expect(previa().getByText('atendimento@univag.edu.br')).toBeInTheDocument()
   })
 })
 
@@ -289,8 +289,8 @@ describe('App instalado', () => {
   })
 
   it('tela inicial e janela do computador', async () => {
-    const barra = () => within(screen.getByRole('region', { name: 'Janela do computador' }))
-    const tela = () => within(screen.getByRole('region', { name: 'Tela inicial' }))
+    const barra = () => within(screen.getByRole('region', { name: 'Janela do computador', hidden: true }))
+    const tela = () => within(screen.getByRole('region', { name: 'Tela inicial', hidden: true }))
     const icones = () => [tela(), barra()].map((r) => r.getByTestId('icone-do-app').getAttribute('src'))
 
     rotas({}, aparencia({ nomeCurto: 'Universidade Federal', cor: Cor, imagens: { logo: null, icone: 3, login: null, assistente: null } }))
@@ -314,7 +314,7 @@ describe('App instalado', () => {
     rotas()
     abrir('/univag/aparencia?aba=app')
     await screen.findByLabelText('Nome do app')
-    const tela = within(screen.getByRole('region', { name: 'Tela inicial' }))
+    const tela = within(screen.getByRole('region', { name: 'Tela inicial', hidden: true }))
     expect(tela.getByTestId('icone-do-app')).toHaveAttribute('src', '/icons/icon-192.png')
   })
 
@@ -322,10 +322,10 @@ describe('App instalado', () => {
     const chamadas = rotas()
     abrir('/univag/aparencia?aba=app')
     await digitar('Nome do app', 'Univag')
-    expect(within(screen.getByRole('region', { name: 'Tela inicial' })).getByText('Univag')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Tela inicial', hidden: true })).getByText('Univag')).toBeInTheDocument()
     await userEvent.upload(screen.getByLabelText('Arquivo: Ícone do app'), arquivo('icone.png'))
     for (const regiao of ['Tela inicial', 'Janela do computador']) {
-      expect(within(screen.getByRole('region', { name: regiao })).getByTestId('icone-do-app'), regiao).toHaveAttribute('src', 'blob:imagem-nova')
+      expect(within(screen.getByRole('region', { name: regiao, hidden: true })).getByTestId('icone-do-app'), regiao).toHaveAttribute('src', 'blob:imagem-nova')
     }
     expect(chamadas.filter((c) => c.metodo !== 'GET')).toEqual([])
   })
@@ -371,7 +371,7 @@ describe('Cores prontas', () => {
     const grupo = within(await screen.findByRole('radiogroup', { name: 'Cores prontas' }))
     await userEvent.click(grupo.getByRole('radio', { name: 'Azul One' }))
     expect(screen.getByLabelText('Cor principal')).toHaveValue(hex('224fa7'))
-    const entrar = previa().getByRole('button', { name: 'Entrar' })
+    const entrar = previa().getByRole('button', { name: 'Entrar', hidden: true })
     expect(entrar.closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${hex('224fa7')}`)
     const marcados = grupo.getAllByRole('radio').map((r) => `${r.getAttribute('aria-label') ?? r.textContent}:${r.getAttribute('aria-checked')}`)
     expect(marcados).toEqual(Nomes.map((n) => `${n}:${n === 'Azul One'}`))

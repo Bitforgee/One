@@ -48,7 +48,7 @@ describe('prévia da Aparência', () => {
     const regiao = screen.getByRole('region', { name: 'Prévia' })
     expect(regiao.querySelector('img[src="/api/instituicoes/univag/imagens/logo?v=3"]')).not.toBeNull()
     for (const texto of ['Univag', 'Fale com a Univag', 'Aqui você resolve tudo sobre a sua vida acadêmica.', 'Boletos', 'Matrícula', 'Documentos']) expect(previa.getByText(texto), texto).toBeInTheDocument()
-    expect(previa.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    expect(previa.getByRole('button', { name: 'Entrar', hidden: true })).toBeInTheDocument()
     expect(regiao.querySelector('img[src*="/imagens/login"]'), 'sem foto de login').toBeNull()
 
     await userEvent.click(screen.getByRole('tab', { name: 'Assistente' }))

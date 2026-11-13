@@ -29,7 +29,7 @@ function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
     <div className="flex flex-col gap-2">
       {d.imagens.login && <img src={d.imagens.login} alt="" className="h-16 w-full rounded-xs object-cover" />}
       {d.imagens.logo ? <img src={d.imagens.logo} alt="" className="h-8 w-auto self-start object-contain" /> : <Sigla nome={d.nome} icone={null} />}
-      <p className="m-0 font-heading text-xl font-semibold">{d.nome}</p>
+      <p className="m-0 min-w-0 font-heading text-xl font-semibold break-words">{d.nome}</p>
       <p className="m-0 text-base font-semibold">{d.loginTitulo || Base.titulo}</p>
       <p className="m-0 text-muted-foreground">{d.loginFrase || Base.frase}</p>
       <ul className="m-0 list-disc ps-5 text-muted-foreground marker:text-muted-foreground">
@@ -47,7 +47,7 @@ function PreviaDoLogin({ d }: { d: DadosDaPrevia }) {
 function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
   return (
     <div className="flex flex-col items-start gap-2">
-      <p className="m-0 font-heading text-xl font-semibold">{`Atendimento ao estudante · ${d.nomeCurto.trim() || d.nome}`}</p>
+      <p className="m-0 min-w-0 font-heading text-xl font-semibold break-words">{`Atendimento ao estudante · ${d.nomeCurto.trim() || d.nome}`}</p>
       <p className="m-0 text-muted-foreground">{d.boasVindas || 'Respostas com base nas normas da instituição.'}</p>
       <div className="flex items-center gap-2 text-muted-foreground">
         {d.imagens.assistente && <img src={d.imagens.assistente} alt="" className="size-8 rounded-full object-cover" />}
@@ -57,7 +57,7 @@ function PreviaDoAssistente({ d }: { d: DadosDaPrevia }) {
         {d.perguntas.map((p) => (
           <li key={p} className="flex min-h-10 items-center gap-2 rounded-xs border-b px-1 py-1">
             <MessageCircleQuestion aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-            <span className="flex-1">{p}</span>
+            <span className="min-w-0 flex-1 break-words">{p}</span>
             <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
           </li>
         ))}
@@ -80,7 +80,7 @@ function PreviaDoApp({ d }: { d: DadosDaPrevia }) {
         <p className="m-0 text-muted-foreground">Janela do computador</p>
         <div data-testid="barra-do-app" className="flex items-center gap-2 rounded-t-md bg-primary px-3 py-2 text-primary-foreground" style={{ backgroundColor: d.cor || undefined }}>
           <img data-testid="icone-do-app" src={icone} alt="" className="size-4 object-cover" />
-          <span className="truncate text-xs">{d.nome}</span>
+          <span className="min-w-0 truncate text-xs break-words">{d.nome}</span>
         </div>
       </section>
     </div>
@@ -93,8 +93,8 @@ function PreviaDoContato({ d }: { d: DadosDaPrevia }) {
     <div className="flex flex-col items-start gap-2">
       <p className="m-0 font-heading text-xl font-semibold">Contato do atendimento</p>
       {horario && <p className="m-0 text-muted-foreground">{horario}</p>}
-      {telefone && <a href={`tel:${telefone.replace(/\s/g, '')}`}>{telefone}</a>}
-      {email && <a href={`mailto:${email}`}>{email}</a>}
+      {telefone && <span className="min-w-0 break-words">{telefone}</span>}
+      {email && <span className="min-w-0 break-words">{email}</span>}
       {!(horario || telefone || email) && <p className="m-0 text-muted-foreground">Preencha o contato para ver como o aluno o recebe.</p>}
     </div>
   )
@@ -112,7 +112,7 @@ export function PreviaAparencia({ dados: d }: { dados: DadosDaPrevia }) {
   const cor = d.cor || undefined
   const Bloco = Blocos[d.aba]
   return (
-    <div className={`flex flex-col gap-4 rounded-md border bg-card p-4 text-sm ${cor ? 'previa-marca' : ''}`} style={{ '--marca-previa': cor } as CSSProperties}>
+    <div inert aria-hidden="true" className={`flex flex-col gap-4 rounded-md border bg-card p-4 text-sm ${cor ? 'previa-marca' : ''}`} style={{ '--marca-previa': cor } as CSSProperties}>
       <Bloco d={d} />
     </div>
   )

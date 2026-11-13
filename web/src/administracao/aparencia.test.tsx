@@ -61,7 +61,7 @@ describe('tela Aparência', () => {
     abrir('/univag/aparencia')
     await digitar('Cor principal', Cor)
     const previa = within(screen.getByRole('region', { name: 'Prévia' }))
-    const entrar = previa.getByRole('button', { name: 'Entrar' })
+    const entrar = previa.getByRole('button', { name: 'Entrar', hidden: true })
     expect(entrar.closest('.previa-marca') as HTMLElement).toHaveStyle(`--marca-previa: ${Cor}`)
     const regra = readFileSync('src/index.css', 'utf8').match(/\.previa-marca \{\s*--primary: var\(--marca-previa\);\s*\}/)
     expect(regra).not.toBeNull()
@@ -194,7 +194,7 @@ describe('tela Aparência', () => {
       expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
       expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Marca', 'App instalado', 'Login', 'Assistente', 'Contato'])
       fireEvent.click(botao)
-      expect(within(await screen.findByRole('dialog', { name: 'Prévia' })).getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+      expect(within(await screen.findByRole('dialog', { name: 'Prévia' })).getByRole('button', { name: 'Entrar', hidden: true })).toBeInTheDocument()
     } finally {
       vi.unstubAllGlobals()
     }
