@@ -1115,4 +1115,273 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Contains(("Lib.Net.Http.WebPush", "3.3.1"), pacotes);
         Assert.DoesNotContain(pacotes, p => Regex.IsMatch(p.Item1, "(?i)push|vapid|firebase|onesignal") && p.Item1 != "Lib.Net.Http.WebPush");
     }
+
+    static readonly string[] Excecoes_Dados_sem_EfCore =
+    [
+        "Dados/EquipeDeSetor.cs",
+        "Dados/Fluxos/ResolverFluxo.cs",
+    ];
+
+    static readonly string[] Excecoes_Relogio_so_pelo_TimeProvider =
+    [
+        "Armazenamento.cs",
+    ];
+
+    static readonly string[] Excecoes_Entidade_sem_setter_publico =
+    [
+        "AtendenteSetor",
+        "Categoria",
+        "CitacaoArtigo",
+        "Conversa",
+        "Curso",
+        "EmailSaida",
+        "ImagemInstituicao",
+        "Instituicao",
+        "Matricula",
+        "MensagemConversa",
+        "OneDb",
+        "RespostaPronta",
+        "Setor",
+        "TokenAcesso",
+        "TrechoFonte",
+        "Usuario",
+        "UsuarioPapel",
+    ];
+
+    static readonly string[] Excecoes_Raiz_sem_fatias =
+    [
+        "Agendador.cs",
+    ];
+
+    static readonly string[] Excecoes_Handler_sem_new_de_entidade =
+    [
+        "Acesso/Login.cs",
+        "Administracao/AlterarMoodle.cs",
+        "Administracao/CriarUsuario.cs",
+        "Administracao/ImportarMatriculas.cs",
+        "Administracao/UsuarioRotas.cs",
+        "Agendador.cs",
+        "Assistente/Assistente.cs",
+        "Assistente/AtendimentoDireto.cs",
+        "Assistente/ConversaRotas.cs",
+        "Assistente/NovaConversa.cs",
+        "Chamados/Avisos.cs",
+        "Chamados/ResponderChamado.cs",
+        "Conhecimento/DocumentoRotas.cs",
+        "Instituicoes/CargaInicial.cs",
+        "Instituicoes/CargaValidacao.cs",
+        "Instituicoes/Criacao.cs",
+        "Instituicoes/EnviarImagemInstituicao.cs",
+        "Instituicoes/InstituicaoComando.cs",
+        "Tokens.cs",
+    ];
+
+    static readonly string[] Excecoes_Arquivo_ate_150_linhas =
+    [
+        "Agendador.cs",
+        "Assistente/Assistente.cs",
+        "Dados/Chamados/Chamado.cs",
+        "Dados/OneDb.cs",
+        "Instituicoes/InstituicaoComando.cs",
+        "Program.cs",
+    ];
+
+    static readonly string[] Excecoes_Dados_ate_5_parametros =
+    [
+        "Dados.Chamados.Chamado.Abrir",
+        "Dados.Chamados.Chamado.Encaminhar",
+        "Dados.Chamados.Chamado.Rejeitar",
+        "Dados.Chamados.Chamado.ResponderComoEquipe",
+        "Dados.Chamados.Chamado.Subir",
+        "Dados.Mcp.TokenMcp.Criar",
+        "Dados.Moodle.PlataformaMoodle.Configurar",
+        "Dados.Push.SubscricaoPush.Registrar",
+    ];
+
+    static readonly string[] Excecoes_Mensagem_sem_entidade =
+    [
+        "Acesso.Eu",
+        "Acesso.TrocarSenha",
+        "Administracao.CriarTokenMcp",
+        "Administracao.DesativarUsuario",
+        "Assistente.AtendimentoDireto",
+        "Assistente.AvaliarConversa",
+        "Assistente.BaixarAnexoConversa",
+        "Assistente.EncerrarConversa",
+        "Assistente.NovaConversa",
+        "Assistente.NovaMensagem",
+        "Assistente.TransferirConversa",
+        "Assistente.VerConversa",
+        "Assistente.VerDestino",
+        "Chamados.AssumirChamado",
+        "Chamados.AtivarPush",
+        "Chamados.BaixarAnexo",
+        "Chamados.CancelarChamado",
+        "Chamados.ConfirmarChamado",
+        "Chamados.DesativarPush",
+        "Chamados.EncaminharChamado",
+        "Chamados.ListarChamados",
+        "Chamados.MarcarDuplicado",
+        "Chamados.ReclassificarChamado",
+        "Chamados.RejeitarChamado",
+        "Chamados.ResolverChamado",
+        "Chamados.ResponderChamado",
+        "Chamados.RespostasProntasDoSetor",
+        "Chamados.SubirChamado",
+        "Chamados.VerChamado",
+        "Conhecimento.BaixarVersaoDocumento",
+        "Conhecimento.VerVersaoArtigo",
+        "Indicadores.ConsultarIndicadores",
+    ];
+
+    static readonly string[] Excecoes_Service_locator_so_na_composicao =
+    [
+        "Agendador.cs",
+        "Instituicoes/InstituicaoComando.cs",
+        "Sessao.cs",
+    ];
+
+    static readonly string[] Excecoes_Caso_de_uso_sem_chamada_estatica_de_outro =
+    [
+        "Administracao/AlterarCategoria.cs",
+        "Administracao/AlterarCurso.cs",
+        "Administracao/AlterarRespostaPronta.cs",
+        "Administracao/AlterarSetor.cs",
+        "Assistente/ConversaRotas.cs",
+    ];
+
+    static readonly string[] Excecoes_Sem_balde_horizontal =
+    [
+        "Acesso/AuthRotas.cs",
+        "Acesso/InstituicaoRotas.cs",
+        "Administracao/AdminRotas.cs",
+        "Administracao/CadastroRotas.cs",
+        "Administracao/FluxoRotas.cs",
+        "Administracao/ImportacaoRotas.cs",
+        "Administracao/Shared",
+        "Administracao/UsuarioRotas.cs",
+        "Assistente/ConversaRotas.cs",
+        "Chamados/ChamadoRotas.cs",
+        "Chamados/PushRotas.cs",
+        "Chamados/Shared",
+        "Conhecimento/ArtigoRotas.cs",
+        "Conhecimento/DocumentoRotas.cs",
+        "Conhecimento/Shared",
+        "Indicadores/IndicadorRotas.cs",
+        "Instituicoes/AparenciaRotas.cs",
+        "Instituicoes/PlataformaRotas.cs",
+        "Mcp/McpRotas.cs",
+    ];
+
+    static IEnumerable<Type> TiposDeDados() => typeof(Program).Assembly.GetTypes()
+        .Where(t => t.Namespace is { } ns && (ns == "One.Api.Dados" || ns.StartsWith("One.Api.Dados.")) && !ns.StartsWith("One.Api.Dados.Migracoes")
+            && !t.Name.Contains('<') && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false));
+
+    static IEnumerable<Type> TiposDeEntidade() => TiposDeDados().Where(t => t is { IsClass: true, IsNested: false, IsAbstract: false }
+        && (typeof(IDaInstituicao).IsAssignableFrom(t) || t == typeof(Instituicao)));
+
+    static string NomeDoTipo(Type t) => t.FullName!["One.Api.".Length..];
+
+    static string[] Ordenados(IEnumerable<string> itens) => [.. itens.Distinct().Order(StringComparer.Ordinal)];
+
+    static void IgualAosOfensores(string[] excecoes, IEnumerable<string> ofensores)
+    {
+        var esperados = excecoes.Order(StringComparer.Ordinal).ToList();
+        var reais = ofensores.Distinct().Order(StringComparer.Ordinal).ToList();
+        Assert.True(esperados.SequenceEqual(reais), $"A lista de exceções tem de ser igual aos ofensores nos dois sentidos.\nSó na lista: [{string.Join(", ", esperados.Except(reais).Select(x => $"\"{x}\""))}]\nSó nos ofensores: [{string.Join(", ", reais.Except(esperados).Select(x => $"\"{x}\""))}]");
+    }
+
+    [Fact]
+    public void Dados_sem_EfCore()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var emDados = CodigoApi().Where(p => p.Contains($"{sep}Dados{sep}") && !p.EndsWith($"{sep}Dados{sep}OneDb.cs") && !p.Contains($"{sep}Dados{sep}Mapeamento{sep}"));
+        IgualAosOfensores(Excecoes_Dados_sem_EfCore, ArquivosQue(new Regex(@"using\s+(static\s+)?Microsoft\.EntityFrameworkCore\b|\bOneDb\b|\bDbSet<|\bIQueryable<"), emDados));
+    }
+
+    [Fact]
+    public void Relogio_so_pelo_TimeProvider()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        IgualAosOfensores(Excecoes_Relogio_so_pelo_TimeProvider, ArquivosQue(new Regex(@"TimeProvider\.System\b"), CodigoApi().Where(p => !p.EndsWith($"{sep}Program.cs"))));
+    }
+
+    [Fact]
+    public void Entidade_sem_setter_publico() =>
+        IgualAosOfensores(Excecoes_Entidade_sem_setter_publico, TiposDeDados()
+            .Where(t => t.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly)
+                .Any(p => p.Name != "InstituicaoId" && p.SetMethod is { IsPublic: true } && !Init(p)))
+            .Select(t => t.Name));
+
+    [Fact]
+    public void Raiz_sem_fatias()
+    {
+        var nomes = string.Join("|", Fatias);
+        var referencia = new Regex($@"using\s+(static\s+)?One\.Api\.({nomes})\b|(?<![\w.])(One\.Api\.)?({nomes})\.[A-Z]");
+        var arquivos = Directory.GetFiles(Api, "*.cs").Where(p => Path.GetFileName(p) != "Program.cs").Append(Path.Combine(Api, "Dados", "OneDb.cs"));
+        IgualAosOfensores(Excecoes_Raiz_sem_fatias, ArquivosQue(referencia, arquivos));
+    }
+
+    [Fact]
+    public void Handler_sem_new_de_entidade()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var nomes = string.Join("|", TiposDeEntidade().Select(t => t.Name));
+        var criacao = new Regex($@"\bnew\s+({nomes})\s*[({{]");
+        IgualAosOfensores(Excecoes_Handler_sem_new_de_entidade, ArquivosQue(criacao, CodigoApi().Where(p => !p.Contains($"{sep}Dados{sep}"))));
+    }
+
+    [Fact]
+    public void Arquivo_ate_150_linhas() =>
+        IgualAosOfensores(Excecoes_Arquivo_ate_150_linhas, CodigoApi().Where(p => File.ReadAllLines(p).Length > 150).Select(Relativo));
+
+    [Fact]
+    public void Dados_ate_5_parametros() =>
+        IgualAosOfensores(Excecoes_Dados_ate_5_parametros, TiposDeDados().SelectMany(t =>
+            t.GetMethods(Declarados).Cast<System.Reflection.MethodBase>().Concat(t.GetConstructors(Declarados))
+                .Where(m => !m.Name.Contains('<') && !m.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false) && m.GetParameters().Length > 5)
+                .Select(m => $"{NomeDoTipo(t)}.{(m is System.Reflection.ConstructorInfo ? "ctor" : m.Name)}")));
+
+    [Fact]
+    public void Mensagem_sem_entidade()
+    {
+        var entidades = TiposDeEntidade().ToHashSet();
+        IgualAosOfensores(Excecoes_Mensagem_sem_entidade, Mensagens().Select(m => m.mensagem)
+            .Where(t => t.GetProperties().Select(p => p.PropertyType).Concat(t.GetConstructors().SelectMany(c => c.GetParameters().Select(p => p.ParameterType)))
+                .SelectMany(Desembrulhar).Any(entidades.Contains))
+            .Select(NomeDoTipo));
+    }
+
+    [Fact]
+    public void Service_locator_so_na_composicao()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        IgualAosOfensores(Excecoes_Service_locator_so_na_composicao,
+            ArquivosQue(new Regex(@"\.GetRequiredService\b|\.GetService\b|\.GetServices\b|\.GetRequiredKeyedService\b"), CodigoApi().Where(p => !p.EndsWith($"{sep}Program.cs"))));
+    }
+
+    [Fact]
+    public void Caso_de_uso_sem_chamada_estatica_de_outro()
+    {
+        var casos = Mensagens().Select(m => m.mensagem.Name).Distinct().ToList();
+        var ofensores = new List<string>();
+        foreach (var arquivo in CodigoApi())
+        {
+            var codigo = SemComentarios(arquivo);
+            var proprio = Path.GetFileNameWithoutExtension(arquivo);
+            if (casos.Any(c => c != proprio && Regex.IsMatch(codigo, $@"(?<![\w.]){c}\.(?!Mapear\b)[A-Z]\w*\s*\(")))
+                ofensores.Add(Relativo(arquivo));
+        }
+        IgualAosOfensores(Excecoes_Caso_de_uso_sem_chamada_estatica_de_outro, ofensores);
+    }
+
+    [Fact]
+    public void Sem_balde_horizontal()
+    {
+        var sep = Path.DirectorySeparatorChar;
+        var pastas = Directory.EnumerateDirectories(Api, "*", SearchOption.AllDirectories)
+            .Where(d => !d.Contains($"{sep}bin") && !d.Contains($"{sep}obj") && Path.GetFileName(d) is "Shared" or "Common" or "Utils" or "Helpers").Select(Relativo);
+        var rotas = ArquivosQue(new Regex(@"\bclass\s+\w+Rotas\b"));
+        IgualAosOfensores(Excecoes_Sem_balde_horizontal, pastas.Concat(rotas));
+    }
 }
