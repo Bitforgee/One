@@ -19,7 +19,7 @@ public sealed class CriarCursoHandler(OneDb db) : IRequestHandler<CriarCurso, IR
         var e = m.Corpo;
         if (Curso.Validar(e.Nome) is { } invalido) return Problemas.Invalido(invalido.Motivo, "nome");
         if (await ValidacaoDeCurso.Coordenacao(db, e.SetorCoordenacaoId) is { } erro) return erro;
-        if (await db.Cursos.AnyAsync(c => c.Nome == e.Nome, ct)) return AdminRotas.Repetido("Já existe um curso com este nome.");
+        if (await db.Cursos.AnyAsync(c => c.Nome == e.Nome, ct)) return ErrosDeAdmin.Repetido("Já existe um curso com este nome.");
         var curso = Curso.Criar(e.Nome!, e.SetorCoordenacaoId);
         db.Cursos.Add(curso);
         await db.SaveChangesAsync(ct);

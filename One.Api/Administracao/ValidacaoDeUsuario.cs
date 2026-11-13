@@ -11,10 +11,12 @@ public static class ValidacaoDeUsuario
     public static async Task<IResult?> Validar(OneDb db, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, long id) =>
         Pessoa(cpf, nome, email) ?? await PapeisESetores(db, senhaTemporaria, papeis, setores) ?? await Repetidos(db, cpf, email, id);
 
+    public static bool Nome(string? nome, int max) => !string.IsNullOrWhiteSpace(nome) && nome.Length <= max;
+
     static IResult? Pessoa(string? cpf, string? nome, string? email)
     {
         if (Cpf.Tentar(cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
-        if (!AdminRotas.Nome(nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
+        if (!Nome(nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
         if (email is null || !EnviadorSmtp.Valido().IsMatch(email)) return Problemas.Invalido("E-mail inválido.", "email");
         return null;
     }
@@ -33,8 +35,8 @@ public static class ValidacaoDeUsuario
     static async Task<IResult?> Repetidos(OneDb db, string? cpfInformado, string? email, long id)
     {
         var cpf = Cpf.Tentar(cpfInformado);
-        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return AdminRotas.Repetido("Já existe um usuário com este CPF na instituição.");
-        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == email)) return AdminRotas.Repetido("Já existe um usuário com este e-mail na instituição.");
+        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return ErrosDeAdmin.Repetido("Já existe um usuário com este CPF na instituição.");
+        if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == email)) return ErrosDeAdmin.Repetido("Já existe um usuário com este e-mail na instituição.");
         return null;
     }
 }

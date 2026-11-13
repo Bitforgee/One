@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "Arquivos", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Persistencia", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Seguranca", "Sessao", "Tokens", "TratamentoDeErros"],
+        Assert.Equal(["Agendador", "Armazenamento", "Arquivos", "EnviadorSmtp", "EquipeDeSetor", "GrupoAdministrador", "LayoutEmail", "Persistencia", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Seguranca", "Sessao", "Tokens", "TratamentoDeErros"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -295,7 +295,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly (string de, string para)[] ReferenciasEntreFatias =
     [
-        ("Administracao", "Acesso"), ("Administracao", "Chamados"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
+        ("Administracao", "Acesso"), ("Administracao", "Chamados"),
         ("Assistente", "Chamados"), ("Assistente", "Conhecimento"),
         ("Chamados", "Conhecimento"),
         ("Indicadores", "Conhecimento"),
@@ -1212,9 +1212,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "Acesso/AuthRotas.cs",
         "Acesso/InstituicaoRotas.cs",
-        "Administracao/AdminRotas.cs",
-        "Administracao/FluxoRotas.cs",
-        "Administracao/ImportacaoRotas.cs",
         "Administracao/Shared",
         "Assistente/ConversaRotas.cs",
         "Chamados/ChamadoRotas.cs",
@@ -1224,8 +1221,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Conhecimento/DocumentoRotas.cs",
         "Conhecimento/Shared",
         "Indicadores/IndicadorRotas.cs",
-        "Instituicoes/AparenciaRotas.cs",
-        "Instituicoes/PlataformaRotas.cs",
         "Mcp/McpRotas.cs",
     ];
 

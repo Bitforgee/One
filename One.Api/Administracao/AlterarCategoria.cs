@@ -19,9 +19,9 @@ public sealed class AlterarCategoriaHandler(OneDb db) : IRequestHandler<AlterarC
     {
         var e = m.Corpo;
         var categoria = await db.Categorias.FirstOrDefaultAsync(c => c.Id == m.Id, ct);
-        if (categoria is null) return AdminRotas.NaoEncontrado();
+        if (categoria is null) return ErrosDeAdmin.NaoEncontrado();
         if (Categoria.Validar(e.Nome, e.Ativa, categoria) is { } invalido) return Problemas.Invalido(invalido.Motivo, "nome");
-        if (await db.Categorias.AnyAsync(c => c.Nome == e.Nome && c.Id != categoria.Id, ct)) return AdminRotas.Repetido("Já existe uma categoria com este nome.");
+        if (await db.Categorias.AnyAsync(c => c.Nome == e.Nome && c.Id != categoria.Id, ct)) return ErrosDeAdmin.Repetido("Já existe uma categoria com este nome.");
         categoria.Alterar(e.Nome!, e.Ativa);
         await db.SaveChangesAsync(ct);
         return Results.Ok(CategoriaResposta.De(categoria));

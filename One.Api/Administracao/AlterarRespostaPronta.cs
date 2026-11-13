@@ -19,10 +19,10 @@ public sealed class AlterarRespostaProntaHandler(OneDb db) : IRequestHandler<Alt
     {
         var e = m.Corpo;
         var resposta = await db.RespostasProntas.FirstOrDefaultAsync(r => r.Id == m.Id, ct);
-        if (resposta is null) return AdminRotas.NaoEncontrado();
+        if (resposta is null) return ErrosDeAdmin.NaoEncontrado();
         if (!await db.Setores.AnyAsync(s => s.Id == e.SetorId, ct)) return Problemas.Invalido("Setor inexistente.", "setorId");
         if (RespostaPronta.Validar(e.Titulo, e.Texto) is { } invalido) return Problemas.Invalido(invalido.Motivo, invalido.Motivo == RespostaPronta.MotivoTitulo ? "titulo" : "texto");
-        if (await db.RespostasProntas.AnyAsync(r => r.SetorId == e.SetorId && r.Titulo == e.Titulo && r.Id != resposta.Id, ct)) return AdminRotas.Repetido("Já existe uma resposta pronta com este título no setor.");
+        if (await db.RespostasProntas.AnyAsync(r => r.SetorId == e.SetorId && r.Titulo == e.Titulo && r.Id != resposta.Id, ct)) return ErrosDeAdmin.Repetido("Já existe uma resposta pronta com este título no setor.");
         resposta.Alterar(e.SetorId!.Value, e.Titulo!, e.Texto!);
         await db.SaveChangesAsync(ct);
         return Results.Ok(RespostaProntaResposta.De(resposta));

@@ -32,7 +32,7 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
     {
         var i = m.Corpo;
         var fluxo = await db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas).FirstOrDefaultAsync(f => f.Id == m.Id);
-        if (fluxo is null) return AdminRotas.NaoEncontrado();
+        if (fluxo is null) return ErrosDeAdmin.NaoEncontrado();
         if (await Validar(i, fluxo) is { } erro) return erro;
 
         var versao = i.Versao == SimularFluxo.Rascunho ? fluxo.Rascunho! : fluxo.Vigente!;

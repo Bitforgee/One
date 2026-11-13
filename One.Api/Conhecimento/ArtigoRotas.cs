@@ -36,13 +36,4 @@ public static class ArtigoRotas
         VersaoArtigo.Criar(new(titulo!, perguntas!, resposta!, links), numero, agora);
 
     public static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
-
-    public static void MapearAdmin(RouteGroupBuilder admin)
-    {
-        ListarArtigos.Mapear(admin);
-        CriarArtigo.Mapear(admin);
-        AlterarArtigo.Mapear(admin);
-        AtivarArtigo.Mapear(admin);
-        ArquivarArtigo.Mapear(admin);
-    }
 }

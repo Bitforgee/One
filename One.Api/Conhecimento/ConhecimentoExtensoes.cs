@@ -6,7 +6,17 @@ public static class ConhecimentoExtensoes
 
     public static void MapConhecimento(this RouteGroupBuilder api)
     {
-        ArtigoRotas.Mapear(api);
-        DocumentoRotas.Mapear(api);
+        VerVersaoArtigo.Mapear(api);
+        BaixarVersaoDocumento.Mapear(api);
+        var admin = api.MapAdmin();
+        ListarArtigos.Mapear(admin);
+        CriarArtigo.Mapear(admin);
+        AlterarArtigo.Mapear(admin);
+        AtivarArtigo.Mapear(admin);
+        ArquivarArtigo.Mapear(admin);
+        ListarDocumentos.Mapear(admin);
+        CriarDocumento.Mapear(admin);
+        NovaVersaoDocumento.Mapear(admin);
+        ArquivarDocumento.Mapear(admin);
     }
 }

@@ -20,7 +20,7 @@ public sealed class SalvarRascunhoHandler(OneDb db) : IRequestHandler<SalvarRasc
     public async ValueTask<IResult> Handle(SalvarRascunho m, CancellationToken ct)
     {
         var fluxo = await db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas).FirstOrDefaultAsync(f => f.Id == m.Id);
-        if (fluxo is null) return AdminRotas.NaoEncontrado();
+        if (fluxo is null) return ErrosDeAdmin.NaoEncontrado();
         var etapas = m.Corpo.Etapas?.Select(e => new EtapaFluxo.Dados(e.Destino ?? "", e.SetorId, e.PrazoHoras, e.X, e.Y)).ToList();
         var pedidos = Fluxo.SetoresPedidos(etapas);
         var ativos = (await db.Setores.Where(s => s.Ativo && s.CursoId == null && pedidos.Contains(s.Id)).Select(s => s.Id).ToListAsync()).ToHashSet();

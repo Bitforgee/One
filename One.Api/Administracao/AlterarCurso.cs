@@ -19,10 +19,10 @@ public sealed class AlterarCursoHandler(OneDb db) : IRequestHandler<AlterarCurso
     {
         var e = m.Corpo;
         var curso = await db.Cursos.FirstOrDefaultAsync(c => c.Id == m.Id, ct);
-        if (curso is null) return AdminRotas.NaoEncontrado();
+        if (curso is null) return ErrosDeAdmin.NaoEncontrado();
         if (Curso.Validar(e.Nome) is { } invalido) return Problemas.Invalido(invalido.Motivo, "nome");
         if (await ValidacaoDeCurso.Coordenacao(db, e.SetorCoordenacaoId) is { } erro) return erro;
-        if (await db.Cursos.AnyAsync(c => c.Nome == e.Nome && c.Id != curso.Id, ct)) return AdminRotas.Repetido("Já existe um curso com este nome.");
+        if (await db.Cursos.AnyAsync(c => c.Nome == e.Nome && c.Id != curso.Id, ct)) return ErrosDeAdmin.Repetido("Já existe um curso com este nome.");
         curso.Alterar(e.Nome!, e.SetorCoordenacaoId);
         await db.SaveChangesAsync(ct);
         return Results.Ok(CursoResposta.De(curso));

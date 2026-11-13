@@ -18,7 +18,7 @@ public sealed class CriarCategoriaHandler(OneDb db) : IRequestHandler<CriarCateg
     {
         var e = m.Corpo;
         if (Categoria.Validar(e.Nome, e.Ativa) is { } invalido) return Problemas.Invalido(invalido.Motivo, "nome");
-        if (await db.Categorias.AnyAsync(c => c.Nome == e.Nome, ct)) return AdminRotas.Repetido("Já existe uma categoria com este nome.");
+        if (await db.Categorias.AnyAsync(c => c.Nome == e.Nome, ct)) return ErrosDeAdmin.Repetido("Já existe uma categoria com este nome.");
         var categoria = Categoria.Criar(e.Nome!, e.Ativa);
         db.Categorias.Add(categoria);
         await db.SaveChangesAsync(ct);

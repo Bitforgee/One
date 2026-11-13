@@ -14,7 +14,7 @@ public sealed class DescartarRascunhoHandler(OneDb db) : IRequestHandler<Descart
     public async ValueTask<IResult> Handle(DescartarRascunho m, CancellationToken ct)
     {
         var fluxo = await db.Fluxos.Include(f => f.Versoes).ThenInclude(v => v.Etapas).FirstOrDefaultAsync(f => f.Id == m.Id);
-        if (fluxo is null || fluxo.DescartarRascunho() is not null) return AdminRotas.NaoEncontrado();
+        if (fluxo is null || fluxo.DescartarRascunho() is not null) return ErrosDeAdmin.NaoEncontrado();
         await db.SaveChangesAsync();
         return Results.NoContent();
     }

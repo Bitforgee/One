@@ -32,7 +32,7 @@ public sealed class CriarTokenMcpHandler(OneDb db, TimeProvider relogio) : IRequ
         if (CriarTokenMcp.Validar(nome, m.Corpo.Dias) is { } erro) return erro;
         var agora = relogio.GetUtcNow().UtcDateTime;
         var ativos = await db.TokensMcp.CountAsync(t => t.UsuarioId == m.Admin.Id && t.RevogadoEm == null && t.ExpiraEm > agora, ct);
-        if (ativos >= TokenMcp.MaximoAtivosPorUsuario) return AdminRotas.Repetido($"Você já tem {TokenMcp.MaximoAtivosPorUsuario} tokens ativos. Revogue um para criar outro.");
+        if (ativos >= TokenMcp.MaximoAtivosPorUsuario) return ErrosDeAdmin.Repetido($"Você já tem {TokenMcp.MaximoAtivosPorUsuario} tokens ativos. Revogue um para criar outro.");
         var slug = await db.Instituicoes.Where(x => x.Id == db.InstituicaoAtual).Select(x => x.Slug).SingleAsync(ct);
         var token = TokenMcp.NovoMcp(slug);
         var registro = TokenMcp.Criar(m.Admin.Id, nome!, Tokens.Hash(token), token[^4..], agora, m.Corpo.Dias!.Value);

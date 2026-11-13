@@ -19,7 +19,7 @@ public sealed class AlterarUsuarioHandler(OneDb db, IPasswordHasher<Usuario> has
     public async ValueTask<IResult> Handle(AlterarUsuario m, CancellationToken ct)
     {
         var u = await db.Usuarios.Include(x => x.Papeis).Include(x => x.Setores).FirstOrDefaultAsync(x => x.Id == m.Id, ct);
-        if (u is null) return AdminRotas.NaoEncontrado();
+        if (u is null) return ErrosDeAdmin.NaoEncontrado();
         var e = m.Corpo;
         if (await ValidacaoDeUsuario.Validar(db, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, m.Id) is { } erro) return erro;
         u.Atualizar(new DadosUsuario(Cpf.Tentar(e.Cpf)!, e.Nome!, e.Email!));

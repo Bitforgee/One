@@ -16,7 +16,7 @@ public sealed class ReenviarAcessoHandler(OneDb db, TimeProvider relogio, IConfi
     public async ValueTask<IResult> Handle(ReenviarAcesso m, CancellationToken ct)
     {
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == m.Slug, ct);
-        if (instituicao is null) return Problemas.Erro(404, PlataformaRotas.NaoEncontrada);
+        if (instituicao is null) return Problemas.Erro(404, ErrosDaPlataforma.NaoEncontrada);
         if (!instituicao.Ativa) return Problemas.Erro(409, "A instituição está desativada.");
 
         db.InstituicaoAtual = instituicao.Id;

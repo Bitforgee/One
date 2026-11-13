@@ -44,7 +44,7 @@ public static class CsvMatriculas
     static IEnumerable<string> DaPessoa(LinhaCsv l, string? cpf, Dictionary<string, string> donoDoEmail)
     {
         if (cpf is null) yield return "CPF inválido";
-        if (!AdminRotas.Nome(l.Nome, 200)) yield return "nome vazio ou com mais de 200 caracteres";
+        if (!ValidacaoDeUsuario.Nome(l.Nome, 200)) yield return "nome vazio ou com mais de 200 caracteres";
         if (!EnviadorSmtp.Valido().IsMatch(l.Email)) yield return "e-mail inválido";
         else if (cpf is not null && donoDoEmail.TryGetValue(l.Email, out var outroCpf) && outroCpf != cpf) yield return "e-mail já usado por outro CPF na instituição";
     }

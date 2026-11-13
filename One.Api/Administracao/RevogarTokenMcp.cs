@@ -14,7 +14,7 @@ public sealed class RevogarTokenMcpHandler(OneDb db, TimeProvider relogio) : IRe
     public async ValueTask<IResult> Handle(RevogarTokenMcp m, CancellationToken ct)
     {
         var token = await db.TokensMcp.FirstOrDefaultAsync(t => t.Id == m.Id, ct);
-        if (token is null) return AdminRotas.NaoEncontrado();
+        if (token is null) return ErrosDeAdmin.NaoEncontrado();
         token.Revogar(relogio.GetUtcNow().UtcDateTime);
         await db.SaveChangesAsync(ct);
         return Results.NoContent();

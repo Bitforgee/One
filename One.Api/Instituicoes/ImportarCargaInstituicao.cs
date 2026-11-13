@@ -24,7 +24,7 @@ public sealed class ImportarCargaInstituicaoHandler(OneDb db, TimeProvider relog
     public async ValueTask<IResult> Handle(ImportarCargaInstituicao m, CancellationToken ct)
     {
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == m.Slug, ct);
-        if (instituicao is null) return Problemas.Erro(404, PlataformaRotas.NaoEncontrada);
+        if (instituicao is null) return Problemas.Erro(404, ErrosDaPlataforma.NaoEncontrada);
         if (m.Form.Files["arquivo"] is not { } arquivo) return Problemas.Invalido("Envie o arquivo JSON no campo arquivo.", "arquivo");
         if (arquivo.Length > ImportarCargaInstituicao.Limite) return Problemas.Erro(413, "O arquivo passa de 2 MB.");
 

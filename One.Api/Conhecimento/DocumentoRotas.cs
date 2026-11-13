@@ -14,13 +14,4 @@ public static class DocumentoRotas
     public static Task<Documento?> Ler(OneDb db, long id) =>
         db.Documentos.ComUltimaVersao().FirstOrDefaultAsync(d => d.Id == id);
 
-    public static void MapearAdmin(RouteGroupBuilder admin)
-    {
-        ListarDocumentos.Mapear(admin);
-        CriarDocumento.Mapear(admin);
-        NovaVersaoDocumento.Mapear(admin);
-        ArquivarDocumento.Mapear(admin);
-    }
-
-    public static void Mapear(RouteGroupBuilder api) => BaixarVersaoDocumento.Mapear(api);
 }

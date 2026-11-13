@@ -25,7 +25,7 @@ public sealed class CriarFluxoHandler(OneDb db) : IRequestHandler<CriarFluxo, IR
         return Results.Created($"/api/admin/fluxos/{fluxo.Id}", FluxoResposta.De(fluxo));
     }
 
-    static IResult Repetido() => AdminRotas.Repetido("Já existe um fluxo para esta categoria e esta abrangência.");
+    static IResult Repetido() => ErrosDeAdmin.Repetido("Já existe um fluxo para esta categoria e esta abrangência.");
 
     async Task<IResult?> Validar(CriarFluxo.Entrada i)
     {

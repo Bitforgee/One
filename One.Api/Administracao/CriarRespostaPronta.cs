@@ -19,7 +19,7 @@ public sealed class CriarRespostaProntaHandler(OneDb db) : IRequestHandler<Criar
         var e = m.Corpo;
         if (!await db.Setores.AnyAsync(s => s.Id == e.SetorId, ct)) return Problemas.Invalido("Setor inexistente.", "setorId");
         if (RespostaPronta.Validar(e.Titulo, e.Texto) is { } invalido) return Problemas.Invalido(invalido.Motivo, invalido.Motivo == RespostaPronta.MotivoTitulo ? "titulo" : "texto");
-        if (await db.RespostasProntas.AnyAsync(r => r.SetorId == e.SetorId && r.Titulo == e.Titulo, ct)) return AdminRotas.Repetido("Já existe uma resposta pronta com este título no setor.");
+        if (await db.RespostasProntas.AnyAsync(r => r.SetorId == e.SetorId && r.Titulo == e.Titulo, ct)) return ErrosDeAdmin.Repetido("Já existe uma resposta pronta com este título no setor.");
         var resposta = RespostaPronta.Criar(e.SetorId!.Value, e.Titulo!, e.Texto!);
         db.RespostasProntas.Add(resposta);
         await db.SaveChangesAsync(ct);

@@ -18,7 +18,7 @@ public sealed class DesativarUsuarioHandler(OneDb db, TimeProvider relogio) : IR
     {
         var id = m.Id;
         var u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Id == id);
-        if (u is null) return AdminRotas.NaoEncontrado();
+        if (u is null) return ErrosDeAdmin.NaoEncontrado();
         var agora = relogio.GetUtcNow().UtcDateTime;
         var adminId = m.Admin.Id;
         u.Desativar();
