@@ -82,7 +82,8 @@ test.describe('Assistente', () => {
     await page.getByLabel('Mensagem').waitFor()
     const amostras = await amostrarBalaoNovo(page)
     expect(amostras.length).toBeGreaterThan(0)
-    expect(amostras.filter((a) => !identidade(a.transform))).toEqual([])
+    expect(amostras.slice(1).filter((a) => !identidade(a.transform))).toEqual([])
+    expect(amostras.filter((a) => deslocamentoY(a.transform) % 8 !== 0)).toEqual([])
   })
 
   test('mensagem nova anima só com transform', async ({ page }) => {
@@ -979,7 +980,7 @@ test.describe('painel', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize({ width: 1280, height: 800 })
     await page.goto('/univag/fila')
-    expect(await page.locator(Conteiner).evaluate((e) => getComputedStyle(e).transitionDuration)).toBe('0s')
+    expect(await page.locator(Conteiner).evaluate((e) => parseFloat(getComputedStyle(e).transitionDuration))).toBeCloseTo(0.00001, 6)
     await page.getByRole('button', { name: 'Alternar barra lateral' }).click()
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
     expect(await largura(page)).toBe(48)

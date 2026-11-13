@@ -992,7 +992,7 @@ test.describe('S5 diálogos e administração', () => {
       const r = await caixa(rodape)
       expect(r.y + r.height, 'o rodapé na base, antes de rolar').toBeCloseTo(Celular.height, 0)
 
-      const corpo = dialogo.locator('form > div:not([data-slot])')
+      const corpo = dialogo.locator('form > [data-slot=editor-corpo]')
       await expect(corpo).toHaveCount(1)
       expect(['auto', 'scroll']).toContain(await corpo.evaluate((e) => getComputedStyle(e).overflowY))
       const [c, h, f] = [await caixa(corpo), await caixa(cabecalho), r]
