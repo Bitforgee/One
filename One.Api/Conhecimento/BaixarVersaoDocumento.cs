@@ -20,6 +20,6 @@ public sealed class BaixarVersaoDocumentoHandler(OneDb db, Armazenamento armazen
         if (!u.Tem(Papeis.Atendente) && !u.Tem(Papeis.Administrador) || await db.SoLideranca(u)) return Problemas.Erro(404, "Documento não encontrado.");
         var v = await db.VersoesDocumento.Where(x => x.Id == m.Id).Select(x => new PdfBaixado(x.Chave, x.NomeArquivo, x.Tamanho)).FirstOrDefaultAsync();
         return v is null ? Problemas.Erro(404, "Documento não encontrado.")
-            : Armazenamento.ComTamanho(Results.Stream(await armazenamento.Baixar(v.Chave), Arquivos.Pdf, v.NomeArquivo), v.Tamanho);
+            : new ResultadoComTamanho(Results.Stream(await armazenamento.Baixar(v.Chave), Arquivos.Pdf, v.NomeArquivo), v.Tamanho);
     }
 }

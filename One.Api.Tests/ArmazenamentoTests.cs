@@ -453,7 +453,7 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Preparar_sem_minio_falha_a_subida_citando_endpoint_e_bucket()
     {
         using var s3 = new AmazonS3Client(new Amazon.Runtime.BasicAWSCredentials("one", "one-minio-dev"), new AmazonS3Config { ServiceURL = "http://localhost:1", ForcePathStyle = true });
-        var e = await Assert.ThrowsAsync<InvalidOperationException>(() => new Armazenamento(s3, "bucket-fora").Preparar());
+        var e = await Assert.ThrowsAsync<InvalidOperationException>(() => new Armazenamento(s3, "bucket-fora", TimeProvider.System).Preparar());
         Assert.Contains("http://localhost:1", e.Message);
         Assert.Contains("bucket-fora", e.Message);
 
@@ -470,7 +470,7 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
         using var s3 = OneFactory.ClienteS3();
         try
         {
-            var armazenamento = new Armazenamento(s3, bucket);
+            var armazenamento = new Armazenamento(s3, bucket, TimeProvider.System);
             Assert.DoesNotContain(bucket, (await s3.ListBucketsAsync()).Buckets.Select(x => x.BucketName));
             for (var vez = 1; vez <= 2; vez++)
             {
@@ -485,7 +485,7 @@ public class ArmazenamentoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Duas_gravacoes_do_mesmo_conteudo_geram_chaves_diferentes()
     {
         using var s3 = OneFactory.ClienteS3();
-        var armazenamento = new Armazenamento(s3, f.Bucket);
+        var armazenamento = new Armazenamento(s3, f.Bucket, TimeProvider.System);
         var bytes = Balcao.Arquivo(Balcao.Png, 300);
 
         var (primeira, hash1) = await armazenamento.Gravar(7, "anexos", bytes);

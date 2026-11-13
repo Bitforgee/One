@@ -7,7 +7,7 @@ namespace One.Api;
 
 public sealed class ArmazenamentoIndisponivel(Exception causa) : Exception("Armazenamento de arquivos indisponível.", causa);
 
-public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? handler = null)
+public class Armazenamento(IAmazonS3 s3, string bucket, TimeProvider relogio, HttpMessageHandler? handler = null)
 {
     readonly HttpClient http = new(handler ?? new HttpClientHandler());
     string Bucket => bucket;
@@ -50,7 +50,7 @@ public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? hand
         {
             BucketName = Bucket,
             Key = chave,
-            Expires = TimeProvider.System.GetUtcNow().UtcDateTime.AddMinutes(1),
+            Expires = relogio.GetUtcNow().UtcDateTime.AddMinutes(1),
             Protocol = new Uri(s3.Config.ServiceURL).Scheme == "https" ? Protocol.HTTPS : Protocol.HTTP,
         });
         try
@@ -61,15 +61,24 @@ public class Armazenamento(IAmazonS3 s3, string bucket, HttpMessageHandler? hand
         }
         catch (HttpRequestException e) { throw new ArmazenamentoIndisponivel(e); }
     }
+}
 
-    public static IResult ComTamanho(IResult resultado, long tamanho) => new ResultadoComTamanho(resultado, tamanho);
-
-    sealed class ResultadoComTamanho(IResult resultado, long tamanho) : IResult
+public static class ArmazenamentoExtensoes
+{
+    public static IServiceCollection AddArmazenamento(this IServiceCollection s)
     {
-        public Task ExecuteAsync(HttpContext ctx)
+        s.AddSingleton<IAmazonS3>(sp =>
         {
-            ctx.Response.ContentLength = tamanho;
-            return resultado.ExecuteAsync(ctx);
-        }
+            var c = sp.GetRequiredService<IConfiguration>();
+            return new AmazonS3Client(new BasicAWSCredentials(c["Armazenamento:Chave"], c["Armazenamento:Segredo"]), new AmazonS3Config
+            {
+                ServiceURL = c["Armazenamento:Endpoint"],
+                ForcePathStyle = true,
+                RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+                ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
+            });
+        });
+        s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), sp.GetRequiredService<IConfiguration>()["Armazenamento:Bucket"]!, sp.GetRequiredService<TimeProvider>()));
+        return s;
     }
 }

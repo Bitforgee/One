@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
+        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Sessao", "Tokens"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -960,7 +960,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(Amazon.Runtime.RequestChecksumCalculation.WHEN_REQUIRED, s3.Config.RequestChecksumCalculation);
         Assert.Equal(Amazon.Runtime.ResponseChecksumValidation.WHEN_REQUIRED, s3.Config.ResponseChecksumValidation);
 
-        var codigos = new[] { File.ReadAllText(Path.Combine(Api, "Program.cs")), File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", "Infra", "OneFactory.cs")) };
+        var codigos = new[] { File.ReadAllText(Path.Combine(Api, "Armazenamento.cs")), File.ReadAllText(Path.Combine(Raiz(), "One.Api.Tests", "Infra", "OneFactory.cs")) };
         foreach (var chave in new[] { "Endpoint", "Chave", "Segredo", "Bucket" })
             foreach (var codigo in codigos)
                 Assert.Contains($"\"Armazenamento:{chave}\"", codigo);
@@ -1130,7 +1130,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Relogio_so_pelo_TimeProvider =
     [
-        "Armazenamento.cs",
     ];
 
     static readonly string[] Excecoes_Entidade_sem_setter_publico =
@@ -1313,12 +1312,14 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Select(NomeDoTipo));
     }
 
+    static readonly string[] Composicao = ["Program.cs", "Armazenamento.cs", "Persistencia.cs", "Seguranca.cs", "TratamentoDeErros.cs"];
+
     [Fact]
     public void Service_locator_so_na_composicao()
     {
         var sep = Path.DirectorySeparatorChar;
         IgualAosOfensores(Excecoes_Service_locator_so_na_composicao,
-            ArquivosQue(new Regex(@"\.GetRequiredService\b|\.GetService\b|\.GetServices\b|\.GetRequiredKeyedService\b"), CodigoApi().Where(p => !p.EndsWith($"{sep}Program.cs"))));
+            ArquivosQue(new Regex(@"\.GetRequiredService\b|\.GetService\b|\.GetServices\b|\.GetRequiredKeyedService\b"), CodigoApi().Where(p => !Composicao.Contains(Path.GetFileName(p)) && !p.EndsWith("Extensoes.cs"))));
     }
 
     [Fact]

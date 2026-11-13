@@ -20,6 +20,6 @@ public sealed class BaixarAnexoHandler(OneDb db, Armazenamento armazenamento) : 
             .Select(x => new AnexoComNumero(x.Nome, x.Tipo, x.Chave, x.Tamanho, db.Chamados.Where(c => db.MensagensChamado.Any(y => y.Id == x.MensagemChamadoId && y.ChamadoId == c.Id)).Select(c => c.Numero).Single()))
             .FirstOrDefaultAsync();
         if (anexo is null || (await ChamadoRotas.Carregar(db, m.Usuario, anexo.Numero)).Item1 is null) return Problemas.Erro(404, "Anexo não encontrado.");
-        return Armazenamento.ComTamanho(Results.Stream(await armazenamento.Baixar(anexo.Chave), anexo.Tipo, anexo.Nome), anexo.Tamanho);
+        return new ResultadoComTamanho(Results.Stream(await armazenamento.Baixar(anexo.Chave), anexo.Tipo, anexo.Nome), anexo.Tamanho);
     }
 }

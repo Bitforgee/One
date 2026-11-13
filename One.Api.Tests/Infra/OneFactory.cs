@@ -95,7 +95,7 @@ public class OneFactory : WebApplicationFactory<Program>, IAsyncLifetime
             s.ConfigureDbContext<OneDb>(o => o.AddInterceptors(Gravacoes, Commit));
             if (!EnviadorPushReal) s.AddSingleton<IEnviadorPush>(Push);
             s.RemoveAll<Armazenamento>();
-            s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, new ContaLeituras(this)));
+            s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), Bucket, TimeProvider.System, new ContaLeituras(this)));
         });
     }
 

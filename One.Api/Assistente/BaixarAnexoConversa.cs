@@ -21,7 +21,7 @@ public sealed class BaixarAnexoConversaHandler(OneDb db, Armazenamento armazenam
             .Select(x => new Achado(x.Nome, x.Tipo, x.Chave, x.Tamanho, db.MensagensConversa.Where(y => y.Id == x.MensagemConversaId).Select(y => y.ConversaId).Single()))
             .FirstOrDefaultAsync();
         if (anexo is null || !await PodeVer(anexo.ConversaId, m.Usuario)) return Problemas.Erro(404, "Anexo não encontrado.");
-        return Armazenamento.ComTamanho(Results.Stream(await armazenamento.Baixar(anexo.Chave), anexo.Tipo, anexo.Nome), anexo.Tamanho);
+        return new ResultadoComTamanho(Results.Stream(await armazenamento.Baixar(anexo.Chave), anexo.Tipo, anexo.Nome), anexo.Tamanho);
     }
 
     async Task<bool> PodeVer(long conversaId, Usuario u)

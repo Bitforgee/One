@@ -67,18 +67,7 @@ public class Program
         s.AddSingleton<ChaveLti>();
         s.AddScoped<ValidadorLti>();
         s.AddSingleton<IEnviadorPush, EnviadorPush>();
-        s.AddSingleton<IAmazonS3>(sp =>
-        {
-            var c = sp.GetRequiredService<IConfiguration>();
-            return new AmazonS3Client(new BasicAWSCredentials(c["Armazenamento:Chave"], c["Armazenamento:Segredo"]), new AmazonS3Config
-            {
-                ServiceURL = c["Armazenamento:Endpoint"],
-                ForcePathStyle = true,
-                RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
-                ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
-            });
-        });
-        s.AddSingleton(sp => new Armazenamento(sp.GetRequiredService<IAmazonS3>(), sp.GetRequiredService<IConfiguration>()["Armazenamento:Bucket"]!));
+        s.AddArmazenamento();
         s.AddScoped<Assistente.Assistente>();
         s.AddSingleton<Embeddings>();
         s.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));
