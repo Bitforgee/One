@@ -1,6 +1,7 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Administracao.Shared;
+using One.Api.Chamados;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
@@ -23,7 +24,7 @@ public sealed record CriarSetor(CriarSetor.Entrada Corpo) : IRequest<IResult>
     static async Task<IResult?> EmFluxoPublicado(OneDb db, Entrada e, Setor? atual)
     {
         if (atual is not { Ativo: true } || e.Ativo != false) return null;
-        var categorias = await ResolverFluxo.CategoriasQueUsamOSetor(db, atual.Id);
+        var categorias = await ConsultasDeFluxo.CategoriasQueUsamOSetor(db, atual.Id);
         return categorias.Count == 0 ? null
             : AdminRotas.Repetido($"O setor é usado em fluxo publicado (categoria: {string.Join("; ", categorias.Order())}). Publique o fluxo sem ele antes de desativar.");
     }

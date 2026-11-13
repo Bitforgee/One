@@ -219,7 +219,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     async Task SubirPorPrazo(OneDb db, long id, DateTime agora)
     {
         var chamado = await VenceuOPrazo(db, db.Chamados, agora).SingleOrDefaultAsync(c => c.Id == id);
-        if (chamado is null || await ResolverFluxo.Seguinte(db, chamado) is not { } passo) return;
+        if (chamado is null || await ConsultasDeFluxo.Seguinte(db, chamado) is not { } passo) return;
         var horas = await db.EtapasFluxo.Where(e => e.VersaoFluxoId == chamado.VersaoFluxoId && e.Ordem == chamado.EtapaOrdem).Select(e => e.PrazoHoras).SingleAsync();
         var nomes = await db.Setores.Where(s => s.Id == chamado.SetorId || s.Id == passo.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
         chamado.Subir(null, nomes[chamado.SetorId], nomes[passo.SetorId], passo.SetorId, passo.Etapa.Ordem, $"Sem resposta em {horas} horas", await AcoesChamado.NomeDoResponsavel(db, chamado), agora);

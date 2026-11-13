@@ -295,7 +295,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly (string de, string para)[] ReferenciasEntreFatias =
     [
-        ("Acesso", "Instituicoes"), ("Administracao", "Acesso"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
+        ("Acesso", "Instituicoes"), ("Administracao", "Acesso"), ("Administracao", "Chamados"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
         ("Assistente", "Chamados"), ("Assistente", "Conhecimento"),
         ("Chamados", "Assistente"), ("Chamados", "Conhecimento"),
         ("Indicadores", "Assistente"), ("Indicadores", "Conhecimento"),
@@ -678,11 +678,11 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Setor_so_pelo_ResolverFluxo()
     {
-        Assert.Equal(["Administracao/SalvarRascunho.cs", "Dados/Fluxos/ResolverFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
+        Assert.Equal(["Administracao/SalvarRascunho.cs", "Dados/Fluxos/RoteamentoDeFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
         foreach (var usa in new[] { "Chamados/Transferencia.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Agendador.cs" })
         {
             var codigo = CodigoDe(usa.Split('/'));
-            Assert.Matches(@"ResolverFluxo\.(Rotear|Seguinte|Proximo)\(", codigo);
+            Assert.Matches(@"(ConsultasDeFluxo|RoteamentoDeFluxo)\.(Rotear|Seguinte|Proximo)\(", codigo);
             Assert.DoesNotMatch(@"SetorCoordenacaoId|DestinosEtapa\.", codigo);
         }
     }
@@ -1126,7 +1126,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Dados_sem_EfCore =
     [
-        "Dados/Fluxos/ResolverFluxo.cs",
     ];
 
     static readonly string[] Excecoes_Relogio_so_pelo_TimeProvider =

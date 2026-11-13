@@ -1,6 +1,6 @@
 using One.Api.Dados;
 using One.Api.Dados.Fluxos;
-using static One.Api.Dados.Fluxos.ResolverFluxo;
+using static One.Api.Dados.Fluxos.RoteamentoDeFluxo;
 
 namespace One.Api.Tests;
 
@@ -78,7 +78,7 @@ public class FluxoDominioTests
     {
         var r = Etapa(destino, setorDaEtapa);
 
-        var resolucao = ResolverFluxo.Etapa(r, Ctx(coordenacao, lideranca));
+        var resolucao = RoteamentoDeFluxo.Etapa(r, Ctx(coordenacao, lideranca));
 
         Assert.Equal((setor, motivo), (resolucao.SetorId, resolucao.Motivo));
         Assert.Equal(setor is not null, resolucao.Resolvida);

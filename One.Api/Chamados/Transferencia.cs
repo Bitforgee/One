@@ -44,7 +44,7 @@ public static class Transferencia
         var (categoria, origem) = await EscolherCategoria(db, conversa);
         var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
         var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
-        var rota = await ResolverFluxo.Rotear(db, categoria, matricula, comLideranca);
+        var rota = await ConsultasDeFluxo.Rotear(db, categoria, matricula, comLideranca);
         conversa.Transferir(agora);
 
         var numero = await db.Database

@@ -82,7 +82,7 @@ public sealed record DetalheChamado(
     static async Task<List<string>> AcoesDoChamado(OneDb db, Chamado c, string papel, long usuarioId)
     {
         var acoes = PermissoesChamado.Acoes(c.Estado, papel, c.ResponsavelId, usuarioId).ToList();
-        if (!await ResolverFluxo.TemEtapaSeguinte(db, c)) acoes.Remove("subir");
+        if (!await ConsultasDeFluxo.TemEtapaSeguinte(db, c)) acoes.Remove("subir");
         return acoes;
     }
 

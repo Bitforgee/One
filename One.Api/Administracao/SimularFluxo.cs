@@ -1,6 +1,8 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using One.Api.Chamados;
 using One.Api.Dados;
+using One.Api.Dados.Fluxos;
 
 namespace One.Api.Administracao;
 
@@ -34,10 +36,10 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
         if (await Validar(i, fluxo) is { } erro) return erro;
 
         var versao = i.Versao == SimularFluxo.Rascunho ? fluxo.Rascunho! : fluxo.Vigente!;
-        var contexto = await ResolverFluxo.CarregarContexto(db, i.CursoId!.Value, i.Semestre);
+        var contexto = await ConsultasDeFluxo.CarregarContexto(db, i.CursoId!.Value, i.Semestre);
         var etapas = versao.Etapas.OrderBy(e => e.Ordem).Select(e => Etapa(e, contexto)).ToList();
-        var primeira = ResolverFluxo.Proximo(versao.Etapas, 0, contexto, true);
-        var escolhido = ResolverFluxo.Escolher(await ResolverFluxo.Candidatos(db, fluxo.CategoriaId, i.CursoId.Value), i.CursoId.Value, i.Semestre!.Value);
+        var primeira = RoteamentoDeFluxo.Proximo(versao.Etapas, 0, contexto, true);
+        var escolhido = RoteamentoDeFluxo.Escolher(await ConsultasDeFluxo.Candidatos(db, fluxo.CategoriaId, i.CursoId.Value), i.CursoId.Value, i.Semestre!.Value);
         var inicial = primeira?.SetorId ?? contexto.Setores.Values.Single(s => s.Triagem).Id;
         return Results.Ok(new SimularFluxo.Resposta(etapas, contexto.Setores[inicial].Nome,
             escolhido is null ? null : new SimularFluxo.Resposta.DoFluxo(escolhido.Id, escolhido.CursoId, escolhido.Semestre)));
@@ -51,9 +53,9 @@ public sealed class SimularFluxoHandler(OneDb db) : IRequestHandler<SimularFluxo
         return i.CursoId is null || !await db.Cursos.AnyAsync(c => c.Id == i.CursoId) ? Problemas.Invalido("Escolha um curso da instituição.", "cursoId") : null;
     }
 
-    static SimularFluxo.Resposta.DaEtapa Etapa(EtapaFluxo e, ResolverFluxo.Contexto contexto)
+    static SimularFluxo.Resposta.DaEtapa Etapa(EtapaFluxo e, RoteamentoDeFluxo.Contexto contexto)
     {
-        var r = ResolverFluxo.Situacao(e, contexto, true);
+        var r = RoteamentoDeFluxo.Situacao(e, contexto, true);
         return new(e.Ordem, e.Destino, r.SetorId is { } id ? contexto.Setores[id].Nome : null, r.Resolvida ? SimularFluxo.Resolvida : SimularFluxo.NaoResolvida, r.Motivo);
     }
 }

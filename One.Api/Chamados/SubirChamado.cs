@@ -25,7 +25,7 @@ public sealed class SubirChamadoHandler(OneDb db, AcessoChamado a) : IRequestHan
 
     public async ValueTask<IResult> Handle(SubirChamado m, CancellationToken ct)
     {
-        if (await ResolverFluxo.Seguinte(db, a.Chamado) is not { } passo) return Problemas.Erro(409, SemEtapa);
+        if (await ConsultasDeFluxo.Seguinte(db, a.Chamado) is not { } passo) return Problemas.Erro(409, SemEtapa);
         var nomes = await db.Setores.Where(s => s.Id == a.Chamado.SetorId || s.Id == passo.SetorId).ToDictionaryAsync(s => s.Id, s => s.Nome);
         a.Chamado.Subir(a.Usuario.Id, nomes[a.Chamado.SetorId], nomes[passo.SetorId], passo.SetorId, passo.Etapa.Ordem, m.Corpo.Motivo!, await NomeDoResponsavel(db, a.Chamado), a.Agora);
         return Results.Empty;
