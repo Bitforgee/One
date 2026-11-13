@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Instituicoes", "InstituicaoComando.cs"), Path.Combine(api, "Agendador.cs") };
+        var permitidos = new[] { Path.Combine(api, "Agendador.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
@@ -1162,7 +1162,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Agendador.cs",
         "Dados/Chamados/Chamado.cs",
         "Dados/OneDb.cs",
-        "Instituicoes/InstituicaoComando.cs",
         "Program.cs",
     ];
 
@@ -1213,7 +1212,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Service_locator_so_na_composicao =
     [
         "Agendador.cs",
-        "Instituicoes/InstituicaoComando.cs",
         "Sessao.cs",
     ];
 
