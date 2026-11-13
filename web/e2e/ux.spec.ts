@@ -300,7 +300,7 @@ test.describe('S1 contraste', () => {
 
     await page.getByRole('button', { name: 'Falar com atendente' }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
-    await semVerde(page.getByRole('dialog').getByRole('button', { name: 'Confirmar', exact: true }), ['default', 'outline'])
+    await semVerde(page.getByRole('dialog').getByRole('button', { name: 'Falar com atendente', exact: true }), ['default', 'outline'])
 
     await page.goto('/univag/chamados/ONE-123')
     await page.getByText('Resumo gerado por IA').waitFor()
@@ -616,7 +616,7 @@ test.describe('S3 conversa', () => {
     await perguntar(page, 'preciso do boleto')
     await page.getByRole('button', { name: 'Não' }).click()
     await page.getByRole('button', { name: /Falar com atendente/ }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Falar com atendente' }).click()
     await expect(page.getByText('Sua solicitação ONE-5 foi para Financeiro')).toHaveCount(1)
     const medidas = await page.evaluate(() => {
       const por = (seletor: string, texto: string) => [...document.querySelectorAll(seletor)].filter((e) => e.textContent === texto)
@@ -944,10 +944,10 @@ const Celular = { width: 360, height: 740 }
 
 type Dialogo = { nome: string; caminho: string; papeis?: string[]; esperar: string; abrir: (p: Page) => Promise<void>; titulo: string; acao: string }
 const Dialogos: Dialogo[] = [
-  { nome: 'Artigos Novo', caminho: '/univag/artigos', esperar: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo artigo', acao: 'Salvar' },
-  { nome: 'Documentos Enviar PDF', caminho: '/univag/documentos', esperar: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', abrir: (p) => p.getByRole('button', { name: 'Enviar PDF' }).click(), titulo: 'Enviar PDF', acao: 'Enviar' },
-  { nome: 'Usuários Novo', caminho: '/univag/usuarios', esperar: 'Carla Regina de Souza Albuquerque', abrir: (p) => p.getByRole('button', { name: 'Novo', exact: true }).click(), titulo: 'Novo usuário', acao: 'Salvar' },
-  { nome: 'Cadastros Novo (Setores)', caminho: '/univag/cadastros', esperar: 'Coordenação de Análise e Desenvolvimento de Sistemas', abrir: (p) => p.getByRole('button', { name: 'Novo setor', exact: true }).click(), titulo: 'Novo: Setores', acao: 'Salvar' },
+  { nome: 'Artigos Novo', caminho: '/univag/artigos', esperar: 'Como emitir a segunda via do boleto do semestre com o valor corrigido', abrir: (p) => p.getByRole('button', { name: 'Novo artigo', exact: true }).click(), titulo: 'Novo artigo', acao: 'Salvar artigo' },
+  { nome: 'Documentos Enviar PDF', caminho: '/univag/documentos', esperar: 'Regulamento do estágio supervisionado obrigatório dos cursos de graduação', abrir: (p) => p.getByRole('button', { name: 'Novo documento' }).click(), titulo: 'Enviar PDF', acao: 'Enviar documento' },
+  { nome: 'Usuários Novo', caminho: '/univag/usuarios', esperar: 'Carla Regina de Souza Albuquerque', abrir: (p) => p.getByRole('button', { name: 'Novo usuário', exact: true }).click(), titulo: 'Novo usuário', acao: 'Salvar usuário' },
+  { nome: 'Cadastros Novo (Setores)', caminho: '/univag/cadastros', esperar: 'Coordenação de Análise e Desenvolvimento de Sistemas', abrir: (p) => p.getByRole('button', { name: 'Novo setor', exact: true }).click(), titulo: 'Novo: Setores', acao: 'Salvar setor' },
   { nome: 'Instituições Nova instituição', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga', abrir: (p) => p.getByRole('button', { name: 'Nova instituição' }).click(), titulo: 'Nova instituição', acao: 'Criar' },
   {
     nome: 'Instituições Importar carga', caminho: '/univag/instituicoes', papeis: ['ADMINISTRADOR', 'OPERADOR'], esperar: 'Faculdade Antiga',
@@ -1006,7 +1006,7 @@ test.describe('S5 diálogos e administração', () => {
 
   test('diálogos de formulário em tela inteira abaixo de 768: a 768 o Novo usuário é um diálogo', async ({ page }) => {
     await noCelular(page, '/univag/usuarios', 'Carla Regina de Souza Albuquerque', undefined, 768)
-    await page.getByRole('button', { name: 'Novo', exact: true }).click()
+    await page.getByRole('button', { name: 'Novo usuário', exact: true }).click()
     const dialogo = page.getByRole('dialog', { name: 'Novo usuário' })
     await expect(dialogo).toHaveCount(1)
     await expect.poll(async () => (await caixa(dialogo)).width).toBeLessThan(768)
@@ -1017,7 +1017,7 @@ test.describe('S5 diálogos e administração', () => {
     await page.route('**/api/admin/usuarios', (r) =>
       r.request().method() === 'POST' ? r.fulfill(json({ status: 400, detail: 'CPF inválido.', errors: { cpf: ['CPF inválido.'] } }, 400)) : r.fallback(),
     )
-    await page.getByRole('button', { name: 'Novo', exact: true }).click()
+    await page.getByRole('button', { name: 'Novo usuário', exact: true }).click()
     const dialogo = page.getByRole('dialog', { name: 'Novo usuário' })
     await dialogo.getByRole('button', { name: 'Salvar' }).click()
     const erro = dialogo.getByText('CPF inválido.')

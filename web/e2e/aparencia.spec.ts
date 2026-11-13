@@ -167,7 +167,7 @@ test.describe('S9 arranjos das telas', () => {
     await page.goto('/univag/assistente')
     await page.getByLabel('Mensagem').fill('quero falar com alguém sobre o meu boleto')
     await page.getByRole('button', { name: 'Falar com atendente' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Falar com atendente' }).click()
     const numero = await caixa(page.getByText(/Sua solicitação ONE-123 foi para/))
     const contato = await caixa(page.getByRole('heading', { name: 'Contato do atendimento' }))
     expect(contato.y, 'bloco de contato abaixo do número').toBeGreaterThan(numero.y + numero.height)

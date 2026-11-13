@@ -177,7 +177,7 @@ const Anexos: [string, string, string[], (p: Page) => Promise<void>][] = [
     ['ADMINISTRADOR'],
     async (p) => {
       await p.getByText('Regulamento do estágio supervisionado obrigatório dos cursos de graduação').waitFor()
-      await p.getByRole('button', { name: 'Enviar PDF' }).click()
+      await p.getByRole('button', { name: 'Novo documento' }).click()
     },
   ],
   ['Detalhe do chamado', '/univag/chamados/ONE-123', ['ATENDENTE'], async (p) => void (await p.getByText('Anexos (PDF').waitFor())],
@@ -508,7 +508,7 @@ test('borda da caixa de envio com 3:1', async ({ page }) => {
 
 test('Encerrar junto de Falar com atendente', async ({ page }) => {
   await abrir(page, 1280, '/univag/assistente', esperaAssistente, { papeis: ['ALUNO'] })
-  const [atendente, encerrar, campo] = [page.getByRole('button', { name: 'Falar com atendente' }), page.getByRole('button', { name: 'Encerrar', exact: true }), page.getByLabel('Mensagem')]
+  const [atendente, encerrar, campo] = [page.getByRole('button', { name: 'Falar com atendente' }), page.getByRole('button', { name: 'Encerrar conversa', exact: true }), page.getByLabel('Mensagem')]
   await expect(atendente).toHaveCount(1)
   await expect(encerrar, 'sem conversa').toHaveCount(0)
   await campo.fill('preciso do boleto do semestre, onde encontro a segunda via?')

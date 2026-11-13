@@ -385,7 +385,7 @@ test.describe('conhecimento', () => {
     await simularApi(page)
     for (const [caminho, titulo, botao, ajuda] of [
       ['/univag/artigos', 'Artigos', /Novo/, /^Orientações internas/],
-      ['/univag/documentos', 'Documentos', /Enviar PDF/, /^PDFs da instituição/],
+      ['/univag/documentos', 'Documentos', /Novo documento/, /^PDFs da instituição/],
     ] as const) {
       await page.setViewportSize({ width: 360, height: 740 })
       await page.goto(caminho)
@@ -551,7 +551,7 @@ test.describe('arranjo restante', () => {
 
   test('diálogos a 360 px com margem de 16 px', async ({ page }) => {
     await simularApi(page)
-    for (const [caminho, botao] of [['/univag/artigos', /Novo/], ['/univag/documentos', /Enviar PDF/], ['/univag/usuarios', /Novo/]] as const) {
+    for (const [caminho, botao] of [['/univag/artigos', /Novo/], ['/univag/documentos', /Novo documento/], ['/univag/usuarios', /Novo/]] as const) {
       await page.goto(caminho)
       await page.getByRole('button', { name: botao }).click()
       const dialogo = page.getByRole('dialog')

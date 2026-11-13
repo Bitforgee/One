@@ -170,7 +170,7 @@ test('aluno anexa foto na conversa e a equipe baixa no chamado', async ({ browse
   expect(sha((await baixado.body()) as Buffer)).toBe(sha(png))
 
   await page.getByRole('button', { name: 'Falar com atendente' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Falar com atendente' }).click()
   const protocolo = page.getByRole('link', { name: 'Ver solicitação' })
   await expect(protocolo).toBeVisible()
   const numero = (await page.getByRole('heading', { name: /^Sua solicitação / }).textContent())!.match(/ONE-\d+/)![0]
