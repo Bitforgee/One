@@ -34,12 +34,10 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
 
     record DonoDaMatricula(string Numero, Cpf Cpf);
 
-    static string Campo(LinhaCsv l, int i) => l.Campos.ElementAtOrDefault(i) ?? "";
-
     async Task<(Dictionary<string, string>, Dictionary<string, string>)> Donos(List<LinhaCsv> linhas)
     {
-        var numeros = linhas.Select(l => Campo(l, 3)).ToList();
-        var emails = linhas.Select(l => Campo(l, 2)).ToList();
+        var numeros = linhas.Select(l => l.Matricula).ToList();
+        var emails = linhas.Select(l => l.Email).ToList();
         var matriculas = await db.Matriculas.Where(m => numeros.Contains(m.Numero))
             .Select(m => new DonoDaMatricula(m.Numero, db.Usuarios.Where(u => u.Id == m.UsuarioId).Select(u => u.Cpf).Single())).ToDictionaryAsync(m => m.Numero, m => m.Cpf.Valor);
         return (matriculas, await db.Usuarios.Where(u => emails.Contains(u.Email)).ToDictionaryAsync(u => u.Email, u => u.Cpf.Valor));
@@ -47,8 +45,8 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
 
     async Task<(int, int)> Gravar(List<Linha> validas, List<LinhaCsv> linhas)
     {
-        var cpfs = linhas.Select(l => Cpf.Tentar(Campo(l, 0))).OfType<Cpf>().ToList();
-        var numeros = linhas.Select(l => Campo(l, 3)).ToList();
+        var cpfs = linhas.Select(l => Cpf.Tentar(l.Cpf)).OfType<Cpf>().ToList();
+        var numeros = linhas.Select(l => l.Matricula).ToList();
         var alunos = await db.Usuarios.Include(u => u.Papeis).Where(u => cpfs.Contains(u.Cpf)).ToDictionaryAsync(u => u.Cpf.Valor);
         var matriculas = await db.Matriculas.Where(m => numeros.Contains(m.Numero)).ToDictionaryAsync(m => m.Numero);
         var (criados, atualizados) = (0, 0);
