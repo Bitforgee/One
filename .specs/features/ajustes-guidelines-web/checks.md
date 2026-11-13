@@ -33,7 +33,7 @@ Proof: `cd web && npx vitest run src/administracao/guidelinesBusca.test.tsx -t "
 
 ### S3 - content-visibility só onde funciona · 2 arquivos · 14 KB · ~9k
 
-**C7** - Cada cartão da `Tabela` no celular declara `content-visibility: auto` e `contain-intrinsic-size: auto 56px` (AC 7)
+**C7** - Cada cartão da `Tabela` no celular, em todos os layouts de cartões que ela renderiza (a fila densa e os demais; o teste enumera os três), declara `content-visibility: auto` e `contain-intrinsic-size: auto 56px` (AC 7)
 Proof: `cd web && npx vitest run src/tabela.test.tsx -t "C7 "`
 
 **C8** - Nenhum seletor de `<tr>` ou `[data-slot='table-row']` do corpo da tabela do desktop declara `content-visibility`, e a lista de 120 itens continua mostrando 50 linhas (AC 8)
@@ -49,7 +49,7 @@ Proof: `npm --prefix web run e2e -- ajustes.spec.ts -g "C9 "`
 **C10** - A 390×844 e a 360×780, com 3 anexos e uma mensagem de 6 linhas e a página no topo, a caixa do link `Sua solicitação` não cruza a caixa do compositor (AC 10)
 Proof: `npm --prefix web run e2e -- ajustes.spec.ts -g "C10 "`
 
-**C11** - Com uma mensagem de 12 linhas, o campo mede no máximo 30% da altura da janela (`30dvh`) e o texto rola dentro dele; a 844×390 o campo mostra ao menos 4 linhas (AC 11)
+**C11** - Com uma mensagem de 12 linhas, o campo mede no máximo 30% da altura da janela (`30dvh`) e o texto rola dentro dele; a 844×390 o conteúdo útil do campo (altura sem padding) comporta ao menos 4 linhas de 24 px, ou seja 96 px ou mais (AC 11, emenda 1)
 Proof: `npm --prefix web run e2e -- ajustes.spec.ts -g "C11 "`
 
 ### S6 - manifest instalável sem corte e sem flash · 4 arquivos · 8 KB · ~6k
@@ -66,10 +66,10 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ManifestoTests.Co
 **C15** - O manifest declara `"background_color": "#fafbfd"` (AC 15)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ManifestoTests.Manifesto_declara_o_fundo_do_app"`
 
-**C16** - Um slug inexistente e um slug de instituição inativa respondem `404` com ProblemDetails (AC 16)
+**C16** - Um slug inexistente e um slug de instituição inativa respondem `404` com ProblemDetails e o corpo traz `status: 404` e `title` do ProblemDetails (AC 16, emenda 1)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ManifestoTests.Instituicao_inexistente_ou_inativa_responde_404"`
 
-**C17** - O manifest estático gerado pelo `vite.config.ts` lista `/icons/icon-maskable-512.png` com `purpose: "maskable"` e `icon-512.png` só com `purpose: "any"`, e o arquivo `web/public/icons/icon-maskable-512.png` existe com 512×512 px (AC 17)
+**C17** - O manifest estático gerado pelo `vite.config.ts` lista `/icons/icon-maskable-512.png` com `purpose: "maskable"` e `icon-512.png` só com `purpose: "any"`, e o arquivo `web/public/icons/icon-maskable-512.png` existe com 512×512 px e todo pixel diferente da moldura `#224fa7` fica dentro do círculo central de raio 40% do lado, a zona segura da especificação do W3C (AC 17, emenda 1)
 Proof: `cd web && npx vitest run src/guidelinesGlobal.test.ts -t "C17 "`
 
 ### Fechamento
@@ -111,6 +111,17 @@ Proof: `cd web && npx vitest run src/guidelinesGlobal.test.ts -t "C21 "`
 - Door 1 do `Landing`: C12 C13 C14 C15 C21
 - Nenhum outro check afirma mais que o caso que a prova exercita
 
+## Amendments
+
+Rodada 2, depois do FAIL da rodada 1 do Verify, a pedido do usuário ("não me pergunte nada").
+
+- C11: a altura que importa é a do conteúdo, sem o padding; o 7rem calibrado a olho sai e a correção do C10 fica no limite dos anexos (max-h-16)
+- C7: a Tabela tem 3 layouts de cartões, e o check os enumera
+- C16: o corpo ProblemDetails também é afirmado
+- C17: a zona segura do ícone maskable é um círculo de raio 40% (W3C), não um quadrado de 80%; o plano diz 80% como aproximação e o círculo é o critério
+- Fica fora, por ser baixo: a linha "teclado aberto" do Observable e o clique perdido quando o botão do cabeçalho some ao carregar vazio
+- C19: segue aberto; crapper bloqueado pelo Windows e sem AD do dono
+
 ## Swept
 
 - validation: C11 (limite de altura do campo), C16 (slug inexistente)
@@ -139,3 +150,4 @@ Estimativa por slice = (tamanho em KB dos arquivos de código tocados × 2,7 par
 **Boundary:** C1-C18 e C20-C21 closed at 46ee0c7; C19 open: `dryer` sem candidato (exit 0), `crapper` bloqueado pelo Controle de Aplicativo do Windows (`crapper.exe` não inicia), sem PASS
 **Settled mid-build:** S5 precisou de mais que `30dvh` no campo: a 360x780 o compositor tinha 372 px e cobria o link; ficou `max-h-[min(30dvh,7rem)]` no campo e `max-h-16` com rolagem na lista de anexos (compositor 264 px). S4: `Handle` usa `--alvo` = 44/zoom via `useStore` e o ponto interno `inset-[36%]`. Os testes novos de `ManifestoTests` usam slug aleatório (o slug `univag` colide no banco da classe). Testes existentes que clicavam em `Novo artigo/documento` na lista vazia passaram a esperar o estado vazio (o botão do cabeçalho some quando a lista carrega vazia).
 **Abandoned:** nada do plano; C19 (crapper) segue sem prova e não é declarado PASS.
+
