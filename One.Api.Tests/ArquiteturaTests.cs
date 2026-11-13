@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs") };
+        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
@@ -698,7 +698,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var anonimo = new Regex(@"\bnew\s*\{");
         var esperado = new Dictionary<string, int>
         {
-            ["Agendador.cs"] = 1,
+            ["Assistente/IndexarTrechos.cs"] = 1,
             ["Conhecimento/BuscarFontes.cs"] = 2, ["Conhecimento/CitacoesDeFontes.cs"] = 2, ["Dados/OneDb.cs"] = 15,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);

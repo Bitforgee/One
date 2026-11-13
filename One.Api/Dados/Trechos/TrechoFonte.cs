@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Pgvector;
 
 namespace One.Api.Dados.Trechos;
@@ -17,6 +18,8 @@ public class TrechoFonte : IDaInstituicao
     public Vector? Embedding { get; private set; }
     public int Tentativas { get; private set; }
     public DateTime ProximaTentativa { get; private set; }
+
+    public static readonly Expression<Func<TrechoFonte, bool>> SemEmbedding = t => t.Embedding == null;
 
     public static TrechoFonte DoArtigo(VersaoArtigo versao, DateTime agora, Vector? embedding = null) =>
         new() { VersaoArtigo = versao, Ordem = 0, Texto = versao.TextoParaBusca(), ProximaTentativa = agora, Embedding = embedding };

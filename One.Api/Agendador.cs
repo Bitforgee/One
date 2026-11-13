@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using One.Api.Assistente;
 using One.Api.Chamados;
 using One.Api.Instituicoes;
-using Pgvector;
 using Lib.Net.Http.WebPush;
 using One.Api.Dados;
 using One.Api.Dados.Fluxos;
@@ -98,20 +97,13 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     {
         var itens = await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
             .Select(e => new ItemAgendado("email", e.Id, e.InstituicaoId)).ToListAsync();
-        itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
-            .OrderBy(t => t.Id).Select(t => new ItemAgendado("trecho", t.Id, t.InstituicaoId)).ToListAsync());
         return itens;
     }
 
     public async Task Processar(List<ItemAgendado> itens, CancellationToken parar = default)
     {
         foreach (var tarefa in tarefas.Where(t => t.Lote > 1)) await ExecutarEmLotes(tarefa, itens, parar);
-        foreach (var lote in itens.Where(i => i.Tipo == "trecho" && !Migrado(i)).Chunk(Embeddings.Lote))
-        {
-            parar.ThrowIfCancellationRequested();
-            await Indexar(lote);
-        }
-        foreach (var item in itens.Where(i => i.Tipo != "trecho" && !Migrado(i)))
+        foreach (var item in itens.Where(i => !Migrado(i)))
         {
             parar.ThrowIfCancellationRequested();
             try
@@ -169,40 +161,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
             case "subir": await SubirPorPrazo(db, item.Id, agora); break;
             case "email": await Enviar(db, sp.GetRequiredService<Email>(), item.Id, agora); break;
-        }
-    }
-
-    async Task Indexar(ItemAgendado[] lote)
-    {
-        using var escopo = escopos.CreateScope();
-        var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
-        var ids = lote.Select(i => i.Id).ToList();
-        var trechos = await db.TrechosFonte.IgnoreQueryFilters().Where(t => ids.Contains(t.Id) && t.Embedding == null).OrderBy(t => t.Id)
-            .Select(t => new { t.Id, t.Texto, t.InstituicaoId, t.Tentativas }).ToListAsync();
-        if (trechos.Count == 0) return;
-        var agora = relogio.GetUtcNow().UtcDateTime;
-        try
-        {
-            var vetores = await escopo.ServiceProvider.GetRequiredService<Embeddings>().Gerar(trechos.Select(t => t.Texto).ToList());
-            for (var i = 0; i < trechos.Count; i++)
-            {
-                var (id, vetor) = (trechos[i].Id, new Vector(vetores[i]));
-                await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Id == id && t.Embedding == null)
-                    .ExecuteUpdateAsync(s => s.SetProperty(t => t.Embedding, vetor));
-            }
-            log.LogInformation("Agendador indexou {Quantidade} trechos de fonte", trechos.Count);
-        }
-        catch (Exception falha)
-        {
-            foreach (var t in trechos)
-            {
-                var tentativas = t.Tentativas + 1;
-                await db.TrechosFonte.IgnoreQueryFilters().Where(x => x.Id == t.Id && x.Embedding == null)
-                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Tentativas, tentativas).SetProperty(x => x.ProximaTentativa, agora.AddMinutes(Math.Pow(2, tentativas))));
-            }
-            foreach (var instituicao in trechos.GroupBy(t => t.InstituicaoId))
-                log.LogWarning(falha, "Falha ao gerar embeddings de {Quantidade} trechos da instituição {InstituicaoId}, tentativa {Tentativas}",
-                    instituicao.Count(), instituicao.Key, instituicao.Max(t => t.Tentativas) + 1);
         }
     }
 

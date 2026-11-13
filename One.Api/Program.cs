@@ -82,6 +82,7 @@ public class Program
         s.AddScoped<Assistente.Assistente>();
         s.AddSingleton<Embeddings>();
         s.AddSingleton(sp => Prazos.Ler(sp.GetRequiredService<IConfiguration>()));
+        s.AddSingleton<ITarefaAgendada, IndexarTrechos>();
         s.AddSingleton<ITarefaAgendada, EnviarPushes>();
         s.AddSingleton<Agendador>();
         s.AddHostedService(sp => sp.GetRequiredService<Agendador>());
