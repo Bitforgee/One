@@ -91,7 +91,7 @@ budget: 150k
 - Sem camadas Domain/Application/Infrastructure, sem repositório sobre o EF Core, sem `Common`/`Utils`;
   compartilhe só no terceiro uso.
 - Multi-instituição (AD-008): toda tabela tem `instituicao_id` não nulo e query filter global. `IgnoreQueryFilters`
-  só em `Instituicoes/InstituicaoComando.cs` e `Agendador.cs`. Tabelas e colunas em snake_case; datas `timestamptz`.
+  só nas classes que implementam `ITarefaAgendada` (as tarefas do `Agendador`). Tabelas e colunas em snake_case; datas `timestamptz`.
 - Erros como ProblemDetails. Relógio sempre por `TimeProvider`, nunca `DateTime.Now`.
 - Essas regras são testadas em `One.Api.Tests/ArquiteturaTests.cs`: mudou a regra, mude o AD primeiro.
 

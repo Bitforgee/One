@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using One.Api.Dados.Chamados;
 
@@ -38,15 +37,10 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     public async Task Executar(CancellationToken parar = default)
     {
         await Processar(await Ler(), parar);
-        await ApagarLancamentosVencidos(parar);
-    }
-
-    async Task ApagarLancamentosVencidos(CancellationToken parar)
-    {
         using var escopo = escopos.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
-        var limite = relogio.GetUtcNow().UtcDateTime - TimeSpan.FromDays(1);
-        await db.LtiLancamentos.IgnoreQueryFilters().Where(l => l.ExpiraEm < limite).ExecuteDeleteAsync(parar);
+        var agora = relogio.GetUtcNow().UtcDateTime;
+        foreach (var tarefa in tarefas) await tarefa.Limpar(db, agora, parar);
     }
 
     public async Task<List<ItemAgendado>> Ler()
