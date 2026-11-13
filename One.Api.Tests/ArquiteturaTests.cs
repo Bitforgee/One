@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "Email", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
+        Assert.Equal(["Agendador", "Armazenamento", "Email", "EquipeDeSetor", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -1126,7 +1126,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Dados_sem_EfCore =
     [
-        "Dados/EquipeDeSetor.cs",
         "Dados/Fluxos/ResolverFluxo.cs",
     ];
 

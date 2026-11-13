@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using One.Api.Dados;
 
-namespace One.Api.Dados;
+namespace One.Api;
 
 public static class EquipeDeSetor
 {

@@ -182,6 +182,13 @@ das rotas de `Retratos/rotas.txt` ficam idênticos é critério (AC 1 e AC 2), n
   parâmetros por records se desfaz com outro refactor; nenhuma rota, campo JSON, tabela, coluna ou chave
   de configuração muda. As portas 1, 2, 3, 6, 7, 8 e 9 passam da feature e vão para o AD-054 acima. Revisão da auditoria, antes da aprovação: a rejeição da linha da door 8 foi reescrita (o motivo anterior era mais forte do que o código do EF) e a door 9 é nova; nenhuma outra linha aprovada foi alterada.
 
+### Portas acrescentadas no build (só linhas novas; nenhuma linha aprovada acima foi alterada)
+
+| One-way door | Literal shape | Alternative rejected |
+| --- | --- | --- |
+| B1. onde mora `SoLideranca` (Lote B, S3; `EquipeDeSetor` sai de `Dados`, AC 19) | `One.Api/EquipeDeSetor.cs`, namespace `One.Api`: `public static class EquipeDeSetor { public static async Task<bool> SoLideranca(this OneDb db, Usuario u) }`, mesmo corpo; a raiz entra na lista de arquivos de `Fatias_do_api` (lista de dados, decisão 2). `Conhecimento` (2 arquivos), `Indicadores` e `Mcp` a chamam: 3 fatias, então a regra do terceiro uso e a door 9 mandam para a raiz | pôr em `Chamados` (texto literal do AC 19): criaria os pares `Conhecimento>Chamados` e `Indicadores>Chamados`, e o AC 21 e o C45 permitem só `Administracao>Chamados` como par novo na S3 |
+| B2. onde moram as consultas de fluxo (Lote B, S3) | `One.Api/Chamados/ConsultasDeFluxo.cs`, namespace `One.Api.Chamados`, `public static class ConsultasDeFluxo` com `Lideranca`, `CarregarContexto`, `CategoriasQueUsamOSetor`, `Candidatos`, `Rotear`, `Seguinte` e `TemEtapaSeguinte` (os dois últimos e `Lideranca` e `CategoriasQueUsamOSetor` também usam `OneDb`, por isso saem de `Dados` junto com os quatro nomeados no AC 19); `Dados/Fluxos/RoteamentoDeFluxo.cs` fica com as 4 constantes de motivo, os records `Contexto`, `Resolucao`, `Passo`, `Rota` e as regras puras `Escolher`, `Etapa`, `Situacao` e `Proximo` | dividir em duas classes de consulta (`Lideranca`/`Contexto` e `Rotear`/`Seguinte`): sem segundo uso, e a lista do plano é de uma classe só |
+
 ## Criteria
 
 Fatias verticais por resultado demonstrável, ordenadas por risco (menor primeiro) e por dependência.
