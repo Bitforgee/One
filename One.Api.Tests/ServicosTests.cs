@@ -10,6 +10,10 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string Arquivo = "servicos.txt";
 
+    static readonly string[] Adicionadas = [];
+
+    static readonly string[] Removidas = [];
+
     static string Nome(Type? t) => t is null ? "fabrica" : t.IsGenericType ? t.ToString() : t.FullName!;
 
     static bool DoApi(ServiceDescriptor d) =>
@@ -27,6 +31,12 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
         var hospedados = colecao!.Where(d => d.ServiceType == typeof(IHostedService)).Select(d => $"{d.Lifetime} {Nome(d.ImplementationType)}").ToList();
         var vivo = string.Join("\n", ["## servicos", .. servicos, "## hospedados", .. hospedados]);
 
-        Dourado.Igual(Arquivo, Dourado.Ler(Arquivo), vivo);
+        var doGolden = Dourado.Secao(Arquivo, "servicos").Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var esperados = doGolden.Except(Removidas).Concat(Adicionadas).Order(StringComparer.Ordinal);
+        var esperado = string.Join("\n", ["## servicos", .. esperados, "## hospedados", .. Dourado.Secao(Arquivo, "hospedados").Split('\n', StringSplitOptions.RemoveEmptyEntries)]);
+
+        Assert.Empty(Removidas.Except(doGolden));
+        Assert.Empty(Adicionadas.Intersect(doGolden));
+        Dourado.Igual(Arquivo, esperado, vivo);
     }
 }
