@@ -235,12 +235,11 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         try
         {
             await email.Enviar(db, instituicao, e.Destinatario, e.Assunto, e.Corpo);
-            e.EnviadoEm = agora;
+            e.Concluir(agora);
         }
         catch (Exception falha)
         {
-            e.Tentativas++;
-            e.ProximaTentativa = agora.AddMinutes(Math.Pow(2, e.Tentativas));
+            e.RegistrarFalha(agora);
             if (e.Tentativas >= MaxTentativas) log.LogError(falha, "Desistência do e-mail {EmailId} da instituição {InstituicaoId} após {Tentativas} tentativas", id, e.InstituicaoId, e.Tentativas);
             else log.LogWarning(falha, "Falha ao enviar o e-mail {EmailId} da instituição {InstituicaoId}, tentativa {Tentativas}", id, e.InstituicaoId, e.Tentativas);
         }

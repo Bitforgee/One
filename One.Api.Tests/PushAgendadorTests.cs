@@ -254,7 +254,7 @@ public class PushAgendadorTests(OneFactory f) : IClassFixture<OneFactory>
         var para = $"{Guid.NewGuid():N}@aluno.com";
         await f.Db(c1.B.Instituicao.Id, async db =>
         {
-            db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = "Aviso", Corpo = "Olá", ProximaTentativa = Agora });
+            db.EmailsSaida.Add(EmailSaida.Criar(para, "Aviso", "Olá", Agora));
             await db.SaveChangesAsync();
         });
         var conversa = (await (await c1.B.Aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })).Json()).GetProperty("conversaId").GetInt64();

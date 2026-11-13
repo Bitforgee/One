@@ -11,7 +11,7 @@ public static class Avisos
     static async Task Enfileirar(OneDb db, IConfiguration cfg, Chamado c, DateTime agora, string assunto, string corpo)
     {
         var para = await db.Usuarios.Where(u => u.Id == c.SolicitanteId).Select(u => u.Email).SingleAsync();
-        db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = assunto, Corpo = corpo, ProximaTentativa = agora });
+        db.EmailsSaida.Add(EmailSaida.Criar(para, assunto, corpo, agora));
         if (!ConfigPush.Ler(cfg).Ligado) return;
         var aparelhos = await db.SubscricoesPush.Where(s => s.UsuarioId == c.SolicitanteId).Select(s => s.Id).ToListAsync();
         db.PushesSaida.AddRange(aparelhos.Select(id => PushSaida.Criar(id, c.Id, agora)));

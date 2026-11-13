@@ -115,7 +115,7 @@ public class AgendadorTests(OneFactory f) : IClassFixture<OneFactory>
             destinos[para] = i;
             await f.Db(i.Id, async db =>
             {
-                db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = $"[{i.Nome}] ONE-1: nova resposta", Corpo = "Olá", ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime });
+                db.EmailsSaida.Add(EmailSaida.Criar(para, $"[{i.Nome}] ONE-1: nova resposta", "Olá", f.Relogio.GetUtcNow().UtcDateTime));
                 await db.SaveChangesAsync();
             });
         }

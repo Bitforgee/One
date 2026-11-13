@@ -26,7 +26,7 @@ public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
         var para = $"{Guid.NewGuid():N}@aluno.com";
         await f.Db(i.Id, async db =>
         {
-            db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = "Aviso", Corpo = corpo, ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime });
+            db.EmailsSaida.Add(EmailSaida.Criar(para, "Aviso", corpo, f.Relogio.GetUtcNow().UtcDateTime));
             await db.SaveChangesAsync();
         });
         await f.Services.GetRequiredService<Agendador>().Executar();
@@ -90,7 +90,7 @@ public class EmailMarcaTests(OneFactory f) : IClassFixture<OneFactory>
         var para = $"{Guid.NewGuid():N}@aluno.com";
         await f.Db(i.Id, async db =>
         {
-            db.EmailsSaida.Add(new EmailSaida { Destinatario = para, Assunto = "Aviso", Corpo = Corpo, ProximaTentativa = f.Relogio.GetUtcNow().UtcDateTime });
+            db.EmailsSaida.Add(EmailSaida.Criar(para, "Aviso", Corpo, f.Relogio.GetUtcNow().UtcDateTime));
             await db.SaveChangesAsync();
         });
 
