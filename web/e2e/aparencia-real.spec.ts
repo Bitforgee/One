@@ -112,7 +112,7 @@ test('admin personaliza a aparência e o login muda', async ({ browser, playwrig
   expect(Buffer.compare(await bytes.body(), icone)).toBe(0)
   await expect(login.locator('link[rel="manifest"]')).toHaveAttribute('href', `/api/instituicoes/${slug}/manifest.webmanifest`)
   await expect(login.locator('link[rel="icon"]')).toHaveAttribute('href', corpo.icons[1].src)
-  await expect(login.locator('meta[name="theme-color"]')).toHaveAttribute('content', Cor)
+  await expect(login.locator('meta[name="theme-color"]:not([media])')).toHaveAttribute('content', Cor)
 
   const nulos = { nomeCurto: null, cor: null, login: { titulo: null, frase: null, itens: [] }, assistente: { nome: null, boasVindas: null, perguntas: [] }, contato: { horario: null, telefone: null, email: null } }
   expect((await admin.put('/api/admin/aparencia', { data: nulos })).status()).toBe(200)
