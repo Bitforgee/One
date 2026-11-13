@@ -77,4 +77,15 @@ public class ConversaDominioTests
         Assert.Equal(("ALUNO", "preciso do boleto", Depois), (m.Autor, m.Texto, m.CriadaEm));
         Assert.Equal(Depois, c.UltimaMensagemEm);
     }
-}
+
+    [Fact]
+    public void Abandonavel_so_sem_desfecho_e_parada_ate_o_limite()
+    {
+        var abandonavel = Conversa.Abandonavel(Depois).Compile();
+        Assert.True(abandonavel(Conversa.Iniciar(3, Depois)));
+        Assert.True(abandonavel(Conversa.Iniciar(3, Depois.AddSeconds(-1))));
+        Assert.False(abandonavel(Conversa.Iniciar(3, Depois.AddSeconds(1))));
+        var encerrada = Nova();
+        encerrada.Encerrar(Depois);
+        Assert.False(abandonavel(encerrada));
+    }}

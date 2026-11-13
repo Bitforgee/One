@@ -1,12 +1,6 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
-using One.Api.Chamados;
-using One.Api.Instituicoes;
-using Lib.Net.Http.WebPush;
 using One.Api.Dados;
-using One.Api.Dados.Fluxos;
-using static One.Api.Dados.Chamados.EstadosChamado;
+using One.Api.Dados.Chamados;
 
 namespace One.Api;
 
@@ -24,7 +18,8 @@ public interface ITarefaAgendada
 
     Task Limpar(OneDb db, DateTime agora, CancellationToken parar) => Task.CompletedTask;
 }
-public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, IEnumerable<ITarefaAgendada> tarefas, ILogger<Agendador> log) : BackgroundService
+
+public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, IEnumerable<ITarefaAgendada> tarefas, ILogger<Agendador> log) : BackgroundService
 {
     public const string TextoSemResposta = Chamado.TextoSemResposta;
     public const int MaxTentativas = 5;
@@ -59,45 +54,24 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         using var escopo = escopos.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var itens = await LerAtendimento(db, agora);
+        var itens = new List<ItemAgendado>();
         foreach (var tarefa in tarefas) itens.AddRange(await tarefa.Ler(db, agora));
-        return itens;
-    }
-
-    async Task<List<ItemAgendado>> LerAtendimento(OneDb db, DateTime agora)
-    {
-        var limiteConversa = agora - prazos.Abandono;
-        var itens = await db.Conversas.IgnoreQueryFilters().Where(c => c.Desfecho == null && c.UltimaMensagemEm <= limiteConversa)
-            .Select(c => new ItemAgendado("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         return itens;
     }
 
     public async Task Processar(List<ItemAgendado> itens, CancellationToken parar = default)
     {
-        foreach (var tarefa in tarefas.Where(t => t.Lote > 1)) await ExecutarEmLotes(tarefa, itens, parar);
-        foreach (var item in itens.Where(i => !Migrado(i)))
+        foreach (var tarefa in tarefas.OrderByDescending(t => t.Lote > 1))
         {
-            parar.ThrowIfCancellationRequested();
-            try
-            {
-                using var escopo = escopos.CreateScope();
-                var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
-                db.InstituicaoAtual = item.InstituicaoId;
-                await Despachar(db, escopo.ServiceProvider, item, relogio.GetUtcNow().UtcDateTime, parar);
-            }
-            catch (Exception e) when (e is not OperationCanceledException)
-            {
-                log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
-            }
+            var dela = itens.Where(i => i.Tipo == tarefa.Tipo).ToList();
+            if (tarefa.Lote > 1) await ExecutarEmLotes(tarefa, dela, parar);
+            else await ExecutarUm(tarefa, dela, parar);
         }
-        foreach (var tarefa in tarefas.Where(t => t.Lote == 1)) await ExecutarUm(tarefa, itens, parar);
     }
-
-    bool Migrado(ItemAgendado item) => tarefas.Any(t => t.Tipo == item.Tipo);
 
     async Task ExecutarEmLotes(ITarefaAgendada tarefa, List<ItemAgendado> itens, CancellationToken parar)
     {
-        foreach (var lote in itens.Where(i => i.Tipo == tarefa.Tipo).Chunk(tarefa.Lote))
+        foreach (var lote in itens.Chunk(tarefa.Lote))
         {
             parar.ThrowIfCancellationRequested();
             using var escopo = escopos.CreateScope();
@@ -107,7 +81,7 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
 
     async Task ExecutarUm(ITarefaAgendada tarefa, List<ItemAgendado> itens, CancellationToken parar)
     {
-        foreach (var item in itens.Where(i => i.Tipo == tarefa.Tipo))
+        foreach (var item in itens)
         {
             parar.ThrowIfCancellationRequested();
             try
@@ -122,20 +96,5 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
                 log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
             }
         }
-    }
-    async Task Despachar(OneDb db, IServiceProvider sp, ItemAgendado item, DateTime agora, CancellationToken parar)
-    {
-        switch (item.Tipo)
-        {
-            case "conversa": await Abandonar(db, item.Id, agora); break;
-        }
-    }
-
-    async Task Abandonar(OneDb db, long id, DateTime agora)
-    {
-        var limite = agora - prazos.Abandono;
-        var n = await db.Conversas.Where(c => c.Id == id && c.Desfecho == null && c.UltimaMensagemEm <= limite)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Desfecho, Desfechos.Abandonada).SetProperty(c => c.DesfechoEm, agora));
-        if (n == 1) log.LogInformation("Conversa {ConversaId} abandonada (instituição {InstituicaoId})", id, db.InstituicaoAtual);
     }
 }

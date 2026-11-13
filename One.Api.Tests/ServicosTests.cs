@@ -12,6 +12,7 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Adicionadas =
     [
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.AbandonarConversas",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.FecharResolvidos",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.ResolverSemResposta",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.LembrarAguardando",

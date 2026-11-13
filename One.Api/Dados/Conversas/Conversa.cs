@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace One.Api.Dados.Conversas;
 
 public class Conversa : IDaInstituicao
@@ -14,6 +16,8 @@ public class Conversa : IDaInstituicao
     public string? Desfecho { get; private set; }
     public DateTime? DesfechoEm { get; private set; }
     public List<MensagemConversa> Mensagens { get; private set; } = [];
+
+    public static Expression<Func<Conversa, bool>> Abandonavel(DateTime limite) => c => c.Desfecho == null && c.UltimaMensagemEm <= limite;
 
     public static Conversa Iniciar(long alunoId, DateTime agora) =>
         new() { AlunoId = alunoId, CriadaEm = agora, UltimaMensagemEm = agora };
