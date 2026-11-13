@@ -54,9 +54,8 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         var (criados, atualizados) = (0, 0);
         foreach (var l in validas)
         {
-            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(new Usuario { Cpf = l.Cpf }).Entity;
-            u.Nome = l.Nome;
-            u.Email = l.Email;
+            if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(Usuario.Criar(l.Cpf, l.Nome, l.Email)).Entity;
+            u.AlterarContato(l.Nome, l.Email);
             if (!u.Tem(Papeis.Aluno)) u.Papeis.Add(new UsuarioPapel { Papel = Papeis.Aluno });
             if (matriculas.TryGetValue(l.Matricula, out var m)) atualizados++;
             else

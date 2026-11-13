@@ -25,9 +25,7 @@ public sealed class DefinirSenhaHandler(OneDb db, TimeProvider relogio, IPasswor
         if (token is null || u is null) return Problemas.Erro(400, LinkInvalido);
         if (!Senha.Valida(i.NovaSenha)) return Problemas.Invalido(Senha.ForaDoTamanho, "novaSenha");
 
-        u.SenhaHash = hasher.HashPassword(u, i.NovaSenha!);
-        u.DeveTrocarSenha = false;
-        token.Usar(agora);
+        u.DefinirSenha(hasher.HashPassword(u, i.NovaSenha!), token, agora);
         await db.SaveChangesAsync();
         return Results.NoContent();
     }

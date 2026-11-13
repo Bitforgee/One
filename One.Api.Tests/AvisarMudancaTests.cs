@@ -130,7 +130,8 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
 
         await f.Db(b.Instituicao.Id, async db =>
         {
-            (await db.Usuarios.SingleAsync(u => u.Id == b.Aluno.Usuario.Id)).Nome = "Outro nome";
+            var aluno = await db.Usuarios.SingleAsync(u => u.Id == b.Aluno.Usuario.Id);
+            aluno.AlterarContato("Outro nome", aluno.Email);
             await db.SaveChangesAsync();
         });
         Assert.Empty(f.Hub.Tirar());

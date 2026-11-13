@@ -46,15 +46,13 @@ public static class Semente
         string? email = null, string? matricula = null, string situacao = "ATIVA", bool deveTrocarSenha = false) =>
         f.Db(i.Id, async db =>
         {
-            var u = new Usuario
+            var u = One.Api.Dados.Usuarios.Usuario.Criar(cpf ?? NovoCpf(), "Pessoa " + Guid.NewGuid().ToString("N")[..6], email ?? $"{Guid.NewGuid():N}@teste.one", papeis);
+            if (senha is not null)
             {
-                Cpf = cpf ?? NovoCpf(),
-                Nome = "Pessoa " + Guid.NewGuid().ToString("N")[..6],
-                Email = email ?? $"{Guid.NewGuid():N}@teste.one",
-                DeveTrocarSenha = deveTrocarSenha,
-                Papeis = papeis.Select(p => new UsuarioPapel { Papel = p }).ToList(),
-            };
-            if (senha is not null) u.SenhaHash = new PasswordHasher<Usuario>().HashPassword(u, senha);
+                var hash = new PasswordHasher<Usuario>().HashPassword(u, senha);
+                if (deveTrocarSenha) u.DefinirSenhaTemporaria(hash);
+                else u.TrocarSenha(hash);
+            }
             if (matricula is not null || papeis.Contains(Papeis.Aluno))
             {
                 var curso = await db.Cursos.FirstOrDefaultAsync() ?? new Curso { Nome = "Análise e Desenvolvimento de Sistemas" };

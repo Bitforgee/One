@@ -22,8 +22,7 @@ public sealed class TrocarSenhaHandler(OneDb db, IPasswordHasher<Usuario> hasher
             return Problemas.Invalido("A senha atual está incorreta.", "senhaAtual");
         if (!Senha.Valida(i.NovaSenha)) return Problemas.Invalido(Senha.ForaDoTamanho, "novaSenha");
 
-        u.SenhaHash = hasher.HashPassword(u, i.NovaSenha!);
-        u.DeveTrocarSenha = false;
+        u.TrocarSenha(hasher.HashPassword(u, i.NovaSenha!));
         await db.SaveChangesAsync();
         return Results.NoContent();
     }

@@ -32,7 +32,7 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
 {
     const string CredenciaisInvalidas = "CPF ou senha inválidos.";
 
-    static readonly string HashFicticio = new PasswordHasher<Usuario>().HashPassword(new Usuario(), "senha-ficticia");
+    static readonly string HashFicticio = new PasswordHasher<Usuario>().HashPassword(Usuario.Criar("", "", ""), "senha-ficticia");
 
     public async ValueTask<ResultadoLogin> Handle(Login m, CancellationToken ct)
     {
@@ -49,7 +49,7 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
             u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Cpf == cpf);
         }
         var podeEntrar = u is { Ativo: true, SenhaHash: not null };
-        var confere = hasher.VerifyHashedPassword(u ?? new Usuario(), podeEntrar ? u!.SenhaHash! : HashFicticio, i.Senha) != PasswordVerificationResult.Failed;
+        var confere = hasher.VerifyHashedPassword(u ?? Usuario.Criar("", "", ""), podeEntrar ? u!.SenhaHash! : HashFicticio, i.Senha) != PasswordVerificationResult.Failed;
         if (!podeEntrar || !confere) return new(null, Problemas.Erro(401, CredenciaisInvalidas));
 
         return new(Sessao.Principal(u!), Results.Ok(new Login.Resposta(u!.Id, u.Nome, [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,

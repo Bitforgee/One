@@ -1142,7 +1142,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "RespostaPronta",
         "Setor",
         "TrechoFonte",
-        "Usuario",
         "UsuarioPapel",
     ];
 
@@ -1153,9 +1152,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Handler_sem_new_de_entidade =
     [
-        "Acesso/Login.cs",
         "Administracao/AlterarMoodle.cs",
-        "Administracao/CriarUsuario.cs",
         "Administracao/ImportarMatriculas.cs",
         "Administracao/UsuarioRotas.cs",
         "Agendador.cs",

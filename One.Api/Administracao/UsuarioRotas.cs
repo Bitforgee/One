@@ -49,15 +49,12 @@ public static class UsuarioRotas
 
     public static async Task Gravar(OneDb db, Usuario u, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, IPasswordHasher<Usuario> hasher)
     {
-        u.Cpf = Cpf.Normalizar(cpf)!;
-        u.Nome = nome!;
-        u.Email = email!;
+        u.Atualizar(Cpf.Normalizar(cpf)!, nome!, email!);
         u.Papeis.RemoveAll(p => p.Papel != Papeis.Operador && !papeis!.Contains(p.Papel));
         u.Papeis.AddRange(papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
         if (senhaTemporaria is not null)
         {
-            u.SenhaHash = hasher.HashPassword(u, senhaTemporaria);
-            u.DeveTrocarSenha = true;
+            u.DefinirSenhaTemporaria(hasher.HashPassword(u, senhaTemporaria));
         }
         await Setores(db, u, papeis!.Contains(Papeis.Atendente) ? setores!.Distinct().ToList() : []);
         await db.SaveChangesAsync();

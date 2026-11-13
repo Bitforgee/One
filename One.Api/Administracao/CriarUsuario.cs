@@ -19,7 +19,7 @@ public sealed class CriarUsuarioHandler(OneDb db, IPasswordHasher<Usuario> hashe
     {
         var e = m.Corpo;
         if (await Validar(db, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, 0) is { } erro) return erro;
-        var u = db.Usuarios.Add(new Usuario()).Entity;
+        var u = db.Usuarios.Add(Usuario.Criar(Cpf.Normalizar(e.Cpf)!, e.Nome!, e.Email!)).Entity;
         await Gravar(db, u, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, hasher);
         return Results.Created($"/api/admin/usuarios/{u.Id}", await UsuarioResposta.De(db, u));
     }

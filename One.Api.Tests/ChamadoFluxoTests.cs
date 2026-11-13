@@ -270,7 +270,7 @@ public class ChamadoFluxoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(b.Instituicao.Id, async db =>
         {
             var atendente = await db.Usuarios.SingleAsync(u => u.Id == b.A.Usuario.Id);
-            atendente.Nome = b.Aluno.Usuario.Nome;
+            atendente.AlterarContato(b.Aluno.Usuario.Nome, atendente.Email);
             await db.SaveChangesAsync();
         });
         var numero = await b.Chamado();

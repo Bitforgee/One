@@ -36,7 +36,7 @@ public static partial class Criacao
 
         db.Setores.Add(new Setor { Nome = "Triagem", Triagem = true });
         db.Categorias.Add(new Categoria { Nome = "Não classificado", Padrao = true });
-        var admin = new Usuario { Cpf = n.Cpf!, Nome = n.AdminNome, Email = n.Email, Papeis = [new UsuarioPapel { Papel = Papeis.Administrador }] };
+        var admin = Usuario.Criar(n.Cpf!, n.AdminNome, n.Email, [Papeis.Administrador]);
         db.Usuarios.Add(admin);
         await db.SaveChangesAsync();
         var (token, registro) = Tokens.Novo(n.Slug, admin.Id, agora);

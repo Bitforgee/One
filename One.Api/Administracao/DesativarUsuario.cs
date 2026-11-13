@@ -21,7 +21,7 @@ public sealed class DesativarUsuarioHandler(OneDb db, TimeProvider relogio) : IR
         if (u is null) return AdminRotas.NaoEncontrado();
         var agora = relogio.GetUtcNow().UtcDateTime;
         var adminId = m.Admin.Id;
-        u.Ativo = false;
+        u.Desativar();
         foreach (var c in await db.Chamados.Where(c => c.ResponsavelId == id && c.Estado != Fechado).ToListAsync())
             c.DevolverAFila(adminId, u.Nome, agora);
         await db.SaveChangesAsync();
