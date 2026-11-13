@@ -1,7 +1,8 @@
 using System.Text.Json.Serialization;
 using Mediator;
 using One.Api.Dados;
-using static One.Api.Assistente.ConversaRotas;
+using static One.Api.Assistente.ConversaDoAluno;
+using static One.Api.Assistente.EnvioDeMensagem;
 
 namespace One.Api.Assistente;
 

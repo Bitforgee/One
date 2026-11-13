@@ -1,7 +1,7 @@
 using Mediator;
 using One.Api.Chamados;
 using One.Api.Dados;
-using static One.Api.Assistente.ConversaRotas;
+using static One.Api.Assistente.ConversaDoAluno;
 
 namespace One.Api.Assistente;
 

@@ -13,7 +13,18 @@ public static class AssistenteExtensoes
 
     public static IServiceCollection AddIndexacaoDeTrechos(this IServiceCollection s) => s.AddSingleton<ITarefaAgendada, IndexarTrechos>();
 
-    public static void MapAssistente(this RouteGroupBuilder api) => ConversaRotas.Mapear(api);
+    public static void MapAssistente(this RouteGroupBuilder api)
+    {
+        NovaConversa.Mapear(api);
+        NovaMensagem.Mapear(api);
+        VerConversa.Mapear(api);
+        BaixarAnexoConversa.Mapear(api);
+        AvaliarConversa.Mapear(api);
+        TransferirConversa.Mapear(api);
+        VerDestino.Mapear(api);
+        AtendimentoDireto.Mapear(api);
+        EncerrarConversa.Mapear(api);
+    }
 
     static void Llm(IServiceProvider sp, HttpClient c)
     {

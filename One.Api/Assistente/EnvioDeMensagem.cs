@@ -1,13 +1,11 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using One.Api.Chamados;
 using One.Api.Dados;
 
 namespace One.Api.Assistente;
 
-public static class ConversaRotas
+public static class EnvioDeMensagem
 {
-    public const string Aluno = MensagemConversa.AutorAluno;
     public const int LimiteAnexos = 3;
 
     public static readonly Microsoft.AspNetCore.Mvc.RequestSizeLimitAttribute LimiteDoCorpo = new(LimiteAnexos * AnexoDeFormulario.MaxAnexo + 1024 * 1024);
@@ -32,20 +30,6 @@ public static class ConversaRotas
             ? Problemas.Invalido("A mensagem deve ter de 1 a 1000 caracteres.", "mensagem")
             : null;
 
-    public static IResult NaoEncontrada() => Problemas.Erro(404, "Conversa não encontrada.");
-    public static IResult JaEncerrada() => Problemas.Erro(409, "Esta conversa já foi encerrada.");
-
-    public static Task<Conversa?> DoAluno(OneDb db, Usuario aluno, long id) =>
-        db.Conversas.Include(c => c.Mensagens).ThenInclude(m => m.Citacoes).Include(c => c.Mensagens).ThenInclude(m => m.Anexos)
-            .FirstOrDefaultAsync(c => c.Id == id && c.AlunoId == aluno.Id);
-
-    public static async Task<bool> PodeUsarAssistente(OneDb db, Usuario u) =>
-        u.Tem(Papeis.Aluno) && await db.Matriculas.AnyAsync(m => m.UsuarioId == u.Id && m.Situacao == "ATIVA");
-
-    public static async Task<IResult> Transferido<TResposta>(OneDb db, Chamado chamado, Func<string, string, string, TResposta> resposta) =>
-        Results.Created($"/api/chamados/{chamado.Numero}",
-            resposta(chamado.Numero, chamado.Estado, await db.Setores.Where(s => s.Id == chamado.SetorId).Select(s => s.Nome).SingleAsync()));
-
     public static async Task<(List<Arquivos.Lido>, IResult?)> LerAnexos(IReadOnlyList<IFormFile> arquivos, int jaGravados)
     {
         if (jaGravados + arquivos.Count > LimiteAnexos) return ([], Problemas.Invalido("A conversa aceita até 3 anexos.", "anexos"));
@@ -66,7 +50,7 @@ public static class ConversaRotas
         foreach (var l in lidos)
         {
             var (chave, hash) = await armazenamento.Gravar(instituicaoId, "anexos-conversa", l.Bytes);
-            anexos.Add(new AnexoConversa { Nome = l.Nome, Tipo = l.Tipo, Tamanho = l.Bytes.Length, Chave = chave, Hash = hash });
+            anexos.Add(AnexoConversa.Criar(l.Nome, l.Tipo, l.Bytes.Length, chave, hash));
         }
         conversa.ReceberDoAluno(mensagem, anexos, agora);
         await db.SaveChangesAsync();
@@ -74,18 +58,5 @@ public static class ConversaRotas
         conversa.Registrar(resposta);
         await db.SaveChangesAsync();
         return resposta;
-    }
-
-    public static void Mapear(RouteGroupBuilder api)
-    {
-        NovaConversa.Mapear(api);
-        NovaMensagem.Mapear(api);
-        VerConversa.Mapear(api);
-        BaixarAnexoConversa.Mapear(api);
-        AvaliarConversa.Mapear(api);
-        TransferirConversa.Mapear(api);
-        VerDestino.Mapear(api);
-        AtendimentoDireto.Mapear(api);
-        EncerrarConversa.Mapear(api);
     }
 }

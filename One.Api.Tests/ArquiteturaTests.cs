@@ -1144,7 +1144,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Handler_sem_new_de_entidade =
     [
         "Administracao/AlterarMoodle.cs",
-        "Assistente/ConversaRotas.cs",
         "Chamados/ResponderChamado.cs",
 
     ];
@@ -1210,7 +1209,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Sem_balde_horizontal =
     [
-        "Assistente/ConversaRotas.cs",
     ];
 
     static IEnumerable<Type> TiposDeDados() => typeof(Program).Assembly.GetTypes()
