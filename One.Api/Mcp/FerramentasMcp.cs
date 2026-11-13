@@ -10,7 +10,6 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using One.Api.Assistente;
 using One.Api.Chamados;
-using One.Api.Chamados.Shared;
 using One.Api.Conhecimento;
 using One.Api.Dados;
 using One.Api.Indicadores;

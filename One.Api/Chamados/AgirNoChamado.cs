@@ -1,5 +1,4 @@
 using Mediator;
-using One.Api.Chamados.Shared;
 using Microsoft.AspNetCore.Http.HttpResults;
 using One.Api.Dados;
 
@@ -23,8 +22,8 @@ public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado a
 
     async Task<IResult> Agir(TMessage m, Func<Task<IResult>> aplicar)
     {
-        var (chamado, papel) = await ChamadoRotas.Carregar(db, m.Usuario, m.Numero);
-        if (chamado is null) return ChamadoRotas.NaoEncontrado();
+        var (chamado, papel) = await ChamadoDoUsuario.Carregar(db, m.Usuario, m.Numero);
+        if (chamado is null) return ChamadoDoUsuario.NaoEncontrado();
         acesso.Preencher(chamado, papel!, relogio.GetUtcNow().UtcDateTime);
         if (PermissoesChamado.Estados(m.Acao, papel!) is not { } estados) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
         if (await m.Validar(acesso, db) is { } invalido) return invalido;

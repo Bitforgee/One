@@ -1,7 +1,6 @@
 using Mediator;
-using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
-using static One.Api.Conhecimento.ArtigoRotas;
+using static One.Api.Conhecimento.ValidacaoDeArtigo;
 
 namespace One.Api.Conhecimento;
 
@@ -18,7 +17,7 @@ public sealed class AlterarArtigoHandler(OneDb db, TimeProvider relogio) : IRequ
     public async ValueTask<IResult> Handle(AlterarArtigo m, CancellationToken ct)
     {
         var i = m.Corpo;
-        var a = await Ler(db, m.Id);
+        var a = await ArtigoComVersoes.Ler(db, m.Id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (await Validar(db, i.Titulo, i.Perguntas, i.CategoriaId, i.Resposta, i.Links, i.VisivelDe, i.VisivelAte) is { } erro) return erro;
         var agora = relogio.GetUtcNow().UtcDateTime;

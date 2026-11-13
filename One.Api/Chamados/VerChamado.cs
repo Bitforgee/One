@@ -1,5 +1,4 @@
 using Mediator;
-using One.Api.Chamados.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Chamados;
@@ -14,7 +13,7 @@ public sealed class VerChamadoHandler(OneDb db) : IRequestHandler<VerChamado, IR
 {
     public async ValueTask<IResult> Handle(VerChamado m, CancellationToken ct)
     {
-        var (chamado, papel) = await ChamadoRotas.Carregar(db, m.Usuario, m.Numero);
-        return chamado is null ? ChamadoRotas.NaoEncontrado() : Results.Ok(await DetalheChamado.Montar(db, m.Usuario.Id, chamado, papel!));
+        var (chamado, papel) = await ChamadoDoUsuario.Carregar(db, m.Usuario, m.Numero);
+        return chamado is null ? ChamadoDoUsuario.NaoEncontrado() : Results.Ok(await DetalheChamado.Montar(db, m.Usuario.Id, chamado, papel!));
     }
 }

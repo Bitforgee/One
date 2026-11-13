@@ -1,6 +1,5 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
-namespace One.Api.Conhecimento.Shared;
+namespace One.Api.Conhecimento;
 
 public sealed record DocumentoResposta(long Id, string Titulo, long CategoriaId, string Categoria, string Estado, DocumentoResposta.DaVersao Versao, string Indexacao)
 {

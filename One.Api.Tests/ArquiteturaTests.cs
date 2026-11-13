@@ -450,7 +450,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
             foreach (var c in t.GetConstructors())
                 Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
-        var montar = Assert.Single(typeof(One.Api.Chamados.Shared.DetalheChamado).GetMethods(), m => m.Name == "Montar");
+        var montar = Assert.Single(typeof(One.Api.Chamados.DetalheChamado).GetMethods(), m => m.Name == "Montar");
         Assert.DoesNotContain(typeof(HttpContext), montar.GetParameters().Select(p => p.ParameterType));
         Assert.Empty(ArquivosQue(new Regex("IHttpContextAccessor")));
     }
@@ -815,7 +815,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(comJson.Count, ComRespostaAninhada.Length + doShared.Count + 1);
         Assert.All(SemCorpoJson, n => Assert.DoesNotContain(n, aninhadas.Concat(doShared.Keys)));
 
-        var shared = CodigoApi().Where(p => Path.GetRelativePath(Api, p).Split(Path.DirectorySeparatorChar).Contains("Shared")).ToList();
+        var shared = OsNoveShared.Select(x => Path.Combine(Api, x.fatia, x.record + ".cs")).ToList();
         Assert.Equal(9, shared.Count);
         foreach (var arquivo in shared)
         {
@@ -824,7 +824,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             var codigo = SemComentarios(arquivo);
             Assert.Equal([nome], TipoDeTopo.Matches(codigo).Select(m => m.Groups[1].Value));
             Assert.Matches($@"(?m)^public sealed record {nome}\b", codigo);
-            Assert.Matches($@"(?m)^namespace One\.Api\.{fatia}\.Shared;", codigo);
+            Assert.Matches($@"(?m)^namespace One\.Api\.{fatia};", codigo);
             Assert.Equal(fatia, OsNoveShared.Single(x => x.record == nome).fatia);
         }
         Assert.Equal(OsNoveShared.Select(x => x.record).Order(), shared.Select(Path.GetFileNameWithoutExtension).Order());
@@ -856,7 +856,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Nenhum_corpo_tipado_object()
     {
-        var detalhe = typeof(One.Api.Chamados.Shared.DetalheChamado);
+        var detalhe = typeof(One.Api.Chamados.DetalheChamado);
         var itens = typeof(IReadOnlyList<object>);
         var tipos = typeof(Program).Assembly.GetTypes()
             .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && t.FullName != "One.Api.Assistente.Assistente"
@@ -910,7 +910,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(typeof(CancellationToken), handle.GetParameters()[2].ParameterType);
         Assert.Equal(agir.GetGenericArguments()[0], handle.GetParameters()[0].ParameterType);
 
-        Assert.Equal(typeof(Task<One.Api.Chamados.Shared.DetalheChamado>), typeof(One.Api.Chamados.Shared.DetalheChamado).GetMethod("Montar")!.ReturnType);
+        Assert.Equal(typeof(Task<One.Api.Chamados.DetalheChamado>), typeof(One.Api.Chamados.DetalheChamado).GetMethod("Montar")!.ReturnType);
 
         var recusa = CodigoDe("Dados", "Recusa.cs");
         Assert.Contains("namespace One.Api.Dados;", recusa);
@@ -1210,14 +1210,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Sem_balde_horizontal =
     [
-        "Administracao/Shared",
         "Assistente/ConversaRotas.cs",
-        "Chamados/ChamadoRotas.cs",
-        "Chamados/PushRotas.cs",
-        "Chamados/Shared",
-        "Conhecimento/ArtigoRotas.cs",
-        "Conhecimento/DocumentoRotas.cs",
-        "Conhecimento/Shared",
     ];
 
     static IEnumerable<Type> TiposDeDados() => typeof(Program).Assembly.GetTypes()

@@ -1,4 +1,4 @@
-namespace One.Api.Administracao.Shared;
+namespace One.Api.Administracao;
 
 public sealed record RespostaProntaResposta(long Id, long SetorId, string Titulo, string Texto)
 {

@@ -1,5 +1,4 @@
 using Mediator;
-using One.Api.Conhecimento.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
@@ -15,7 +14,7 @@ public sealed class AtivarArtigoHandler(OneDb db, TimeProvider relogio) : IReque
 {
     public async ValueTask<IResult> Handle(AtivarArtigo m, CancellationToken ct)
     {
-        var a = await ArtigoRotas.Ler(db, m.Id);
+        var a = await ArtigoComVersoes.Ler(db, m.Id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (a.Ativar() is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         var atual = a.UltimaVersao;

@@ -29,7 +29,7 @@ public sealed class BaixarAnexoConversaHandler(OneDb db, Armazenamento armazenam
         if (await db.Conversas.AnyAsync(c => c.Id == conversaId && c.AlunoId == u.Id)) return true;
         var numero = await db.Chamados.Where(c => c.ConversaId == conversaId).Select(c => c.Numero).FirstOrDefaultAsync();
         if (numero is null) return false;
-        var (chamado, papel) = await ChamadoRotas.Carregar(db, u, numero);
+        var (chamado, papel) = await ChamadoDoUsuario.Carregar(db, u, numero);
         return chamado is not null && papel != PermissoesChamado.Lider;
     }
 }

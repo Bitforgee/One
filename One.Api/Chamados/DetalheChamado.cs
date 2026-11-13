@@ -3,7 +3,7 @@ using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Chamados.ConsultasDoDetalhe;
 
-namespace One.Api.Chamados.Shared;
+namespace One.Api.Chamados;
 
 public sealed record DetalheChamado(
     string Numero, string Titulo, string Estado, string? MotivoFechamento, string? NumeroOriginal, long SetorId, string Setor, string Categoria,

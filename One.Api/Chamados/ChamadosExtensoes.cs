@@ -26,8 +26,15 @@ public static class ChamadosExtensoes
 
     public static void MapChamados(this RouteGroupBuilder api)
     {
-        ChamadoRotas.Mapear(api);
-        PushRotas.Mapear(api);
+        ListarChamados.Mapear(api);
+        VerChamado.Mapear(api);
+        AcoesChamado.Mapear(api);
+        RespostasProntasDoSetor.Mapear(api);
+        BaixarAnexo.Mapear(api);
+        var push = api.MapGroup("/push");
+        VerChavePush.Mapear(push);
+        AtivarPush.Mapear(push);
+        DesativarPush.Mapear(push);
         api.MapHub<TempoRealHub>("/tempo-real").Add(b =>
         {
             if (b is RouteEndpointBuilder { RoutePattern.RawText: { } t } && t.EndsWith("/negotiate", StringComparison.Ordinal)) b.Metadata.Add(new HttpMethodMetadata(["POST"]));

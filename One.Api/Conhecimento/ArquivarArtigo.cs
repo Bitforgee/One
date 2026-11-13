@@ -1,5 +1,4 @@
 using Mediator;
-using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
 
 namespace One.Api.Conhecimento;
@@ -14,7 +13,7 @@ public sealed class ArquivarArtigoHandler(OneDb db) : IRequestHandler<ArquivarAr
 {
     public async ValueTask<IResult> Handle(ArquivarArtigo m, CancellationToken ct)
     {
-        var a = await ArtigoRotas.Ler(db, m.Id);
+        var a = await ArtigoComVersoes.Ler(db, m.Id);
         if (a is null) return Problemas.Erro(404, "Artigo não encontrado.");
         if (a.Arquivar() is { } recusa) return Problemas.Erro(409, recusa.Motivo);
         await db.SaveChangesAsync();

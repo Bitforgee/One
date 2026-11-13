@@ -1,4 +1,4 @@
-namespace One.Api.Administracao.Shared;
+namespace One.Api.Administracao;
 
 public sealed record SetorResposta(long Id, string Nome, bool Triagem, bool Ativo, long? CursoId, int? Semestre)
 {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 
-namespace One.Api.Administracao.Shared;
+namespace One.Api.Administracao;
 
 public sealed record UsuarioResposta(long Id, string Cpf, string Nome, string Email, bool Ativo, bool DeveTrocarSenha, IReadOnlyList<string> Papeis, IReadOnlyList<long> Setores)
 {

@@ -15,12 +15,14 @@ public sealed record AtivarPush(AtivarPush.Entrada Corpo, Usuario Usuario) : IRe
 
 public sealed class AtivarPushHandler(OneDb db, IConfiguration cfg, TimeProvider relogio) : IRequestHandler<AtivarPush, IResult>
 {
+    const string NaoConfigurado = "Os avisos no aparelho não estão configurados.";
+
     const int MaxEndpoint = 2048;
     const int MaxPorUsuario = 10;
 
     public async ValueTask<IResult> Handle(AtivarPush m, CancellationToken ct)
     {
-        if (!ConfigPush.Ler(cfg).Ligado) return Problemas.Erro(404, PushRotas.NaoConfigurado);
+        if (!ConfigPush.Ler(cfg).Ligado) return Problemas.Erro(404, NaoConfigurado);
         var (endpoint, p256dh, auth, u) = (m.Corpo.Endpoint, m.Corpo.Chaves?.P256dh, m.Corpo.Chaves?.Auth, m.Usuario);
         if (endpoint is not { Length: > 0 and <= MaxEndpoint } || !Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
             return Problemas.Invalido($"O endpoint deve ser uma URL https de até {MaxEndpoint} caracteres.", "endpoint");

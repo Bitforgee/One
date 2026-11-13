@@ -1,4 +1,4 @@
-namespace One.Api.Administracao.Shared;
+namespace One.Api.Administracao;
 
 public sealed record FluxoResposta(long Id, long CategoriaId, long? CursoId, int? Semestre, FluxoResposta.VersaoResposta? Vigente, FluxoResposta.VersaoResposta? Rascunho)
 {

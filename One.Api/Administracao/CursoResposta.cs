@@ -1,4 +1,4 @@
-namespace One.Api.Administracao.Shared;
+namespace One.Api.Administracao;
 
 public sealed record CursoResposta(long Id, string Nome, long? SetorCoordenacaoId)
 {

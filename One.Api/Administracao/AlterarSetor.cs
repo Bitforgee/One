@@ -1,6 +1,5 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Administracao.Shared;
 using One.Api.Chamados;
 using One.Api.Dados;
 

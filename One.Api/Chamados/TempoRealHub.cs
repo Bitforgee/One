@@ -10,7 +10,7 @@ public class TempoRealHub(OneDb db) : Hub
     public async Task EntrarNoChamado(string numero)
     {
         var u = await Reler();
-        var (c, _) = string.IsNullOrWhiteSpace(numero) ? (null, null) : await ChamadoRotas.Carregar(db, u, numero);
+        var (c, _) = string.IsNullOrWhiteSpace(numero) ? (null, null) : await ChamadoDoUsuario.Carregar(db, u, numero);
         if (c is null) throw new HubException("Chamado não encontrado.");
         await Groups.AddToGroupAsync(Context.ConnectionId, TempoRealGrupos.Chamado(u.InstituicaoId, c.Numero));
     }

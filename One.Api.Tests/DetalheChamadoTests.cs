@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using One.Api.Chamados;
-using One.Api.Chamados.Shared;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 using static One.Api.Dados.Chamados.EstadosChamado;

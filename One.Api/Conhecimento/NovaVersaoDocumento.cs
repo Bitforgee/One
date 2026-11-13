@@ -1,7 +1,6 @@
 using Mediator;
-using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
-using static One.Api.Conhecimento.DocumentoRotas;
+using static One.Api.Conhecimento.DocumentoComVersoes;
 
 namespace One.Api.Conhecimento;
 

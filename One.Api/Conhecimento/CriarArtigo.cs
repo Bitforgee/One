@@ -1,7 +1,6 @@
 using Mediator;
-using One.Api.Conhecimento.Shared;
 using One.Api.Dados;
-using static One.Api.Conhecimento.ArtigoRotas;
+using static One.Api.Conhecimento.ValidacaoDeArtigo;
 
 namespace One.Api.Conhecimento;
 

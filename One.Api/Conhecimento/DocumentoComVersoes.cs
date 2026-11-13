@@ -3,7 +3,7 @@ using One.Api.Dados;
 
 namespace One.Api.Conhecimento;
 
-public static class DocumentoRotas
+public static class DocumentoComVersoes
 {
     public static VersaoDocumento Versao(long instituicaoId, LeitorDePdf.Pdf pdf, int numero, DateTime agora) =>
         VersaoDocumento.Criar(new(pdf.Nome, Armazenamento.NovaChave(instituicaoId, "documentos"), Armazenamento.Hash(pdf.Conteudo), pdf.Conteudo.Length), pdf.Texto, pdf.Paginas, numero, agora);
@@ -13,5 +13,4 @@ public static class DocumentoRotas
 
     public static Task<Documento?> Ler(OneDb db, long id) =>
         db.Documentos.ComUltimaVersao().FirstOrDefaultAsync(d => d.Id == id);
-
 }

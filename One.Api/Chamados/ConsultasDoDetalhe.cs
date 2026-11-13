@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using One.Api.Chamados.Shared;
 using One.Api.Dados;
 using One.Api.Dados.Fluxos;
 

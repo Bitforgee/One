@@ -3,10 +3,8 @@ using One.Api.Dados;
 
 namespace One.Api.Conhecimento;
 
-public static class ArtigoRotas
+public static class ValidacaoDeArtigo
 {
-    public static void Mapear(RouteGroupBuilder api) => VerVersaoArtigo.Mapear(api);
-
     public static async Task<IResult?> Validar(OneDb db, string? titulo, string[]? perguntas, long? categoriaId, string? resposta, string[]? links, DateOnly? visivelDe, DateOnly? visivelAte)
     {
         if (TituloEPerguntas(titulo, perguntas) is { } erro) return erro;
@@ -34,6 +32,4 @@ public static class ArtigoRotas
 
     public static VersaoArtigo Versao(string? titulo, string[]? perguntas, string? resposta, string[]? links, int numero, DateTime agora) =>
         VersaoArtigo.Criar(new(titulo!, perguntas!, resposta!, links), numero, agora);
-
-    public static Task<Artigo?> Ler(OneDb db, long id) => db.Artigos.Include(a => a.Versoes).FirstOrDefaultAsync(a => a.Id == id);
 }
