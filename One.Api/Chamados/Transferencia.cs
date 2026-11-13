@@ -23,7 +23,7 @@ public static class Transferencia
         Problemas.Invalido("Escolha uma das suas matrículas ativas.", "matriculaId");
 
     static List<MensagemConversa> DoAssistente(Conversa conversa) =>
-        [.. conversa.Mensagens.Where(m => m.Autor == Assistente.Assistente.Autor).OrderByDescending(m => m.Id)];
+        [.. conversa.Mensagens.Where(m => m.Autor == MensagemConversa.AutorAssistente).OrderByDescending(m => m.Id)];
 
     public static async Task<(Categoria Categoria, string Origem)> EscolherCategoria(OneDb db, Conversa conversa)
     {
@@ -42,7 +42,7 @@ public static class Transferencia
         await using var tx = await db.Database.BeginTransactionAsync();
         if (conversa.Id == 0) await db.SaveChangesAsync();
         var (categoria, origem) = await EscolherCategoria(db, conversa);
-        var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
+        var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != MensagemConversa.AutorAssistente).OrderBy(m => m.Id).First().Texto, 120);
         var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
         var rota = await ConsultasDeFluxo.Rotear(db, categoria, matricula, comLideranca);
         conversa.Transferir(agora);

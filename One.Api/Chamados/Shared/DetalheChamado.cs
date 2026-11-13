@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
 using One.Api.Conhecimento;
 using One.Api.Dados;
 using One.Api.Dados.Fluxos;
@@ -103,7 +102,7 @@ public sealed record DetalheChamado(
     {
         var anexos = (await db.AnexosConversa.Where(x => db.MensagensConversa.Any(m => m.Id == x.MensagemConversaId && m.ConversaId == c.ConversaId)).OrderBy(x => x.Id).ToListAsync())
             .ToLookup(x => x.MensagemConversaId);
-        return [.. transcricao.Select(m => m.Autor != ConversaRotas.Aluno ? m : m with { Anexos = [.. anexos[m.Id].Select(x => new DoAnexo(x.Id, x.Nome, x.Tipo, x.Tamanho))] })];
+        return [.. transcricao.Select(m => m.Autor != MensagemConversa.AutorAluno ? m : m with { Anexos = [.. anexos[m.Id].Select(x => new DoAnexo(x.Id, x.Nome, x.Tipo, x.Tamanho))] })];
     }
 
     static async Task<IReadOnlyList<DaMensagem>> DasMensagens(OneDb db, Chamado c, bool equipe, Dictionary<long, string> nomes)

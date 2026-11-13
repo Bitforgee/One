@@ -297,7 +297,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         ("Acesso", "Instituicoes"), ("Administracao", "Acesso"), ("Administracao", "Chamados"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
         ("Assistente", "Chamados"), ("Assistente", "Conhecimento"),
-        ("Chamados", "Assistente"), ("Chamados", "Conhecimento"),
+        ("Chamados", "Conhecimento"),
         ("Indicadores", "Conhecimento"),
         ("Mcp", "Assistente"), ("Mcp", "Chamados"), ("Mcp", "Conhecimento"), ("Mcp", "Indicadores"),
         ("Instituicoes", "Assistente"), ("Instituicoes", "Conhecimento"),
