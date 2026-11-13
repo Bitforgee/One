@@ -15,6 +15,9 @@ public sealed record ConsultarIndicadores(DateOnly? De, DateOnly? Ate, long? Set
 
 public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<ConsultarIndicadores, IResult>
 {
+    sealed record ConversaComSemBase(long AlunoId, string? Desfecho, bool SemBase);
+    sealed record ConversaCitada(long Id, long CategoriaId);
+
     public async ValueTask<IResult> Handle(ConsultarIndicadores m, CancellationToken ct)
     {
         var (u, de, ate, setorId) = (m.Usuario, m.De, m.Ate, m.SetorId);
@@ -62,7 +65,7 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
     async Task<(List<ConversaLida>, List<long>)> Conversas(DateTime inicio, DateTime fim)
     {
         var conversas = (await db.Conversas.Where(c => c.CriadaEm >= inicio && c.CriadaEm < fim)
-                .Select(c => new { c.AlunoId, c.Desfecho, SemBase = db.MensagensConversa.Any(m => m.ConversaId == c.Id && m.TipoFinal == Tipos.SemBase) })
+                .Select(c => new ConversaComSemBase(c.AlunoId, c.Desfecho, db.MensagensConversa.Any(m => m.ConversaId == c.Id && m.TipoFinal == Tipos.SemBase)))
                 .ToListAsync())
             .Select(c => new ConversaLida(c.AlunoId, c.Desfecho, c.SemBase)).ToList();
         var citadas = await (
@@ -70,7 +73,7 @@ public sealed class ConsultarIndicadoresHandler(OneDb db) : IRequestHandler<Cons
             join m in db.MensagensConversa on ci.MensagemConversaId equals m.Id
             join c in db.Conversas on m.ConversaId equals c.Id
             where c.CriadaEm >= inicio && c.CriadaEm < fim
-            select new { c.Id, ci.CategoriaId }).Distinct().ToListAsync();
+            select new ConversaCitada(c.Id, ci.CategoriaId)).Distinct().ToListAsync();
         return (conversas, citadas.Select(x => x.CategoriaId).ToList());
     }
 }
