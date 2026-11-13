@@ -2,6 +2,7 @@ import { ChartColumn } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { ErroDe } from '../ErroDe'
@@ -198,11 +199,20 @@ function useVariacao(consulta: { de: string; ate: string }, atual: Indicadores |
   return !provisorio && a != null && b != null ? variacao(a, b) : undefined
 }
 
+const dataValida = (v: string | null): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v) && dia(new Date(`${v}T00:00:00`)) === v
+
+function periodoDaUrl(params: URLSearchParams, padrao: { de: string; ate: string }) {
+  const [de, ate] = [params.get('de'), params.get('ate')]
+  return dataValida(de) && dataValida(ate) && de <= ate ? { de, ate } : padrao
+}
+
 export function Indicadores() {
   const hoje = new Date()
-  const [de, setDe] = useState(dia(new Date(hoje.getFullYear(), hoje.getMonth(), 1)))
-  const [ate, setAte] = useState(dia(hoje))
-  const [consulta, setConsulta] = useState({ de, ate, vez: 0 })
+  const [params, setParams] = useSearchParams()
+  const [inicial] = useState(() => periodoDaUrl(params, { de: dia(new Date(hoje.getFullYear(), hoje.getMonth(), 1)), ate: dia(hoje) }))
+  const [de, setDe] = useState(inicial.de)
+  const [ate, setAte] = useState(inicial.ate)
+  const [consulta, setConsulta] = useState({ ...inicial, vez: 0 })
   const { data: dados, error, isFetching, isPlaceholderData, refetch } = useQuery({
     queryKey: ['indicadores', consulta],
     queryFn: () => api<Indicadores>(`/api/indicadores?de=${consulta.de}&ate=${consulta.ate}`),
@@ -217,6 +227,7 @@ export function Indicadores() {
         onSubmit={(e) => {
           e.preventDefault()
           setConsulta((c) => ({ de, ate, vez: c.vez + 1 }))
+          setParams({ de, ate }, { replace: true })
         }}
       >
         <div className="flex flex-col gap-2">

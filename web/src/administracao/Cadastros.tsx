@@ -5,6 +5,7 @@ import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
 import { ErroDoCampo } from '../Campo'
 import { Editor, useSujo } from '../Editor'
+import { useBuscaNaUrl, useEditarNaUrl } from '../urlDaTela'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
@@ -273,7 +274,7 @@ export function vazioDaAba(aba: Aba, busca: string, todos: { id: number }[] | un
 }
 
 function PainelDaAba({ aba, dados, erro, novo, editar }: Painel) {
-  const [busca, setBusca] = useState('')
+  const [busca, setBusca] = useBuscaNaUrl()
   const linha = dados ? linhas(dados)[aba] : undefined
   const todos = dados?.[aba] as { id: number }[] | undefined
   const itens = filtrarItens(todos, linha, busca)
@@ -315,7 +316,8 @@ export function Cadastros() {
   const pedida = params.get('aba') as Aba | null
   const aba: Aba = pedida && pedida in Titulos ? pedida : 'setores'
   const setAba = (k: Aba) => setParams(k === 'setores' ? {} : { aba: k }, { replace: true })
-  const [editando, setEditando] = useState<Ficha>()
+  const achar = (id: number) => (aba === 'fluxos' ? undefined : (dados?.[aba] as { id: number }[] | undefined)?.filter((x) => x.id === id).map(ficha)[0])
+  const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novos[aba], !!dados)
   const sujo = useSujo(editando)
   const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
@@ -323,9 +325,9 @@ export function Cadastros() {
 
   function salvar() {
     const { id, ...resto } = editando!
-    acao.mutate({ chamar: () => gravar(`/api/admin/${Rotas[aba]}`, id, Corpos[aba](resto)), aviso: 'Cadastro salvo.', depois: () => setEditando(undefined) })
+    acao.mutate({ chamar: () => gravar(`/api/admin/${Rotas[aba]}`, id, Corpos[aba](resto)), aviso: 'Cadastro salvo.', depois: fechar })
   }
-  const editar = (x: object) => (aba === 'fluxos' ? navegar(`/${slug}/cadastros/fluxos/${(x as Fluxo).id}`) : setEditando(ficha(x)))
+  const editar = (x: object) => (aba === 'fluxos' ? navegar(`/${slug}/cadastros/fluxos/${(x as Fluxo).id}`) : abrir(ficha(x)))
 
   return (
     <div className="flex flex-col gap-2">
@@ -343,12 +345,12 @@ export function Cadastros() {
         <Navegacao abas={abas} dados={dados} />
         {abas.map((k) => (
           <TabsContent key={k} value={k} className="flex min-w-0 flex-1 flex-col gap-4">
-            <PainelDaAba aba={k} dados={dados} erro={erro} novo={() => setEditando({ ...Novos[k] })} editar={editar} />
+            <PainelDaAba aba={k} dados={dados} erro={erro} novo={() => abrir({ ...Novos[k] })} editar={editar} />
           </TabsContent>
         ))}
       </Tabs>
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>
     </div>

@@ -15,6 +15,7 @@ import { DropdownMenuItem } from '../ui/dropdown-menu'
 import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
+import { useEditarNaUrl } from '../urlDaTela'
 import { ConfirmarArquivar, IconeIndexacao, SeloEstado, useCatalogo, type Categoria, type Indexacao } from './comum'
 
 type Documento = {
@@ -27,6 +28,9 @@ type Documento = {
   indexacao: Indexacao
 }
 type Envio = { id?: number; titulo: string; categoriaId: string; arquivo?: File }
+
+const NovoEnvio: Envio = { titulo: '', categoriaId: '' }
+const novaVersao = (d: Documento): Envio => ({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })
 
 const paginas = (n: number) => (n === 1 ? 'página' : 'páginas')
 
@@ -111,13 +115,14 @@ const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes
 export function Documentos() {
   const { itens: documentos, categorias, erro, recarregar } = useCatalogo<Documento>('/api/admin/documentos')
   const { visiveis, mais } = useMostrarMais(documentos)
-  const [envio, setEnvio] = useState<Envio>()
+  const achar = (id: number) => documentos?.filter((d) => d.estado === 'ATIVO' && d.id === id).map(novaVersao)[0]
+  const { editando: envio, setEditando: setEnvio, abrir, fechar } = useEditarNaUrl(achar, NovoEnvio, !!documentos)
   const [arquivar, setArquivar] = useState<Documento>()
   const acao = useGravacao(recarregar)
   useFocoNoPrimeiroErro(acao.error)
   const sujo = useSujo(envio, chaveDoEnvio)
 
-  const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: () => setEnvio(undefined) })
+  const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: fechar })
 
   function confirmarArquivar(d: Documento) {
     setArquivar(undefined)
@@ -126,7 +131,7 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => setEnvio({ titulo: '', categoriaId: '' })}>
+      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => abrir({ ...NovoEnvio })}>
         <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       </Cabecalho>
       <ErroDe erro={erro} oque="os documentos" tentar={recarregar} />
@@ -139,16 +144,16 @@ export function Documentos() {
           Icone: FileText,
           titulo: 'Nenhum documento',
           frase: 'PDFs como regulamentos e calendários também alimentam o assistente.',
-          acao: <Button onClick={() => setEnvio({ titulo: '', categoriaId: '' })}>Novo documento</Button>,
+          acao: <Button onClick={() => abrir({ ...NovoEnvio })}>Novo documento</Button>,
         }}
       >
         {visiveis?.map((d) => (
-          <LinhaDocumento key={d.id} d={d} novaVersao={() => setEnvio({ id: d.id, titulo: d.titulo, categoriaId: String(d.categoriaId) })} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
+          <LinhaDocumento key={d.id} d={d} novaVersao={() => abrir(novaVersao(d))} arquivar={() => setArquivar(d)} pendente={acao.isPending} />
         ))}
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={fechar} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

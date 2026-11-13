@@ -16,6 +16,7 @@ import { Label } from '../ui/label'
 import { NativeSelect } from '../ui/native-select'
 import { TableCell, TableRow } from '../ui/table'
 import { Textarea } from '../ui/textarea'
+import { useEditarNaUrl } from '../urlDaTela'
 import { ConfirmarArquivar, IconeIndexacao, SeloEstado, useCatalogo, type Categoria, type Indexacao } from './comum'
 import { Resposta } from './Resposta'
 
@@ -127,14 +128,15 @@ export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
   const vazia = artigos?.length === 0
   const { visiveis, mais } = useMostrarMais(artigos)
-  const [editando, setEditando] = useState<Rascunho>()
+  const achar = (id: number) => artigos?.filter((a) => a.id === id).map(rascunho)[0]
+  const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novo, !!artigos)
   const [arquivar, setArquivar] = useState<Artigo>()
   const [ativar, setAtivar] = useState<Artigo>()
   const acao = useGravacao(recarregar)
   useFocoNoPrimeiroErro(acao.error)
   const sujo = useSujo(editando)
 
-  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/artigos', editando!.id, corpo(editando!)), aviso: 'Artigo salvo.', depois: () => setEditando(undefined) })
+  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/artigos', editando!.id, corpo(editando!)), aviso: 'Artigo salvo.', depois: fechar })
 
   function mudar(a: Artigo, para: 'ativar' | 'arquivar') {
     setArquivar(undefined)
@@ -144,7 +146,7 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao={vazia ? undefined : 'Novo'} Icone={Plus} aoClicar={() => setEditando({ ...Novo })}>
+      <Cabecalho botao={vazia ? undefined : 'Novo'} Icone={Plus} aoClicar={() => abrir({ ...Novo })}>
         <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
       </Cabecalho>
       <ErroDe erro={erro} oque="os artigos" tentar={recarregar} />
@@ -153,15 +155,15 @@ export function Artigos() {
         colunas={Colunas}
         itens={artigos}
         erro={erro}
-        vazio={{ Icone: BookText, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
+        vazio={{ Icone: BookText, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => abrir({ ...Novo })}>Novo artigo</Button> }}
       >
         {visiveis?.map((a) => (
-          <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => setAtivar(a)} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
+          <LinhaArtigo key={a.id} a={a} editar={() => abrir(rascunho(a))} mudar={() => setAtivar(a)} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
         ))}
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

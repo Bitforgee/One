@@ -1120,6 +1120,7 @@ test.describe('S5 diálogos e administração', () => {
         await page.getByText('Coordenação de Análise e Desenvolvimento de Sistemas').first().waitFor()
         if (largura === 390) await page.getByLabel('Cadastro', { exact: true }).selectOption({ label: aba })
         else await page.getByRole('tab', { name: aba }).click()
+        await expect(page.locator('[role=tabpanel] h2'), ` a ${largura}: aba trocada`).toHaveText(aba)
         const linhas = largura === 390 ? page.getByRole('main').getByRole('listitem') : page.locator('[role=tabpanel] tbody tr')
         await expect(linhas, `${aba} a ${largura}`).toHaveCount(1)
         await expect(linhas.first()).toContainText(texto.split(' > ')[0])

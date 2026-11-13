@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, instituicao, me, type Rota } from '../test/util'
+import { abrir, abrirComRoteador, api, instituicao, me, type Rota } from '../test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
 const Urls = {
@@ -44,6 +44,20 @@ const salvaOk: Record<string, Rota> = { 'PUT /api/admin/moodle': (c) => [200, { 
 const nomesDasAbas = () => screen.getAllByRole('tab').map((t) => t.textContent)
 
 describe('tela Integrações', () => {
+  it('C56 trocar a aba usa replace e não empilha histórico', async () => {
+    rotas(() => [200, vazia])
+    const { roteador } = abrirComRoteador('/univag/integracoes')
+    await screen.findByRole('tab', { name: 'MCP' })
+    await userEvent.click(screen.getByRole('tab', { name: 'MCP' }))
+    await waitFor(() => expect(roteador.state.location.search).toBe('?aba=mcp'))
+    expect(roteador.state.historyAction).toBe('REPLACE')
+    await userEvent.click(screen.getByRole('tab', { name: 'Moodle' }))
+    await waitFor(() => expect(roteador.state.location.search).toBe('?aba=moodle'))
+    expect(roteador.state.historyAction).toBe('REPLACE')
+    await roteador.navigate(-1)
+    expect(roteador.state.location.pathname).toBe('/univag/integracoes')
+    expect(roteador.state.location.search).toBe('?aba=moodle')
+  })
   it('coluna lateral', async () => {
     rotas(() => [200, vazia])
     abrir('/univag/integracoes')

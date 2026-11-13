@@ -30,9 +30,12 @@ export function api(rotas: Record<string, Rota>) {
   return chamadas
 }
 
-export function abrir(caminho: string) {
-  return render(<RouterProvider router={createMemoryRouter([{ path: '*', element: <App /> }], { initialEntries: [caminho] })} />)
+export function abrirComRoteador(caminho: string) {
+  const roteador = createMemoryRouter([{ path: '*', element: <App /> }], { initialEntries: [caminho] })
+  return { roteador, ...render(<RouterProvider router={roteador} />) }
 }
+
+export const abrir = abrirComRoteador
 
 export function me(parcial: Partial<Me> = {}): Me {
   return {

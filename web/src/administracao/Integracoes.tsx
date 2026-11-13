@@ -77,7 +77,7 @@ export function Integracoes() {
   const [params, setParams] = useSearchParams()
   const aba = abaPedida(params.get('aba'))
   const estados = useEstados()
-  const escolher = (k: string) => setParams({ aba: k })
+  const escolher = (k: string) => setParams({ aba: k }, { replace: true })
   return (
     <Tabs orientation="vertical" value={aba} onValueChange={escolher} className="gap-4 @4xl/main:flex-row @4xl/main:gap-8" data-aba-ativa={params.get('aba') ?? ''}>
       <div className="@4xl/main:hidden">

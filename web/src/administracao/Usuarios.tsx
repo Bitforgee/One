@@ -15,6 +15,7 @@ import { DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { TableCell, TableRow } from '../ui/table'
+import { useBuscaNaUrl, useEditarNaUrl } from '../urlDaTela'
 import { cpfFormatado, type Setor, type Usuario } from './comum'
 
 const Papeis: [string, string][] = [
@@ -121,17 +122,18 @@ const tituloDaJanela = (f?: Ficha) => (f?.id ? 'Editar usuário' : 'Novo usuári
 
 export function Usuarios() {
   const { dados, erro, recarregar } = useLeituras<{ usuarios: Usuario[]; setores: Setor[] }>({ usuarios: '/api/admin/usuarios', setores: '/api/admin/setores' })
-  const [editando, setEditando] = useState<Ficha>()
   const [desativar, setDesativar] = useState<Usuario>()
-  const [busca, setBusca] = useState('')
+  const [busca, setBusca] = useBuscaNaUrl()
   const acao = useGravacao(recarregar)
+  const achar = (id: number) => dados?.usuarios.filter((u) => u.ativo && u.id === id).map(ficha)[0]
+  const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novo, !!dados)
   const sujo = useSujo(editando)
   const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
   const usuarios = dados?.usuarios.filter((u) => casa(u, busca))
   const { visiveis, mais } = useMostrarMais(usuarios)
 
-  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/usuarios', editando!.id, corpo(editando!)), aviso: 'Usuário salvo.', depois: () => setEditando(undefined) })
+  const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/usuarios', editando!.id, corpo(editando!)), aviso: 'Usuário salvo.', depois: fechar })
 
   function confirmarDesativar() {
     const u = desativar!
@@ -141,7 +143,7 @@ export function Usuarios() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
+      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => abrir({ ...Novo })} />
       <ErroDe erro={erro} oque="os usuários" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
@@ -152,12 +154,12 @@ export function Usuarios() {
         vazio={busca.trim() ? { Icone: Users, titulo: 'Nenhum resultado', frase: 'Nenhum usuário combina com a busca.' } : { Icone: Users, titulo: 'Nenhum usuário', frase: 'Cadastre a equipe ou importe as matrículas.' }}
       >
         {visiveis?.map((u) => (
-          <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => setEditando(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
+          <LinhaUsuario key={u.id} u={u} setores={nomes} editar={() => abrir(ficha(u))} desativar={() => setDesativar(u)} pendente={acao.isPending} />
         ))}
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} erros={errosDeCampo(acao.error)} />}
       </Editor>
 
