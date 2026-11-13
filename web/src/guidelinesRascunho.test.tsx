@@ -11,7 +11,7 @@ const celular = () => vi.stubGlobal('matchMedia', (media: string) => ({ media, m
 async function novoUsuario() {
   api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, [carla]], 'GET /api/admin/setores': () => [200, []] })
   abrir('/univag/usuarios')
-  await userEvent.click(await screen.findByRole('button', { name: 'Novo' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Novo usuário' }))
   return screen.findByLabelText('Nome')
 }
 
@@ -59,7 +59,7 @@ describe('rascunho do Editor', () => {
     await waitFor(() => expect(editorAberto()).not.toBeInTheDocument())
     expect(confirmacao()).not.toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Novo' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Novo usuário' }))
     expect(await screen.findByLabelText('Nome')).toHaveValue('')
   })
 

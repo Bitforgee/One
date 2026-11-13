@@ -48,7 +48,7 @@ describe('artigos', () => {
     expect(d.getByLabelText('Categoria')).toHaveValue('3')
     expect(d.getByLabelText('Válido de (opcional)')).toHaveValue('2026-11-01')
     expect(d.getByLabelText('Válido até (opcional)')).toHaveValue('')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar artigo' }))
     await waitFor(() =>
       expect(gravadas(chamadas)).toEqual([
         ['PUT', '/api/admin/artigos/1', { titulo: 'Estágio obrigatório', perguntas: ['quantas horas?', 'tem estágio?'], categoriaId: 3, resposta: 'São 300 horas.', links: ['https://univag.edu.br/estagio'], visivelDe: '2026-11-01', visivelAte: null }],
@@ -99,14 +99,14 @@ describe('documentos', () => {
 
   it('novo documento leva título, categoria e o PDF', async () => {
     const chamadas = tela('/univag/documentos', 'documentos', [], { 'POST /api/admin/documentos': () => [201, {}] })
-    await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('PDF com texto (não digitalizado), até 20 MB.')).toBeInTheDocument()
-    expect(d.getByRole('button', { name: 'Enviar' })).toBeDisabled()
+    expect(d.getByRole('button', { name: 'Enviar documento' })).toBeDisabled()
     await userEvent.type(d.getByLabelText('Título'), 'Regulamento')
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')
     await userEvent.upload(d.getByLabelText('Arquivo PDF'), pdf())
-    await userEvent.click(d.getByRole('button', { name: 'Enviar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Enviar documento' }))
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
     const [, url, corpo] = gravadas(chamadas)[0]
     expect(url).toBe('/api/admin/documentos')
@@ -124,7 +124,7 @@ describe('documentos', () => {
     expect(d.getByText('A nova versão de “Regulamento” substitui a atual na busca; as anteriores ficam guardadas.')).toBeInTheDocument()
     expect(d.queryByLabelText('Título')).not.toBeInTheDocument()
     await userEvent.upload(d.getByLabelText('Arquivo PDF'), pdf())
-    await userEvent.click(d.getByRole('button', { name: 'Enviar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Enviar documento' }))
     expect(await d.findByRole('alert')).toHaveTextContent('O arquivo precisa ser um PDF.')
     expect(screen.getAllByRole('alert')).toHaveLength(1)
     const [, url, corpo] = gravadas(chamadas)[0]
@@ -158,7 +158,7 @@ async function editarArtigo(resposta: string, rotas: Record<string, Rota> = {}) 
   return chamadas
 }
 const salvo = async (chamadas: ReturnType<typeof tela>) => {
-  await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+  await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar artigo' }))
   await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
   return gravadas(chamadas)[0][2].resposta
 }
@@ -173,13 +173,13 @@ describe('toasts', () => {
       'POST /api/admin/artigos/1/arquivar': () => [200, {}],
     })
     await escolher('Ativo', 'Editar')
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar artigo' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Título repetido.')
     expect(avisos()).not.toHaveTextContent('Artigo salvo.')
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
     await escolher('Rascunho', 'Editar')
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar artigo' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo salvo.'))
     await escolher('Rascunho', 'Ativar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ativar artigo' }))
@@ -196,12 +196,12 @@ describe('toasts', () => {
       'POST /api/admin/documentos/2/arquivar': () => [409, { status: 409, detail: 'O documento já foi arquivado.' }],
       'POST /api/admin/documentos': () => [201, {}],
     })
-    await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Título'), 'Novo')
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')
     await userEvent.upload(d.getByLabelText('Arquivo PDF'), pdf())
-    await userEvent.click(d.getByRole('button', { name: 'Enviar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Enviar documento' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento enviado.'))
 
     await escolher('Edital', 'Arquivar')
@@ -223,7 +223,7 @@ describe('editor Resposta', () => {
     await userEvent.type(d.getByLabelText('Título'), 'Marcas')
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')
     await userEvent.type(await editor(), '<b>x</b> &amp; **y**{enter}fim')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar artigo' }))
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
     expect(gravadas(chamadas)[0][2].resposta).toBe('<b>x</b> &amp; **y**\nfim')
   })
@@ -288,14 +288,14 @@ describe('validade e arquivo', () => {
     const dias = Array.from(calendario.getByRole('grid').querySelectorAll('thead th')).map((h) => h.getAttribute('aria-label') ?? h.textContent)
     ;['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'].forEach((inicio, i) => expect(dias[i], inicio).toMatch(new RegExp(`^${inicio}`)))
     await userEvent.keyboard('{Escape}')
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar artigo' }))
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
     expect(gravadas(chamadas)[0][2]).toMatchObject({ visivelDe: '2026-11-03', visivelAte: '2026-11-17' })
   })
 
   it('soltar PDF em Arquivo PDF envia o arquivo', async () => {
     const chamadas = tela('/univag/documentos', 'documentos', [], { 'POST /api/admin/documentos': () => [201, {}] })
-    await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const d = within(await screen.findByRole('dialog'))
     const campo = d.getByLabelText('Arquivo PDF')
     expect(campo).toHaveAttribute('type', 'file')
@@ -305,8 +305,8 @@ describe('validade e arquivo', () => {
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '3')
     const arquivo = new File(['%PDF-1.4'], 'r.pdf', { type: 'application/pdf' })
     fireEvent.drop(campo.parentElement as HTMLElement, { dataTransfer: { files: [arquivo], items: [{ kind: 'file', type: arquivo.type, getAsFile: () => arquivo }], types: ['Files'] } })
-    await waitFor(() => expect(d.getByRole('button', { name: 'Enviar' })).toBeEnabled())
-    await userEvent.click(d.getByRole('button', { name: 'Enviar' }))
+    await waitFor(() => expect(d.getByRole('button', { name: 'Enviar documento' })).toBeEnabled())
+    await userEvent.click(d.getByRole('button', { name: 'Enviar documento' }))
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
     expect(gravadas(chamadas)[0][1]).toBe('/api/admin/documentos')
     expect((gravadas(chamadas)[0][2].arquivo as File).name).toBe('r.pdf')

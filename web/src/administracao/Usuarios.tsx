@@ -143,7 +143,7 @@ export function Usuarios() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => abrir({ ...Novo })} />
+      <Cabecalho botao="Novo usuário" Icone={Plus} aoClicar={() => abrir({ ...Novo })} />
       <ErroDe erro={erro} oque="os usuários" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
       <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
@@ -159,7 +159,7 @@ export function Usuarios() {
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Salvar usuário">
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

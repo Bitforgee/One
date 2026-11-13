@@ -64,14 +64,13 @@ describe('Novo some com a lista vazia', () => {
     tela('artigos', [])
     abrir('/univag/artigos')
     expect(await screen.findByRole('button', { name: 'Novo artigo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Novo' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Novo artigo' })).toHaveLength(1)
   })
 
   it('Novo some com a lista vazia: com 1 artigo', async () => {
     tela('artigos', [artigo('Rematrícula', 'ATIVO', null)])
     abrir('/univag/artigos')
     await screen.findByText('Rematrícula')
-    expect(screen.getByRole('button', { name: 'Novo' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Novo artigo' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Novo artigo' })).toHaveLength(1)
   })
 })

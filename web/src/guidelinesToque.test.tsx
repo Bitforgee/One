@@ -145,7 +145,7 @@ describe('fechar do Editor', () => {
     celular()
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, []], 'GET /api/admin/setores': () => [200, []] })
     abrir('/univag/usuarios')
-    await userEvent.click(await screen.findByRole('button', { name: 'Novo' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo usuário' }))
     const fechar = await screen.findByRole('button', { name: 'Fechar' })
     const lista = classes(fechar).split(/\s+/)
     expect(lista).toContain('focus-visible:ring-2')

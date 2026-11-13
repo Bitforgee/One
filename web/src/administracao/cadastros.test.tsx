@@ -71,7 +71,7 @@ describe('cadastros', () => {
     expect(d.getByLabelText(/Setor de triagem/)).toBeChecked()
     expect(d.getByLabelText('Ativo')).toBeChecked()
     await userEvent.click(d.getByLabelText('Ativo'))
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/setores/1', { nome: 'Triagem', triagem: true, ativo: false }]]))
   })
 
@@ -83,7 +83,7 @@ describe('cadastros', () => {
     expect(d.getByText('Novo: Setores')).toBeInTheDocument()
     expect(d.getByLabelText(/Setor de triagem/)).not.toBeChecked()
     await userEvent.type(d.getByLabelText('Nome'), 'Secretaria')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await aba('Categorias')
@@ -91,7 +91,7 @@ describe('cadastros', () => {
     d = within(await screen.findByRole('dialog'))
     expect(d.getByLabelText('Ativa')).toBeChecked()
     await userEvent.type(d.getByLabelText('Nome'), 'Estágio')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar categoria' }))
     await waitFor(() =>
       expect(gravadas(chamadas)).toEqual([
         ['POST', '/api/admin/setores', { nome: 'Secretaria', triagem: false, ativo: true }],
@@ -106,14 +106,14 @@ describe('cadastros', () => {
     await userEvent.click(await screen.findByText('Direito'))
     let d = within(await screen.findByRole('dialog'))
     expect(d.getByLabelText('Setor de coordenação')).toHaveValue('')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar curso' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await userEvent.click(screen.getByRole('button', { name: /^Nov[oa] / }))
     d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Nome'), 'Medicina')
     await userEvent.selectOptions(d.getByLabelText('Setor de coordenação'), '2')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar curso' }))
     await waitFor(() =>
       expect(gravadas(chamadas)).toEqual([
         ['PUT', '/api/admin/cursos/5', { nome: 'Direito', setorCoordenacaoId: null }],
@@ -130,7 +130,7 @@ describe('cadastros', () => {
     await userEvent.selectOptions(d.getByLabelText('Setor'), '2')
     await userEvent.type(d.getByLabelText('Título'), 'Atestado')
     await userEvent.type(d.getByLabelText('Texto'), 'Envie o atestado.')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar resposta pronta' }))
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/respostas-prontas', { setorId: 2, titulo: 'Atestado', texto: 'Envie o atestado.' }]]))
   })
   it('o editor abre antes de as listas chegarem', async () => {
@@ -175,10 +175,10 @@ describe('cadastros', () => {
     cadastros({ 'PUT /api/admin/setores/1': () => (++tentativa === 1 ? [422, { status: 422, detail: 'Já existe um setor de triagem.' }] : [200, {}]) })
     const avisos = () => screen.getByRole('region', { name: /^Notificações/ })
     await userEvent.click(await screen.findByRole('button', { name: 'Triagem' }))
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar setor' }))
     expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent('Já existe um setor de triagem.')
     expect(avisos()).not.toHaveTextContent('Cadastro salvo.')
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar setor' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
   })
 
@@ -197,7 +197,7 @@ describe('cadastros', () => {
       await userEvent.click(d.getByLabelText('Liderança de semestre'))
       await userEvent.selectOptions(d.getByLabelText('Curso'), '5')
       await userEvent.selectOptions(d.getByLabelText('Semestre'), '1')
-      await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+      await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
       await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/setores', { nome: 'Líderes Direito 1º', triagem: false, ativo: true, cursoId: 5, semestre: 1 }]]))
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -206,7 +206,7 @@ describe('cadastros', () => {
       expect(d.getByText('Liderança de semestre: ADS, 3º semestre')).toBeInTheDocument()
       expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
       expect(d.queryByLabelText('Liderança de semestre')).not.toBeInTheDocument()
-      await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+      await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
       await waitFor(() => expect(gravadas(chamadas)[1]).toEqual(['PUT', '/api/admin/setores/10', { nome: 'Líderes ADS 3º', triagem: false, ativo: true }]))
     } finally {
       listas.setores.pop()

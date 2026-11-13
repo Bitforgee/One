@@ -16,7 +16,7 @@ async function transferirConversa() {
   await userEvent.click(screen.getByRole('button', { name: /Enviar/ }))
   await screen.findByText('Não encontrei.')
   await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
-  await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+  await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
 }
 
 const transferido: Rota = () => [201, { numero: 'ONE-1', estado: 'ABERTO', setor: 'Financeiro' }]
@@ -42,10 +42,10 @@ describe('transferência', () => {
     const opcoes = within(within(dialogo).getByLabelText('Matrícula')).getAllByRole('option').map((o) => o.textContent)
     expect(opcoes).toEqual(['Escolha a matrícula', '2000567890 — ADS', '2000567891 — Direito'])
     await userEvent.type(within(dialogo).getByLabelText('Descreva seu pedido'), 'Quero trancar o curso')
-    expect(within(dialogo).getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(within(dialogo).getByRole('button', { name: 'Falar com atendente' })).toBeDisabled()
 
     await userEvent.selectOptions(within(dialogo).getByLabelText('Matrícula'), '2')
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Falar com atendente' }))
 
     await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
     expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'Quero trancar o curso', matriculaId: 2 })

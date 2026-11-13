@@ -90,7 +90,7 @@ describe('assistente com identidade', () => {
       await userEvent.click(screen.getByRole('button', { name: /Enviar/ }))
       await screen.findByText('Não encontrei.')
       await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
-      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
       await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
     }
     const completo = { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: 'atendimento@univag.edu.br' }

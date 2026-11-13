@@ -19,23 +19,23 @@ describe('erro de campo da API abaixo do campo', () => {
   type Caso = { nome: string; caminho: string; eu: typeof admin; rotas: Record<string, Rota>; abrirForm: () => Promise<void>; enviar: string; rotulo: string; proximo: string; texto: string; preencher?: (d: ReturnType<typeof within>) => Promise<void> }
   const Casos: Caso[] = [
     {
-      nome: 'Novo artigo', caminho: '/univag/artigos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Perguntas relacionadas (uma por linha)', enviar: 'Salvar',
+      nome: 'Novo artigo', caminho: '/univag/artigos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Perguntas relacionadas (uma por linha)', enviar: 'Salvar artigo',
       rotas: { 'GET /api/admin/artigos': ok([]), 'GET /api/admin/categorias': ok(categorias), 'POST /api/admin/artigos': campo400('titulo', 'Informe o título, com até 200 caracteres.') },
       abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))),
     },
     {
-      nome: 'Enviar PDF', caminho: '/univag/documentos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Categoria', enviar: 'Enviar',
+      nome: 'Enviar PDF', caminho: '/univag/documentos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Categoria', enviar: 'Enviar documento',
       rotas: { 'GET /api/admin/documentos': ok([]), 'GET /api/admin/categorias': ok(categorias), 'POST /api/admin/documentos': campo400('titulo', 'Informe o título, com até 200 caracteres.') },
-      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))),
+      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))),
       preencher: async (d) => void (await userEvent.upload(d.getByLabelText('Arquivo PDF'), pdf)),
     },
     {
-      nome: 'Novo usuário', caminho: '/univag/usuarios', eu: admin, texto: 'CPF inválido.', rotulo: 'CPF', proximo: 'Nome', enviar: 'Salvar',
+      nome: 'Novo usuário', caminho: '/univag/usuarios', eu: admin, texto: 'CPF inválido.', rotulo: 'CPF', proximo: 'Nome', enviar: 'Salvar usuário',
       rotas: { 'GET /api/admin/usuarios': ok([]), 'GET /api/admin/setores': ok([]), 'POST /api/admin/usuarios': campo400('cpf', 'CPF inválido.') },
-      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo' }))),
+      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo usuário' }))),
     },
     {
-      nome: 'Cadastros, Setores', caminho: '/univag/cadastros', eu: admin, texto: 'Informe o nome do setor.', rotulo: 'Nome', proximo: 'Setor de triagem (exatamente um na instituição)', enviar: 'Salvar',
+      nome: 'Cadastros, Setores', caminho: '/univag/cadastros', eu: admin, texto: 'Informe o nome do setor.', rotulo: 'Nome', proximo: 'Setor de triagem (exatamente um na instituição)', enviar: 'Salvar setor',
       rotas: {
         ...Object.fromEntries(['setores', 'categorias', 'cursos', 'regras', 'respostas-prontas'].map((k) => [`GET /api/admin/${k}`, ok([])])),
         'POST /api/admin/setores': campo400('nome', 'Informe o nome do setor.'),

@@ -106,9 +106,9 @@ describe('assistente', () => {
     expect(screen.queryByLabelText('Mensagem')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Enviar/ })).not.toBeInTheDocument()
     expect(falar()).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Encerrar' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Encerrar conversa' })).toBeVisible()
     const botoes = screen.getAllByRole('button').filter((b) => !b.closest('[data-sidebar=sidebar], header')).map((b) => b.textContent?.trim())
-    expect(botoes).toEqual(['Falar com atendente', 'Encerrar'])
+    expect(botoes).toEqual(['Falar com atendente', 'Encerrar conversa'])
   }, 15000)
 
   it('limite destaca Falar com atendente', async () => {

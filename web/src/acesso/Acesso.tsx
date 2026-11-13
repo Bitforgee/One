@@ -309,7 +309,7 @@ export function TrocarSenha() {
       {me.deveTrocarSenha && <Alert>Troque a senha temporária para continuar.</Alert>}
       <Formulario
         schema={z.object({ senhaAtual: obrigatorio, novaSenha: obrigatorio })}
-        botao="Salvar"
+        botao="Salvar nova senha"
         enviar={async (v) => {
           await api('/api/auth/senha', v)
           const atualizado = { ...me, deveTrocarSenha: false }

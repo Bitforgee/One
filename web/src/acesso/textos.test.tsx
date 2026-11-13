@@ -126,7 +126,7 @@ describe('textos das telas de acesso', () => {
   })
 
   it('textos Trocar senha', async () => {
-    const t = estados(['Trocar senha', 'Troque a senha temporária para continuar.', 'Senha atual', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar'])
+    const t = estados(['Trocar senha', 'Troque a senha temporária para continuar.', 'Senha atual', 'Nova senha', 'De 8 a 128 caracteres.', 'Salvar nova senha'])
     for (const deveTrocarSenha of [true, false]) {
       api({ 'GET /api/auth/me': () => [200, me({ deveTrocarSenha })] })
       const { container, unmount } = abrir('/univag/trocar-senha')

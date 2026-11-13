@@ -35,7 +35,7 @@ describe('liderança do semestre', () => {
     const dialogo = await abrirODialogo()
 
     expect(await within(dialogo).findByText(Aviso)).toBeInTheDocument()
-    expect(nomesDosBotoes(dialogo).filter((n) => ['Cancelar', 'Prefiro a coordenação', 'Enviar à liderança', 'Confirmar'].includes(n!))).toEqual(['Cancelar', 'Enviar à liderança'])
+    expect(nomesDosBotoes(dialogo).filter((n) => ['Voltar à conversa', 'Prefiro a coordenação', 'Enviar à liderança', 'Falar com atendente', 'Cancelar', 'Confirmar'].includes(n!))).toEqual(['Voltar à conversa', 'Enviar à liderança'])
     expect(within(dialogo).queryByText(/Sua conversa será enviada a um atendente/)).not.toBeInTheDocument()
 
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Enviar à liderança' }))
@@ -50,7 +50,7 @@ describe('liderança do semestre', () => {
 
     let dialogo = await abrirODialogo()
     await within(dialogo).findByText(Aviso)
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Voltar à conversa' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(chamadas.some((c) => c.url.endsWith('/transferir'))).toBe(false)
 
@@ -73,8 +73,8 @@ describe('liderança do semestre', () => {
     expect(await within(dialogo).findByText('Sua conversa será enviada a um atendente da instituição, que responde por aqui.')).toBeInTheDocument()
     await waitFor(() => expect(chamadas.some((c) => c.url === '/api/conversas/7/destino')).toBe(true))
     expect(within(dialogo).queryByText(Aviso)).not.toBeInTheDocument()
-    expect(nomesDosBotoes(dialogo)).toContain('Confirmar')
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
+    expect(nomesDosBotoes(dialogo)).toContain('Falar com atendente')
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Falar com atendente' }))
     await screen.findByText(/Sua solicitação ONE-1 foi para/)
     expect(chamadas.find((c) => c.url === '/api/conversas/7/transferir')?.corpo).toEqual({})
   })
@@ -87,7 +87,7 @@ describe('liderança do semestre', () => {
 
     await waitFor(() => expect(chamadas.some((c) => c.url === '/api/conversas/7/destino')).toBe(true))
     expect(await within(dialogo).findByText('Não foi possível confirmar para onde sua dúvida vai. Feche esta janela e tente de novo.')).toBeInTheDocument()
-    expect(within(dialogo).getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+    expect(within(dialogo).getByRole('button', { name: 'Falar com atendente' })).toBeDisabled()
     expect(within(dialogo).queryByRole('button', { name: 'Prefiro a coordenação' })).not.toBeInTheDocument()
     expect(chamadas.some((c) => c.url.endsWith('/transferir'))).toBe(false)
   })
@@ -135,7 +135,7 @@ describe('liderança do semestre', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Falar com atendente/ }))
     const dialogo = await screen.findByRole('dialog')
     await userEvent.type(within(dialogo).getByLabelText('Descreva seu pedido'), 'Quero trancar o curso')
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Falar com atendente' }))
 
     await screen.findByText(/Sua solicitação ONE-1 foi para/)
     expect(chamadas.some((c) => c.url.includes('/destino'))).toBe(false)

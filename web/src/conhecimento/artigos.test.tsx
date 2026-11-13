@@ -24,7 +24,7 @@ describe('artigos', () => {
     await userEvent.selectOptions(dialogo.getByLabelText('Categoria'), '3')
     await userEvent.type(dialogo.getByLabelText('Resposta'), 'Faltas não são abonadas.')
     await userEvent.type(dialogo.getByLabelText(/Links/), 'https://univag.edu.br/estatuto')
-    await userEvent.click(dialogo.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(dialogo.getByRole('button', { name: 'Salvar artigo' }))
 
     await screen.findByText('Os artigos são a base das respostas do assistente.')
     expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({

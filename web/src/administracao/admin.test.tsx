@@ -86,7 +86,7 @@ describe('administração', () => {
     await userEvent.type(d.getByLabelText('Nome'), 'Carla')
     await userEvent.type(d.getByLabelText('E-mail'), 'carla@univag.edu.br')
     await userEvent.click(d.getByLabelText('Financeiro'))
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar usuário' }))
 
     await waitFor(() => expect(chamadas.some((c) => c.metodo === 'POST')).toBe(true))
     expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({ cpf: '12345678909', nome: 'Carla', email: 'carla@univag.edu.br', papeis: ['ATENDENTE'], setores: [2] })
@@ -110,7 +110,7 @@ describe('administração', () => {
     expect(within(d.getByLabelText('Categoria')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha a categoria', 'Notas'])
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '7')
     expect(d.queryByLabelText('Curso')).not.toBeInTheDocument()
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar fluxo' }))
 
     await waitFor(() => expect(chamadas.some((c) => c.metodo === 'POST')).toBe(true))
     expect(chamadas.find((c) => c.metodo === 'POST')?.corpo).toEqual({ categoriaId: 7, cursoId: null, semestre: null })
@@ -124,7 +124,7 @@ describe('administração', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('Importar alunos.csv?')).toBeInTheDocument()
-    await userEvent.click(d.getByRole('button', { name: 'Voltar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     await userEvent.click(screen.getByRole('button', { name: 'Importar' }))
     await screen.findByRole('dialog')

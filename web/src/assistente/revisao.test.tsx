@@ -55,7 +55,7 @@ describe('assistente revisado', () => {
       await userEvent.click(await screen.findByRole('button', { name: 'Não' }))
       expect(await screen.findAllByText(Convite)).toHaveLength(1)
       await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
-      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+      await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
 
       const titulo = await screen.findByText('Sua solicitação ONE-5 foi para Financeiro')
       expect(screen.queryAllByText(Convite)).toHaveLength(0)

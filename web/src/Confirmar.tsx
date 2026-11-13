@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 
-export function Confirmar({ aberto, fechar, titulo, botao, voltar = 'Voltar', destrutivo, confirmar, children }: {
+export function Confirmar({ aberto, fechar, titulo, botao, voltar, destrutivo, confirmar, children }: {
   aberto: boolean; fechar: () => void; titulo: string; botao: string; voltar?: string; destrutivo?: boolean; confirmar: () => void; children: ReactNode
 }) {
   return (
@@ -14,7 +14,7 @@ export function Confirmar({ aberto, fechar, titulo, botao, voltar = 'Voltar', de
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={fechar}>
-            {voltar}
+            {voltar ?? (destrutivo ? 'Voltar' : 'Cancelar')}
           </Button>
           <Button variant={destrutivo ? 'destructive' : 'default'} onClick={confirmar}>
             {botao}

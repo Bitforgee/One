@@ -20,7 +20,7 @@ describe('setor em fluxo publicado', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Financeiro' }))
     const editor = within(await screen.findByRole('dialog'))
     await userEvent.click(editor.getByLabelText('Ativo'))
-    await userEvent.click(editor.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(editor.getByRole('button', { name: 'Salvar setor' }))
 
     expect(await within(screen.getByRole('dialog')).findByText(detail)).toBeInTheDocument()
     expect(screen.getByRole('dialog')).toBeInTheDocument()

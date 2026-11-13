@@ -272,7 +272,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   )
   const encerrar = emConversa && (
     <Button type="button" size="sm" variant="outline" onClick={() => confirmar('encerrar')}>
-      Encerrar
+      Encerrar conversa
     </Button>
   )
   return (
@@ -375,10 +375,10 @@ function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: Mo
         {encerrar ? <p>A conversa será encerrada.</p> : <PedidoAoAtendente {...pedido} />}
         <DialogFooter>
           <Button variant="outline" onClick={fechar}>
-            Cancelar
+            {encerrar ? 'Cancelar' : 'Voltar à conversa'}
           </Button>
           <Button onClick={confirmarAcao} disabled={!pronto || (!encerrar && pedido.falhou)}>
-            {aLideranca ? 'Enviar à liderança' : 'Confirmar'}
+            {aLideranca ? 'Enviar à liderança' : encerrar ? 'Confirmar' : 'Falar com atendente'}
           </Button>
         </DialogFooter>
       </DialogContent>

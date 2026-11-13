@@ -81,7 +81,7 @@ describe('fluxos', () => {
     await userEvent.selectOptions(d.getByLabelText('Categoria'), '9')
     await userEvent.selectOptions(d.getByLabelText('Curso'), '4')
     await userEvent.selectOptions(d.getByLabelText('Semestre'), '3')
-    await userEvent.click(d.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar fluxo' }))
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/fluxos', { categoriaId: 9, cursoId: 4, semestre: 3 }]]))
   })
 

@@ -122,6 +122,7 @@ export function Documentos() {
   useFocoNoPrimeiroErro(acao.error)
   const sujo = useSujo(envio, chaveDoEnvio)
 
+  const semItens = !documentos?.length
   const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: fechar })
 
   function confirmarArquivar(d: Documento) {
@@ -131,7 +132,7 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao="Enviar PDF" Icone={Upload} aoClicar={() => abrir({ ...NovoEnvio })}>
+      <Cabecalho botao={semItens ? undefined : 'Novo documento'} Icone={Upload} aoClicar={() => abrir({ ...NovoEnvio })}>
         <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       </Cabecalho>
       <ErroDe erro={erro} oque="os documentos" tentar={recarregar} />
@@ -153,7 +154,7 @@ export function Documentos() {
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={fechar} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={fechar} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar documento" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

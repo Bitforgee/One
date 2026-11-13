@@ -21,7 +21,7 @@ const Assistente = [
   'Quer explicar melhor ou falar com um atendente?',
   'Confirmar transferência',
   'Falar com atendente',
-  'Encerrar',
+  'Encerrar conversa',
   'Enviar',
   'Falar com um atendente?',
   'Encerrar a conversa?',
@@ -31,6 +31,7 @@ const Assistente = [
   'Escolha a matrícula',
   'A conversa será encerrada.',
   'Cancelar',
+  'Voltar à conversa',
   'Confirmar',
   'Sua solicitação ONE-1 foi para Financeiro',
   'A resposta chega em Solicitações e no seu e-mail.',
@@ -124,9 +125,9 @@ describe('textos', () => {
     await screen.findByText('É do semestre atual?')
     await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
     t.conferir(await screen.findByRole('dialog'))
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Voltar à conversa' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await userEvent.click(screen.getByRole('button', { name: 'Encerrar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Encerrar conversa' }))
     t.conferir(await screen.findByRole('dialog'))
     montada.unmount()
 
@@ -140,7 +141,7 @@ describe('textos', () => {
     t.conferir(tela(), [...conversa, 'Vou transferir você.'])
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar transferência' }))
     t.conferir(await screen.findByRole('dialog'))
-    await userEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Falar com atendente' }))
     await screen.findByText('Olá!')
     t.conferir(tela(), [...conversa, 'Vou transferir você.', 'Olá!', 'Carla'])
     montada.unmount()
@@ -154,7 +155,7 @@ describe('textos', () => {
 
     montada = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?'), 'POST /api/conversas/7/encerrar': () => [200, { desfecho: 'ENCERRADA' }] })
     await enviar()
-    await userEvent.click(await screen.findByRole('button', { name: 'Encerrar' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Encerrar conversa' }))
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
     await screen.findByText('Conversa encerrada.')
     t.conferir(tela(), [...conversa, 'É do semestre atual?'])

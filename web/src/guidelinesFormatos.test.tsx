@@ -49,7 +49,7 @@ describe('tamanho, unidade e plural', () => {
   it('C36 a ajuda do documento mostra 20 MB com espaço inseparável', async () => {
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/documentos': () => [200, []], 'GET /api/admin/categorias': () => [200, []] })
     abrir('/univag/documentos')
-    await userEvent.click(await screen.findByRole('button', { name: 'Enviar PDF' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const dialogo = await screen.findByRole('dialog')
     expect(within(dialogo).getByText(/^PDF com texto/).textContent).toBe(`PDF com texto (não digitalizado), até 20${NB}MB.`)
   })

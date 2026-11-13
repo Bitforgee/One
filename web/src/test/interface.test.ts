@@ -291,7 +291,7 @@ describe('interface nova', () => {
         expect([tipo('Válido de (opcional)', dialogo), tipo('Válido até (opcional)', dialogo)]).toEqual(['date', 'date'])
       }],
       ['/univag/documentos', { 'GET /api/admin/documentos': () => [200, []], 'GET /api/admin/categorias': () => [200, []] }, async () => {
-        await userEvent.click(await screen.findByRole('button', { name: /Enviar PDF/ }))
+        await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
         expect(tipo('Arquivo PDF', await screen.findByRole('dialog'))).toBe('file')
       }],
       ['/univag/matriculas', {}, async () => {

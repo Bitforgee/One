@@ -5,9 +5,9 @@ import { estados } from '../test/textos'
 import { abrir, api, escolher, me, type Rota } from '../test/util'
 
 const Usuarios = [
-  'Usuários', 'Novo', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.',
+  'Usuários', 'Novo usuário', 'Desativado', 'CPF', 'Situação', '·', 'Aluno', 'Atendente', 'Administrador', 'Editar', 'Desativar', 'Nenhum usuário', 'Cadastre a equipe ou importe as matrículas.',
   'Novo usuário', 'Editar usuário', 'Nome', 'E-mail', 'Papéis', 'Setores do atendente', 'Senha temporária (opcional)',
-  'Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.', 'Cancelar', 'Salvar',
+  'Com senha temporária, a pessoa troca a senha no primeiro login. Sem ela, entra pelo primeiro acesso por e-mail.', 'Cancelar', 'Salvar usuário',
   'A pessoa perde o acesso na próxima requisição. Conversas, chamados e histórico ficam guardados; os chamados em que ela era responsável voltam para a fila do setor.',
   'Voltar', 'Usuário salvo.', 'Usuário desativado.',
 ]
@@ -15,7 +15,7 @@ const Matriculas = [
   'Matrículas', 'Baixe o modelo', 'Baixar modelo (CSV)', 'Preencha uma linha por aluno', 'Envie o arquivo', 'Arquivo CSV em UTF-8, separado por ponto e vírgula, com o cabeçalho ', 'cpf;nome;email;matricula;curso;semestre;situacao',
   '. Alunos são atualizados pelo CPF e matrículas pelo número. Se alguma linha tiver erro, nada é importado.', 'Arquivo CSV', 'Importar',
   'Importação concluída: ', ' matrículas criadas e ', ' atualizada.', 'Linha',
-  'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Voltar',
+  'Os dados de alunos e matrículas que já existem serão substituídos pelos do arquivo.', 'Cancelar',
 ]
 const Titulos = ['Setores', 'Categorias', 'Cursos', 'Fluxos', 'Respostas prontas']
 const Cadastros = [
@@ -26,7 +26,7 @@ const Cadastros = [
   'Nome', 'Setor de triagem (exatamente um na instituição)', 'Ativo', 'Liderança de semestre', 'Ativa', 'Setor de coordenação', 'Sem coordenação (vai para a triagem)',
   'Categoria', 'Abrangência', 'Um curso', 'Um semestre de um curso', 'Escolha a categoria', 'Escolha o setor', 'Título', 'Texto',
   'Etapa 1', 'Setor fixo', 'Lista', 'Canvas', 'Adicionar etapa', 'Simular um aluno', 'Escolha o curso', 'Escolha o semestre', 'Simular', 'Publicar', 'Descartar rascunho', 'Salvar rascunho', 'Mais',
-  'Cancelar', 'Salvar', 'Cadastro salvo.', 'Voltar',
+  'Cancelar', 'Salvar setor', 'Salvar categoria', 'Salvar fluxo', 'Salvar curso', 'Salvar resposta pronta', 'Cadastro salvo.', 'Voltar',
 ]
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
@@ -76,7 +76,7 @@ describe('textos', () => {
     await userEvent.click(screen.getByRole('menuitem', { name: 'Editar' }))
     const editar = await screen.findByRole('dialog')
     t.conferir(editar, fixture)
-    await userEvent.click(within(editar).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(editar).getByRole('button', { name: 'Salvar usuário' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Usuário salvo.'))
     t.conferir(avisos())
 
@@ -177,7 +177,7 @@ describe('textos', () => {
       } else {
         t.conferir(await screen.findByRole('dialog', { name: `Editar: ${titulo}` }), Fixture)
         if (titulo === 'Setores') {
-          await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar' }))
+          await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salvar setor' }))
           await waitFor(() => expect(avisos()).toHaveTextContent('Cadastro salvo.'))
           t.conferir(avisos())
         } else await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))

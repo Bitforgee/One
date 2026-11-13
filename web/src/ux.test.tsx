@@ -218,7 +218,7 @@ describe('ux', () => {
     semChamado()
     await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
     semChamado()
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
     await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
     semChamado()
   })

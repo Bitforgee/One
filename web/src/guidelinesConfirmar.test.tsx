@@ -45,7 +45,7 @@ describe('confirmar ativar artigo', () => {
     abrir('/univag/artigos')
     await screen.findByText('Faltas')
     await escolher('Faltas', 'Ativar')
-    await userEvent.click((await dialogo()).getByRole('button', { name: 'Voltar' }))
+    await userEvent.click((await dialogo()).getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(posts(chamadas)).toEqual([])
   })
@@ -67,7 +67,7 @@ describe('confirmar ações do chamado', () => {
   it('C59 Voltar não envia nada', async () => {
     const chamadas = detalhe(daEquipe({ estado: 'ABERTO', acoes: ['assumir'], responsavel: null }))
     await userEvent.click(await screen.findByRole('button', { name: 'Assumir' }))
-    await userEvent.click((await dialogo()).getByRole('button', { name: 'Voltar' }))
+    await userEvent.click((await dialogo()).getByRole('button', { name: 'Cancelar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(posts(chamadas)).toEqual([])
   })

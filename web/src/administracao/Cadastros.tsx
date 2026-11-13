@@ -54,6 +54,7 @@ const Ajudas: Record<Aba, string> = {
 }
 const SemFluxo: Vazio = { Icone: Workflow, titulo: 'Nenhum fluxo', frase: 'Sem fluxo, os chamados vão para a Triagem.' }
 const Botoes: Record<Aba, string> = { setores: 'Novo setor', categorias: 'Nova categoria', cursos: 'Novo curso', fluxos: 'Novo fluxo', prontas: 'Nova resposta pronta' }
+const Salvares: Record<Aba, string> = { setores: 'Salvar setor', categorias: 'Salvar categoria', cursos: 'Salvar curso', fluxos: 'Salvar fluxo', prontas: 'Salvar resposta pronta' }
 const simples = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 const SemResultado = (busca: string, limpar: () => void): Vazio => ({
   Icone: SearchX,
@@ -350,7 +351,7 @@ export function Cadastros() {
         ))}
       </Tabs>
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao={Salvares[aba]}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>
     </div>

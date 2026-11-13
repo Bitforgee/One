@@ -5,21 +5,21 @@ import { estados } from '../test/textos'
 import { abrir, api, escolher, me, type Rota } from '../test/util'
 
 const Artigos = [
-  'Artigos', 'Novo', 'Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.',
+  'Artigos', 'Novo artigo', 'Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.',
   'Indexando', 'Indexado', 'Falhou', 'Rascunho', 'Ativo', 'Arquivado', 'versão', 'válido de', 'válido até', 'Editar', 'Ativar', 'Arquivar',
   'Nenhum artigo', 'Os artigos são a base das respostas do assistente.', 'Versão', 'Validade', 'Situação',
   'Novo artigo', 'Editar artigo', 'Salvar cria uma nova versão; as anteriores ficam guardadas.',
   'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.',
   'Título', 'Perguntas relacionadas (uma por linha)', 'Categoria', 'Escolha a categoria', 'Resposta', 'Links (um por linha, com https://)',
-  'Válido de (opcional)', 'Válido até (opcional)', 'Cancelar', 'Salvar', 'Escolher validade no calendário',
+  'Válido de (opcional)', 'Válido até (opcional)', 'Cancelar', 'Salvar artigo', 'Escolher validade no calendário',
   'Ativar o artigo?', 'O assistente passa a usar este artigo nas respostas aos alunos.', 'Ativar artigo', 'Arquivar o artigo?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
   'Artigo salvo.', 'Artigo ativado.', 'Artigo arquivado.',
 ]
 const Documentos = [
-  'Documentos', 'Enviar PDF', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
+  'Documentos', 'Novo documento', 'Enviar PDF', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
   'Indexado', 'Ativo', 'Arquivado', 'versão', 'página', 'páginas', 'Nova versão', 'Arquivar', 'Versão', 'Arquivo', 'Situação',
   'PDF com texto (não digitalizado), até 20\u00a0MB.', 'A nova versão de “', '” substitui a atual na busca; as anteriores ficam guardadas.',
-  'Título', 'Categoria', 'Escolha a categoria', 'Arquivo PDF', 'Cancelar', 'Enviar',
+  'Título', 'Categoria', 'Escolha a categoria', 'Arquivo PDF', 'Cancelar', 'Enviar documento',
   'Arquivar o documento?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
   'Documento enviado.', 'Documento arquivado.',
 ]
@@ -85,7 +85,7 @@ describe('textos', () => {
     await userEvent.keyboard('{Escape}')
     dialogo = await screen.findByRole('dialog')
     t.conferir(dialogo, ['Estágio obrigatório', 'quantas horas?', 'São 300 horas.', 'https://univag.edu.br/estagio', 'Estágio'])
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar artigo' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo salvo.'))
     t.conferir(avisos())
 
@@ -124,14 +124,14 @@ describe('textos', () => {
     t.conferir(await screen.findByRole('dialog'), ['Regulamento'])
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
-    await userEvent.click(within(tela()).getByRole('button', { name: /Enviar PDF/ }))
+    await userEvent.click(within(tela()).getByRole('button', { name: 'Novo documento' }))
     const dialogo = await screen.findByRole('dialog')
     t.conferir(dialogo, ['Estágio'])
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Novo')
     await userEvent.selectOptions(within(dialogo).getByLabelText('Categoria'), '3')
     await userEvent.upload(within(dialogo).getByLabelText('Arquivo PDF'), new File(['%PDF-1.4'], 'r.pdf', { type: 'application/pdf' }))
     t.conferir(dialogo, ['Novo', 'Estágio', 'r.pdf'])
-    await userEvent.click(within(dialogo).getByRole('button', { name: 'Enviar' }))
+    await userEvent.click(within(dialogo).getByRole('button', { name: 'Enviar documento' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Documento enviado.'))
     t.conferir(avisos())
 

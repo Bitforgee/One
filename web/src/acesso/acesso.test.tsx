@@ -130,7 +130,7 @@ describe('acesso', () => {
       ['/univag', 'Entrar', '/api/auth/login', [['CPF', '1'], ['Senha', 'x']], { ...instituicao, 'POST /api/auth/login': recusa('CPF inválido.') }],
       ['/univag/primeiro-acesso', 'Enviar link', '/api/auth/primeiro-acesso', [['CPF', '1']], { 'POST /api/auth/primeiro-acesso': recusa('CPF inválido.') }],
       ['/univag/definir-senha?token=t', 'Salvar senha', '/api/auth/definir-senha', [['Nova senha', 'x']], { 'POST /api/auth/definir-senha': recusa('Senha curta.') }],
-      ['/univag/trocar-senha', 'Salvar', '/api/auth/senha', [['Senha atual', 'x'], ['Nova senha', 'x']], { 'GET /api/auth/me': () => [200, me()], 'POST /api/auth/senha': recusa('Senha curta.') }],
+      ['/univag/trocar-senha', 'Salvar nova senha', '/api/auth/senha', [['Senha atual', 'x'], ['Nova senha', 'x']], { 'GET /api/auth/me': () => [200, me()], 'POST /api/auth/senha': recusa('Senha curta.') }],
     ]
     for (const [caminho, botao, url, campos, rotas] of telas) {
       for (const vazio of campos.map(([rotulo]) => rotulo)) {
@@ -376,7 +376,7 @@ describe('acesso', () => {
     expect(await screen.findByText('Troque a senha temporária para continuar.')).toBeInTheDocument()
     await userEvent.type(screen.getByLabelText('Senha atual'), 'temporaria-1')
     await userEvent.type(screen.getByLabelText('Nova senha'), 'senha-boa-123')
-    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar nova senha' }))
     expect(await screen.findByRole('heading', { name: 'Assistente' })).toBeInTheDocument()
     expect(chamadas.find((c) => c.url === '/api/auth/senha')?.corpo).toEqual({ senhaAtual: 'temporaria-1', novaSenha: 'senha-boa-123' })
   })

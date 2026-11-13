@@ -126,7 +126,7 @@ const tituloDaJanela = (r?: Rascunho) => (r?.id ? 'Editar artigo' : 'Novo artigo
 
 export function Artigos() {
   const { itens: artigos, categorias, erro, recarregar } = useCatalogo<Artigo>('/api/admin/artigos')
-  const vazia = artigos?.length === 0
+  const semItens = !artigos?.length
   const { visiveis, mais } = useMostrarMais(artigos)
   const achar = (id: number) => artigos?.filter((a) => a.id === id).map(rascunho)[0]
   const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novo, !!artigos)
@@ -146,7 +146,7 @@ export function Artigos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao={vazia ? undefined : 'Novo'} Icone={Plus} aoClicar={() => abrir({ ...Novo })}>
+      <Cabecalho botao={semItens ? undefined : 'Novo artigo'} Icone={Plus} aoClicar={() => abrir({ ...Novo })}>
         <p className="text-sm text-muted-foreground">Orientações internas usadas pelo assistente. O aluno nunca vê os artigos, só a resposta.</p>
       </Cabecalho>
       <ErroDe erro={erro} oque="os artigos" tentar={recarregar} />
@@ -163,7 +163,7 @@ export function Artigos() {
       </Tabela>
       {mais}
 
-      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={fechar} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Salvar artigo">
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 
