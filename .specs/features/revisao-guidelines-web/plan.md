@@ -75,7 +75,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 4. The system SHALL declarar `overscroll-behavior: contain` em `[data-slot=sheet-content]`, `[data-slot=dialog-content]`, `[data-slot=popover-content]` e no corpo rolável do `Editor`
 5. WHERE `pointer: fine` casa, the system SHALL declarar `overscroll-behavior: none` em `html`; em `pointer: coarse` o `html` mantém o padrão
 6. The system SHALL declarar `scroll-padding-top: 3.5rem` e `scroll-padding-bottom: calc(var(--barra, 0px) + 1rem)` em `html`
-7. WHEN o tema muda entre claro, escuro e preto, the system SHALL atualizar o `<meta name="theme-color">` para `#ffffff`, `#0a0a0a` e `#000000`
+7. WHEN o tema muda entre claro, escuro e preto, the system SHALL atualizar o `<meta name="theme-color">` para o `--background` do claro, o do escuro e `#000000` no preto (emenda 1: a barra combina com o fundo da página)
 8. The `manifest` SHALL declarar `id: "/"`, `scope: "/"`, um ícone `purpose: "maskable"` e `background_color` igual ao `theme_color` claro
 9. The `Topo` (`Autenticado.tsx`) e o cabeçalho do `Editor` SHALL somar `env(safe-area-inset-top)` ao padding superior
 
@@ -86,7 +86,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 **Acceptance Criteria**
 
 10. WHEN um campo tem erro, the `Campo` SHALL renderizar o erro com `id="<id>-erro"` e `role="alert"`, e o controle SHALL declarar `aria-describedby` com o id da dica e o id do erro
-11. WHEN o envio do formulário falha na validação, the system SHALL mover o foco para o primeiro campo com erro
+11. WHEN o envio do formulário falha na validação, the system SHALL mover o foco para o primeiro campo com erro, em Acesso, Artigos, Documentos, Instituições, Usuários e Cadastros
 12. IF `Acesso.tsx` renderiza dois campos com erro, THEN the system SHALL gerar ids de erro distintos (`cpf-erro`, `senha-erro`)
 13. The campos de CPF, e-mail, URL, protocolo (`ONE-n`), slug, busca e título SHALL declarar `name`, `autoComplete="off"` (exceto login: `username`/`current-password`/`new-password`) e `spellCheck={false}` nos de código, e-mail e URL
 14. The campos de e-mail, telefone e URL SHALL declarar `type="email"`, `type="tel"` e `type="url"`
@@ -102,7 +102,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 17. WHEN a pessoa escolhe `Continuar editando`, the system SHALL manter o `Editor` aberto com os valores digitados
 18. WHEN o `Editor` não está sujo, the system SHALL fechar sem pedir confirmação
 19. WHEN a pessoa escolhe "Descartar rascunho" do fluxo, the system SHALL abrir `Confirmar` com o botão `Descartar rascunho` e só então chamar o DELETE
-20. WHEN a pessoa escolhe "Remover etapa" no canvas ou no painel da etapa e a etapa tem destino, setor ou prazo, the system SHALL abrir `Confirmar` antes de remover
+20. WHEN a pessoa escolhe "Remover etapa" no canvas ou no painel da etapa e a etapa tem setor ou prazo (todas têm destino, então ele não decide; emenda 1), the system SHALL abrir `Confirmar` antes de remover
 21. WHEN o campo de resposta do chamado tem texto não enviado e a pessoa navega para outra rota, the system SHALL abrir a guarda de navegação com `Descartar resposta?`
 
 **Independent test:** abrir "Novo artigo", digitar, tocar fora: aparece a confirmação; "Continuar editando" mantém o texto.
@@ -144,10 +144,10 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 38. The system SHALL formatar datas de `Instituicoes` e `Mcp` com `Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })`, sem `slice` de texto formatado
 39. The `<th>` de ações vazio de `Tabela` SHALL conter `<span class="sr-only">Ações</span>`
 40. The métricas de `Indicadores` SHALL usar `<dl>`, `<dt>`, `<dd>`; a lista de ranking SHALL declarar `role="list"`
-41. The `<img>` de logo, foto de login, avatar e `Sigla` SHALL declarar `width` e `height`
+41. The `<img>` de logo, foto de login, avatar, `Sigla`, `CampoImagem` e as imagens da `PreviaAparencia` SHALL declarar `width` e `height`
 42. WHEN a rota sob `/:slug` não existe, the system SHALL mostrar a página `Página não encontrada` com `h1` e link `Voltar ao início`
 43. WHEN a rota muda, the system SHALL atualizar `document.title` para `<Rota> · <Instituição>` e mover o foco para `#conteudo`
-44. The nome da marca, o protocolo `ONE-n`, o slug, CPF, e-mail e telefone exibidos SHALL declarar `translate="no"`
+44. The nome da marca, o protocolo `ONE-n`, o slug, CPF, e-mail e telefone exibidos, em qualquer tela e dentro de frases, SHALL declarar `translate="no"` num `<span>` em volta só do token
 45. The citações em texto SHALL usar aspas curvas “ ” no lugar de `"` e `«»`
 46. The enums `ATIVO`, `EXPIRADO`, `REVOGADO` de `Mcp` SHALL aparecer como `Ativo`, `Expirado`, `Revogado`
 
@@ -178,7 +178,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 **Acceptance Criteria**
 
 53. WHEN a pessoa muda o período de `Indicadores`, the system SHALL gravar `de` e `ate` na query string (`?de=2026-11-01&ate=2026-11-30`) e restaurar o período ao recarregar
-54. WHEN a pessoa digita na busca de Usuários, Cadastros ou Chamados, the system SHALL gravar `q` na query string com `replace`, sem empilhar histórico
+54. WHEN a pessoa digita na busca de Usuários ou Cadastros (Chamados não tem busca; emenda 1), the system SHALL gravar `q` na query string com `replace`, sem empilhar histórico
 55. WHEN a pessoa abre o `Editor` de Artigos, Documentos, Cadastros ou Usuários, the system SHALL gravar `editar=<id>` (ou `editar=novo`) na query string e reabrir o painel ao recarregar
 56. WHEN a pessoa troca a aba de `Integracoes`, the system SHALL usar `replace`, como `Cadastros`
 57. IF a query string traz um valor inválido (data malformada, id inexistente), THEN the system SHALL ignorá-lo e mostrar a tela sem filtro
@@ -191,8 +191,8 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 
 58. WHEN a pessoa escolhe "Ativar" em Artigos, the system SHALL abrir `Confirmar` com o texto `O assistente passa a usar este artigo nas respostas aos alunos.` e o botão `Ativar artigo`
 59. WHEN o atendente escolhe "Assumir" no chamado, the system SHALL abrir `Confirmar` com o botão `Assumir chamado`
-60. WHEN o atendente escolhe "Resolver" ou "Confirmar resolução", the system SHALL abrir `Confirmar` com o botão `Resolver chamado`
-61. WHEN o atendente escolhe "Rejeitar resolução", the system SHALL abrir `Confirmar` com o botão `Rejeitar resolução`
+60. WHEN o atendente escolhe "Resolver" ou o aluno escolhe "Confirmar resolução", the system SHALL abrir `Confirmar` com o botão `Resolver chamado`
+61. WHEN o aluno escolhe "Rejeitar resolução", the system SHALL abrir `Confirmar` com o botão `Rejeitar resolução`
 
 **Independent test:** em um chamado aberto, tocar "Assumir": aparece a confirmação e nada muda até confirmar.
 
@@ -218,6 +218,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 | `preload` de fontes e subset latino | ganho de desempenho sem defeito medido; fica para uma feature de desempenho |
 | Fallback `<noscript>` e tela de carregamento do `index.html` | sem requisito de produto |
 | `apple-mobile-web-app-*` e `screenshots` do manifest | cosmético de instalação |
+| Manifest por instituição gerado pela API (`ManifestoInstituicao.cs`, AD-032): `id`, ícone `maskable`, cores por tema | exige mudança de API; vira feature própria |
 | Mexer em `web/src/ui/` | código do shadcn (AGENTS.md); `Alert` e `Conversation` já têm `role` |
 
 ## Assumptions
@@ -260,5 +261,7 @@ O app inteiro passa a obedecer às preferências do sistema, sem mexer em tela n
 
 - Web Interface Guidelines (Vercel) - `https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`, lista de regras aplicada pelos 4 revisores
 - `.specs/features/revisao-ux/pesquisa.md` - alvo de 44 px e 16 px de campo no iOS (WCAG 2.5.5, HIG), já registrados
+
+
 
 
