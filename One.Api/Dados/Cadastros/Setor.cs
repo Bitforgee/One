@@ -2,11 +2,43 @@ namespace One.Api.Dados.Cadastros;
 
 public class Setor : IDaInstituicao
 {
-    public long Id { get; set; }
+    public const string MotivoNome = "Informe o nome do setor.";
+    public const string MotivoTurmaJunta = "Informe o curso e o semestre da liderança juntos.";
+    public const string MotivoSemestre = "O semestre deve ficar entre 1 e 12.";
+    public const string MotivoCurso = "Escolha um curso da instituição.";
+    public const string MotivoTriagemLideranca = "O setor de triagem não pode ser uma liderança.";
+
+    Setor() { }
+
+    public long Id { get; private set; }
     public long InstituicaoId { get; set; }
-    public string Nome { get; set; } = "";
-    public bool Triagem { get; set; }
-    public bool Ativo { get; set; } = true;
-    public long? CursoId { get; set; }
-    public int? Semestre { get; set; }
+    public string Nome { get; private set; } = "";
+    public bool Triagem { get; private set; }
+    public bool Ativo { get; private set; } = true;
+    public long? CursoId { get; private set; }
+    public int? Semestre { get; private set; }
+
+    public static Invalido? Validar(string? nome, bool? triagem, long? cursoId, int? semestre, bool cursoExiste = true)
+    {
+        if (string.IsNullOrWhiteSpace(nome) || nome.Length > 100) return new Invalido(MotivoNome);
+        if (cursoId is null && semestre is null) return null;
+        if (cursoId is null || semestre is null) return new Invalido(MotivoTurmaJunta);
+        if (semestre is < 1 or > 12) return new Invalido(MotivoSemestre);
+        if (!cursoExiste) return new Invalido(MotivoCurso);
+        return triagem == true ? new Invalido(MotivoTriagemLideranca) : null;
+    }
+
+    public static Setor Criar(string? nome, bool? triagem = null, bool? ativo = null, long? cursoId = null, int? semestre = null)
+    {
+        if (Validar(nome, triagem, cursoId, semestre) is not null) throw new InvalidOperationException("Setor sem validar.");
+        return new() { Nome = nome!, Triagem = triagem == true, Ativo = ativo ?? true, CursoId = cursoId, Semestre = semestre };
+    }
+
+    public static Setor CriarTriagem() => new() { Nome = "Triagem", Triagem = true };
+
+    public void Alterar(string? nome, bool? triagem, bool? ativo)
+    {
+        if (Validar(nome, triagem, null, null) is not null) throw new InvalidOperationException("Setor sem validar.");
+        (Nome, Triagem, Ativo) = (nome!, triagem == true, ativo ?? true);
+    }
 }

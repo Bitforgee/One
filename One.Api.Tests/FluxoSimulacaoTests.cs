@@ -18,8 +18,8 @@ public class FluxoSimulacaoTests(OneFactory f) : IClassFixture<OneFactory>
         var coordAds = await f.Setor(i, "Coordenação ADS");
         var (ads, direito) = await f.Db(i.Id, async db =>
         {
-            var a = new Curso { Nome = "ADS", SetorCoordenacaoId = coordAds.Id };
-            var d = new Curso { Nome = "Direito" };
+            var a = Curso.Criar("ADS", coordAds.Id);
+            var d = Curso.Criar("Direito");
             db.Cursos.AddRange(a, d);
             await db.SaveChangesAsync();
             return (a, d);

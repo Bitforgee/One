@@ -2,8 +2,16 @@ namespace One.Api.Dados.Cadastros;
 
 public class Curso : IDaInstituicao
 {
-    public long Id { get; set; }
+    Curso() { }
+
+    public long Id { get; private set; }
     public long InstituicaoId { get; set; }
-    public string Nome { get; set; } = "";
-    public long? SetorCoordenacaoId { get; set; }
+    public string Nome { get; private set; } = "";
+    public long? SetorCoordenacaoId { get; private set; }
+
+    public static Curso Criar(string nome, long? setorCoordenacaoId = null) => new() { Nome = nome, SetorCoordenacaoId = setorCoordenacaoId };
+
+    public void Alterar(string nome, long? setorCoordenacaoId) => (Nome, SetorCoordenacaoId) = (nome, setorCoordenacaoId);
+
+    public void DefinirCoordenacao(long? setorId) => SetorCoordenacaoId = setorId;
 }

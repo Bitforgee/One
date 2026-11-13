@@ -6,10 +6,10 @@ namespace One.Api.Tests;
 public class CargaValidacaoTests
 {
     static Existentes Existentes() => new(
-        Setores: new() { ["Triagem"] = new Setor { Id = 1, Nome = "Triagem" } },
-        Categorias: new() { ["Não classificado"] = new Categoria { Id = 2, Nome = "Não classificado" }, ["Boletos"] = new Categoria { Id = 3, Nome = "Boletos" } },
+        Setores: new() { ["Triagem"] = Setor.CriarTriagem() },
+        Categorias: new() { ["Não classificado"] = Categoria.CriarPadrao(), ["Boletos"] = Categoria.Criar("Boletos") },
         Cursos: ["Direito"],
-        CategoriasComRegra: [3]);
+        CategoriasComRegra: ["Boletos"]);
 
     static List<string> Erros(ArquivoCarga arquivo) => CargaValidacao.Validar(arquivo, Existentes()).Erros;
 

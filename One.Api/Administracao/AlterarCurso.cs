@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
@@ -17,6 +18,11 @@ public sealed class AlterarCursoHandler(OneDb db) : IRequestHandler<AlterarCurso
     public async ValueTask<IResult> Handle(AlterarCurso m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Alterar<Curso, CursoResposta>(db, m.Id, a => CriarCurso.Validar(db, e.Nome, e.SetorCoordenacaoId, a), s => CriarCurso.Aplicar(s, e.Nome, e.SetorCoordenacaoId), CursoResposta.De);
+        var curso = await db.Cursos.FirstOrDefaultAsync(c => c.Id == m.Id, ct);
+        if (curso is null) return AdminRotas.NaoEncontrado();
+        if (await CriarCurso.Validar(db, e.Nome, e.SetorCoordenacaoId, curso) is { } erro) return erro;
+        curso.Alterar(e.Nome!, e.SetorCoordenacaoId);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(CursoResposta.De(curso));
     }
 }

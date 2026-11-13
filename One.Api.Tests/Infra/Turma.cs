@@ -16,7 +16,7 @@ public record Turma(OneFactory F, Instituicao I, Curso Curso, Setor Coordenacao,
         var coordenacao = await f.Setor(i, "Coordenação");
         var curso = await f.Db(i.Id, async db =>
         {
-            var c = new Curso { Nome = "ADS", SetorCoordenacaoId = coordenacao.Id };
+            var c = Curso.Criar("ADS", coordenacao.Id);
             db.Cursos.Add(c);
             await db.SaveChangesAsync();
             return c;
@@ -66,7 +66,7 @@ public static class SementeLideranca
     public static Task<Setor> Lideranca(this OneFactory f, Instituicao i, Curso curso, int semestre, string nome, bool ativo = true) =>
         f.Db(i.Id, async db =>
         {
-            var s = new Setor { Nome = nome, CursoId = curso.Id, Semestre = semestre, Ativo = ativo };
+            var s = Setor.Criar(nome, null, ativo, curso.Id, semestre);
             db.Setores.Add(s);
             await db.SaveChangesAsync();
             return s;

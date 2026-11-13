@@ -26,7 +26,7 @@ public class FluxoDominioTests
         return fluxo.Vigente!.Etapas.Single();
     }
 
-    static Setor UmSetor(long id, bool ativo) => new() { Id = id, Nome = $"Setor {id}", Ativo = ativo };
+    static Setor UmSetor(long id, bool ativo) => Setor.Criar($"Setor {id}", null, ativo).ComId(id);
 
     static Contexto Ctx(long? coordenacao = null, long? lideranca = null) =>
         new(new Dictionary<long, Setor> { [1] = UmSetor(1, true), [2] = UmSetor(2, false), [7] = UmSetor(7, true), [9] = UmSetor(9, true) }, coordenacao, lideranca);

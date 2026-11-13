@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
@@ -17,6 +18,11 @@ public sealed class AlterarRespostaProntaHandler(OneDb db) : IRequestHandler<Alt
     public async ValueTask<IResult> Handle(AlterarRespostaPronta m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Alterar<RespostaPronta, RespostaProntaResposta>(db, m.Id, a => CriarRespostaPronta.Validar(db, e.SetorId, e.Titulo, e.Texto, a), s => CriarRespostaPronta.Aplicar(s, e.SetorId, e.Titulo, e.Texto), RespostaProntaResposta.De);
+        var resposta = await db.RespostasProntas.FirstOrDefaultAsync(r => r.Id == m.Id, ct);
+        if (resposta is null) return AdminRotas.NaoEncontrado();
+        if (await CriarRespostaPronta.Validar(db, e.SetorId, e.Titulo, e.Texto, resposta) is { } erro) return erro;
+        resposta.Alterar(e.SetorId!.Value, e.Titulo!, e.Texto!);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(RespostaProntaResposta.De(resposta));
     }
 }

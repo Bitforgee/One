@@ -94,7 +94,7 @@ public class ExtrasTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Resposta_pronta_guarda_texto_enviado()
     {
         var b = await Balcao.Criar(f);
-        await f.Db(b.Instituicao.Id, async db => { db.RespostasProntas.Add(new RespostaPronta { SetorId = b.Triagem.Id, Titulo = "Boleto", Texto = "Seu boleto está no Portal do Aluno." }); await db.SaveChangesAsync(); });
+        await f.Db(b.Instituicao.Id, async db => { db.RespostasProntas.Add(RespostaPronta.Criar(b.Triagem.Id, "Boleto", "Seu boleto está no Portal do Aluno.")); await db.SaveChangesAsync(); });
         var numero = await b.Chamado();
 
         var r = await b.A.Cliente.GetAsync($"/api/respostas-prontas?setorId={b.Triagem.Id}");

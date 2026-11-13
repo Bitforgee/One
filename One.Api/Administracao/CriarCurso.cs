@@ -11,8 +11,6 @@ public sealed record CriarCurso(CriarCurso.Entrada Corpo) : IRequest<IResult>
 
     public static void Mapear(RouteGroupBuilder g) => g.MapPost("/cursos", (CriarCurso.Entrada i, IMediator m) => m.Send(new CriarCurso(i)));
 
-    public static void Aplicar(Curso c, string? nome, long? setorCoordenacaoId) { c.Nome = nome!; c.SetorCoordenacaoId = setorCoordenacaoId; }
-
     public static async Task<IResult?> Validar(OneDb db, string? nome, long? setorCoordenacaoId, Curso? atual)
     {
         if (!AdminRotas.Nome(nome, 200)) return Problemas.Invalido("Informe o nome do curso.", "nome");
@@ -27,6 +25,10 @@ public sealed class CriarCursoHandler(OneDb db) : IRequestHandler<CriarCurso, IR
     public async ValueTask<IResult> Handle(CriarCurso m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Criar<Curso, CursoResposta>(db, "/cursos", a => CriarCurso.Validar(db, e.Nome, e.SetorCoordenacaoId, a), s => CriarCurso.Aplicar(s, e.Nome, e.SetorCoordenacaoId), CursoResposta.De);
+        if (await CriarCurso.Validar(db, e.Nome, e.SetorCoordenacaoId, null) is { } erro) return erro;
+        var curso = Curso.Criar(e.Nome!, e.SetorCoordenacaoId);
+        db.Cursos.Add(curso);
+        await db.SaveChangesAsync(ct);
+        return Results.Created($"/api/admin/cursos/{curso.Id}", CursoResposta.De(curso));
     }
 }

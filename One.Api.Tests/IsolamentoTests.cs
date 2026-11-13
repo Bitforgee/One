@@ -23,7 +23,7 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var (setor, categoria, curso) = await f.Db(univag.Id, async db => (await db.Setores.SingleAsync(), await db.Categorias.SingleAsync(c => c.Padrao), await db.Cursos.SingleAsync()));
         var boleto = await f.Categoria(univag, "Boleto");
         var regra = await f.Regra(univag, boleto, setor);
-        var pronta = await f.Db(univag.Id, async db => { var r = new RespostaPronta { SetorId = setor.Id, Titulo = "Boleto", Texto = "x" }; db.RespostasProntas.Add(r); await db.SaveChangesAsync(); return r; });
+        var pronta = await f.Db(univag.Id, async db => { var r = RespostaPronta.Criar(setor.Id, "Boleto", "x"); db.RespostasProntas.Add(r); await db.SaveChangesAsync(); return r; });
 
         var alunoDemo = await f.AlunoLogado(demo);
         var equipeDemo = await f.Entrar(demo, await f.Usuario(demo, [Papeis.Atendente, Papeis.Administrador]));
@@ -146,15 +146,17 @@ public class IsolamentoTests(OneFactory f) : IClassFixture<OneFactory>
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => f.Db(univag.Id, async db =>
         {
-            db.Categorias.Add(new Categoria { Nome = "Da sessão" });
-            db.Categorias.Add(new Categoria { Nome = "Intrusa", InstituicaoId = demo.Id });
+            db.Categorias.Add(Categoria.Criar("Da sessão"));
+            var intrusa = Categoria.Criar("Intrusa");
+            intrusa.InstituicaoId = demo.Id;
+            db.Categorias.Add(intrusa);
             await db.SaveChangesAsync();
         }));
         Assert.False(await f.Db(null, db => db.Categorias.IgnoreQueryFilters().AnyAsync(c => c.Nome == "Intrusa" || c.Nome == "Da sessão")));
 
         var nova = await f.Db(univag.Id, async db =>
         {
-            var c = new Categoria { Nome = "Sem instituição informada" };
+            var c = Categoria.Criar("Sem instituição informada");
             db.Categorias.Add(c);
             await db.SaveChangesAsync();
             return c;

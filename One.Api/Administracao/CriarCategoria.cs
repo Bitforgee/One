@@ -11,8 +11,6 @@ public sealed record CriarCategoria(CriarCategoria.Entrada Corpo) : IRequest<IRe
 
     public static void Mapear(RouteGroupBuilder g) => g.MapPost("/categorias", (CriarCategoria.Entrada i, IMediator m) => m.Send(new CriarCategoria(i)));
 
-    public static void Aplicar(Categoria c, string? nome, bool? ativa) { c.Nome = nome!; c.Ativa = ativa ?? true; }
-
     public static async Task<IResult?> Validar(OneDb db, string? nome, bool? ativa, Categoria? atual)
     {
         if (!AdminRotas.Nome(nome)) return Problemas.Invalido("Informe o nome da categoria.", "nome");
@@ -27,6 +25,10 @@ public sealed class CriarCategoriaHandler(OneDb db) : IRequestHandler<CriarCateg
     public async ValueTask<IResult> Handle(CriarCategoria m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Criar<Categoria, CategoriaResposta>(db, "/categorias", a => CriarCategoria.Validar(db, e.Nome, e.Ativa, a), s => CriarCategoria.Aplicar(s, e.Nome, e.Ativa), CategoriaResposta.De);
+        if (await CriarCategoria.Validar(db, e.Nome, e.Ativa, null) is { } erro) return erro;
+        var categoria = Categoria.Criar(e.Nome!, e.Ativa);
+        db.Categorias.Add(categoria);
+        await db.SaveChangesAsync(ct);
+        return Results.Created($"/api/admin/categorias/{categoria.Id}", CategoriaResposta.De(categoria));
     }
 }

@@ -14,7 +14,7 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<Mundo> Montar()
     {
         var (i, admin) = await Admin.Criar(f);
-        var ads = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var ads = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         return new Mundo(i, admin, await f.Categoria(i, "Dúvida"), await f.Setor(i, "Financeiro"), await f.Setor(i, "Secretaria"), ads);
     }
 
@@ -85,7 +85,7 @@ public class FluxoAdminTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var m = await Montar();
         var outra = await f.Instituicao();
-        var cursoAlheio = await f.Db(outra.Id, async db => { var c = new Curso { Nome = "Medicina" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var cursoAlheio = await f.Db(outra.Id, async db => { var c = Curso.Criar("Medicina"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
 
         await Recusa400(await m.Admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = m.Duvida.Id, cursoId = cursoAlheio.Id }), "cursoId", "curso de outra instituição");
         await Recusa400(await m.Admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = m.Duvida.Id, cursoId = 999999 }), "cursoId", "curso inexistente");

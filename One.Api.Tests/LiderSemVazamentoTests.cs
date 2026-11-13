@@ -23,7 +23,7 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(HttpStatusCode.Created, enviado.StatusCode);
         var documento = (await enviado.Json()).GetProperty("id").GetInt64();
         var versaoDocumento = await f.Db(i.Id, db => db.VersoesDocumento.Where(v => v.DocumentoId == documento).Select(v => v.Id).SingleAsync());
-        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var curso = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         var comum = await f.Setor(i, "Financeiro");
         var lideranca = await f.Lideranca(i, curso, 3, "Líderes ADS 3º");
         return new Mundo(i, admin, versaoArtigo, versaoDocumento, comum, lideranca,

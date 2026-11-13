@@ -16,8 +16,8 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var i = await f.Instituicao();
         var (ads, direito) = await f.Db(i.Id, async db =>
         {
-            var a = new Curso { Nome = "ADS" };
-            var d = new Curso { Nome = "Direito" };
+            var a = Curso.Criar("ADS");
+            var d = Curso.Criar("Direito");
             db.Cursos.AddRange(a, d);
             await db.SaveChangesAsync();
             return (a, d);

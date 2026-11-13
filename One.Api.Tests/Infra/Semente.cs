@@ -36,8 +36,8 @@ public static class Semente
             db.Instituicoes.Add(i);
             await db.SaveChangesAsync();
             db.InstituicaoAtual = i.Id;
-            db.Setores.Add(new Setor { Nome = "Triagem", Triagem = true });
-            db.Categorias.Add(new Categoria { Nome = "Não classificado", Padrao = true });
+            db.Setores.Add(Setor.CriarTriagem());
+            db.Categorias.Add(One.Api.Dados.Cadastros.Categoria.CriarPadrao());
             await db.SaveChangesAsync();
             return i;
         });
@@ -58,7 +58,7 @@ public static class Semente
                 var curso = await db.Cursos.FirstOrDefaultAsync();
                 if (curso is null)
                 {
-                    curso = new Curso { Nome = "Análise e Desenvolvimento de Sistemas" };
+                    curso = Curso.Criar("Análise e Desenvolvimento de Sistemas");
                     db.Cursos.Add(curso);
                     await db.SaveChangesAsync();
                 }
@@ -90,7 +90,7 @@ public static class Semente
     public static Task<Categoria> Categoria(this OneFactory f, Instituicao i, string nome, bool ativa = true) =>
         f.Db(i.Id, async db =>
         {
-            var c = new Categoria { Nome = nome, Ativa = ativa };
+            var c = One.Api.Dados.Cadastros.Categoria.Criar(nome, ativa);
             db.Categorias.Add(c);
             await db.SaveChangesAsync();
             return c;

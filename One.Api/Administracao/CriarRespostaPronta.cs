@@ -11,8 +11,6 @@ public sealed record CriarRespostaPronta(CriarRespostaPronta.Entrada Corpo) : IR
 
     public static void Mapear(RouteGroupBuilder g) => g.MapPost("/respostas-prontas", (CriarRespostaPronta.Entrada i, IMediator m) => m.Send(new CriarRespostaPronta(i)));
 
-    public static void Aplicar(RespostaPronta r, long? setorId, string? titulo, string? texto) { r.SetorId = setorId!.Value; r.Titulo = titulo!; r.Texto = texto!; }
-
     public static async Task<IResult?> Validar(OneDb db, long? setorId, string? titulo, string? texto, RespostaPronta? atual)
     {
         if (!await db.Setores.AnyAsync(s => s.Id == setorId)) return Problemas.Invalido("Setor inexistente.", "setorId");
@@ -27,6 +25,10 @@ public sealed class CriarRespostaProntaHandler(OneDb db) : IRequestHandler<Criar
     public async ValueTask<IResult> Handle(CriarRespostaPronta m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Criar<RespostaPronta, RespostaProntaResposta>(db, "/respostas-prontas", a => CriarRespostaPronta.Validar(db, e.SetorId, e.Titulo, e.Texto, a), s => CriarRespostaPronta.Aplicar(s, e.SetorId, e.Titulo, e.Texto), RespostaProntaResposta.De);
+        if (await CriarRespostaPronta.Validar(db, e.SetorId, e.Titulo, e.Texto, null) is { } erro) return erro;
+        var resposta = RespostaPronta.Criar(e.SetorId!.Value, e.Titulo!, e.Texto!);
+        db.RespostasProntas.Add(resposta);
+        await db.SaveChangesAsync(ct);
+        return Results.Created($"/api/admin/respostas-prontas/{resposta.Id}", RespostaProntaResposta.De(resposta));
     }
 }

@@ -90,7 +90,7 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Csv_valido_cria_e_atualiza()
     {
         var (i, admin) = await Admin.Criar(f);
-        var ads = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); db.Cursos.Add(new Curso { Nome = "Direito" }); await db.SaveChangesAsync(); return c; });
+        var ads = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); db.Cursos.Add(Curso.Criar("Direito")); await db.SaveChangesAsync(); return c; });
         var existente = await f.Usuario(i, [Papeis.Aluno], matricula: "2000000001");
         var (novo1, novo2) = (Semente.NovoCpf(), Semente.NovoCpf());
         var csv = $"""
@@ -124,7 +124,7 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Linha_invalida_nada_entra()
     {
         var (i, admin) = await Admin.Criar(f);
-        await f.Db(i.Id, async db => { db.Cursos.Add(new Curso { Nome = "ADS" }); await db.SaveChangesAsync(); });
+        await f.Db(i.Id, async db => { db.Cursos.Add(Curso.Criar("ADS")); await db.SaveChangesAsync(); });
         var dono = await f.Usuario(i, [Papeis.Aluno], matricula: "2000000099");
         var valida = $"{Semente.NovoCpf()};Ana;ana@aluno.com;2000000001;ADS;3;ATIVA";
         var semArquivo = await admin.PostAsync("/api/admin/matriculas/importacao", new MultipartFormDataContent { { new StringContent("x"), "outro" } });
@@ -402,7 +402,7 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var (i, admin) = await Admin.Criar(f);
         var categoria = await f.Categoria(i, "Boleto");
-        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var curso = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
 
         var primeira = await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id });
         var segunda = await admin.PostAsJsonAsync("/api/admin/fluxos", new { categoriaId = categoria.Id });
@@ -537,7 +537,7 @@ public class CadastroTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var (i, admin) = await Admin.Criar(f);
         var setor = await f.Setor(i, "Financeiro");
-        await f.Db(i.Id, async db => { db.Cursos.Add(new Curso { Nome = "ADS" }); db.RespostasProntas.Add(new RespostaPronta { SetorId = setor.Id, Titulo = "Boleto", Texto = "x" }); await db.SaveChangesAsync(); });
+        await f.Db(i.Id, async db => { db.Cursos.Add(Curso.Criar("ADS")); db.RespostasProntas.Add(RespostaPronta.Criar(setor.Id, "Boleto", "x")); await db.SaveChangesAsync(); });
 
         foreach (var (rota, corpo) in new (string, object)[]
         {

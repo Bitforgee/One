@@ -26,7 +26,7 @@ public class McpFerramentasTests(OneFactory f) : IClassFixture<OneFactory>
         return await f.Db(i.Id, async db =>
         {
             var curso = await db.Cursos.FirstAsync();
-            var s = new Setor { Nome = "Líderes do 3º semestre", CursoId = curso.Id, Semestre = 3 };
+            var s = Setor.Criar("Líderes do 3º semestre", null, null, curso.Id, 3);
             db.Setores.Add(s);
             await db.SaveChangesAsync();
             return s;

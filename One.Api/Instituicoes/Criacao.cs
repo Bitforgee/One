@@ -34,8 +34,8 @@ public static partial class Criacao
         await db.SaveChangesAsync();
         db.InstituicaoAtual = instituicao.Id;
 
-        db.Setores.Add(new Setor { Nome = "Triagem", Triagem = true });
-        db.Categorias.Add(new Categoria { Nome = "Não classificado", Padrao = true });
+        db.Setores.Add(Setor.CriarTriagem());
+        db.Categorias.Add(Categoria.CriarPadrao());
         var admin = Usuario.Criar(n.Cpf!, n.AdminNome, n.Email, [Papeis.Administrador]);
         db.Usuarios.Add(admin);
         await db.SaveChangesAsync();

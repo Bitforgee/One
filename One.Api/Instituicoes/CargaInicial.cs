@@ -8,7 +8,7 @@ public static class CargaInicial
 {
     public static async Task<Existentes> Existentes(OneDb db) =>
         new(await db.Setores.ToDictionaryAsync(s => s.Nome), await db.Categorias.ToDictionaryAsync(c => c.Nome),
-            (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet(), await db.Fluxos.Where(f => f.CursoId == null && f.Semestre == null).Select(f => f.CategoriaId).ToListAsync());
+            (await db.Cursos.Select(c => c.Nome).ToListAsync()).ToHashSet(), (await db.Categorias.Where(c => db.Fluxos.Any(f => f.CategoriaId == c.Id && f.CursoId == null && f.Semestre == null)).Select(c => c.Nome).ToListAsync()).ToHashSet());
 
     public static async Task<(int, int)> Gravar(OneDb db, ArquivoCarga arq, Existentes existentes, Plano plano, DateTime agora)
     {
@@ -19,7 +19,7 @@ public static class CargaInicial
         db.Categorias.AddRange(novasCategorias);
         await db.SaveChangesAsync();
         foreach (var (c, i) in (arq.Cursos ?? []).Select((c, i) => (c, i)))
-            plano.Cursos[i].SetorCoordenacaoId = c.Coordenacao is null ? null : plano.Setores[c.Coordenacao].Id;
+            plano.Cursos[i].DefinirCoordenacao(c.Coordenacao is null ? null : plano.Setores[c.Coordenacao].Id);
         db.Cursos.AddRange(plano.Cursos);
         foreach (var (destino, categoria, setor) in plano.Regras)
         {

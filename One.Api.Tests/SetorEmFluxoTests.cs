@@ -14,7 +14,7 @@ public class SetorEmFluxoTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<Mundo> Montar()
     {
         var (i, admin) = await Admin.Criar(f);
-        var ads = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var ads = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         return new Mundo(i, admin, await f.Setor(i, "Financeiro"), ads);
     }
 

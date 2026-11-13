@@ -14,7 +14,7 @@ public class LiderancaSetorTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<Mundo> Montar()
     {
         var (i, admin) = await Admin.Criar(f);
-        var ads = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var ads = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         return new Mundo(i, admin, ads);
     }
 
@@ -59,7 +59,7 @@ public class LiderancaSetorTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var m = await Montar();
         var outra = await f.Instituicao(nome: "Outra");
-        var cursoAlheio = await f.Db(outra.Id, async db => { var c = new Curso { Nome = "Direito" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var cursoAlheio = await f.Db(outra.Id, async db => { var c = Curso.Criar("Direito"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
 
         await Recusa400(await Criar(m.Admin, "Zero", m.Ads.Id, 0), "semestre", "semestre 0");
         await Recusa400(await Criar(m.Admin, "Treze", m.Ads.Id, 13), "semestre", "semestre 13");
@@ -91,7 +91,7 @@ public class LiderancaSetorTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Atualizar_nao_muda_a_turma()
     {
         var m = await Montar();
-        var outro = await f.Db(m.I.Id, async db => { var c = new Curso { Nome = "Direito" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var outro = await f.Db(m.I.Id, async db => { var c = Curso.Criar("Direito"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         var id = (await (await Criar(m.Admin, "Líderes ADS 3º", m.Ads.Id, 3)).Json()).GetProperty("id").GetInt64();
 
         var r = await m.Admin.PutAsJsonAsync($"/api/admin/setores/{id}", new { nome = "Líderes renomeados", ativo = true, cursoId = outro.Id, semestre = 7 });

@@ -1135,12 +1135,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Entidade_sem_setter_publico =
     [
-        "Categoria",
         "CitacaoArtigo",
-        "Curso",
         "OneDb",
-        "RespostaPronta",
-        "Setor",
         "TrechoFonte",
     ];
 
@@ -1158,8 +1154,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Chamados/ResponderChamado.cs",
         "Conhecimento/DocumentoRotas.cs",
         "Instituicoes/CargaInicial.cs",
-        "Instituicoes/CargaValidacao.cs",
-        "Instituicoes/Criacao.cs",
+
     ];
 
     static readonly string[] Excecoes_Arquivo_ate_150_linhas =
@@ -1227,7 +1222,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Administracao/AlterarCategoria.cs",
         "Administracao/AlterarCurso.cs",
         "Administracao/AlterarRespostaPronta.cs",
-        "Administracao/AlterarSetor.cs",
     ];
 
     static readonly string[] Excecoes_Sem_balde_horizontal =
@@ -1235,7 +1229,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Acesso/AuthRotas.cs",
         "Acesso/InstituicaoRotas.cs",
         "Administracao/AdminRotas.cs",
-        "Administracao/CadastroRotas.cs",
         "Administracao/FluxoRotas.cs",
         "Administracao/ImportacaoRotas.cs",
         "Administracao/Shared",

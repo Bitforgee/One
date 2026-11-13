@@ -1,4 +1,5 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using One.Api.Administracao.Shared;
 using One.Api.Dados;
 
@@ -17,6 +18,11 @@ public sealed class AlterarCategoriaHandler(OneDb db) : IRequestHandler<AlterarC
     public async ValueTask<IResult> Handle(AlterarCategoria m, CancellationToken ct)
     {
         var e = m.Corpo;
-        return await CadastroRotas.Alterar<Categoria, CategoriaResposta>(db, m.Id, a => CriarCategoria.Validar(db, e.Nome, e.Ativa, a), s => CriarCategoria.Aplicar(s, e.Nome, e.Ativa), CategoriaResposta.De);
+        var categoria = await db.Categorias.FirstOrDefaultAsync(c => c.Id == m.Id, ct);
+        if (categoria is null) return AdminRotas.NaoEncontrado();
+        if (await CriarCategoria.Validar(db, e.Nome, e.Ativa, categoria) is { } erro) return erro;
+        categoria.Alterar(e.Nome!, e.Ativa);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(CategoriaResposta.De(categoria));
     }
 }

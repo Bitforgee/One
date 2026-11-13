@@ -80,7 +80,7 @@ public static class SementeAtendimento
     public static Task<Setor> Setor(this OneFactory f, Instituicao i, string nome) =>
         f.Db(i.Id, async db =>
         {
-            var s = new Setor { Nome = nome };
+            var s = One.Api.Dados.Cadastros.Setor.Criar(nome);
             db.Setores.Add(s);
             await db.SaveChangesAsync();
             return s;

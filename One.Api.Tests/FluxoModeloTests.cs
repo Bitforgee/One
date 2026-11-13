@@ -38,7 +38,7 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var i = await f.Instituicao();
         var categoria = await f.Categoria(i, "Boleto");
-        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var curso = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         await using var con = await Abrir();
         string Fluxo(string cursoId, string semestre) => $"INSERT INTO fluxo (instituicao_id, categoria_id, curso_id, semestre) VALUES ({i.Id}, {categoria.Id}, {cursoId}, {semestre})";
 
@@ -81,7 +81,7 @@ public class FluxoModeloTests(OneFactory f) : IClassFixture<OneFactory>
     public async Task Colunas_do_chamado_e_do_setor()
     {
         var i = await f.Instituicao();
-        var curso = await f.Db(i.Id, async db => { var c = new Curso { Nome = "ADS" }; db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
+        var curso = await f.Db(i.Id, async db => { var c = Curso.Criar("ADS"); db.Cursos.Add(c); await db.SaveChangesAsync(); return c; });
         await using var con = await Abrir();
         await using var cmd = new NpgsqlCommand("""
             SELECT column_name || '.' || data_type || '.' || is_nullable FROM information_schema.columns

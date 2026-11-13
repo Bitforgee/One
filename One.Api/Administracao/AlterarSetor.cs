@@ -1,5 +1,7 @@
 using Mediator;
+using Microsoft.EntityFrameworkCore;
 using One.Api.Administracao.Shared;
+using One.Api.Chamados;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
@@ -16,7 +18,23 @@ public sealed class AlterarSetorHandler(OneDb db) : IRequestHandler<AlterarSetor
 {
     public async ValueTask<IResult> Handle(AlterarSetor m, CancellationToken ct)
     {
-        var e = new CriarSetor.Entrada(m.Corpo.Nome, m.Corpo.Triagem, m.Corpo.Ativo);
-        return await CadastroRotas.Alterar<Setor, SetorResposta>(db, m.Id, a => CriarSetor.Validar(db, e, a), s => CriarSetor.Aplicar(s, e), SetorResposta.De);
+        var setor = await db.Setores.FirstOrDefaultAsync(s => s.Id == m.Id, ct);
+        if (setor is null) return AdminRotas.NaoEncontrado();
+        var e = m.Corpo;
+        if (Setor.Validar(e.Nome, e.Triagem, null, null) is { } invalido) return Problemas.Invalido(invalido.Motivo, ValidacaoDeSetor.Campo(invalido));
+        var erro = await EmFluxoPublicado(setor, e) ?? await ValidacaoDeSetor.TriagemENome(db, e.Nome, e.Triagem, setor.Id)
+            ?? await ValidacaoDeSetor.LiderancaRepetida(db, setor.CursoId, setor.Semestre, e.Ativo, setor.Id);
+        if (erro is not null) return erro;
+        setor.Alterar(e.Nome, e.Triagem, e.Ativo);
+        await db.SaveChangesAsync(ct);
+        return Results.Ok(SetorResposta.De(setor));
+    }
+
+    async Task<IResult?> EmFluxoPublicado(Setor setor, AlterarSetor.Entrada e)
+    {
+        if (setor is not { Ativo: true } || e.Ativo != false) return null;
+        var categorias = await ConsultasDeFluxo.CategoriasQueUsamOSetor(db, setor.Id);
+        return categorias.Count == 0 ? null
+            : AdminRotas.Repetido($"O setor é usado em fluxo publicado (categoria: {string.Join("; ", categorias.Order())}). Publique o fluxo sem ele antes de desativar.");
     }
 }
