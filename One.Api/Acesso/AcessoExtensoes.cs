@@ -30,8 +30,16 @@ public static class AcessoExtensoes
 
     public static void MapAcesso(this RouteGroupBuilder api)
     {
-        AuthRotas.Mapear(api);
-        InstituicaoRotas.Mapear(api);
+        Login.Mapear(api);
+        PrimeiroAcesso.Mapear(api);
+        DefinirSenha.Mapear(api);
+        Logout.Mapear(api);
+        Eu.Mapear(api);
+        TrocarSenha.Mapear(api);
+        IniciarLoginMoodle.Mapear(api);
+        LancamentoMoodle.Mapear(api);
+        ChavesMoodle.Mapear(api);
+        VerInstituicao.Mapear(api);
     }
 
     public static IApplicationBuilder UseAcesso(this IApplicationBuilder app) => app.Use(CookieDeSessao.ExigirTrocaDeSenha);

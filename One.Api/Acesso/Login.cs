@@ -38,7 +38,7 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
     {
         var i = m.Corpo;
         var cpf = Cpf.Tentar(i.Cpf);
-        if (cpf is null) return new(null, Problemas.Invalido(AuthRotas.CpfInvalido, "cpf"));
+        if (cpf is null) return new(null, Problemas.Invalido("CPF inválido.", "cpf"));
         if (string.IsNullOrEmpty(i.Senha)) return new(null, Problemas.Invalido("Informe a senha.", "senha"));
 
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(x => x.Slug == i.Instituicao && x.Ativa);

@@ -1210,8 +1210,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Sem_balde_horizontal =
     [
-        "Acesso/AuthRotas.cs",
-        "Acesso/InstituicaoRotas.cs",
         "Administracao/Shared",
         "Assistente/ConversaRotas.cs",
         "Chamados/ChamadoRotas.cs",
@@ -1220,8 +1218,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Conhecimento/ArtigoRotas.cs",
         "Conhecimento/DocumentoRotas.cs",
         "Conhecimento/Shared",
-        "Indicadores/IndicadorRotas.cs",
-        "Mcp/McpRotas.cs",
     ];
 
     static IEnumerable<Type> TiposDeDados() => typeof(Program).Assembly.GetTypes()

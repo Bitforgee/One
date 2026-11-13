@@ -24,7 +24,7 @@ public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Enviad
     {
         var i = m.Corpo;
         var cpf = Cpf.Tentar(i.Cpf);
-        if (cpf is null) return Problemas.Invalido(AuthRotas.CpfInvalido, "cpf");
+        if (cpf is null) return Problemas.Invalido("CPF inválido.", "cpf");
 
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(x => x.Slug == i.Instituicao && x.Ativa);
         if (instituicao is not null)
