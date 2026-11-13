@@ -128,7 +128,7 @@ function Principal({ valor, variacaoDe }: { valor: string; variacaoDe?: string }
     <section className="flex flex-col gap-1">
       <dl className="m-0 flex flex-col gap-1">
         <dt className="text-sm text-muted-foreground">Indicador principal</dt>
-        <dd className="m-0 flex flex-wrap items-baseline gap-x-3">
+        <dd className="m-0 flex flex-wrap items-baseline gap-x-4">
           <div className="font-heading text-[40px] leading-tight font-semibold tabular-nums">{valor}</div>
           {variacaoDe && (
             <span className="text-base font-medium tabular-nums">

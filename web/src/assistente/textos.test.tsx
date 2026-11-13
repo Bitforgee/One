@@ -30,9 +30,7 @@ const Assistente = [
   'Matrícula',
   'Escolha a matrícula',
   'A conversa será encerrada.',
-  'Cancelar',
   'Voltar à conversa',
-  'Confirmar',
   'Sua solicitação ONE-1 foi para Financeiro',
   'A resposta chega em Solicitações e no seu e-mail.',
   'Ver solicitação',
@@ -156,7 +154,7 @@ describe('textos', () => {
     montada = assistente({ 'POST /api/conversas': responde('pergunta', 'É do semestre atual?'), 'POST /api/conversas/7/encerrar': () => [200, { desfecho: 'ENCERRADA' }] })
     await enviar()
     await userEvent.click(await screen.findByRole('button', { name: 'Encerrar conversa' }))
-    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Encerrar conversa' }))
     await screen.findByText('Conversa encerrada.')
     t.conferir(tela(), [...conversa, 'É do semestre atual?'])
     montada.unmount()

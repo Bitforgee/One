@@ -3,7 +3,7 @@ import { useState, type Dispatch, type JSX, type ReactNode, type SetStateAction 
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
-import { ErroDoCampo } from '../Campo'
+import { ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { Editor, useSujo } from '../Editor'
 import { useBuscaNaUrl, useEditarNaUrl } from '../urlDaTela'
 import { ErroDe, errosDeCampo } from '../ErroDe'
@@ -321,6 +321,7 @@ export function Cadastros() {
   const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novos[aba], !!dados)
   const sujo = useSujo(editando)
   const acao = useGravacao(recarregar)
+  useFocoNoPrimeiroErro(acao.error)
   const Campos = CamposDaAba[aba]
   const abas = Object.keys(Titulos) as Aba[]
 

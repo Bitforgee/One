@@ -46,3 +46,24 @@ describe('rótulos do Assistente', () => {
     expect(screen.queryByRole('button', { name: 'Encerrar' })).not.toBeInTheDocument()
   })
 })
+
+describe('rótulos do diálogo de encerrar', () => {
+  it('C70 o diálogo de encerrar tem Voltar à conversa e Encerrar conversa, sem Confirmar nem Cancelar', async () => {
+    montar()
+    await conversar()
+    await userEvent.click(screen.getByRole('button', { name: 'Encerrar conversa' }))
+    const dialogo = await screen.findByRole('dialog')
+    expect(nomes(dialogo)).toEqual(['Voltar à conversa', 'Encerrar conversa'])
+    expect(within(dialogo).queryByRole('button', { name: 'Confirmar' })).not.toBeInTheDocument()
+    expect(within(dialogo).queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
+  })
+
+  it('C70 Voltar à conversa fecha o diálogo sem encerrar', async () => {
+    montar()
+    await conversar()
+    await userEvent.click(screen.getByRole('button', { name: 'Encerrar conversa' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Voltar à conversa' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Encerrar conversa' })).toBeInTheDocument()
+  })
+})

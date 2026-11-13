@@ -1,7 +1,7 @@
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
-import { abrir, acoesDe, api, cabecalhos, escolher, me, type Rota } from '../test/util'
+import { abrir, acoesDe, api, cabecalhos, comTexto, escolher, me, type Rota } from '../test/util'
 
 const operador = me({ papeis: ['ADMINISTRADOR', 'OPERADOR'], matriculas: [] })
 const demo = { slug: 'demo', nome: 'Faculdade Demo', fuso: 'America/Cuiaba', ativa: true, criadaEm: '2026-11-02T12:00:00Z', administradores: 2 }
@@ -135,7 +135,7 @@ describe('instituições', () => {
     expect(gravacoes(chamadas)).toEqual([
       ['POST', Lista, { slug: 'faculdade-demo', nome: 'Faculdade Demo', fuso: 'America/Cuiaba', admin: { cpf: '123.456.789-09', nome: 'Dona Admin', email: 'admin@demo.edu.br' } }],
     ])
-    expect(await screen.findByText('Instituição Faculdade Demo criada. Enviamos o link de primeiro acesso para admin@demo.edu.br.')).toBeInTheDocument()
+    expect(await screen.findByText(comTexto('Instituição Faculdade Demo criada. Enviamos o link de primeiro acesso para admin@demo.edu.br. /faculdade-demo'))).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '/faculdade-demo' })).toHaveAttribute('href', '/faculdade-demo')
     expect(await linha('Faculdade Demo')).toBeInTheDocument()
     expect(lidas).toBe(2)

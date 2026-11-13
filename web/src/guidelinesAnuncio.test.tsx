@@ -62,6 +62,12 @@ describe('carregamentos anunciados', () => {
     await anuncia()
   })
 
+  it('C28 Acesso', async () => {
+    api({ 'GET /api/instituicoes/univag': eterna })
+    abrir('/univag')
+    await anuncia()
+  })
+
   it('C28 Chamados', async () => {
     api({ 'GET /api/auth/me': () => [200, atendente], 'GET /api/chamados?escopo=fila': eterna })
     abrir('/univag/fila')

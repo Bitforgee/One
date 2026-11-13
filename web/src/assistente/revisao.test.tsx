@@ -1,7 +1,7 @@
 import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, instituicao, me, type Rota } from '../test/util'
+import { abrir, api, comTexto, instituicao, me, type Rota } from '../test/util'
 
 const Convite = 'Quer explicar melhor ou falar com um atendente?'
 const resposta = (texto = 'O boleto fica no portal.'): Rota => () => [201, { conversaId: 7, resposta: { tipo: 'resposta', texto } }]
@@ -57,7 +57,7 @@ describe('assistente revisado', () => {
       await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
       await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
 
-      const titulo = await screen.findByText('Sua solicitação ONE-5 foi para Financeiro')
+      const titulo = await screen.findByText(comTexto('Sua solicitação ONE-5 foi para Financeiro'))
       expect(screen.queryAllByText(Convite)).toHaveLength(0)
       expect(screen.queryByText(/Transferido para/)).not.toBeInTheDocument()
       expect(screen.getByText('A resposta chega em Solicitações e no seu e-mail.')).toBeInTheDocument()

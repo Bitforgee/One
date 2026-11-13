@@ -118,3 +118,50 @@ test.describe('C22 desktop com ponteiro fino', () => {
     expect(await medida(page.locator('.react-flow__handle').first())).toEqual([12, 12])
   })
 })
+
+test.describe('C6 celular 360x780', () => {
+  test.use({ hasTouch: true, isMobile: true })
+
+  test('C6 o scroll-padding-bottom de html passa de 16 px com a barra de abas', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/solicitacoes', ['ALUNO'])
+    await expect(page.getByRole('navigation', { name: 'Navegação' })).toBeVisible()
+    const base = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom))
+    const barra = await page.getByRole('navigation', { name: 'Navegação' }).evaluate((e) => (e as HTMLElement).offsetHeight)
+    expect(base).toBeGreaterThan(16)
+    expect(base).toBeGreaterThanOrEqual(barra + 16 - 1)
+  })
+})
+
+test.describe('C72 celular 360x780', () => {
+  test.use({ hasTouch: true, isMobile: true })
+
+  const distancia = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    Math.max(b.x - (a.x + a.width), a.x - (b.x + b.width), b.y - (a.y + a.height), a.y - (b.y + b.height))
+
+  test('C72 Falar com atendente e Encerrar conversa ficam a 8 px ou mais um do outro e dentro da tela', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/assistente', ['ALUNO'])
+    await page.getByLabel('Mensagem').fill('preciso do boleto do semestre')
+    await page.getByRole('button', { name: /Enviar/ }).click()
+    await page.getByText('Isso resolveu?').waitFor()
+    const falar = (await page.getByRole('button', { name: /Falar com atendente/ }).boundingBox())!
+    const encerrar = (await page.getByRole('button', { name: 'Encerrar conversa' }).boundingBox())!
+    expect(distancia(falar, encerrar)).toBeGreaterThanOrEqual(8 - 0.5)
+    for (const caixa of [falar, encerrar]) {
+      expect(caixa.x).toBeGreaterThanOrEqual(0)
+      expect(caixa.x + caixa.width).toBeLessThanOrEqual(360)
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+  })
+
+  test('C72 em Indicadores o valor e a variação mantêm o gap-x-4 e não se sobrepõem', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/indicadores', ['ADMINISTRADOR'])
+    const numero = page.getByText(/^71,2\s%$/)
+    await numero.waitFor()
+    const variacao = page.getByText('vs. período anterior').locator('xpath=..')
+    const [n, v] = [(await numero.boundingBox())!, (await variacao.first().boundingBox())!]
+    expect(distancia(n, v), 'sem sobreposição').toBeGreaterThanOrEqual(0)
+    const coluna = await numero.evaluate((e) => parseFloat(getComputedStyle(e.parentElement!).columnGap))
+    expect(coluna).toBe(16)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+  })
+})

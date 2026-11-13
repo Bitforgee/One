@@ -2,10 +2,11 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Rotulos } from './administracao/abasDaAparencia'
+import { CampoImagem } from './administracao/CampoImagem'
 import { AjudaDosAnexos } from './assistente/Anexos'
 import { plural } from './formatos'
 import { LinkDeAnexo } from './LinkDeAnexo'
-import { abrir, api, escolher, instituicao, me, type Rota } from './test/util'
+import { abrir, api, chamado as chamadoPronto, escolher, instituicao, me, type Rota } from './test/util'
 
 const NB = '\u00a0'
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
@@ -265,5 +266,74 @@ describe('aspas curvas', () => {
     abrir('/univag/cadastros')
     await userEvent.type(await screen.findByLabelText('Buscar em Setores'), 'zzz')
     expect(await screen.findByText('Nenhum resultado para “zzz”')).toBeInTheDocument()
+  })
+})
+
+describe('translate no nos tokens que faltavam', () => {
+  const noToken = (el: HTMLElement) => {
+    expect(el.tagName).toBe('SPAN')
+    expect(el).toHaveAttribute('translate', 'no')
+    return el
+  }
+
+  it('C44 CPF e e-mail do detalhe de celular de Usuários ficam em spans só do token', async () => {
+    const usuario = { id: 7, cpf: '12345678909', nome: 'Pessoa Sete', email: 'sete@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ALUNO'], setores: [] }
+    api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, [usuario]], 'GET /api/admin/setores': () => [200, []] })
+    abrir('/univag/usuarios')
+    const linha = (await screen.findByText('Pessoa Sete')).closest('td') as HTMLElement
+    const detalhe = linha.querySelector('[data-slot=detalhe], :scope > :not(:first-child)') ?? linha
+    const spans = [...detalhe.querySelectorAll<HTMLElement>('[translate=no]')].map((s) => noToken(s).textContent)
+    expect(spans).toEqual(['123.456.789-09', 'sete@univag.edu.br'])
+    expect(detalhe.textContent).toContain('Aluno')
+  })
+
+  it('C44 o e-mail do aviso de instituição criada fica em span só do token', async () => {
+    api({
+      'GET /api/auth/me': () => [200, operador],
+      'GET /api/plataforma/instituicoes': () => [200, []],
+      'POST /api/plataforma/instituicoes': () => [201, { slug: 'demo', nome: 'Faculdade Demo', fuso: 'America/Cuiaba', ativa: true, criadaEm: '2026-11-02T12:00:00Z', administradores: 1 }],
+    })
+    abrir('/univag/instituicoes')
+    await userEvent.click(await screen.findByRole('button', { name: 'Nova instituição' }))
+    const d = within(await screen.findByRole('dialog'))
+    const [nome, nomeDoAdmin] = d.getAllByLabelText('Nome')
+    await userEvent.type(nome, 'Faculdade Demo')
+    await userEvent.type(nomeDoAdmin, 'Dona Admin')
+    await userEvent.type(d.getByLabelText('CPF'), '123.456.789-09')
+    await userEvent.type(d.getByLabelText('E-mail'), 'admin@demo.edu.br')
+    await userEvent.click(d.getByRole('button', { name: /^(Criar|Salvar)/ }))
+    noToken(await screen.findByText('admin@demo.edu.br'))
+  })
+
+  it('C44 o protocolo ONE-n da solicitação aberta no Assistente fica em span só do token', async () => {
+    const item = { numero: 'ONE-5', titulo: 'preciso do boleto', estado: 'ABERTO', criadoEm: '2026-11-02T12:00:00Z' }
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados?escopo=meus': () => [200, [item]] })
+    abrir('/univag/assistente')
+    const protocolo = noToken(await screen.findByText('ONE-5'))
+    expect(protocolo.closest('a')).toHaveTextContent('Sua solicitação ONE-5 · Aberto')
+  })
+
+  it('C44 o protocolo ONE-n da transferência no Assistente fica em span só do token', async () => {
+    api({
+      'GET /api/auth/me': () => [200, me()],
+      'POST /api/atendimento-direto': () => [201, { numero: 'ONE-1', estado: 'ABERTO', setor: 'Financeiro' }],
+      'GET /api/chamados/ONE-1': () => [200, chamadoPronto()],
+    })
+    abrir('/univag/assistente')
+    await userEvent.type(await screen.findByLabelText('Mensagem'), 'x')
+    await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
+    const d = within(await screen.findByRole('dialog'))
+    await userEvent.click(d.getByRole('button', { name: 'Falar com atendente' }))
+    const protocolo = noToken(await screen.findByText('ONE-1'))
+    expect(protocolo.closest('h2')).toHaveTextContent('Sua solicitação ONE-1 foi para Financeiro')
+  })
+})
+
+describe('CampoImagem com dimensões', () => {
+  it('C41 a miniatura do CampoImagem declara width e height', () => {
+    render(<CampoImagem rotulo="Logo" dica="PNG" miniatura="/logo.png" escolher={() => {}} remover={() => {}} />)
+    const img = screen.getByAltText('Miniatura: Logo')
+    expect(img.getAttribute('width')).toMatch(/^\d+$/)
+    expect(img.getAttribute('height')).toMatch(/^\d+$/)
   })
 })

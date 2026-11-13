@@ -4,7 +4,7 @@ import { onlineManager } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { Balao } from '../Balao'
 import { separarLinks } from './Assistente'
-import { abrir, api, chamado, me, type Rota } from '../test/util'
+import { abrir, api, chamado, comTexto, me, type Rota } from '../test/util'
 
 const Exemplo = 'Respostas com base nas normas da instituição.'
 
@@ -24,7 +24,7 @@ async function enviar(texto = 'preciso do boleto') {
 }
 
 const dialogo = async () => within(await screen.findByRole('dialog'))
-const confirmar = () => screen.getByRole('button', { name: 'Confirmar' })
+const confirmar = () => within(screen.getByRole('dialog')).getByRole('button', { name: 'Encerrar conversa' })
 const falar = () => within(screen.getByRole('dialog')).getByRole('button', { name: 'Falar com atendente' })
 
 describe('conversa com o assistente', () => {
@@ -125,7 +125,7 @@ describe('conversa com o assistente', () => {
     await userEvent.paste('a'.repeat(2000))
     expect(falar()).toBeEnabled()
     await userEvent.click(falar())
-    expect(await screen.findByText('Sua solicitação ONE-1 foi para Triagem')).toBeInTheDocument()
+    expect(await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Triagem'))).toBeInTheDocument()
     expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'a'.repeat(2000) })
   })
 

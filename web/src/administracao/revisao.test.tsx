@@ -88,7 +88,7 @@ describe('CPF formatado e busca por nome, CPF ou e-mail', () => {
     tela()
     await screen.findByText('Carla Souza')
     const linha = screen.getByText('Carla Souza').closest('tr') as HTMLElement
-    expect(within(linha).getByText('123.456.789-09')).toBeInTheDocument()
+    expect(within(linha).getAllByText('123.456.789-09')).toHaveLength(2)
     expect(linha).not.toHaveTextContent('12345678909')
   })
 

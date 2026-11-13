@@ -730,8 +730,9 @@ test('Indicador principal em serifa de 40 px com a variação ao lado', async ({
     const variacao = page.getByText('▲ 4,2 pts').filter({ hasText: 'vs. período anterior' })
     await expect(variacao, `${largura}: variação`).toHaveCount(1)
     const [n, v] = [await caixa(numero), await caixa(variacao)]
-    expect(v.x, `${largura}: variação à direita do número`).toBeGreaterThanOrEqual(n.x + n.width - 1)
-    expect(v.y < n.y + n.height && v.y + v.height > n.y, `${largura}: sobrepõe na vertical`).toBe(true)
+    const aoLado = v.x >= n.x + n.width - 1 && v.y < n.y + n.height && v.y + v.height > n.y
+    const abaixo = v.y >= n.y + n.height - 1
+    expect(largura === 1440 ? aoLado : aoLado || abaixo, `${largura}: variação ao lado do número, ou abaixo quando não cabe`).toBe(true)
     const bloco = await caixa(page.getByText('Indicador principal', { exact: true }).locator('xpath=ancestor::section[1]'))
     const formulario = await caixa(page.getByRole('main').locator('form').first())
     const primeiro = await caixa(page.getByText(Faixa[0], { exact: true }))

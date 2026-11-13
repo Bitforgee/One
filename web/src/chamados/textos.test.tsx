@@ -43,7 +43,7 @@ const Detalhe = [
   'Resolver',
   'Reclassificar',
   'Escolha a categoria',
-  'Salvar',
+  'Salvar categoria',
   'Duplicado de outro pedido do mesmo aluno',
   'Marcar',
   'Não resolveu? Explique o motivo',

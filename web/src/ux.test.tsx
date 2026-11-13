@@ -6,7 +6,7 @@ import { createMemoryRouter, RouterProvider, useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { textoVisivel } from './test/textos'
-import { abrir, api, chamado, instituicao, me, type Rota } from './test/util'
+import { abrir, api, chamado, comTexto, instituicao, me, type Rota } from './test/util'
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog'
 import { Sheet, SheetContent, SheetTitle } from './ui/sheet'
 
@@ -219,7 +219,7 @@ describe('ux', () => {
     await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
     semChamado()
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
-    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
+    await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Financeiro'))
     semChamado()
   })
 

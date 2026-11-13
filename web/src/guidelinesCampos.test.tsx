@@ -255,3 +255,33 @@ describe('placeholders de exemplo', () => {
     expect(await abrirChamado()).toHaveAttribute('placeholder', 'Ex.: ONE-123…')
   })
 })
+
+describe('foco no primeiro erro de Usuários e Cadastros', () => {
+  it('C11 Usuarios foca o primeiro campo inválido do servidor', async () => {
+    api({ ...usuarios, 'POST /api/admin/usuarios': () => invalido({ email: ['E-mail inválido.'], nome: ['Informe o nome.'] }) })
+    abrir('/univag/usuarios')
+    await userEvent.click((await screen.findAllByRole('button', { name: /^Novo/ }))[0])
+    const d = within(await screen.findByRole('dialog'))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar usuário' }))
+    await waitFor(() => expect(idsInvalidos()).toEqual(['nome', 'email']))
+    await waitFor(() => expect(focado()).toBe(document.getElementById('nome')))
+  })
+
+  it('C11 Cadastros foca o primeiro campo inválido do servidor', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/setores': () => [200, []],
+      'GET /api/admin/categorias': () => [200, []],
+      'GET /api/admin/cursos': () => [200, []],
+      'GET /api/admin/fluxos': () => [200, []],
+      'GET /api/admin/respostas-prontas': () => [200, []],
+      'POST /api/admin/setores': () => invalido({ nome: ['Informe o nome.'] }),
+    })
+    abrir('/univag/cadastros')
+    await userEvent.click((await screen.findAllByRole('button', { name: 'Novo setor' }))[0])
+    const d = within(await screen.findByRole('dialog'))
+    await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
+    await waitFor(() => expect(idsInvalidos()).toEqual(['cad-nome']))
+    await waitFor(() => expect(focado()).toBe(document.getElementById('cad-nome')))
+  })
+})

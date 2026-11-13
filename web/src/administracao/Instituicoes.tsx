@@ -11,6 +11,7 @@ import { Confirmar } from '../Confirmar'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { dataCurta, plural } from '../formatos'
+import { Literal } from '../Literal'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
@@ -190,7 +191,7 @@ function useCriacao(recarregar: () => Promise<unknown>) {
 const AvisoDeCriacao = ({ criada }: { criada: Ficha }) => (
   <Alert>
     <div>
-      Instituição {criada.nome} criada. Enviamos o link de primeiro acesso para {criada.email}. <Link to={`/${criada.slug}`} translate="no">/{criada.slug}</Link>
+      Instituição {criada.nome} criada. Enviamos o link de primeiro acesso para <Literal>{criada.email}</Literal>. <Link to={`/${criada.slug}`} translate="no">/{criada.slug}</Link>
     </div>
   </Alert>
 )

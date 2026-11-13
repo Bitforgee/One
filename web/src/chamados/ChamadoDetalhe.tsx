@@ -346,7 +346,7 @@ function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo, campos 
       <FormTexto visivel={pode('resolver')} enviar={() => executar('resolver', { texto: resolucao }, () => setResolucao(''))}
         id="resolucao" rotulo="Resolução" botao="Resolver" pendente={pendente} valor={resolucao} setValor={setResolucao} />
       <FormLinha visivel={pode('reclassificar')} enviar={() => executar('reclassificar', { categoriaId: Number(categoriaId) }, () => setCategoriaId(''))}
-        id="categoria" rotulo="Reclassificar" botao="Salvar" pendente={pendente} pronto={categoriaId !== ''}>
+        id="categoria" rotulo="Reclassificar" botao="Salvar categoria" pendente={pendente} pronto={categoriaId !== ''}>
         <NativeSelect id="categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)} className="h-11">
           <Opcoes vazio="Escolha a categoria" itens={c.categorias} />
         </NativeSelect>

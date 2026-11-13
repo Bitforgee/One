@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { abrir, api, chamado, instituicao, me, type Rota } from '../test/util'
+import { abrir, api, chamado, comTexto, instituicao, me, type Rota } from '../test/util'
 
 const Perguntas = ['Como pago a mensalidade?', 'Quando abre a rematrícula?', 'Onde vejo minhas notas?', 'Como peço o histórico?']
 const Frase = 'Respostas com base nas normas da instituição.'
@@ -91,7 +91,7 @@ describe('assistente com identidade', () => {
       await screen.findByText('Não encontrei.')
       await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
       await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Falar com atendente' }))
-      await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
+      await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Financeiro'))
     }
     const completo = { horario: 'Seg a sex, 8h às 18h', telefone: '(65) 3688-6000', email: 'atendimento@univag.edu.br' }
     const casos: [Record<string, string | null>, string[], string[]][] = [

@@ -31,7 +31,7 @@ describe('ações do chamado', () => {
   it('cada ação aparece só quando a API a permite', async () => {
     const sem = detalhe(daEquipe({ acoes: [] }))
     await screen.findByRole('heading', { name: 'preciso do boleto' })
-    for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).not.toBeInTheDocument()
+    for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar categoria', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).not.toBeInTheDocument()
     expect(screen.queryByLabelText(/Responder/)).not.toBeInTheDocument()
     expect(enviados(sem)).toEqual([])
   })
@@ -39,7 +39,7 @@ describe('ações do chamado', () => {
   it('com todas as ações permitidas, a equipe vê todos os botões', async () => {
     detalhe(daEquipe({ acoes: Todas }))
     await screen.findByRole('heading', { name: 'preciso do boleto' })
-    for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).toBeInTheDocument()
+    for (const nome of ['Assumir', 'Confirmar resolução', 'Encaminhar', 'Cancelar solicitação', 'Resolver', 'Salvar categoria', 'Marcar', 'Rejeitar resolução', 'Enviar']) expect(botao(nome), nome).toBeInTheDocument()
     expect(screen.getByLabelText('Nota interna')).toBeInTheDocument()
     expect(screen.getByLabelText('Aguardando aluno')).toBeInTheDocument()
   })
@@ -100,9 +100,9 @@ describe('ações do chamado', () => {
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Resolver chamado' }))
     await waitFor(() => expect(resolucao).toHaveValue(''))
 
-    expect(botao('Salvar')).toBeDisabled()
+    expect(botao('Salvar categoria')).toBeDisabled()
     await userEvent.selectOptions(screen.getByLabelText('Reclassificar'), '4')
-    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar categoria' }))
     await waitFor(() => expect(screen.getByLabelText('Reclassificar')).toHaveValue(''))
 
     const original = screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')

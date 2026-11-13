@@ -7,6 +7,7 @@ import { Contato, temContato, urlDaImagem, useAparencia, type InstituicaoPublica
 import { Estados, useChamado, type Anexo } from '../chamado'
 import { ProximoPasso } from '../chamados/Chamados'
 import { LinkDeAnexo } from '../LinkDeAnexo'
+import { Literal } from '../Literal'
 import { Balao } from '../Balao'
 import { Links, separarLinks } from '../LinksDaResposta'
 import { useSessao } from '../sessao'
@@ -177,7 +178,7 @@ function SolicitacaoEmAberto() {
   if (!c) return null
   return (
     <Link to={`/${slug}/chamados/${c.numero}`} className="flex flex-col gap-0.5 border-l-2 border-primary py-1 ps-3 text-foreground no-underline hover:bg-accent">
-      <span className="font-medium">{`Sua solicitação ${c.numero} · ${Estados[c.estado]}`}</span>
+      <span className="font-medium">Sua solicitação <Literal>{c.numero}</Literal> · {Estados[c.estado]}</span>
       <span className="text-sm text-muted-foreground">{ProximoPasso[c.estado]}</span>
     </Link>
   )
@@ -221,7 +222,7 @@ function Transferido({ transferido, fuso, contato }: { transferido: Transferenci
   return (
     <>
       <section className="my-2 flex flex-col gap-2 rounded-md border p-4">
-        <h2 className="m-0 text-base font-semibold">{`Sua solicitação ${transferido.numero} foi para ${transferido.setor}`}</h2>
+        <h2 className="m-0 text-base font-semibold">Sua solicitação <Literal>{transferido.numero}</Literal> foi para {transferido.setor}</h2>
         <p className="m-0 text-sm">A resposta chega em Solicitações e no seu e-mail.</p>
         {temContato(contato) && (
           <section className="flex flex-col gap-1">
@@ -277,7 +278,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
   )
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-2">
         {atendente}
         {encerrar}
       </div>
@@ -363,7 +364,7 @@ function PedidoAoAtendente({ emConversa, lideranca, falhou, descricao, setDescri
   )
 }
 
-const rotulosDaConfirmacao = (encerrar: boolean, lideranca: boolean) => (encerrar ? ['Cancelar', 'Confirmar'] : ['Voltar à conversa', lideranca ? 'Enviar à liderança' : 'Falar com atendente'])
+const rotulosDaConfirmacao = (encerrar: boolean, lideranca: boolean) => ['Voltar à conversa', encerrar ? 'Encerrar conversa' : lideranca ? 'Enviar à liderança' : 'Falar com atendente']
 
 function Confirmacao({ confirmar, fechar, pronto, confirmarAcao, ...pedido }: ModalProps) {
   const encerrar = confirmar === 'encerrar'

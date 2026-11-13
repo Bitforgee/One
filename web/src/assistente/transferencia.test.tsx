@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { abrir, api, chamado, me, type Rota } from '../test/util'
+import { abrir, api, chamado, comTexto, me, type Rota } from '../test/util'
 
 function emConversa(rotas: Record<string, Rota> = {}, quem = me()) {
   return api({
@@ -47,7 +47,7 @@ describe('transferência', () => {
     await userEvent.selectOptions(within(dialogo).getByLabelText('Matrícula'), '2')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Falar com atendente' }))
 
-    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
+    await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Financeiro'))
     expect(chamadas.find((c) => c.url === '/api/atendimento-direto')?.corpo).toEqual({ descricao: 'Quero trancar o curso', matriculaId: 2 })
   })
 
@@ -68,7 +68,7 @@ describe('transferência', () => {
 
     await transferirConversa()
 
-    expect(await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')).toBeInTheDocument()
+    expect(await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Financeiro'))).toBeInTheDocument()
     expect(await screen.findByText('Olá! Vou reemitir seu boleto.')).toBeInTheDocument()
     expect(screen.getByText('Obrigada!')).toBeInTheDocument()
     expect(screen.getByText('preciso do boleto')).toBeInTheDocument()
@@ -81,7 +81,7 @@ describe('transferência', () => {
     const chamadas = emConversa({ 'POST /api/conversas/7/transferir': transferido, 'GET /api/chamados/ONE-1': () => [200, chamado()] })
     abrir('/univag/assistente')
     await transferirConversa()
-    await screen.findByText('Sua solicitação ONE-1 foi para Financeiro')
+    await screen.findByText(comTexto('Sua solicitação ONE-1 foi para Financeiro'))
     const leituras = () => chamadas.filter((c) => c.metodo === 'GET' && c.url === '/api/chamados/ONE-1').length
     await waitFor(() => expect(leituras()).toBe(1))
 

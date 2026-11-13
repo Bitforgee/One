@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { BotaoAcao } from '../acao'
 import { api, ErroApi } from '../api'
+import { Carregando } from '../Carregando'
 import { ErroDe } from '../ErroDe'
 import { descricaoDoCampo } from '../Campo'
 import { Sigla, urlDaImagem, useInstituicao, type InstituicaoPublica } from '../aparencia'
@@ -15,7 +16,6 @@ import { Alert } from '../ui/alert'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Spinner } from '../ui/spinner'
 
 const obrigatorio = z.string().min(1, 'Preencha este campo.')
 
@@ -215,7 +215,7 @@ export function Login() {
   if (isPending)
     return (
       <Centro>
-        <Spinner className="mx-auto size-8" />
+        <Carregando className="mx-auto flex size-8 justify-center" />
       </Centro>
     )
 

@@ -37,6 +37,8 @@ export function abrirComRoteador(caminho: string) {
 
 export const abrir = abrirComRoteador
 
+export const comTexto = (esperado: string) => (_: string, el: Element | null) => !!el && el.textContent === esperado && ![...el.children].some((f) => f.textContent === esperado)
+
 export function me(parcial: Partial<Me> = {}): Me {
   return {
     id: 1,

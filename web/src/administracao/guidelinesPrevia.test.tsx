@@ -80,3 +80,30 @@ describe('prévia da aparência não interativa', () => {
     quebra(screen.getByText(Email))
   })
 })
+
+describe('imagens da prévia com dimensões', () => {
+  it('C41 todas as imagens da prévia declaram width e height', () => {
+    const imagens = { logo: '/logo.png', icone: '/icone.png', login: '/login.png', assistente: '/assistente.png' }
+    for (const aba of abas) {
+      const { container, unmount } = render(<PreviaAparencia dados={{ ...dados(aba), imagens }} />)
+      for (const img of container.querySelectorAll('img')) {
+        expect(img.getAttribute('width'), `${aba} ${img.getAttribute('src')}`).toMatch(/^\d+$/)
+        expect(img.getAttribute('height'), `${aba} ${img.getAttribute('src')}`).toMatch(/^\d+$/)
+      }
+      unmount()
+    }
+    const todas = abas.flatMap((aba) => {
+      const { container, unmount } = render(<PreviaAparencia dados={{ ...dados(aba), imagens }} />)
+      const fontes = [...container.querySelectorAll('img')].map((i) => i.getAttribute('src'))
+      unmount()
+      return fontes
+    })
+    expect(new Set(todas)).toEqual(new Set(['/logo.png', '/icone.png', '/login.png', '/assistente.png']))
+  })
+
+  it('C44 telefone e e-mail da prévia têm translate no', () => {
+    render(<PreviaAparencia dados={dados('contato')} />)
+    expect(screen.getByText(Telefone)).toHaveAttribute('translate', 'no')
+    expect(screen.getByText(Email)).toHaveAttribute('translate', 'no')
+  })
+})

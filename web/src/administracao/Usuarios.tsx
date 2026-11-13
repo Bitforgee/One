@@ -3,7 +3,7 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao, useLeituras } from '../acao'
 import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo } from '../Campo'
+import { Campo, useFocoNoPrimeiroErro } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
@@ -44,7 +44,9 @@ function LinhaUsuario({ u, setores, editar, desativar, pendente }: { u: Usuario;
     <TableRow>
       <TableCell className={`font-medium ${Principal}`}>
         {u.nome}
-        <Detalhe>{[cpfFormatado(u.cpf), u.email, perfil].join(' · ')}</Detalhe>
+        <Detalhe>
+          <Literal>{cpfFormatado(u.cpf)}</Literal> · <Literal>{u.email}</Literal> · {perfil}
+        </Detalhe>
       </TableCell>
       <CelulaLargo>
         <Literal>{cpfFormatado(u.cpf)}</Literal>
@@ -128,6 +130,7 @@ export function Usuarios() {
   const achar = (id: number) => dados?.usuarios.filter((u) => u.ativo && u.id === id).map(ficha)[0]
   const { editando, setEditando, abrir, fechar } = useEditarNaUrl(achar, Novo, !!dados)
   const sujo = useSujo(editando)
+  useFocoNoPrimeiroErro(acao.error)
   const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
   const usuarios = dados?.usuarios.filter((u) => casa(u, busca))
