@@ -3,10 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import html from '../index.html?raw'
-import { abrir, api, me } from './test/util'
+import { abrir, api, instituicao, me } from './test/util'
 
-const hex = (digitos: string) => '#' + digitos
-const [claro, escuro, preto] = [hex('ffffff'), hex('0a0a0a'), hex('000000')]
 const css = readFileSync('src/index.css', 'utf8')
 
 type Regra = { contexto: string[]; seletor: string; corpo: string }
@@ -42,6 +40,37 @@ const declara = (r: Regra, propriedade: string, valor?: string) => {
 }
 const com = (propriedade: string, valor?: string) => regras(css).filter((r) => declara(r, propriedade, valor))
 const dosSeletores = (rs: Regra[]) => rs.flatMap(seletores)
+
+type Cor = { L: number; C: number; h?: number }
+const lerCor = (texto: string): Cor => {
+  const [L, C, H] = texto.match(/oklch\(([^)]+)\)/)![1].trim().split(/\s+/)
+  return { L: Number(L), C: Number(C), h: H === 'none' ? undefined : Number(H) }
+}
+
+function fundoDe(valor: string): Cor {
+  const mistura = valor.match(/color-mix\(in oklch,\s*var\(--marca,\s*(oklch\([^)]+\))\)\s*([\d.]+)%,\s*(oklch\([^)]+\))\)/)
+  if (!mistura) return lerCor(valor)
+  const [a, b, p] = [lerCor(mistura[1]), lerCor(mistura[3]), Number(mistura[2]) / 100]
+  return { L: a.L * p + b.L * (1 - p), C: a.C * p + b.C * (1 - p), h: a.h ?? b.h ?? 0 }
+}
+
+const canal = (x: number) => {
+  const c = Math.min(1, Math.max(0, x))
+  return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055) * 255).toString(16).padStart(2, '0')
+}
+
+function hexDe({ L, C, h = 0 }: Cor) {
+  const a = C * Math.cos((h * Math.PI) / 180)
+  const b = C * Math.sin((h * Math.PI) / 180)
+  const [l, m, s] = [(L + 0.3963377774 * a + 0.2158037573 * b) ** 3, (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, (L - 0.0894841775 * a - 1.291485548 * b) ** 3]
+  return '#' + [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s].map(canal).join('')
+}
+
+const fundoDoTema = (seletor: string) => {
+  const regra = regras(css).find((r) => r.contexto.length === 0 && seletores(r).includes(seletor) && declara(r, '--background'))
+  return hexDe(fundoDe(regra!.corpo.match(/--background\s*:\s*([^;]+)/)![1].trim()))
+}
+const [claro, escuro, preto] = [':root', '.dark', '.black'].map(fundoDoTema)
 
 describe('base global do css', () => {
   it('C1 movimento reduzido zera animação, transição e rolagem exceto .animate-spin', () => {
@@ -96,6 +125,29 @@ describe('base global do css', () => {
     expect(doHtml.some((r) => declara(r, 'scroll-padding-bottom', 'calc(var(--barra, 0px) + 1rem)'))).toBe(true)
   })
 
+  it('C6 --barra é definida em html enquanto a barra de abas existe e sai junto com ela', async () => {
+    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
+    api({
+      'GET /api/auth/me': () => [200, me()],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'GET /api/chamados?escopo=meus': () => [200, []],
+    })
+    const barra = () => document.documentElement.style.getPropertyValue('--barra')
+    const { unmount } = abrir('/univag/conta')
+    await screen.findByRole('navigation', { name: 'Navegação' })
+    expect(barra()).toMatch(/^calc\(3\.5rem \+ 1px \+ env\(safe-area-inset-bottom\)\)$/)
+    unmount()
+    expect(barra()).toBe('')
+    vi.unstubAllGlobals()
+  })
+
+  it('C6 --barra não existe em html sem a barra de abas', async () => {
+    window.innerWidth = 1024
+    api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/instituicoes/univag': () => [200, instituicao()] })
+    abrir('/univag/conta')
+    await screen.findByRole('heading', { name: 'Conta' })
+    expect(document.documentElement.style.getPropertyValue('--barra')).toBe('')
+  })
   it('C7 index.html traz theme-color por tema', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html')
     const metas = [...doc.head.querySelectorAll('meta[name="theme-color"]')]

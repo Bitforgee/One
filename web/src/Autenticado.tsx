@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookText, Building2, ChartColumn, ChevronLeft, CircleAlert, CircleUser, FileText, Inbox, LayoutGrid, ListChecks, LogOut, MessageCircle, Menu as IconeMenu, Monitor, Moon, MoonStar, Palette, Phone, Plug, Settings, Sun, Upload, Users } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
 import { Carregando } from './Carregando'
@@ -422,6 +422,15 @@ function useFocoNaRota(pathname: string) {
   }, [pathname])
 }
 
+function useAlturaDaBarra(altura?: string) {
+  useLayoutEffect(() => {
+    if (!altura) return
+    const raiz = document.documentElement.style
+    raiz.setProperty('--barra', altura)
+    return () => void raiz.removeProperty('--barra')
+  }, [altura])
+}
+
 function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica }) {
   const { numero } = useParams()
   const { pathname } = useLocation()
@@ -434,9 +443,10 @@ function Casca({ me, slug, ap }: { me: Me; slug?: string; ap: InstituicaoPublica
   const { abas, comBarra, deitado, voltar } = useModo(me, slug)
   const setMe = (novo: Me) => cliente.setQueryData(['me'], novo)
   const altura = deitado ? AlturaDaBarraDeitada : AlturaDaBarra
+  useAlturaDaBarra(comBarra ? altura : undefined)
 
   return (
-    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar} style={comBarra ? ({ '--barra': altura } as CSSProperties) : undefined}>
+    <SidebarProvider open={barra.aberta} onOpenChange={barra.aoMudar}>
       <PularParaOConteudo />
       {!abas && <Barra me={me} itens={itensDo(me.papeis)} slug={slug} sair={sair} ap={ap} />}
       <SidebarInset id="conteudo" tabIndex={-1} className="min-w-0 outline-none">
