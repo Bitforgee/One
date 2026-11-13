@@ -188,7 +188,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         int Leituras(string chave) => CodigoApi().Sum(p => Regex.Matches(File.ReadAllText(p), Regex.Escape($"\"{chave}\"")).Count);
         foreach (var chave in new[] { "Llm:BaseUrl", "Llm:ChaveApi", "App:UrlBase" })
             Assert.True(Leituras(chave) == 1, $"{chave} lida {Leituras(chave)} vezes");
-        var program = File.ReadAllText(Path.Combine(Api, "Program.cs"));
+        var program = File.ReadAllText(Path.Combine(Api, "Assistente", "AssistenteExtensoes.cs"));
         var metodo = Regex.Match(program, @"AddHttpClient\(""llm"", (\w+)\)").Groups[1].Value;
         Assert.NotEqual("", metodo);
         var registro = Regex.Match(program, $@"static void {metodo}\(IServiceProvider \w+, HttpClient \w+\)\s*\{{.*?\n    \}}", RegexOptions.Singleline).Value;
@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Sessao", "Tokens"],
+        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Persistencia", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Seguranca", "Sessao", "Tokens", "TratamentoDeErros"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -399,7 +399,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var projeto = System.Xml.Linq.XDocument.Load(Path.Combine(Api, "One.Api.csproj"));
         var mcp = Assert.Single(projeto.Descendants("PackageReference"), p => (string?)p.Attribute("Include") == "ModelContextProtocol.AspNetCore");
         Assert.Equal("2.4.0", (string?)mcp.Attribute("Version"));
-        var programa = SemComentarios(Path.Combine(Api, "Program.cs"));
+        var programa = SemComentarios(Path.Combine(Api, "Mcp", "McpExtensoes.cs"));
         Assert.Contains("HttpServerSessionMode.Stateless", programa);
         Assert.Contains("WithTools<FerramentasMcp>", programa);
     }
@@ -1070,16 +1070,17 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Aviso_registrado_so_no_Program()
     {
-        var program = File.ReadAllText(Path.Combine(Api, "Program.cs"));
-        foreach (var termo in new[] { "AddSignalR(", "MapHub<TempoRealHub>(", "AddInterceptors(sp.GetRequiredService<AvisarMudanca>())" })
+        var program = File.ReadAllText(Path.Combine(Api, "Chamados", "ChamadosExtensoes.cs"));
+        foreach (var termo in new[] { "AddSignalR(", "MapHub<TempoRealHub>(", "AddSingleton<IInterceptor>(sp => sp.GetRequiredService<AvisarMudanca>())" })
         {
             Assert.Contains(termo, program);
-            Assert.Equal(["Program.cs"], ArquivosDaApi().Where(a => File.ReadAllText(a).Contains(termo)).Select(Path.GetFileName));
+            Assert.Equal(["ChamadosExtensoes.cs"], ArquivosDaApi().Where(a => File.ReadAllText(a).Contains(termo)).Select(Path.GetFileName));
         }
         var infra = Directory.EnumerateFiles(Path.Combine(Raiz(), "One.Api.Tests", "Infra"), "*.cs").Select(File.ReadAllText).ToList();
         foreach (var termo in new[] { "AddSignalR", "MapHub", "AvisarMudanca" })
             Assert.DoesNotContain(infra, t => t.Contains(termo));
-        Assert.True(program.IndexOf("Servicos(builder.Services)", StringComparison.Ordinal) < program.IndexOf("InstituicaoComando.Executar", StringComparison.Ordinal));
+        var principal = File.ReadAllText(Path.Combine(Api, "Program.cs"));
+        Assert.True(principal.IndexOf("AddPersistencia()", StringComparison.Ordinal) < principal.IndexOf("InstituicaoComando.Rodar", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -1153,7 +1154,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "Dados/Chamados/Chamado.cs",
         "Dados/OneDb.cs",
-        "Program.cs",
     ];
 
     static readonly string[] Excecoes_Dados_ate_5_parametros =

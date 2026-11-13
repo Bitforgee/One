@@ -46,7 +46,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(["/api/conversas", "/api/conversas/{id:long}/mensagens", "/api/atendimento-direto"], Com("mensagens"));
         Assert.Equal(["/api/mcp/{slug}/"], Com("mcp"));
 
-        Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")), viva);
+        Assert.Equal(File.ReadAllLines(Retrato("rotas.txt")).Order(StringComparer.Ordinal), viva.Order(StringComparer.Ordinal));
     }
 
     [Fact]

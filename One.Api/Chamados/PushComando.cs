@@ -4,6 +4,8 @@ namespace One.Api.Chamados;
 
 public static class PushComando
 {
+    public static int Rodar(string[] args) => Executar(args, Console.Out, Console.Error);
+
     public static int Executar(string[] args, TextWriter saida, TextWriter erro)
     {
         if (args is not ["chaves"])
