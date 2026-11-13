@@ -1146,7 +1146,7 @@ test.describe('S5 diálogos e administração', () => {
       await page.getByRole('button', { name: 'Ver prévia' }).click()
       const dialogo = page.getByRole('dialog')
       await expect(dialogo).toHaveCount(1)
-      await expect(dialogo.getByRole('button', { name: 'Entrar' })).toBeVisible()
+      await expect(dialogo.getByRole('button', { name: 'Entrar', includeHidden: true })).toBeVisible()
     }
     await page.setViewportSize({ width: 1024, height: 800 })
     await page.goto('/univag/aparencia')
@@ -1163,7 +1163,7 @@ test.describe('S5 diálogos e administração', () => {
     await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
     await page.goto('/univag/aparencia')
     await page.getByLabel('Cor principal').waitFor()
-    const [previa, salvar] = [page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar' }), page.locator('main form').getByRole('button', { name: 'Salvar' })]
+    const [previa, salvar] = [page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar', includeHidden: true }), page.locator('main form').getByRole('button', { name: 'Salvar' })]
     await expect(previa).toHaveCount(1)
     await expect(salvar).toHaveCount(1)
     const pintura = async (b: Locator) => ({ fundo: await corSobreFundo(b, 'backgroundColor'), texto: await corSobreFundo(b, 'color') })
@@ -1180,7 +1180,7 @@ test.describe('S5 diálogos e administração', () => {
     await simularApi(page, ['ADMINISTRADOR'], false, comAparencia)
     await page.goto('/univag/aparencia')
     await page.getByLabel('Cor principal').fill('#224fa7')
-    const entrar = page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar' })
+    const entrar = page.locator('section[aria-label=Prévia]').getByRole('button', { name: 'Entrar', includeHidden: true })
     const esperada = await page.evaluate(() => {
       const ref = document.createElement('div')
       ref.style.backgroundColor = '#224fa7'
@@ -1318,6 +1318,7 @@ test.describe('S7 acréscimos', () => {
     await expect(folha().getByLabel('Reclassificar')).toHaveValue('3')
     await expect(folha().getByLabel('Duplicado de outro pedido do mesmo aluno')).toHaveValue('ONE-9')
     await folha().getByRole('button', { name: 'Resolver', exact: true }).click()
+    await page.getByRole('dialog', { name: 'Resolver o chamado?' }).getByRole('button', { name: 'Resolver chamado' }).click()
     await expect(folha()).toHaveCount(0)
     await mais()
     await expect(folha().getByLabel('Resolução')).toHaveValue('')

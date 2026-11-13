@@ -157,6 +157,7 @@ test.describe('S2 celular', () => {
     await page.getByRole('button', { name: 'Mais', exact: true }).click()
     await page.getByRole('dialog').getByLabel('Resolução').fill('Boleto reemitido.')
     await page.getByRole('dialog').getByRole('button', { name: 'Resolver' }).click()
+    await page.getByRole('dialog', { name: 'Resolver o chamado?' }).getByRole('button', { name: 'Resolver chamado' }).click()
     await expect(page.getByRole('dialog')).toBeHidden()
     await expect(selo).toHaveText('Resolvido')
   })

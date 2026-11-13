@@ -165,7 +165,7 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
     const w = window as unknown as { __folhas: number }
     w.__folhas = 0
     new MutationObserver((lista) => {
-      for (const m of lista) for (const n of m.addedNodes) if (n instanceof Element && (n.getAttribute('role') === 'dialog' || n.querySelector('[role=dialog]'))) w.__folhas++
+      for (const m of lista) for (const n of m.addedNodes) if (n instanceof Element && (n.matches('[data-slot=sheet-content]') || n.querySelector('[data-slot=sheet-content]'))) w.__folhas++
     }).observe(document, { childList: true, subtree: true })
   })
   await primeiroAcesso(page.request, atendenteCpf, atendenteEmail, senhaAluno)
@@ -179,6 +179,7 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
   await clicar('linha da Fila', page.getByRole('main').getByRole('listitem').filter({ hasText: numero }))
   await expect(page).toHaveURL(new RegExp(`/chamados/${numero}$`))
   await clicar('Assumir')
+  await page.getByRole('dialog', { name: 'Assumir o chamado?' }).getByRole('button', { name: 'Assumir chamado' }).click()
   await expect(page.getByRole('button', { name: 'Responder', exact: true }).first()).toBeVisible()
   await clicar('Responder')
   await expect(page.locator('#resposta')).toBeFocused()
@@ -189,6 +190,7 @@ ${alunoCpf};Aluno E2E ${rodada};${alunoEmail};E${rodada};${curso};1;ATIVA
   const folha = page.getByRole('dialog', { name: 'Mais ações' })
   await folha.getByLabel('Resolução').fill('Segunda via emitida e enviada.')
   await clicar('Resolver', folha.getByRole('button', { name: 'Resolver', exact: true }))
+  await page.getByRole('dialog', { name: 'Resolver o chamado?' }).getByRole('button', { name: 'Resolver chamado' }).click()
 
   expect(cliques).toEqual(['linha da Fila', 'Assumir', 'Responder', 'Enviar', 'Mais', 'Resolver'])
   await expect(page.locator('[data-slot=badge]').filter({ hasText: /^Resolvido$/ })).toBeVisible()
