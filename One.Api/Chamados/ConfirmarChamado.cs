@@ -18,7 +18,7 @@ public sealed class ConfirmarChamadoHandler(AcessoChamado a) : IRequestHandler<C
 {
     public ValueTask<IResult> Handle(ConfirmarChamado m, CancellationToken ct)
     {
-        a.Chamado.Confirmar(a.Usuario.Id, a.Agora);
+        a.Chamado.Confirmar(m.Usuario.Id, a.Agora);
         return ValueTask.FromResult(Results.Empty);
     }
 }

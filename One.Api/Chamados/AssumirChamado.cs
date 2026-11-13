@@ -18,7 +18,7 @@ public sealed class AssumirChamadoHandler(OneDb db, AcessoChamado a) : IRequestH
 {
     public async ValueTask<IResult> Handle(AssumirChamado m, CancellationToken ct)
     {
-        var recusa = a.Chamado.Assumir(a.Usuario.Id, await NomeDoResponsavel(db, a.Chamado), a.Usuario.Nome, a.Agora);
+        var recusa = a.Chamado.Assumir(m.Usuario.Id, await NomeDoResponsavel(db, a.Chamado), m.Usuario.Nome, a.Agora);
         return recusa is null ? Results.Empty : Problemas.Erro(409, recusa.Motivo);
     }
 }

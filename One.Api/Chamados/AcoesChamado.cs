@@ -25,11 +25,11 @@ public static class AcoesChamado
     public static async Task<string?> NomeDoResponsavel(OneDb db, Chamado c) =>
         c.ResponsavelId is { } id ? await db.Usuarios.Where(u => u.Id == id).Select(u => u.Nome).SingleAsync() : null;
 
-    public static async Task<IResult> RejeitarResolucao(OneDb db, AcessoChamado a, string motivo, List<Anexo>? anexos = null)
+    public static async Task<IResult> RejeitarResolucao(OneDb db, AcessoChamado a, Usuario usuario, Prazos prazos, string motivo, List<Anexo>? anexos = null)
     {
         var c = a.Chamado;
         var ativo = c.ResponsavelId is { } r && await db.Usuarios.AnyAsync(u => u.Id == r && u.Ativo);
-        var recusa = c.Rejeitar(a.Usuario.Id, new(motivo, anexos ?? [], ativo, await NomeDoResponsavel(db, c), a.Prazos.RejeicaoDias), a.Agora);
+        var recusa = c.Rejeitar(usuario.Id, new(motivo, anexos ?? [], ativo, await NomeDoResponsavel(db, c), prazos.RejeicaoDias), a.Agora);
         return recusa is null ? Results.Empty : Problemas.Erro(409, recusa.Motivo);
     }
 }

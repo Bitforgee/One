@@ -19,12 +19,12 @@ public sealed record MarcarDuplicado(string Numero, MarcarDuplicado.Entrada Corp
             ? null : Problemas.Invalido("Informe outro chamado do mesmo aluno.", "numeroOriginal");
 }
 
-public sealed class MarcarDuplicadoHandler(OneDb db, AcessoChamado a) : IRequestHandler<MarcarDuplicado, IResult>
+public sealed class MarcarDuplicadoHandler(OneDb db, AcessoChamado a, IConfiguration cfg) : IRequestHandler<MarcarDuplicado, IResult>
 {
     public async ValueTask<IResult> Handle(MarcarDuplicado m, CancellationToken ct)
     {
-        a.Chamado.MarcarDuplicado(a.Usuario.Id, m.Corpo.NumeroOriginal!, a.Agora);
-        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, a.Chamado, a.Agora);
+        a.Chamado.MarcarDuplicado(m.Usuario.Id, m.Corpo.NumeroOriginal!, a.Agora);
+        await Avisos.NovaResposta(db, cfg, m.Instituicao, a.Chamado, a.Agora);
         return Results.Empty;
     }
 }

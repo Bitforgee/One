@@ -24,7 +24,7 @@ public sealed class ReclassificarChamadoHandler(OneDb db, AcessoChamado a) : IRe
     {
         var i = m.Corpo;
         var nomes = await db.Categorias.Where(c => c.Id == a.Chamado.CategoriaId || c.Id == i.CategoriaId).ToDictionaryAsync(c => c.Id, c => c.Nome);
-        a.Chamado.Reclassificar(a.Usuario.Id, i.CategoriaId!.Value, nomes[a.Chamado.CategoriaId], nomes[i.CategoriaId.Value], a.Agora);
+        a.Chamado.Reclassificar(m.Usuario.Id, i.CategoriaId!.Value, nomes[a.Chamado.CategoriaId], nomes[i.CategoriaId.Value], a.Agora);
         return Results.Empty;
     }
 }

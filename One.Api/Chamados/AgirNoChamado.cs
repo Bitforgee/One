@@ -15,7 +15,7 @@ public interface IAcaoChamado : IRequest<IResult>
     ValueTask<IResult?> Validar(AcessoChamado a, OneDb db);
 }
 
-public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado acesso, TimeProvider relogio, Prazos prazos, IConfiguration cfg)
+public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado acesso, TimeProvider relogio)
     : IPipelineBehavior<TMessage, TResponse> where TMessage : IAcaoChamado where TResponse : IResult
 {
     public async ValueTask<TResponse> Handle(TMessage m, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken ct) =>
@@ -25,7 +25,7 @@ public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado a
     {
         var (chamado, papel) = await ChamadoRotas.Carregar(db, m.Usuario, m.Numero);
         if (chamado is null) return ChamadoRotas.NaoEncontrado();
-        acesso.Preencher(chamado, papel!, m.Usuario, m.Instituicao, relogio.GetUtcNow().UtcDateTime, cfg, prazos);
+        acesso.Preencher(chamado, papel!, relogio.GetUtcNow().UtcDateTime);
         if (PermissoesChamado.Estados(m.Acao, papel!) is not { } estados) return Problemas.Erro(403, "Seu papel neste chamado não permite esta ação.");
         if (await m.Validar(acesso, db) is { } invalido) return invalido;
         if (!estados.Contains(chamado.Estado)) return Problemas.Erro(409, "A ação não é permitida no estado atual do chamado.");

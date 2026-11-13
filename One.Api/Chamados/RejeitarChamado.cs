@@ -17,7 +17,7 @@ public sealed record RejeitarChamado(string Numero, RejeitarChamado.Entrada Corp
         ValueTask.FromResult(Texto(Corpo.Motivo, "motivo", "Explique o motivo da rejeição, com até 4000 caracteres."));
 }
 
-public sealed class RejeitarChamadoHandler(OneDb db, AcessoChamado a) : IRequestHandler<RejeitarChamado, IResult>
+public sealed class RejeitarChamadoHandler(OneDb db, AcessoChamado a, Prazos prazos) : IRequestHandler<RejeitarChamado, IResult>
 {
-    public async ValueTask<IResult> Handle(RejeitarChamado m, CancellationToken ct) => await RejeitarResolucao(db, a, m.Corpo.Motivo!);
+    public async ValueTask<IResult> Handle(RejeitarChamado m, CancellationToken ct) => await RejeitarResolucao(db, a, m.Usuario, prazos, m.Corpo.Motivo!);
 }

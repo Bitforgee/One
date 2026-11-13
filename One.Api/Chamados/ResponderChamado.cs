@@ -29,19 +29,19 @@ public sealed record ResponderChamado(string Numero, IFormCollection Form, Usuar
     }
 }
 
-public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenamento armazenamento) : IRequestHandler<ResponderChamado, IResult>
+public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenamento armazenamento, IConfiguration cfg, Prazos prazos) : IRequestHandler<ResponderChamado, IResult>
 {
     public async ValueTask<IResult> Handle(ResponderChamado m, CancellationToken ct)
     {
         var c = a.Chamado;
-        if (m.Tipo == TiposMensagem.Nota) { c.Anotar(a.Usuario.Id, m.Texto, a.Agora); return Results.Empty; }
+        if (m.Tipo == TiposMensagem.Nota) { c.Anotar(m.Usuario.Id, m.Texto, a.Agora); return Results.Empty; }
         var lidos = new List<Arquivos.Lido>();
         var anexos = new List<Anexo>();
         foreach (var f in m.Anexos)
         {
             var lido = (await AnexoDeFormulario.Ler(f)).Item1!;
             lidos.Add(lido);
-            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = Armazenamento.NovaChave(a.Instituicao.Id, "anexos"), Hash = Armazenamento.Hash(lido.Bytes) });
+            anexos.Add(new Anexo { Nome = lido.Nome, Tipo = lido.Tipo, Tamanho = lido.Bytes.Length, Chave = Armazenamento.NovaChave(m.Instituicao.Id, "anexos"), Hash = Armazenamento.Hash(lido.Bytes) });
         }
         async Task Guardar()
         {
@@ -51,17 +51,17 @@ public sealed class ResponderChamadoHandler(OneDb db, AcessoChamado a, Armazenam
         {
             if (c.Estado == Resolvido)
             {
-                var r = await RejeitarResolucao(db, a, m.Texto, anexos);
+                var r = await RejeitarResolucao(db, a, m.Usuario, prazos, m.Texto, anexos);
                 if (ReferenceEquals(r, Results.Empty)) await Guardar();
                 return r;
             }
-            c.ResponderComoAluno(a.Usuario.Id, m.Texto, anexos, a.Agora);
+            c.ResponderComoAluno(m.Usuario.Id, m.Texto, anexos, a.Agora);
             await Guardar();
             return Results.Empty;
         }
-        c.ResponderComoEquipe(a.Usuario.Id, a.Usuario.Nome, m.Texto, anexos, m.AguardaAluno, a.Agora);
+        c.ResponderComoEquipe(m.Usuario.Id, m.Usuario.Nome, m.Texto, anexos, m.AguardaAluno, a.Agora);
         await Guardar();
-        await Avisos.NovaResposta(db, a.Cfg, a.Instituicao, c, a.Agora);
+        await Avisos.NovaResposta(db, cfg, m.Instituicao, c, a.Agora);
         return Results.Empty;
     }
 }

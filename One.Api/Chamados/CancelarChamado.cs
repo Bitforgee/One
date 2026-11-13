@@ -21,7 +21,7 @@ public sealed class CancelarChamadoHandler(AcessoChamado a) : IRequestHandler<Ca
 {
     public ValueTask<IResult> Handle(CancelarChamado m, CancellationToken ct)
     {
-        a.Chamado.Cancelar(a.Usuario.Id, m.Corpo?.Motivo, a.Agora);
+        a.Chamado.Cancelar(m.Usuario.Id, m.Corpo?.Motivo, a.Agora);
         return ValueTask.FromResult(Results.Empty);
     }
 }

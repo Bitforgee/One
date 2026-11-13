@@ -888,11 +888,11 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([typeof(string), typeof(string), typeof(long?), typeof(long)], permissoes.GetMethod("Acoes")!.GetParameters().Select(p => p.ParameterType));
 
         var acesso = typeof(One.Api.Chamados.AcessoChamado);
-        Assert.Equal(["Agora", "Cfg", "Chamado", "Instituicao", "Papel", "Prazos", "Preencher", "Usuario"], Publicos(acesso));
+        Assert.Equal(["Agora", "Chamado", "Papel", "Preencher"], Publicos(acesso));
         Assert.All(acesso.GetProperties(), p => Assert.False(p.SetMethod is { IsPublic: true }, p.Name));
         var preencher = acesso.GetMethod("Preencher")!;
         Assert.Equal(typeof(void), preencher.ReturnType);
-        Assert.Equal([typeof(Chamado), typeof(string), typeof(Usuario), typeof(Instituicao), typeof(DateTime), typeof(Microsoft.Extensions.Configuration.IConfiguration), typeof(Prazos)],
+        Assert.Equal([typeof(Chamado), typeof(string), typeof(DateTime)],
             preencher.GetParameters().Select(p => p.ParameterType));
 
         var acao = typeof(One.Api.Chamados.IAcaoChamado);
@@ -903,7 +903,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
         var agir = typeof(One.Api.Chamados.AgirNoChamado<,>);
         Assert.Equal(["Handle"], Publicos(agir));
-        Assert.Equal([typeof(OneDb), typeof(One.Api.Chamados.AcessoChamado), typeof(TimeProvider), typeof(Prazos), typeof(Microsoft.Extensions.Configuration.IConfiguration)],
+        Assert.Equal([typeof(OneDb), typeof(One.Api.Chamados.AcessoChamado), typeof(TimeProvider)],
             Assert.Single(agir.GetConstructors()).GetParameters().Select(p => p.ParameterType));
         var handle = agir.GetMethod("Handle")!;
         Assert.Equal(typeof(ValueTask<>), handle.ReturnType.GetGenericTypeDefinition());
