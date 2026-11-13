@@ -92,7 +92,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorOrdemTes
 - `Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.LembrarAguardando`
 - `Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.ResolverSemResposta`
 - `Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.SubirPorPrazo`
-- `Singleton One.Api.ITarefaAgendada -> One.Api.Conhecimento.IndexarTrechos`
+- `Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.IndexarTrechos` (E10: era `One.Api.Conhecimento.IndexarTrechos`; a tarefa injeta `Embeddings`, que mora em `Assistente`, e `Conhecimento` usar `Assistente` criaria o inverso do par `Assistente>Conhecimento`, proibido pelos AC 27 e AC 68; plano B7)
 - `Singleton One.Api.EnviadorSmtp -> One.Api.EnviadorSmtp`
 Ao preenchê-las o teste segue exato: o esperado é montado como golden - Removidas + Adicionadas, Assert.Empty(Removidas.Except(golden)) e Assert.Empty(Adicionadas.Intersect(golden)) rejeitam item inexistente ou repetido, e Dourado.Igual compara o texto inteiro, então um serviço a mais, a menos ou com outro tempo de vida falha (provado no container, ver notas-build.md)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ServicosTests.Tempos_de_vida_iguais_ao_golden"`
@@ -347,7 +347,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 
 ### S6 - O Agendador só repete e despacha (AC 41-48) · 21 arquivos · 212,4 KB · ~54,4k
 
-**C71** - Existem 9 classes `ITarefaAgendada` (`conversa`, `chamado`, `aguardando`, `lembrete`, `subir`, `email`, `trecho`, `push` e a limpeza de lançamentos vencidos), fora da raiz, cada uma registrada por `AddSingleton<ITarefaAgendada,` em `Add<Fatia>`, e o registro devolve os 8 `Tipo` na ordem da base (AC 41)
+**C71** - Existem 9 classes `ITarefaAgendada` (`conversa`, `chamado`, `aguardando`, `lembrete`, `subir`, `email`, `trecho`, `push` e a limpeza de lançamentos vencidos), fora da raiz, cada uma registrada por `AddSingleton<ITarefaAgendada,` em uma extensão de fatia (`AddAcesso`, `AddAssistente`, `AddChamados`, `AddIndexacaoDeTrechos` e `AddEnvioDePush`; as duas últimas existem para a ordem do AC 41, plano B8), e o registro tem as 9 classes: os 8 `Tipo` da base na ordem do AC 41 e `ApagarLancamentos` com `Tipo` `lancamento`, cujo `Ler` devolve lista vazia (E11)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao ':\s*ITarefaAgendada\b' -Caminho One.Api -Excluir 'Agendador\.cs' -Esperado 9 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'AddSingleton<ITarefaAgendada,' -Caminho One.Api -Esperado 9 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AgendadorTarefasTests.Tarefas_registradas_na_ordem_da_base"`
@@ -390,7 +390,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 existe -Caminho One.Api/Persistencia.cs,One.Api/Seguranca.cs,One.Api/TratamentoDeErros.cs -Esperado 1 # existe`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Configuracao_lida_em_um_lugar|FullyQualifiedName~ArquiteturaTests.Cliente_S3_configurado_como_a_door_2|FullyQualifiedName~ArquiteturaTests.Aviso_registrado_so_no_Program|FullyQualifiedName~ArquiteturaTests.Pacote_mcp_fixado|FullyQualifiedName~SessaoTests"`
 
-**C81** - As 3 políticas de limite mantêm os padrões `Limites:AuthPorMinuto` 5, `Limites:McpPorMinuto` 60 e `Limites:MensagensPorMinuto` 10 (3 ocorrências em `One.Api/`), o cookie mantém `one.auth`, `HttpOnly`, `Secure` sempre e `SameSite` Strict, e o golden de serviços da S1 segue igual (AC 50), exceto pela lista fechada do C20: `Removidas` = `Singleton One.Api.Email -> One.Api.Email` e `Adicionadas` = as 9 linhas `Singleton One.Api.ITarefaAgendada -> One.Api.<Fatia>.<Tarefa>` do C20 mais `Singleton One.Api.EnviadorSmtp -> One.Api.EnviadorSmtp`, e nada além disso (E5)
+**C81** - As 3 políticas de limite mantêm os padrões `Limites:AuthPorMinuto` 5, `Limites:McpPorMinuto` 60 e `Limites:MensagensPorMinuto` 10 (3 ocorrências em `One.Api/`), o cookie mantém `one.auth`, `HttpOnly`, `Secure` sempre e `SameSite` Strict, e o golden de serviços da S1 segue igual (AC 50), exceto pela lista fechada do C20: `Removidas` = `Singleton One.Api.Email -> One.Api.Email` e `Adicionadas` = as 9 linhas `Singleton One.Api.ITarefaAgendada -> One.Api.<Fatia>.<Tarefa>` do C20 (com `One.Api.Assistente.IndexarTrechos`, E10) mais `Singleton One.Api.EnviadorSmtp -> One.Api.EnviadorSmtp`, e nada além disso (E5)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Limites:(AuthPorMinuto", 5\)|McpPorMinuto", 60\)|MensagensPorMinuto", 10\))' -Caminho One.Api -Esperado 3 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Cookie\.Name = "one\.auth"|Cookie\.HttpOnly = true|CookieSecurePolicy\.Always|SameSiteMode\.Strict' -Caminho One.Api -Esperado 4 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ServicosTests.Tempos_de_vida_iguais_ao_golden|FullyQualifiedName~RateLimitTests|FullyQualifiedName~McpAcessoTests.Limita_requisicoes_por_token|FullyQualifiedName~RetratoTests.Tabela_de_rotas_sem_regras_e_com_as_rotas_do_plano|FullyQualifiedName~SessaoTests.Logout_204_expira_cookie"`
@@ -508,7 +508,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 modelo # modelo`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 migracoes # migracoes`
 
-**C103** - No último commit as listas `Excecoes_*` só perderam linhas desde a S1, `Arquivo_ate_150_linhas` lista só `Dados/Chamados/Chamado.cs` (1 item), `dotnet build One.slnx` sai 0 e a suíte inteira passa (AC 59)
+**C103** - No último commit nenhuma lista `Excecoes_*` cresceu desde a S1 (tamanho de cada lista menor ou igual ao da S1; item novo só como renomeação listada em `## Emendas aprovadas`, E9), `Arquivo_ate_150_linhas` lista só `Dados/Chamados/Chamado.cs` (1 item), `dotnet build One.slnx` sai 0 e a suíte inteira passa (AC 59)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 listas-encolhem -Base <S1> # listas-encolhem`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Arquivo_ate_150_linhas -Esperado 1 # lista`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-contem -Regra Arquivo_ate_150_linhas -Nomes Chamado.cs # lista-contem`
@@ -640,6 +640,8 @@ Cada builder acrescenta aqui, ao fechar o lote, três linhas: `Boundary` (checks
 
 - Lote A, S1: Boundary `ad7cf78` (C1-C25: suíte 837/837 no commit; listas 6/19/17/5/2/1 conferidas por `provas.ps1 lista`; `git diff 97524d1 ad7cf78 -- One.Api` vazio; mutação das 11 listas pega no container). C2 só vale para os cinco retratos originais (ver notas-build.md, item 2).
 - Lote A, S2: Boundary `967860a` (C26-C38: suíte 862/862; C27 `lista-sem` e C28 grep conferidos, C27 `lista-sem` não fecha pela prova escrita, ver notas-build.md, item 6). Settled mid-build: vocabulários em arquivo próprio na pasta da entidade; `Invalido` e `DadosDeAparencia` criados em `Dados/`. Abandoned: nenhum item; o lote B (S3 e S4) não foi iniciado.
+- Lote D, S6: Boundary `d1e099b` (C71-C79: suíte 935/935 ao fim do lote; mutação à mão em `Chamado.FecharPorInatividade` e em `FecharResolvidos` pega no container; ver notas-build.md, Lote D). Settled mid-build: tarefa `trecho` na fatia `Assistente` (`Assistente.IndexarTrechos`, plano B7, E10); ordem das tarefas por `AddIndexacaoDeTrechos` e `AddEnvioDePush` (plano B8). Abandoned: nenhum item.
+- Lote D, S7: Boundary `6e225a2` (C80-C89: suíte 935/935 ao fim do lote; `dotnet build One.slnx` sem erros; ver notas-build.md, Lote D). Settled mid-build: `AddPersistencia` registra também `Prazos`, `EnviadorSmtp`, `Agendador` e o `IHostedService`; `Sessao.cs` virou `Acesso/CookieDeSessao.cs` (renomeação do E9). Abandoned: nenhum item.
 
 ## Emendas aprovadas
 
@@ -662,3 +664,16 @@ Aprovadas pelo humano em 2026-11-13: "pode aplicar e seguir".
 | --- | --- | --- | --- | --- |
 | E7 | C47 | "(5 casos)" | "(6 casos)"; asserção e prova iguais | o texto enumera 6 saídas (`resposta`, `sem_base`, `pergunta`, `sem_base` com `pergunta_invalida`, `transferir`, `sem_base` sem motivo), conferidas contra o AC 22 e `ConferirRespostaTests.Classificar_cada_tipo` (6 cenários) |
 | E8 | C52 | "no máximo 4 consultas (hoje 9 a 10)", provado só no cenário simples | tabela de limites por papel e cenário (simples, citação, fluxo, os dois), com a base `683e6a6` ao lado; teoria `Montar_consultas_por_cenario` acrescentada; `Montar_faz_no_maximo_4_consultas` intacto | medido: com citação ou fluxo o atendente passa de 4 (7, 6 e 9), sempre abaixo da base (14, 18 e 18); a base também não fazia 9 a 10 (media 14 no simples) |
+
+Aprovadas pelo humano em 2026-11-13: "Sim autorizo" (E9-E14, Lote D).
+
+| Emenda | Check | Antes | Depois | Motivo |
+| --- | --- | --- | --- | --- |
+| E9 | C103 (prova `listas-encolhem`) | a prova rejeitava item novo na lista (`-notcontains` por nome) | a prova compara o tamanho de cada lista com o da S1 (nunca cresce) e aceita item novo só com a renomeação listada nesta seção, no formato `Renomeacao permitida (listas-encolhem): <Regra>: <antigo> -> <novo>` (antigo na lista da S1 e fora da atual); acrescentar item novo continua falhando | o C83 manda `Validar` sair de `Sessao.cs` para `Acesso/CookieDeSessao.cs` (usa `GetRequiredService<OneDb>`); a lista manteve 2 itens e a prova por nome falhava |
+| E10 | C20, C81 | `Singleton One.Api.ITarefaAgendada -> One.Api.Conhecimento.IndexarTrechos` | `Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.IndexarTrechos` | `Embeddings` mora em `Assistente`; `Conhecimento` usar `Assistente` cria o inverso de `Assistente>Conhecimento`, par proibido pelos AC 27 e AC 68 (plano B7); conferido contra `ServicosTests` (linha 23) |
+| E11 | C71 | "os 8 `Tipo`"; "registrada em `Add<Fatia>`" | 9 classes (os 8 `Tipo` da base na ordem mais `ApagarLancamentos` com `Tipo` `lancamento`); registro em `AddAcesso`, `AddAssistente`, `AddChamados`, `AddIndexacaoDeTrechos` e `AddEnvioDePush` | `AgendadorTarefasTests.Tarefas_registradas_na_ordem_da_base` afirma as 9 classes e os 8 tipos da base; a ordem do AC 41 pede as 2 extensões extras (plano B8) |
+| E12 | AC 49 (plan.md); nenhum check cita a contagem | "the four infrastructure extensions" | as 4 de infraestrutura (`AddPersistencia`, `AddArmazenamento`, `AddSeguranca`, `AddTratamentoDeErros`) mais `AddIndexacaoDeTrechos` e `AddEnvioDePush`: 6 extensões que não são `Add<Fatia>` no `Program.cs` | conferido em `Program.cs`; as 2 extras existem para a ordem das tarefas (B8); C80 e C89 não mudam (o C89 conta 16 declarações `Add`/`Map` das 8 fatias) |
+| E13 | C74, C75 | nomes do `Proof:` | sem mudança de texto: os nomes já são os reais (`ChamadoAgendadorDominioTests` 3 métodos; `AgendadorConcorrenciaTests.Conflito_de_xmin_nao_muda_nada_e_nao_registra_erro` e `Recusa_do_dominio_nao_muda_nada_e_nao_registra_erro`); provado por `provas.ps1 nomes` | o builder da S6 escreveu os testes a partir do texto dos checks |
+| E14 | `## Handoff` | sem `Boundary` de S6 e S7 | `Boundary` `d1e099b` (S6) e `6e225a2` (S7) | o builder não podia editar o `checks.md`; hashes conferidos com `git log` |
+
+Renomeacao permitida (listas-encolhem): Service_locator_so_na_composicao: Sessao.cs -> Acesso/CookieDeSessao.cs
