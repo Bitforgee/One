@@ -3,7 +3,7 @@ import { useState, type Dispatch, type SetStateAction } from 'react'
 import { useGravacao } from '../acao'
 import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo, ErroDoCampo } from '../Campo'
+import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
@@ -90,7 +90,7 @@ function CamposDoArtigo({ editando, setEditando, categorias, erros }: { editando
   return (
     <>
       <p className="text-sm text-muted-foreground">{editando.id ? 'Salvar cria uma nova versão; as anteriores ficam guardadas.' : 'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.'}</p>
-      <Campo id="titulo" rotulo="Título" maxLength={200} value={editando.titulo} erro={erros.titulo} onChange={muda('titulo')} />
+      <Campo id="titulo" rotulo="Título" autoComplete="off" maxLength={200} value={editando.titulo} erro={erros.titulo} onChange={muda('titulo')} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="perguntas">Perguntas relacionadas (uma por linha)</Label>
         <Textarea id="perguntas" rows={3} value={editando.perguntas} aria-invalid={!!erros.perguntas} aria-describedby={erros.perguntas ? 'perguntas-erro' : undefined} onChange={muda('perguntas')} />
@@ -128,6 +128,7 @@ export function Artigos() {
   const [editando, setEditando] = useState<Rascunho>()
   const [arquivar, setArquivar] = useState<Artigo>()
   const acao = useGravacao(recarregar)
+  useFocoNoPrimeiroErro(acao.error)
 
   const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/artigos', editando!.id, corpo(editando!)), aviso: 'Artigo salvo.', depois: () => setEditando(undefined) })
 

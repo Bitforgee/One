@@ -5,7 +5,7 @@ import { Link } from 'react-router'
 import { useGravacao, useLeituras } from '../acao'
 import { api, ErroApi } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo, ErroDoCampo } from '../Campo'
+import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Confirmar } from '../Confirmar'
 import { formatarData } from '../datas'
@@ -49,12 +49,12 @@ function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Pa
   const texto = (chave: 'adminNome' | 'cpf' | 'email') => (e: { target: { value: string } }) => mudar({ [chave]: e.target.value })
   return (
     <>
-      <Campo id="nome" rotulo="Nome" value={ficha.nome} erro={erros.nome} onChange={(e) => mudar({ nome: e.target.value, ...(ficha.slugEditado ? {} : { slug: enderecoDe(e.target.value) }) })} />
+      <Campo id="nome" rotulo="Nome" autoComplete="off" value={ficha.nome} erro={erros.nome} onChange={(e) => mudar({ nome: e.target.value, ...(ficha.slugEditado ? {} : { slug: enderecoDe(e.target.value) }) })} />
       <div className="flex flex-col gap-2">
         <Label htmlFor="endereco">Endereço</Label>
         <div className="flex items-center gap-1">
           <span aria-hidden="true">/</span>
-          <Input id="endereco" value={ficha.slug} aria-invalid={!!erros.slug} aria-describedby={erros.slug ? 'endereco-erro' : undefined} onChange={(e) => mudar({ slug: e.target.value, slugEditado: true })} />
+          <Input id="endereco" name="endereco" autoComplete="off" spellCheck={false} value={ficha.slug} aria-invalid={!!erros.slug} aria-describedby={erros.slug ? 'endereco-erro' : undefined} onChange={(e) => mudar({ slug: e.target.value, slugEditado: true })} />
         </div>
         <ErroDoCampo id="endereco" erro={erros.slug} />
       </div>
@@ -73,9 +73,9 @@ function Formulario({ ficha, mudar, erros }: { ficha: Ficha; mudar: (parcial: Pa
         <legend id={grupo} className="mb-2 text-sm font-medium">
           Primeiro administrador
         </legend>
-        <Campo id="admin-nome" rotulo="Nome" value={ficha.adminNome} erro={erros['admin.nome']} onChange={texto('adminNome')} />
-        <Campo id="admin-cpf" rotulo="CPF" inputMode="numeric" value={ficha.cpf} erro={erros['admin.cpf']} onChange={texto('cpf')} />
-        <Campo id="admin-email" rotulo="E-mail" type="email" value={ficha.email} erro={erros['admin.email']} onChange={texto('email')} />
+        <Campo id="admin-nome" rotulo="Nome" autoComplete="off" value={ficha.adminNome} erro={erros['admin.nome']} onChange={texto('adminNome')} />
+        <Campo id="admin-cpf" rotulo="CPF" inputMode="numeric" autoComplete="off" spellCheck={false} placeholder="Ex.: 000.000.000-00…" value={ficha.cpf} erro={erros['admin.cpf']} onChange={texto('cpf')} />
+        <Campo id="admin-email" rotulo="E-mail" type="email" autoComplete="off" spellCheck={false} value={ficha.email} erro={erros['admin.email']} onChange={texto('email')} />
       </fieldset>
     </>
   )
@@ -197,6 +197,7 @@ const AvisoDeCriacao = ({ criada }: { criada: Ficha }) => (
 export function Instituicoes() {
   const { dados, erro, recarregar } = useLeituras<{ lista: Item[] }>({ lista: '/api/plataforma/instituicoes' })
   const criacao = useCriacao(recarregar)
+  useFocoNoPrimeiroErro(criacao.mutacao.error)
   const [carga, setCarga] = useState<Item>()
   const [desativar, setDesativar] = useState<Item>()
   const acao = useGravacao(recarregar)

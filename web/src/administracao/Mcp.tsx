@@ -75,7 +75,7 @@ function FormularioNovo({ nome, setNome, dias, setDias, erros }: { nome: string;
     <>
       <div className="flex flex-col gap-2">
         <Label htmlFor="mcp-nome">Nome</Label>
-        <Input id="mcp-nome" value={nome} aria-invalid={!!erros.nome} aria-describedby="mcp-nome-dica" onChange={(e) => setNome(e.target.value)} />
+        <Input id="mcp-nome" name="nome" autoComplete="off" value={nome} aria-invalid={!!erros.nome} aria-describedby="mcp-nome-dica" onChange={(e) => setNome(e.target.value)} />
         <p id="mcp-nome-dica" className="m-0 text-xs text-muted-foreground">
           Ex.: Cursor no meu notebook
         </p>

@@ -31,6 +31,7 @@ const Campos = [
 ] as const
 
 type Chave = (typeof Campos)[number][0]
+const EhUrl = (chave: string) => chave === 'emissor' || chave.endsWith('Url')
 type Valores = Record<Chave, string> & { ativa: boolean }
 
 const valoresDe = (p: Plataforma): Valores => ({ ativa: p.configurada ? p.ativa : true, emissor: p.emissor, clientId: p.clientId, deploymentId: p.deploymentId, authUrl: p.authUrl, jwksUrl: p.jwksUrl })
@@ -127,7 +128,7 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
         {Campos.map(([chave, rotulo, dica]) => (
           <div key={chave} className="flex flex-col gap-2">
             <Label htmlFor={`moodle-${chave}`}>{rotulo}</Label>
-            <Input id={`moodle-${chave}`} value={v[chave]} aria-invalid={!!erros[chave]} aria-describedby={`moodle-${chave}-dica`} onChange={(e) => mudar({ [chave]: e.target.value })} />
+            <Input id={`moodle-${chave}`} name={chave} type={EhUrl(chave) ? 'url' : 'text'} autoComplete="off" spellCheck={false} value={v[chave]} aria-invalid={!!erros[chave]} aria-describedby={`moodle-${chave}-dica`} onChange={(e) => mudar({ [chave]: e.target.value })} />
             <p id={`moodle-${chave}-dica`} className="m-0 text-xs text-muted-foreground">
               {dica}
             </p>

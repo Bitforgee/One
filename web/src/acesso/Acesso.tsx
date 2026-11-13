@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { BotaoAcao } from '../acao'
 import { api, ErroApi } from '../api'
 import { ErroDe } from '../ErroDe'
+import { descricaoDoCampo } from '../Campo'
 import { Sigla, urlDaImagem, useInstituicao, type InstituicaoPublica } from '../aparencia'
 import { telaInicial, useSessao } from '../sessao'
 import { Alert } from '../ui/alert'
@@ -140,11 +141,11 @@ function Campo<T extends FieldValues>({ f, nome, rotulo, dica, type, ...props }:
     <div className="flex flex-col gap-2">
       <Label htmlFor={nome}>{rotulo}</Label>
       <div className="relative">
-        <Input id={nome} type={senha && visivel ? 'text' : type} aria-invalid={!!f.formState.errors[nome]} aria-describedby={dica ? `${nome}-dica` : undefined} className={senha ? 'pr-12' : undefined} {...props} {...f.register(nome)} />
+        <Input id={nome} type={senha && visivel ? 'text' : type} aria-invalid={!!f.formState.errors[nome]} aria-describedby={descricaoDoCampo(nome, dica, erro)} className={senha ? 'pr-12' : undefined} {...props} {...f.register(nome)} />
         {senha && <BotaoVerSenha visivel={visivel} alternar={() => setVisivel((v) => !v)} />}
       </div>
       {erro && (
-        <p id={`-erro`} className="text-sm text-destructive">
+        <p id={`${nome}-erro`} role="alert" className="text-sm text-destructive">
           {erro}
         </p>
       )}
@@ -218,7 +219,7 @@ export function Login() {
         {(form) => (
           <>
             <p className="m-0 -mb-2 text-sm text-muted-foreground">Entre com seu CPF e sua senha.</p>
-            <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" autoComplete="username" />
+            <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" autoComplete="username" spellCheck={false} placeholder="Ex.: 000.000.000-00…" />
             <Campo f={form} nome="senha" rotulo="Senha" type="password" autoComplete="current-password" />
           </>
         )}
@@ -244,7 +245,7 @@ export function PrimeiroAcesso() {
           className="w-full"
           enviar={async (v) => setMensagem((await api<{ mensagem: string }>('/api/auth/primeiro-acesso', { instituicao: slug, ...v })).mensagem)}
         >
-          {(form) => <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" dica="Enviaremos um link para criar a senha no e-mail registrado na instituição." />}
+          {(form) => <Campo f={form} nome="cpf" rotulo="CPF" inputMode="numeric" autoComplete="off" spellCheck={false} placeholder="Ex.: 000.000.000-00…" dica="Enviaremos um link para criar a senha no e-mail registrado na instituição." />}
         </Formulario>
       )}
       <Link to={`/${slug}`} className="inline-flex min-h-11 items-center self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">

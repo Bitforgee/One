@@ -80,7 +80,7 @@ function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string;
       </div>
       <div className="relative">
         <Search aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input type="search" aria-label={`Buscar em ${Titulos[aba]}`} placeholder="Buscar pelo nome" className="ps-9" value={busca} onChange={(e) => buscar(e.target.value)} />
+        <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label={`Buscar em ${Titulos[aba]}`} placeholder="Buscar pelo nome" className="ps-9" value={busca} onChange={(e) => buscar(e.target.value)} />
       </div>
     </div>
   )
@@ -127,7 +127,7 @@ function Rotulado({ id, rotulo, erro, children }: { id: string; rotulo: string; 
 function CampoNome(c: Campos) {
   return (
     <Rotulado id="cad-nome" rotulo="Nome" erro={c.erros.nome}>
-      <Input id="cad-nome" {...campo(c, 'nome', 'cad-nome')} />
+      <Input id="cad-nome" name="nome" autoComplete="off" {...campo(c, 'nome', 'cad-nome')} />
     </Rotulado>
   )
 }
@@ -244,7 +244,7 @@ const CamposDePronta = (c: Campos) => (
   <>
     <Escolha c={c} id="cad-setor-pronta" rotulo="Setor" chave="setorId" vazio="Escolha o setor" itens={c.dados?.setores} />
     <Rotulado id="cad-titulo" rotulo="Título" erro={c.erros.titulo}>
-      <Input id="cad-titulo" {...campo(c, 'titulo', 'cad-titulo')} />
+      <Input id="cad-titulo" name="titulo" autoComplete="off" {...campo(c, 'titulo', 'cad-titulo')} />
     </Rotulado>
     <Rotulado id="cad-texto" rotulo="Texto" erro={c.erros.texto}>
       <Textarea id="cad-texto" rows={4} maxLength={4000} {...campo(c, 'texto', 'cad-texto')} />

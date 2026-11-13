@@ -224,11 +224,11 @@ export function Indicadores() {
       >
         <div className="flex flex-col gap-2">
           <Label htmlFor="de">De</Label>
-          <Input id="de" type="date" value={de} onChange={(e) => setDe(e.target.value)} />
+          <Input id="de" name="de" autoComplete="off" type="date" value={de} onChange={(e) => setDe(e.target.value)} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="ate">Até</Label>
-          <Input id="ate" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
+          <Input id="ate" name="ate" autoComplete="off" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
         <Button type="submit" className="col-span-2 @3xl/main:col-span-1" disabled={isFetching}>
           {isFetching && <Spinner />}

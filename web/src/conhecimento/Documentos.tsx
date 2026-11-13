@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useGravacao } from '../acao'
 import { api } from '../api'
 import { Cabecalho } from '../Cabecalho'
-import { Campo, ErroDoCampo } from '../Campo'
+import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Editor } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
@@ -80,7 +80,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias, erros }: { envio: Envio; s
       </p>
       {!envio.id && (
         <>
-          <Campo id="titulo-documento" rotulo="Título" maxLength={200} value={envio.titulo} erro={erros.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
+          <Campo id="titulo-documento" rotulo="Título" autoComplete="off" maxLength={200} value={envio.titulo} erro={erros.titulo} onChange={(e) => setEnvio({ ...envio, titulo: e.target.value })} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="categoria-documento">Categoria</Label>
             <NativeSelect id="categoria-documento" className="w-full" value={envio.categoriaId} aria-invalid={!!erros.categoriaId} aria-describedby={erros.categoriaId ? 'categoria-documento-erro' : undefined} onChange={(e) => setEnvio({ ...envio, categoriaId: e.target.value })}>
@@ -111,6 +111,7 @@ export function Documentos() {
   const [envio, setEnvio] = useState<Envio>()
   const [arquivar, setArquivar] = useState<Documento>()
   const acao = useGravacao(recarregar)
+  useFocoNoPrimeiroErro(acao.error)
 
   const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: () => setEnvio(undefined) })
 

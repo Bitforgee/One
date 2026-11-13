@@ -292,6 +292,8 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
               <BotaoAnexar anexos={anexos} />
               <Textarea
                 id="mensagem"
+                name="mensagem"
+                autoComplete="off"
                 rows={1}
                 maxLength={1000}
                 value={texto}
@@ -343,7 +345,7 @@ function PedidoAoAtendente({ emConversa, lideranca, falhou, descricao, setDescri
       {!emConversa && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="descricao">Descreva seu pedido</Label>
-          <Textarea id="descricao" rows={3} maxLength={2000} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+          <Textarea id="descricao" name="descricao" autoComplete="off" rows={3} maxLength={2000} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
         </div>
       )}
       {ativas.length > 1 && (

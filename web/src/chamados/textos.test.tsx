@@ -117,7 +117,7 @@ describe('textos', () => {
     montada = detalhe(daEquipe, undefined, { 'GET /api/respostas-prontas?setorId=5': () => [200, [{ id: 1, titulo: 'Boleto pronto', texto: 'Segue o boleto.' }]] })
     await screen.findByLabelText('Resposta pronta')
     await userEvent.click(await screen.findByRole('button', { name: /^Conversa com o assistente/ }))
-    expect(screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')).toHaveAttribute('placeholder', 'ONE-123')
+    expect(screen.getByLabelText('Duplicado de outro pedido do mesmo aluno')).toHaveAttribute('placeholder', 'Ex.: ONE-123…')
     t.conferir(tela(), [...ValoresDaEquipe, 'Boleto pronto'])
 
     await userEvent.click(screen.getByRole('button', { name: 'Encaminhar' }))

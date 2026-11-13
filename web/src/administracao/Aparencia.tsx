@@ -106,10 +106,10 @@ export function descricaoDe(campo: Campo, id: string, erro?: string) {
   return [campo.dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
 }
 
-type PropsDaEntrada = { area?: boolean; props: { id: string; value: string; 'aria-invalid': boolean; 'aria-describedby': string | undefined }; mudar: (v: string) => void }
+type PropsDaEntrada = { area?: boolean; tipo?: 'tel' | 'email'; props: { id: string; name: string; autoComplete: 'off'; value: string; 'aria-invalid': boolean; 'aria-describedby': string | undefined }; mudar: (v: string) => void }
 
-function Entrada({ area, props, mudar }: PropsDaEntrada) {
-  return area ? <Textarea rows={3} {...props} onChange={(e) => mudar(e.target.value)} /> : <Input {...props} onChange={(e) => mudar(e.target.value)} />
+function Entrada({ area, tipo, props, mudar }: PropsDaEntrada) {
+  return area ? <Textarea rows={3} {...props} onChange={(e) => mudar(e.target.value)} /> : <Input type={tipo} spellCheck={tipo === 'email' ? false : undefined} {...props} onChange={(e) => mudar(e.target.value)} />
 }
 
 function RodapeDoCampo({ campo, id, tamanho }: { campo: Campo; id: string; tamanho: number }) {
@@ -129,12 +129,12 @@ function RodapeDoCampo({ campo, id, tamanho }: { campo: Campo; id: string; taman
 function CampoDeTexto({ campo, valor, mudar, erro }: { campo: Campo; valor: string; mudar: (v: string) => void; erro?: string }) {
   const id = `ap-${campo.chave}`
   const descricao = descricaoDe(campo, id, erro)
-  const props = { id, value: valor, 'aria-invalid': !!erro, 'aria-describedby': descricao }
+  const props = { id, name: campo.chave, autoComplete: 'off' as const, value: valor, 'aria-invalid': !!erro, 'aria-describedby': descricao }
   const tamanho = valor.trim().length
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <Label htmlFor={id}>{campo.rotulo}</Label>
-      <Entrada area={campo.area} props={props} mudar={mudar} />
+      <Entrada area={campo.area} tipo={campo.tipo} props={props} mudar={mudar} />
       {campo.chave === 'cor' && <Amostra cor={valor} />}
       <RodapeDoCampo campo={campo} id={id} tamanho={tamanho} />
       <ErroDoCampo id={id} erro={erro} />

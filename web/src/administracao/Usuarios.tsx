@@ -91,9 +91,9 @@ function CamposDoUsuario({ editando, setEditando, setores, erros }: Edicao & { e
   const muda = (chave: 'cpf' | 'nome' | 'email' | 'senhaTemporaria') => (e: { target: { value: string } }) => setEditando((f) => f && { ...f, [chave]: e.target.value })
   return (
     <>
-      <Campo id="cpf" rotulo="CPF" inputMode="numeric" value={editando.cpf} erro={erros.cpf} onChange={muda('cpf')} />
+      <Campo id="cpf" rotulo="CPF" inputMode="numeric" autoComplete="off" spellCheck={false} placeholder="Ex.: 000.000.000-00…" value={editando.cpf} erro={erros.cpf} onChange={muda('cpf')} />
       <Campo id="nome" rotulo="Nome" value={editando.nome} erro={erros.nome} onChange={muda('nome')} />
-      <Campo id="email" rotulo="E-mail" type="email" value={editando.email} erro={erros.email} onChange={muda('email')} />
+      <Campo id="email" rotulo="E-mail" type="email" autoComplete="off" spellCheck={false} value={editando.email} erro={erros.email} onChange={muda('email')} />
       <PapeisESetores editando={editando} setEditando={setEditando} setores={setores} />
       <div className="flex flex-col gap-2">
         <Campo id="senha" rotulo="Senha temporária (opcional)" type="password" autoComplete="new-password" value={editando.senhaTemporaria} erro={erros.senhaTemporaria} onChange={muda('senhaTemporaria')} />
@@ -137,7 +137,7 @@ export function Usuarios() {
       <Cabecalho botao="Novo" Icone={Plus} aoClicar={() => setEditando({ ...Novo })} />
       <ErroDe erro={erro} oque="os usuários" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Input type="search" aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
       <Tabela
         colunas={Colunas}
         itens={usuarios}

@@ -1,12 +1,25 @@
-import type { ComponentProps } from 'react'
+import { useEffect, type ComponentProps } from 'react'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 
-export function Campo({ id, rotulo, erro, ...props }: { id: string; rotulo: string; erro?: string } & ComponentProps<'input'>) {
+export const descricaoDoCampo = (id: string, dica?: string, erro?: string) => [dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
+
+export function useFocoNoPrimeiroErro(erro: unknown) {
+  useEffect(() => {
+    if (erro) document.querySelector<HTMLElement>('[role="dialog"] [aria-invalid="true"]')?.focus()
+  }, [erro])
+}
+
+export function Campo({ id, rotulo, erro, dica, ...props }: { id: string; rotulo: string; erro?: string; dica?: string } & ComponentProps<'input'>) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <Label htmlFor={id}>{rotulo}</Label>
-      <Input id={id} aria-invalid={!!erro} aria-describedby={erro ? `${id}-erro` : undefined} {...props} />
+      <Input id={id} name={id} aria-invalid={!!erro} aria-describedby={descricaoDoCampo(id, dica, erro)} {...props} />
+      {dica && (
+        <p id={`${id}-dica`} className="m-0 text-sm text-muted-foreground">
+          {dica}
+        </p>
+      )}
       <ErroDoCampo id={id} erro={erro} />
     </div>
   )
@@ -15,7 +28,7 @@ export function Campo({ id, rotulo, erro, ...props }: { id: string; rotulo: stri
 export function ErroDoCampo({ id, erro }: { id: string; erro?: string }) {
   if (!erro) return null
   return (
-    <p id={`${id}-erro`} className="m-0 text-sm text-destructive">
+    <p id={`${id}-erro`} role="alert" className="m-0 text-sm text-destructive">
       {erro}
     </p>
   )

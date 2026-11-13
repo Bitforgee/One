@@ -140,7 +140,7 @@ describe('acesso', () => {
         await userEvent.click(await screen.findByRole('button', { name: botao }))
         await waitFor(() => expect(screen.getByLabelText(vazio)).toHaveAttribute('aria-invalid', 'true'))
         expect(chamadas.filter((c) => c.metodo === 'POST'), `${caminho} sem ${vazio}`).toEqual([])
-        expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+        expect(document.querySelector('[data-slot="alert"]')).not.toBeInTheDocument()
         unmount()
       }
       const chamadas = api(rotas)

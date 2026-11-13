@@ -1,7 +1,7 @@
 import type { Imagens } from '../aparencia'
 
 export type Tipo = keyof Imagens
-export type Campo = { chave: string; rotulo: string; area?: boolean; dica?: string; limite?: number }
+export type Campo = { chave: string; rotulo: string; area?: boolean; dica?: string; limite?: number; tipo?: 'tel' | 'email' }
 export type IdAba = 'marca' | 'app' | 'login' | 'assistente' | 'contato'
 export type Aba = { id: IdAba; titulo: string; campos: Campo[]; imagens: Tipo[]; nota?: string }
 
@@ -48,8 +48,8 @@ export const Abas: Aba[] = [
     titulo: 'Contato',
     campos: [
       { chave: 'contato.horario', rotulo: 'Horário de atendimento' },
-      { chave: 'contato.telefone', rotulo: 'Telefone' },
-      { chave: 'contato.email', rotulo: 'E-mail de atendimento' },
+      { chave: 'contato.telefone', rotulo: 'Telefone', tipo: 'tel' },
+      { chave: 'contato.email', rotulo: 'E-mail de atendimento', tipo: 'email' },
     ],
     imagens: [],
   },

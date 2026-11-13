@@ -109,7 +109,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
     <form onSubmit={responder} className="flex flex-col gap-2 rounded-md bg-muted p-4 form-resposta lg:sticky lg:bottom-0 lg:z-10 lg:max-h-[50dvh] lg:overflow-y-auto">
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
-      <Textarea id="resposta" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
+      <Textarea id="resposta" name="resposta" autoComplete="off" rows={3} maxLength={4000} value={texto} onChange={(e) => setTexto(e.target.value)} />
       {!nota && <CampoArquivo key={String(envio)} id="anexos" rotulo="Anexos (PDF, JPG ou PNG, até 10 MB cada)" accept=".pdf,.jpg,.jpeg,.png" arquivos={arquivos} setArquivos={setArquivos} />}
       <MarcasDaEquipe equipe={equipe} nota={nota} pode={pode} setNota={setNota} aguardaAluno={aguardaAluno} setAguardaAluno={setAguardaAluno} />
       <BotaoAcao type="submit" pendente={pendente} className="self-start" disabled={semEnvio(texto, nota, pode('responder'))}>
@@ -230,7 +230,7 @@ function CampoMotivo({ id, rotulo, valor, setValor }: Campo & { id: string; rotu
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={id}>{rotulo}</Label>
-      <Textarea id={id} rows={2} maxLength={4000} value={valor} onChange={(e) => setValor(e.target.value)} />
+      <Textarea id={id} name={id} autoComplete="off" rows={2} maxLength={4000} value={valor} onChange={(e) => setValor(e.target.value)} />
     </div>
   )
 }
@@ -336,7 +336,7 @@ function PainelDeAcoes({ c, acoes, abrir, semAssumir, motivo, setMotivo, campos 
       </FormLinha>
       <FormLinha visivel={pode('duplicado')} enviar={() => executar('duplicado', { numeroOriginal: original.trim().toUpperCase() }, () => setOriginal(''))}
         id="original" rotulo="Duplicado de outro pedido do mesmo aluno" botao="Marcar" pendente={pendente} pronto={original.trim() !== ''}>
-        <Input id="original" placeholder="ONE-123" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
+        <Input id="original" name="original" autoComplete="off" spellCheck={false} placeholder="Ex.: ONE-123…" value={original} onChange={(e) => setOriginal(e.target.value)} className="h-11" />
       </FormLinha>
       <FormTexto visivel={pode('rejeitar')} enviar={() => executar('rejeitar', { motivo }, () => setMotivo(''))}
         id="motivo" rotulo="Não resolveu? Explique o motivo" botao="Rejeitar resolução" variant="outline" pendente={pendente} valor={motivo} setValor={setMotivo} />
