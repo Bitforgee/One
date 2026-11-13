@@ -66,11 +66,9 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
 
     async Task<List<ItemAgendado>> LerAtendimento(OneDb db, DateTime agora)
     {
-        var (limiteConversa, limiteChamado) = (agora - prazos.Abandono, agora - prazos.Confirmacao);
+        var limiteConversa = agora - prazos.Abandono;
         var itens = await db.Conversas.IgnoreQueryFilters().Where(c => c.Desfecho == null && c.UltimaMensagemEm <= limiteConversa)
             .Select(c => new ItemAgendado("conversa", c.Id, c.InstituicaoId)).ToListAsync();
-        itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
-            .Select(c => new ItemAgendado("chamado", c.Id, c.InstituicaoId)).ToListAsync());
         return itens;
     }
 
@@ -130,7 +128,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         switch (item.Tipo)
         {
             case "conversa": await Abandonar(db, item.Id, agora); break;
-            case "chamado": await FecharResolvido(db, item.Id, agora); break;
         }
     }
 
@@ -140,18 +137,5 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         var n = await db.Conversas.Where(c => c.Id == id && c.Desfecho == null && c.UltimaMensagemEm <= limite)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.Desfecho, Desfechos.Abandonada).SetProperty(c => c.DesfechoEm, agora));
         if (n == 1) log.LogInformation("Conversa {ConversaId} abandonada (instituição {InstituicaoId})", id, db.InstituicaoAtual);
-    }
-
-    async Task FecharResolvido(OneDb db, long id, DateTime agora)
-    {
-        var limite = agora - prazos.Confirmacao;
-        await using var tx = await db.Database.BeginTransactionAsync();
-        var n = await db.Chamados.Where(c => c.Id == id && c.Estado == Resolvido && c.ResolvidoEm <= limite)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Fechado).SetProperty(c => c.MotivoFechamento, MotivosFechamento.FechadoAutomaticamente).SetProperty(c => c.FechadoEm, agora));
-        if (n == 0) return;
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Transicao, De = Resolvido, Para = Fechado, Detalhe = $"Fechado automaticamente: {prazos.ConfirmacaoDias} dias sem confirmação", CriadoEm = agora });
-        await db.SaveChangesAsync();
-        await tx.CommitAsync();
-        log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
     }
 }

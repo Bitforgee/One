@@ -18,6 +18,13 @@ public class ChamadoAgendadorDominioTests
         return c;
     }
 
+    static Chamado JaResolvido(DateTime em)
+    {
+        var c = Novo(em);
+        c.Resolver(Atendente, "Ana", "Feito.", em);
+        return c;
+    }
+
     static Chamado Atendendo(DateTime desde)
     {
         var c = Novo(desde);
@@ -77,4 +84,28 @@ public class ChamadoAgendadorDominioTests
         Assert.NotNull(errado.ResolverPorFaltaDeResposta(7, Agora));
         Assert.Equal((EmAtendimento, (DateTime?)null), (errado.Estado, errado.ResolvidoEm));
         Assert.Equal((eventos, mensagens), (errado.Eventos.Count, errado.Mensagens.Count));
+    }
+    [Fact]
+    public void Fechar_por_inatividade_no_limite_antes_e_estado_errado()
+    {
+        var limite = JaResolvido(Agora - TimeSpan.FromDays(7));
+        var eventos = limite.Eventos.Count;
+        Assert.Null(limite.FecharPorInatividade(7, Agora));
+        Assert.Equal((Fechado, MotivosFechamento.FechadoAutomaticamente, (DateTime?)Agora), (limite.Estado, limite.MotivoFechamento, limite.FechadoEm));
+        Assert.Equal(eventos + 1, limite.Eventos.Count);
+        var evento = limite.Eventos.Last();
+        Assert.Equal((TiposEvento.Transicao, (long?)null, Resolvido, Fechado, "Fechado automaticamente: 7 dias sem confirmação", Agora),
+            (evento.Tipo, evento.AtorId, evento.De, evento.Para, evento.Detalhe, evento.CriadoEm));
+
+        var antes = JaResolvido(Agora - TimeSpan.FromDays(7) + TimeSpan.FromSeconds(1));
+        eventos = antes.Eventos.Count;
+        Assert.NotNull(antes.FecharPorInatividade(7, Agora));
+        Assert.Equal((Resolvido, (string?)null, (DateTime?)null), (antes.Estado, antes.MotivoFechamento, antes.FechadoEm));
+        Assert.Equal(eventos, antes.Eventos.Count);
+
+        var errado = Atendendo(Agora - TimeSpan.FromDays(9));
+        eventos = errado.Eventos.Count;
+        Assert.NotNull(errado.FecharPorInatividade(7, Agora));
+        Assert.Equal((EmAtendimento, (string?)null), (errado.Estado, errado.MotivoFechamento));
+        Assert.Equal(eventos, errado.Eventos.Count);
     }}

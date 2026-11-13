@@ -194,6 +194,13 @@ public class Chamado : IDaInstituicao
         AguardandoDesde = null;
     }
 
+    public Recusa? FecharPorInatividade(int dias, DateTime agora)
+    {
+        if (Estado != Resolvido || ResolvidoEm is not { } em || em > agora - TimeSpan.FromDays(dias)) return new Recusa("Este chamado não está resolvido há tempo suficiente.");
+        Fechar(MotivosFechamento.FechadoAutomaticamente, $"Fechado automaticamente: {dias} dias sem confirmação", new Ato(null, agora));
+        return null;
+    }
+
     public Recusa? LembrarAluno(int dias, DateTime agora)
     {
         if (Estado != AguardandoAluno || LembreteEm is not null || !AguardandoHaPeloMenos(dias, agora)) return new Recusa("Este chamado não pede lembrete.");
