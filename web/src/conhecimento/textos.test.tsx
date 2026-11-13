@@ -16,7 +16,7 @@ const Artigos = [
   'Artigo salvo.', 'Artigo ativado.', 'Artigo arquivado.',
 ]
 const Documentos = [
-  'Documentos', 'Novo documento', 'Enviar PDF', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
+  'Documentos', 'Novo documento', 'PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.',
   'Indexado', 'Ativo', 'Arquivado', 'versão', 'página', 'páginas', 'Nova versão', 'Arquivar', 'Versão', 'Arquivo', 'Situação',
   'PDF com texto (não digitalizado), até 20\u00a0MB.', 'A nova versão de “', '” substitui a atual na busca; as anteriores ficam guardadas.',
   'Título', 'Categoria', 'Escolha a categoria', 'Arquivo PDF', 'Cancelar', 'Enviar documento',

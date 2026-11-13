@@ -99,6 +99,7 @@ describe('documentos', () => {
 
   it('novo documento leva título, categoria e o PDF', async () => {
     const chamadas = tela('/univag/documentos', 'documentos', [], { 'POST /api/admin/documentos': () => [201, {}] })
+    await screen.findByText('Nenhum documento')
     await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const d = within(await screen.findByRole('dialog'))
     expect(d.getByText('PDF com texto (não digitalizado), até 20 MB.')).toBeInTheDocument()
@@ -218,6 +219,7 @@ describe('toasts', () => {
 describe('editor Resposta', () => {
   it('resposta é o texto digitado sem marcação', async () => {
     const chamadas = tela('/univag/artigos', 'artigos', [], { 'POST /api/admin/artigos': () => [201, {}] })
+    await screen.findByText('Nenhum artigo')
     await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Título'), 'Marcas')
@@ -247,6 +249,7 @@ describe('editor Resposta', () => {
 
   it('editor Resposta acessível', async () => {
     tela('/univag/artigos', 'artigos', [])
+    await screen.findByText('Nenhum artigo')
     await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const campo = within(await screen.findByRole('dialog')).getByRole('textbox', { name: 'Resposta' })
     expect(campo).toHaveAttribute('aria-multiline', 'true')
@@ -270,6 +273,7 @@ describe('validade e arquivo', () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 10, 10, 10, 0))
     const chamadas = tela('/univag/artigos', 'artigos', [], { 'POST /api/admin/artigos': () => [201, {}] })
+    await screen.findByText('Nenhum artigo')
     await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
     const d = within(await screen.findByRole('dialog'))
     await userEvent.type(d.getByLabelText('Título'), 'Prazo')
@@ -295,6 +299,7 @@ describe('validade e arquivo', () => {
 
   it('soltar PDF em Arquivo PDF envia o arquivo', async () => {
     const chamadas = tela('/univag/documentos', 'documentos', [], { 'POST /api/admin/documentos': () => [201, {}] })
+    await screen.findByText('Nenhum documento')
     await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
     const d = within(await screen.findByRole('dialog'))
     const campo = d.getByLabelText('Arquivo PDF')

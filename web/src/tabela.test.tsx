@@ -57,31 +57,36 @@ describe('Tabela', () => {
       return
     }
     await userEvent.click(botoes[0])
-    expect(await screen.findByRole('dialog', { name: botao === 'Novo artigo' ? 'Novo artigo' : 'Enviar PDF' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: botao })).toBeInTheDocument()
   })
 
-  it('C51 cada linha de dados, em tabela e em cartão, declara content-visibility e contain-intrinsic-size', async () => {
+  const regrasDeVisibilidade = () => {
     const css = readFileSync('src/index.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
-    const regra = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, , corpo]) => /content-visibility:\s*auto/.test(corpo) && /contain-intrinsic-size:\s*auto 56px/.test(corpo))
-    expect(regra).toBeDefined()
-    const seletor = regra![1].trim()
-    const dados = () =>
-      api({
-        'GET /api/auth/me': () => [200, atendente],
-        'GET /api/chamados?escopo=fila': () => [200, fila(['ABERTO', 'EM_ATENDIMENTO', 'RESOLVIDO'])],
-      })
+    return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, , corpo]) => /content-visibility/.test(corpo))
+  }
+  const servirFila = (n: number) =>
+    api({
+      'GET /api/auth/me': () => [200, atendente],
+      'GET /api/chamados?escopo=fila': () => [200, fila(Array.from({ length: n }, (_, i) => ['ABERTO', 'EM_ATENDIMENTO', 'RESOLVIDO'][i % 3]))],
+    })
+  const noCelular = () => vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
 
-    dados()
+  it('C51 cada cartão do celular declara content-visibility e a linha da tabela do desktop não', async () => {
+    const regras = regrasDeVisibilidade()
+    expect(regras).toHaveLength(1)
+    const seletor = regras[0][1].trim()
+
+    servirFila(3)
     abrir('/univag/fila')
     await screen.findByText('ONE-1')
     const linhasDeDados = [...document.querySelectorAll('[data-slot=table-body] > [data-slot=table-row]')]
     expect(linhasDeDados).toHaveLength(3)
-    for (const linha of linhasDeDados) expect(linha.matches(seletor)).toBe(true)
+    for (const linha of linhasDeDados) expect(linha.matches(seletor)).toBe(false)
     expect(document.querySelector('[data-slot=table-header] [data-slot=table-row]')!.matches(seletor)).toBe(false)
     cleanup()
 
-    vi.stubGlobal('matchMedia', (media: string) => ({ media, matches: media.startsWith('(max-width: 767px)'), addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }))
-    dados()
+    noCelular()
+    servirFila(3)
     abrir('/univag/fila')
     await screen.findByText('ONE-1')
     const cartoes = [...document.querySelectorAll('[data-slot=table-row]')]
@@ -89,6 +94,32 @@ describe('Tabela', () => {
     for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
   })
 
+  it('C7 o cartão declara content-visibility auto e contain-intrinsic-size auto 56px', async () => {
+    const [[, seletor, corpo]] = regrasDeVisibilidade()
+    expect(corpo).toMatch(/content-visibility:\s*auto/)
+    expect(corpo).toMatch(/contain-intrinsic-size:\s*auto 56px/)
+    noCelular()
+    servirFila(2)
+    abrir('/univag/fila')
+    await screen.findByText('ONE-1')
+    const cartoes = [...document.querySelectorAll('[data-cartoes] > [data-slot=table-row], [data-linhas] > [data-slot=table-row]')]
+    expect(cartoes).toHaveLength(2)
+    for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
+  })
+
+  it('C8 nenhum seletor de linha da tabela do desktop declara content-visibility e a lista de 120 mostra 50 linhas', async () => {
+    for (const [, seletor] of regrasDeVisibilidade()) {
+      for (const parte of seletor.split(',').map((s) => s.trim())) {
+        expect(parte, parte).toMatch(/^\[data-(cartoes|linhas)\]/)
+        expect(parte, parte).not.toMatch(/\btr\b|table-body\]\s*>/)
+      }
+    }
+    servirFila(120)
+    abrir('/univag/fila')
+    await screen.findByText('ONE-1')
+    expect(document.querySelectorAll('[data-slot=table-body] > [data-slot=table-row]')).toHaveLength(50)
+    expect(document.querySelector('table')).not.toBeNull()
+  })
   it('C39 o cabeçalho vazio de ações traz Ações em sr-only', async () => {
     const usuario = { id: 7, cpf: '12345678909', nome: 'Ana Souza', email: 'a@univag.edu.br', ativo: true, deveTrocarSenha: false, papeis: ['ALUNO'], setores: [] }
     api({ 'GET /api/auth/me': () => [200, admin], 'GET /api/admin/usuarios': () => [200, [usuario]], 'GET /api/admin/setores': () => [200, []] })

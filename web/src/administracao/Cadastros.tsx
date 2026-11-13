@@ -82,7 +82,7 @@ function CabecalhoDaAba({ aba, busca, buscar, novo }: { aba: Aba; busca: string;
       </div>
       <div className="relative">
         <Search aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label={`Buscar em ${Titulos[aba]}`} placeholder="Buscar pelo nome" className="ps-9" value={busca} onChange={(e) => buscar(e.target.value)} />
+        <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label={`Buscar em ${Titulos[aba]}`} placeholder="Buscar pelo nome…" className="ps-9" value={busca} onChange={(e) => buscar(e.target.value)} />
       </div>
     </div>
   )

@@ -108,7 +108,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias, erros }: { envio: Envio; s
 }
 
 const CamposComErro = ['titulo', 'categoriaId']
-const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Enviar PDF')
+const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Novo documento')
 const chaveDoEnvio = (e: Envio) => JSON.stringify([e.titulo, e.categoriaId, e.arquivo?.name, e.arquivo?.size])
 const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos')
 
@@ -122,7 +122,7 @@ export function Documentos() {
   useFocoNoPrimeiroErro(acao.error)
   const sujo = useSujo(envio, chaveDoEnvio)
 
-  const semItens = !documentos?.length
+  const vazia = documentos?.length === 0
   const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: fechar })
 
   function confirmarArquivar(d: Documento) {
@@ -132,7 +132,7 @@ export function Documentos() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Cabecalho botao={semItens ? undefined : 'Novo documento'} Icone={Upload} aoClicar={() => abrir({ ...NovoEnvio })}>
+      <Cabecalho botao={vazia ? undefined : 'Novo documento'} Icone={Upload} aoClicar={() => abrir({ ...NovoEnvio })}>
         <p className="text-sm text-muted-foreground">PDFs da instituição (regulamentos, calendários, editais) que o assistente consulta. O aluno nunca vê o documento, só a resposta.</p>
       </Cabecalho>
       <ErroDe erro={erro} oque="os documentos" tentar={recarregar} />

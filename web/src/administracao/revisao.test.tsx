@@ -21,12 +21,18 @@ describe('erro de campo da API abaixo do campo', () => {
     {
       nome: 'Novo artigo', caminho: '/univag/artigos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Perguntas relacionadas (uma por linha)', enviar: 'Salvar artigo',
       rotas: { 'GET /api/admin/artigos': ok([]), 'GET /api/admin/categorias': ok(categorias), 'POST /api/admin/artigos': campo400('titulo', 'Informe o título, com até 200 caracteres.') },
-      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))),
+      abrirForm: async () => {
+        await screen.findByText('Nenhum artigo')
+        await userEvent.click(await screen.findByRole('button', { name: 'Novo artigo' }))
+      },
     },
     {
-      nome: 'Enviar PDF', caminho: '/univag/documentos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Categoria', enviar: 'Enviar documento',
+      nome: 'Novo documento', caminho: '/univag/documentos', eu: admin, texto: 'Informe o título, com até 200 caracteres.', rotulo: 'Título', proximo: 'Categoria', enviar: 'Enviar documento',
       rotas: { 'GET /api/admin/documentos': ok([]), 'GET /api/admin/categorias': ok(categorias), 'POST /api/admin/documentos': campo400('titulo', 'Informe o título, com até 200 caracteres.') },
-      abrirForm: async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))),
+      abrirForm: async () => {
+        await screen.findByText('Nenhum documento')
+        await userEvent.click(await screen.findByRole('button', { name: 'Novo documento' }))
+      },
       preencher: async (d) => void (await userEvent.upload(d.getByLabelText('Arquivo PDF'), pdf)),
     },
     {

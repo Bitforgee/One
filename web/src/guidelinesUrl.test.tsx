@@ -29,7 +29,7 @@ function abrirTela(tela: keyof typeof telas, busca = '') {
 }
 
 const busca = (roteador: { state: { location: { search: string } } }) => new URLSearchParams(roteador.state.location.search)
-const botaoDeCriar = () => screen.findByRole('button', { name: /^(Novo|Nova|Enviar PDF)\b/ })
+const botaoDeCriar = () => screen.findByRole('button', { name: /^(Novo|Nova)\b/ })
 
 afterEach(() => {
   vi.useRealTimers()
@@ -158,7 +158,7 @@ describe('editor na URL', () => {
   const casos: [string, keyof typeof telas, string, string, string, () => Promise<void>][] = [
     ['Usuários', 'usuarios', 'Novo usuário', 'Editar usuário', '7', () => escolher('Ana Souza', 'Editar')],
     ['Artigos', 'artigos', 'Novo artigo', 'Editar artigo', '4', () => escolher('Faltas', 'Editar')],
-    ['Documentos', 'documentos', 'Enviar PDF', 'Nova versão', '6', () => escolher('Calendário', 'Nova versão')],
+    ['Documentos', 'documentos', 'Novo documento', 'Nova versão', '6', () => escolher('Calendário', 'Nova versão')],
     ['Cadastros', 'cadastros', 'Novo: Setores', 'Editar: Setores', '9', async () => void (await userEvent.click(await screen.findByRole('button', { name: 'Financeiro' })))],
   ]
 

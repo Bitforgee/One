@@ -149,7 +149,7 @@ export function Usuarios() {
       <Cabecalho botao="Novo usuário" Icone={Plus} aoClicar={() => abrir({ ...Novo })} />
       <ErroDe erro={erro} oque="os usuários" tentar={recarregar} />
       <ErroDe erro={acao.error} oculto={!!editando} />
-      <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail" value={busca} onChange={(e) => setBusca(e.target.value)} />
+      <Input type="search" name="busca" autoComplete="off" spellCheck={false} aria-label="Buscar por nome, CPF ou e-mail" placeholder="Buscar por nome, CPF ou e-mail…" value={busca} onChange={(e) => setBusca(e.target.value)} />
       <Tabela
         colunas={Colunas}
         itens={usuarios}
