@@ -109,6 +109,25 @@ public class AgendadorConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory
     }
 
     [Fact]
+    public async Task SemResposta_com_resposta_do_aluno_entre_Ler_e_Processar_fica_em_atendimento()
+    {
+        var b = await Balcao.Criar(f);
+        var numero = await b.Chamado(AguardandoAluno);
+        await Aguardando(b, numero, TimeSpan.FromDays(10));
+        var chamadoId = (await b.Ler(numero)).Id;
+        var lidos = await Agendador.Ler();
+        Assert.NotEmpty(Do(lidos, "aguardando", chamadoId));
+        Assert.Equal(HttpStatusCode.Created, (await Balcao.Mensagem(b.ClienteAluno, numero, "Segue o comprovante.")).StatusCode);
+        var antes = await Contar(b, numero);
+
+        await Agendador.Processar(Do(lidos, "aguardando", chamadoId));
+
+        Assert.Equal(EmAtendimento, (await b.Ler(numero)).Estado);
+        Assert.Equal(antes, await Contar(b, numero));
+        Assert.DoesNotContain(await f.Db(b.Instituicao.Id, db => db.MensagensChamado.Where(m => m.ChamadoId == chamadoId).Select(m => m.Texto).ToListAsync()), t => t == Agendador.TextoSemResposta);
+    }
+
+    [Fact]
     public async Task Duas_execucoes_conversa_um_abandono()
     {
         var aluno = await f.AlunoLogado();
