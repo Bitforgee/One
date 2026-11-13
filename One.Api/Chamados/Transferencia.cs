@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Conhecimento;
 using One.Api.Dados;
-using One.Api.Dados.Fluxos;
 
 namespace One.Api.Chamados;
 
@@ -22,7 +21,7 @@ public static class Transferencia
     public static IResult MatriculaInvalida() =>
         Problemas.Invalido("Escolha uma das suas matrículas ativas.", "matriculaId");
 
-    static List<MensagemConversa> DoAssistente(Conversa conversa) =>
+    public static List<MensagemConversa> DoAssistente(Conversa conversa) =>
         [.. conversa.Mensagens.Where(m => m.Autor == MensagemConversa.AutorAssistente).OrderByDescending(m => m.Id)];
 
     public static async Task<(Categoria Categoria, string Origem)> EscolherCategoria(OneDb db, Conversa conversa)
@@ -36,27 +35,4 @@ public static class Transferencia
         var categoriaId = await db.CategoriasCitadas().Where(x => x.CitacaoId == ultima.Id).Select(x => x.CategoriaId).SingleAsync();
         return (await db.Categorias.SingleAsync(c => c.Id == categoriaId), OrigemArtigo);
     }
-
-    public static async Task<Chamado> Criar(OneDb db, Instituicao instituicao, Conversa conversa, Matricula matricula, DateTime agora, bool comLideranca = true)
-    {
-        await using var tx = await db.Database.BeginTransactionAsync();
-        if (conversa.Id == 0) await db.SaveChangesAsync();
-        var (categoria, origem) = await EscolherCategoria(db, conversa);
-        var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != MensagemConversa.AutorAssistente).OrderBy(m => m.Id).First().Texto, 120);
-        var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
-        var rota = await ConsultasDeFluxo.Rotear(db, categoria, matricula, comLideranca);
-        conversa.Transferir(agora);
-
-        var numero = await db.Database
-            .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")
-            .ToListAsync();
-        var chamado = Chamado.Abrir(new($"ONE-{numero.Single()}", titulo, resumo, new(conversa.Id, conversa.AlunoId, matricula.Id, matricula.Semestre),
-            new(categoria.Id, origem, rota.SetorId, rota.Fluxo?.Vigente?.Id, rota.Passo?.Etapa.Ordem)), agora);
-        db.Chamados.Add(chamado);
-        await db.SaveChangesAsync();
-        await tx.CommitAsync();
-        return chamado;
-    }
-
-    static string Cortar(string texto, int max) => texto.Length <= max ? texto : texto[..max];
 }

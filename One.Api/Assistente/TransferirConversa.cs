@@ -24,7 +24,7 @@ public sealed class TransferirConversaHandler(OneDb db, TimeProvider relogio) : 
         if (conversa.Desfecho is not null) return JaEncerrada();
         var matricula = await Transferencia.Matricula(db, conversa.AlunoId, m.Corpo?.MatriculaId);
         if (matricula is null) return Transferencia.MatriculaInvalida();
-        return await Transferido(db, await Transferencia.Criar(db, m.Instituicao, conversa, matricula, relogio.GetUtcNow().UtcDateTime),
+        return await Transferido(db, await new AbrirChamado(conversa, matricula).Executar(db, m.Instituicao, relogio.GetUtcNow().UtcDateTime),
             (numero, estado, setor) => new TransferirConversa.Resposta(numero, estado, setor));
     }
 }
