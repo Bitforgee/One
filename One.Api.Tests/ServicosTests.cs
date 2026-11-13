@@ -12,6 +12,7 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Adicionadas =
     [
+        "Singleton One.Api.EnviadorSmtp -> One.Api.EnviadorSmtp",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Acesso.ApagarLancamentos",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.AbandonarConversas",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.FecharResolvidos",
@@ -23,7 +24,10 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
         "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.EnviarPushes",
     ];
 
-    static readonly string[] Removidas = [];
+    static readonly string[] Removidas =
+    [
+        "Singleton One.Api.Email -> One.Api.Email",
+    ];
 
     static string Nome(Type? t) => t is null ? "fabrica" : t.IsGenericType ? t.ToString() : t.FullName!;
 

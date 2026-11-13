@@ -40,7 +40,7 @@ public sealed record AlterarAparencia(AlterarAparencia.Entrada Corpo) : IRequest
         ];
         var longo = textos.FirstOrDefault(t => t.Valor?.Length > t.Max);
         if (longo.Campo is not null) return Problemas.Invalido($"{longo.Rotulo} aceita até {longo.Max} caracteres.", longo.Campo);
-        if (e.Contato.Email is not null && !One.Api.Email.Valido().IsMatch(e.Contato.Email)) return Problemas.Invalido("Informe um e-mail válido para o contato.", "contato.email");
+        if (e.Contato.Email is not null && !EnviadorSmtp.Valido().IsMatch(e.Contato.Email)) return Problemas.Invalido("Informe um e-mail válido para o contato.", "contato.email");
         return ValidarListas(e);
     }
 

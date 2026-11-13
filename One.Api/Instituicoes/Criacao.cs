@@ -22,7 +22,7 @@ public static partial class Criacao
         if (!(TimeZoneInfo.TryFindSystemTimeZoneById(n.Fuso, out var tz) && tz.HasIanaId)) erros.Add(new("fuso", $"\"{n.Fuso}\" não é um fuso IANA (ex.: America/Cuiaba)"));
         if (n.Cpf is null) erros.Add(new("admin.cpf", "CPF inválido"));
         if (n.AdminNome == "") erros.Add(new("admin.nome", "obrigatório"));
-        if (!Email.Valido().IsMatch(n.Email)) erros.Add(new("admin.email", $"\"{n.Email}\" não é um e-mail válido"));
+        if (!EnviadorSmtp.Valido().IsMatch(n.Email)) erros.Add(new("admin.email", $"\"{n.Email}\" não é um e-mail válido"));
         return erros;
     }
 

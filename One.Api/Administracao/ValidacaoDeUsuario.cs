@@ -15,7 +15,7 @@ public static class ValidacaoDeUsuario
     {
         if (Cpf.Tentar(cpf) is null) return Problemas.Invalido("CPF inválido.", "cpf");
         if (!AdminRotas.Nome(nome, 200)) return Problemas.Invalido("Informe o nome.", "nome");
-        if (email is null || !Email.Valido().IsMatch(email)) return Problemas.Invalido("E-mail inválido.", "email");
+        if (email is null || !EnviadorSmtp.Valido().IsMatch(email)) return Problemas.Invalido("E-mail inválido.", "email");
         return null;
     }
 

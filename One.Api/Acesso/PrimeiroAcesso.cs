@@ -14,8 +14,10 @@ public sealed record PrimeiroAcesso(PrimeiroAcesso.Entrada Corpo) : IRequest<IRe
         g.MapPost("/auth/primeiro-acesso", (PrimeiroAcesso.Entrada i, IMediator m) => m.Send(new PrimeiroAcesso(i))).AllowAnonymous().RequireRateLimiting("auth");
 }
 
-public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email email, IConfiguration cfg, ILogger<Email> log) : IRequestHandler<PrimeiroAcesso, IResult>
+public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, EnviadorSmtp email, IConfiguration cfg, ILoggerFactory logs) : IRequestHandler<PrimeiroAcesso, IResult>
 {
+    readonly ILogger log = logs.CreateLogger("One.Api.Email");
+
     public const string Mensagem = "Se o CPF estiver cadastrado, enviamos um link para o e-mail registrado na instituição.";
 
     public async ValueTask<IResult> Handle(PrimeiroAcesso m, CancellationToken ct)

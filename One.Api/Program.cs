@@ -61,7 +61,7 @@ public class Program
         s.AddDbContext<OneDb>((sp, o) => o.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString("One"), n => n.UseVector()).AddInterceptors(sp.GetRequiredService<AvisarMudanca>()));
         s.TryAddSingleton(TimeProvider.System);
         s.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
-        s.AddSingleton<Email>();
+        s.AddSingleton<EnviadorSmtp>();
         s.AddHttpClient("push");
         s.AddHttpClient("moodle", c => c.Timeout = TimeSpan.FromSeconds(10));
         s.AddSingleton<ChaveLti>();

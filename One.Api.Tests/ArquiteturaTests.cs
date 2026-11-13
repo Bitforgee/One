@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "Email", "EquipeDeSetor", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
+        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Prazos", "Problemas", "Program", "Sessao", "Tokens"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
@@ -970,7 +970,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Baixar_so_com_chave_de_coluna_do_banco()
     {
         var chamam = CodigoApi().Where(p => Regex.IsMatch(SemComentarios(p), @"\.Baixar\(")).Select(Relativo).Order().ToList();
-        Assert.Equal(["Assistente/BaixarAnexoConversa.cs", "Assistente/LerAnexosDaJanela.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs", "Email.cs", "Instituicoes/BaixarImagemInstituicao.cs"], chamam);
+        Assert.Equal(["Assistente/BaixarAnexoConversa.cs", "Assistente/LerAnexosDaJanela.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs", "EnviadorSmtp.cs", "Instituicoes/BaixarImagemInstituicao.cs"], chamam);
         foreach (var arquivo in chamam)
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));

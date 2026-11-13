@@ -45,7 +45,7 @@ public static class CsvMatriculas
     {
         if (cpf is null) yield return "CPF inválido";
         if (!AdminRotas.Nome(l.Nome, 200)) yield return "nome vazio ou com mais de 200 caracteres";
-        if (!Email.Valido().IsMatch(l.Email)) yield return "e-mail inválido";
+        if (!EnviadorSmtp.Valido().IsMatch(l.Email)) yield return "e-mail inválido";
         else if (cpf is not null && donoDoEmail.TryGetValue(l.Email, out var outroCpf) && outroCpf != cpf) yield return "e-mail já usado por outro CPF na instituição";
     }
 
