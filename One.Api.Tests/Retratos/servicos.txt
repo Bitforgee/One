@@ -1,0 +1,20 @@
+## servicos
+Scoped One.Api.Acesso.ValidadorLti -> One.Api.Acesso.ValidadorLti
+Scoped One.Api.Assistente.Assistente -> One.Api.Assistente.Assistente
+Scoped One.Api.Chamados.AcessoChamado -> One.Api.Chamados.AcessoChamado
+Scoped One.Api.Dados.OneDb -> One.Api.Dados.OneDb
+Singleton One.Api.Acesso.ChaveLti -> One.Api.Acesso.ChaveLti
+Singleton One.Api.Agendador -> One.Api.Agendador
+Singleton One.Api.Armazenamento -> fabrica
+Singleton One.Api.Assistente.Embeddings -> One.Api.Assistente.Embeddings
+Singleton One.Api.Chamados.AvisarMudanca -> One.Api.Chamados.AvisarMudanca
+Singleton One.Api.Chamados.IEnviadorPush -> One.Api.Chamados.EnviadorPush
+Singleton One.Api.Chamados.IEnviadorPush -> fabrica
+Singleton One.Api.Email -> One.Api.Email
+Singleton One.Api.Prazos -> fabrica
+Transient One.Api.Mcp.AutenticacaoMcp -> One.Api.Mcp.AutenticacaoMcp
+## hospedados
+Singleton fabrica
+Singleton ModelContextProtocol.AspNetCore.IdleTrackingBackgroundService
+Singleton Microsoft.AspNetCore.DataProtection.Internal.DataProtectionHostedService
+Singleton Microsoft.AspNetCore.Hosting.GenericWebHostService
