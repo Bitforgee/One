@@ -16,10 +16,10 @@ public interface IAcaoChamado : IRequest<IResult>
 }
 
 public sealed class AgirNoChamado<TMessage, TResponse>(OneDb db, AcessoChamado acesso, TimeProvider relogio, Prazos prazos, IConfiguration cfg)
-    : IPipelineBehavior<TMessage, TResponse> where TMessage : IAcaoChamado
+    : IPipelineBehavior<TMessage, TResponse> where TMessage : IAcaoChamado where TResponse : IResult
 {
     public async ValueTask<TResponse> Handle(TMessage m, MessageHandlerDelegate<TMessage, TResponse> next, CancellationToken ct) =>
-        (TResponse)await Agir(m, async () => (IResult)(object)(await next(m, ct))!);
+        (TResponse)await Agir(m, async () => await next(m, ct));
 
     async Task<IResult> Agir(TMessage m, Func<Task<IResult>> aplicar)
     {
