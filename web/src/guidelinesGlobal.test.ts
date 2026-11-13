@@ -7,6 +7,19 @@ import { abrir, api, instituicao, me } from './test/util'
 
 const css = readFileSync('src/index.css', 'utf8')
 
+type ManifestoEstatico = { id: string; scope: string; icons: { src: string; sizes: string; purpose?: string }[]; background_color: string; theme_color: string }
+
+function manifestoEstatico() {
+  const fonte = readFileSync('vite.config.ts', 'utf8')
+  const bloco = fonte.match(/manifest:\s*(\{[\s\S]*?\r?\n {6}\}),\r?\n {6}injectManifest/)![1]
+  return new Function(`return (${bloco})`)() as ManifestoEstatico
+}
+
+const Maskable = '/icons/icon-maskable-512.png'
+const dimensoesDoPng = (arquivo: string) => {
+  const b = readFileSync(arquivo)
+  return [b.readUInt32BE(16), b.readUInt32BE(20)]
+}
 type Regra = { contexto: string[]; seletor: string; corpo: string }
 
 function regras(texto: string, contexto: string[] = []): Regra[] {
@@ -208,9 +221,8 @@ describe('base global do css', () => {
   })
 
   it('C8 manifest com id, scope, ícone maskable e background igual ao theme_color claro', () => {
-    const fonte = readFileSync('vite.config.ts', 'utf8')
-    const bloco = fonte.match(/manifest:\s*(\{[\s\S]*?\r?\n {6}\}),\r?\n {6}injectManifest/)![1]
-    const manifest = new Function(`return (${bloco})`)() as { id: string; scope: string; icons: { purpose?: string }[]; background_color: string; theme_color: string }
+    const manifest = manifestoEstatico()
+
     expect(manifest.id).toBe('/')
     expect(manifest.scope).toBe('/')
     expect(manifest.icons.some((i) => i.purpose === 'maskable')).toBe(true)
@@ -218,6 +230,20 @@ describe('base global do css', () => {
     expect(manifest.theme_color).toBe(claro)
   })
 
+  it('C17 o manifest estático lista o maskable de 512 x 512 e deixa icon-512.png só como any', () => {
+    const { icons } = manifestoEstatico()
+    expect(icons.filter((i) => i.purpose === 'maskable').map((i) => i.src)).toEqual([Maskable])
+    expect(icons.filter((i) => i.src === '/icons/icon-512.png').map((i) => i.purpose)).toEqual(['any'])
+    expect(dimensoesDoPng(`public${Maskable}`)).toEqual([512, 512])
+  })
+
+  it('C21 o manifest estático e o da API apontam o mesmo arquivo maskable', () => {
+    const daApi = readFileSync('../One.Api/Instituicoes/ManifestoInstituicao.cs', 'utf8').match(/IconeMaskable\s*=\s*"([^"]+)"/)![1]
+    const maskable = manifestoEstatico().icons.find((i) => i.purpose === 'maskable')!
+    expect(daApi).toBe(maskable.src)
+    expect(daApi).toBe(Maskable)
+    expect(maskable.sizes).toBe('512x512')
+  })
   it('C9 Topo e cabeçalho do Editor somam env(safe-area-inset-top)', () => {
     const topo = readFileSync('src/Autenticado.tsx', 'utf8').match(/<header[^>]*className="([^"]+)"/)![1]
     expect(topo).toContain('env(safe-area-inset-top)')
