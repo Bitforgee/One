@@ -7,7 +7,7 @@ using Pgvector;
 using Lib.Net.Http.WebPush;
 using One.Api.Dados;
 using One.Api.Dados.Fluxos;
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api;
 

@@ -2,7 +2,7 @@ using Mediator;
 using One.Api.Administracao.Shared;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Administracao;
 

@@ -1,4 +1,4 @@
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Chamados;
 

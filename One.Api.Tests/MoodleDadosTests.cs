@@ -31,7 +31,7 @@ public class MoodleDadosTests(OneFactory f) : IClassFixture<OneFactory>
     {
         Assert.Equal(["instituicao_id,emissor,sub"], await IndicesUnicos("vinculo_moodle"));
         var i = await f.Instituicao();
-        var u = await f.Usuario(i, [One.Api.Dados.Papeis.Aluno]);
+        var u = await f.Usuario(i, [One.Api.Dados.Usuarios.Papeis.Aluno]);
         var agora = f.Relogio.GetUtcNow().UtcDateTime;
         await f.Db(i.Id, async db => { db.VinculosMoodle.Add(VinculoMoodle.Criar(u.Id, "https://m.teste", "1", agora)); await db.SaveChangesAsync(); });
 

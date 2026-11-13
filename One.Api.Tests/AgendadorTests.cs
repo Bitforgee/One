@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Tests;
 

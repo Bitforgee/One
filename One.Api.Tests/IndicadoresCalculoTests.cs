@@ -1,6 +1,6 @@
 using One.Api.Dados;
 using One.Api.Indicadores;
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Tests;
 

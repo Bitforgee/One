@@ -143,6 +143,14 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         [typeof(MotivosFechamento)] = ["CONFIRMADO", "CANCELADO", "DUPLICADO", "FECHADO_AUTOMATICAMENTE"],
     };
 
+    static readonly Dictionary<Type, string> ArquivoDoVocabulario = new()
+    {
+        [typeof(TiposEvento)] = "Dados/Chamados/TiposEvento.cs",
+        [typeof(DestinosEtapa)] = "Dados/Fluxos/DestinosEtapa.cs",
+        [typeof(TiposMensagem)] = "Dados/Chamados/TiposMensagem.cs",
+        [typeof(MotivosFechamento)] = "Dados/Chamados/MotivosFechamento.cs",
+    };
+
     [Fact]
     public void Literais_gravados_so_nas_constantes()
     {
@@ -153,7 +161,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(literais.Order(), valores);
         }
         foreach (var literal in LiteraisGravados.Values.SelectMany(l => l).Distinct())
-            Assert.Equal(["Dados/Entidades.cs"], ArquivosQue(new Regex($"\"{literal}\"")));
+            Assert.Equal(LiteraisGravados.Where(g => g.Value.Contains(literal)).Select(g => ArquivoDoVocabulario[g.Key]).Order(), ArquivosQue(new Regex($"\"{literal}\"")));
     }
 
     [Fact]
@@ -547,7 +555,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
                 Assert.Equal([nome], TipoDeTopo.Matches(SemComentarios(arquivo)).Select(m => m.Groups[1].Value));
                 Assert.Equal(pasta == "" ? "One.Api.Dados" : $"One.Api.Dados.{pasta}", tipos.Single(t => t.Name == nome).Namespace);
             }
-        Assert.Equal(new[] { "IDaInstituicao", "Papeis", "EstadosArtigo", "Desfechos", "EstadosDocumento", "EstadosChamado", "TiposEvento", "DestinosEtapa", "TiposMensagem", "MotivosFechamento" }.Order(),
+        Assert.Equal(new[] { "IDaInstituicao" }.Order(),
             TipoDeTopo.Matches(SemComentarios(Path.Combine(Api, "Dados", "Entidades.cs"))).Select(m => m.Groups[1].Value).Order());
         foreach (var projeto in new[] { Path.Combine(Api, "One.Api.csproj"), Path.Combine(Raiz(), "One.Api.Tests", "One.Api.Tests.csproj") })
             foreach (var pasta in EntidadesPorPasta.Keys.Where(p => p != ""))

@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
-using static One.Api.Dados.EstadosChamado;
+using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Tests;
 
