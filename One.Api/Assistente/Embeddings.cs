@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace One.Api.Assistente;
 
@@ -11,12 +12,14 @@ public class Embeddings(IHttpClientFactory http, IConfiguration cfg, TimeProvide
     record Item(int Index, float[] Embedding);
     record Resposta(List<Item> Data);
 
+    record Pedido(string Model, IReadOnlyList<string> Input, [property: JsonPropertyName("encoding_format")] string EncodingFormat);
+
     public async Task<List<float[]>> Gerar(IReadOnlyList<string> textos)
     {
         using var limite = new CancellationTokenSource(TempoLimite, relogio);
         using var req = new HttpRequestMessage(HttpMethod.Post, "embeddings")
         {
-            Content = JsonContent.Create(new { model = cfg["Llm:ModeloEmbeddings"] ?? "text-embedding-3-small", input = textos, encoding_format = "float" }),
+            Content = JsonContent.Create(new Pedido(cfg["Llm:ModeloEmbeddings"] ?? "text-embedding-3-small", textos, "float")),
         };
         using var resp = await http.CreateClient("llm").SendAsync(req, limite.Token);
         resp.EnsureSuccessStatusCode();
@@ -27,3 +30,4 @@ public class Embeddings(IHttpClientFactory http, IConfiguration cfg, TimeProvide
         return corpo.Data.OrderBy(d => d.Index).Select(d => d.Embedding).ToList();
     }
 }
+

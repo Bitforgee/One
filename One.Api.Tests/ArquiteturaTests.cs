@@ -698,12 +698,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var anonimo = new Regex(@"\bnew\s*\{");
         var esperado = new Dictionary<string, int>
         {
-            ["Agendador.cs"] = 1, ["Assistente/Assistente.cs"] = 8, ["Assistente/Embeddings.cs"] = 1,
+            ["Agendador.cs"] = 1, ["Assistente/Assistente.cs"] = 8,
             ["Conhecimento/Fontes.cs"] = 4, ["Dados/OneDb.cs"] = 15,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
-        Assert.Equal(29, achados.Values.Sum());
+        Assert.Equal(28, achados.Values.Sum());
         foreach (var arquivo in esperado.Keys.Except(["Indicadores/ConsultarIndicadores.cs"]))
             Assert.DoesNotMatch(@"\b(Typed)?Results\.", CodigoDe(arquivo.Split('/')));
         var indicadores = CodigoDe("Indicadores", "ConsultarIndicadores.cs");
