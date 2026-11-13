@@ -5,16 +5,9 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Conhecimento;
 using One.Api.Dados;
+using One.Api.Dados.Conversas;
 
 namespace One.Api.Assistente;
-
-public static class Tipos
-{
-    public const string Resposta = "resposta";
-    public const string Pergunta = "pergunta";
-    public const string SemBase = "sem_base";
-    public const string Transferir = "transferir";
-}
 
 public static class Textos
 {

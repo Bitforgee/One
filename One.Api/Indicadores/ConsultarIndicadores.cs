@@ -1,8 +1,8 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
 using One.Api.Conhecimento;
 using One.Api.Dados;
+using One.Api.Dados.Conversas;
 
 namespace One.Api.Indicadores;
 

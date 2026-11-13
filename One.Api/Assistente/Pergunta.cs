@@ -1,3 +1,5 @@
+using One.Api.Dados.Conversas;
+
 namespace One.Api.Assistente;
 
 public static class Pergunta
