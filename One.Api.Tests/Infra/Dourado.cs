@@ -13,7 +13,7 @@ public static class Dourado
         var linhas = Ler(arquivo).Split('\n');
         var inicio = Array.IndexOf(linhas, $"## {nome}");
         if (inicio < 0) return "";
-        return string.Join("\n", linhas.Skip(inicio + 1).TakeWhile(l => !l.StartsWith("## ")));
+        return string.Join("\n", linhas[(inicio + 1)..].TakeWhile(l => !l.StartsWith("## ")));
     }
 
     public static void Igual(string arquivo, string esperado, string vivo) =>
