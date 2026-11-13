@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
+        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "SubirPorPrazo.cs"), Path.Combine(api, "Chamados", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
@@ -679,7 +679,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Setor_so_pelo_ResolverFluxo()
     {
         Assert.Equal(["Dados/Fluxos/Fluxo.cs", "Dados/Fluxos/RoteamentoDeFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
-        foreach (var usa in new[] { "Chamados/AbrirChamado.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Agendador.cs" })
+        foreach (var usa in new[] { "Chamados/AbrirChamado.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Chamados/SubirPorPrazo.cs" })
         {
             var codigo = CodigoDe(usa.Split('/'));
             Assert.Matches(@"(ConsultasDeFluxo|RoteamentoDeFluxo)\.(Rotear|Seguinte|Proximo)\(", codigo);
