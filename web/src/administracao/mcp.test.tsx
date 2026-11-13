@@ -161,6 +161,7 @@ describe('aba MCP', () => {
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Criar token' }))
     expect(await within(dialogo).findByText('O nome é obrigatório e aceita até 60 caracteres.')).toBeInTheDocument()
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     await userEvent.click(screen.getByRole('button', { name: 'Novo token' }))

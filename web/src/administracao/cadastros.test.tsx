@@ -145,6 +145,7 @@ describe('cadastros', () => {
     await userEvent.selectOptions(d.getByLabelText('Abrangência'), 'CURSO')
     expect(within(d.getByLabelText('Curso')).getAllByRole('option').map((o) => o.textContent)).toEqual(['Escolha o curso'])
     await userEvent.click(d.getByRole('button', { name: 'Cancelar' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     for (const [nome, campo, vazio] of [
