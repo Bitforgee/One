@@ -60,8 +60,15 @@ public class ManifestoTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(null, db => db.Instituicoes.Where(x => x.Id == inativa.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.Ativa, false)));
         var c = f.Cliente();
 
-        Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/api/instituicoes/nao-existe/manifest.webmanifest")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync($"/api/instituicoes/{inativa.Slug}/manifest.webmanifest")).StatusCode);
+        foreach (var slug in new[] { "nao-existe", inativa.Slug })
+        {
+            var r = await c.GetAsync($"/api/instituicoes/{slug}/manifest.webmanifest");
+            Assert.Equal(HttpStatusCode.NotFound, r.StatusCode);
+            Assert.Equal("application/problem+json", r.Content.Headers.ContentType!.MediaType);
+            var corpo = await r.Json();
+            Assert.Equal(404, corpo.GetProperty("status").GetInt32());
+            Assert.Equal("Não encontrado", corpo.GetProperty("title").GetString());
+        }
     }
 
     private async Task<(string Slug, System.Text.Json.JsonElement Manifesto)> ManifestoDe(bool comIcone)
