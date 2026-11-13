@@ -324,3 +324,6 @@ Nenhum slice sozinho passa de 150k (o maior é S2, com 105k).
 
 - Mechanism: handoff - 5 lotes sequenciais, só sobre verde (escolha do usuário: "pode seguir com o que for recomendado")
 
+**Boundary:** C1-C15 closed at 02f974e
+**Settled mid-build:** theme-color em runtime vem de web/src/corDaBarra.json (interface.test.ts proíbe hex literal em .ts/.tsx); o meta sem media é criado como primeiro filho do head e carrega a cor da instituição ou a do tema; ícone maskable reaproveita icon-512.png (sem arte própria); foco no primeiro erro do servidor por useFocoNoPrimeiroErro (Campo.tsx) em Artigos, Documentos e Instituicoes, e o RHF no Acesso; erros de Campo e de Acesso com role=alert; C1 e2e rodou contra o vite dev (E2E_URL) porque o Docker não está instalado/ligado aqui; testes existentes mudados: identidade.test.tsx (regex \binter\b por causa de pointer), acesso.test.tsx (sem Alert de formulário em vez de sem role alert), interface.test.ts (theme-color acompanha o tema claro), chamados/textos.test.tsx (placeholder Ex.: ONE-123…), estrutura.test.ts (Raiz ganha os dois testes da raiz).
+**Abandoned:** nada do lote A; C22-C26 (S4) e demais slices ficaram para os lotes seguintes.
