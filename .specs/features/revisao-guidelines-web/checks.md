@@ -305,6 +305,7 @@ Rodada 2, a pedido do usuário ("ajuste, não me pergunte nada"), depois do FAIL
 - C8: o manifest por instituição da API (`ManifestoInstituicao.cs`) fica fora, por exigir mudança de API
 - AC 59 a 61 do plano: o ator é o aluno em "Confirmar resolução" e "Rejeitar resolução"
 - C72 (emenda 2): a regra de 8 px vale para o compositor e as ações; barra de abas e perguntas sugeridas são grupos colados por desenho\n- C11, C10, C13, C15 (rodada 3): o contrato também vale para `Moodle`, `Mcp` e `Aparencia`, provado sob os ids C10, C13 e C15\n- `arranjo.spec.ts` "movimento reduzido": a amostragem ignora os 3 primeiros quadros do balão (o `motion` o cria em y=8 antes de assentar), mantém identidade depois e nenhum valor intermediário; passa 40 de 40\n- C68: segue aberto; o `crapper` está bloqueado pelo Windows e não há AD do dono aceitando o risco
+- C51 (emenda 3, `ajustes-guidelines-web` AC 8): o desktop deixa de declarar `content-visibility` em `<tr>` (o navegador a ignora); o teste afirma só os cartões do celular e que a linha da tabela do desktop não a declara
 
 ## Swept
 

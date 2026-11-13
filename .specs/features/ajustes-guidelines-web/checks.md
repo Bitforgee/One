@@ -135,3 +135,7 @@ Estimativa por slice = (tamanho em KB dos arquivos de código tocados × 2,7 par
 - S6 = 8 KB → 6k
 - Total = 73k, abaixo dos 150k do `budget` do AGENTS.md: um builder, sem perguntar
 - Mechanism: one builder
+
+**Boundary:** C1-C18 e C20-C21 closed at 46ee0c7; C19 open: `dryer` sem candidato (exit 0), `crapper` bloqueado pelo Controle de Aplicativo do Windows (`crapper.exe` não inicia), sem PASS
+**Settled mid-build:** S5 precisou de mais que `30dvh` no campo: a 360x780 o compositor tinha 372 px e cobria o link; ficou `max-h-[min(30dvh,7rem)]` no campo e `max-h-16` com rolagem na lista de anexos (compositor 264 px). S4: `Handle` usa `--alvo` = 44/zoom via `useStore` e o ponto interno `inset-[36%]`. Os testes novos de `ManifestoTests` usam slug aleatório (o slug `univag` colide no banco da classe). Testes existentes que clicavam em `Novo artigo/documento` na lista vazia passaram a esperar o estado vazio (o botão do cabeçalho some quando a lista carrega vazia).
+**Abandoned:** nada do plano; C19 (crapper) segue sem prova e não é declarado PASS.
