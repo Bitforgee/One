@@ -1,7 +1,9 @@
-import { cleanup, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
+import { Tabela } from './Tabela'
+import { TableCell, TableRow } from './ui/table'
 import { abrir, api, me } from './test/util'
 
 const admin = me({ papeis: ['ALUNO', 'ATENDENTE', 'ADMINISTRADOR'] })
@@ -94,19 +96,47 @@ describe('Tabela', () => {
     for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
   })
 
-  it('C7 o cartão declara content-visibility auto e contain-intrinsic-size auto 56px', async () => {
-    const [[, seletor, corpo]] = regrasDeVisibilidade()
-    expect(corpo).toMatch(/content-visibility:\s*auto/)
-    expect(corpo).toMatch(/contain-intrinsic-size:\s*auto 56px/)
-    noCelular()
-    servirFila(2)
-    abrir('/univag/fila')
-    await screen.findByText('ONE-1')
-    const cartoes = [...document.querySelectorAll('[data-cartoes] > [data-slot=table-row], [data-linhas] > [data-slot=table-row]')]
-    expect(cartoes).toHaveLength(2)
-    for (const cartao of cartoes) expect(cartao.matches(seletor)).toBe(true)
-  })
+  it('C7 os tres layouts da Tabela: cartao denso e cartao comum declaram content-visibility auto e contain-intrinsic-size auto 56px, a tabela do desktop nao', () => {
+    const regras = regrasDeVisibilidade()
+    const completas = regras.filter(([, , corpo]) => /content-visibility:\s*auto/.test(corpo) && /contain-intrinsic-size:\s*auto 56px/.test(corpo))
+    expect(completas).toHaveLength(regras.length)
+    const declarada = (linha: Element) => completas.some(([, seletor]) => linha.matches(seletor.trim()))
+    const itens = [1, 2]
+    const montado = { linhas: [] as Element[], raiz: null as Element | null }
+    const anotar = (densa: boolean) => {
+      const { container, unmount } = render(
+        <Tabela colunas={[{ titulo: 'Nome' }]} itens={itens} densa={densa}>
+          {itens.map((n) => (
+            <TableRow key={n}>
+              <TableCell>{n}</TableCell>
+            </TableRow>
+          ))}
+        </Tabela>,
+      )
+      montado.raiz = container.firstElementChild
+      montado.linhas = [...container.querySelectorAll('[data-slot=table-body] > [data-slot=table-row], [data-cartoes] > [data-slot=table-row], [data-linhas] > [data-slot=table-row]')]
+      return unmount
+    }
 
+    noCelular()
+    let desmontar = anotar(true)
+    expect(montado.raiz).toHaveAttribute('data-linhas')
+    expect(montado.linhas).toHaveLength(2)
+    for (const linha of montado.linhas) expect(declarada(linha), 'cartao denso').toBe(true)
+    desmontar()
+
+    desmontar = anotar(false)
+    expect(montado.raiz).toHaveAttribute('data-cartoes')
+    expect(montado.linhas).toHaveLength(2)
+    for (const linha of montado.linhas) expect(declarada(linha), 'cartao comum').toBe(true)
+    desmontar()
+    vi.unstubAllGlobals()
+
+    anotar(false)
+    expect(montado.raiz!.querySelector('table')).not.toBeNull()
+    expect(montado.linhas).toHaveLength(2)
+    for (const linha of montado.linhas) expect(declarada(linha), 'tabela do desktop').toBe(false)
+  })
   it('C8 nenhum seletor de linha da tabela do desktop declara content-visibility e a lista de 120 mostra 50 linhas', async () => {
     for (const [, seletor] of regrasDeVisibilidade()) {
       for (const parte of seletor.split(',').map((s) => s.trim())) {
