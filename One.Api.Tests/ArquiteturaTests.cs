@@ -698,7 +698,12 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var esperado = new Dictionary<string, int>
         {
             ["Assistente/IndexarTrechos.cs"] = 1,
-            ["Conhecimento/BuscarFontes.cs"] = 2, ["Conhecimento/CitacoesDeFontes.cs"] = 2, ["Dados/OneDb.cs"] = 15,
+            ["Conhecimento/BuscarFontes.cs"] = 2, ["Conhecimento/CitacoesDeFontes.cs"] = 2,
+            ["Dados/Mapeamento/CategoriaMapeamento.cs"] = 1, ["Dados/Mapeamento/ChamadoMapeamento.cs"] = 1, ["Dados/Mapeamento/CursoMapeamento.cs"] = 1,
+            ["Dados/Mapeamento/EtapaFluxoMapeamento.cs"] = 1, ["Dados/Mapeamento/FluxoMapeamento.cs"] = 1, ["Dados/Mapeamento/MatriculaMapeamento.cs"] = 1,
+            ["Dados/Mapeamento/RespostaProntaMapeamento.cs"] = 1, ["Dados/Mapeamento/SetorMapeamento.cs"] = 2, ["Dados/Mapeamento/UsuarioMapeamento.cs"] = 2,
+            ["Dados/Mapeamento/UsuarioPapelMapeamento.cs"] = 1, ["Dados/Mapeamento/VersaoArtigoMapeamento.cs"] = 1, ["Dados/Mapeamento/VersaoDocumentoMapeamento.cs"] = 1,
+            ["Dados/Mapeamento/VersaoFluxoMapeamento.cs"] = 1,
         };
         var achados = CodigoApi().Select(p => (arquivo: Relativo(p), n: anonimo.Matches(SemComentarios(p)).Count)).Where(x => x.n > 0).ToDictionary(x => x.arquivo, x => x.n);
         Assert.Equal(esperado.OrderBy(x => x.Key), achados.OrderBy(x => x.Key));
@@ -1151,7 +1156,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Arquivo_ate_150_linhas =
     [
         "Dados/Chamados/Chamado.cs",
-        "Dados/OneDb.cs",
     ];
 
     static readonly string[] Excecoes_Dados_ate_5_parametros =

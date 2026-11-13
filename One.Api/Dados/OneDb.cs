@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using One.Api.Dados.Mapeamento;
 
 namespace One.Api.Dados;
 
@@ -46,194 +47,40 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
     protected override void OnModelCreating(ModelBuilder mb)
     {
         mb.HasPostgresExtension("vector");
-        mb.Entity<Instituicao>(e =>
-        {
-            e.Property(x => x.Slug).HasMaxLength(30);
-            e.HasIndex(x => x.Slug).IsUnique();
-        });
-        mb.Entity<ImagemInstituicao>(e =>
-        {
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.HasIndex(nameof(ImagemInstituicao.InstituicaoId), nameof(ImagemInstituicao.Tipo)).IsUnique();
-        });
-        mb.Entity<PlataformaMoodle>(e =>
-        {
-            e.HasIndex(x => x.InstituicaoId).IsUnique();
-            foreach (var campo in new[] { nameof(PlataformaMoodle.Emissor), nameof(PlataformaMoodle.ClientId), nameof(PlataformaMoodle.DeploymentId), nameof(PlataformaMoodle.AuthUrl), nameof(PlataformaMoodle.JwksUrl) })
-                e.Property(campo).HasMaxLength(500);
-        });
-        mb.Entity<VinculoMoodle>(e =>
-        {
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
-            e.Property(x => x.Emissor).HasMaxLength(500);
-            e.Property(x => x.Sub).HasMaxLength(100);
-            e.HasIndex(nameof(VinculoMoodle.InstituicaoId), nameof(VinculoMoodle.Emissor), nameof(VinculoMoodle.Sub)).IsUnique();
-        });
-        mb.Entity<LtiLancamento>(e =>
-        {
-            e.Property(x => x.State).HasMaxLength(64);
-            e.Property(x => x.Nonce).HasMaxLength(64);
-            e.HasIndex(x => x.State).IsUnique();
-        });
-        mb.Entity<TokenMcp>(e =>
-        {
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
-            e.Property(x => x.Nome).HasMaxLength(60);
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.Property(x => x.Final).HasMaxLength(4);
-            e.HasIndex(x => x.Hash).IsUnique();
-        });
-        mb.Entity<Usuario>(e =>
-        {
-            e.Property(x => x.Cpf).HasConversion(c => c.Valor, v => Cpf.Ler(v)).HasColumnType("char(11)");
-            e.HasIndex(x => new { x.InstituicaoId, x.Cpf }).IsUnique();
-            e.HasIndex(x => new { x.InstituicaoId, x.Email }).IsUnique();
-        });
-        mb.Entity<UsuarioPapel>().HasIndex(x => new { x.UsuarioId, x.Papel }).IsUnique();
-        mb.Entity<Setor>(e =>
-        {
-            e.HasIndex(x => x.InstituicaoId).IsUnique().HasFilter("triagem").HasDatabaseName("ux_setor_triagem");
-            e.HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
-            e.HasOne<Curso>().WithMany().HasForeignKey(x => x.CursoId);
-            e.HasIndex(x => new { x.InstituicaoId, x.CursoId, x.Semestre }).IsUnique().HasFilter("curso_id IS NOT NULL AND ativo").HasDatabaseName("ux_setor_lideranca");
-            e.ToTable(t =>
-            {
-                t.HasCheckConstraint("ck_setor_curso_e_semestre", "(curso_id IS NULL) = (semestre IS NULL)");
-                t.HasCheckConstraint("ck_setor_semestre", "semestre BETWEEN 1 AND 12");
-            });
-        });
-        mb.Entity<Categoria>().HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
-        mb.Entity<AtendenteSetor>(e =>
-        {
-            e.HasOne<Usuario>().WithMany(u => u.Setores).HasForeignKey(x => x.UsuarioId);
-            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
-        });
-        mb.Entity<Curso>(e =>
-        {
-            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorCoordenacaoId);
-            e.HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
-        });
-        mb.Entity<Matricula>(e =>
-        {
-            e.Property(x => x.Numero).HasMaxLength(20);
-            e.HasIndex(x => new { x.InstituicaoId, x.Numero }).IsUnique();
-        });
-        mb.Entity<Fluxo>(e =>
-        {
-            e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
-            e.HasOne<Curso>().WithMany().HasForeignKey(x => x.CursoId);
-            e.HasMany(x => x.Versoes).WithOne().HasForeignKey(v => v.FluxoId);
-            e.HasIndex(x => new { x.InstituicaoId, x.CategoriaId, x.CursoId, x.Semestre }).IsUnique().AreNullsDistinct(false).HasDatabaseName("ux_fluxo_abrangencia");
-            e.ToTable(t =>
-            {
-                t.HasCheckConstraint("ck_fluxo_semestre_com_curso", "semestre IS NULL OR curso_id IS NOT NULL");
-                t.HasCheckConstraint("ck_fluxo_semestre", "semestre BETWEEN 1 AND 12");
-            });
-        });
-        mb.Entity<VersaoFluxo>(e =>
-        {
-            e.HasMany(x => x.Etapas).WithOne().HasForeignKey(x => x.VersaoFluxoId);
-            e.HasIndex(x => new { x.FluxoId, x.Numero }).IsUnique();
-            e.HasIndex(x => x.FluxoId).IsUnique().HasFilter("publicada_em IS NULL").HasDatabaseName("ux_versao_rascunho");
-            e.Property(x => x.PublicadaEm).IsConcurrencyToken();
-        });
-        mb.Entity<EtapaFluxo>(e =>
-        {
-            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
-            e.HasIndex(x => new { x.VersaoFluxoId, x.Ordem }).IsUnique();
-            e.ToTable(t =>
-            {
-                t.HasCheckConstraint("ck_etapa_fluxo_ordem", "ordem BETWEEN 1 AND 5");
-                t.HasCheckConstraint("ck_etapa_fluxo_prazo", "prazo_horas IS NULL OR prazo_horas BETWEEN 1 AND 720");
-                t.HasCheckConstraint("ck_etapa_fluxo_posicao", "(pos_x IS NULL) = (pos_y IS NULL)");
-            });
-        });
-        mb.Entity<Artigo>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
-        mb.Entity<Artigo>().HasMany(a => a.Versoes).WithOne(v => v.Artigo).HasForeignKey(v => v.ArtigoId);
-        mb.Entity<VersaoArtigo>().HasIndex(x => new { x.ArtigoId, x.Numero }).IsUnique();
-        mb.Entity<TokenAcesso>(e =>
-        {
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.HasIndex(x => x.Hash).IsUnique();
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
-        });
-        mb.Entity<Conversa>().HasOne<Usuario>().WithMany().HasForeignKey(x => x.AlunoId);
-        mb.Entity<CitacaoArtigo>(e =>
-        {
-            e.HasOne<VersaoArtigo>().WithMany().HasForeignKey(x => x.VersaoArtigoId);
-            e.HasOne<TrechoFonte>().WithMany().HasForeignKey(x => x.TrechoFonteId);
-            e.ToTable(t => t.HasCheckConstraint("ck_citacao_artigo_fonte", "trecho_fonte_id IS NOT NULL OR versao_artigo_id IS NOT NULL"));
-        });
-        mb.Entity<Documento>().HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
-        mb.Entity<Documento>().HasMany(d => d.Versoes).WithOne(v => v.Documento).HasForeignKey(v => v.DocumentoId);
-        mb.Entity<VersaoDocumento>(e =>
-        {
-            e.HasIndex(x => new { x.DocumentoId, x.Numero }).IsUnique();
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.HasIndex(x => x.Chave).IsUnique();
-        });
-        mb.Entity<TrechoFonte>(e =>
-        {
-            e.HasOne(x => x.VersaoArtigo).WithMany().HasForeignKey(x => x.VersaoArtigoId);
-            e.HasOne(x => x.VersaoDocumento).WithMany().HasForeignKey(x => x.VersaoDocumentoId);
-            e.Property(x => x.Embedding).HasColumnType("vector(1536)");
-            e.HasIndex(x => x.Embedding).HasMethod("hnsw").HasOperators("vector_cosine_ops");
-            e.ToTable(t => t.HasCheckConstraint("ck_trecho_fonte_uma_versao", "(versao_artigo_id IS NULL) <> (versao_documento_id IS NULL)"));
-        });
-        mb.Entity<SubscricaoPush>(e =>
-        {
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
-            e.HasIndex(x => x.Endpoint).IsUnique();
-        });
-        mb.Entity<PushSaida>(e =>
-        {
-            e.HasOne<SubscricaoPush>().WithMany().HasForeignKey(x => x.SubscricaoId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne<Chamado>().WithMany().HasForeignKey(x => x.ChamadoId);
-            e.Property(x => x.EnviadoEm).IsConcurrencyToken();
-        });
-        mb.Entity<Chamado>(e =>
-        {
-            e.Property(x => x.Numero).HasMaxLength(20);
-            e.HasIndex(x => new { x.InstituicaoId, x.Numero }).IsUnique();
-            e.HasOne<Conversa>().WithOne().HasForeignKey<Chamado>(x => x.ConversaId);
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.SolicitanteId);
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.ResponsavelId);
-            e.HasOne<Matricula>().WithMany().HasForeignKey(x => x.MatriculaId);
-            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
-            e.HasOne<VersaoFluxo>().WithMany().HasForeignKey(x => x.VersaoFluxoId);
-            e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaId);
-            e.HasOne<Categoria>().WithMany().HasForeignKey(x => x.CategoriaOriginalId);
-            e.Property(x => x.Titulo).HasMaxLength(120);
-            e.Property(x => x.Resumo).HasMaxLength(500);
-            e.Property(x => x.Xmin).IsRowVersion();
-        });
-        mb.Entity<MensagemChamado>(e =>
-        {
-            e.HasOne<Chamado>().WithMany(c => c.Mensagens).HasForeignKey(x => x.ChamadoId);
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AutorId);
-        });
-        mb.Entity<Anexo>(e =>
-        {
-            e.HasOne<MensagemChamado>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemChamadoId);
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.HasIndex(x => x.Chave).IsUnique();
-        });
-        mb.Entity<AnexoConversa>(e =>
-        {
-            e.HasOne<MensagemConversa>().WithMany(m => m.Anexos).HasForeignKey(x => x.MensagemConversaId);
-            e.Property(x => x.Hash).HasColumnType("char(64)");
-            e.HasIndex(x => x.Chave).IsUnique();
-        });
-        mb.Entity<EventoChamado>(e =>
-        {
-            e.HasOne<Chamado>().WithMany(c => c.Eventos).HasForeignKey(x => x.ChamadoId);
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.AtorId);
-        });
-        mb.Entity<RespostaPronta>(e =>
-        {
-            e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
-            e.HasIndex(x => new { x.SetorId, x.Titulo }).IsUnique();
-        });
+mb.ApplyConfiguration(new InstituicaoMapeamento());
+        mb.ApplyConfiguration(new ImagemInstituicaoMapeamento());
+        mb.ApplyConfiguration(new PlataformaMoodleMapeamento());
+        mb.ApplyConfiguration(new VinculoMoodleMapeamento());
+        mb.ApplyConfiguration(new LtiLancamentoMapeamento());
+        mb.ApplyConfiguration(new TokenMcpMapeamento());
+        mb.ApplyConfiguration(new UsuarioMapeamento());
+        mb.ApplyConfiguration(new UsuarioPapelMapeamento());
+        mb.ApplyConfiguration(new SetorMapeamento());
+        mb.ApplyConfiguration(new CategoriaMapeamento());
+        mb.ApplyConfiguration(new AtendenteSetorMapeamento());
+        mb.ApplyConfiguration(new CursoMapeamento());
+        mb.ApplyConfiguration(new MatriculaMapeamento());
+        mb.ApplyConfiguration(new FluxoMapeamento());
+        mb.ApplyConfiguration(new VersaoFluxoMapeamento());
+        mb.ApplyConfiguration(new EtapaFluxoMapeamento());
+        mb.ApplyConfiguration(new ArtigoMapeamento());
+        mb.ApplyConfiguration(new VersaoArtigoMapeamento());
+        mb.ApplyConfiguration(new TokenAcessoMapeamento());
+        mb.ApplyConfiguration(new ConversaMapeamento());
+        mb.ApplyConfiguration(new CitacaoArtigoMapeamento());
+        mb.ApplyConfiguration(new DocumentoMapeamento());
+        mb.ApplyConfiguration(new VersaoDocumentoMapeamento());
+        mb.ApplyConfiguration(new TrechoFonteMapeamento());
+        mb.ApplyConfiguration(new SubscricaoPushMapeamento());
+        mb.ApplyConfiguration(new PushSaidaMapeamento());
+        mb.ApplyConfiguration(new ChamadoMapeamento());
+        mb.ApplyConfiguration(new MensagemChamadoMapeamento());
+        mb.ApplyConfiguration(new AnexoMapeamento());
+        mb.ApplyConfiguration(new AnexoConversaMapeamento());
+        mb.ApplyConfiguration(new EventoChamadoMapeamento());
+        mb.ApplyConfiguration(new RespostaProntaMapeamento());
+        mb.ApplyConfiguration(new MensagemConversaMapeamento());
+        mb.ApplyConfiguration(new EmailSaidaMapeamento());
 
         var configurar = GetType().GetMethod(nameof(DaInstituicao), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
         foreach (var tipo in mb.Model.GetEntityTypes().Select(e => e.ClrType).Where(t => typeof(IDaInstituicao).IsAssignableFrom(t)).ToList())
