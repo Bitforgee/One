@@ -10,15 +10,18 @@ const listas: Record<string, unknown[]> = {
   setores: [{ id: 2, nome: 'Financeiro', triagem: false, ativo: true }],
   categorias: [{ id: 6, nome: 'Provas', ativa: true, padrao: false }],
   cursos: [{ id: 4, nome: 'ADS', setorCoordenacaoId: 2 }],
-  fluxos: [{ id: 6, categoriaId: 6, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [etapa('SETOR', 2)] }, rascunho: null }],
+  fluxos: [
+    { id: 6, categoriaId: 6, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [etapa('SETOR', 2)] }, rascunho: null },
+    { id: 9, categoriaId: 6, cursoId: 4, semestre: 3, vigente: null, rascunho: null },
+  ],
   'respostas-prontas': [],
 }
 const resultado = { etapas: [{ ordem: 1, destino: 'SETOR', setor: 'Financeiro', situacao: 'RESOLVIDA', motivo: null }], inicial: 'Financeiro', escolhido: { id: 6, cursoId: null, semestre: null } }
 
-async function simulador(simular: Rota = () => [200, resultado]) {
+async function simulador(simular: Rota = () => [200, resultado], fluxo = 6) {
   const leituras = Object.fromEntries(Object.entries(listas).map(([k, v]) => [`GET /api/admin/${k}`, (() => [200, v]) as Rota]))
-  const chamadas = api({ 'GET /api/auth/me': () => [200, admin], ...leituras, 'POST /api/admin/fluxos/6/simular': simular })
-  abrir('/univag/cadastros/fluxos/6')
+  const chamadas = api({ 'GET /api/auth/me': () => [200, admin], ...leituras, [`POST /api/admin/fluxos/${fluxo}/simular`]: simular })
+  abrir('/univag/cadastros/fluxos/' + fluxo)
   const editor = within(await screen.findByRole('region', { name: 'Editar: Fluxos' }))
   return { editor, chamadas, simular: () => editor.getByRole('button', { name: /^Simul/ }) }
 }
@@ -74,5 +77,23 @@ describe('Simulador sem curso e semestre', () => {
     liberar([200, resultado])
     await waitFor(() => expect(simular()).toBeEnabled())
     expect(await editor.findByText('O chamado abre em Financeiro.')).toBeInTheDocument()
+  })
+})
+
+describe('Simulador sem versão a simular', () => {
+  it('C33 Simular fica desabilitado quando o fluxo não tem versão vigente nem rascunho e não chama a API', async () => {
+    const { editor, chamadas, simular } = await simulador(undefined, 9)
+    await waitFor(() => expect(simular()).toBeDisabled())
+    await userEvent.selectOptions(editor.getByLabelText('Curso do aluno'), '4')
+    await userEvent.selectOptions(editor.getByLabelText('Semestre do aluno'), '3')
+    expect(simular()).toBeDisabled()
+    await userEvent.click(simular())
+    expect(simulacoes(chamadas)).toHaveLength(0)
+    expect(editor.queryByText('Escolha o curso e o semestre.')).not.toBeInTheDocument()
+  })
+
+  it('C33 com versão vigente o mesmo botão volta a ficar habilitado', async () => {
+    const { simular } = await simulador()
+    expect(simular()).toBeEnabled()
   })
 })

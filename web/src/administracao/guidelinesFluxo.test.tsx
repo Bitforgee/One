@@ -20,6 +20,7 @@ const listas: Record<string, unknown[]> = {
   fluxos: [
     { id: 6, categoriaId: 6, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [etapa('SETOR', 2)] }, rascunho: { numero: 2, etapas: [etapa('COORDENACAO_CURSO')] } },
     { id: 7, categoriaId: 9, cursoId: 4, semestre: 3, rascunho: null, vigente: { numero: 1, etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48)] } },
+    { id: 10, categoriaId: 9, cursoId: null, semestre: null, vigente: null, rascunho: { numero: 1, etapas: [etapa('SETOR', 2), etapa('COORDENACAO_CURSO', null, 48), etapa('LIDERANCA_SEMESTRE')] } },
     { id: 8, categoriaId: 7, cursoId: null, semestre: null, vigente: null, rascunho: { numero: 1, etapas: [etapa('SETOR', 2, 24, 300, 50), etapa('COORDENACAO_CURSO', null, null, 600, 50)] } },
   ],
   'respostas-prontas': [],
@@ -109,5 +110,49 @@ describe('remover etapa', () => {
     await userEvent.click(await e.findByRole('button', { name: 'Remover etapa selecionada' }))
     await waitFor(() => expect(screen.queryByLabelText(/^Etapa 1: Liderança/)).not.toBeInTheDocument())
     expect(confirmacao()).not.toBeInTheDocument()
+  })
+})
+
+describe('remover etapa só com setor ou só com prazo', () => {
+  it.each([
+    ['só com setor', 1, 'Setor Financeiro'],
+    ['só com prazo', 2, 'Coordenação do curso (48 h)'],
+  ])('C20 canvas: etapa %s pede confirmação e continua no fluxo', async (_, n, rotulo) => {
+    await noCanvas('10', n, rotulo)
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    expect(await screen.findByRole('dialog', { name: 'Remover a etapa?' })).toBeInTheDocument()
+    expect(noDeEtapa(n, rotulo)).toBeInTheDocument()
+  })
+
+  it.each([
+    ['só com setor', 1, 'Setor Financeiro'],
+    ['só com prazo', 2, 'Coordenação do curso (48 h)'],
+  ])('C20 painel: etapa %s pede confirmação e continua no fluxo', async (_, n, rotulo) => {
+    const e = await noCanvas('10', n, rotulo)
+    await userEvent.click(await e.findByRole('button', { name: 'Remover etapa selecionada' }))
+    expect(await screen.findByRole('dialog', { name: 'Remover a etapa?' })).toBeInTheDocument()
+    expect(noDeEtapa(n, rotulo)).toBeInTheDocument()
+  })
+
+  it('C20 no mesmo fluxo a etapa sem setor e sem prazo remove direto', async () => {
+    await noCanvas('10', 3, 'Liderança do semestre')
+    await userEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    await waitFor(() => expect(screen.queryByLabelText(/^Etapa 3: Liderança/)).not.toBeInTheDocument())
+    expect(confirmacao()).not.toBeInTheDocument()
+  })
+})
+describe('placeholder do prazo da etapa', () => {
+  it('C15 a lista de etapas dá um exemplo que termina em reticências', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/10')
+    const e = await editor()
+    const prazo = await e.findByLabelText('Prazo da etapa 1 (horas)')
+    expect(prazo.getAttribute('placeholder')).toMatch(/^Ex\.: .+…$/)
+  })
+
+  it('C15 o painel da etapa dá um exemplo que termina em reticências', async () => {
+    const e = await noCanvas('10', 1, 'Setor Financeiro')
+    const prazo = await e.findByLabelText('Prazo da etapa selecionada (horas)')
+    expect(prazo.getAttribute('placeholder')).toMatch(/^Ex\.: .+…$/)
   })
 })

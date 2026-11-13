@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
@@ -166,6 +166,45 @@ describe('base global do css', () => {
       await userEvent.click(await screen.findByRole('button', { name: rotulo }))
       await vi.waitFor(() => expect(cor(), rotulo).toBe(esperado))
     }
+  })
+
+  it('C7 no tema Sistema o theme-color sem media acompanha prefers-color-scheme e os outros temas seguem os hex', async () => {
+    localStorage.clear()
+    let escuroAgora = false
+    const ouvintes = new Set<(e: { matches: boolean }) => void>()
+    vi.stubGlobal('matchMedia', (media: string) => ({
+      media,
+      get matches() {
+        return media === '(prefers-color-scheme: dark)' && escuroAgora
+      },
+      addEventListener: (_: string, f: (e: { matches: boolean }) => void) => ouvintes.add(f),
+      removeEventListener: (_: string, f: (e: { matches: boolean }) => void) => ouvintes.delete(f),
+      addListener() {},
+      removeListener() {},
+    }))
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/trocar-senha')
+    const cor = () => document.head.querySelector('meta[name="theme-color"]:not([media])')?.getAttribute('content')
+    const trocar = async (rotulo: string) => {
+      await userEvent.click(await screen.findByRole('button', { name: 'Tema' }))
+      await userEvent.click(await screen.findByRole('button', { name: rotulo }))
+    }
+    const sistema = (escuro: boolean) => {
+      escuroAgora = escuro
+      act(() => ouvintes.forEach((f) => f({ matches: escuro })))
+    }
+    await vi.waitFor(() => expect(cor(), 'sistema claro').toBe(claro))
+    sistema(true)
+    await vi.waitFor(() => expect(cor(), 'sistema escuro').toBe(escuro))
+    sistema(false)
+    await vi.waitFor(() => expect(cor(), 'sistema claro de novo').toBe(claro))
+    sistema(true)
+    await trocar('Preto')
+    await vi.waitFor(() => expect(cor(), 'preto').toBe(preto))
+    await trocar('Claro')
+    await vi.waitFor(() => expect(cor(), 'claro com o sistema escuro').toBe(claro))
+    await trocar('Sistema')
+    await vi.waitFor(() => expect(cor(), 'volta ao sistema escuro').toBe(escuro))
   })
 
   it('C8 manifest com id, scope, ícone maskable e background igual ao theme_color claro', () => {
