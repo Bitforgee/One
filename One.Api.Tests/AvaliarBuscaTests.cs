@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 
@@ -11,7 +10,7 @@ public class AvaliarBuscaTests(OneFactory f) : IClassFixture<OneFactory>
     async Task<(int codigo, string saida, string erro)> Rodar(params string[] args)
     {
         var (saida, erro) = (new StringWriter(), new StringWriter());
-        var codigo = await ComandoAvaliarBusca.Executar(f.Services, args, saida, erro);
+        var codigo = await Program.Despachar(["instituicao", .. args], () => f.Services, saida, erro)!;
         return (codigo, saida.ToString(), erro.ToString());
     }
 

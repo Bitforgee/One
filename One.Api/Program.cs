@@ -16,25 +16,8 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        if (args is ["push", ..]) return PushComando.Rodar(args[1..]);
-        var comando = args is ["instituicao", ..];
-        var builder = WebApplication.CreateBuilder(args);
-        if (comando) builder.Logging.ClearProviders();
-        builder.Services.TryAddSingleton(TimeProvider.System);
-        builder.Services.AddPersistencia().AddArmazenamento().AddSeguranca().AddTratamentoDeErros()
-            .AddAssistente().AddChamados().AddIndexacaoDeTrechos().AddEnvioDePush().AddConhecimento()
-            .AddIndicadores().AddInstituicoes().AddAdministracao().AddMcp().AddAcesso();
-
-        var app = builder.Build();
-        using (var scope = app.Services.CreateScope())
-            scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
-
-        if (comando)
-        {
-            if (args is ["instituicao", "avaliar-busca", ..]) return await ComandoAvaliarBusca.Rodar(app.Services, args[1..]);
-            return await InstituicaoComando.Rodar(app.Services, args[1..]);
-        }
-
+        if (Despachar(args, () => Montar(args).Services, Terminal.Saida, Terminal.Erro) is { } comando) return await comando;
+        var app = Montar(args);
         await app.Services.GetRequiredService<Armazenamento>().Preparar();
 
         app.UseExceptionHandler();
@@ -60,4 +43,26 @@ public class Program
         app.Run();
         return 0;
     }
+
+    static WebApplication Montar(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        if (args is ["instituicao", ..]) builder.Logging.ClearProviders();
+        builder.Services.TryAddSingleton(TimeProvider.System);
+        builder.Services.AddPersistencia().AddArmazenamento().AddSeguranca().AddTratamentoDeErros()
+            .AddAssistente().AddChamados().AddIndexacaoDeTrechos().AddEnvioDePush().AddConhecimento()
+            .AddIndicadores().AddInstituicoes().AddAdministracao().AddMcp().AddAcesso();
+        var app = builder.Build();
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
+        return app;
+    }
+
+    public static Task<int>? Despachar(string[] args, Func<IServiceProvider> servicos, TextWriter saida, TextWriter erro) => args switch
+    {
+        ["push", .. var resto] => Task.FromResult(PushComando.Executar(resto, saida, erro)),
+        ["instituicao", "avaliar-busca", ..] => ComandoAvaliarBusca.Executar(servicos(), args[1..], saida, erro),
+        ["instituicao", .. var resto] => InstituicaoComando.Executar(servicos(), resto, saida, erro),
+        _ => null,
+    };
 }

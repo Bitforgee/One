@@ -9,8 +9,6 @@ public sealed class ComandoAvaliarBusca(OneDb db, Embeddings embeddings, Assiste
 {
     record PerguntaAvaliacao(string? Pergunta, string? Fonte);
 
-    public static Task<int> Rodar(IServiceProvider servicos, string[] args) => Executar(servicos, args, Console.Out, Console.Error);
-
     public static async Task<int> Executar(IServiceProvider servicos, string[] args, TextWriter saida, TextWriter erro)
     {
         using var escopo = servicos.CreateScope();
