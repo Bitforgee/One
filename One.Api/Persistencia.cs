@@ -15,4 +15,10 @@ public static class Persistencia
         s.AddHostedService(sp => sp.GetRequiredService<Agendador>());
         return s;
     }
+
+    public static void MigrarBanco(this IServiceProvider servicos)
+    {
+        using var escopo = servicos.CreateScope();
+        escopo.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
+    }
 }

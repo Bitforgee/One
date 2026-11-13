@@ -17,4 +17,6 @@ public static class TratamentoDeErros
         s.AddExceptionHandler(o => o.StatusCodeSelector = e => e is ArmazenamentoIndisponivel ? 503 : Problemas.Conflito(e) ? 409 : 500);
         return s;
     }
+
+    public static IApplicationBuilder UseTratamentoDeErros(this IApplicationBuilder app) => app.UseExceptionHandler().UseStatusCodePages();
 }

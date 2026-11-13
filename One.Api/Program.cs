@@ -1,11 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using One.Api.Acesso;
 using One.Api.Administracao;
 using One.Api.Assistente;
 using One.Api.Chamados;
 using One.Api.Conhecimento;
-using One.Api.Dados;
 using One.Api.Indicadores;
 using One.Api.Instituicoes;
 using One.Api.Mcp;
@@ -19,15 +17,11 @@ public class Program
         if (Despachar(args, () => Montar(args).Services, Terminal.Saida, Terminal.Erro) is { } comando) return await comando;
         var app = Montar(args);
         await app.Services.GetRequiredService<Armazenamento>().Preparar();
-
-        app.UseExceptionHandler();
-        app.UseStatusCodePages();
+        app.UseTratamentoDeErros();
         app.UseStaticFiles();
         app.UseAuthentication();
         app.UseAcesso();
-        app.UseAuthorization();
-        app.UseRateLimiter();
-
+        app.UseSeguranca();
         app.MapMcp();
         var api = app.MapGroup("/api").RequireAuthorization();
         api.MapAcesso();
@@ -39,7 +33,6 @@ public class Program
         api.MapIndicadores();
         app.MapFallback("/api/{**resto}", () => Problemas.Erro(404, "Recurso não encontrado."));
         app.MapFallbackToFile("index.html");
-
         app.Run();
         return 0;
     }
@@ -53,8 +46,7 @@ public class Program
             .AddAssistente().AddChamados().AddIndexacaoDeTrechos().AddEnvioDePush().AddConhecimento()
             .AddIndicadores().AddInstituicoes().AddAdministracao().AddMcp().AddAcesso();
         var app = builder.Build();
-        using var scope = app.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<OneDb>().Database.Migrate();
+        app.Services.MigrarBanco();
         return app;
     }
 

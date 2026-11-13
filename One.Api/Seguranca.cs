@@ -21,5 +21,7 @@ public static class Seguranca
         return s;
     }
 
+    public static IApplicationBuilder UseSeguranca(this IApplicationBuilder app) => app.UseAuthorization().UseRateLimiter();
+
     static int Limite(HttpContext c, string chave, int padrao) => c.RequestServices.GetRequiredService<IConfiguration>().GetValue(chave, padrao);
 }
