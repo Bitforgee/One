@@ -25,7 +25,7 @@ public static class McpTeste
 {
     public static async Task<string> NovoTokenMcp(this OneFactory f, Instituicao i, Usuario u, int dias = 90, string nome = "teste", DateTime? agora = null)
     {
-        var token = Tokens.NovoMcp(i.Slug);
+        var token = TokenMcp.NovoMcp(i.Slug);
         await f.Db(i.Id, async db =>
         {
             db.TokensMcp.Add(TokenMcp.Criar(u.Id, nome, Tokens.Hash(token), token[^4..], agora ?? f.Relogio.GetUtcNow().UtcDateTime, dias));

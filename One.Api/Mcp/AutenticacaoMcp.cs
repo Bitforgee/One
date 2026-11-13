@@ -18,7 +18,7 @@ public sealed class AutenticacaoMcp(IOptionsMonitor<AuthenticationSchemeOptions>
         var cabecalho = Request.Headers.Authorization.ToString();
         if (!cabecalho.StartsWith(Prefixo, StringComparison.OrdinalIgnoreCase)) return AuthenticateResult.NoResult();
         var token = cabecalho[Prefixo.Length..].Trim();
-        var slug = Tokens.SlugDoMcp(token);
+        var slug = TokenMcp.SlugDoMcp(token);
         if (slug is null || Request.RouteValues["slug"] as string != slug) return AuthenticateResult.Fail("token");
 
         var instituicao = await db.Instituicoes.FirstOrDefaultAsync(i => i.Slug == slug && i.Ativa);

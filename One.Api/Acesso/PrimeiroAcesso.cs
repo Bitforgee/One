@@ -31,7 +31,7 @@ public sealed class PrimeiroAcessoHandler(OneDb db, TimeProvider relogio, Email 
             var u = await db.Usuarios.FirstOrDefaultAsync(x => x.Cpf == cpf && x.Ativo);
             if (u is not null)
             {
-                var (token, registro) = Tokens.Novo(instituicao.Slug, u.Id, relogio.GetUtcNow().UtcDateTime);
+                var (token, registro) = TokenAcesso.Criar(instituicao.Slug, u.Id, relogio.GetUtcNow().UtcDateTime);
                 db.Tokens.Add(registro);
                 await db.SaveChangesAsync();
                 try

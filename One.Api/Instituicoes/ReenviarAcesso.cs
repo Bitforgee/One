@@ -26,7 +26,7 @@ public sealed class ReenviarAcessoHandler(OneDb db, TimeProvider relogio, IConfi
         var agora = relogio.GetUtcNow().UtcDateTime;
         foreach (var admin in admins)
         {
-            var (token, registro) = Tokens.Novo(instituicao.Slug, admin.Id, agora);
+            var (token, registro) = TokenAcesso.Criar(instituicao.Slug, admin.Id, agora);
             db.Tokens.Add(registro);
             db.EmailsSaida.Add(Criacao.EmailDeAcesso(cfg, instituicao, admin.Email, token, agora));
         }

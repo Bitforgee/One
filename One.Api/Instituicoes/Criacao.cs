@@ -39,7 +39,7 @@ public static partial class Criacao
         var admin = Usuario.Criar(n.Cpf!, n.AdminNome, n.Email, [Papeis.Administrador]);
         db.Usuarios.Add(admin);
         await db.SaveChangesAsync();
-        var (token, registro) = Tokens.Novo(n.Slug, admin.Id, agora);
+        var (token, registro) = TokenAcesso.Criar(n.Slug, admin.Id, agora);
         db.Tokens.Add(registro);
         if (cfg is not null) db.EmailsSaida.Add(EmailDeAcesso(cfg, instituicao, admin.Email, token, agora));
         await db.SaveChangesAsync();

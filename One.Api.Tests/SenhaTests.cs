@@ -13,7 +13,7 @@ public class SenhaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var i = await f.Instituicao();
         var u = await f.Usuario(i, [Papeis.Aluno], senha: null);
-        var (token, registro) = Tokens.Novo(i.Slug, u.Id, f.Relogio.GetUtcNow().UtcDateTime);
+        var (token, registro) = TokenAcesso.Criar(i.Slug, u.Id, f.Relogio.GetUtcNow().UtcDateTime);
         await f.Db(i.Id, db => { db.Tokens.Add(registro); return db.SaveChangesAsync(); });
         const string senha = "minha-senha-secreta";
 

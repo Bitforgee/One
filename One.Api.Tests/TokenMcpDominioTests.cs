@@ -52,4 +52,14 @@ public class TokenMcpDominioTests
         Assert.True(t.RegistrarUso(Agora.AddSeconds(60)));
         Assert.Equal(Agora.AddSeconds(60), t.UltimoUsoEm);
     }
-}
+
+    [Fact]
+    public void NovoMcp_e_SlugDoMcp_se_reconhecem_e_recusam_o_resto()
+    {
+        var token = TokenMcp.NovoMcp("univag");
+
+        Assert.Matches(@"^onemcp_univag\.[A-Za-z0-9_-]{43}$", token);
+        Assert.Equal("univag", TokenMcp.SlugDoMcp(token));
+        Assert.Null(TokenMcp.SlugDoMcp("univag.abc"));
+        Assert.Null(TokenMcp.SlugDoMcp(null));
+    }}
