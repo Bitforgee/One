@@ -18,7 +18,7 @@ public class ChamadoAgendadorDominioTests
         return c;
     }
 
-    static Chamado EmAtendimento(DateTime desde)
+    static Chamado Atendendo(DateTime desde)
     {
         var c = Novo(desde);
         c.Assumir(Atendente, null, "Ana", desde);
@@ -42,7 +42,7 @@ public class ChamadoAgendadorDominioTests
         Assert.Null(antes.LembreteEm);
         Assert.Equal(eventos, antes.Eventos.Count);
 
-        var errado = EmAtendimento(Agora - TimeSpan.FromDays(9));
+        var errado = Atendendo(Agora - TimeSpan.FromDays(9));
         eventos = errado.Eventos.Count;
         Assert.NotNull(errado.LembrarAluno(3, Agora));
         Assert.Null(errado.LembreteEm);
@@ -51,4 +51,30 @@ public class ChamadoAgendadorDominioTests
         Assert.NotNull(limite.LembrarAluno(3, Agora.AddDays(1)));
         Assert.Equal(Agora, limite.LembreteEm);
     }
-}
+
+    [Fact]
+    public void Resolver_por_falta_de_resposta_no_limite_antes_e_estado_errado()
+    {
+        var limite = Aguardando(Agora - TimeSpan.FromDays(7));
+        var (eventos, mensagens) = (limite.Eventos.Count, limite.Mensagens.Count);
+        Assert.Null(limite.ResolverPorFaltaDeResposta(7, Agora));
+        Assert.Equal((Resolvido, (DateTime?)Agora, (DateTime?)null), (limite.Estado, limite.ResolvidoEm, limite.AguardandoDesde));
+        Assert.Equal(eventos + 1, limite.Eventos.Count);
+        var evento = limite.Eventos.Last();
+        Assert.Equal((TiposEvento.Transicao, (long?)null, AguardandoAluno, Resolvido, Agora), (evento.Tipo, evento.AtorId, evento.De, evento.Para, evento.CriadoEm));
+        Assert.Equal(mensagens + 1, limite.Mensagens.Count);
+        var mensagem = limite.Mensagens.Last();
+        Assert.Equal((TiposMensagem.Publica, (long?)null, "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.", Agora), (mensagem.Tipo, mensagem.AutorId, mensagem.Texto, mensagem.CriadaEm));
+
+        var antes = Aguardando(Agora - TimeSpan.FromDays(7) + TimeSpan.FromSeconds(1));
+        (eventos, mensagens) = (antes.Eventos.Count, antes.Mensagens.Count);
+        Assert.NotNull(antes.ResolverPorFaltaDeResposta(7, Agora));
+        Assert.Equal((AguardandoAluno, (DateTime?)null), (antes.Estado, antes.ResolvidoEm));
+        Assert.Equal((eventos, mensagens), (antes.Eventos.Count, antes.Mensagens.Count));
+
+        var errado = Atendendo(Agora - TimeSpan.FromDays(9));
+        (eventos, mensagens) = (errado.Eventos.Count, errado.Mensagens.Count);
+        Assert.NotNull(errado.ResolverPorFaltaDeResposta(7, Agora));
+        Assert.Equal((EmAtendimento, (DateTime?)null), (errado.Estado, errado.ResolvidoEm));
+        Assert.Equal((eventos, mensagens), (errado.Eventos.Count, errado.Mensagens.Count));
+    }}

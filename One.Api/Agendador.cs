@@ -26,7 +26,7 @@ public interface ITarefaAgendada
 }
 public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, IEnumerable<ITarefaAgendada> tarefas, ILogger<Agendador> log) : BackgroundService
 {
-    public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
+    public const string TextoSemResposta = Chamado.TextoSemResposta;
     public const int MaxTentativas = 5;
 
     protected override async Task ExecuteAsync(CancellationToken parar)
@@ -71,9 +71,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             .Select(c => new ItemAgendado("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
             .Select(c => new ItemAgendado("chamado", c.Id, c.InstituicaoId)).ToListAsync());
-        var limiteResolver = agora - prazos.ResolverAguardando;
-        itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.AguardandoDesde <= limiteResolver)
-            .Select(c => new ItemAgendado("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
         return itens;
     }
 
@@ -134,7 +131,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         {
             case "conversa": await Abandonar(db, item.Id, agora); break;
             case "chamado": await FecharResolvido(db, item.Id, agora); break;
-            case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
         }
     }
 
@@ -157,20 +153,5 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         log.LogInformation("Chamado {ChamadoId} fechado automaticamente (instituição {InstituicaoId})", id, db.InstituicaoAtual);
-    }
-
-    async Task ResolverSemResposta(OneDb db, long id, DateTime agora)
-    {
-        var limite = agora - prazos.ResolverAguardando;
-        await using var tx = await db.Database.BeginTransactionAsync();
-        var n = await db.Chamados.Where(c => c.Id == id && c.Estado == AguardandoAluno && c.AguardandoDesde <= limite)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Estado, Resolvido).SetProperty(c => c.ResolvidoEm, agora).SetProperty(c => c.AguardandoDesde, (DateTime?)null));
-        if (n == 0) return;
-        var chamado = await db.Chamados.SingleAsync(c => c.Id == id);
-        db.MensagensChamado.Add(new MensagemChamado { ChamadoId = id, Tipo = TiposMensagem.Publica, Texto = TextoSemResposta, CriadaEm = agora });
-        db.EventosChamado.Add(new EventoChamado { ChamadoId = id, Tipo = TiposEvento.Transicao, De = AguardandoAluno, Para = Resolvido, CriadoEm = agora });
-        await Avisos.Resolvido(db, cfg, prazos, await db.Instituicoes.SingleAsync(i => i.Id == chamado.InstituicaoId), chamado, TextoSemResposta, agora);
-        await db.SaveChangesAsync();
-        await tx.CommitAsync();
     }
 }

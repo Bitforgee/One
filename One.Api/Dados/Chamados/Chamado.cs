@@ -4,6 +4,8 @@ namespace One.Api.Dados.Chamados;
 
 public class Chamado : IDaInstituicao
 {
+    public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
+
     static readonly string[] Abertos = [Aberto, EmAtendimento, AguardandoAluno];
     static readonly string[] NaoFechados = [Aberto, EmAtendimento, AguardandoAluno, Resolvido];
 
@@ -197,6 +199,17 @@ public class Chamado : IDaInstituicao
         if (Estado != AguardandoAluno || LembreteEm is not null || !AguardandoHaPeloMenos(dias, agora)) return new Recusa("Este chamado não pede lembrete.");
         Evento(TiposEvento.Lembrete, new Ato(null, agora), detalhe: $"Lembrete ao aluno: {dias} dias aguardando resposta");
         LembreteEm = agora;
+        return null;
+    }
+
+    public Recusa? ResolverPorFaltaDeResposta(int dias, DateTime agora)
+    {
+        if (Estado != AguardandoAluno || !AguardandoHaPeloMenos(dias, agora)) return new Recusa("Este chamado não espera o aluno há tempo suficiente.");
+        _mensagens.Add(new MensagemChamado { Tipo = TiposMensagem.Publica, Texto = TextoSemResposta, CriadaEm = agora });
+        Evento(TiposEvento.Transicao, new Ato(null, agora), AguardandoAluno, Resolvido);
+        Estado = Resolvido;
+        ResolvidoEm = agora;
+        AguardandoDesde = null;
         return null;
     }
 
