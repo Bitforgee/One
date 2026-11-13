@@ -5,7 +5,7 @@ import { api } from '../api'
 import { Cabecalho } from '../Cabecalho'
 import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
-import { Editor } from '../Editor'
+import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Button } from '../ui/button'
@@ -104,6 +104,7 @@ function CamposDoEnvio({ envio, setEnvio, categorias, erros }: { envio: Envio; s
 
 const CamposComErro = ['titulo', 'categoriaId']
 const tituloDaJanela = (e?: Envio) => (e?.id ? 'Nova versão' : 'Enviar PDF')
+const chaveDoEnvio = (e: Envio) => JSON.stringify([e.titulo, e.categoriaId, e.arquivo?.name, e.arquivo?.size])
 const rotaDoEnvio = (r: Envio) => (r.id ? `/api/admin/documentos/${r.id}/versoes` : '/api/admin/documentos')
 
 export function Documentos() {
@@ -112,6 +113,7 @@ export function Documentos() {
   const [arquivar, setArquivar] = useState<Documento>()
   const acao = useGravacao(recarregar)
   useFocoNoPrimeiroErro(acao.error)
+  const sujo = useSujo(envio, chaveDoEnvio)
 
   const enviar = () => acao.mutate({ chamar: () => api(rotaDoEnvio(envio!), formulario(envio!)), aviso: 'Documento enviado.', depois: () => setEnvio(undefined) })
 
@@ -143,7 +145,7 @@ export function Documentos() {
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(envio)} aberto={!!envio} fechar={() => setEnvio(undefined)} salvar={enviar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />} botao="Enviar" desabilitado={!envio?.arquivo}>
         {envio && <CamposDoEnvio envio={envio} setEnvio={setEnvio} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

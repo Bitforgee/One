@@ -5,7 +5,7 @@ import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
 import { Campo } from '../Campo'
 import { Confirmar } from '../Confirmar'
-import { Editor } from '../Editor'
+import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
@@ -120,6 +120,7 @@ export function Usuarios() {
   const [desativar, setDesativar] = useState<Usuario>()
   const [busca, setBusca] = useState('')
   const acao = useGravacao(recarregar)
+  const sujo = useSujo(editando)
   const setores = dados?.setores ?? []
   const nomes = new Map(setores.map((s) => [s.id, s.nome]))
   const usuarios = dados?.usuarios.filter((u) => casa(u, busca))
@@ -149,7 +150,7 @@ export function Usuarios() {
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoUsuario editando={editando} setEditando={setEditando} setores={setores} erros={errosDeCampo(acao.error)} />}
       </Editor>
 

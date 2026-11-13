@@ -143,6 +143,7 @@ describe('fluxos', () => {
 
     await userEvent.click(d.getByRole('button', { name: 'Mais' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar rascunho' }))
 
     await waitFor(() => expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]]))
     await waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())

@@ -62,6 +62,7 @@ describe('artigos', () => {
       'POST /api/admin/artigos/2/arquivar': () => [200, {}],
     })
     await escolher('Rascunho', 'Ativar')
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ativar artigo' }))
     await waitFor(() => expect(gravadas(chamadas)).toHaveLength(1))
     await escolher('Rascunho', 'Arquivar')
     const d = within(await screen.findByRole('dialog'))
@@ -181,6 +182,7 @@ describe('toasts', () => {
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Salvar' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo salvo.'))
     await escolher('Rascunho', 'Ativar')
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ativar artigo' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo ativado.'))
     await escolher('Rascunho', 'Arquivar')
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Arquivar' }))

@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
-import { useParams } from 'react-router'
+import { useBlocker, useParams } from 'react-router'
 import { api, ErroApi } from '../api'
+import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { CampoArquivo } from '../CampoArquivo'
 import { useChamado, type Chamado } from '../chamado'
@@ -85,6 +86,14 @@ function corpoDaResposta(texto: string, nota: boolean, aguardaAluno: boolean, ar
   return f
 }
 
+function DescartarResposta({ bloqueio }: { bloqueio: ReturnType<typeof useBlocker> }) {
+  return (
+    <Confirmar aberto={bloqueio.state === 'blocked'} fechar={() => bloqueio.reset?.()} titulo="Descartar resposta?" botao="Descartar resposta" voltar="Continuar editando" destrutivo confirmar={() => bloqueio.proceed?.()}>
+      O texto que você escreveu e ainda não enviou será perdido.
+    </Confirmar>
+  )
+}
+
 function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado; equipe: boolean }) {
   const [texto, setTexto] = useState('')
   const [nota, setNota] = useState(false)
@@ -92,6 +101,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   const [arquivos, setArquivos] = useState<File[]>([])
   const [envio, setEnvio] = useState<boolean>()
   const prontas = useProntas(equipe ? c.setorId : undefined)
+  const bloqueio = useBlocker(({ currentLocation, nextLocation }) => texto.trim() !== '' && currentLocation.pathname !== nextLocation.pathname)
   if (!pode('responder') && !pode('nota')) return null
   if (equipe && ['RESOLVIDO', 'FECHADO'].includes(c.estado)) return null
 
@@ -106,6 +116,7 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
   }
 
   return (
+    <>
     <form onSubmit={responder} className="flex flex-col gap-2 rounded-md bg-muted p-4 form-resposta lg:sticky lg:bottom-0 lg:z-10 lg:max-h-[50dvh] lg:overflow-y-auto">
       <SelecaoPronta nota={nota} prontas={prontas} setTexto={setTexto} />
       <Label htmlFor="resposta">{rotuloResposta(c, equipe)}</Label>
@@ -116,6 +127,8 @@ function Responder({ c, equipe, pode, executar, pendente }: Acoes & { c: Chamado
         Enviar
       </BotaoAcao>
     </form>
+    <DescartarResposta bloqueio={bloqueio} />
+    </>
   )
 }
 
@@ -223,6 +236,22 @@ function Confirmacao({ aberto, fechar, titulo, botao, destrutivo, pronto, confir
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+const Confirmaveis: Record<string, { titulo: string; botao: string; texto: string }> = {
+  assumir: { titulo: 'Assumir o chamado?', botao: 'Assumir chamado', texto: 'Você passa a ser a pessoa responsável por este chamado.' },
+  confirmar: { titulo: 'Confirmar a resolução?', botao: 'Resolver chamado', texto: 'O chamado é fechado como resolvido.' },
+  resolver: { titulo: 'Resolver o chamado?', botao: 'Resolver chamado', texto: 'O chamado passa para resolvido, com a resolução que você escreveu.' },
+  rejeitar: { titulo: 'Rejeitar a resolução?', botao: 'Rejeitar resolução', texto: 'Você informa que o problema não foi resolvido. O motivo que você escreveu é enviado à equipe.' },
+}
+
+function ConfirmarPedido({ pedido, fechar, executar }: { pedido?: Pedido; fechar: () => void; executar: Executar }) {
+  const texto = Confirmaveis[pedido?.caminho ?? '']
+  return (
+    <Confirmar aberto={!!pedido} fechar={fechar} titulo={texto?.titulo ?? ''} botao={texto?.botao ?? ''} confirmar={() => { fechar(); executar(pedido!.caminho, pedido!.corpo, pedido!.depois) }}>
+      {texto?.texto}
+    </Confirmar>
   )
 }
 
@@ -433,21 +462,23 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
   const acao = useMutacaoDoChamado(c, carregar, setChamado)
   const [motivo, setMotivo] = useState('')
   const [modal, setModal] = useState<Modal>()
+  const [pedido, setPedido] = useState<Pedido>()
   const campos = useCamposDaAcao()
   const celular = useConsulta('(max-width: 1023px)')
   const equipe = c.eventos !== null
   const pode = (a: string) => c.acoes.includes(a)
   const executar: Executar = (caminho, corpo, depois) => acao.mutate({ caminho, corpo, depois })
+  const pedir: Executar = (caminho, corpo, depois) => (caminho in Confirmaveis ? setPedido({ caminho, corpo, depois }) : executar(caminho, corpo, depois))
   const pendente = acao.isPending
-  const acoes = { pode, executar, pendente }
-  const dentroDaFolha: Executar = (caminho, corpo, depois) => executar(caminho, corpo, () => { setFolha(false); depois?.() })
+  const acoes = { pode, executar: pedir, pendente }
+  const dentroDaFolha: Executar = (caminho, corpo, depois) => pedir(caminho, corpo, () => { setFolha(false); depois?.() })
   const erro = <AlertaDaAcao erro={acao.error} />
   const abrir = (m: Modal) => {
     setFolha(false)
     setModal(m)
   }
   const { principal, temMais } = acoesDaBarra(c, pode, equipe)
-  const barra = montarBarra(celular, principal, temMais, executar, pendente, () => setFolha(true))
+  const barra = montarBarra(celular, principal, temMais, pedir, pendente, () => setFolha(true))
   const painel = <PainelDeAcoes c={c} acoes={{ ...acoes, executar: dentroDaFolha }} abrir={abrir} semAssumir={!!barra && principal === 'Assumir'} motivo={motivo} setMotivo={setMotivo} campos={campos} />
   const lugar = lugarDasAcoesDoAluno(pode, equipe)
   return (
@@ -461,6 +492,7 @@ function Detalhe({ c, fuso, carregar, setChamado }: { c: Chamado; fuso: string; 
         <AcoesDoAluno lugar={lugar} aqui="depois" erro={erro} painel={painel} />
       </div>
       {equipe && <ColunaDaEquipe c={c} fuso={fuso} erro={erro} folha={folha} setFolha={setFolha} barra={barra} tem={!!(principal || temMais)} painel={painel} />}
+      <ConfirmarPedido pedido={pedido} fechar={() => setPedido(undefined)} executar={executar} />
       <Dialogos c={c} modal={modal} fechar={() => setModal(undefined)} executar={executar} motivo={motivo} setMotivo={setMotivo} />
     </div>
   )

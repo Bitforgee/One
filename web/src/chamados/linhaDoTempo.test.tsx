@@ -116,6 +116,7 @@ describe('linha do tempo do chamado', () => {
     const antesDeAssumir = leituras()
 
     await userEvent.click(screen.getByRole('button', { name: 'Assumir' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Assumir chamado' }))
     await waitFor(async () => expect(await itens()).toHaveLength(3))
     const lista = await textos()
     expect(lista.at(-1)).toContain('Carla assumiu a solicitação')

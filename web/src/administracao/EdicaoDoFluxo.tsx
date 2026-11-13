@@ -3,6 +3,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type F
 import { Link, useBlocker, useNavigate, useParams } from 'react-router'
 import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
+import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { Alert } from '../ui/alert'
 import { Badge } from '../ui/badge'
@@ -262,6 +263,7 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
   const [simulacao, setSimulacao] = useState<Simulacao>()
   const [salvo, setSalvo] = useState(!!fluxo.rascunho)
   const [alterado, setAlterado] = useState(false)
+  const [descartando, setDescartando] = useState(false)
   const ignorarSaida = useRef(false)
   const bloqueio = useBlocker(({ currentLocation, nextLocation }) => deveBloquear(alterado, ignorarSaida.current, currentLocation.pathname, nextLocation.pathname))
   const estreito = useConsulta('(max-width: 767px)')
@@ -303,12 +305,15 @@ export function EdicaoDoFluxo({ fluxo, categorias, cursos, setores, recarregar }
     <section aria-label="Editar: Fluxos" className={`flex min-w-0 flex-col gap-2 ${classeDaSecao(noCanvas)}`}>
       <Trilha contexto={contexto} lista={lista} fluxos={fluxos} />
       <form className="flex min-h-0 flex-1 flex-col gap-3" onSubmit={aoEnviar}>
-        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => navegar(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={semPendencia(!!fluxo.rascunho, acao.isPending)} descartar={descartar} />
+        <BarraDoEditor estado={rotuloDoEstado(alterado, salvo, fluxo)} alterado={alterado} visao={visao} mudarVisao={mudarVisao} simulador={simulador} voltar={() => navegar(fluxos)} salvando={acao.isPending} valida={valida} publicar={publicarBotao} podeDescartar={semPendencia(!!fluxo.rascunho, acao.isPending)} descartar={() => setDescartando(true)} />
         <div className={`flex min-h-0 flex-1 flex-col gap-3 ${classeDoCorpo(noCanvas)}`}>
           <ErroDe erro={acao.error} />
           <AreaDoRascunho grafo={grafo} setores={setores} simulacao={simulacao} editar={editar} visao={visao} estreito={estreito} simulador={<Simulador s={simulador} cursos={cursos} resultado={simulacao} />} />
         </div>
       </form>
+      <Confirmar aberto={descartando} fechar={() => setDescartando(false)} titulo="Descartar rascunho?" botao="Descartar rascunho" destrutivo confirmar={() => { setDescartando(false); descartar() }}>
+        O rascunho deste fluxo será apagado e não poderá ser recuperado.
+      </Confirmar>
       <SairSemSalvar aberto={bloqueio.state === 'blocked'} continuar={() => bloqueio.reset?.()} sair={() => bloqueio.proceed?.()} />
     </section>
   )

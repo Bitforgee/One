@@ -4,7 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { useGravacao, useLeituras } from '../acao'
 import { gravar } from '../api'
 import { ErroDoCampo } from '../Campo'
-import { Editor } from '../Editor'
+import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Opcoes } from '../Opcoes'
@@ -316,6 +316,7 @@ export function Cadastros() {
   const aba: Aba = pedida && pedida in Titulos ? pedida : 'setores'
   const setAba = (k: Aba) => setParams(k === 'setores' ? {} : { aba: k }, { replace: true })
   const [editando, setEditando] = useState<Ficha>()
+  const sujo = useSujo(editando)
   const acao = useGravacao(recarregar)
   const Campos = CamposDaAba[aba]
   const abas = Object.keys(Titulos) as Aba[]
@@ -347,7 +348,7 @@ export function Cadastros() {
         ))}
       </Tabs>
 
-      <Editor titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(aba, editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <Campos editando={editando} setEditando={setEditando} dados={dados} erros={errosDeCampo(acao.error)} />}
       </Editor>
     </div>

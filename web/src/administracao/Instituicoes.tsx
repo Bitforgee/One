@@ -9,7 +9,7 @@ import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { CampoArquivo } from '../CampoArquivo'
 import { Confirmar } from '../Confirmar'
 import { formatarData } from '../datas'
-import { Editor } from '../Editor'
+import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { CelulaLargo, Detalhe, MenuAcoes, Principal, Tabela } from '../Tabela'
 import { Alert } from '../ui/alert'
@@ -118,6 +118,7 @@ function ImportarCarga({ alvo, fechar }: { alvo: Item; fechar: () => void }) {
     <Editor
       titulo={`Importar carga: ${alvo.nome}`}
       aberto
+      sujo={!!arquivo}
       fechar={fechar}
       salvar={importar}
       botao="Importar"
@@ -197,6 +198,7 @@ const AvisoDeCriacao = ({ criada }: { criada: Ficha }) => (
 export function Instituicoes() {
   const { dados, erro, recarregar } = useLeituras<{ lista: Item[] }>({ lista: '/api/plataforma/instituicoes' })
   const criacao = useCriacao(recarregar)
+  const sujo = useSujo(criacao.nova)
   useFocoNoPrimeiroErro(criacao.mutacao.error)
   const [carga, setCarga] = useState<Item>()
   const [desativar, setDesativar] = useState<Item>()
@@ -222,6 +224,7 @@ export function Instituicoes() {
       </Tabela>
 
       <Editor
+        sujo={sujo}
         titulo="Nova instituição"
         aberto={!!criacao.nova}
         fechar={() => criacao.setNova(undefined)}

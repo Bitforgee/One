@@ -12,7 +12,7 @@ const Artigos = [
   'O artigo nasce como rascunho e só entra na base do assistente quando for ativado.',
   'Título', 'Perguntas relacionadas (uma por linha)', 'Categoria', 'Escolha a categoria', 'Resposta', 'Links (um por linha, com https://)',
   'Válido de (opcional)', 'Válido até (opcional)', 'Cancelar', 'Salvar', 'Escolher validade no calendário',
-  'Arquivar o artigo?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
+  'Ativar o artigo?', 'O assistente passa a usar este artigo nas respostas aos alunos.', 'Ativar artigo', 'Arquivar o artigo?', '“', '” sai da base do assistente. As conversas que já o citaram continuam como estão.', 'Voltar',
   'Artigo salvo.', 'Artigo ativado.', 'Artigo arquivado.',
 ]
 const Documentos = [
@@ -94,6 +94,8 @@ describe('textos', () => {
     await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))
 
     await escolher('Faltas', 'Ativar')
+    t.conferir(await screen.findByRole('dialog'))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ativar artigo' }))
     await waitFor(() => expect(avisos()).toHaveTextContent('Artigo ativado.'))
     await escolher('Estágio obrigatório', 'Arquivar')
     t.conferir(await screen.findByRole('dialog'), ['Estágio obrigatório'])

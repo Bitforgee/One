@@ -51,9 +51,11 @@ describe('ações do chamado', () => {
     })
     expect(await screen.findByText(/sem responsável/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Assumir' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Assumir chamado' }))
     expect(await screen.findByText('Financeiro · Boleto · Bruno')).toBeInTheDocument()
     expect(botao('Assumir')).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar resolução' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Resolver chamado' }))
     expect(await screen.findByText('Fechado')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(enviados(chamadas)).toEqual([
@@ -67,6 +69,7 @@ describe('ações do chamado', () => {
       'POST /api/chamados/ONE-1/assumir': () => [409, { status: 409, detail: 'Outro atendente assumiu o chamado.' }],
     })
     await userEvent.click(await screen.findByRole('button', { name: 'Assumir' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Assumir chamado' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Outro atendente assumiu o chamado.')
     await waitFor(() => expect(leituras(chamadas)).toBe(2))
   })
@@ -76,6 +79,7 @@ describe('ações do chamado', () => {
       'POST /api/chamados/ONE-1/assumir': () => [403, { status: 403, detail: 'Sem permissão.' }],
     })
     await userEvent.click(await screen.findByRole('button', { name: 'Assumir' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Assumir chamado' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Sem permissão.')
     expect(leituras(chamadas)).toBe(1)
   })
@@ -93,6 +97,7 @@ describe('ações do chamado', () => {
     expect(botao('Resolver')).toBeDisabled()
     await userEvent.type(resolucao, 'Boleto reenviado.')
     await userEvent.click(screen.getByRole('button', { name: 'Resolver' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Resolver chamado' }))
     await waitFor(() => expect(resolucao).toHaveValue(''))
 
     expect(botao('Salvar')).toBeDisabled()
@@ -121,6 +126,7 @@ describe('ações do chamado', () => {
     expect(botao('Rejeitar resolução')).toBeDisabled()
     await userEvent.type(motivo, 'Não chegou.')
     await userEvent.click(screen.getByRole('button', { name: 'Rejeitar resolução' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Rejeitar resolução' }))
     await waitFor(() => expect(motivo).toHaveValue(''))
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar solicitação' }))

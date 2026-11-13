@@ -96,6 +96,7 @@ describe('artigos', () => {
     await screen.findByText('Em rascunho')
     await userEvent.click(screen.getByRole('button', { name: 'Ações de Em rascunho' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Ativar' }))
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Ativar artigo' }))
     const gatilho = await screen.findByRole('button', { name: 'Ações de Em rascunho' })
     await waitFor(() => expect(gatilho).toBeDisabled())
     expect(within(gatilho).getByRole('status')).toBeInTheDocument()

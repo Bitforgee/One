@@ -1,12 +1,28 @@
-import type { FormEvent, ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { BotaoAcao } from './acao'
+import { Confirmar } from './Confirmar'
 import { Button } from './ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from './ui/sheet'
 import { useConsulta } from './ui/use-mobile'
 import { XIcon } from 'lucide-react'
 
-type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; acoes?: ReactNode; bloqueado?: boolean; semCancelar?: boolean; children: ReactNode }
+type Props = { titulo: string; aberto: boolean; fechar: () => void; salvar: () => void; pendente: boolean; alerta: ReactNode; botao?: string; desabilitado?: boolean; largo?: boolean; acoes?: ReactNode; bloqueado?: boolean; semCancelar?: boolean; sujo?: boolean; children: ReactNode }
+
+export function useSujo<T>(valor: T | undefined, chave: (v: T) => string = (v) => JSON.stringify(v)) {
+  const [inicial, setInicial] = useState<string>()
+  const atual = valor === undefined ? undefined : chave(valor)
+  if (atual === undefined ? inicial !== undefined : inicial === undefined) setInicial(atual)
+  return atual !== undefined && inicial !== undefined && atual !== inicial
+}
+
+function DescartarAlteracoes({ aberto, continuar, descartar }: { aberto: boolean; continuar: () => void; descartar: () => void }) {
+  return (
+    <Confirmar aberto={aberto} fechar={continuar} titulo="Descartar alterações?" botao="Descartar" voltar="Continuar editando" destrutivo confirmar={descartar}>
+      O que você digitou e ainda não salvou será perdido.
+    </Confirmar>
+  )
+}
 
 function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes, semCancelar }: Pick<Props, 'fechar' | 'pendente' | 'desabilitado' | 'acoes' | 'semCancelar'> & { botao: string; cheios?: boolean }) {
   const c = cheios ? 'flex-1' : undefined
@@ -25,7 +41,18 @@ function Botoes({ fechar, pendente, botao, desabilitado, cheios, acoes, semCance
   )
 }
 
-export function Editor({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, acoes, bloqueado, semCancelar, children }: Props) {
+export function Editor({ sujo, ...props }: Props) {
+  const [descartando, setDescartando] = useState(false)
+  const pedirFechar = () => (sujo ? setDescartando(true) : props.fechar())
+  return (
+    <>
+      <Painel {...props} fechar={pedirFechar} />
+      <DescartarAlteracoes aberto={descartando && props.aberto} continuar={() => setDescartando(false)} descartar={() => { setDescartando(false); props.fechar() }} />
+    </>
+  )
+}
+
+function Painel({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Salvar', desabilitado, largo, acoes, bloqueado, semCancelar, children }: Omit<Props, 'sujo'>) {
   const celular = useConsulta('(max-width: 767px)')
   const enviar = (e: FormEvent) => {
     e.preventDefault()

@@ -4,7 +4,8 @@ import { useGravacao } from '../acao'
 import { api, gravar } from '../api'
 import { Cabecalho } from '../Cabecalho'
 import { Campo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
-import { Editor } from '../Editor'
+import { Confirmar } from '../Confirmar'
+import { Editor, useSujo } from '../Editor'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Opcoes } from '../Opcoes'
 import { Periodo } from '../Periodo'
@@ -127,13 +128,16 @@ export function Artigos() {
   const vazia = artigos?.length === 0
   const [editando, setEditando] = useState<Rascunho>()
   const [arquivar, setArquivar] = useState<Artigo>()
+  const [ativar, setAtivar] = useState<Artigo>()
   const acao = useGravacao(recarregar)
   useFocoNoPrimeiroErro(acao.error)
+  const sujo = useSujo(editando)
 
   const salvar = () => acao.mutate({ chamar: () => gravar('/api/admin/artigos', editando!.id, corpo(editando!)), aviso: 'Artigo salvo.', depois: () => setEditando(undefined) })
 
   function mudar(a: Artigo, para: 'ativar' | 'arquivar') {
     setArquivar(undefined)
+    setAtivar(undefined)
     acao.mutate({ chamar: () => api(`/api/admin/artigos/${a.id}/${para}`, {}), aviso: Avisos[para] })
   }
 
@@ -151,13 +155,17 @@ export function Artigos() {
         vazio={{ Icone: BookText, titulo: 'Nenhum artigo', frase: 'Os artigos são a base das respostas do assistente.', acao: <Button onClick={() => setEditando({ ...Novo })}>Novo artigo</Button> }}
       >
         {artigos?.map((a) => (
-          <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => mudar(a, 'ativar')} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
+          <LinhaArtigo key={a.id} a={a} editar={() => setEditando(rascunho(a))} mudar={() => setAtivar(a)} arquivar={() => setArquivar(a)} pendente={acao.isPending} />
         ))}
       </Tabela>
 
-      <Editor titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
+      <Editor sujo={sujo} titulo={tituloDaJanela(editando)} aberto={!!editando} fechar={() => setEditando(undefined)} salvar={salvar} pendente={acao.isPending} alerta={<ErroDe erro={acao.error} campos={CamposComErro} />}>
         {editando && <CamposDoArtigo editando={editando} setEditando={setEditando} categorias={categorias} erros={errosDeCampo(acao.error)} />}
       </Editor>
+
+      <Confirmar aberto={!!ativar} fechar={() => setAtivar(undefined)} titulo="Ativar o artigo?" botao="Ativar artigo" confirmar={() => mudar(ativar!, 'ativar')}>
+        O assistente passa a usar este artigo nas respostas aos alunos.
+      </Confirmar>
 
       <ConfirmarArquivar tipo="artigo" titulo={arquivar?.versao.titulo} aberto={!!arquivar} fechar={() => setArquivar(undefined)} arquivar={() => mudar(arquivar!, 'arquivar')} />
     </div>

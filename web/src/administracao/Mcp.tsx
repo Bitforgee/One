@@ -118,6 +118,7 @@ function NovoToken({ url, aberto, fechar }: { url: string; aberto: boolean; fech
     <Editor
       titulo={criado ? 'Copie o token agora' : 'Novo token'}
       aberto={aberto}
+      sujo={!criado && (nome !== '' || dias !== 90)}
       fechar={sair}
       salvar={criado ? sair : () => criar.mutate()}
       pendente={criar.isPending}
