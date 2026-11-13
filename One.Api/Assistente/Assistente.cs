@@ -27,7 +27,7 @@ public record SaidaModelo(string? Tipo, string? Texto, List<long>? FonteIds, Lis
 
 public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvider relogio, ILogger<Assistente> log, OneDb db, Embeddings embeddings, Armazenamento armazenamento)
 {
-    public const string Autor = "ASSISTENTE";
+    public const string Autor = MensagemConversa.AutorAssistente;
 
     static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
@@ -94,9 +94,8 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             conversa.InstituicaoId, modelo, (long)relogio.GetElapsedTime(inicio).TotalMilliseconds, uso.ComCache, uso.SemCache, uso.Saida,
             saida?.Tipo, tipoFinal, ArtigosCitados(saida, fontes), anexos.Count);
 
-        return new MensagemConversa
+        return MensagemConversa.DoAssistente(new MensagemConversa.RespostaDoAssistente
         {
-            Autor = Autor,
             Texto = TextoFinal(tipoFinal, saida),
             TipoDevolvido = saida?.Tipo,
             TipoFinal = tipoFinal,
@@ -106,11 +105,11 @@ public class Assistente(IHttpClientFactory http, IConfiguration cfg, TimeProvide
             CriadaEm = relogio.GetUtcNow().UtcDateTime,
             Citacoes = citacoes,
             TrechosBuscados = fontes.Select(f => f.Id).ToList(),
-        };
+        });
     }
 
     MensagemConversa SemBase(string modelo) =>
-        new() { Autor = Autor, Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] };
+        MensagemConversa.DoAssistente(new() { Texto = Textos.SemBase, TipoFinal = Tipos.SemBase, Modelo = modelo, CriadaEm = relogio.GetUtcNow().UtcDateTime, TrechosBuscados = [] });
 
     static List<MensagemConversa> Janela(Conversa conversa) => conversa.Mensagens.OrderBy(m => m.Id).TakeLast(10).ToList();
 

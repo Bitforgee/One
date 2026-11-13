@@ -45,8 +45,7 @@ public static class Transferencia
         var titulo = Cortar(conversa.Mensagens.Where(m => m.Autor != Assistente.Assistente.Autor).OrderBy(m => m.Id).First().Texto, 120);
         var resumo = DoAssistente(conversa).Select(m => m.Resumo).FirstOrDefault(r => !string.IsNullOrWhiteSpace(r)) is { } r ? Cortar(r, 500) : null;
         var rota = await ResolverFluxo.Rotear(db, categoria, matricula, comLideranca);
-        conversa.Desfecho = Desfechos.Transferida;
-        conversa.DesfechoEm = agora;
+        conversa.Transferir(agora);
 
         var numero = await db.Database
             .SqlQuery<long>($"UPDATE instituicao SET ultimo_numero_chamado = ultimo_numero_chamado + 1 WHERE id = {instituicao.Id} RETURNING ultimo_numero_chamado AS \"Value\"")

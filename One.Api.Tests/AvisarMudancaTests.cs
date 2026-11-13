@@ -141,7 +141,7 @@ public class AvisarMudancaTests(OneFactoryComGravador f) : IClassFixture<OneFact
 
         await f.Db(b.Instituicao.Id, async db =>
         {
-            db.Conversas.Add(new Conversa { AlunoId = b.Aluno.Usuario.Id, CriadaEm = Agora, UltimaMensagemEm = Agora });
+            db.Conversas.Add(One.Api.Dados.Conversas.Conversa.Iniciar(b.Aluno.Usuario.Id, Agora));
             await db.SaveChangesAsync();
         });
         Assert.Empty(f.Hub.Tirar());

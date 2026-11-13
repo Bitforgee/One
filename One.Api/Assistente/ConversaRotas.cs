@@ -8,7 +8,7 @@ namespace One.Api.Assistente;
 
 public static class ConversaRotas
 {
-    public const string Aluno = "ALUNO";
+    public const string Aluno = MensagemConversa.AutorAluno;
     public const int LimiteAnexos = 3;
     const long MaxAnexo = 10 * 1024 * 1024;
 
@@ -70,11 +70,10 @@ public static class ConversaRotas
             var (chave, hash) = await armazenamento.Gravar(instituicaoId, "anexos-conversa", l.Bytes);
             anexos.Add(new AnexoConversa { Nome = l.Nome, Tipo = l.Tipo, Tamanho = l.Bytes.Length, Chave = chave, Hash = hash });
         }
-        conversa.Mensagens.Add(new MensagemConversa { Autor = Aluno, Texto = mensagem, CriadaEm = agora, Anexos = anexos });
-        conversa.UltimaMensagemEm = agora;
+        conversa.ReceberDoAluno(mensagem, anexos, agora);
         await db.SaveChangesAsync();
         var resposta = await assistente.Responder(conversa);
-        conversa.Mensagens.Add(resposta);
+        conversa.Registrar(resposta);
         await db.SaveChangesAsync();
         return resposta;
     }

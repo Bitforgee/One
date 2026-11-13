@@ -101,8 +101,8 @@ public class ArquiteturaRagTests(OneFactory f) : IClassFixture<OneFactory>
         var mensagem = await f.Db(i.Id, async db =>
         {
             var aluno = await f.Usuario(i, [One.Api.Dados.Papeis.Aluno]);
-            var c = new Conversa { AlunoId = aluno.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
-            c.Mensagens.Add(new MensagemConversa { Autor = "ASSISTENTE", Texto = "x", CriadaEm = DateTime.UtcNow });
+            var c = One.Api.Dados.Conversas.Conversa.Iniciar(aluno.Id, DateTime.UtcNow);
+            c.Registrar(MensagemConversa.DoAssistente(new() { Texto = "x", TipoFinal = "sem_base", CriadaEm = DateTime.UtcNow }));
             db.Conversas.Add(c);
             await db.SaveChangesAsync();
             return c.Mensagens[0].Id;

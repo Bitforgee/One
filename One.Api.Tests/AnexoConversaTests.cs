@@ -193,8 +193,8 @@ public class AnexoConversaTests(OneFactory f) : IClassFixture<OneFactory>
         var outro = await f.AlunoLogado(c.Instituicao);
         var cheia = await f.Db(c.Instituicao.Id, async db =>
         {
-            var conversa = new Conversa { AlunoId = c.Aluno.Usuario.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
-            for (var n = 1; n <= 10; n++) conversa.Mensagens.Add(new MensagemConversa { Autor = "ALUNO", Texto = $"m{n}", CriadaEm = DateTime.UtcNow });
+            var conversa = One.Api.Dados.Conversas.Conversa.Iniciar(c.Aluno.Usuario.Id, DateTime.UtcNow);
+            for (var n = 1; n <= 10; n++) conversa.Registrar(MensagemConversa.DoAluno($"m{n}", [], DateTime.UtcNow));
             db.Conversas.Add(conversa);
             await db.SaveChangesAsync();
             return conversa.Id;

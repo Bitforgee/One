@@ -201,8 +201,8 @@ public class ImportacaoTests(OneFactory f) : IClassFixture<OneFactory>
 
         var id = await f.Db(i.Id, async db =>
         {
-            var c = new Conversa { AlunoId = aluno.Usuario.Id, CriadaEm = f.Relogio.GetUtcNow().UtcDateTime, UltimaMensagemEm = f.Relogio.GetUtcNow().UtcDateTime };
-            c.Mensagens.Add(new MensagemConversa { Autor = "ALUNO", Texto = "depois", CriadaEm = c.CriadaEm });
+            var c = One.Api.Dados.Conversas.Conversa.Iniciar(aluno.Usuario.Id, f.Relogio.GetUtcNow().UtcDateTime);
+            c.Registrar(MensagemConversa.DoAluno("depois", [], c.CriadaEm));
             db.Conversas.Add(c);
             await db.SaveChangesAsync();
             return c.Id;

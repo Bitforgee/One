@@ -33,7 +33,7 @@ public sealed class NovaConversaHandler(OneDb db, Assistente assistente, Armazen
         if (recusa is not null) return recusa;
 
         var agora = relogio.GetUtcNow().UtcDateTime;
-        var conversa = new Conversa { AlunoId = u.Id, CriadaEm = agora, UltimaMensagemEm = agora };
+        var conversa = Conversa.Iniciar(u.Id, agora);
         db.Conversas.Add(conversa);
         var r = await Responder(db, assistente, armazenamento, conversa, u.InstituicaoId, i.Mensagem!, lidos, agora);
         return Results.Created($"/api/conversas/{conversa.Id}", new NovaConversa.Resposta(conversa.Id, new(r.TipoFinal, r.Texto)));

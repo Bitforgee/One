@@ -18,9 +18,7 @@ public sealed class EncerrarConversaHandler(OneDb db, TimeProvider relogio) : IR
     {
         var conversa = await DoAluno(db, m.Usuario, m.Id);
         if (conversa is null) return NaoEncontrada();
-        if (conversa.Desfecho is not null) return JaEncerrada();
-        conversa.Desfecho = Desfechos.Encerrada;
-        conversa.DesfechoEm = relogio.GetUtcNow().UtcDateTime;
+        if (conversa.Encerrar(relogio.GetUtcNow().UtcDateTime) is not null) return JaEncerrada();
         await db.SaveChangesAsync();
         return Results.Ok(new EncerrarConversa.Resposta(conversa.Desfecho));
     }

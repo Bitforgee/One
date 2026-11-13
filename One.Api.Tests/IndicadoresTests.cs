@@ -26,18 +26,32 @@ public class IndicadoresTests(OneFactory f) : IClassFixture<OneFactory>
         return new Mundo(i, admin, triagem, financeiro, catFin, catSec, artigo.Id, atendente);
     }
 
+    static void Concluir(One.Api.Dados.Conversas.Conversa c, string? desfecho, DateTime em)
+    {
+        switch (desfecho)
+        {
+            case null: break;
+            case Desfechos.Resolvida: c.Avaliar(true, em); break;
+            case Desfechos.Encerrada: c.Encerrar(em); break;
+            case Desfechos.Transferida: c.Transferir(em); break;
+            case Desfechos.Abandonada: c.Abandonar(em); break;
+            default: throw new ArgumentOutOfRangeException(nameof(desfecho), desfecho, null);
+        }
+    }
+
     Task<Conversa> Conversa(Mundo m, Usuario aluno, DateTime em, string? desfecho, string[] tipos, bool citar = false) =>
         f.Db(m.I.Id, async db =>
         {
-            var c = new Conversa { AlunoId = aluno.Id, CriadaEm = em, UltimaMensagemEm = em, Desfecho = desfecho, DesfechoEm = desfecho is null ? null : em };
-            c.Mensagens.Add(new MensagemConversa { Autor = "ALUNO", Texto = "MENSAGEM-SECRETA do aluno", CriadaEm = em });
+            var c = One.Api.Dados.Conversas.Conversa.Iniciar(aluno.Id, em);
+            Concluir(c, desfecho, em);
+            c.Registrar(MensagemConversa.DoAluno("MENSAGEM-SECRETA do aluno", [], em));
             var versao = await db.VersoesArtigo.Where(v => v.ArtigoId == m.ArtigoFinanceiro).Select(v => v.Id).SingleAsync();
             foreach (var t in tipos)
-                c.Mensagens.Add(new MensagemConversa
+                c.Registrar(MensagemConversa.DoAssistente(new()
                 {
-                    Autor = "ASSISTENTE", Texto = "texto", TipoFinal = t, CriadaEm = em,
+                    Texto = "texto", TipoFinal = t, CriadaEm = em,
                     Citacoes = t == "resposta" && citar ? [new CitacaoArtigo { VersaoArtigoId = versao, Trechos = ["o portal"] }] : [],
-                });
+                }));
             db.Conversas.Add(c);
             await db.SaveChangesAsync();
             return c;

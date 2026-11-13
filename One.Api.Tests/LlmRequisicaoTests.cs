@@ -40,9 +40,9 @@ public class LlmRequisicaoTests(OneFactory f) : IClassFixture<OneFactory>
 
         var conversaId = await f.Db(c.Instituicao.Id, async db =>
         {
-            var conversa = new Conversa { AlunoId = u.Id, CriadaEm = DateTime.UtcNow, UltimaMensagemEm = DateTime.UtcNow };
+            var conversa = One.Api.Dados.Conversas.Conversa.Iniciar(u.Id, DateTime.UtcNow);
             for (var n = 1; n <= 11; n++)
-                conversa.Mensagens.Add(new MensagemConversa { Autor = n % 2 == 1 ? "ALUNO" : "ASSISTENTE", Texto = $"mensagem-{n:00}", TipoFinal = n % 2 == 1 ? null : "sem_base", CriadaEm = DateTime.UtcNow });
+                conversa.Registrar(n % 2 == 1 ? MensagemConversa.DoAluno($"mensagem-{n:00}", [], DateTime.UtcNow) : MensagemConversa.DoAssistente(new() { Texto = $"mensagem-{n:00}", TipoFinal = "sem_base", CriadaEm = DateTime.UtcNow }));
             db.Conversas.Add(conversa);
             await db.SaveChangesAsync();
             return conversa.Id;
