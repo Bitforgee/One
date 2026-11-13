@@ -10,14 +10,6 @@ public sealed record CriarRespostaPronta(CriarRespostaPronta.Entrada Corpo) : IR
     public sealed record Entrada(long? SetorId, string? Titulo, string? Texto);
 
     public static void Mapear(RouteGroupBuilder g) => g.MapPost("/respostas-prontas", (CriarRespostaPronta.Entrada i, IMediator m) => m.Send(new CriarRespostaPronta(i)));
-
-    public static async Task<IResult?> Validar(OneDb db, long? setorId, string? titulo, string? texto, RespostaPronta? atual)
-    {
-        if (!await db.Setores.AnyAsync(s => s.Id == setorId)) return Problemas.Invalido("Setor inexistente.", "setorId");
-        if (!AdminRotas.Nome(titulo, 200)) return Problemas.Invalido("Informe o título.", "titulo");
-        if (string.IsNullOrWhiteSpace(texto) || texto.Length > 4000) return Problemas.Invalido("O texto deve ter de 1 a 4000 caracteres.", "texto");
-        return await db.RespostasProntas.AnyAsync(r => r.SetorId == setorId && r.Titulo == titulo && r.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe uma resposta pronta com este título no setor.") : null;
-    }
 }
 
 public sealed class CriarRespostaProntaHandler(OneDb db) : IRequestHandler<CriarRespostaPronta, IResult>
@@ -25,7 +17,9 @@ public sealed class CriarRespostaProntaHandler(OneDb db) : IRequestHandler<Criar
     public async ValueTask<IResult> Handle(CriarRespostaPronta m, CancellationToken ct)
     {
         var e = m.Corpo;
-        if (await CriarRespostaPronta.Validar(db, e.SetorId, e.Titulo, e.Texto, null) is { } erro) return erro;
+        if (!await db.Setores.AnyAsync(s => s.Id == e.SetorId, ct)) return Problemas.Invalido("Setor inexistente.", "setorId");
+        if (RespostaPronta.Validar(e.Titulo, e.Texto) is { } invalido) return Problemas.Invalido(invalido.Motivo, invalido.Motivo == RespostaPronta.MotivoTitulo ? "titulo" : "texto");
+        if (await db.RespostasProntas.AnyAsync(r => r.SetorId == e.SetorId && r.Titulo == e.Titulo, ct)) return AdminRotas.Repetido("Já existe uma resposta pronta com este título no setor.");
         var resposta = RespostaPronta.Criar(e.SetorId!.Value, e.Titulo!, e.Texto!);
         db.RespostasProntas.Add(resposta);
         await db.SaveChangesAsync(ct);

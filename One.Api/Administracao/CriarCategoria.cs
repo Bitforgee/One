@@ -10,14 +10,6 @@ public sealed record CriarCategoria(CriarCategoria.Entrada Corpo) : IRequest<IRe
     public sealed record Entrada(string? Nome, bool? Ativa);
 
     public static void Mapear(RouteGroupBuilder g) => g.MapPost("/categorias", (CriarCategoria.Entrada i, IMediator m) => m.Send(new CriarCategoria(i)));
-
-    public static async Task<IResult?> Validar(OneDb db, string? nome, bool? ativa, Categoria? atual)
-    {
-        if (!AdminRotas.Nome(nome)) return Problemas.Invalido("Informe o nome da categoria.", "nome");
-        if (atual is { Padrao: true } && (nome != atual.Nome || ativa == false))
-            return Problemas.Invalido("A categoria \"Não classificado\" não pode ser renomeada nem desativada.", "nome");
-        return await db.Categorias.AnyAsync(c => c.Nome == nome && c.Id != (atual == null ? 0 : atual.Id)) ? AdminRotas.Repetido("Já existe uma categoria com este nome.") : null;
-    }
 }
 
 public sealed class CriarCategoriaHandler(OneDb db) : IRequestHandler<CriarCategoria, IResult>
@@ -25,7 +17,8 @@ public sealed class CriarCategoriaHandler(OneDb db) : IRequestHandler<CriarCateg
     public async ValueTask<IResult> Handle(CriarCategoria m, CancellationToken ct)
     {
         var e = m.Corpo;
-        if (await CriarCategoria.Validar(db, e.Nome, e.Ativa, null) is { } erro) return erro;
+        if (Categoria.Validar(e.Nome, e.Ativa) is { } invalido) return Problemas.Invalido(invalido.Motivo, "nome");
+        if (await db.Categorias.AnyAsync(c => c.Nome == e.Nome, ct)) return AdminRotas.Repetido("Já existe uma categoria com este nome.");
         var categoria = Categoria.Criar(e.Nome!, e.Ativa);
         db.Categorias.Add(categoria);
         await db.SaveChangesAsync(ct);

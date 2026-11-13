@@ -1207,9 +1207,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Caso_de_uso_sem_chamada_estatica_de_outro =
     [
-        "Administracao/AlterarCategoria.cs",
-        "Administracao/AlterarCurso.cs",
-        "Administracao/AlterarRespostaPronta.cs",
     ];
 
     static readonly string[] Excecoes_Sem_balde_horizontal =
