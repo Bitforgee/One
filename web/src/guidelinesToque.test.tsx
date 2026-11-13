@@ -76,7 +76,10 @@ describe('alvos de toque de 44 px', () => {
     quarenta(mais[0])
     const alcas = document.querySelectorAll<HTMLElement>('.react-flow__handle')
     expect(alcas.length).toBeGreaterThan(0)
-    for (const alca of alcas) expect(classes(alca)).toMatch(/pointer-coarse:size-11!/)
+    for (const alca of alcas) {
+      expect(classes(alca)).toMatch(/pointer-coarse:size-\(--alvo\)!/)
+      expect(alca.style.getPropertyValue('--alvo')).toMatch(/^[\d.]+px$/)
+    }
   })
 
   it('C22 o X do anexo usa o alvo de 44 px', async () => {

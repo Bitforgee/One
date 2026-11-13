@@ -1,13 +1,20 @@
-import { Handle, NodeToolbar, Position, type Node, type NodeProps } from '@xyflow/react'
+import { Handle, NodeToolbar, Position, useStore, type HandleProps, type Node, type NodeProps } from '@xyflow/react'
 import { Check, Clock, Flag, SkipForward, Trash2, TriangleAlert } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Button } from '../ui/button'
 import type { Destino } from './comum'
 import { Icones } from './IconesDoDestino'
 
 const Cartao = 'relative flex h-16 items-center gap-3 border bg-card text-card-foreground shadow-xs transition-colors'
 const Bloco = 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'
-const Bolinha = 'size-3! border-2! border-card! bg-primary! pointer-coarse:size-11! pointer-coarse:border-0! pointer-coarse:bg-transparent! pointer-coarse:after:absolute pointer-coarse:after:inset-4 pointer-coarse:after:rounded-full pointer-coarse:after:border-2 pointer-coarse:after:border-card pointer-coarse:after:bg-primary'
+const Bolinha = 'size-3! border-2! border-card! bg-primary! pointer-coarse:size-(--alvo)! pointer-coarse:border-0! pointer-coarse:bg-transparent! pointer-coarse:after:absolute pointer-coarse:after:inset-[36%] pointer-coarse:after:rounded-full pointer-coarse:after:border-2 pointer-coarse:after:border-card pointer-coarse:after:bg-primary'
+
+const AlvoEmTela = 44
+
+function Alca(props: Omit<HandleProps, 'className'>) {
+  const zoom = useStore((s) => s.transform[2])
+  return <Handle {...props} className={Bolinha} style={{ '--alvo': `${AlvoEmTela / zoom}px` } as CSSProperties} />
+}
 
 export type DadosDaEtapa = { titulo: string; prazo: number | null; destino: Destino; posicao: number; marca?: string; invalido: boolean; remover: () => void }
 
@@ -18,7 +25,7 @@ export function NoInicio() {
         <Flag aria-hidden="true" className="size-5" />
       </span>
       <span className="text-sm font-medium">Início</span>
-      <Handle type="source" position={Position.Right} className={Bolinha} />
+      <Alca type="source" position={Position.Right} />
     </div>
   )
 }
@@ -66,7 +73,7 @@ export function NoEtapa({ data, selected }: NodeProps<Node<DadosDaEtapa>>) {
   return (
     <div className={`${Cartao} w-48 rounded-xl px-3 ${bordaDoCartao(data.invalido, data.marca, selected)}`} onMouseEnter={() => setSobre(true)} onMouseLeave={() => setSobre(false)}>
       <BarraDaEtapa visivel={sobre || !!selected} remover={data.remover} />
-      <Handle type="target" position={Position.Left} className={Bolinha} />
+      <Alca type="target" position={Position.Left} />
       <span className={Bloco}>
         <Icone aria-hidden="true" className="size-5" />
       </span>
@@ -83,7 +90,7 @@ export function NoEtapa({ data, selected }: NodeProps<Node<DadosDaEtapa>>) {
         </span>
       </span>
       <Aviso invalido={data.invalido} marca={data.marca} />
-      <Handle type="source" position={Position.Right} className={Bolinha} />
+      <Alca type="source" position={Position.Right} />
     </div>
   )
 }
