@@ -62,6 +62,16 @@ public class CargaValidacaoTests
     }
 
     [Fact]
+    public void Carga_aceita_nome_de_setor_e_de_categoria_com_mais_de_100_caracteres()
+    {
+        var (erros, plano) = CargaValidacao.Validar(Arquivo(setores: [new(new string('s', 101))], categorias: [new(new string('c', 150))]), Existentes());
+
+        Assert.Empty(erros);
+        Assert.Contains(plano.Setores.Values, s => s.Nome.Length == 101);
+        Assert.Contains(plano.Categorias.Values, c => c.Nome.Length == 150);
+    }
+
+    [Fact]
     public void Regra_da_carga_vira_fluxo_de_uma_etapa()
     {
         var (erros, plano) = CargaValidacao.Validar(Arquivo(setores: [new("Financeiro")], categorias: [new("Matrícula"), new("Notas")],

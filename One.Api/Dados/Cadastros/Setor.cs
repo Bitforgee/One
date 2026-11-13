@@ -8,6 +8,8 @@ public class Setor : IDaInstituicao
     public const string MotivoCurso = "Escolha um curso da instituição.";
     public const string MotivoTriagemLideranca = "O setor de triagem não pode ser uma liderança.";
 
+    public const int LimiteNome = 100;
+
     Setor() { }
 
     public long Id { get; private set; }
@@ -20,7 +22,12 @@ public class Setor : IDaInstituicao
 
     public static Invalido? Validar(string? nome, bool? triagem, long? cursoId, int? semestre, bool cursoExiste = true)
     {
-        if (string.IsNullOrWhiteSpace(nome) || nome.Length > 100) return new Invalido(MotivoNome);
+        if (string.IsNullOrWhiteSpace(nome) || nome.Length > LimiteNome) return new Invalido(MotivoNome);
+        return Turma(triagem, cursoId, semestre, cursoExiste);
+    }
+
+    static Invalido? Turma(bool? triagem, long? cursoId, int? semestre, bool cursoExiste)
+    {
         if (cursoId is null && semestre is null) return null;
         if (cursoId is null || semestre is null) return new Invalido(MotivoTurmaJunta);
         if (semestre is < 1 or > 12) return new Invalido(MotivoSemestre);
@@ -30,7 +37,7 @@ public class Setor : IDaInstituicao
 
     public static Setor Criar(string? nome, bool? triagem = null, bool? ativo = null, long? cursoId = null, int? semestre = null)
     {
-        if (Validar(nome, triagem, cursoId, semestre) is not null) throw new InvalidOperationException("Setor sem validar.");
+        if (string.IsNullOrWhiteSpace(nome) || Turma(triagem, cursoId, semestre, true) is not null) throw new InvalidOperationException("Setor sem validar.");
         return new() { Nome = nome!, Triagem = triagem == true, Ativo = ativo ?? true, CursoId = cursoId, Semestre = semestre };
     }
 
