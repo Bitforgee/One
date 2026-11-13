@@ -43,7 +43,7 @@ export function PainelDoNo({ no, setores, mudar, remover, fechar }: Props) {
       )}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="no-prazo">Prazo da etapa selecionada (horas)</Label>
-        <Input id="no-prazo" name="prazoHoras" autoComplete="off" type="number" min={1} max={720} inputMode="numeric" placeholder="Opcional" value={no.prazoHoras} onChange={(e) => mudar({ prazoHoras: e.target.value })} />
+        <Input id="no-prazo" name="prazoHoras" autoComplete="off" type="number" min={1} max={720} inputMode="numeric" placeholder="Ex.: 48 (opcional)…" value={no.prazoHoras} onChange={(e) => mudar({ prazoHoras: e.target.value })} />
         <p className="m-0 text-xs text-muted-foreground">Sem resposta da equipe nesse prazo, o chamado sobe para a próxima etapa. A última etapa não tem prazo.</p>
       </div>
       <Button type="button" variant="outline" className="self-start text-destructive hover:text-destructive" onClick={remover}>

@@ -4,10 +4,10 @@ import { Label } from './ui/label'
 
 export const descricaoDoCampo = (id: string, dica?: string, erro?: string) => [dica && `${id}-dica`, erro && `${id}-erro`].filter(Boolean).join(' ') || undefined
 
-export function useFocoNoPrimeiroErro(erro: unknown) {
+export function useFocoNoPrimeiroErro(erro: unknown, escopo = '[role="dialog"]') {
   useEffect(() => {
-    if (erro) document.querySelector<HTMLElement>('[role="dialog"] [aria-invalid="true"]')?.focus()
-  }, [erro])
+    if (erro) document.querySelector<HTMLElement>(`${escopo} [aria-invalid="true"]`)?.focus()
+  }, [erro, escopo])
 }
 
 export function Campo({ id, rotulo, erro, dica, ...props }: { id: string; rotulo: string; erro?: string; dica?: string } & ComponentProps<'input'>) {

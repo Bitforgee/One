@@ -269,6 +269,19 @@ function ErroDaRemocao({ erro }: { erro: Error | null }) {
   return erro ? <Alert variant="destructive">{erro.message}</Alert> : null
 }
 
+function useFocoNaAba(aba: IdAba, falhas: Falhas) {
+  const alvo = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (alvo.current !== aba) return
+    const quadro = requestAnimationFrame(() => {
+      alvo.current = undefined
+      document.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden]) [aria-invalid="true"]')?.focus()
+    })
+    return () => cancelAnimationFrame(quadro)
+  }, [aba, falhas])
+  return alvo
+}
+
 function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: string }) {
   const cliente = useQueryClient()
   const [params, setParams] = useSearchParams()
@@ -276,6 +289,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
   const [valores, setValores] = useState(() => valoresDe(dados))
   const [escolhidas, setEscolhidas] = useState<Partial<Record<Tipo, File>>>({})
   const [falhas, setFalhas] = useState<Falhas>({ campos: {}, imagens: {} })
+  const focar = useFocoNaAba(aba, falhas)
   const [removendo, setRemovendo] = useState<Tipo>()
   const blobs = useBlobs(escolhidas)
   const estreito = useConsulta('(max-width: 1023px)')
@@ -297,6 +311,7 @@ function Formulario({ dados, slug, nome }: { dados: Dados; slug: string; nome: s
   const salvar = useMutation({
     mutationFn: () => gravarTudo(valores, escolhidas),
     onSuccess: async ({ enviadas, ...f }) => {
+      focar.current = abasComErro(f.campos, f.imagens)[0]
       setFalhas(f)
       setEscolhidas((e) => semEnviadas(e, enviadas))
       await reler()

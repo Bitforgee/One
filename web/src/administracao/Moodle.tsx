@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { BotaoAcao } from '../acao'
 import { api } from '../api'
+import { descricaoDoCampo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { ErroDe, errosDeCampo } from '../ErroDe'
 import { Marca } from '../Marca'
 import { Button } from '../ui/button'
@@ -118,6 +119,7 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
     },
   })
   const erros = errosDeCampo(salvar.error)
+  useFocoNoPrimeiroErro(salvar.error, 'form')
   return (
     <form
       noValidate
@@ -135,11 +137,11 @@ export function FormularioMoodle({ dados }: { dados: Plataforma }) {
         {Campos.map(([chave, rotulo, dica]) => (
           <div key={chave} className="flex flex-col gap-2">
             <Label htmlFor={`moodle-${chave}`}>{rotulo}</Label>
-            <Input id={`moodle-${chave}`} name={chave} type={EhUrl(chave) ? 'url' : 'text'} autoComplete="off" spellCheck={false} value={v[chave]} aria-invalid={!!erros[chave]} aria-describedby={`moodle-${chave}-dica`} onChange={(e) => mudar({ [chave]: e.target.value })} />
+            <Input id={`moodle-${chave}`} name={chave} type={EhUrl(chave) ? 'url' : 'text'} autoComplete="off" spellCheck={false} value={v[chave]} aria-invalid={!!erros[chave]} aria-describedby={descricaoDoCampo(`moodle-${chave}`, dica, erros[chave])} onChange={(e) => mudar({ [chave]: e.target.value })} />
             <p id={`moodle-${chave}-dica`} className="m-0 text-xs text-muted-foreground">
               {dica}
             </p>
-            {erros[chave] && <p className="m-0 text-sm text-destructive">{erros[chave]}</p>}
+            <ErroDoCampo id={`moodle-${chave}`} erro={erros[chave]} />
           </div>
         ))}
         <Marca id="moodle-ativa" rotulo="Permitir a entrada pelo Moodle" marcado={v.ativa} mudar={(ativa) => mudar({ ativa })} />

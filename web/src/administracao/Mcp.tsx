@@ -3,6 +3,7 @@ import { KeyRound } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { api } from '../api'
+import { descricaoDoCampo, ErroDoCampo, useFocoNoPrimeiroErro } from '../Campo'
 import { Confirmar } from '../Confirmar'
 import { Editor } from '../Editor'
 import { formatarData } from '../datas'
@@ -77,22 +78,22 @@ function FormularioNovo({ nome, setNome, dias, setDias, erros }: { nome: string;
     <>
       <div className="flex flex-col gap-2">
         <Label htmlFor="mcp-nome">Nome</Label>
-        <Input id="mcp-nome" name="nome" autoComplete="off" value={nome} aria-invalid={!!erros.nome} aria-describedby="mcp-nome-dica" onChange={(e) => setNome(e.target.value)} />
+        <Input id="mcp-nome" name="nome" autoComplete="off" value={nome} aria-invalid={!!erros.nome} aria-describedby={descricaoDoCampo('mcp-nome', 'dica', erros.nome)} onChange={(e) => setNome(e.target.value)} />
         <p id="mcp-nome-dica" className="m-0 text-xs text-muted-foreground">
           Ex.: Cursor no meu notebook
         </p>
-        {erros.nome && <p className="m-0 text-sm text-destructive">{erros.nome}</p>}
+        <ErroDoCampo id="mcp-nome" erro={erros.nome} />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="mcp-validade">Validade</Label>
-        <NativeSelect id="mcp-validade" value={dias} aria-invalid={!!erros.dias} onChange={(e) => setDias(Number(e.target.value))}>
+        <NativeSelect id="mcp-validade" value={dias} aria-invalid={!!erros.dias} aria-describedby={descricaoDoCampo('mcp-validade', undefined, erros.dias)} onChange={(e) => setDias(Number(e.target.value))}>
           {Validades.map((v) => (
             <NativeSelectOption key={v} value={v}>
               {v} dias
             </NativeSelectOption>
           ))}
         </NativeSelect>
-        {erros.dias && <p className="m-0 text-sm text-destructive">{erros.dias}</p>}
+        <ErroDoCampo id="mcp-validade" erro={erros.dias} />
       </div>
     </>
   )
@@ -111,6 +112,7 @@ function NovoToken({ url, aberto, fechar }: { url: string; aberto: boolean; fech
       await cliente.invalidateQueries({ queryKey: ['mcp-admin'] })
     },
   })
+  useFocoNoPrimeiroErro(criar.error)
   const sair = () => {
     setCriado(undefined)
     criar.reset()

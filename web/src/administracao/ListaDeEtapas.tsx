@@ -33,7 +33,7 @@ function LinhaDaEtapa({ n, no, setores, pode, foraDaCadeia, editar }: Linha) {
           <Opcoes vazio="Escolha o setor" itens={setores.filter((s) => s.ativo)} />
         </NativeSelect>
       )}
-      <Input type="number" name="prazoHoras" autoComplete="off" min={1} max={720} inputMode="numeric" placeholder="Prazo em horas (opcional)" aria-label={`Prazo da etapa ${n} (horas)`} value={no.prazoHoras} onChange={(e) => alterar({ prazoHoras: e.target.value })} />
+      <Input type="number" name="prazoHoras" autoComplete="off" min={1} max={720} inputMode="numeric" placeholder="Ex.: 48 (opcional)…" aria-label={`Prazo da etapa ${n} (horas)`} value={no.prazoHoras} onChange={(e) => alterar({ prazoHoras: e.target.value })} />
       <div className="flex gap-2">
         <Button type="button" variant="outline" size="icon" aria-label={`Mover etapa ${n} para cima`} disabled={!pode.subir} onClick={() => editar((g) => mover(g, no.id, -1))}>
           <ArrowUp aria-hidden="true" />

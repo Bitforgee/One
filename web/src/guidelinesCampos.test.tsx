@@ -251,6 +251,13 @@ describe('placeholders de exemplo', () => {
     expect(d.getByLabelText('CPF')).toHaveAttribute('placeholder', 'Ex.: 000.000.000-00…')
   })
 
+  it('C15 mensagem do Assistente', async () => {
+    api({ 'GET /api/auth/me': () => [200, me()] })
+    abrir('/univag/assistente')
+    const placeholder = (await screen.findByLabelText('Mensagem')).getAttribute('placeholder')!
+    expect(placeholder).toMatch(/…$/)
+  })
+
   it('C15 protocolo do chamado', async () => {
     expect(await abrirChamado()).toHaveAttribute('placeholder', 'Ex.: ONE-123…')
   })
@@ -283,5 +290,141 @@ describe('foco no primeiro erro de Usuários e Cadastros', () => {
     await userEvent.click(d.getByRole('button', { name: 'Salvar setor' }))
     await waitFor(() => expect(idsInvalidos()).toEqual(['cad-nome']))
     await waitFor(() => expect(focado()).toBe(document.getElementById('cad-nome')))
+  })
+})
+const moodleVazio = { configurada: false, ativa: false, emissor: '', clientId: '', deploymentId: '', authUrl: '', jwksUrl: '', urlLogin: '', urlLancamento: '', urlJwks: '' }
+const ligado = (campo: HTMLElement, id: string, mensagem: string) => {
+  const erro = document.getElementById(`${id}-erro`)!
+  expect(erro).toHaveTextContent(mensagem)
+  expect(erro).toHaveAttribute('role', 'alert')
+  expect(campo.getAttribute('aria-describedby')!.split(' ')).toContain(`${id}-erro`)
+}
+
+describe('erros de campo de Moodle, MCP e Aparência', () => {
+  it('C10 Moodle liga cada erro ao campo por id, alert e aria-describedby e mantém a dica', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'GET /api/admin/moodle': () => [200, moodleVazio],
+      'GET /api/admin/mcp': () => [200, { url: 'https://one.teste/api/mcp/univag', tokens: [] }],
+      'PUT /api/admin/moodle': () => invalido({ clientId: ['Informe o Client ID.'], authUrl: ['A URL deve começar com https://.'] }),
+    })
+    abrir('/univag/integracoes')
+    await userEvent.click(await screen.findByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(idsInvalidos()).toEqual(['moodle-clientId', 'moodle-authUrl']))
+    ligado(screen.getByLabelText('Client ID'), 'moodle-clientId', 'Informe o Client ID.')
+    ligado(screen.getByLabelText('URL de autenticação'), 'moodle-authUrl', 'A URL deve começar com https://.')
+    expect(screen.getByLabelText('Client ID').getAttribute('aria-describedby')).toBe('moodle-clientId-dica moodle-clientId-erro')
+    expect(document.getElementById('moodle-emissor-erro')).toBeNull()
+    expect(screen.getByLabelText('Emissor (iss)').getAttribute('aria-describedby')).toBe('moodle-emissor-dica')
+  })
+
+  it('C10 Moodle foca o primeiro campo inválido depois de salvar com erro', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'GET /api/admin/moodle': () => [200, moodleVazio],
+      'GET /api/admin/mcp': () => [200, { url: 'https://one.teste/api/mcp/univag', tokens: [] }],
+      'PUT /api/admin/moodle': () => invalido({ clientId: ['Informe o Client ID.'], authUrl: ['A URL deve começar com https://.'] }),
+    })
+    abrir('/univag/integracoes')
+    await userEvent.click(await screen.findByRole('button', { name: 'Salvar' }))
+    await waitFor(() => expect(focado()).toBe(document.getElementById('moodle-clientId')))
+  })
+
+  const novoToken = async (erros: Record<string, string[]>) => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'GET /api/admin/moodle': () => [200, moodleVazio],
+      'GET /api/admin/mcp': () => [200, { url: 'https://one.teste/api/mcp/univag', tokens: [] }],
+      'POST /api/admin/mcp/tokens': () => invalido(erros),
+    })
+    abrir('/univag/integracoes?aba=mcp')
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo token' }))
+    const d = within(await screen.findByRole('dialog', { name: 'Novo token' }))
+    await userEvent.click(d.getByRole('button', { name: 'Criar token' }))
+    return d
+  }
+
+  it('C10 MCP liga os erros de nome e validade ao campo e foca o nome', async () => {
+    const d = await novoToken({ nome: ['Informe o nome do token.'], dias: ['Escolha uma validade.'] })
+    await waitFor(() => expect(idsInvalidos()).toEqual(['mcp-nome', 'mcp-validade']))
+    ligado(d.getByLabelText('Nome'), 'mcp-nome', 'Informe o nome do token.')
+    ligado(d.getByLabelText('Validade'), 'mcp-validade', 'Escolha uma validade.')
+    expect(d.getByLabelText('Nome').getAttribute('aria-describedby')).toBe('mcp-nome-dica mcp-nome-erro')
+    await waitFor(() => expect(focado()).toBe(document.getElementById('mcp-nome')))
+  })
+
+  it('C10 MCP com erro só na validade foca a validade', async () => {
+    const d = await novoToken({ dias: ['Escolha uma validade.'] })
+    await waitFor(() => expect(focado()).toBe(document.getElementById('mcp-validade')))
+    ligado(d.getByLabelText('Validade'), 'mcp-validade', 'Escolha uma validade.')
+    expect(document.getElementById('mcp-nome-erro')).toBeNull()
+  })
+
+  const aparencia = () => {
+    const { nome: _, ...resto } = instituicao()
+    return resto
+  }
+  const salvarAparencia = async (erros: Record<string, string[]>, antes?: () => Promise<void>) => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/admin/aparencia': () => [200, aparencia()],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'PUT /api/admin/aparencia': () => [400, { status: 400, detail: 'Dados inválidos.', errors: erros }],
+    })
+    abrir('/univag/aparencia')
+    const cor = await screen.findByLabelText('Cor principal')
+    await userEvent.clear(cor)
+    await userEvent.type(cor, '#' + '224fa7')
+    await antes?.()
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+  }
+
+  it('C10 Aparência foca o primeiro campo inválido da aba que o erro abre', async () => {
+    await salvarAparencia(
+      { 'contato.email': ['Informe um e-mail válido.'], nomeCurto: ['O nome do app passa de 12 letras.'] },
+      async () => {
+        await userEvent.click(screen.getByRole('tab', { name: /^Contato/ }))
+        await userEvent.type(await screen.findByLabelText('E-mail de atendimento'), 'errado')
+      },
+    )
+    await waitFor(() => expect(focado()).toBe(document.getElementById('ap-nomeCurto')))
+    ligado(focado(), 'ap-nomeCurto', 'O nome do app passa de 12 letras.')
+    await userEvent.click(screen.getByRole('tab', { name: /^Contato/ }))
+    expect(await screen.findByLabelText('E-mail de atendimento')).toHaveAttribute('aria-invalid', 'true')
+    ligado(screen.getByLabelText('E-mail de atendimento'), 'ap-contato.email', 'Informe um e-mail válido.')
+  })
+
+  it('C10 Aparência foca o campo inválido sem trocar de aba quando o erro está na aba aberta', async () => {
+    await salvarAparencia({ cor: ['Escolha uma cor mais escura.'] })
+    await waitFor(() => expect(focado()).toBe(document.getElementById('ap-cor')))
+    ligado(focado(), 'ap-cor', 'Escolha uma cor mais escura.')
+  })
+
+  it('C10 Aparência não puxa o foco de volta ao trocar de aba depois do erro', async () => {
+    await salvarAparencia({ cor: ['Escolha uma cor mais escura.'] })
+    await waitFor(() => expect(focado()).toBe(document.getElementById('ap-cor')))
+    await userEvent.click(screen.getByRole('tab', { name: /^Contato/ }))
+    await screen.findByLabelText('Telefone')
+    await userEvent.click(screen.getByRole('tab', { name: /^Marca/ }))
+    expect(await screen.findByLabelText('Cor principal')).toHaveAttribute('aria-invalid', 'true')
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    expect(focado()).toBe(screen.getByRole('tab', { name: /^Marca/ }))
+  })
+
+  it('C13 os campos de Moodle e do token MCP trazem name e autocomplete off', async () => {
+    api({
+      'GET /api/auth/me': () => [200, admin],
+      'GET /api/instituicoes/univag': () => [200, instituicao()],
+      'GET /api/admin/moodle': () => [200, moodleVazio],
+      'GET /api/admin/mcp': () => [200, { url: 'https://one.teste/api/mcp/univag', tokens: [] }],
+    })
+    abrir('/univag/integracoes')
+    const campo = await screen.findByLabelText('Client ID')
+    expect(campo).toHaveAttribute('name', 'clientId')
+    expect(campo).toHaveAttribute('autocomplete', 'off')
+    expect(campo).toHaveAttribute('spellcheck', 'false')
   })
 })
