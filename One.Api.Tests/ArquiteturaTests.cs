@@ -295,7 +295,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly (string de, string para)[] ReferenciasEntreFatias =
     [
-        ("Acesso", "Instituicoes"), ("Administracao", "Acesso"), ("Administracao", "Chamados"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
+        ("Administracao", "Acesso"), ("Administracao", "Chamados"), ("Administracao", "Conhecimento"), ("Administracao", "Instituicoes"),
         ("Assistente", "Chamados"), ("Assistente", "Conhecimento"),
         ("Chamados", "Conhecimento"),
         ("Indicadores", "Conhecimento"),
