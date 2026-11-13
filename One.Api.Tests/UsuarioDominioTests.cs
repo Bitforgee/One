@@ -54,11 +54,43 @@ public class UsuarioDominioTests
     }
 
     [Fact]
+    public void Definir_papeis_mantem_OPERADOR_remove_os_ausentes_e_nao_duplica()
+    {
+        var u = Usuario.Criar(Cpf.Tentar("11144477735")!, "Maria Teste", "maria@teste.one", [Papeis.Aluno, Papeis.Operador]);
+
+        u.DefinirPapeis([Papeis.Atendente, Papeis.Atendente]);
+
+        Assert.Equal([Papeis.Operador, Papeis.Atendente], u.Papeis.Select(p => p.Papel));
+    }
+
+    [Fact]
+    public void Definir_senha_temporaria_grava_hash_e_exige_troca()
+    {
+        var u = Novo();
+        u.TrocarSenha("antigo");
+
+        u.DefinirSenhaTemporaria("hash-temporario");
+
+        Assert.Equal(("hash-temporario", true), (u.SenhaHash, u.DeveTrocarSenha));
+    }
+
+    [Fact]
+    public void Vincular_setores_remove_os_ausentes_e_acrescenta_os_novos()
+    {
+        var u = Novo();
+        u.VincularSetores([1, 2]);
+
+        u.VincularSetores([2, 3]);
+
+        Assert.Equal([2L, 3L], u.Setores.Select(a => a.SetorId).Order());
+    }
+
+    [Fact]
     public void Atualizar_troca_cpf_nome_e_email()
     {
         var u = Novo();
 
-        u.Atualizar(Cpf.Tentar("52998224725")!, "Maria Souza", "souza@teste.one");
+        u.Atualizar(new DadosUsuario(Cpf.Tentar("52998224725")!, "Maria Souza", "souza@teste.one"));
 
         Assert.Equal(("52998224725", "Maria Souza", "souza@teste.one"), (u.Cpf.Valor, u.Nome, u.Email));
     }

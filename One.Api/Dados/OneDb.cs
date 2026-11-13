@@ -105,7 +105,7 @@ public class OneDb(DbContextOptions<OneDb> options) : DbContext(options)
         mb.Entity<Categoria>().HasIndex(x => new { x.InstituicaoId, x.Nome }).IsUnique();
         mb.Entity<AtendenteSetor>(e =>
         {
-            e.HasOne<Usuario>().WithMany().HasForeignKey(x => x.UsuarioId);
+            e.HasOne<Usuario>().WithMany(u => u.Setores).HasForeignKey(x => x.UsuarioId);
             e.HasOne<Setor>().WithMany().HasForeignKey(x => x.SetorId);
         });
         mb.Entity<Curso>(e =>

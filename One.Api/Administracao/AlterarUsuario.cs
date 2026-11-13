@@ -3,7 +3,6 @@ using One.Api.Administracao.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
-using static One.Api.Administracao.UsuarioRotas;
 
 namespace One.Api.Administracao;
 
@@ -19,11 +18,14 @@ public sealed class AlterarUsuarioHandler(OneDb db, IPasswordHasher<Usuario> has
 {
     public async ValueTask<IResult> Handle(AlterarUsuario m, CancellationToken ct)
     {
-        var u = await db.Usuarios.Include(x => x.Papeis).FirstOrDefaultAsync(x => x.Id == m.Id);
+        var u = await db.Usuarios.Include(x => x.Papeis).Include(x => x.Setores).FirstOrDefaultAsync(x => x.Id == m.Id, ct);
         if (u is null) return AdminRotas.NaoEncontrado();
         var e = m.Corpo;
-        if (await Validar(db, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, m.Id) is { } erro) return erro;
-        await Gravar(db, u, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, hasher);
+        if (await ValidacaoDeUsuario.Validar(db, e.Cpf, e.Nome, e.Email, e.SenhaTemporaria, e.Papeis, e.Setores, m.Id) is { } erro) return erro;
+        u.Atualizar(new DadosUsuario(Cpf.Tentar(e.Cpf)!, e.Nome!, e.Email!));
+        u.DefinirAcesso(e.Papeis!, e.Setores ?? []);
+        if (e.SenhaTemporaria is not null) u.DefinirSenhaTemporaria(hasher.HashPassword(u, e.SenhaTemporaria));
+        await db.SaveChangesAsync(ct);
         return Results.Ok(await UsuarioResposta.De(db, u));
     }
 }

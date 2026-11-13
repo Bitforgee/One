@@ -121,10 +121,7 @@ public class FluxoRoteamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var aluno = await AlunoDe(m, m.Ads, 3);
         var daSegunda = await f.Db(m.I.Id, async db =>
         {
-            var x = new Matricula { UsuarioId = aluno.Usuario.Id, CursoId = m.Direito.Id, Numero = "3000000001", Semestre = 2 };
-            db.Matriculas.Add(x);
-            await db.SaveChangesAsync();
-            return x.Id;
+            return (await db.AdicionarMatricula(aluno.Usuario.Id, m.Direito.Id, "3000000001", 2)).Id;
         });
 
         var (numero, setor) = await Transferir(aluno, m.Duvida, daSegunda);

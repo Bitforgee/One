@@ -1,21 +1,12 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Acesso;
 using One.Api.Dados;
 
 namespace One.Api.Administracao;
 
-public static class UsuarioRotas
+public static class ValidacaoDeUsuario
 {
     static readonly string[] PapeisValidos = [Papeis.Aluno, Papeis.Atendente, Papeis.Administrador];
-
-    public static void Mapear(RouteGroupBuilder admin)
-    {
-        ListarUsuarios.Mapear(admin);
-        CriarUsuario.Mapear(admin);
-        AlterarUsuario.Mapear(admin);
-        DesativarUsuario.Mapear(admin);
-    }
 
     public static async Task<IResult?> Validar(OneDb db, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, long id) =>
         Pessoa(cpf, nome, email) ?? await PapeisESetores(db, senhaTemporaria, papeis, setores) ?? await Repetidos(db, cpf, email, id);
@@ -45,31 +36,5 @@ public static class UsuarioRotas
         if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Cpf == cpf)) return AdminRotas.Repetido("Já existe um usuário com este CPF na instituição.");
         if (await db.Usuarios.AnyAsync(u => u.Id != id && u.Email == email)) return AdminRotas.Repetido("Já existe um usuário com este e-mail na instituição.");
         return null;
-    }
-
-    public static async Task Gravar(OneDb db, Usuario u, string? cpf, string? nome, string? email, string? senhaTemporaria, string[]? papeis, long[]? setores, IPasswordHasher<Usuario> hasher)
-    {
-        u.Atualizar(Cpf.Tentar(cpf)!, nome!, email!);
-        u.Papeis.RemoveAll(p => p.Papel != Papeis.Operador && !papeis!.Contains(p.Papel));
-        u.Papeis.AddRange(papeis!.Distinct().Where(p => !u.Tem(p)).Select(p => new UsuarioPapel { Papel = p }));
-        if (senhaTemporaria is not null)
-        {
-            u.DefinirSenhaTemporaria(hasher.HashPassword(u, senhaTemporaria));
-        }
-        await Setores(db, u, papeis!.Contains(Papeis.Atendente) ? setores!.Distinct().ToList() : []);
-        await db.SaveChangesAsync();
-    }
-
-    static async Task Setores(OneDb db, Usuario u, List<long> setores)
-    {
-        var atuais = await db.AtendenteSetores.Where(a => a.UsuarioId == u.Id).ToListAsync();
-        db.AtendenteSetores.RemoveRange(atuais.Where(a => !setores.Contains(a.SetorId)));
-        var usuarioId = db.Entry(u).Property(x => x.Id);
-        foreach (var s in setores.Except(atuais.Select(a => a.SetorId)))
-        {
-            var vinculo = db.Entry(db.AtendenteSetores.Add(new AtendenteSetor { SetorId = s }).Entity).Property(a => a.UsuarioId);
-            vinculo.CurrentValue = usuarioId.CurrentValue;
-            vinculo.IsTemporary = usuarioId.IsTemporary;
-        }
     }
 }

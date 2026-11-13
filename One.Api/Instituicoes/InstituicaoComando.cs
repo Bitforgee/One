@@ -90,8 +90,8 @@ public static class InstituicaoComando
         if (usuario is null) return [$"--cpf: não há usuário com o CPF \"{o.GetValueOrDefault("cpf")}\" em \"{slug}\""];
         if (!usuario.Ativo) return [$"--cpf: o usuário {usuario.Nome} está inativo"];
 
-        if (remover) usuario.Papeis.RemoveAll(p => p.Papel == Papeis.Operador);
-        else if (!usuario.Tem(Papeis.Operador)) usuario.Papeis.Add(new UsuarioPapel { Papel = Papeis.Operador });
+        if (remover) usuario.RemoverPapel(Papeis.Operador);
+        else usuario.AdicionarPapel(Papeis.Operador);
         await db.SaveChangesAsync();
         saida.WriteLine($"Operador {usuario.Nome} {(remover ? "removido" : "adicionado")}.");
         return [];

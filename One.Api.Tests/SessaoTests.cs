@@ -61,8 +61,7 @@ public class SessaoTests(OneFactory f) : IClassFixture<OneFactory>
         var u = await f.Usuario(i, [Papeis.Aluno], cpf: "12345678909", matricula: "2000567890");
         await f.Db(i.Id, async db =>
         {
-            db.Matriculas.Add(new Matricula { UsuarioId = u.Id, CursoId = (await db.Cursos.FirstAsync()).Id, Numero = "2000567891", Semestre = 1, Situacao = "INATIVA" });
-            await db.SaveChangesAsync();
+            await db.AdicionarMatricula(u.Id, (await db.Cursos.FirstAsync()).Id, "2000567891", 1, "INATIVA");
         });
         var c = await f.Entrar(i, u);
 

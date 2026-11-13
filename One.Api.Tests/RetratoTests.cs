@@ -146,11 +146,7 @@ public class RetratoTests(OneFactory f) : IClassFixture<OneFactory>
     static async Task<(HttpClient, long)> Equipe(OneFactory n, Instituicao i, string nome, string cpf, Setor setor)
     {
         var u = await Pessoa(n, i, nome, cpf, [Papeis.Atendente]);
-        await n.Db(i.Id, async db =>
-        {
-            db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = u.Id, SetorId = setor.Id });
-            await db.SaveChangesAsync();
-        });
+        await n.Db(i.Id, db => db.VincularSetores(u.Id, setor.Id));
         return (await n.Entrar(i, u), u.Id);
     }
 

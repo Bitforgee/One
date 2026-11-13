@@ -1135,16 +1135,13 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Entidade_sem_setter_publico =
     [
-        "AtendenteSetor",
         "Categoria",
         "CitacaoArtigo",
         "Curso",
-        "Matricula",
         "OneDb",
         "RespostaPronta",
         "Setor",
         "TrechoFonte",
-        "UsuarioPapel",
     ];
 
     static readonly string[] Excecoes_Raiz_sem_fatias =
@@ -1155,8 +1152,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Handler_sem_new_de_entidade =
     [
         "Administracao/AlterarMoodle.cs",
-        "Administracao/ImportarMatriculas.cs",
-        "Administracao/UsuarioRotas.cs",
         "Agendador.cs",
         "Assistente/ConferirResposta.cs",
         "Assistente/ConversaRotas.cs",
@@ -1165,7 +1160,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Instituicoes/CargaInicial.cs",
         "Instituicoes/CargaValidacao.cs",
         "Instituicoes/Criacao.cs",
-        "Instituicoes/InstituicaoComando.cs",
     ];
 
     static readonly string[] Excecoes_Arquivo_ate_150_linhas =
@@ -1245,7 +1239,6 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         "Administracao/FluxoRotas.cs",
         "Administracao/ImportacaoRotas.cs",
         "Administracao/Shared",
-        "Administracao/UsuarioRotas.cs",
         "Assistente/ConversaRotas.cs",
         "Chamados/ChamadoRotas.cs",
         "Chamados/PushRotas.cs",

@@ -56,15 +56,14 @@ public sealed class ImportarMatriculasHandler(OneDb db) : IRequestHandler<Import
         {
             if (!alunos.TryGetValue(l.Cpf, out var u)) alunos[l.Cpf] = u = db.Usuarios.Add(Usuario.Criar(Cpf.Ler(l.Cpf), l.Nome, l.Email)).Entity;
             u.AlterarContato(l.Nome, l.Email);
-            if (!u.Tem(Papeis.Aluno)) u.Papeis.Add(new UsuarioPapel { Papel = Papeis.Aluno });
+            u.AdicionarPapel(Papeis.Aluno);
             if (matriculas.TryGetValue(l.Matricula, out var m)) atualizados++;
             else
             {
-                matriculas[l.Matricula] = m = new Matricula { Numero = l.Matricula };
-                u.Matriculas.Add(m);
+                matriculas[l.Matricula] = u.AdicionarMatricula(l.Matricula, l.CursoId, l.Semestre, l.Situacao);
                 criados++;
             }
-            (m.CursoId, m.Semestre, m.Situacao) = (l.CursoId, l.Semestre, l.Situacao);
+            m?.Atualizar(l.CursoId, l.Semestre, l.Situacao);
         }
         await db.SaveChangesAsync();
         return (criados, atualizados);

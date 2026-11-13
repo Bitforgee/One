@@ -111,7 +111,7 @@ public class LiderSemVazamentoTests(OneFactory f) : IClassFixture<OneFactory>
         var liderComAntigo = await f.Atendente(m.I, m.Lideranca, antigo);
         var admin = await f.Usuario(m.I, [Papeis.Administrador]);
         var administradorLider = await f.Usuario(m.I, [Papeis.Administrador, Papeis.Atendente]);
-        await f.Db(m.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = administradorLider.Id, SetorId = m.Lideranca.Id }); await db.SaveChangesAsync(); });
+        await f.Db(m.I.Id, db => db.VincularSetores(administradorLider.Id, m.Lideranca.Id));
 
         var casos = new (string Nome, long Id, bool Esperado)[]
         {

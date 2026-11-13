@@ -267,8 +267,7 @@ public class OrdemDasRecusasTests(OneFactory f) : IClassFixture<OneFactory>
         await f.Db(i.Id, async db =>
         {
             var curso = await db.Cursos.FirstAsync();
-            db.Matriculas.Add(new Matricula { UsuarioId = duas.Usuario.Id, CursoId = curso.Id, Numero = "M2-" + Guid.NewGuid().ToString("N")[..8], Semestre = 5 });
-            await db.SaveChangesAsync();
+            await db.AdicionarMatricula(duas.Usuario.Id, curso.Id, "M2-" + Guid.NewGuid().ToString("N")[..8], 5);
         });
         var chamados = await f.Db(i.Id, db => db.Chamados.CountAsync());
         await Recusa400(await duas.Cliente.PostAsJsonAsync("/api/atendimento-direto", new { descricao = "" }), "descricao", "descrição vazia e duas matrículas");

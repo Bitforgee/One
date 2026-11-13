@@ -14,7 +14,10 @@ public static class AdminRotas
         var admin = api.MapGroup("/admin").AddEndpointFilter(async (c, next) =>
             c.HttpContext.Usuario().Tem(Papeis.Administrador) ? await next(c) : Problemas.Erro(403, "Só administradores podem usar esta área."));
 
-        UsuarioRotas.Mapear(admin);
+        ListarUsuarios.Mapear(admin);
+        CriarUsuario.Mapear(admin);
+        AlterarUsuario.Mapear(admin);
+        DesativarUsuario.Mapear(admin);
         ImportacaoRotas.Mapear(admin);
         CadastroRotas.Mapear(admin);
         FluxoRotas.Mapear(admin);

@@ -91,8 +91,7 @@ public static class SementeAtendimento
         var u = await f.Usuario(i, [Papeis.Atendente]);
         await f.Db(i.Id, async db =>
         {
-            db.AtendenteSetores.AddRange(setores.Select(s => new AtendenteSetor { UsuarioId = u.Id, SetorId = s.Id }));
-            await db.SaveChangesAsync();
+            await db.VincularSetores(u.Id, [.. setores.Select(s => s.Id)]);
         });
         return new Atendente(u, await f.Entrar(i, u));
     }

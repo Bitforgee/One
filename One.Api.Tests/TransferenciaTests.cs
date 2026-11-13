@@ -129,10 +129,8 @@ public class TransferenciaTests(OneFactory f) : IClassFixture<OneFactory>
         var (segunda, inativa, alheia) = await f.Db(i.Id, async db =>
         {
             var curso = await db.Cursos.FirstAsync();
-            var m2 = new Matricula { UsuarioId = aluno.Usuario.Id, CursoId = curso.Id, Numero = "2000000002", Semestre = 1 };
-            var m3 = new Matricula { UsuarioId = aluno.Usuario.Id, CursoId = curso.Id, Numero = "2000000003", Semestre = 1, Situacao = "INATIVA" };
-            db.Matriculas.AddRange(m2, m3);
-            await db.SaveChangesAsync();
+            var m2 = await db.AdicionarMatricula(aluno.Usuario.Id, curso.Id, "2000000002", 1);
+            var m3 = await db.AdicionarMatricula(aluno.Usuario.Id, curso.Id, "2000000003", 1, "INATIVA");
             return (m2.Id, m3.Id, await db.Matriculas.Where(m => m.UsuarioId == outro.Id).Select(m => m.Id).SingleAsync());
         });
         var id = (await (await aluno.Cliente.PostAsJsonAsync("/api/conversas", new { mensagem = "oi" })).Json()).GetProperty("conversaId").GetInt64();

@@ -18,7 +18,7 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(await Prevista(await Turma.Criar(f, comLider: false)));
 
         var soOAluno = await Turma.Criar(f, comLider: false);
-        await f.Db(soOAluno.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = soOAluno.Aluno.Usuario.Id, SetorId = soOAluno.Lideranca!.Id }); await db.SaveChangesAsync(); });
+        await f.Db(soOAluno.I.Id, db => db.VincularSetores(soOAluno.Aluno.Usuario.Id, soOAluno.Lideranca!.Id));
         Assert.False(await Prevista(soOAluno));
 
         var inativo = await Turma.Criar(f);
@@ -26,7 +26,7 @@ public class LiderancaDestinoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.False(await Prevista(inativo));
 
         var comColega = await Turma.Criar(f);
-        await f.Db(comColega.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = comColega.Aluno.Usuario.Id, SetorId = comColega.Lideranca!.Id }); await db.SaveChangesAsync(); });
+        await f.Db(comColega.I.Id, db => db.VincularSetores(comColega.Aluno.Usuario.Id, comColega.Lideranca!.Id));
         Assert.True(await Prevista(comColega));
     }
 

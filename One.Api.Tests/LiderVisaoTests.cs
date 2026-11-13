@@ -116,7 +116,7 @@ public class LiderVisaoTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var t = await Turma.Criar(f);
         var dupla = await f.Usuario(t.I, [Papeis.Aluno, Papeis.Atendente]);
-        await f.Db(t.I.Id, async db => { db.AtendenteSetores.Add(new AtendenteSetor { UsuarioId = dupla.Id, SetorId = t.Lideranca!.Id }); await db.SaveChangesAsync(); });
+        await f.Db(t.I.Id, db => db.VincularSetores(dupla.Id, t.Lideranca!.Id));
         var aluno = new Aluno(t.I, dupla, Semente.Senha, await f.Entrar(t.I, dupla));
         var numero = await t.Transferir(null, aluno);
         Assert.Equal(t.Lideranca!.Id, (await t.Ler(numero)).SetorId);

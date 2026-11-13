@@ -55,8 +55,14 @@ public static class Semente
             }
             if (matricula is not null || papeis.Contains(Papeis.Aluno))
             {
-                var curso = await db.Cursos.FirstOrDefaultAsync() ?? new Curso { Nome = "Análise e Desenvolvimento de Sistemas" };
-                u.Matriculas.Add(new Matricula { Curso = curso, Numero = matricula ?? Random.Shared.NextInt64(1_000_000_000, 9_999_999_999).ToString(), Semestre = 3, Situacao = situacao });
+                var curso = await db.Cursos.FirstOrDefaultAsync();
+                if (curso is null)
+                {
+                    curso = new Curso { Nome = "Análise e Desenvolvimento de Sistemas" };
+                    db.Cursos.Add(curso);
+                    await db.SaveChangesAsync();
+                }
+                u.AdicionarMatricula(matricula ?? Random.Shared.NextInt64(1_000_000_000, 9_999_999_999).ToString(), curso.Id, 3, situacao);
             }
             db.Usuarios.Add(u);
             await db.SaveChangesAsync();
