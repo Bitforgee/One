@@ -277,7 +277,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
         Assert.False(Directory.Exists(Path.Combine(Api, "Rotas")));
         Assert.False(Directory.Exists(Path.Combine(Api, "Comando")));
-        Assert.Equal(["Agendador", "Armazenamento", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Persistencia", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Seguranca", "Sessao", "Tokens", "TratamentoDeErros"],
+        Assert.Equal(["Agendador", "Armazenamento", "Arquivos", "EnviadorSmtp", "EquipeDeSetor", "LayoutEmail", "Persistencia", "Prazos", "Problemas", "Program", "ResultadoComTamanho", "Seguranca", "Sessao", "Tokens", "TratamentoDeErros"],
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 

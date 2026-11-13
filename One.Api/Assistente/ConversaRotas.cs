@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Chamados;
-using One.Api.Conhecimento;
 using One.Api.Dados;
 
 namespace One.Api.Assistente;

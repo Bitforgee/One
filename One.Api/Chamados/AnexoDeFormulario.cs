@@ -1,4 +1,3 @@
-using One.Api.Conhecimento;
 
 namespace One.Api.Chamados;
 

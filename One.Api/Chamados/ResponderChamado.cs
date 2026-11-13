@@ -1,5 +1,4 @@
 using Mediator;
-using One.Api.Conhecimento;
 using One.Api.Dados;
 using static One.Api.Chamados.AcoesChamado;
 using static One.Api.Dados.Chamados.EstadosChamado;

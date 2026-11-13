@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using One.Api.Conhecimento;
 using One.Api.Dados;
 
 namespace One.Api.Instituicoes;

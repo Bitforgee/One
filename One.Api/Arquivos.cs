@@ -1,4 +1,4 @@
-namespace One.Api.Conhecimento;
+namespace One.Api;
 
 public static class Arquivos
 {
