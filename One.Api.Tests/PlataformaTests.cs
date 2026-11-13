@@ -480,6 +480,6 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
             .OrderBy(p => p, StringComparer.Ordinal)
             .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/ComandoCarga.cs" or "Instituicoes/ComandoOperador.cs" or "Assistente/ComandoAvaliarBusca.cs"))
             .Where(p => atribui.IsMatch(File.ReadAllText(Path.Combine(api, p))));
-        Assert.Equal(["Chamados/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/FerramentasMcp.cs"], fora);
+        Assert.Equal(["Chamados/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/ContextoMcp.cs"], fora);
     }
 }
