@@ -2,7 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useMatch } from 'react-router'
 import { api } from './api'
+import CorDaBarra from './corDaBarra.json'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
+import { useTheme } from './ui/theme-provider'
+import { useConsulta } from './ui/use-mobile'
 
 export type Imagens = { logo: number | null; icone: number | null; login: number | null; assistente: number | null }
 export type Aparencia = {
@@ -76,13 +79,23 @@ function tituloDoApp(slug: string | undefined, d: InstituicaoPublica | undefined
   return slug && d ? (d.nomeCurto ?? d.nome) : null
 }
 
-function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined) {
+function barra(cor: string) {
+  let el = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([media])')
+  if (!el) {
+    el = document.createElement('meta')
+    el.name = 'theme-color'
+    document.head.prepend(el)
+  }
+  el.content = cor
+}
+
+function aplicar(slug: string | undefined, d: InstituicaoPublica | undefined, tema: keyof typeof CorDaBarra) {
   marcar(d?.cor)
   titular(d)
   const icone = iconeDe(slug, d)
   ponto('link[rel="icon"]', 'link', { rel: 'icon', type: 'image/png' }, 'href', icone)
   ponto('link[rel="apple-touch-icon"]', 'link', { rel: 'apple-touch-icon' }, 'href', icone)
-  ponto('meta[name="theme-color"]', 'meta', { name: 'theme-color' }, 'content', d?.cor ?? null)
+  barra(d?.cor ?? CorDaBarra[tema])
   ponto('link[rel="manifest"]', 'link', { rel: 'manifest' }, 'href', manifestoDe(slug))
   ponto('meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title' }, 'content', tituloDoApp(slug, d))
 }
@@ -94,7 +107,10 @@ export function useAparencia(slug?: string, nome = '') {
 export function AplicaAparencia() {
   const slug = useMatch('/:slug/*')?.params.slug
   const { data } = useInstituicao(slug)
-  useEffect(() => aplicar(slug, data), [slug, data])
+  const { theme } = useTheme()
+  const sistemaEscuro = useConsulta('(prefers-color-scheme: dark)')
+  const tema = theme === 'system' ? (sistemaEscuro ? 'dark' : 'light') : theme
+  useEffect(() => aplicar(slug, data, tema), [slug, data, tema])
   return null
 }
 

@@ -4,6 +4,7 @@
 /* Tokens de ## Visual (redesign-institucional/plan.md): neutros, um azul de destaque; .black sobrepõe o .dark (door 2).
    revisao-ux door 2: background, muted, accent, border e input levam um traço da matiz de --marca (ou do azul de base) */
 :root {
+  color-scheme: light;
   --background: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 2%, oklch(1 0 none));
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -43,6 +44,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: color-mix(in oklch, var(--marca, oklch(0.45 0.15 262)) 3%, oklch(0.17 0 none));
   --foreground: oklch(0.95 0 0);
   --card: oklch(0.205 0 0);
@@ -78,6 +80,7 @@
 
 /* Preto: fundo #000 para OLED; texto em 0.92 e não branco puro, para não borrar */
 .black {
+  color-scheme: dark;
   --background: oklch(0 0 0);
   --foreground: oklch(0.92 0 0);
   --card: oklch(0.15 0 0);
@@ -154,7 +157,15 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-padding-top: 3.5rem;
+    scroll-padding-bottom: calc(var(--barra, 0px) + 1rem);
+  }
+  a, button, [role='button'], input, select, textarea, label {
+    touch-action: manipulation;
+  }
   body {
+    -webkit-tap-highlight-color: transparent;
     @apply bg-background text-foreground;
     /* mobile-m0: com viewport-fit=cover o celular deitado não esconde o conteúdo atrás do entalhe */
     padding-left: env(safe-area-inset-left);
@@ -170,6 +181,17 @@
 [data-cartoes] [data-celula] { display: flex; justify-content: flex-end; grid-row: 1; align-self: start; margin-inline-start: 0.5rem; }
 [data-cartoes] [data-celula='selo'] { grid-column: 2; margin-top: 1px; }
 [data-cartoes] [data-celula='acoes'] { grid-column: 3; }
+
+[data-slot='sheet-content'], [data-slot='dialog-content'], [data-slot='popover-content'], [data-slot='editor-corpo'] { overscroll-behavior: contain; }
+@media (pointer: fine) { html { overscroll-behavior: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin), *:not(.animate-spin)::before, *:not(.animate-spin)::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Foco (estrutura-visual door 1): fora de @layer, para vencer outline-none e outline-hidden dos utilitários.
    Onde o contêiner corta com overflow, o contorno vai para dentro do controle. */

@@ -7,6 +7,7 @@ import html from '../../index.html?raw'
 import pacote from '../../package.json'
 import tsconfig from '../../tsconfig.json'
 import vite from '../../vite.config.ts?raw'
+import barra from '../corDaBarra.json'
 import { abrir, api, chamado, me } from './util'
 
 const fontes = import.meta.glob('/src/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
@@ -310,12 +311,11 @@ describe('interface nova', () => {
     }
   })
 
-  it('theme-color é o primary claro', () => {
-    const gama = (x: number) => (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055)
-    const hex = '#' + linear(bloco(':root')['--primary']).map((x) => Math.round(gama(x) * 255).toString(16).padStart(2, '0')).join('')
-    expect(vite.match(/theme_color:\s*'([^']+)'/)![1]).toBe(hex)
-    expect(html.match(/<meta name="theme-color" content="([^"]+)"/)![1]).toBe(hex)
-    expect(hex).not.toBe('#0d6efd')
+  it('theme-color segue o tema claro no manifest e no html', () => {
+    expect(vite.match(/theme_color:\s*'([^']+)'/)![1]).toBe(barra.light)
+    expect(html.match(/<meta name="theme-color" content="([^"]+)" media="\(prefers-color-scheme: light\)"/)![1]).toBe(barra.light)
+    expect(html.match(/<meta name="theme-color" content="([^"]+)" media="\(prefers-color-scheme: dark\)"/)![1]).toBe(barra.dark)
+    expect(barra.light).not.toBe('#' + '0d6efd')
   })
 
   it('estado das telas só pelo TanStack Query', () => {

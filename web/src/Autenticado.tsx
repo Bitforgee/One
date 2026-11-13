@@ -248,7 +248,7 @@ function Barra({ me, itens, slug, sair, ap }: { me: Me; itens: Item[]; slug?: st
 function Topo({ titulo, aluno, abas, slug, icone, nome, voltar }: { titulo: string; aluno: boolean; abas: boolean; slug?: string; icone: number | null; nome: string; voltar?: () => void }) {
   const { isMobile, toggleSidebar } = useSidebar()
   return (
-    <header className="sticky top-0 z-10 flex h-[49px] shrink-0 items-center gap-2 border-b bg-background">
+    <header className="sticky top-0 z-10 flex h-[calc(49px+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b bg-background pt-[env(safe-area-inset-top)]">
       <div className={`flex w-full min-w-0 items-center px-4 lg:px-6 ${abas ? 'gap-2' : 'gap-1 lg:gap-2'}`}>
         {!abas && isMobile && (
           <Button variant="ghost" size="icon" className="-ms-1" onClick={toggleSidebar}>
