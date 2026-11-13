@@ -33,37 +33,34 @@ public sealed class FerramentasMcp(OneDb db, IMediator mediator, Embeddings embe
             var qual = escopo ?? "fila";
             if (qual is not ("fila" or "meus")) throw new McpException("O escopo deve ser 'fila' ou 'meus'.");
             if (estado is not null && !Estados.Contains(estado)) throw new McpException($"O estado deve ser um destes: {string.Join(", ", Estados)}.");
-            var itens = Corpo(await mediator.Send(new ListarChamados(qual, estado, usuario))).EnumerateArray().Select(Item).ToList();
+            var itens = Itens(await mediator.Send(new ListarChamados(qual, estado, usuario)));
             return new ListaDeChamados(itens.Count, [.. itens.Take(MaximoDaLista)]);
         });
 
-    static ChamadoNaLista Item(JsonElement c) =>
-        new(Texto(c, "numero")!, Texto(c, "titulo")!, Texto(c, "estado")!, c.GetProperty("criadoEm").GetDateTime(), Texto(c, "categoria"), Texto(c, "responsavel"),
-            c.TryGetProperty("dias", out var dias) ? dias.GetInt32() : null);
+    static List<ChamadoNaLista> Itens(IResult resultado) => resultado switch
+    {
+        ProblemHttpResult => throw Erro(resultado),
+        IValueHttpResult { Value: IEnumerable<ListarChamados.RespostaDaFila> fila } =>
+            [.. fila.Select(c => new ChamadoNaLista(c.Numero, c.Titulo, c.Estado, c.CriadoEm, c.Categoria, c.Responsavel, c.Dias))],
+        IValueHttpResult { Value: IEnumerable<ListarChamados.Resposta> meus } => [.. meus.Select(c => new ChamadoNaLista(c.Numero, c.Titulo, c.Estado, c.CriadoEm, null, null, null))],
+        _ => throw Erro(resultado),
+    };
 
     [McpServerTool(Name = "ver_chamado", ReadOnly = true)]
     [Description("Abre um chamado pelo número (ex.: ONE-12) com as mensagens e os eventos que o usuário pode ver. Não traz anexos nem o número da matrícula.")]
     public Task<CallToolResult> Ver(ClaimsPrincipal? principal, string numero) =>
-        Executar("ver_chamado", principal, async (usuario, _) => Detalhe(Corpo(await mediator.Send(new VerChamado(numero, usuario)))));
+        Executar("ver_chamado", principal, async (usuario, _) => Detalhe(Lido<DetalheLido>(await mediator.Send(new VerChamado(numero, usuario)))));
 
-    static ChamadoDetalhado Detalhe(JsonElement d)
-    {
-        var matricula = d.GetProperty("matricula");
-        return new ChamadoDetalhado(Texto(d, "numero")!, Texto(d, "titulo")!, Texto(d, "estado")!, Texto(d, "categoria")!, Texto(d, "setor")!, Texto(d, "responsavel"), Texto(d, "solicitante"),
-            Texto(matricula, "curso")!, matricula.GetProperty("semestre").GetInt32(), d.GetProperty("criadoEm").GetDateTime(),
-            d.TryGetProperty("resolvidoEm", out var resolvido) && resolvido.ValueKind != JsonValueKind.Null ? resolvido.GetDateTime() : null, Texto(d, "resumo"),
-            Lista(d, "mensagens", Mensagem), Lista(d, "eventos", Evento));
-    }
+    sealed record MatriculaLida(string Curso, int Semestre);
 
-    static MensagemDoChamado Mensagem(JsonElement m) => new(Texto(m, "tipo")!, Texto(m, "autor")!, Texto(m, "texto")!, m.GetProperty("criadaEm").GetDateTime());
+    sealed record DetalheLido(
+        string Numero, string Titulo, string Estado, string Categoria, string Setor, string? Responsavel, string? Solicitante, MatriculaLida Matricula, DateTime CriadoEm,
+        DateTime? ResolvidoEm, string? Resumo, IReadOnlyList<MensagemDoChamado>? Mensagens, IReadOnlyList<EventoDoChamado>? Eventos);
 
-    static EventoDoChamado Evento(JsonElement e) =>
-        new(Texto(e, "tipo")!, Texto(e, "ator")!, Texto(e, "de"), Texto(e, "para"), Texto(e, "tipo") == TiposEvento.Anexo ? null : Texto(e, "detalhe"), e.GetProperty("criadoEm").GetDateTime());
+    static ChamadoDetalhado Detalhe(DetalheLido d) =>
+        new(d.Numero, d.Titulo, d.Estado, d.Categoria, d.Setor, d.Responsavel, d.Solicitante, d.Matricula.Curso, d.Matricula.Semestre, d.CriadoEm, d.ResolvidoEm, d.Resumo,
+            d.Mensagens ?? [], [.. (d.Eventos ?? []).Select(e => e.Tipo == TiposEvento.Anexo ? e with { Detalhe = null } : e)]);
 
-    static IReadOnlyList<T> Lista<T>(JsonElement d, string nome, Func<JsonElement, T> ler) =>
-        d.TryGetProperty(nome, out var lista) && lista.ValueKind == JsonValueKind.Array ? [.. lista.EnumerateArray().Select(ler)] : [];
-
-    static string? Texto(JsonElement e, string nome) => e.TryGetProperty(nome, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
     [McpServerTool(Name = "buscar_conhecimento", ReadOnly = true)]
     [Description("Busca na base de conhecimento da instituição (artigos e documentos ativos) os trechos mais próximos da consulta. consulta: 1 a 500 caracteres. limite: 1 a 10 (padrão 5).")]
     public Task<CallToolResult> Buscar(ClaimsPrincipal? principal, string consulta, int? limite = null) =>
@@ -105,14 +102,14 @@ public sealed class FerramentasMcp(OneDb db, IMediator mediator, Embeddings embe
 
     static T Valor<T>(IResult resultado) => resultado is not ProblemHttpResult and IValueHttpResult { Value: T v } ? v : throw Erro(resultado);
 
-    static JsonElement Corpo(IResult resultado) =>
-        resultado is not ProblemHttpResult and IValueHttpResult { Value: { } v } ? JsonSerializer.SerializeToElement(v, JsonSerializerOptions.Web) : throw Erro(resultado);
+    static T Lido<T>(IResult resultado) =>
+        resultado is not ProblemHttpResult and IValueHttpResult { Value: { } v } ? JsonSerializer.SerializeToElement(v, JsonSerializerOptions.Web).Deserialize<T>(JsonSerializerOptions.Web)! : throw Erro(resultado);
 
     static McpException Erro(IResult resultado) =>
         new(resultado is ProblemHttpResult p ? p.ProblemDetails.Detail ?? p.ProblemDetails.Title ?? "Não foi possível concluir." : "Não foi possível concluir.");
     async Task<CallToolResult> Executar<T>(string ferramenta, ClaimsPrincipal? principal, Func<Usuario, Instituicao, Task<T>> acao)
     {
-        var (usuario, instituicao) = await Contexto(principal);
+        var (usuario, instituicao) = await ContextoMcp.Carregar(db, principal);
         try
         {
             var resultado = await acao(usuario, instituicao);
@@ -133,13 +130,4 @@ public sealed class FerramentasMcp(OneDb db, IMediator mediator, Embeddings embe
 
     void Registrar(string ferramenta, Usuario usuario, Instituicao instituicao, string resultado) =>
         log.LogInformation("Ferramenta MCP {Ferramenta} do usuário {UsuarioId} na instituição {InstituicaoId}: {Resultado}", ferramenta, usuario.Id, instituicao.Id, resultado);
-
-    async Task<(Usuario, Instituicao)> Contexto(ClaimsPrincipal? principal)
-    {
-        if (!long.TryParse(principal?.FindFirstValue("sub"), out var usuarioId) || !long.TryParse(principal.FindFirstValue("instituicao_id"), out var instituicaoId))
-            throw new McpException("Não autenticado.");
-        db.InstituicaoAtual = instituicaoId;
-        var usuario = await db.Usuarios.Include(u => u.Papeis).FirstAsync(u => u.Id == usuarioId);
-        return (usuario, await db.Instituicoes.FirstAsync(i => i.Id == instituicaoId));
-    }
 }

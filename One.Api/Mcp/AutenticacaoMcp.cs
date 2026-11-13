@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -34,8 +33,7 @@ public sealed class AutenticacaoMcp(IOptionsMonitor<AuthenticationSchemeOptions>
         if (!PodeUsar(usuario)) return AuthenticateResult.Fail("usuario");
 
         if (registro.RegistrarUso(agora)) await db.SaveChangesAsync();
-        var identidade = new ClaimsIdentity([new Claim("sub", usuario!.Id.ToString()), new Claim("instituicao_id", instituicao.Id.ToString())], Esquema);
-        return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identidade), Esquema));
+        return AuthenticateResult.Success(new AuthenticationTicket(ContextoMcp.Principal(usuario!, instituicao, Esquema), Esquema));
     }
 
     static bool PodeUsar(Usuario? u) => u is { Ativo: true, DeveTrocarSenha: false } && (u.Tem(Papeis.Atendente) || u.Tem(Papeis.Administrador));
