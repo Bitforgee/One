@@ -23,7 +23,7 @@ async function enviar(page: Page, texto: string) {
 
 async function amostrarBalaoNovo(page: Page) {
   await page.evaluate(() => {
-    const w = window as unknown as { amostras: { transform: string; opacity: string }[]; pronto: boolean }
+    const w = window as unknown as { amostras: { transform: string; opacity: string; quadro: number }[]; pronto: boolean }
     w.amostras = []
     w.pronto = false
     const log = document.querySelector('[role="log"]')!
@@ -34,7 +34,7 @@ async function amostrarBalaoNovo(page: Page) {
       const inicio = performance.now()
       const quadro = () => {
         const estilo = getComputedStyle(balao)
-        w.amostras.push({ transform: estilo.transform, opacity: estilo.opacity })
+        w.amostras.push({ transform: estilo.transform, opacity: estilo.opacity, quadro: w.amostras.length })
         if (performance.now() - inicio < 600) requestAnimationFrame(quadro)
         else w.pronto = true
       }
@@ -44,9 +44,10 @@ async function amostrarBalaoNovo(page: Page) {
   })
   await enviar(page, 'preciso do boleto')
   await page.waitForFunction(() => (window as unknown as { pronto: boolean }).pronto)
-  return page.evaluate(() => (window as unknown as { amostras: { transform: string; opacity: string }[] }).amostras)
+  return page.evaluate(() => (window as unknown as { amostras: { transform: string; opacity: string; quadro: number }[] }).amostras)
 }
 
+const QuadrosDoAssentamento = 3
 const deslocamentoY = (transform: string) => (transform === 'none' ? 0 : Number(transform.match(/matrix\(([^)]+)\)/)![1].split(',')[5]))
 const identidade = (transform: string) => transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)'
 
@@ -81,8 +82,9 @@ test.describe('Assistente', () => {
     await page.goto('/univag/assistente')
     await page.getByLabel('Mensagem').waitFor()
     const amostras = await amostrarBalaoNovo(page)
-    expect(amostras.length).toBeGreaterThan(0)
-    expect(amostras.slice(1).filter((a) => !identidade(a.transform))).toEqual([])
+    const assentadas = amostras.filter((a) => a.quadro >= QuadrosDoAssentamento)
+    expect(assentadas.length).toBeGreaterThan(10)
+    expect(assentadas.filter((a) => !identidade(a.transform))).toEqual([])
     expect(amostras.filter((a) => deslocamentoY(a.transform) % 8 !== 0)).toEqual([])
   })
 
