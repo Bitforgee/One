@@ -19,6 +19,7 @@ const fluxo = {
 }
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
 const arquivos = [1, 2, 3].map((n) => ({ name: `boleto-${n}.png`, mimeType: 'image/png', buffer: png }))
+const arquivosLongos = [1, 2, 3].map((n) => ({ name: `comprovante de pagamento da mensalidade ${n} ` + 'do semestre letivo com vencimento no ultimo dia do mes '.repeat(4) + '.png', mimeType: 'image/png', buffer: png }))
 
 async function abrir(page: Page, largura: number, altura: number, caminho: string, papeis: string[]) {
   await page.setViewportSize({ width: largura, height: altura })
@@ -82,19 +83,23 @@ for (const [largura, altura] of [
   test.describe(`C10 celular ${largura}x${altura}`, () => {
     test.use({ hasTouch: true, isMobile: true })
 
-    test('C10 com 3 anexos e 6 linhas o link Sua solicitação não cruza o compositor', async ({ page }) => {
-      await abrir(page, largura, altura, '/univag/assistente', ['ALUNO'])
-      const link = page.getByRole('link', { name: /Sua solicitação/ })
-      await link.waitFor()
-      await page.locator('input[type="file"]').setInputFiles(arquivos)
-      await expect(page.getByRole('button', { name: 'Remover boleto-3.png' })).toBeVisible()
-      await page.getByLabel('Mensagem').fill(seis)
-      await page.evaluate(() => window.scrollTo(0, 0))
-      const compositor = page.getByTestId('compositor').locator('xpath=ancestor::div[contains(@class,"sticky")]')
-      const [a, b] = [await caixa(link), await caixa(compositor)]
-      const cruza = a.top < b.bottom && b.top < a.bottom
-      expect(cruza, `link ${a.top}-${a.bottom} compositor ${b.top}-${b.bottom}`).toBe(false)
-    })
+    for (const [rotulo, lote, texto] of [
+      ['nomes curtos e 6 linhas', arquivos, seis],
+      ['nomes longos e 12 linhas', arquivosLongos, doze],
+    ] as const)
+      test(`C10 com 3 anexos de ${rotulo} o link Sua solicitação não cruza o compositor`, async ({ page }) => {
+        await abrir(page, largura, altura, '/univag/assistente', ['ALUNO'])
+        const link = page.getByRole('link', { name: /Sua solicitação/ })
+        await link.waitFor()
+        await page.locator('input[type="file"]').setInputFiles(lote)
+        await expect(page.getByRole('button', { name: `Remover ${lote[2].name}` })).toBeVisible()
+        await page.getByLabel('Mensagem').fill(texto)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        const compositor = page.getByTestId('compositor').locator('xpath=ancestor::div[contains(@class,"sticky")]')
+        const [a, b] = [await caixa(link), await caixa(compositor)]
+        const cruza = a.top < b.bottom && b.top < a.bottom
+        expect(cruza, `link ${a.top}-${a.bottom} compositor ${b.top}-${b.bottom}`).toBe(false)
+      })
   })
 }
 
@@ -118,7 +123,12 @@ test.describe('C11 altura do campo da mensagem', () => {
     const { height } = await caixa(campo)
     const linha = await campo.evaluate((e) => parseFloat(getComputedStyle(e).lineHeight))
     expect(height).toBeLessThanOrEqual(0.3 * 390 + 0.5)
-    expect(await campo.evaluate((e) => e.clientHeight)).toBeGreaterThanOrEqual(4 * linha)
+    const util = await campo.evaluate((e) => {
+      const css = getComputedStyle(e)
+      return e.clientHeight - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom)
+    })
+    expect(util).toBeGreaterThanOrEqual(96)
+    expect(util).toBeGreaterThanOrEqual(4 * linha)
     expect(await campo.evaluate((e) => e.scrollHeight > e.clientHeight)).toBe(true)
   })
 })

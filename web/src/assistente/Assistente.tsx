@@ -301,7 +301,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
                 onChange={(e) => setTexto(e.target.value)}
                 onKeyDown={(e) => enviarComEnter(e, vazio)}
                 placeholder="Escreva sua dúvida…"
-                className="max-h-[min(30dvh,7rem)] min-h-11 flex-1 resize-none overflow-y-auto border-0 px-1 py-2.5"
+                className="max-h-[min(30dvh,calc(4lh_+_1.25rem))] min-h-11 flex-1 resize-none overflow-y-auto border-0 px-1 py-2.5"
               />
               <Button type="submit" className="h-11 shrink-0" disabled={vazio}>
                 {pendente && <Spinner />}
