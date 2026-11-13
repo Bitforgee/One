@@ -34,18 +34,21 @@ type Props = { fluxo: Fluxo; cursos: Curso[]; versao: 'RASCUNHO' | 'VIGENTE' | n
 export function useSimulador({ fluxo, versao, aoSimular }: Pick<Props, 'fluxo' | 'versao' | 'aoSimular'>) {
   const [cursoId, setCursoId] = useState('')
   const [semestre, setSemestre] = useState('')
+  const [faltou, setFaltou] = useState(false)
   const simular = useMutation({
     mutationFn: () => api<Simulacao>(`/api/admin/fluxos/${fluxo.id}/simular`, { versao, cursoId: Number(cursoId), semestre: Number(semestre) }),
     onSuccess: aoSimular,
   })
-  return { cursoId, setCursoId, semestre, setSemestre, simular, pode: !!versao && !!cursoId && !!semestre }
+  const escolhido = !!cursoId && !!semestre
+  const pedir = () => (escolhido ? simular.mutate() : setFaltou(true))
+  return { cursoId, setCursoId, semestre, setSemestre, simular, pedir, versao, dica: faltou && !escolhido }
 }
 
 export type EstadoDoSimulador = ReturnType<typeof useSimulador>
 
 export function BotaoSimular({ s }: { s: EstadoDoSimulador }) {
   return (
-    <BotaoAcao type="button" variant="outline" pendente={s.simular.isPending} disabled={!s.pode} onClick={() => s.simular.mutate()}>
+    <BotaoAcao type="button" variant="outline" pendente={s.simular.isPending} disabled={!s.versao} onClick={s.pedir}>
       Simular
     </BotaoAcao>
   )
@@ -69,7 +72,10 @@ export function Simulador({ s, cursos, resultado }: { s: EstadoDoSimulador; curs
       </NativeSelect>
       </div>
       <ErroDe erro={s.simular.error} />
-      {resultado && <ResultadoDaSimulacao resultado={resultado} />}
+      <div aria-live="polite">
+        {s.dica && <p className="m-0 text-sm text-muted-foreground">Escolha o curso e o semestre.</p>}
+        {resultado && <ResultadoDaSimulacao resultado={resultado} />}
+      </div>
     </section>
   )
 }

@@ -46,14 +46,14 @@ describe('indicadores', () => {
     await screen.findByText('Sem atendimentos neste período.')
     const consultar = screen.getByRole('button', { name: 'Consultar' })
     expect(consultar).toBeEnabled()
-    expect(within(consultar).queryByRole('status')).not.toBeInTheDocument()
+    expect(within(consultar).queryByRole('status', { hidden: true })).not.toBeInTheDocument()
 
     await userEvent.click(consultar)
     await waitFor(() => expect(consultar).toBeDisabled())
-    expect(within(consultar).getByRole('status')).toBeInTheDocument()
+    expect(within(consultar).getByRole('status', { hidden: true })).toBeInTheDocument()
     responder()
     await waitFor(() => expect(consultar).toBeEnabled())
-    expect(within(consultar).queryByRole('status')).not.toBeInTheDocument()
+    expect(within(consultar).queryByRole('status', { hidden: true })).not.toBeInTheDocument()
   })
 
   it('cartões formatam taxa, horas e número, e o ranking vazio mostra traço', async () => {

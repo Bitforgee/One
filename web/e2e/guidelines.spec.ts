@@ -1,5 +1,6 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { simularApi } from './simulada'
+
 
 test.use({ serviceWorkers: 'block' })
 
@@ -40,4 +41,80 @@ test('C1 movimento reduzido zera animação, transição e rolagem, menos no spi
   expect(segundos(normal.comum.animacao)).toBeCloseTo(3, 3)
   expect(segundos(normal.comum.transicao)).toBeCloseTo(3, 3)
   expect(normal.rolagem).toBe('smooth')
+})
+
+const fluxo = {
+  id: 8,
+  categoriaId: 1,
+  cursoId: null,
+  semestre: null,
+  vigente: null,
+  rascunho: {
+    numero: 1,
+    etapas: [
+      { destino: 'SETOR', setorId: 1, prazoHoras: 24, x: 300, y: 50 },
+      { destino: 'COORDENACAO_CURSO', setorId: null, prazoHoras: null, x: 600, y: 50 },
+    ],
+  },
+}
+const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+async function abrir(page: Page, largura: number, altura: number, caminho: string, papeis: string[]) {
+  await page.setViewportSize({ width: largura, height: altura })
+  await simularApi(page, papeis)
+  await page.route('**/api/admin/fluxos', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([fluxo]) }))
+  await page.route('**/api/push/chave', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ chavePublica: 'BAEC' }) }))
+  await page.addInitScript(() => Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => null } }) } }))
+  await page.goto(caminho)
+}
+
+const medida = (l: Locator) => l.evaluate((e) => [(e as HTMLElement).offsetWidth, (e as HTMLElement).offsetHeight])
+
+test.describe('C22 celular 360x780', () => {
+  test.use({ hasTouch: true, isMobile: true })
+
+  test('C22 Topo, AvisosPush, ListaDeEtapas e o X de Anexos medem 44 x 44', async ({ page }) => {
+    await abrir(page, 360, 780, '/univag/chamados/ONE-123', ['ALUNO'])
+    await expect(page.getByRole('button', { name: 'Voltar' })).toBeVisible()
+    expect(await medida(page.getByRole('button', { name: 'Voltar' }))).toEqual([44, 44])
+    expect(await medida(page.getByRole('button', { name: 'Ativar avisos neste aparelho' }))).toEqual([44, 44])
+
+    await page.goto('/univag/assistente')
+    await page.getByLabel('Mensagem').waitFor()
+    await page.locator('input[type="file"]').setInputFiles({ name: 'boleto.png', mimeType: 'image/png', buffer: png })
+    expect(await medida(page.getByRole('button', { name: 'Remover boleto.png' }))).toEqual([44, 44])
+
+    await page.unrouteAll()
+    await abrir(page, 360, 780, '/univag/cadastros/fluxos/8', ['ADMINISTRADOR'])
+    for (const nome of ['Mover etapa 1 para cima', 'Mover etapa 1 para baixo', 'Remover etapa 1']) expect(await medida(page.getByRole('button', { name: nome })), nome).toEqual([44, 44])
+  })
+})
+
+test.describe('C22 canvas com ponteiro grosso', () => {
+  test.use({ hasTouch: true })
+
+  test('C22 LigacaoComMais e Handle medem no mínimo 44 x 44', async ({ page }) => {
+    await abrir(page, 1024, 768, '/univag/cadastros/fluxos/8', ['ADMINISTRADOR'])
+    expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true)
+    await page.getByRole('tab', { name: 'Canvas' }).click()
+    const mais = page.getByRole('button', { name: /^Inserir etapa/ })
+    await expect(mais.first()).toBeVisible()
+    for (const botao of await mais.all()) for (const lado of await medida(botao)) expect(lado).toBeGreaterThanOrEqual(44)
+    const alcas = page.locator('.react-flow__handle')
+    expect(await alcas.count()).toBeGreaterThan(0)
+    for (const alca of await alcas.all()) for (const lado of await medida(alca)) expect(lado).toBeGreaterThanOrEqual(44)
+  })
+})
+
+test.describe('C22 desktop com ponteiro fino', () => {
+  test('C22 os tamanhos de hoje continuam', async ({ page }) => {
+    await abrir(page, 1280, 800, '/univag/cadastros/fluxos/8', ['ADMINISTRADOR'])
+    expect(await page.evaluate(() => matchMedia('(pointer: fine)').matches)).toBe(true)
+    expect(await medida(page.getByRole('button', { name: 'Remover etapa 1' }))).toEqual([36, 36])
+    await page.getByRole('tab', { name: 'Canvas' }).click()
+    const mais = page.getByRole('button', { name: /^Inserir etapa/ })
+    await expect(mais.first()).toBeVisible()
+    expect(await medida(mais.first())).toEqual([24, 24])
+    expect(await medida(page.locator('.react-flow__handle').first())).toEqual([12, 12])
+  })
 })

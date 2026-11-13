@@ -120,8 +120,8 @@ describe('acesso', () => {
     api({ ...instituicao, 'POST /api/auth/login': () => new Promise(() => {}) })
     abrir('/univag')
     await entrar()
-    await waitFor(() => expect(screen.getByRole('button', { name: /Entrar/ })).toBeDisabled())
-    expect(within(screen.getByRole('button', { name: /Entrar/ })).getByRole('status')).toHaveClass('animate-spin')
+    await waitFor(() => expect(screen.getByRole('button', { name: /Entrando/ })).toBeDisabled())
+    expect(within(screen.getByRole('button', { name: /Entrando/ })).getByRole('status', { hidden: true })).toHaveClass('animate-spin')
   })
 
   it('formulários de acesso exigem só os obrigatórios', async () => {

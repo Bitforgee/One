@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
 import { useLeituras } from '../acao'
+import { Carregando } from '../Carregando'
 import { ErroDe } from '../ErroDe'
-import { Carregando } from '../chamados/Chamados'
 import type { Categoria, Curso, Fluxo, Setor } from './comum'
 import { semLideranca } from './comum'
 import { EdicaoDoFluxo } from './EdicaoDoFluxo'

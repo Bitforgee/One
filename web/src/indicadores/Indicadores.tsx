@@ -2,13 +2,12 @@ import { ChartColumn } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { useState } from 'react'
+import { BotaoAcao } from '../acao'
 import { api } from '../api'
 import { ErroDe } from '../ErroDe'
 import { dia } from '../Periodo'
-import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { Spinner } from '../ui/spinner'
 import { BlocoVazio } from '../Tabela'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
@@ -230,10 +229,9 @@ export function Indicadores() {
           <Label htmlFor="ate">Até</Label>
           <Input id="ate" name="ate" autoComplete="off" type="date" value={ate} onChange={(e) => setAte(e.target.value)} />
         </div>
-        <Button type="submit" className="col-span-2 @3xl/main:col-span-1" disabled={isFetching}>
-          {isFetching && <Spinner />}
+        <BotaoAcao type="submit" className="col-span-2 @3xl/main:col-span-1" pendente={isFetching}>
           Consultar
-        </Button>
+        </BotaoAcao>
       </form>
       <ErroDe erro={error} oque="os indicadores" tentar={() => void refetch()} />
       {dados?.semDados && (

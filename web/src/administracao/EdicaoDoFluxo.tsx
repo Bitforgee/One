@@ -3,6 +3,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type F
 import { Link, useBlocker, useNavigate, useParams } from 'react-router'
 import { BotaoAcao, useGravacao } from '../acao'
 import { api } from '../api'
+import { Carregando } from '../Carregando'
 import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { Alert } from '../ui/alert'
@@ -10,7 +11,6 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { Spinner } from '../ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
 import { useConsulta } from '../ui/use-mobile'
 import { useAvisoAoFechar } from './avisoAoFechar'
@@ -109,7 +109,7 @@ function AreaDoRascunho({ grafo, setores, simulacao, editar, visao, estreito, si
         </>
       }
     >
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={<Carregando />}>
         <CanvasCarregado grafo={grafo} setores={setores} marcas={marcasDaSimulacao(grafo, simulacao)} editar={editar} lateral={simulador} />
       </Suspense>
     </FalhaDoCanvas>

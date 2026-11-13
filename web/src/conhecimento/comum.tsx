@@ -8,12 +8,15 @@ export type Categoria = { id: number; nome: string; ativa: boolean }
 
 const Indexacoes = { PENDENTE: ['Indexando', Clock, 'text-muted-foreground'], INDEXADO: ['Indexado', CircleCheck, 'text-success'], FALHOU: ['Falhou', CircleAlert, 'text-destructive'] } as const
 export function IconeIndexacao({ valor }: { valor: Indexacao | null }) {
-  if (!valor) return null
-  const [rotulo, Icone, cor] = Indexacoes[valor]
+  const [rotulo, Icone, cor] = valor ? Indexacoes[valor] : []
   return (
-    <Icone role="img" aria-label={rotulo} className={`ms-1 inline size-4 align-text-bottom ${cor}`}>
-      <title>{rotulo}</title>
-    </Icone>
+    <span aria-live="polite">
+      {Icone && (
+        <Icone role="img" aria-label={rotulo} className={`ms-1 inline size-4 align-text-bottom ${cor}`}>
+          <title>{rotulo}</title>
+        </Icone>
+      )}
+    </span>
   )
 }
 

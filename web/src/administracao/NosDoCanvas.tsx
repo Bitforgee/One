@@ -7,7 +7,7 @@ import { Icones } from './IconesDoDestino'
 
 const Cartao = 'relative flex h-16 items-center gap-3 border bg-card text-card-foreground shadow-xs transition-colors'
 const Bloco = 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'
-const Bolinha = 'size-3! border-2! border-card! bg-primary!'
+const Bolinha = 'size-3! border-2! border-card! bg-primary! pointer-coarse:size-11! pointer-coarse:border-0! pointer-coarse:bg-transparent! pointer-coarse:after:absolute pointer-coarse:after:inset-4 pointer-coarse:after:rounded-full pointer-coarse:after:border-2 pointer-coarse:after:border-card pointer-coarse:after:bg-primary'
 
 export type DadosDaEtapa = { titulo: string; prazo: number | null; destino: Destino; posicao: number; marca?: string; invalido: boolean; remover: () => void }
 

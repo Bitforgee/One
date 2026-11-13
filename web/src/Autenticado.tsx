@@ -3,6 +3,7 @@ import { BookText, Building2, ChartColumn, ChevronLeft, CircleAlert, CircleUser,
 import { useId, useState, type CSSProperties } from 'react'
 import { Link as RouterLink, Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate, useParams } from 'react-router'
 import { api, ErroApi, type Me } from './api'
+import { Carregando } from './Carregando'
 import { ErroDe } from './ErroDe'
 import { DialogoDeContato, iniciais, normalizar, Sigla, temContato, urlDaImagem, useInstituicao, type InstituicaoPublica } from './aparencia'
 import { AvisosPush } from './AvisosPush'
@@ -13,7 +14,6 @@ import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from './ui/sidebar'
-import { Spinner } from './ui/spinner'
 import { useTheme } from './ui/theme-provider'
 import { Celular, Deitado, useConsulta } from './ui/use-mobile'
 
@@ -293,7 +293,7 @@ function BarraDeAbas({ slug, papeis, deitado }: { slug?: string; papeis: string[
             key={caminho}
             to={`/${slug}/${caminho}`}
             aria-current={ativo ? 'page' : undefined}
-            className={`flex items-center justify-center ${deitado ? 'h-12 flex-row gap-2 text-sm' : 'h-14 flex-col gap-0.5 text-xs'} ${ativo ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
+            className={`flex items-center justify-center focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${deitado ? 'h-12 flex-row gap-2 text-sm' : 'h-14 flex-col gap-0.5 text-xs'} ${ativo ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
           >
             <Icone aria-hidden="true" className="size-5" />
             <span>{rotulo}</span>
@@ -390,9 +390,7 @@ export function Autenticado() {
     )
   if (!me)
     return (
-      <div className="flex justify-center py-12">
-        <Spinner className="size-8" />
-      </div>
+      <Carregando className="flex justify-center py-12" />
     )
   return <Casca me={me} slug={slug} ap={instituicao ?? normalizar({ nome: me.instituicao.nome })} />
 }

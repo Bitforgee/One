@@ -1,7 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState, type ComponentProps, type FormEvent, type ReactNode } from 'react'
 import { useBlocker, useParams } from 'react-router'
+import { BotaoAcao as Acao } from '../acao'
 import { api, ErroApi } from '../api'
+import { Carregando } from '../Carregando'
 import { Confirmar } from '../Confirmar'
 import { ErroDe } from '../ErroDe'
 import { CampoArquivo } from '../CampoArquivo'
@@ -18,22 +20,15 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { NativeSelect, NativeSelectOption } from '../ui/native-select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
-import { Spinner } from '../ui/spinner'
 import { Textarea } from '../ui/textarea'
-import { Carregando } from './Chamados'
 import { Cabecalho, LinhaDoTempo, Transcricao } from './Conversa'
 
 type Executar = (caminho: string, corpo: unknown, depois?: () => void) => void
 type Acoes = { pode: (acao: string) => boolean; executar: Executar; pendente: boolean }
 type Pronta = { id: number; titulo: string; texto: string }
 
-function BotaoAcao({ pendente, children, className, ...props }: ComponentProps<typeof Button> & { pendente: boolean }) {
-  return (
-    <Button {...props} className={`h-11 ${className ?? ''}`} disabled={pendente || props.disabled}>
-      {pendente && <Spinner />}
-      {children}
-    </Button>
-  )
+function BotaoAcao({ className, ...props }: ComponentProps<typeof Acao>) {
+  return <Acao {...props} className={`h-11 ${className ?? ''}`} />
 }
 
 function useProntas(setorId?: number) {

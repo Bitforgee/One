@@ -4,7 +4,6 @@ import { api } from '../api'
 import { Estados } from '../chamado'
 import { ErroDe } from '../ErroDe'
 import { Badge } from '../ui/badge'
-import { Spinner } from '../ui/spinner'
 import { TableCell, TableRow } from '../ui/table'
 import { Inbox, MessageSquare } from 'lucide-react'
 import { Button } from '../ui/button'
@@ -24,10 +23,6 @@ const CoresDoEstado: Record<string, string> = {
   FECHADO: 'bg-success/15 text-foreground',
 }
 export const SeloDoChamado = ({ estado }: { estado: string }) => <Badge className={CoresDoEstado[estado]}>{Estados[estado]}</Badge>
-
-export function Carregando() {
-  return <Spinner className="size-8" />
-}
 
 export const ProximoPasso: Record<string, string> = {
   ABERTO: 'A equipe vai responder',

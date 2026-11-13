@@ -10,12 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { useTheme } from '../ui/theme-provider'
 
 const NomesDeTema = { light: 'Claro', dark: 'Escuro', black: 'Preto', system: 'Sistema' }
-const Linha = 'flex h-[52px] w-full items-center gap-3 px-4 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none'
+const Linha = 'flex h-[52px] w-full items-center gap-3 px-4 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring'
 
-function Conteudo({ Icone, rotulo, valor }: { Icone: ComponentType<{ className?: string }>; rotulo: string; valor?: ReactNode }) {
+function Conteudo({ Icone, rotulo, valor }: { Icone: ComponentType<{ className?: string; 'aria-hidden'?: 'true' }>; rotulo: string; valor?: ReactNode }) {
   return (
     <>
-      <Icone className="size-5 shrink-0 text-muted-foreground" />
+      <Icone aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
       <span className="flex-1">{rotulo}</span>
       {valor ? <span className="text-muted-foreground">{valor}</span> : <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground" />}
     </>

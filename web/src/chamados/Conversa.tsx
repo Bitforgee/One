@@ -71,7 +71,7 @@ export function Transcricao({ c, fuso }: { c: Chamado; fuso: string }) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="m-0">
-        <button type="button" aria-expanded={aberta} aria-controls="transcricao" onClick={() => setAberta((a) => !a)} className="flex min-h-11 w-full items-center gap-2 rounded-xs text-start font-semibold hover:bg-accent">
+        <button type="button" aria-expanded={aberta} aria-controls="transcricao" onClick={() => setAberta((a) => !a)} className="flex min-h-11 w-full items-center gap-2 rounded-xs text-start font-semibold hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
           <ChevronRight aria-hidden="true" className={`size-4 shrink-0 transition-transform ${aberta ? 'rotate-90' : ''}`} />
           {`Conversa com o assistente · ${n} ${n === 1 ? 'mensagem' : 'mensagens'}`}
         </button>

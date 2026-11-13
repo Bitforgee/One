@@ -66,7 +66,7 @@ function Painel({ titulo, aberto, fechar, salvar, pendente, alerta, botao = 'Sal
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={enviar}>
             <SheetHeader className="shrink-0 flex-row items-center justify-between gap-2 border-b py-1 pt-[calc(0.25rem+env(safe-area-inset-top))] pl-4 pr-1">
               <SheetTitle className="text-base">{titulo}</SheetTitle>
-              <SheetClose hidden={bloqueado} className="flex size-11 shrink-0 items-center justify-center rounded-sm focus:ring-2 focus:ring-ring focus:outline-hidden">
+              <SheetClose hidden={bloqueado} className="flex size-11 shrink-0 items-center justify-center rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">
                 <XIcon className="size-4" aria-hidden="true" />
                 <span className="sr-only">Fechar</span>
               </SheetClose>

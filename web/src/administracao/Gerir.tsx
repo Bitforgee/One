@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from 'react-router'
 import { destinosDaGerir, Grupos } from '../Autenticado'
 import { telaInicial, useSessao } from '../sessao'
 
-const Linha = 'flex h-[52px] w-full items-center gap-3 px-4 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none'
+const Linha = 'flex h-[52px] w-full items-center gap-3 px-4 text-start text-base hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring'
 
 export function Gerir() {
   const { me } = useSessao()

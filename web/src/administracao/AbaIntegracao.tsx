@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { api } from '../api'
+import { Carregando } from '../Carregando'
 import { ErroDe } from '../ErroDe'
 import { Badge } from '../ui/badge'
 import { Skeleton } from '../ui/skeleton'
@@ -24,11 +25,11 @@ export function AbaIntegracao<T>({ titulo, introducao, oque, chave, url, estado,
       ) : data ? (
         children(data)
       ) : (
-        <div className="flex flex-col gap-3">
+        <Carregando className="flex flex-col gap-3">
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
           <Skeleton className="h-10" />
-        </div>
+        </Carregando>
       )}
     </div>
   )

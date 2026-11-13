@@ -1,5 +1,6 @@
 import { ClipboardList, EllipsisVertical, type LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { Carregando } from './Carregando'
 import { useConsulta } from './ui/use-mobile'
 import { Button } from './ui/button'
 import { Skeleton } from './ui/skeleton'
@@ -45,11 +46,11 @@ export function Tabela({ colunas, itens, vazio = SemItens, erro, densa, children
   const cartoes = useEstreito()
   if (!itens)
     return erro ? null : (
-      <div aria-busy="true" className="flex flex-col gap-2">
+      <Carregando className="flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-14 w-full" />
         ))}
-      </div>
+      </Carregando>
     )
   const corpo =
     itens.length === 0 ? (

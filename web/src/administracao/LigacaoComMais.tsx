@@ -19,7 +19,7 @@ export function LigacaoComMais({ id, sourceX, sourceY, targetX, targetY, sourceP
                 <button
                   type="button"
                   aria-label={`Inserir etapa ${data.entre}`}
-                  className="flex size-6 items-center justify-center rounded-full border bg-card text-muted-foreground opacity-70 shadow-xs transition hover:border-primary hover:text-primary hover:opacity-100 focus-visible:opacity-100"
+                  className="flex size-6 items-center justify-center rounded-full border bg-card text-muted-foreground opacity-70 shadow-xs transition hover:border-primary hover:text-primary hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring max-md:size-11 pointer-coarse:size-11"
                 >
                   <Plus aria-hidden="true" className="size-3.5" />
                 </button>

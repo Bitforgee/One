@@ -35,7 +35,7 @@ test.describe('S3 tela Aparência', () => {
     await expect(page.getByRole('button', { name: 'Ver prévia' })).toBeVisible()
     await page.getByRole('button', { name: 'Ver prévia' }).click()
     const folha = page.getByRole('dialog', { name: 'Prévia' })
-    await expect(folha.getByRole('button', { name: 'Entrar' })).toBeVisible()
+    await expect(folha.getByRole('button', { name: 'Entrar', includeHidden: true })).toBeVisible()
   })
 
   test('abas a 360 px', async ({ page }) => {
@@ -59,8 +59,8 @@ test.describe('S3 tela Aparência', () => {
     await page.getByLabel('Nome do app').waitFor()
     const [f, p] = [await caixa(page.locator('main form')), await caixa(page.getByRole('region', { name: 'Prévia' }))]
     expect(p.x, 'a prévia começa depois do fim do formulário').toBeGreaterThanOrEqual(f.x + f.width - 1)
-    await expect(page.getByRole('region', { name: 'Tela inicial' })).toBeVisible()
-    await expect(page.getByRole('region', { name: 'Janela do computador' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Tela inicial', includeHidden: true })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Janela do computador', includeHidden: true })).toBeVisible()
   })
 })
 

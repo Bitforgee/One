@@ -1,15 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ComponentProps } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { toast } from 'sonner'
 import { api } from './api'
 import { Button } from './ui/button'
 import { Spinner } from './ui/spinner'
 
+const Gerundios = { ar: 'ando', er: 'endo', ir: 'indo' } as const
+
+export function gerundio(rotulo: ReactNode) {
+  const verbo = typeof rotulo === 'string' ? /^(\p{L}+)(ar|er|ir)(?: |$)/u.exec(rotulo) : null
+  return verbo ? `${verbo[1]}${Gerundios[verbo[2] as keyof typeof Gerundios]}…` : rotulo
+}
+
 export function BotaoAcao({ pendente, children, ...props }: ComponentProps<typeof Button> & { pendente: boolean }) {
   return (
-    <Button {...props} disabled={pendente || props.disabled}>
-      {pendente && <Spinner />}
-      {children}
+    <Button {...props} aria-busy={pendente || undefined} disabled={pendente || props.disabled}>
+      {pendente && <Spinner aria-hidden="true" />}
+      {pendente ? gerundio(children) : children}
     </Button>
   )
 }

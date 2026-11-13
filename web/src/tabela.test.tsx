@@ -39,7 +39,7 @@ describe('Tabela', () => {
     abrir('/univag/fila')
     await screen.findByRole('heading', { name: 'Fila' })
     expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando…')
   })
 
   it.each(Listas)('vazio com ícone nas 6 listas (%s)', async (rota, caminho, titulo, frase, botao) => {

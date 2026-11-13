@@ -41,6 +41,8 @@ const AvisoDeSalvo = {
   desligado: ['Moodle salvo, mas a entrada pelo Moodle está desligada.', ''],
 } as const
 
+const FalhaAoCopiar = 'Não foi possível copiar. Selecione o texto e copie à mão.'
+
 export function Url({ rotulo, valor, campo }: { rotulo: string; valor: string; campo?: string }) {
   const [copiado, setCopiado] = useState(false)
   useEffect(() => {
@@ -58,9 +60,9 @@ export function Url({ rotulo, valor, campo }: { rotulo: string; valor: string; c
           type="button"
           variant="outline"
           aria-label={copiado ? `${rotulo} copiado` : `Copiar ${rotulo}`}
-          onClick={() => void navigator.clipboard?.writeText(valor).then(() => setCopiado(true))}
+          onClick={() => void Promise.resolve().then(() => navigator.clipboard.writeText(valor)).then(() => setCopiado(true), () => toast.error(FalhaAoCopiar))}
         >
-          {copiado ? 'Copiado' : 'Copiar'}
+          <span aria-live="polite">{copiado ? 'Copiado' : 'Copiar'}</span>
         </Button>
       </div>
     </div>

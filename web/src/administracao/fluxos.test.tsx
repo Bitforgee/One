@@ -107,7 +107,9 @@ describe('fluxos', () => {
     })
     const d = await abrirFluxo('Notas')
 
-    expect(d.getByRole('button', { name: 'Simular' })).toBeDisabled()
+    expect(d.getByRole('button', { name: 'Simular' })).toBeEnabled()
+    await userEvent.click(d.getByRole('button', { name: 'Simular' }))
+    expect(d.getByText('Escolha o curso e o semestre.')).toBeInTheDocument()
     await userEvent.selectOptions(d.getByLabelText('Curso do aluno'), '4')
     await userEvent.selectOptions(d.getByLabelText('Semestre do aluno'), '3')
     await userEvent.click(d.getByRole('button', { name: 'Simular' }))

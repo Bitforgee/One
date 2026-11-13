@@ -31,7 +31,7 @@ function MenuDeDestinos({ escolher, pergunta }: { escolher: Escolher; pergunta: 
               e.dataTransfer.setData(TipoArrastado, destino)
               e.dataTransfer.effectAllowed = 'move'
             }}
-            className="flex min-h-11 cursor-grab items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent"
+            className="flex min-h-11 cursor-grab items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => escolher(destino)}
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
@@ -71,7 +71,7 @@ export function BotaoFlutuante({ adicionar, cheia }: { adicionar: Escolher; chei
     <Panel position="top-left" className="m-3! flex max-w-64 flex-col gap-1.5">
       <MenuDeAdicionar adicionar={adicionar} pergunta="Para onde o chamado vai depois?">
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" className="min-h-11 self-start bg-card shadow-xs">
+          <Button type="button" variant="outline" className="min-h-11 self-start bg-card shadow-xs focus-visible:ring-2 focus-visible:ring-ring">
             <Plus aria-hidden="true" />
             Adicionar etapa
           </Button>
@@ -93,7 +93,7 @@ export function BotaoDeAdicionar({ x, y, vazio, adicionar }: PropsDoBotao) {
             <button
               type="button"
               aria-label="Adicionar etapa no fim da cadeia"
-              className={`nodrag nopan flex items-center justify-center gap-2 border-2 border-dashed border-border bg-card text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary ${vazio ? 'h-16 w-48 rounded-xl' : 'size-11 rounded-lg'}`}
+              className={`nodrag nopan flex items-center justify-center gap-2 border-2 border-dashed border-border bg-card text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring ${vazio ? 'h-16 w-48 rounded-xl' : 'size-11 rounded-lg'}`}
             >
               <Plus aria-hidden="true" className="size-5" />
               {vazio && 'Adicionar a primeira etapa'}

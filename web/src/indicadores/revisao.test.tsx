@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { abrir, api, me } from '../test/util'
 
@@ -26,7 +26,7 @@ describe('um controle de período, destaques e Ver tabela', () => {
     expect([de.getAttribute('type'), screen.getByLabelText('Até').getAttribute('type')]).toEqual(['date', 'date'])
     expect(screen.queryByRole('button', { name: 'Escolher período no calendário' })).not.toBeInTheDocument()
     const form = de.closest('form')!
-    expect(within(form).getAllByRole('button').map((b) => b.textContent)).toEqual(['Consultar'])
+    await waitFor(() => expect(within(form).getAllByRole('button').map((b) => b.textContent)).toEqual(['Consultar']))
   })
 
   it('um controle de período, destaques e Ver tabela: os 4 destaques', async () => {

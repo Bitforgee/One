@@ -22,7 +22,8 @@ describe('chamado', () => {
     api({ 'GET /api/auth/me': () => [200, me()], 'GET /api/chamados/ONE-1': () => new Promise(() => {}) })
     const carregando = abrir('/univag/chamados/ONE-1')
     await screen.findByRole('navigation')
-    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveClass('animate-spin')
+    expect(screen.getByRole('status', { name: 'Carregando' })).toHaveTextContent('Carregando…')
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
     carregando.unmount()
 

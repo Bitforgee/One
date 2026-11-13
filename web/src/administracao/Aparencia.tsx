@@ -4,6 +4,7 @@ import { useBlocker, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { BotaoAcao } from '../acao'
 import { api, ErroApi } from '../api'
+import { Carregando } from '../Carregando'
 import { contraste, CorValida, MinimoDeContraste, normalizar, urlDaImagem } from '../aparencia'
 import { ErroDoCampo } from '../Campo'
 import { Confirmar } from '../Confirmar'
@@ -380,11 +381,11 @@ export function Aparencia() {
   if (error) return <ErroDe erro={error} oque="a aparência" tentar={() => void refetch()} />
   if (!data)
     return (
-      <div aria-busy="true" className="flex flex-col gap-2">
+      <Carregando className="flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-24 w-full" />
         ))}
-      </div>
+      </Carregando>
     )
   return <Formulario dados={normalizar({ nome: me.instituicao.nome, ...data })} slug={slug!} nome={me.instituicao.nome} />
 }

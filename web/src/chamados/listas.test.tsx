@@ -81,7 +81,7 @@ describe('listas de chamados', () => {
     abrir('/univag/fila')
     expect(await screen.findByRole('heading', { name: 'Fila' })).toBeInTheDocument()
     expect(document.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(3)
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando…')
     expect(screen.queryByText('Nenhum chamado na fila dos seus setores.')).not.toBeInTheDocument()
   })
 
