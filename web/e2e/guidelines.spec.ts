@@ -132,36 +132,71 @@ test.describe('C6 celular 360x780', () => {
   })
 })
 
-test.describe('C72 celular 360x780', () => {
-  test.use({ hasTouch: true, isMobile: true })
+type Caixa = { nome: string; x: number; y: number; width: number; height: number }
 
-  const distancia = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
-    Math.max(b.x - (a.x + a.width), a.x - (b.x + b.width), b.y - (a.y + a.height), a.y - (b.y + b.height))
+const Alvos = 'a[href], button, [role="button"], [role="tab"], input:not([type="file"]):not([type="hidden"]), textarea, select, summary'
 
-  test('C72 Falar com atendente e Encerrar conversa ficam a 8 px ou mais um do outro e dentro da tela', async ({ page }) => {
-    await abrir(page, 360, 780, '/univag/assistente', ['ALUNO'])
-    await page.getByLabel('Mensagem').fill('preciso do boleto do semestre')
-    await page.getByRole('button', { name: /Enviar/ }).click()
-    await page.getByText('Isso resolveu?').waitFor()
-    const falar = (await page.getByRole('button', { name: /Falar com atendente/ }).boundingBox())!
-    const encerrar = (await page.getByRole('button', { name: 'Encerrar conversa' }).boundingBox())!
-    expect(distancia(falar, encerrar)).toBeGreaterThanOrEqual(8 - 0.5)
-    for (const caixa of [falar, encerrar]) {
-      expect(caixa.x).toBeGreaterThanOrEqual(0)
-      expect(caixa.x + caixa.width).toBeLessThanOrEqual(360)
-    }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+const distancia = (a: Caixa, b: Caixa) => Math.max(b.x - (a.x + a.width), a.x - (b.x + b.width), b.y - (a.y + a.height), a.y - (b.y + b.height))
+
+const alvosDe = (raiz: Locator) =>
+  raiz.evaluate((el, seletor) => {
+    const nomeDe = (e: HTMLElement) => e.getAttribute('aria-label') || (e as HTMLInputElement).labels?.[0]?.textContent?.trim() || e.textContent?.trim() || e.id
+    return [...el.querySelectorAll<HTMLElement>(seletor)]
+      .map((e) => ({ e, caixa: e.getBoundingClientRect() }))
+      .filter(({ e, caixa }) => caixa.width > 1 && caixa.height > 1 && getComputedStyle(e).visibility !== 'hidden')
+      .map(({ e, caixa }) => ({ nome: nomeDe(e), x: caixa.x, y: caixa.y, width: caixa.width, height: caixa.height }))
+  }, Alvos)
+
+const vizinhosPertoDemais = (alvos: Caixa[], limite = 8) =>
+  alvos.flatMap((a, i) => alvos.slice(i + 1).map((b) => [a, b] as const)).filter(([a, b]) => distancia(a, b) < limite - 0.5).map(([a, b]) => `${a.nome} | ${b.nome}: ${distancia(a, b).toFixed(1)} px`)
+
+for (const [largura, altura] of [
+  [360, 780],
+  [390, 844],
+] as const) {
+  test.describe(`C72 celular ${largura}x${altura}`, () => {
+    test.use({ hasTouch: true, isMobile: true })
+
+    test('C72 todos os alvos de toque do Assistente ficam a 8 px ou mais um do outro, com e sem arquivo escolhido', async ({ page }) => {
+      await abrir(page, largura, altura, '/univag/assistente', ['ALUNO'])
+      await page.getByLabel('Mensagem').fill('preciso do boleto do semestre')
+      await page.locator('input[type="file"]').setInputFiles({ name: 'boleto.png', mimeType: 'image/png', buffer: png })
+      await page.getByRole('button', { name: /Enviar/ }).click()
+      await page.getByText('Isso resolveu?').waitFor()
+      const principal = page.getByRole('main')
+      const sem = await alvosDe(principal)
+      for (const nome of ['Falar com atendente', 'Encerrar conversa', 'Anexar arquivo', 'Mensagem', 'Enviar', 'Sim', 'Não']) expect(sem.map((a) => a.nome), nome).toContain(nome)
+      expect(vizinhosPertoDemais(sem), 'sem arquivo escolhido').toEqual([])
+
+      await page.locator('input[type="file"]').setInputFiles({ name: 'boleto.png', mimeType: 'image/png', buffer: png })
+      const com = await alvosDe(principal)
+      expect(com.map((a) => a.nome)).toContain('Remover boleto.png')
+      expect(vizinhosPertoDemais(com), 'com arquivo escolhido').toEqual([])
+
+      const barra = await alvosDe(page.getByRole('navigation', { name: 'Navegação' }))
+      expect(barra.length).toBeGreaterThan(0)
+      const entre = com.flatMap((a) => barra.map((b) => [a, b] as const)).filter(([a, b]) => distancia(a, b) < 8 - 0.5)
+      expect(entre.map(([a, b]) => `${a.nome} | ${b.nome}`), 'compositor e barra de abas').toEqual([])
+
+      for (const caixa of com) {
+        expect(caixa.x, caixa.nome).toBeGreaterThanOrEqual(0)
+        expect(caixa.x + caixa.width, caixa.nome).toBeLessThanOrEqual(largura)
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+    })
+
+    test('C72 em Indicadores o valor e a variação ficam a 16 px na mesma linha ou empilhados sem se sobrepor', async ({ page }) => {
+      await abrir(page, largura, altura, '/univag/indicadores', ['ADMINISTRADOR'])
+      const numero = page.getByText(/^71,2\s%$/)
+      await numero.waitFor()
+      const variacao = page.getByText('vs. período anterior').locator('xpath=..')
+      const [n, v] = [(await numero.boundingBox())!, (await variacao.first().boundingBox())!]
+      const mesmaLinha = Math.min(n.y + n.height, v.y + v.height) - Math.max(n.y, v.y) > 0
+      if (mesmaLinha) expect(distancia({ nome: 'n', ...n }, { nome: 'v', ...v }), 'na mesma linha').toBeGreaterThanOrEqual(16 - 0.5)
+      else expect(distancia({ nome: 'n', ...n }, { nome: 'v', ...v }), 'empilhados').toBeGreaterThanOrEqual(0)
+      const coluna = await numero.evaluate((e) => parseFloat(getComputedStyle(e.parentElement!).columnGap))
+      expect(coluna).toBe(16)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+    })
   })
-
-  test('C72 em Indicadores o valor e a variação mantêm o gap-x-4 e não se sobrepõem', async ({ page }) => {
-    await abrir(page, 360, 780, '/univag/indicadores', ['ADMINISTRADOR'])
-    const numero = page.getByText(/^71,2\s%$/)
-    await numero.waitFor()
-    const variacao = page.getByText('vs. período anterior').locator('xpath=..')
-    const [n, v] = [(await numero.boundingBox())!, (await variacao.first().boundingBox())!]
-    expect(distancia(n, v), 'sem sobreposição').toBeGreaterThanOrEqual(0)
-    const coluna = await numero.evaluate((e) => parseFloat(getComputedStyle(e.parentElement!).columnGap))
-    expect(coluna).toBe(16)
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
-  })
-})
+}

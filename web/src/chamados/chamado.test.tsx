@@ -56,7 +56,7 @@ describe('chamado', () => {
 
     expect(await screen.findByText('Resumo gerado por IA')).toBeInTheDocument()
     expect(screen.getByText('Aluna não encontra o boleto de novembro.')).toBeInTheDocument()
-    expect(screen.getByText(/matrícula 2000567890 · ADS · 3º semestre/)).toBeInTheDocument()
+    expect(screen.getByText('Dados do aluno').parentElement).toHaveTextContent(/matrícula 2000567890 · ADS · 3º semestre/)
   })
 
   it('aluno não vê resumo no detalhe', async () => {

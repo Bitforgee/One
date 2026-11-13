@@ -277,7 +277,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
     </Button>
   )
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         {atendente}
         {encerrar}
@@ -289,7 +289,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
             <Label htmlFor="mensagem" className="sr-only">
               Mensagem
             </Label>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <BotaoAnexar anexos={anexos} />
               <Textarea
                 id="mensagem"
@@ -300,7 +300,7 @@ function Entrada({ noLimite, texto, setTexto, enviar, pendente, destaque, emConv
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
                 onKeyDown={(e) => enviarComEnter(e, vazio)}
-                placeholder="Escreva sua dúvida"
+                placeholder="Escreva sua dúvida…"
                 className="max-h-52 min-h-11 flex-1 resize-none border-0 px-1 py-2.5"
               />
               <Button type="submit" className="h-11 shrink-0" disabled={vazio}>
@@ -355,7 +355,7 @@ function PedidoAoAtendente({ emConversa, lideranca, falhou, descricao, setDescri
           <NativeSelect id="matricula" value={matriculaId} onChange={(e) => setMatriculaId(e.target.value)}>
             <NativeSelectOption value="">Escolha a matrícula</NativeSelectOption>
             {ativas.map((m) => (
-              <NativeSelectOption key={m.id} value={m.id}>{`${m.numero} — ${m.curso}`}</NativeSelectOption>
+              <NativeSelectOption key={m.id} value={m.id} translate="no">{`${m.numero} — ${m.curso}`}</NativeSelectOption>
             ))}
           </NativeSelect>
         </div>

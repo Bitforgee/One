@@ -78,7 +78,7 @@ describe('textos', () => {
 
     let montada = assistente()
     const campo = await screen.findByLabelText('Mensagem')
-    expect(campo).toHaveAttribute('placeholder', 'Escreva sua dúvida')
+    expect(campo).toHaveAttribute('placeholder', 'Escreva sua dúvida…')
     t.conferir(tela())
     await userEvent.upload(document.querySelector<HTMLInputElement>('input[type="file"]')!, new File(['x'], 'foto.png', { type: 'image/png' }))
     await screen.findByText('PDF ou foto, até 10 MB')

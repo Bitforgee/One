@@ -4,6 +4,7 @@ import { Balao, Quebravel } from '../Balao'
 import { frase, type Chamado, type Evento, type Fonte, type MensagemChamado } from '../chamado'
 import { formatarData } from '../datas'
 import { LinkDeAnexo } from '../LinkDeAnexo'
+import { Literal } from '../Literal'
 import { Links, separarLinks } from '../LinksDaResposta'
 import { Marca } from '../Marca'
 import { Button } from '../ui/button'
@@ -26,7 +27,12 @@ export function Cabecalho({ c }: { c: Chamado }) {
           <h2 className="m-0 text-base font-semibold">Dados do aluno</h2>
           <div>
             {c.solicitante}
-            {c.matricula.numero && ` · matrícula ${c.matricula.numero}`} · {c.matricula.curso} · {c.matricula.semestre}º semestre
+            {c.matricula.numero && (
+              <>
+                {' · matrícula '}
+                <Literal>{c.matricula.numero}</Literal>
+              </>
+            )} · {c.matricula.curso} · {c.matricula.semestre}º semestre
           </div>
         </section>
       )}

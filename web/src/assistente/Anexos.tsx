@@ -63,7 +63,7 @@ export function BotaoAnexar({ anexos }: { anexos: Anexos }) {
 export function Selos({ anexos }: { anexos: Anexos }) {
   return (
     anexos.escolhidos.length > 0 && (
-      <ul aria-label="Arquivos escolhidos" className="m-0 flex list-none flex-wrap gap-1.5 px-2 pt-1">
+      <ul aria-label="Arquivos escolhidos" className="m-0 flex list-none flex-wrap gap-2 px-2 pt-1 pb-2">
         {anexos.escolhidos.map((a, i) => (
           <li key={i}>
             <Badge variant="secondary" className="max-w-full gap-0.5 pe-0.5">

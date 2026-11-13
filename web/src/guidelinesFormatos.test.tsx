@@ -337,3 +337,33 @@ describe('CampoImagem com dimensões', () => {
     expect(img.getAttribute('height')).toMatch(/^\d+$/)
   })
 })
+describe('translate no na matrícula', () => {
+  it('C44 a matrícula do select do Assistente fica com translate no na opção', async () => {
+    const duas = me({
+      matriculas: [
+        { id: 1, numero: '2000567890', curso: 'ADS', semestre: 3, situacao: 'ATIVA' },
+        { id: 2, numero: '2000567891', curso: 'Direito', semestre: 1, situacao: 'ATIVA' },
+      ],
+    })
+    api({ 'GET /api/auth/me': () => [200, duas] })
+    abrir('/univag/assistente')
+    await userEvent.type(await screen.findByLabelText('Mensagem'), 'x')
+    await userEvent.click(screen.getByRole('button', { name: /Falar com atendente/ }))
+    const d = within(await screen.findByRole('dialog'))
+    const opcoes = d.getAllByRole('option').filter((o) => /2000567/.test(o.textContent ?? ''))
+    expect(opcoes).toHaveLength(2)
+    for (const o of opcoes) expect(o).toHaveAttribute('translate', 'no')
+  })
+
+  it('C44 a matrícula dos dados do aluno no chamado fica num span só do token', async () => {
+    api({
+      'GET /api/auth/me': () => [200, me({ papeis: ['ATENDENTE'] })],
+      'GET /api/chamados/ONE-1': () => [200, chamadoPronto({ eventos: [], solicitante: 'Aluno Teste' })],
+    })
+    abrir('/univag/chamados/ONE-1')
+    const numero = await screen.findByText('2000567890')
+    expect(numero.tagName).toBe('SPAN')
+    expect(numero).toHaveAttribute('translate', 'no')
+    expect(numero.parentElement).toHaveTextContent(/matrícula 2000567890 · ADS · 3º semestre/)
+  })
+})
