@@ -10,7 +10,10 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
 {
     const string Arquivo = "servicos.txt";
 
-    static readonly string[] Adicionadas = [];
+    static readonly string[] Adicionadas =
+    [
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.EnviarPushes",
+    ];
 
     static readonly string[] Removidas = [];
 

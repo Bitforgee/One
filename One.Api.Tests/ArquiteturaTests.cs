@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Agendador.cs") };
+        var permitidos = new[] { Path.Combine(api, "Agendador.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))

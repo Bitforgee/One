@@ -10,12 +10,6 @@ public sealed record ContatoAparencia(string? Horario, string? Telefone, string?
 
 public sealed record ImagensAparencia(int? Logo, int? Icone, int? Login, int? Assistente);
 
-public static class TiposDeImagem
-{
-    public const string Logo = "logo", Icone = "icone", Login = "login", Assistente = "assistente";
-    public static readonly string[] Todos = [Logo, Icone, Login, Assistente];
-}
-
 public record AparenciaDados(string? NomeCurto, string? Cor, LoginAparencia Login, AssistenteAparencia Assistente, ContatoAparencia Contato, ImagensAparencia Imagens)
 {
     public static AparenciaDados De(Instituicao i, IEnumerable<ImagemInstituicao> imagens)

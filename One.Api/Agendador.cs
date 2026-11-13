@@ -11,13 +11,24 @@ using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api;
 
-public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, ILogger<Agendador> log) : BackgroundService
-{
-    public record Item(string Tipo, long Id, long InstituicaoId);
+public sealed record ItemAgendado(string Tipo, long Id, long InstituicaoId);
 
+public interface ITarefaAgendada
+{
+    string Tipo { get; }
+
+    int Lote => 1;
+
+    Task<List<ItemAgendado>> Ler(OneDb db, DateTime agora);
+
+    Task Executar(OneDb db, IReadOnlyList<ItemAgendado> itens, DateTime agora, CancellationToken parar);
+
+    Task Limpar(OneDb db, DateTime agora, CancellationToken parar) => Task.CompletedTask;
+}
+public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConfiguration cfg, Prazos prazos, IEnumerable<ITarefaAgendada> tarefas, ILogger<Agendador> log) : BackgroundService
+{
     public const string TextoSemResposta = "Encerrado por falta de resposta. Se ainda precisar, rejeite esta resolução.";
-    const int MaxTentativas = 5;
-    static readonly TimeSpan LimiteDoPush = TimeSpan.FromSeconds(30);
+    public const int MaxTentativas = 5;
 
     protected override async Task ExecuteAsync(CancellationToken parar)
     {
@@ -44,29 +55,30 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
         await db.LtiLancamentos.IgnoreQueryFilters().Where(l => l.ExpiraEm < limite).ExecuteDeleteAsync(parar);
     }
 
-    public async Task<List<Item>> Ler()
+    public async Task<List<ItemAgendado>> Ler()
     {
         using var escopo = escopos.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
         var agora = relogio.GetUtcNow().UtcDateTime;
         var itens = await LerAtendimento(db, agora);
         itens.AddRange(await LerFilas(db, agora));
+        foreach (var tarefa in tarefas) itens.AddRange(await tarefa.Ler(db, agora));
         return itens;
     }
 
-    async Task<List<Item>> LerAtendimento(OneDb db, DateTime agora)
+    async Task<List<ItemAgendado>> LerAtendimento(OneDb db, DateTime agora)
     {
         var (limiteConversa, limiteChamado) = (agora - prazos.Abandono, agora - prazos.Confirmacao);
         var itens = await db.Conversas.IgnoreQueryFilters().Where(c => c.Desfecho == null && c.UltimaMensagemEm <= limiteConversa)
-            .Select(c => new Item("conversa", c.Id, c.InstituicaoId)).ToListAsync();
+            .Select(c => new ItemAgendado("conversa", c.Id, c.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == Resolvido && c.ResolvidoEm <= limiteChamado)
-            .Select(c => new Item("chamado", c.Id, c.InstituicaoId)).ToListAsync());
+            .Select(c => new ItemAgendado("chamado", c.Id, c.InstituicaoId)).ToListAsync());
         var (limiteResolver, limiteLembrete) = (agora - prazos.ResolverAguardando, agora - prazos.Lembrete);
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.AguardandoDesde <= limiteResolver)
-            .Select(c => new Item("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
+            .Select(c => new ItemAgendado("aguardando", c.Id, c.InstituicaoId)).ToListAsync());
         itens.AddRange(await db.Chamados.IgnoreQueryFilters().Where(c => c.Estado == AguardandoAluno && c.LembreteEm == null && c.AguardandoDesde <= limiteLembrete && c.AguardandoDesde > limiteResolver)
-            .Select(c => new Item("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
-        itens.AddRange(await VenceuOPrazo(db, db.Chamados.IgnoreQueryFilters(), agora).Select(c => new Item("subir", c.Id, c.InstituicaoId)).ToListAsync());
+            .Select(c => new ItemAgendado("lembrete", c.Id, c.InstituicaoId)).ToListAsync());
+        itens.AddRange(await VenceuOPrazo(db, db.Chamados.IgnoreQueryFilters(), agora).Select(c => new ItemAgendado("subir", c.Id, c.InstituicaoId)).ToListAsync());
         return itens;
     }
 
@@ -82,26 +94,24 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
     static Expression<Func<Chamado, bool>> SemRespostaDaEquipe(OneDb db) => c =>
         !db.MensagensChamado.IgnoreQueryFilters().Any(m => m.ChamadoId == c.Id && m.Tipo == TiposMensagem.Publica && m.AutorId != null && m.AutorId != c.SolicitanteId && m.CriadaEm >= c.EtapaDesde);
 
-    async Task<List<Item>> LerFilas(OneDb db, DateTime agora)
+    async Task<List<ItemAgendado>> LerFilas(OneDb db, DateTime agora)
     {
         var itens = await db.EmailsSaida.IgnoreQueryFilters().Where(e => e.EnviadoEm == null && e.Tentativas < MaxTentativas && e.ProximaTentativa <= agora)
-            .Select(e => new Item("email", e.Id, e.InstituicaoId)).ToListAsync();
+            .Select(e => new ItemAgendado("email", e.Id, e.InstituicaoId)).ToListAsync();
         itens.AddRange(await db.TrechosFonte.IgnoreQueryFilters().Where(t => t.Embedding == null && t.Tentativas < MaxTentativas && t.ProximaTentativa <= agora)
-            .OrderBy(t => t.Id).Select(t => new Item("trecho", t.Id, t.InstituicaoId)).ToListAsync());
-        itens.AddRange(await db.PushesSaida.IgnoreQueryFilters().Where(p => p.EnviadoEm == null && p.Tentativas < MaxTentativas && p.ProximaTentativa <= agora
-                && db.SubscricoesPush.IgnoreQueryFilters().Any(s => s.Id == p.SubscricaoId && s.InstituicaoId == p.InstituicaoId))
-            .Select(p => new Item("push", p.Id, p.InstituicaoId)).ToListAsync());
+            .OrderBy(t => t.Id).Select(t => new ItemAgendado("trecho", t.Id, t.InstituicaoId)).ToListAsync());
         return itens;
     }
 
-    public async Task Processar(List<Item> itens, CancellationToken parar = default)
+    public async Task Processar(List<ItemAgendado> itens, CancellationToken parar = default)
     {
-        foreach (var lote in itens.Where(i => i.Tipo == "trecho").Chunk(Embeddings.Lote))
+        foreach (var tarefa in tarefas.Where(t => t.Lote > 1)) await ExecutarEmLotes(tarefa, itens, parar);
+        foreach (var lote in itens.Where(i => i.Tipo == "trecho" && !Migrado(i)).Chunk(Embeddings.Lote))
         {
             parar.ThrowIfCancellationRequested();
             await Indexar(lote);
         }
-        foreach (var item in itens.Where(i => i.Tipo != "trecho"))
+        foreach (var item in itens.Where(i => i.Tipo != "trecho" && !Migrado(i)))
         {
             parar.ThrowIfCancellationRequested();
             try
@@ -116,9 +126,40 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
                 log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
             }
         }
+        foreach (var tarefa in tarefas.Where(t => t.Lote == 1)) await ExecutarUm(tarefa, itens, parar);
     }
 
-    async Task Despachar(OneDb db, IServiceProvider sp, Item item, DateTime agora, CancellationToken parar)
+    bool Migrado(ItemAgendado item) => tarefas.Any(t => t.Tipo == item.Tipo);
+
+    async Task ExecutarEmLotes(ITarefaAgendada tarefa, List<ItemAgendado> itens, CancellationToken parar)
+    {
+        foreach (var lote in itens.Where(i => i.Tipo == tarefa.Tipo).Chunk(tarefa.Lote))
+        {
+            parar.ThrowIfCancellationRequested();
+            using var escopo = escopos.CreateScope();
+            await tarefa.Executar(escopo.ServiceProvider.GetRequiredService<OneDb>(), lote, relogio.GetUtcNow().UtcDateTime, parar);
+        }
+    }
+
+    async Task ExecutarUm(ITarefaAgendada tarefa, List<ItemAgendado> itens, CancellationToken parar)
+    {
+        foreach (var item in itens.Where(i => i.Tipo == tarefa.Tipo))
+        {
+            parar.ThrowIfCancellationRequested();
+            try
+            {
+                using var escopo = escopos.CreateScope();
+                var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
+                db.InstituicaoAtual = item.InstituicaoId;
+                await tarefa.Executar(db, [item], relogio.GetUtcNow().UtcDateTime, parar);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                log.LogError(e, "Agendador falhou no item {Tipo} {ItemId} da instituição {InstituicaoId}", item.Tipo, item.Id, item.InstituicaoId);
+            }
+        }
+    }
+    async Task Despachar(OneDb db, IServiceProvider sp, ItemAgendado item, DateTime agora, CancellationToken parar)
     {
         switch (item.Tipo)
         {
@@ -128,11 +169,10 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             case "aguardando": await ResolverSemResposta(db, item.Id, agora); break;
             case "subir": await SubirPorPrazo(db, item.Id, agora); break;
             case "email": await Enviar(db, sp.GetRequiredService<Email>(), item.Id, agora); break;
-            case "push": await EnviarPush(db, sp.GetRequiredService<IEnviadorPush>(), item.Id, agora, parar); break;
         }
     }
 
-    async Task Indexar(Item[] lote)
+    async Task Indexar(ItemAgendado[] lote)
     {
         using var escopo = escopos.CreateScope();
         var db = escopo.ServiceProvider.GetRequiredService<OneDb>();
@@ -242,37 +282,6 @@ public class Agendador(IServiceScopeFactory escopos, TimeProvider relogio, IConf
             e.RegistrarFalha(agora);
             if (e.Tentativas >= MaxTentativas) log.LogError(falha, "Desistência do e-mail {EmailId} da instituição {InstituicaoId} após {Tentativas} tentativas", id, e.InstituicaoId, e.Tentativas);
             else log.LogWarning(falha, "Falha ao enviar o e-mail {EmailId} da instituição {InstituicaoId}, tentativa {Tentativas}", id, e.InstituicaoId, e.Tentativas);
-        }
-        await db.SaveChangesAsync();
-    }
-
-    record DoChamado(string Numero, string Estado);
-    record DaInstituicao(string Slug, string Titulo);
-
-    async Task EnviarPush(OneDb db, IEnviadorPush envio, long id, DateTime agora, CancellationToken parar)
-    {
-        var p = await db.PushesSaida.SingleOrDefaultAsync(x => x.Id == id && x.EnviadoEm == null && x.Tentativas < MaxTentativas);
-        var s = p is null ? null : await db.SubscricoesPush.SingleOrDefaultAsync(x => x.Id == p.SubscricaoId);
-        if (p is null || s is null) return;
-        var chamado = await db.Chamados.Where(c => c.Id == p.ChamadoId).Select(c => new DoChamado(c.Numero, c.Estado)).SingleAsync();
-        var inst = await db.Instituicoes.Where(i => i.Id == p.InstituicaoId).Select(i => new DaInstituicao(i.Slug, i.NomeCurto ?? i.Nome)).SingleAsync();
-        var icone = await db.ImagensInstituicao.Where(x => x.Tipo == TiposDeImagem.Icone && x.RemovidaEm == null).Select(x => (int?)x.Versao).FirstOrDefaultAsync();
-        using var prazo = new CancellationTokenSource(LimiteDoPush, relogio);
-        using var junto = CancellationTokenSource.CreateLinkedTokenSource(parar, prazo.Token);
-        try
-        {
-            await envio.Enviar(s.Endpoint, s.P256dh, s.Auth, PayloadPush.De(inst.Slug, chamado.Numero, inst.Titulo, chamado.Estado, icone), junto.Token);
-            p.Concluir(agora);
-        }
-        catch (PushServiceClientException e) when (e.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Gone)
-        {
-            db.SubscricoesPush.Remove(s);
-        }
-        catch (Exception falha) when (!parar.IsCancellationRequested)
-        {
-            p.RegistrarFalha(agora);
-            if (p.Tentativas >= MaxTentativas) log.LogError(falha, "Desistência do push {PushId} da instituição {InstituicaoId} após {Tentativas} tentativas", id, p.InstituicaoId, p.Tentativas);
-            else log.LogWarning(falha, "Falha ao enviar o push {PushId} da instituição {InstituicaoId}, tentativa {Tentativas}", id, p.InstituicaoId, p.Tentativas);
         }
         await db.SaveChangesAsync();
     }

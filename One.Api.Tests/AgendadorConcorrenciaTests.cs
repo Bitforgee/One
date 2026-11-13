@@ -32,7 +32,7 @@ public class AgendadorConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory
     Task Aguardando(Balcao b, string numero, TimeSpan ha) =>
         f.Db(b.Instituicao.Id, db => db.Chamados.Where(c => c.Numero == numero).ExecuteUpdateAsync(s => s.SetProperty(c => c.AguardandoDesde, Agora - ha)));
 
-    static List<Agendador.Item> Do(List<Agendador.Item> lidos, string tipo, long id) => lidos.Where(x => x.Tipo == tipo && x.Id == id).ToList();
+    static List<ItemAgendado> Do(List<ItemAgendado> lidos, string tipo, long id) => lidos.Where(x => x.Tipo == tipo && x.Id == id).ToList();
 
     [Fact]
     public async Task Conversa_mudada_entre_Ler_e_Processar_fica_intacta()
