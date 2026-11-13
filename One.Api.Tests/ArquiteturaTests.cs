@@ -1203,7 +1203,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     static readonly string[] Excecoes_Service_locator_so_na_composicao =
     [
         "Agendador.cs",
-        "Sessao.cs",
+        "Acesso/CookieDeSessao.cs",
     ];
 
     static readonly string[] Excecoes_Caso_de_uso_sem_chamada_estatica_de_outro =

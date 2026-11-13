@@ -45,7 +45,7 @@ public class Program
         app.UseStatusCodePages();
         app.UseStaticFiles();
         app.UseAuthentication();
-        app.Use(Sessao.ExigirTrocaDeSenha);
+        app.Use(CookieDeSessao.ExigirTrocaDeSenha);
         app.UseAuthorization();
         app.UseRateLimiter();
         Rotas(app);
@@ -132,7 +132,7 @@ public class Program
             o.SlidingExpiration = true;
             o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
             o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
-            o.Events.OnValidatePrincipal = Sessao.Validar;
+            o.Events.OnValidatePrincipal = CookieDeSessao.Validar;
         });
         s.AddAuthentication().AddScheme<AuthenticationSchemeOptions, AutenticacaoMcp>(AutenticacaoMcp.Esquema, null);
         s.AddAuthorization();

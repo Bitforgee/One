@@ -52,7 +52,7 @@ public sealed class LoginHandler(OneDb db, IPasswordHasher<Usuario> hasher) : IR
         var confere = hasher.VerifyHashedPassword(u ?? Usuario.Criar(Cpf.Ler(""), "", ""), podeEntrar ? u!.SenhaHash! : HashFicticio, i.Senha) != PasswordVerificationResult.Failed;
         if (!podeEntrar || !confere) return new(null, Problemas.Erro(401, CredenciaisInvalidas));
 
-        return new(Sessao.Principal(u!), Results.Ok(new Login.Resposta(u!.Id, u.Nome, [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,
+        return new(CookieDeSessao.Principal(u!), Results.Ok(new Login.Resposta(u!.Id, u.Nome, [.. u.Papeis.Select(p => p.Papel)], u.DeveTrocarSenha,
             new Login.Resposta.DaInstituicao(instituicao!.Slug, instituicao.Nome))));
     }
 }

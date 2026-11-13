@@ -56,7 +56,7 @@ public sealed class LancamentoMoodleHandler(OneDb db, ValidadorLti validador, Ti
         if (!u.Ativo) return Voltar(i, "inativo");
         if (u.Papeis.Count != 1 || !u.Tem(Papeis.Aluno)) return Voltar(i, "use-senha");
         if (vinculo is null) await Vincular(u, p, d.Sub, ct);
-        return new(Sessao.Principal(u), Results.Redirect($"/{i.Slug}"));
+        return new(CookieDeSessao.Principal(u), Results.Redirect($"/{i.Slug}"));
     }
 
     async Task<Usuario?> Achar(VinculoMoodle? vinculo, Cpf? cpf, CancellationToken ct)
