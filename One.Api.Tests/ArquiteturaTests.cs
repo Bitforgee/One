@@ -77,6 +77,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
             .Where(p => File.ReadAllText(p).Contains("IgnoreQueryFilters"));
         Assert.All(usos, p => Assert.Contains(p, permitidos));
+        Assert.Equal(permitidos.Order(), usos.Order());
     }
 
     [Fact]
