@@ -16,3 +16,8 @@ web/apresentacao/dados/
 web/apresentacao/dados.json
 .idea/
 .playwright-mcp/
+
+/demo-*.png
+__pycache__/
+*.pyc
+*.tsbuildinfo
