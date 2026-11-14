@@ -112,16 +112,16 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Dados_sem_EfCore -Rev <S1> -Esperado 2 # lista`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Relogio_so_pelo_TimeProvider -Rev <S1> -Esperado 1 # lista`
 
-**C24** - Para cada uma das 11 listas, acrescentar a linha `"__falso__"` ou tirar a primeira linha, sem mexer no código, faz o teste da regra falhar (exit diferente de 0 com "Com falha"): a regra pega ofensor novo e ofensor que sumiu (AC 9)
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Arquivo_ate_150_linhas # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Sem_balde_horizontal # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Entidade_sem_setter_publico # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Caso_de_uso_sem_chamada_estatica_de_outro # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Dados_sem_EfCore # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Relogio_so_pelo_TimeProvider # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Raiz_sem_fatias # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Handler_sem_new_de_entidade # ratchet-falha`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Dados_ate_5_parametros # ratchet-falha`
+**C24** - Para cada uma das 11 listas, acrescentar a linha `"__falso__"` ou tirar a primeira linha, sem mexer no código, faz o teste da regra falhar (exit diferente de 0 com "Com falha" ou "Failed"; a prova roda o `dotnet test` dentro do container pelo `testar-em-container.ps1`, com `-Container`, sobre uma cópia mutada do último commit): a regra pega ofensor novo e ofensor que sumiu (AC 9)
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Arquivo_ate_150_linhas -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Sem_balde_horizontal -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Entidade_sem_setter_publico -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Caso_de_uso_sem_chamada_estatica_de_outro -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Dados_sem_EfCore -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Relogio_so_pelo_TimeProvider -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Raiz_sem_fatias -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Handler_sem_new_de_entidade -Container # ratchet-falha`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Dados_ate_5_parametros -Container # ratchet-falha`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Mensagem_sem_entidade # ratchet-falha`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 ratchet-falha -Regra Service_locator_so_na_composicao # ratchet-falha`
 
@@ -135,10 +135,10 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~EmailSaidaDominioTests.Registrar_falha_soma_uma_tentativa_e_agenda_2_elevado_a_tentativas_minutos"`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~EmailFalhaTests.Retry_2_a_n_e_desiste_em_5"`
 
-**C27** - Os 7 tipos `Usuario`, `Conversa`, `MensagemConversa`, `TokenAcesso`, `Instituicao`, `ImagemInstituicao` e `EmailSaida` não têm setter público (exceto `InstituicaoId`): `Entidade_sem_setter_publico` passa e a lista cai de 17 para 10 nomes e `UsuarioPapel` continua nela; a prova `lista-sem` compara por igualdade exata do nome (`UsuarioPapel` não casa com `Usuario`) (AC 12)
+**C27** - Os 7 tipos `Usuario`, `Conversa`, `MensagemConversa`, `TokenAcesso`, `Instituicao`, `ImagemInstituicao` e `EmailSaida` não têm setter público (exceto `InstituicaoId`): `Entidade_sem_setter_publico` passa e a lista cai de 17 para 10 nomes na S2 (`lista -Rev <S2> -Esperado 10`) e `UsuarioPapel` continua nela; no último commit a lista tem só `OneDb` (C70) e `lista-sem` dos 7 nomes sai 0; a prova `lista-sem` compara por igualdade exata do nome (`UsuarioPapel` não casa com `Usuario`) (AC 12)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Entidade_sem_setter_publico"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-sem -Regra Entidade_sem_setter_publico -Nomes Usuario,Conversa,MensagemConversa,TokenAcesso,Instituicao,ImagemInstituicao,EmailSaida # lista-sem`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Entidade_sem_setter_publico -Esperado 10 # lista`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Entidade_sem_setter_publico -Rev <S2> -Esperado 10 # lista`
 
 **C28** - Nenhum `new Usuario`, `new Conversa`, `new TokenAcesso`, `new Instituicao` nem `new EmailSaida` aparece em `One.Api/` fora de `One.Api/Dados/` (a base tem 10 ocorrências em 8 arquivos: Tokens.cs, Acesso/Login.cs, Administracao/CriarUsuario.cs, Administracao/ImportarMatriculas.cs, Assistente/AtendimentoDireto.cs, Assistente/NovaConversa.cs, Chamados/Avisos.cs, Instituicoes/Criacao.cs) e `Handler_sem_new_de_entidade` passa (AC 13)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'new (Usuario|Conversa|TokenAcesso|Instituicao|EmailSaida)\b' -Caminho One.Api -Excluir '\\Dados\\' -Esperado 0 # grep`
@@ -257,7 +257,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 
 "Com citação" é uma mensagem do assistente com `Fontes.Citadas` no histórico da conversa; "com fluxo" é chamado com `VersaoFluxoId` (para o aluno o fluxo não aparece no JSON).
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~DetalheChamadoTests.Montar_faz_no_maximo_4_consultas|FullyQualifiedName~DetalheChamadoTests.Montar_consultas_por_cenario"`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 linhas -Caminho 'One.Api/Chamados/*Detalhe*.cs,One.Api/Chamados/Shared/*Detalhe*.cs' -Max 150 # linhas`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 linhas -Caminho 'One.Api/Chamados/*Detalhe*.cs' -Max 150 # linhas`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests.Corpos_de_sucesso_iguais_aos_da_base|FullyQualifiedName~ArmazenamentoTests.Detalhe_do_chamado_nao_expoe_chave_nem_hash"`
 
 **C53** - `ReferenciasEntreFatias` não lista `Chamados>Assistente` nem `Indicadores>Assistente` e nenhum par tem o inverso listado (de 17 para 15 pares) (AC 27)
@@ -336,7 +336,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~CsvMatriculasTest
 
 **C69** - `DivisorDeTexto` (puro), `LeitorDePdf`, `BuscarFontes` e `CitacoesDeFontes` existem, `Fontes.cs` e os novos têm no máximo 150 linhas, `VersaoArtigo.Criar` monta as versões e o limite de título de 200 caracteres aparece em 1 lugar (AC 39)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 linhas -Caminho One.Api/Conhecimento/DivisorDeTexto.cs,One.Api/Conhecimento/LeitorDePdf.cs,One.Api/Conhecimento/BuscarFontes.cs,One.Api/Conhecimento/CitacoesDeFontes.cs -Max 150 # linhas`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao '\b200\b' -Caminho One.Api/Conhecimento -Esperado 1 # grep`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao '\b200\b' -Caminho One.Api/Dados/Artigos -Esperado 1 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'static .*VersaoArtigo Criar\(' -Caminho One.Api/Dados/Artigos -Esperado 1 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~DivisaoTests|FullyQualifiedName~ArtigoDominioTests|FullyQualifiedName~ArtigoAdminTests|FullyQualifiedName~DocumentoTests|FullyQualifiedName~IndexacaoTests|FullyQualifiedName~BuscaTests"`
 
@@ -429,7 +429,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'using One\.Api\.(Acesso|Administracao|Assistente|Chamados|Conhecimento|Indicadores|Instituicoes|Mcp)\b' -Caminho One.Api/Agendador.cs,One.Api/Armazenamento.cs,One.Api/Prazos.cs,One.Api/Problemas.cs,One.Api/Sessao.cs,One.Api/Tokens.cs,One.Api/EnviadorSmtp.cs,One.Api/LayoutEmail.cs,One.Api/Persistencia.cs,One.Api/Seguranca.cs,One.Api/TratamentoDeErros.cs -Esperado 0 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Raiz_sem_fatias"`
 
-**C88** - Os comandos `push`, `instituicao` (`criar`, `operador`, `carga`) e `avaliar` imprimem as mesmas linhas e saem com os mesmos códigos da base (`PushComandoTests` 3, `InstituicaoComandoTests` 16, `OperadorComandoTests` 4, `AvaliarBuscaTests` 3), e `Program.cs` não escreve no console (0 `Console.`) (AC 54)
+**C88** - Os comandos `push`, `instituicao` (`criar`, `operador`, `carga`) e `avaliar-busca` imprimem as mesmas linhas e saem com os mesmos códigos da base (`PushComandoTests` 3, `InstituicaoComandoTests` 16, `OperadorComandoTests` 4, `AvaliarBuscaTests` 3), e `Program.cs` não escreve no console (0 `Console.`) (AC 54)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Console\.' -Caminho One.Api/Program.cs -Esperado 0 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~PushComandoTests|FullyQualifiedName~InstituicaoComandoTests|FullyQualifiedName~OperadorComandoTests|FullyQualifiedName~AvaliarBuscaTests"`
 
@@ -455,7 +455,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Criar(Setor|Curso|Categoria|RespostaPronta)\.Validar|ResponderChamado\.LerAnexo' -Caminho One.Api -Esperado 0 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Caso_de_uso_sem_chamada_estatica_de_outro|FullyQualifiedName~CadastroTests"`
 
-**C93** - `AcessoChamado` tem exatamente as propriedades `Agora`, `Chamado` e `Papel`, `AgirNoChamado` não tem `Prazos` nem `IConfiguration` (0 ocorrências) e os 4 handlers que leem esses valores os recebem pelo construtor; `AvisarMudancaTests` e `AcoesDoChamadoTests` passam sem `Assert` alterado em `AvisarMudancaTests.cs` (AC 63)
+**C93** - `AcessoChamado` tem exatamente as propriedades `Agora`, `Chamado` e `Papel`, `AgirNoChamado` não tem `Prazos` nem `IConfiguration` (0 ocorrências) e os 4 handlers que leem esses valores os recebem pelo construtor; `AvisarMudancaTests` e `AcoesDoChamadoTests` passam sem `Assert` alterado em `AvisarMudancaTests.cs`; as 3 asserções de `Pipeline_do_chamado_com_a_forma_da_base` mudaram só para deixar de afirmar os membros que o AC 63 remove (`Cfg`, `Prazos`, `Usuario`, `Instituicao`) e continuam `Assert.Equal` exato sobre o conjunto restante (E18) (AC 63)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AcessoChamadoTests.Tem_so_Agora_Chamado_e_Papel"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Prazos|IConfiguration' -Caminho One.Api/Chamados/AgirNoChamado.cs -Esperado 0 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 asserts-intactos -Caminho One.Api.Tests/AvisarMudancaTests.cs # asserts-intactos`
@@ -465,15 +465,15 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AvisarMudancaTest
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'AparenciaDados' -Caminho One.Api/Acesso -Esperado 0 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~InstituicaoPublicaTests.Corpo_igual_ao_golden|FullyQualifiedName~InstituicaoRotaTests|FullyQualifiedName~AparenciaPublicaTests"`
 
-**C95** - `Arquivos.cs` está na raiz e não em `Conhecimento/`, `Fontes.DoArtigo` e `TextoDoArtigo` não existem mais (0), as 2 `Ultima()` são métodos em `One.Api/Dados/` e a lista de arquivos da raiz de `Fatias_do_api` inclui `Arquivos` (AC 65)
+**C95** - `Arquivos.cs` está na raiz e não em `Conhecimento/`, `Fontes.DoArtigo` e `TextoDoArtigo` não existem mais (0), as 2 `Ultima()` viraram a propriedade `UltimaVersao` de `Artigo` e de `Documento` em `One.Api/Dados/` e a lista de arquivos da raiz de `Fatias_do_api` inclui `Arquivos` (AC 65)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 existe -Caminho One.Api/Arquivos.cs -Esperado 1 # existe`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 existe -Caminho One.Api/Conhecimento/Arquivos.cs -Esperado 0 # existe`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'Fontes\.(DoArtigo|TextoDoArtigo)\b' -Caminho One.Api -Esperado 0 # grep`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao '\bUltima\(' -Caminho One.Api/Dados -Min 2 # grep`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao '\bUltimaVersao\b' -Caminho One.Api/Dados -Min 2 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao '"Arquivos"' -Caminho One.Api.Tests/ArquiteturaTests.cs -Min 1 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.Fatias_do_api|FullyQualifiedName~ArquiteturaTests.Ultima_versao_em_um_arquivo|FullyQualifiedName~ArtigoDominioTests|FullyQualifiedName~DocumentoDominioTests"`
 
-**C96** - `dotnet One.Api.dll instituicao avaliar` imprime as mesmas linhas e sai com o mesmo código (0 com avaliação válida, 1 com arquivo inválido), sua classe está em `One.Api/Assistente/` e `InstituicaoComando.cs` tem 0 `using One.Api.Assistente` (AC 66)
+**C96** - `dotnet One.Api.dll instituicao avaliar-busca` imprime as mesmas linhas e sai com o mesmo código (0 com avaliação válida, 1 com arquivo inválido), sua classe está em `One.Api/Assistente/` e `InstituicaoComando.cs` tem 0 `using One.Api.Assistente` (AC 66)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~AvaliarBuscaTests"`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'using One\.Api\.Assistente' -Caminho One.Api/Instituicoes -Esperado 0 # grep`
 
@@ -488,7 +488,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.
 
 ### S8 - MCP e mapeamento EF (AC 55-59) · 44 arquivos · 150,7 KB · ~38,6k
 
-**C99** - `Mcp/FerramentasMcp.cs` chama os casos de uso das outras fatias e lê o resultado tipado: 0 `GetProperty("` e 0 `TryGetProperty("`, 0 `db.Usuarios` e 0 `db.Instituicoes` na entrada, e as 4 ferramentas (`listar_chamados`, `ver_chamado`, `buscar_conhecimento`, `ver_indicadores`) devolvem o texto JSON da base (AC 55)
+**C99** - `Mcp/FerramentasMcp.cs` chama os casos de uso das outras fatias e lê o resultado tipado: 0 `GetProperty("` e 0 `TryGetProperty("`, 0 `db.Usuarios` e 0 `db.Instituicoes` na entrada, e as 4 ferramentas (`listar_chamados`, `ver_chamado`, `buscar_conhecimento`, `ver_indicadores`) devolvem o texto JSON da base; fecha como PASS-with-gap documentado (AD-055, risco aceito pelo dono): `ver_chamado` mantém a ida e volta por JSON via `DetalheLido`, `listar_chamados` e `ver_indicadores` leem tipos (AC 55)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'GetProperty\("|TryGetProperty\("' -Caminho One.Api/Mcp/FerramentasMcp.cs -Esperado 0 # grep`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 grep -Padrao 'db\.(Usuarios|Instituicoes)' -Caminho One.Api/Mcp/FerramentasMcp.cs -Esperado 0 # grep`
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~McpFerramentasTests.Listar_chamados_igual_a_rota_e_corta_em_50|FullyQualifiedName~McpFerramentasTests.Ver_chamado_igual_a_rota_sem_anexo_nem_matricula|FullyQualifiedName~McpFerramentasTests.Buscar_conhecimento_so_ativos_da_instituicao|FullyQualifiedName~McpFerramentasTests.Ver_indicadores_igual_a_rota|FullyQualifiedName~McpFerramentasTests|FullyQualifiedName~McpAcessoTests"`
@@ -511,7 +511,7 @@ Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 
 **C103** - No último commit nenhuma lista `Excecoes_*` cresceu desde a S1 (tamanho de cada lista menor ou igual ao da S1; item novo só como renomeação listada em `## Emendas aprovadas`, E9), `Arquivo_ate_150_linhas` lista só `Dados/Chamados/Chamado.cs` (1 item), `dotnet build One.slnx` sai 0 e a suíte inteira passa (AC 59)
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 listas-encolhem -Base <S1> # listas-encolhem`
 Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista -Regra Arquivo_ate_150_linhas -Esperado 1 # lista`
-Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-contem -Regra Arquivo_ate_150_linhas -Nomes Chamado.cs # lista-contem`
+Proof: `pwsh -NoProfile -File .specs/features/refatoracao-back-limpa/provas.ps1 lista-contem -Regra Arquivo_ate_150_linhas -Nomes Dados/Chamados/Chamado.cs # lista-contem`
 Proof: `dotnet build One.slnx` # sai 0
 Proof: `dotnet test One.Api.Tests` # sai 0
 
@@ -682,3 +682,22 @@ Aprovadas pelo humano em 2026-11-13: "Sim autorizo" (E9-E14, Lote D).
 | E14 | `## Handoff` | sem `Boundary` de S6 e S7 | `Boundary` `d1e099b` (S6) e `6e225a2` (S7) | o builder não podia editar o `checks.md`; hashes conferidos com `git log` |
 
 Renomeacao permitida (listas-encolhem): Service_locator_so_na_composicao: Sessao.cs -> Acesso/CookieDeSessao.cs
+Aprovadas pelo humano em 2026-11-13: "autorizo pode fazer" (E15-E23; só redação e prova obsoleta, nenhuma asserção nem valor de teste enfraquece; o Verificador FAIL da rodada 1 aponta cada uma).
+
+| Emenda | Check | Antes | Depois | Motivo |
+| --- | --- | --- | --- | --- |
+| E15 | C88, C96, AC 66 (e AC 54, que repete o nome) | o comando se chamava `avaliar` / `instituicao avaliar` | `avaliar-busca` / `instituicao avaliar-busca` | é o nome do comando desde a base 683e6a6; o despacho do `Program` e `AvaliarBuscaTests` já usam `avaliar-busca` |
+| E16 | AC 49 (plan.md); C80 e C88 não citam a lista e ficam como estão | o `Program` chama só `Add<Fatia>`, `Map<Fatia>`, `UseAcesso` e as extensões | acrescenta `UseTratamentoDeErros`, `UseSeguranca`, `MigrarBanco`, `Despachar` e `Montar`; limite de 60 linhas e 0 `Console.` mantidos | conferido em `One.Api/Program.cs` (60 linhas, 0 `Console.`): o middleware de erros e de segurança, a migração e o despacho testável moram em extensões ou no próprio `Program` por `Raiz_sem_fatias` e C88 (notas-build.md, F2 e F6) |
+| E17 | AC 65, C95 (5ª prova) | `Ultima()` vira método; prova `grep -Padrao '\bUltima\(' -Caminho One.Api/Dados -Min 2` | as 2 `Ultima()` viram a propriedade `UltimaVersao` de `Artigo` e `Documento`; prova `grep -Padrao '\bUltimaVersao\b' -Caminho One.Api/Dados -Min 2` (2 ocorrências: `Artigo.cs:30` e `Documento.cs:30`) | a base já usava a propriedade; o padrão antigo contava 0 e não prova nada |
+| E18 | AC 63, C93 | "sem mudança de asserção" para `Pipeline_do_chamado_com_a_forma_da_base` e "sem os membros removidos" | `AvisarMudancaTests` e as dez ações passam sem asserção mudada; as 3 asserções de `Pipeline_do_chamado_com_a_forma_da_base` (membros de `AcessoChamado`, parâmetros de `Preencher`, construtor de `AgirNoChamado`) mudaram só para deixar de afirmar `Cfg`, `Prazos`, `Usuario` e `Instituicao` e seguem `Assert.Equal` exato sobre o conjunto restante | os dois textos se contradiziam; o AC remove os membros, então o teste que os afirmava só pode deixar de afirmá-los |
+| E19 | C24 (9 provas `ratchet-falha`) | `ratchet-falha` rodava `dotnet test` no host | `ratchet-falha ... -Container`: a mesma mutação roda em `testar-em-container.ps1` sobre a cópia do último commit; sem `-Container` o comportamento é o antigo | o host Windows bloqueia `One.Api.Tests.exe`; a mutação e a regra são as mesmas |
+| E20 | C27 | prova `lista -Regra Entidade_sem_setter_publico -Esperado 10` no último commit | `lista ... -Rev <S2> -Esperado 10` (a queda de 17 para 10 vale na S2, `967860a`); no último commit a lista tem só `OneDb` (C70); `lista-sem` dos 7 nomes por igualdade exata (E2) segue valendo | a lista caiu para 1 item na S5, então o valor 10 só vale na S2 |
+| E21 | C52 | prova `linhas` incluía `One.Api/Chamados/Shared/*Detalhe*.cs` | só `One.Api/Chamados/*Detalhe*.cs` | a pasta `Chamados/Shared` não existe mais |
+| E22 | C69 | `grep -Padrao '\b200\b' -Caminho One.Api/Conhecimento -Esperado 1` | o mesmo padrão em `One.Api/Dados/Artigos` (`TituloDeConhecimento.cs:5`) | o limite de título mora em `Dados/Artigos`; o 200 de `Conhecimento/DivisorDeTexto.cs:5` é a sobreposição do divisor |
+| E23 | C103 | `lista-contem -Nomes Chamado.cs` (casa por nome ou sufixo com ponto) | `lista-contem -Nomes Dados/Chamados/Chamado.cs` (igualdade exata do item) | o item da lista é `Dados/Chamados/Chamado.cs`; o texto sobre renomeação continua sendo a E9 |
+
+Aprovada pelo humano em 2026-11-13: "autorizo pode fazer" (E24; risco aceito do C99/AC 55, AD-055 no STATE.md).
+
+| Emenda | Check | Antes | Depois | Motivo |
+| --- | --- | --- | --- | --- |
+| E24 | C99, AC 55 | as 4 ferramentas leem o resultado tipado, sem ida e volta | PASS-with-gap documentado: `ver_chamado` mantém a ida e volta por JSON via `DetalheLido` (`FerramentasMcp.cs`, ~L52); a saída das 4 ferramentas é a da base; `listar_chamados` e `ver_indicadores` leem tipos; o gatilho para revisitar está no AD-055 | ler `DetalheChamado` no `Mcp` faria dois pacotes usarem o mesmo record e quebra `Shared_com_tres_usos_na_fatia` (AC 64); as asserções das provas do C99 não mudam |

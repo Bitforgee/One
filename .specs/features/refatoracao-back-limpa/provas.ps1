@@ -6,7 +6,7 @@ param(
     [int]$Esperado = -1, [int]$Min = 0, [int]$Max = 0,
     [string]$Base = '97524d1', [string]$Rev = '.', [string]$Regra, [string[]]$Nomes,
     [string]$Justificativa, [string]$Tipo = 'static class', [string]$Arquivo = 'One.Api.Tests/ArquiteturaTests.cs',
-    [switch]$Seco
+    [switch]$Seco, [switch]$Container
 )
 $ErrorActionPreference = 'Stop'
 $Nomes = @($Nomes | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
@@ -184,7 +184,9 @@ switch ($Modo) {
             git worktree add --detach $wt HEAD | Out-Null
             try {
                 Set-Content (Join-Path $wt $Arquivo) $novo -Encoding utf8 -NoNewline
-                $saida = dotnet test (Join-Path $wt 'One.Api.Tests') --filter "FullyQualifiedName~ArquiteturaTests.$Regra" 2>&1
+                $filtro = "FullyQualifiedName~ArquiteturaTests.$Regra"
+                if ($Container) { $saida = & (Join-Path $wt '.specs/features/refatoracao-back-limpa/testar-em-container.ps1') -Filtro $filtro 2>&1 }
+                else { $saida = dotnet test (Join-Path $wt 'One.Api.Tests') --filter $filtro 2>&1 }
                 $codigo = $LASTEXITCODE
                 if ($codigo -eq 0 -or -not ($saida | Select-String 'Com falha|Failed')) { Falha "mutacao '$nome' em Excecoes_$Regra sobreviveu (exit $codigo)" }
                 Write-Host "mutacao '$nome' pega: exit $codigo"
