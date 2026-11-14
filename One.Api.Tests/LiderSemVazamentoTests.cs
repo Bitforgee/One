@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Chamados;
+using One.Api.Chamados.TempoReal;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

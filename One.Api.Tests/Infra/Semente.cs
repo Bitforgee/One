@@ -2,8 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Assistente;
-using One.Api.Conhecimento;
 using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;

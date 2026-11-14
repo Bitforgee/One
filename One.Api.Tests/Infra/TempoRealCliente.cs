@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using One.Api.Chamados;
+using One.Api.Chamados.TempoReal;
 using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;

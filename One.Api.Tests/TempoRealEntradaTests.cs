@@ -2,7 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Chamados;
+using One.Api.Chamados.TempoReal;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

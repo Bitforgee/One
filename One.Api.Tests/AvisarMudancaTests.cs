@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using One.Api.Chamados;
+using One.Api.Chamados.TempoReal;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using One.Api.Acesso;
-using One.Api.Assistente;
+using One.Api.Assistente.Busca;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
@@ -29,14 +29,14 @@ public class AgendadorTarefasTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(new Dictionary<string, (string?, int)>
         {
             ["ApagarLancamentos"] = ("One.Api.Acesso", 1),
-            ["AbandonarConversas"] = ("One.Api.Assistente", 1),
-            ["FecharResolvidos"] = ("One.Api.Chamados", 1),
-            ["ResolverSemResposta"] = ("One.Api.Chamados", 1),
-            ["LembrarAguardando"] = ("One.Api.Chamados", 1),
-            ["SubirPorPrazo"] = ("One.Api.Chamados", 1),
-            ["EnviarEmails"] = ("One.Api.Chamados", 1),
-            ["IndexarTrechos"] = ("One.Api.Assistente", Embeddings.Lote),
-            ["EnviarPushes"] = ("One.Api.Chamados", 1),
+            ["AbandonarConversas"] = ("One.Api.Assistente.Conversas", 1),
+            ["FecharResolvidos"] = ("One.Api.Chamados.Tarefas", 1),
+            ["ResolverSemResposta"] = ("One.Api.Chamados.Tarefas", 1),
+            ["LembrarAguardando"] = ("One.Api.Chamados.Tarefas", 1),
+            ["SubirPorPrazo"] = ("One.Api.Chamados.Tarefas", 1),
+            ["EnviarEmails"] = ("One.Api.Chamados.Tarefas", 1),
+            ["IndexarTrechos"] = ("One.Api.Assistente.Busca", Embeddings.Lote),
+            ["EnviarPushes"] = ("One.Api.Chamados.Tarefas", 1),
         }.OrderBy(x => x.Key), tarefas.OrderBy(x => x.Key));
     }
 }

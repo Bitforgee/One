@@ -1,6 +1,6 @@
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
-using One.Api.Chamados;
+using One.Api.Chamados.Permissao;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;

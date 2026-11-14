@@ -1,4 +1,4 @@
-using One.Api.Assistente;
+using One.Api.Assistente.Respostas;
 
 namespace One.Api.Tests;
 

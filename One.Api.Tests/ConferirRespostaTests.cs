@@ -1,4 +1,5 @@
-using One.Api.Assistente;
+using One.Api.Assistente.Busca;
+using One.Api.Assistente.Respostas;
 using One.Api.Conhecimento;
 using One.Api.Dados;
 using One.Api.Dados.Conversas;

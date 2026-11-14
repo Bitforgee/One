@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
-using One.Api.Instituicoes;
+using One.Api.Instituicoes.Plataforma;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;

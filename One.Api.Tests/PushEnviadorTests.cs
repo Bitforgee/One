@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using One.Api.Chamados;
+using One.Api.Chamados.Push;
 using One.Api.Tests.Infra;
 using Lib.Net.Http.WebPush;
 

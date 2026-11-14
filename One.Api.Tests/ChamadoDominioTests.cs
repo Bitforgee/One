@@ -1,4 +1,4 @@
-using One.Api.Chamados;
+using One.Api.Chamados.Permissao;
 using One.Api.Dados;
 using static One.Api.Dados.Chamados.EstadosChamado;
 

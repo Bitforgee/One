@@ -14,14 +14,14 @@ public class ServicosTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "Singleton One.Api.EnviadorSmtp -> One.Api.EnviadorSmtp",
         "Singleton One.Api.ITarefaAgendada -> One.Api.Acesso.ApagarLancamentos",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.AbandonarConversas",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.FecharResolvidos",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.ResolverSemResposta",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.LembrarAguardando",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.SubirPorPrazo",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.EnviarEmails",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.IndexarTrechos",
-        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.EnviarPushes",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.Conversas.AbandonarConversas",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.FecharResolvidos",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.ResolverSemResposta",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.LembrarAguardando",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.SubirPorPrazo",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.EnviarEmails",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Assistente.Busca.IndexarTrechos",
+        "Singleton One.Api.ITarefaAgendada -> One.Api.Chamados.Tarefas.EnviarPushes",
     ];
 
     static readonly string[] Removidas =

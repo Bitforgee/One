@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using One.Api.Assistente.Conversas;
 using One.Api.Dados;
 using One.Api.Dados.Chamados;
 using One.Api.Tests.Infra;

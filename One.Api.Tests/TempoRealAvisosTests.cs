@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using One.Api.Chamados;
+using One.Api.Chamados.TempoReal;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 using static One.Api.Dados.Chamados.EstadosChamado;

@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using One.Api.Assistente;
+using One.Api.Assistente.Respostas;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;

@@ -2,10 +2,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using One.Api.Acesso;
 using One.Api.Administracao;
 using One.Api.Assistente;
+using One.Api.Assistente.Busca;
 using One.Api.Chamados;
+using One.Api.Chamados.Push;
 using One.Api.Conhecimento;
 using One.Api.Indicadores;
 using One.Api.Instituicoes;
+using One.Api.Instituicoes.Plataforma;
 using One.Api.Mcp;
 
 namespace One.Api;

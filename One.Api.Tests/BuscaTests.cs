@@ -4,7 +4,6 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using One.Api.Assistente;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

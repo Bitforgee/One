@@ -1,4 +1,4 @@
-using One.Api.Chamados;
+using One.Api.Chamados.Permissao;
 using static One.Api.Dados.Chamados.EstadosChamado;
 
 namespace One.Api.Tests;

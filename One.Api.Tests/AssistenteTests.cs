@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using One.Api.Assistente;
+using One.Api.Assistente.Respostas;
 using One.Api.Dados;
 using One.Api.Tests.Infra;
 

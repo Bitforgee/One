@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
-using One.Api.Chamados;
+using One.Api.Chamados.Push;
 using One.Api.Dados;
 using Lib.Net.Http.WebPush;
 

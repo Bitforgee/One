@@ -1,4 +1,4 @@
-using One.Api.Administracao;
+using One.Api.Administracao.Matriculas;
 
 namespace One.Api.Tests;
 

@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using One.Api.Dados;
-using One.Api.Instituicoes;
+using One.Api.Instituicoes.Plataforma;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;
@@ -478,8 +478,8 @@ public class PlataformaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
             .Select(p => Path.GetRelativePath(api, p).Replace(sep, '/'))
             .OrderBy(p => p, StringComparer.Ordinal)
-            .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Criacao.cs" or "Instituicoes/ReenviarAcesso.cs" or "Instituicoes/ImportarCargaInstituicao.cs" or "Instituicoes/BaixarImagemInstituicao.cs" or "Instituicoes/ManifestoInstituicao.cs" or "Instituicoes/ComandoCarga.cs" or "Instituicoes/ComandoOperador.cs" or "Assistente/ComandoAvaliarBusca.cs"))
+            .Where(p => !p.StartsWith("Acesso/") && p is not ("Sessao.cs" or "Agendador.cs" or "Instituicoes/Plataforma/Criacao.cs" or "Instituicoes/Plataforma/ReenviarAcesso.cs" or "Instituicoes/Carga/ImportarCargaInstituicao.cs" or "Instituicoes/Aparencia/BaixarImagemInstituicao.cs" or "Instituicoes/Carga/ManifestoInstituicao.cs" or "Instituicoes/Carga/ComandoCarga.cs" or "Instituicoes/Plataforma/ComandoOperador.cs" or "Assistente/Busca/ComandoAvaliarBusca.cs"))
             .Where(p => atribui.IsMatch(File.ReadAllText(Path.Combine(api, p))));
-        Assert.Equal(["Chamados/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/ContextoMcp.cs"], fora);
+        Assert.Equal(["Chamados/TempoReal/TempoRealHub.cs", "Mcp/AutenticacaoMcp.cs", "Mcp/ContextoMcp.cs"], fora);
     }
 }

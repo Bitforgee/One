@@ -1,4 +1,4 @@
-using One.Api.Chamados;
+using One.Api.Chamados.Permissao;
 
 namespace One.Api.Tests;
 

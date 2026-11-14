@@ -16,7 +16,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using Npgsql;
-using One.Api.Chamados;
+using One.Api.Chamados.Push;
 using One.Api.Dados;
 
 namespace One.Api.Tests.Infra;

@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using One.Api.Assistente;
+using One.Api.Assistente.Busca;
 using One.Api.Tests.Infra;
 
 namespace One.Api.Tests;

@@ -1,5 +1,5 @@
 using One.Api.Dados;
-using One.Api.Instituicoes;
+using One.Api.Instituicoes.Carga;
 
 namespace One.Api.Tests;
 
