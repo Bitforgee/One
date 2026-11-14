@@ -52,6 +52,31 @@ public class ProgramDespachoTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.DoesNotContain("uso:", erro);
     }
 
+    [Fact]
+    public async Task Instituicao_criar_entrega_o_resto_dos_argumentos_e_cria()
+    {
+        var slug = "despacho-" + Guid.NewGuid().ToString("N")[..8];
+        var (codigo, saida, erro, pedidos) = await Despachar("instituicao", "criar", "--slug", slug, "--nome", "Faculdade Teste", "--fuso", "America/Cuiaba",
+            "--admin-cpf", Semente.NovoCpf(), "--admin-nome", "Coordenadora", "--admin-email", "admin@teste.edu.br");
+
+        Assert.Equal((0, "", 1), (codigo, erro, pedidos));
+        Assert.StartsWith($"Instituição {slug} criada.", saida);
+        Assert.DoesNotContain("uso:", saida);
+    }
+
+    [Theory]
+    [InlineData("carga", "--arquivo", "x.json")]
+    [InlineData("operador", "--cpf", "000.000.000-00")]
+    public async Task Instituicao_carga_e_operador_entregam_o_resto_dos_argumentos(params string[] verboEOpcoes)
+    {
+        var slug = "nao-existe-" + Guid.NewGuid().ToString("N");
+        var (codigo, saida, erro, pedidos) = await Despachar(["instituicao", verboEOpcoes[0], "--slug", slug, .. verboEOpcoes[1..]]);
+
+        Assert.Equal((1, "", 1), (codigo, saida, pedidos));
+        Assert.StartsWith($"--slug: instituição \"{slug}\"", erro);
+        Assert.DoesNotContain("uso:", erro);
+    }
+
     [Theory]
     [InlineData]
     [InlineData("--urls", "http://localhost:0")]
