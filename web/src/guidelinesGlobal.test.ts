@@ -283,7 +283,7 @@ describe('base global do css', () => {
   })
 
   it('C21 o manifest estático e o da API apontam o mesmo arquivo maskable', () => {
-    const daApi = readFileSync('../One.Api/Instituicoes/ManifestoInstituicao.cs', 'utf8').match(/IconeMaskable\s*=\s*"([^"]+)"/)![1]
+    const daApi = readFileSync('../One.Api/Instituicoes/Carga/ManifestoInstituicao.cs', 'utf8').match(/IconeMaskable\s*=\s*"([^"]+)"/)![1]
     const maskable = manifestoEstatico().icons.find((i) => i.purpose === 'maskable')!
     expect(daApi).toBe(maskable.src)
     expect(daApi).toBe(Maskable)
