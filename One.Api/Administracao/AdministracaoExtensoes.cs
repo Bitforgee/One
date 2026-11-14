@@ -1,3 +1,12 @@
+using One.Api.Administracao.Categorias;
+using One.Api.Administracao.Cursos;
+using One.Api.Administracao.Fluxos;
+using One.Api.Administracao.Integracoes;
+using One.Api.Administracao.Matriculas;
+using One.Api.Administracao.RespostasProntas;
+using One.Api.Administracao.Setores;
+using One.Api.Administracao.Usuarios;
+
 namespace One.Api.Administracao;
 
 public static class AdministracaoExtensoes
