@@ -71,7 +71,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void IgnoreQueryFilters_so_no_agendador_e_no_comando()
     {
         var api = Path.Combine(Raiz(), "One.Api");
-        var permitidos = new[] { Path.Combine(api, "Acesso", "ApagarLancamentos.cs"), Path.Combine(api, "Assistente", "AbandonarConversas.cs"), Path.Combine(api, "Chamados", "FecharResolvidos.cs"), Path.Combine(api, "Chamados", "ResolverSemResposta.cs"), Path.Combine(api, "Chamados", "LembrarAguardando.cs"), Path.Combine(api, "Chamados", "SubirPorPrazo.cs"), Path.Combine(api, "Chamados", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "IndexarTrechos.cs") };
+        var permitidos = new[] { Path.Combine(api, "Acesso", "ApagarLancamentos.cs"), Path.Combine(api, "Assistente", "Conversas", "AbandonarConversas.cs"), Path.Combine(api, "Chamados", "Tarefas", "FecharResolvidos.cs"), Path.Combine(api, "Chamados", "Tarefas", "ResolverSemResposta.cs"), Path.Combine(api, "Chamados", "Tarefas", "LembrarAguardando.cs"), Path.Combine(api, "Chamados", "Tarefas", "SubirPorPrazo.cs"), Path.Combine(api, "Chamados", "Tarefas", "EnviarEmails.cs"), Path.Combine(api, "Chamados", "Tarefas", "EnviarPushes.cs"), Path.Combine(api, "Assistente", "Busca", "IndexarTrechos.cs") };
         var sep = Path.DirectorySeparatorChar;
         var usos = Directory.EnumerateFiles(api, "*.cs", SearchOption.AllDirectories)
             .Where(p => !p.Contains($"{sep}bin{sep}") && !p.Contains($"{sep}obj{sep}"))
@@ -281,6 +281,131 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Directory.GetFiles(Api, "*.cs").Select(Path.GetFileNameWithoutExtension).Order());
     }
 
+    static readonly Dictionary<string, string[]> SubpastasPermitidas = new()
+    {
+        ["Chamados"] = ["Acoes", "Permissao", "Consulta", "Push", "TempoReal", "Tarefas"],
+        ["Administracao"] = ["Categorias", "Cursos", "Setores", "Usuarios", "RespostasProntas", "Fluxos", "Matriculas", "Integracoes"],
+        ["Assistente"] = ["Conversas", "Respostas", "Busca"],
+        ["Conhecimento"] = ["Artigos", "Documentos"],
+        ["Instituicoes"] = ["Aparencia", "Carga", "Plataforma"],
+    };
+
+    static readonly string[] FatiasPlanas = ["Acesso", "Mcp", "Indicadores"];
+
+    static Dictionary<string, List<string>> ArquivosPorPasta(string fatia)
+    {
+        var porPasta = new Dictionary<string, List<string>>();
+        foreach (var arquivo in CodigoApi().Where(p => Relativo(p).StartsWith(fatia + "/")))
+        {
+            var partes = Relativo(arquivo).Split('/');
+            var pasta = partes.Length == 2 ? "" : string.Join("/", partes[1..^1]);
+            if (!porPasta.TryGetValue(pasta, out var nomes)) porPasta[pasta] = nomes = [];
+            nomes.Add(Path.GetFileNameWithoutExtension(arquivo));
+        }
+        return porPasta;
+    }
+
+    [Fact]
+    public void Subpastas_das_fatias()
+    {
+        Assert.Equal(22, SubpastasPermitidas.Values.Sum(s => s.Length));
+        foreach (var (fatia, permitidas) in SubpastasPermitidas)
+        {
+            var porPasta = ArquivosPorPasta(fatia);
+            Assert.All(porPasta.Keys.Where(k => k != ""), pasta =>
+            {
+                Assert.False(pasta.Contains('/'), $"{fatia}/{pasta}: mais de um nível de subpasta");
+                Assert.True(permitidas.Contains(pasta), $"{fatia}/{pasta}: nome fora da lista fechada");
+                Assert.True(porPasta[pasta].Count <= 12, $"{fatia}/{pasta}: {porPasta[pasta].Count} arquivos, no máximo 12");
+            });
+            var naRaiz = porPasta.GetValueOrDefault("")?.Count ?? 0;
+            Assert.True(naRaiz <= 4, $"{fatia}: {naRaiz} arquivos na raiz da fatia, no máximo 4");
+        }
+    }
+
+    [Fact]
+    public void Fatias_planas()
+    {
+        Assert.Equal(["Acesso", "Indicadores", "Mcp"], FatiasPlanas.Order());
+        Assert.Equal(Fatias.Order(), FatiasPlanas.Concat(SubpastasPermitidas.Keys).Order());
+        foreach (var fatia in FatiasPlanas)
+        {
+            Assert.Empty(Directory.GetDirectories(Path.Combine(Api, fatia)).Select(Path.GetFileName).Except(["bin", "obj"]));
+            Assert.All(DaPasta(fatia).Where(p => CodigoApi().Contains(p)), p => Assert.Equal(fatia, Path.GetRelativePath(Api, Path.GetDirectoryName(p)!)));
+        }
+        var pastas = Directory.GetDirectories(Api).Select(Path.GetFileName).Except(["bin", "obj", "Properties", "wwwroot"]).Order();
+        Assert.Equal([.. Fatias.Append("Dados").Order()], pastas);
+    }
+
+    static void ConferirMapa(string fatia, Dictionary<string, string[]> esperado, int total)
+    {
+        var porPasta = ArquivosPorPasta(fatia);
+        Assert.Equal(esperado.Keys.Order(), porPasta.Keys.Order());
+        foreach (var (pasta, nomes) in esperado)
+        {
+            Assert.Equal(nomes.Order(StringComparer.Ordinal), porPasta[pasta].Order(StringComparer.Ordinal));
+            Assert.True(porPasta[pasta].Count == nomes.Length, $"{fatia}/{pasta}: {porPasta[pasta].Count} arquivos, esperado {nomes.Length}");
+        }
+        Assert.Equal(total, porPasta.Values.Sum(l => l.Count));
+    }
+
+    [Fact]
+    public void Mapa_de_Chamados() =>
+        ConferirMapa("Chamados", new()
+        {
+            ["Acoes"] = ["AbrirChamado", "AssumirChamado", "CancelarChamado", "ConfirmarChamado", "EncaminharChamado", "MarcarDuplicado", "ReclassificarChamado", "RejeitarChamado", "ResolverChamado", "ResponderChamado", "SubirChamado", "Transferencia"],
+            ["Permissao"] = ["AcoesChamado", "AgirNoChamado", "AcessoChamado", "PermissoesChamado"],
+            ["Consulta"] = ["ListarChamados", "VerChamado", "DetalheChamado", "ConsultasDoDetalhe", "ConsultasDeFluxo", "ChamadoDoUsuario", "BaixarAnexo", "AnexoDeFormulario", "RespostasProntasDoSetor"],
+            ["Push"] = ["AtivarPush", "DesativarPush", "ConfigPush", "VerChavePush", "PushComando", "PushEnviador"],
+            ["TempoReal"] = ["TempoRealGrupos", "TempoRealHub", "AvisarMudanca", "ColetaDeMudancas"],
+            ["Tarefas"] = ["FecharResolvidos", "LembrarAguardando", "ResolverSemResposta", "SubirPorPrazo", "EnviarEmails", "EnviarPushes"],
+            [""] = ["Avisos", "ChamadosExtensoes"],
+        }, 43);
+
+    [Fact]
+    public void Mapa_de_Administracao() =>
+        ConferirMapa("Administracao", new()
+        {
+            ["Categorias"] = ["CriarCategoria", "AlterarCategoria", "ListarCategorias", "CategoriaResposta"],
+            ["Cursos"] = ["CriarCurso", "AlterarCurso", "ListarCursos", "CursoResposta", "ValidacaoDeCurso"],
+            ["Setores"] = ["CriarSetor", "AlterarSetor", "ListarSetores", "SetorResposta", "ValidacaoDeSetor"],
+            ["Usuarios"] = ["CriarUsuario", "AlterarUsuario", "DesativarUsuario", "ListarUsuarios", "UsuarioResposta", "ValidacaoDeUsuario"],
+            ["RespostasProntas"] = ["CriarRespostaPronta", "AlterarRespostaPronta", "ListarRespostasProntas", "RespostaProntaResposta"],
+            ["Fluxos"] = ["CriarFluxo", "SalvarRascunho", "DescartarRascunho", "PublicarFluxo", "SimularFluxo", "ListarFluxos", "FluxoResposta"],
+            ["Matriculas"] = ["ImportarMatriculas", "CsvMatriculas"],
+            ["Integracoes"] = ["VerMoodle", "AlterarMoodle", "MoodleDados", "VerMcp", "CriarTokenMcp", "RevogarTokenMcp"],
+            [""] = ["AdministracaoExtensoes", "ErrosDeAdmin"],
+        }, 41);
+
+    [Fact]
+    public void Mapa_de_Assistente() =>
+        ConferirMapa("Assistente", new()
+        {
+            ["Conversas"] = ["NovaConversa", "NovaMensagem", "EnvioDeMensagem", "VerConversa", "VerDestino", "EncerrarConversa", "AvaliarConversa", "TransferirConversa", "ConversaDoAluno", "BaixarAnexoConversa", "AtendimentoDireto", "AbandonarConversas"],
+            ["Respostas"] = ["Assistente", "MontarPrompt", "ChamarProvedor", "CorpoDoProvedor", "SaidaModelo", "Conferencia", "ConferirResposta", "Pergunta", "Textos", "LerAnexosDaJanela"],
+            ["Busca"] = ["Embeddings", "IndexarTrechos", "Trecho", "ComandoAvaliarBusca"],
+            [""] = ["AssistenteExtensoes"],
+        }, 27);
+
+    [Fact]
+    public void Mapa_de_Conhecimento() =>
+        ConferirMapa("Conhecimento", new()
+        {
+            ["Artigos"] = ["CriarArtigo", "AlterarArtigo", "ArquivarArtigo", "AtivarArtigo", "ListarArtigos", "ArtigoComVersoes", "ArtigoResposta", "ValidacaoDeArtigo", "VerVersaoArtigo"],
+            ["Documentos"] = ["CriarDocumento", "ArquivarDocumento", "NovaVersaoDocumento", "BaixarVersaoDocumento", "ListarDocumentos", "DocumentoComVersoes", "DocumentoResposta", "DivisorDeTexto", "LeitorDePdf"],
+            [""] = ["BuscarFontes", "CitacoesDeFontes", "ConhecimentoExtensoes"],
+        }, 21);
+
+    [Fact]
+    public void Mapa_de_Instituicoes() =>
+        ConferirMapa("Instituicoes", new()
+        {
+            ["Aparencia"] = ["AlterarAparencia", "VerAparencia", "AparenciaDados", "ContrasteDaCor", "EnviarImagemInstituicao", "BaixarImagemInstituicao", "RemoverImagemInstituicao"],
+            ["Carga"] = ["CargaInicial", "CargaValidacao", "ComandoCarga", "ContratosDaCarga", "ImportarCargaInstituicao", "ManifestoInstituicao", "ArquivoDeComando"],
+            ["Plataforma"] = ["CriarInstituicao", "Criacao", "ComandoCriar", "DesativarInstituicao", "ReativarInstituicao", "ReenviarAcesso", "ListarInstituicoes", "ComandoOperador", "InstituicaoComando", "ErrosDaPlataforma"],
+            [""] = ["InstituicoesExtensoes"],
+        }, 25);
+
     [Fact]
     public void Namespace_igual_a_pasta()
     {
@@ -321,6 +446,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Importacao_em_arquivo_proprio()
     {
         var arquivo = Assert.Single(DaPasta("Administracao"), p => File.ReadAllText(p).Contains("\"/matriculas/importacao\""));
+        Assert.Equal("Administracao/Matriculas", Path.GetRelativePath(Api, Path.GetDirectoryName(arquivo)!).Replace('\\', '/'));
         Assert.Single(Regex.Matches(SemComentarios(arquivo), @"\.Map\w*\("));
     }
 
@@ -352,7 +478,9 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .Where(x => x.Item2 is not null)
             .Select(x => (x.t, x.Item2!.GetGenericArguments()[0])).ToList();
 
-    static string ArquivoDo(Type t) => Path.Combine(Api, t.Namespace!["One.Api.".Length..], t.Name + ".cs");
+    static string FatiaDo(Type t) => t.Namespace!["One.Api.".Length..].Split('.')[0];
+
+    static string ArquivoDo(Type t) => Path.Combine(Api, Path.Combine(t.Namespace!["One.Api.".Length..].Split('.')), t.Name + ".cs");
 
     [Fact]
     public void Um_arquivo_por_caso_de_uso()
@@ -361,7 +489,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(87, mensagens.Count);
         var porFatia = new Dictionary<string, int> { ["Acesso"] = 9, ["Assistente"] = 9, ["Chamados"] = 17, ["Conhecimento"] = 11, ["Indicadores"] = 1, ["Administracao"] = 28, ["Instituicoes"] = 12 };
         foreach (var (fatia, n) in porFatia)
-            Assert.True(mensagens.Count(t => t.Namespace == $"One.Api.{fatia}") == n, $"{fatia}: {mensagens.Count(t => t.Namespace == $"One.Api.{fatia}")}, esperado {n}");
+            Assert.True(mensagens.Count(t => FatiaDo(t) == fatia) == n, $"{fatia}: {mensagens.Count(t => FatiaDo(t) == fatia)}, esperado {n}");
         var declaraMensagem = new Regex(@"\b(class|record|struct)\s+\w+[^{;]*?:\s*[^{;]*?(\bIRequest<|\bIAcaoChamado\b)");
         foreach (var t in mensagens)
         {
@@ -431,7 +559,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Fora_do_mediator()
     {
         var logout = Assert.Single(CodigoApi(), p => File.ReadAllText(p).Contains("\"/auth/logout\""));
-        foreach (var arquivo in new[] { Path.Combine(Api, "Agendador.cs"), Path.Combine(Api, "Sessao.cs"), Path.Combine(Api, "Instituicoes", "InstituicaoComando.cs"), logout })
+        foreach (var arquivo in new[] { Path.Combine(Api, "Agendador.cs"), Path.Combine(Api, "Sessao.cs"), Path.Combine(Api, "Instituicoes", "Plataforma", "InstituicaoComando.cs"), logout })
         {
             var codigo = File.ReadAllText(arquivo);
             foreach (var proibido in new[] { "IMediator", "ISender", "using Mediator" })
@@ -447,10 +575,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.All(mensagem.GetProperties(), p => Assert.DoesNotContain(p.PropertyType, proibidos));
         var handlers = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => Fechado(t, typeof(Mediator.IRequestHandler<,>)) is not null).ToList();
         Assert.Equal(87, handlers.Count);
-        foreach (var t in handlers.Append(typeof(One.Api.Chamados.AgirNoChamado<,>)))
+        foreach (var t in handlers.Append(typeof(One.Api.Chamados.Permissao.AgirNoChamado<,>)))
             foreach (var c in t.GetConstructors())
                 Assert.All(c.GetParameters(), p => Assert.DoesNotContain(p.ParameterType, proibidos));
-        var montar = Assert.Single(typeof(One.Api.Chamados.DetalheChamado).GetMethods(), m => m.Name == "Montar");
+        var montar = Assert.Single(typeof(One.Api.Chamados.Consulta.DetalheChamado).GetMethods(), m => m.Name == "Montar");
         Assert.DoesNotContain(typeof(HttpContext), montar.GetParameters().Select(p => p.ParameterType));
         Assert.Empty(ArquivosQue(new Regex("IHttpContextAccessor")));
     }
@@ -464,7 +592,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             {
                 var codigo = SemComentarios(p);
                 return Regex.IsMatch(codigo, @"PermissoesChamado\.Estados\(")
-                    || (Regex.IsMatch(codigo, @"using\s+static\s+One\.Api\.Chamados\.PermissoesChamado\s*;") && Regex.IsMatch(codigo, @"(?<![\w.])Estados\("));
+                    || (Regex.IsMatch(codigo, @"using\s+static\s+One\.Api\.Chamados\.Permissao\.PermissoesChamado\s*;") && Regex.IsMatch(codigo, @"(?<![\w.])Estados\("));
             }).ToList();
         var arquivo = Assert.Single(chamaEstados);
         Assert.Contains("class AgirNoChamado<", SemComentarios(arquivo));
@@ -646,19 +774,19 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Dez_acoes_do_chamado()
     {
-        var acoes = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => typeof(One.Api.Chamados.IAcaoChamado).IsAssignableFrom(t)).ToList();
+        var acoes = typeof(Program).Assembly.GetTypes().Where(Concreto).Where(t => typeof(One.Api.Chamados.Permissao.IAcaoChamado).IsAssignableFrom(t)).ToList();
         Assert.Equal(10, acoes.Count);
-        Assert.All(acoes, t => Assert.True(File.Exists(Path.Combine(Api, "Chamados", t.Name + ".cs")) && t.Namespace == "One.Api.Chamados", t.Name));
+        Assert.All(acoes, t => Assert.True(File.Exists(Path.Combine(Api, "Chamados", "Acoes", t.Name + ".cs")) && t.Namespace == "One.Api.Chamados.Acoes", t.Name));
 
         object Construir(Type t, string tipo) =>
             Assert.Single(t.GetConstructors()).Invoke([.. Assert.Single(t.GetConstructors()).GetParameters().Select(p =>
                 p.ParameterType == typeof(IFormCollection) ? new FormCollection(new() { ["tipo"] = tipo })
                 : p.ParameterType == typeof(string) ? "2026-000001"
                 : p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null)]);
-        var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
+        var nomes = acoes.SelectMany(t => new[] { "PUBLICA", "NOTA" }.Select(tipo => ((One.Api.Chamados.Permissao.IAcaoChamado)Construir(t, tipo)).Acao)).ToHashSet();
         Assert.Equal(["assumir", "cancelar", "confirmar", "duplicado", "encaminhar", "nota", "reclassificar", "rejeitar", "resolver", "responder", "subir"], nomes.Order());
-        Assert.All(nomes, n => Assert.True(new[] { "ALUNO", "ATENDENTE", "LIDER" }.Any(p => One.Api.Chamados.PermissoesChamado.Estados(n, p) is not null), n));
-        Assert.Equal(["assumir", "nota", "resolver", "responder", "subir"], nomes.Where(n => One.Api.Chamados.PermissoesChamado.Estados(n, "LIDER") is not null).Order());
+        Assert.All(nomes, n => Assert.True(new[] { "ALUNO", "ATENDENTE", "LIDER" }.Any(p => One.Api.Chamados.Permissao.PermissoesChamado.Estados(n, p) is not null), n));
+        Assert.Equal(["assumir", "nota", "resolver", "responder", "subir"], nomes.Where(n => One.Api.Chamados.Permissao.PermissoesChamado.Estados(n, "LIDER") is not null).Order());
     }
 
     [Fact]
@@ -670,7 +798,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             .SelectMany(e => db.Model.FindEntityType(e)!.GetProperties().Select(p => p.Name)).ToList()));
         Assert.NotEmpty(colunas);
         Assert.DoesNotContain(colunas, proibido.IsMatch);
-        foreach (var entrada in new[] { typeof(One.Api.Administracao.SalvarRascunho.EtapaEntrada), typeof(One.Api.Administracao.SalvarRascunho.Entrada), typeof(One.Api.Administracao.CriarFluxo.Entrada) })
+        foreach (var entrada in new[] { typeof(One.Api.Administracao.Fluxos.SalvarRascunho.EtapaEntrada), typeof(One.Api.Administracao.Fluxos.SalvarRascunho.Entrada), typeof(One.Api.Administracao.Fluxos.CriarFluxo.Entrada) })
             Assert.DoesNotContain(entrada.GetProperties(), p => proibido.IsMatch(p.Name));
     }
 
@@ -678,7 +806,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Setor_so_pelo_ResolverFluxo()
     {
         Assert.Equal(["Dados/Fluxos/Fluxo.cs", "Dados/Fluxos/RoteamentoDeFluxo.cs"], ArquivosQue(new Regex(@"\.Destino\s*(==|!=|\bis\b|switch\b)")));
-        foreach (var usa in new[] { "Chamados/AbrirChamado.cs", "Chamados/SubirChamado.cs", "Administracao/SimularFluxo.cs", "Chamados/SubirPorPrazo.cs" })
+        foreach (var usa in new[] { "Chamados/Acoes/AbrirChamado.cs", "Chamados/Acoes/SubirChamado.cs", "Administracao/Fluxos/SimularFluxo.cs", "Chamados/Tarefas/SubirPorPrazo.cs" })
         {
             var codigo = CodigoDe(usa.Split('/'));
             Assert.Matches(@"(ConsultasDeFluxo|RoteamentoDeFluxo)\.(Rotear|Seguinte|Proximo)\(", codigo);
@@ -784,8 +912,14 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         ("Administracao", "RespostaProntaResposta", ["ListarRespostasProntas", "CriarRespostaPronta", "AlterarRespostaPronta"]),
     ];
 
+    static readonly Dictionary<string, string> SubpastaDoShared = new()
+    {
+        ["DetalheChamado"] = "Consulta", ["ArtigoResposta"] = "Artigos", ["DocumentoResposta"] = "Documentos", ["UsuarioResposta"] = "Usuarios", ["FluxoResposta"] = "Fluxos",
+        ["SetorResposta"] = "Setores", ["CategoriaResposta"] = "Categorias", ["CursoResposta"] = "Cursos", ["RespostaProntaResposta"] = "RespostasProntas",
+    };
+
     static string TextoDoCaso(Type mensagem) =>
-        SemComentarios(typeof(One.Api.Chamados.IAcaoChamado).IsAssignableFrom(mensagem) ? Path.Combine(Api, "Chamados", "AgirNoChamado.cs") : ArquivoDo(mensagem));
+        SemComentarios(typeof(One.Api.Chamados.Permissao.IAcaoChamado).IsAssignableFrom(mensagem) ? Path.Combine(Api, "Chamados", "Permissao", "AgirNoChamado.cs") : ArquivoDo(mensagem));
 
     [Fact]
     public void Resposta_por_caso_de_uso()
@@ -819,7 +953,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(comJson.Count, ComRespostaAninhada.Length + doShared.Count + 1);
         Assert.All(SemCorpoJson, n => Assert.DoesNotContain(n, aninhadas.Concat(doShared.Keys)));
 
-        var shared = OsNoveShared.Select(x => Path.Combine(Api, x.fatia, x.record + ".cs")).ToList();
+        var shared = OsNoveShared.Select(x => Path.Combine(Api, x.fatia, SubpastaDoShared[x.record], x.record + ".cs")).ToList();
         Assert.Equal(9, shared.Count);
         foreach (var arquivo in shared)
         {
@@ -828,7 +962,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             var codigo = SemComentarios(arquivo);
             Assert.Equal([nome], TipoDeTopo.Matches(codigo).Select(m => m.Groups[1].Value));
             Assert.Matches($@"(?m)^public sealed record {nome}\b", codigo);
-            Assert.Matches($@"(?m)^namespace One\.Api\.{fatia};", codigo);
+            Assert.Matches($@"(?m)^namespace One\.Api\.{fatia}\.{SubpastaDoShared[nome]};", codigo);
             Assert.Equal(fatia, OsNoveShared.Single(x => x.record == nome).fatia);
         }
         Assert.Equal(OsNoveShared.Select(x => x.record).Order(), shared.Select(Path.GetFileNameWithoutExtension).Order());
@@ -840,7 +974,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         var mensagens = Mensagens().Select(m => m.mensagem).ToList();
         foreach (var (fatia, record, casos) in OsNoveShared)
         {
-            var citam = mensagens.Where(m => m.Namespace == $"One.Api.{fatia}" && Regex.IsMatch(TextoDoCaso(m), $@"\b{record}\b")).Select(m => m.Name).Order().ToList();
+            var citam = mensagens.Where(m => FatiaDo(m) == fatia && Regex.IsMatch(TextoDoCaso(m), $@"\b{record}\b")).Select(m => m.Name).Order().ToList();
             Assert.True(citam.Count >= 3, $"{record}: {citam.Count} usos");
             Assert.Equal(casos.Order(), citam);
             var fora = CodigoApi().Where(p => !Relativo(p).StartsWith(fatia + "/"));
@@ -860,10 +994,10 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Nenhum_corpo_tipado_object()
     {
-        var detalhe = typeof(One.Api.Chamados.DetalheChamado);
+        var detalhe = typeof(One.Api.Chamados.Consulta.DetalheChamado);
         var itens = typeof(IReadOnlyList<object>);
         var tipos = typeof(Program).Assembly.GetTypes()
-            .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && t.FullName != "One.Api.Assistente.Assistente"
+            .Where(t => t.Namespace is { } ns && ns.StartsWith("One.Api") && !ns.StartsWith("One.Api.Dados.Migracoes") && t.FullName != "One.Api.Assistente.Respostas.Assistente"
                 && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false) && !t.Name.Contains('<'));
         var com = tipos.SelectMany(Assinaturas).Where(x => ComObject(x.tipo)).ToList();
         var restante = com.Where(x => !(x.onde.StartsWith(detalhe.FullName + ".") && x.onde.Contains("Transcricao") && (x.tipo == itens || x.tipo.GetElementType() == itens))).ToList();
@@ -883,14 +1017,14 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         string[] Publicos(Type t) => [.. t.GetMembers(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.DeclaredOnly)
             .Where(m => m is not System.Reflection.ConstructorInfo && !(m is System.Reflection.MethodInfo { IsSpecialName: true })).Select(m => m.Name).Order()];
 
-        var permissoes = typeof(One.Api.Chamados.PermissoesChamado);
+        var permissoes = typeof(One.Api.Chamados.Permissao.PermissoesChamado);
         Assert.Equal(["Acoes", "Aluno", "Atendente", "Estados", "Lider"], Publicos(permissoes));
         Assert.Equal(typeof(string[]), permissoes.GetMethod("Estados")!.ReturnType);
         Assert.Equal([typeof(string), typeof(string)], permissoes.GetMethod("Estados")!.GetParameters().Select(p => p.ParameterType));
         Assert.Equal(typeof(IEnumerable<string>), permissoes.GetMethod("Acoes")!.ReturnType);
         Assert.Equal([typeof(string), typeof(string), typeof(long?), typeof(long)], permissoes.GetMethod("Acoes")!.GetParameters().Select(p => p.ParameterType));
 
-        var acesso = typeof(One.Api.Chamados.AcessoChamado);
+        var acesso = typeof(One.Api.Chamados.Permissao.AcessoChamado);
         Assert.Equal(["Agora", "Chamado", "Papel", "Preencher"], Publicos(acesso));
         Assert.All(acesso.GetProperties(), p => Assert.False(p.SetMethod is { IsPublic: true }, p.Name));
         var preencher = acesso.GetMethod("Preencher")!;
@@ -898,15 +1032,15 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal([typeof(Chamado), typeof(string), typeof(DateTime)],
             preencher.GetParameters().Select(p => p.ParameterType));
 
-        var acao = typeof(One.Api.Chamados.IAcaoChamado);
+        var acao = typeof(One.Api.Chamados.Permissao.IAcaoChamado);
         Assert.Equal(["Acao", "Criado", "Instituicao", "Numero", "Usuario", "Validar"], Publicos(acao));
         var validar = acao.GetMethod("Validar")!;
         Assert.Equal(typeof(ValueTask<IResult?>), validar.ReturnType);
-        Assert.Equal([typeof(One.Api.Chamados.AcessoChamado), typeof(OneDb)], validar.GetParameters().Select(p => p.ParameterType));
+        Assert.Equal([typeof(One.Api.Chamados.Permissao.AcessoChamado), typeof(OneDb)], validar.GetParameters().Select(p => p.ParameterType));
 
-        var agir = typeof(One.Api.Chamados.AgirNoChamado<,>);
+        var agir = typeof(One.Api.Chamados.Permissao.AgirNoChamado<,>);
         Assert.Equal(["Handle"], Publicos(agir));
-        Assert.Equal([typeof(OneDb), typeof(One.Api.Chamados.AcessoChamado), typeof(TimeProvider)],
+        Assert.Equal([typeof(OneDb), typeof(One.Api.Chamados.Permissao.AcessoChamado), typeof(TimeProvider)],
             Assert.Single(agir.GetConstructors()).GetParameters().Select(p => p.ParameterType));
         var handle = agir.GetMethod("Handle")!;
         Assert.Equal(typeof(ValueTask<>), handle.ReturnType.GetGenericTypeDefinition());
@@ -914,7 +1048,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
         Assert.Equal(typeof(CancellationToken), handle.GetParameters()[2].ParameterType);
         Assert.Equal(agir.GetGenericArguments()[0], handle.GetParameters()[0].ParameterType);
 
-        Assert.Equal(typeof(Task<One.Api.Chamados.DetalheChamado>), typeof(One.Api.Chamados.DetalheChamado).GetMethod("Montar")!.ReturnType);
+        Assert.Equal(typeof(Task<One.Api.Chamados.Consulta.DetalheChamado>), typeof(One.Api.Chamados.Consulta.DetalheChamado).GetMethod("Montar")!.ReturnType);
 
         var recusa = CodigoDe("Dados", "Recusa.cs");
         Assert.Contains("namespace One.Api.Dados;", recusa);
@@ -923,8 +1057,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
             Assert.Equal(typeof(Recusa), tipo.GetMethod(metodo)!.ReturnType);
 
         var sep = Path.DirectorySeparatorChar;
-        var chamam = CodigoApi().Where(p => !p.EndsWith($"{sep}Chamados{sep}PermissoesChamado.cs")).Where(p => Regex.IsMatch(SemComentarios(p), @"\bEstados\(")).Select(Relativo);
-        Assert.Equal(["Chamados/AgirNoChamado.cs"], chamam);
+        var chamam = CodigoApi().Where(p => !p.EndsWith($"{sep}Chamados{sep}Permissao{sep}PermissoesChamado.cs")).Where(p => Regex.IsMatch(SemComentarios(p), @"\bEstados\(")).Select(Relativo);
+        Assert.Equal(["Chamados/Permissao/AgirNoChamado.cs"], chamam);
     }
 
     [Fact]
@@ -973,7 +1107,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     public void Baixar_so_com_chave_de_coluna_do_banco()
     {
         var chamam = CodigoApi().Where(p => Regex.IsMatch(SemComentarios(p), @"\.Baixar\(")).Select(Relativo).Order().ToList();
-        Assert.Equal(["Assistente/BaixarAnexoConversa.cs", "Assistente/LerAnexosDaJanela.cs", "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs", "EnviadorSmtp.cs", "Instituicoes/BaixarImagemInstituicao.cs"], chamam);
+        Assert.Equal(["Assistente/Conversas/BaixarAnexoConversa.cs", "Assistente/Respostas/LerAnexosDaJanela.cs", "Chamados/Consulta/BaixarAnexo.cs", "Conhecimento/Documentos/BaixarVersaoDocumento.cs", "EnviadorSmtp.cs", "Instituicoes/Aparencia/BaixarImagemInstituicao.cs"], chamam);
         foreach (var arquivo in chamam)
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));
@@ -985,7 +1119,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Download_em_streaming_sem_array_inteiro()
     {
-        foreach (var arquivo in new[] { "Chamados/BaixarAnexo.cs", "Conhecimento/BaixarVersaoDocumento.cs" })
+        foreach (var arquivo in new[] { "Chamados/Consulta/BaixarAnexo.cs", "Conhecimento/Documentos/BaixarVersaoDocumento.cs" })
         {
             var codigo = SemComentarios(Path.Combine(Api, arquivo));
             Assert.Contains("Results.Stream(", codigo);
@@ -1039,13 +1173,13 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [Fact]
     public void Contrato_do_hub()
     {
-        var metodos = typeof(One.Api.Chamados.TempoRealHub).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
+        var metodos = typeof(One.Api.Chamados.TempoReal.TempoRealHub).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly);
         Assert.Equal(["EntrarNaFila()", "EntrarNoChamado(String)", "SairDoChamado(String)"],
             metodos.Select(m => $"{m.Name}({string.Join(",", m.GetParameters().Select(p => p.ParameterType.Name))})").Order());
         Assert.All(metodos, m => Assert.Equal(typeof(Task), m.ReturnType));
 
         var hub = f.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
-            .Where(e => e.Metadata.GetMetadata<Microsoft.AspNetCore.SignalR.HubMetadata>()?.HubType == typeof(One.Api.Chamados.TempoRealHub)).ToList();
+            .Where(e => e.Metadata.GetMetadata<Microsoft.AspNetCore.SignalR.HubMetadata>()?.HubType == typeof(One.Api.Chamados.TempoReal.TempoRealHub)).ToList();
         Assert.Equal(["/api/tempo-real", "/api/tempo-real/negotiate"], hub.Select(e => e.RoutePattern.RawText).Order());
     }
 
@@ -1054,7 +1188,7 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     {
         var comNome = ArquivosDaApi().Where(a => Regex.IsMatch(File.ReadAllText(a), @"\x22[^\x22\r\n]*\b(chamado|fila):")).Select(Path.GetFileName).ToList();
         Assert.Equal(["TempoRealGrupos.cs"], comNome);
-        var hub = File.ReadAllText(Path.Combine(Api, "Chamados", "TempoRealHub.cs"));
+        var hub = File.ReadAllText(Path.Combine(Api, "Chamados", "TempoReal", "TempoRealHub.cs"));
         var usos = Regex.Matches(hub, @"TempoRealGrupos\.\w+\((\w+(?:\.\w+)*)").Select(m => m.Groups[1].Value).ToList();
         Assert.NotEmpty(usos);
         Assert.All(usos, u => Assert.Equal("u.InstituicaoId", u));
@@ -1147,8 +1281,8 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
 
     static readonly string[] Excecoes_Handler_sem_new_de_entidade =
     [
-        "Administracao/AlterarMoodle.cs",
-        "Chamados/ResponderChamado.cs",
+        "Administracao/Integracoes/AlterarMoodle.cs",
+        "Chamados/Acoes/ResponderChamado.cs",
 
     ];
 
@@ -1169,34 +1303,34 @@ public class ArquiteturaTests(OneFactory f) : IClassFixture<OneFactory>
     [
         "Acesso.Eu",
         "Acesso.TrocarSenha",
-        "Administracao.CriarTokenMcp",
-        "Administracao.DesativarUsuario",
-        "Assistente.AtendimentoDireto",
-        "Assistente.AvaliarConversa",
-        "Assistente.BaixarAnexoConversa",
-        "Assistente.EncerrarConversa",
-        "Assistente.NovaConversa",
-        "Assistente.NovaMensagem",
-        "Assistente.TransferirConversa",
-        "Assistente.VerConversa",
-        "Assistente.VerDestino",
-        "Chamados.AssumirChamado",
-        "Chamados.AtivarPush",
-        "Chamados.BaixarAnexo",
-        "Chamados.CancelarChamado",
-        "Chamados.ConfirmarChamado",
-        "Chamados.DesativarPush",
-        "Chamados.EncaminharChamado",
-        "Chamados.ListarChamados",
-        "Chamados.MarcarDuplicado",
-        "Chamados.ReclassificarChamado",
-        "Chamados.RejeitarChamado",
-        "Chamados.ResolverChamado",
-        "Chamados.ResponderChamado",
-        "Chamados.RespostasProntasDoSetor",
-        "Chamados.SubirChamado",
-        "Chamados.VerChamado",
-        "Conhecimento.BaixarVersaoDocumento",
+        "Administracao.Integracoes.CriarTokenMcp",
+        "Administracao.Usuarios.DesativarUsuario",
+        "Assistente.Conversas.AtendimentoDireto",
+        "Assistente.Conversas.AvaliarConversa",
+        "Assistente.Conversas.BaixarAnexoConversa",
+        "Assistente.Conversas.EncerrarConversa",
+        "Assistente.Conversas.NovaConversa",
+        "Assistente.Conversas.NovaMensagem",
+        "Assistente.Conversas.TransferirConversa",
+        "Assistente.Conversas.VerConversa",
+        "Assistente.Conversas.VerDestino",
+        "Chamados.Acoes.AssumirChamado",
+        "Chamados.Push.AtivarPush",
+        "Chamados.Consulta.BaixarAnexo",
+        "Chamados.Acoes.CancelarChamado",
+        "Chamados.Acoes.ConfirmarChamado",
+        "Chamados.Push.DesativarPush",
+        "Chamados.Acoes.EncaminharChamado",
+        "Chamados.Consulta.ListarChamados",
+        "Chamados.Acoes.MarcarDuplicado",
+        "Chamados.Acoes.ReclassificarChamado",
+        "Chamados.Acoes.RejeitarChamado",
+        "Chamados.Acoes.ResolverChamado",
+        "Chamados.Acoes.ResponderChamado",
+        "Chamados.Consulta.RespostasProntasDoSetor",
+        "Chamados.Acoes.SubirChamado",
+        "Chamados.Consulta.VerChamado",
+        "Conhecimento.Documentos.BaixarVersaoDocumento",
         "Indicadores.ConsultarIndicadores",
     ];
 

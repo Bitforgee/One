@@ -80,12 +80,15 @@ budget: 150k
 - `LESSONS.md` e `lessons.json` são gerados pelo `lessons.py` da skill: sem a skill, não edite esses dois
   arquivos; escreva a lição no `verification.md` e quem tiver a skill registra.
 
-## Arquitetura da API (AD-017, AD-019, AD-024)
+## Arquitetura da API (AD-017, AD-019, AD-024, AD-056)
 - Fatias verticais por assunto: `One.Api/<Fatia>/`, namespace `One.Api.<Fatia>` (`Acesso`, `Administracao`,
   `Assistente`, `Chamados`, `Conhecimento`, `Indicadores`, `Instituicoes`). Compartilhado só em `One.Api/Dados/` e `One.Api/*.cs`.
+- Subpasta por assunto (AD-056): `Chamados`, `Administracao`, `Assistente`, `Conhecimento` e `Instituicoes` se dividem em
+  `One.Api/<Fatia>/<Subpasta>/` (um nível só, nomes da lista fechada do AD-056, no máximo 12 arquivos por subpasta e 4 na raiz da
+  fatia); o namespace segue a pasta (`One.Api.<Fatia>.<Subpasta>`). `Acesso`, `Mcp` e `Indicadores` ficam planas.
 - Um arquivo por caso de uso: `record` de request com `static Mapear(RouteGroupBuilder)` da própria rota,
   `Entrada`/resposta nomeadas no mesmo arquivo e o `...Handler` (`IRequestHandler`, pacote `Mediator` 3.x, não MediatR).
-  Modelo: `One.Api/Chamados/ResolverChamado.cs`. Sem objeto anônimo na resposta, sem DTO compartilhado entre fatias.
+  Modelo: `One.Api/Chamados/Acoes/ResolverChamado.cs`. Sem objeto anônimo na resposta, sem DTO compartilhado entre fatias.
 - Domínio rico em `One.Api/Dados/<Agregado>/`, uma entidade por arquivo: transições de estado são métodos com setter
   privado; o domínio não referencia ASP.NET Core, Mediator nem handlers. Handler só orquestra dados e efeitos.
 - Sem camadas Domain/Application/Infrastructure, sem repositório sobre o EF Core, sem `Common`/`Utils`;
