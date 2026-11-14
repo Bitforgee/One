@@ -708,6 +708,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: web/src/administracao/integracoes.test.tsx:45 (web)
 - last seen: 2026-11-10T15:24:49Z
 
+### L-117 - Afirme os dois lados de um limite de tamanho no teste da entidade: o valor exato do limite passa e o seguinte é recusado.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/tests` · harmful: 0
+- features: refatoracao-back-limpa
+- evidence: m27 (verification.md, rodada 2, Setor.cs:25) (api/tests)
+- last seen: 2026-11-14T03:35:24Z
+
+### L-118 - Teste o despacho da linha de comando com um verbo válido por braço e afirme que os argumentos chegam ao comando, não só o caminho do verbo desconhecido.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/tests` · harmful: 0
+- features: refatoracao-back-limpa
+- evidence: m30 (verification.md, rodada 2, Program.cs:57) (api/tests)
+- last seen: 2026-11-14T03:35:24Z
+
+### L-119 - Chame o ponto de entrada Main e afirme o exit code e o que sai na saída padrão e na saída de erro, não só os métodos que ele chama.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `api/tests` · harmful: 0
+- features: refatoracao-back-limpa
+- evidence: m34 (verification.md, rodada 2, Program.cs:17) (api/tests)
+- last seen: 2026-11-14T03:35:24Z
+
+### L-120 - Um teste de concorrência cujo caminho também é guardado por trigger do banco não prova o filtro da aplicação; afirme o efeito que só o filtro evita.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `api/tests` · harmful: 0
+- features: refatoracao-back-limpa
+- evidence: C76 (verification.md, rodada 3, R5, IndexarTrechos.cs:32) (api/tests)
+- last seen: 2026-11-14T03:35:24Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

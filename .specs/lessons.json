@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 117,
+  "next_id": 121,
   "lessons": [
     {
       "id": "L-001",
@@ -2106,6 +2106,78 @@
       ],
       "created": "2026-11-10T15:24:49Z",
       "last_seen": "2026-11-10T15:24:49Z"
+    },
+    {
+      "id": "L-117",
+      "key": "surviving_mutant::afirme os dois lados de um limite de tamanho no teste da entidade o valor exato do limite passa e o seguinte e recusado",
+      "text": "Afirme os dois lados de um limite de tamanho no teste da entidade: o valor exato do limite passa e o seguinte é recusado.",
+      "signal": "surviving_mutant",
+      "scope": "api/tests",
+      "status": "candidate",
+      "features": [
+        "refatoracao-back-limpa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "m27 (verification.md, rodada 2, Setor.cs:25) (api/tests)"
+      ],
+      "created": "2026-11-14T03:35:24Z",
+      "last_seen": "2026-11-14T03:35:24Z"
+    },
+    {
+      "id": "L-118",
+      "key": "surviving_mutant::teste o despacho da linha de comando com um verbo valido por braco e afirme que os argumentos chegam ao comando nao so o caminho do verbo desconhecido",
+      "text": "Teste o despacho da linha de comando com um verbo válido por braço e afirme que os argumentos chegam ao comando, não só o caminho do verbo desconhecido.",
+      "signal": "surviving_mutant",
+      "scope": "api/tests",
+      "status": "candidate",
+      "features": [
+        "refatoracao-back-limpa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "m30 (verification.md, rodada 2, Program.cs:57) (api/tests)"
+      ],
+      "created": "2026-11-14T03:35:24Z",
+      "last_seen": "2026-11-14T03:35:24Z"
+    },
+    {
+      "id": "L-119",
+      "key": "surviving_mutant::chame o ponto de entrada main e afirme o exit code e o que sai na saida padrao e na saida de erro nao so os metodos que ele chama",
+      "text": "Chame o ponto de entrada Main e afirme o exit code e o que sai na saída padrão e na saída de erro, não só os métodos que ele chama.",
+      "signal": "surviving_mutant",
+      "scope": "api/tests",
+      "status": "candidate",
+      "features": [
+        "refatoracao-back-limpa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "m34 (verification.md, rodada 2, Program.cs:17) (api/tests)"
+      ],
+      "created": "2026-11-14T03:35:24Z",
+      "last_seen": "2026-11-14T03:35:24Z"
+    },
+    {
+      "id": "L-120",
+      "key": "ac_gap::um teste de concorrencia cujo caminho tambem e guardado por trigger do banco nao prova o filtro da aplicacao afirme o efeito que so o filtro evita",
+      "text": "Um teste de concorrência cujo caminho também é guardado por trigger do banco não prova o filtro da aplicação; afirme o efeito que só o filtro evita.",
+      "signal": "ac_gap",
+      "scope": "api/tests",
+      "status": "candidate",
+      "features": [
+        "refatoracao-back-limpa"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "C76 (verification.md, rodada 3, R5, IndexarTrechos.cs:32) (api/tests)"
+      ],
+      "created": "2026-11-14T03:35:24Z",
+      "last_seen": "2026-11-14T03:35:24Z"
     }
   ]
 }
