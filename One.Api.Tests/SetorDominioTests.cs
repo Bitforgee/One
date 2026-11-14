@@ -16,6 +16,14 @@ public class SetorDominioTests
     }
 
     [Fact]
+    public void Validar_limita_o_nome_a_100_caracteres()
+    {
+        Assert.Null(Setor.Validar(new string('a', 100), false, null, null));
+        Assert.Equal(new Invalido(Setor.MotivoNome), Setor.Validar(new string('a', 101), false, null, null));
+        Assert.Equal(new Invalido(Setor.MotivoNome), Setor.Validar("", false, null, null));
+    }
+
+    [Fact]
     public void Validar_aceita_setor_comum_e_lideranca()
     {
         Assert.Null(Setor.Validar("Financeiro", false, null, null));
