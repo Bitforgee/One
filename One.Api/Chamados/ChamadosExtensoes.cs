@@ -1,5 +1,10 @@
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using One.Api.Chamados.Consulta;
+using One.Api.Chamados.Permissao;
+using One.Api.Chamados.Push;
+using One.Api.Chamados.Tarefas;
+using One.Api.Chamados.TempoReal;
 
 namespace One.Api.Chamados;
 
