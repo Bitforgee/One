@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -201,6 +202,125 @@ public class AgendadorConcorrenciaTests(OneFactory f) : IClassFixture<OneFactory
         var trecho = await f.Db(i.Id, db => db.TrechosFonte.SingleAsync(t => t.Id == id));
         Assert.Equal(concorrente.ToArray(), trecho.Embedding!.ToArray());
         Assert.Equal(0, trecho.Tentativas);
+    }
+
+    static async Task<int> EmailsNoMailpit(string para)
+    {
+        using var http = new HttpClient { BaseAddress = new Uri("http://localhost:8025") };
+        var busca = JsonDocument.Parse(await http.GetStringAsync($"/api/v1/search?query={Uri.EscapeDataString($"to:\"{para}\"")}")).RootElement;
+        return busca.GetProperty("messages").GetArrayLength();
+    }
+
+    async Task<(Instituicao, string, long)> EmailPendente()
+    {
+        var i = await f.Instituicao();
+        var para = $"{Guid.NewGuid():N}@aluno.com";
+        await f.Db(i.Id, async db =>
+        {
+            db.EmailsSaida.Add(EmailSaida.Criar(para, $"[{i.Nome}] ONE-1: nova resposta", "Olá", Agora));
+            await db.SaveChangesAsync();
+        });
+        return (i, para, await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Destinatario == para).Select(e => e.Id).SingleAsync()));
+    }
+
+    [Fact]
+    public async Task Email_marcado_como_enviado_entre_Ler_e_Processar_e_reenviado_como_na_base()
+    {
+        var (i, para, id) = await EmailPendente();
+        var lidos = await Agendador.Ler();
+        Assert.NotEmpty(Do(lidos, "email", id));
+        var antes = Agora.AddMinutes(-5);
+        await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Id == id).ExecuteUpdateAsync(s => s.SetProperty(e => e.EnviadoEm, antes)));
+
+        await Agendador.Processar(Do(lidos, "email", id));
+
+        Assert.NotNull(await PrimeiroAcessoTests.EmailNoMailpit(para));
+        Assert.Equal(1, await EmailsNoMailpit(para));
+        var linha = await f.Db(i.Id, db => db.EmailsSaida.AsNoTracking().SingleAsync(e => e.Id == id));
+        Assert.Equal((Agora, 0), (linha.EnviadoEm!.Value, linha.Tentativas));
+    }
+
+    [Fact]
+    public async Task Email_apagado_entre_Ler_e_Processar_nao_envia_e_registra_o_erro_do_item()
+    {
+        var (i, para, id) = await EmailPendente();
+        var lidos = await Agendador.Ler();
+        Assert.NotEmpty(Do(lidos, "email", id));
+        await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Id == id).ExecuteDeleteAsync());
+
+        await Agendador.Processar(Do(lidos, "email", id));
+
+        await Task.Delay(500);
+        Assert.Equal(0, await EmailsNoMailpit(para));
+        Assert.Contains(f.Logs.Entradas, l => l.Nivel == LogLevel.Error && l.Campos.GetValueOrDefault("ItemId") is long item && item == id
+            && l.Campos.GetValueOrDefault("InstituicaoId") is long dono && dono == i.Id);
+    }
+
+    [Fact]
+    public async Task Email_ja_enviado_antes_de_Ler_nao_e_lido_nem_reenviado()
+    {
+        var (i, para, id) = await EmailPendente();
+        await f.Db(i.Id, db => db.EmailsSaida.Where(e => e.Id == id).ExecuteUpdateAsync(s => s.SetProperty(e => e.EnviadoEm, Agora.AddMinutes(-5))));
+
+        var lidos = await Agendador.Ler();
+        await Agendador.Executar();
+
+        Assert.Empty(Do(lidos, "email", id));
+        await Task.Delay(500);
+        Assert.Equal(0, await EmailsNoMailpit(para));
+    }
+
+    async Task<long> LancamentoVencido(Instituicao i)
+    {
+        var (state, _) = await f.NovoLancamento(i, agora => agora - LtiLancamento.Validade - TimeSpan.FromDays(2));
+        return await f.Db(i.Id, db => db.LtiLancamentos.Where(l => l.State == state).Select(l => l.Id).SingleAsync());
+    }
+
+    Task<List<long>> Lancamentos(Instituicao i) => f.Db(i.Id, db => db.LtiLancamentos.AsNoTracking().Select(l => l.Id).ToListAsync());
+
+    [Fact]
+    public async Task Duas_execucoes_lancamento_vencido_apagado_uma_vez_e_o_valido_fica_sem_erro()
+    {
+        var i = await f.Instituicao();
+        var vencido = await LancamentoVencido(i);
+        await f.NovoLancamento(i);
+        var valido = (await Lancamentos(i)).Single(id => id != vencido);
+        var erros = Erros();
+
+        await Task.WhenAll(Agendador.Executar(), Agendador.Executar());
+
+        Assert.Equal([valido], await Lancamentos(i));
+        Assert.Equal(erros, Erros());
+    }
+
+    [Fact]
+    public async Task Lancamento_vencido_apagado_por_outro_entre_Ler_e_Executar_nao_falha()
+    {
+        var i = await f.Instituicao();
+        var vencido = await LancamentoVencido(i);
+        await Agendador.Ler();
+        await f.Db(i.Id, db => db.LtiLancamentos.Where(l => l.Id == vencido).ExecuteDeleteAsync());
+        var erros = Erros();
+
+        await Agendador.Executar();
+
+        Assert.Empty(await Lancamentos(i));
+        Assert.Equal(erros, Erros());
+    }
+
+    [Fact]
+    public async Task Lancamento_renovado_por_outro_entre_Ler_e_Executar_nao_e_apagado()
+    {
+        var i = await f.Instituicao();
+        var vencido = await LancamentoVencido(i);
+        await Agendador.Ler();
+        var renovado = Agora + LtiLancamento.Validade;
+        await f.Db(i.Id, db => db.LtiLancamentos.Where(l => l.Id == vencido).ExecuteUpdateAsync(s => s.SetProperty(l => l.ExpiraEm, renovado)));
+
+        await Agendador.Executar();
+
+        Assert.Equal([vencido], await Lancamentos(i));
+        Assert.Equal(renovado, await f.Db(i.Id, db => db.LtiLancamentos.AsNoTracking().Where(l => l.Id == vencido).Select(l => l.ExpiraEm).SingleAsync()));
     }
 
     sealed class ConflitoDeXmin(string conexao, long chamadoId) : SaveChangesInterceptor
