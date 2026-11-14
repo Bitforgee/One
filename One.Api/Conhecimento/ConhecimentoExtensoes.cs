@@ -1,3 +1,6 @@
+using One.Api.Conhecimento.Artigos;
+using One.Api.Conhecimento.Documentos;
+
 namespace One.Api.Conhecimento;
 
 public static class ConhecimentoExtensoes

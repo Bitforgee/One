@@ -1,4 +1,7 @@
 using One.Api.Dados;
+using One.Api.Instituicoes.Aparencia;
+using One.Api.Instituicoes.Carga;
+using One.Api.Instituicoes.Plataforma;
 
 namespace One.Api.Instituicoes;
 

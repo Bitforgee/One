@@ -1,10 +1,13 @@
+using One.Api.Assistente.Busca;
+using One.Api.Assistente.Conversas;
+
 namespace One.Api.Assistente;
 
 public static class AssistenteExtensoes
 {
     public static IServiceCollection AddAssistente(this IServiceCollection s)
     {
-        s.AddScoped<Assistente>();
+        s.AddScoped<Respostas.Assistente>();
         s.AddSingleton<Embeddings>();
         s.AddHttpClient("llm", Llm);
         s.AddSingleton<ITarefaAgendada, AbandonarConversas>();
