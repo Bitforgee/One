@@ -34,7 +34,7 @@ describe('identidade visual', () => {
       .filter((a) => /\.tsx?$/.test(a) && !/\.test\.tsx?$/.test(a))
       .map((a) => [a, readFileSync(`src/${a}`, 'utf8')] as const)
     const importam = fontes.flatMap(([arquivo, texto]) => [...texto.matchAll(/import \{([^}]+)\} from '(?:\.\.?\/)+ilustracoes'/g)].map(([, nomes]) => [arquivo, nomes.split(',').map((n) => n.trim())] as const))
-    expect(importam).toEqual([['administracao/Matriculas.tsx', ['Planilha']]])
+    expect(importam).toEqual([['administracao/cadastros/Matriculas.tsx', ['Planilha']]])
     const indice = fontes.find(([a]) => a === 'ilustracoes/index.tsx')![1]
     expect([...indice.matchAll(/export (?:function|const) (\w+)/g)].map((m) => m[1])).toEqual(['Planilha'])
   })

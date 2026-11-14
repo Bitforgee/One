@@ -1,0 +1,276 @@
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { readFileSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
+import { abrir, api, me, type Rota } from '../../test/util'
+
+const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })
+const etapa = (destino: string, setorId: number | null = null, prazoHoras: number | null = null) => ({ destino, setorId, prazoHoras, x: null, y: null })
+const listas: Record<string, unknown[]> = {
+  setores: [
+    { id: 1, nome: 'Triagem', triagem: true, ativo: true },
+    { id: 2, nome: 'Financeiro', triagem: false, ativo: true },
+  ],
+  categorias: [
+    { id: 7, nome: 'Notas', ativa: true, padrao: false },
+    { id: 9, nome: 'Boletos', ativa: true, padrao: false },
+  ],
+  cursos: [{ id: 4, nome: 'ADS', setorCoordenacaoId: 2 }],
+  fluxos: [
+    { id: 6, categoriaId: 7, cursoId: null, semestre: null, vigente: { numero: 1, etapas: [etapa('SETOR', 2)] }, rascunho: null },
+    { id: 7, categoriaId: 9, cursoId: 4, semestre: 3, rascunho: null, vigente: { numero: 2, etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48)] } },
+  ],
+  'respostas-prontas': [],
+}
+
+function montar(rotas: Record<string, Rota> = {}, quem = admin, sobre: Record<string, unknown[]> = {}) {
+  const leituras = Object.fromEntries(Object.entries({ ...listas, ...sobre }).map(([k, v]) => [`GET /api/admin/${k}`, (() => [200, v]) as Rota]))
+  const chamadas = api({ 'GET /api/auth/me': () => [200, quem], 'GET /api/chamados?escopo=fila': () => [200, []], ...leituras, ...rotas })
+  return chamadas
+}
+
+const editor = async () => within(await screen.findByRole('region', { name: 'Editar: Fluxos' }))
+const semEditor = () => waitFor(() => expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument())
+const gravadas = (chamadas: { metodo: string; url: string; corpo: any }[]) => chamadas.filter((c) => c.metodo !== 'GET').map((c) => [c.metodo, c.url, c.corpo])
+const trilha = () => within(screen.getByRole('navigation', { name: 'Trilha' }))
+const comRascunho = [{ ...(listas.fluxos[0] as object), rascunho: { numero: 2, etapas: [etapa('COORDENACAO_CURSO')] } }]
+
+describe('editor de fluxo na casca', () => {
+  it('abre na casca sem diálogo', async () => {
+    montar()
+    abrir('/univag/cadastros')
+    await userEvent.click(await screen.findByRole('tab', { name: 'Fluxos' }))
+    await userEvent.click(await within(screen.getByRole('tabpanel', { name: 'Fluxos' })).findByRole('button', { name: 'Boletos' }))
+
+    const e = await editor()
+    expect(e.getByLabelText('Destino da etapa 1')).toHaveValue('LIDERANCA_SEMESTRE')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('navigation').length).toBeGreaterThanOrEqual(2)
+    expect(document.querySelector('[data-sidebar=sidebar]')).not.toBeNull()
+  })
+
+  it('trilha do editor', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    await editor()
+    const t = trilha()
+    expect(t.getByRole('link', { name: 'Cadastros' })).toHaveAttribute('href', '/univag/cadastros')
+    expect(t.getByRole('link', { name: 'Fluxos' })).toHaveAttribute('href', '/univag/cadastros?aba=fluxos')
+    const atual = t.getByText('Boletos · ADS, 3º semestre')
+    expect(atual).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('abre direto pelo endereço', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    expect(e.getByLabelText('Destino da etapa 1')).toHaveValue('LIDERANCA_SEMESTRE')
+    expect(e.getByLabelText('Destino da etapa 2')).toHaveValue('COORDENACAO_CURSO')
+    expect(e.queryByLabelText('Destino da etapa 3')).not.toBeInTheDocument()
+  })
+
+  it('fluxo inexistente', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/999')
+    expect(await screen.findByText('Fluxo não encontrado.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Voltar aos fluxos' })).toHaveAttribute('href', '/univag/cadastros?aba=fluxos')
+    expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()
+  })
+
+  it('menu ativo e título', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    await editor()
+    const doMenu = screen.getAllByRole('link', { name: 'Cadastros' }).find((l) => l.closest('[data-sidebar=sidebar]'))!
+    expect(doMenu).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cadastros')
+  })
+
+  it('avisos ao voltar à lista', async () => {
+    const chamadas = montar({ 'POST /api/admin/fluxos/6/publicar': () => [201, {}], 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
+    abrir('/univag/cadastros/fluxos/6')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Publicar' }))
+    expect(await screen.findByText('Fluxo publicado.')).toBeInTheDocument()
+    await semEditor()
+    expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
+    expect(gravadas(chamadas)).toEqual([['POST', '/api/admin/fluxos/6/publicar', {}]])
+  })
+
+  it('avisos ao descartar', async () => {
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
+    abrir('/univag/cadastros/fluxos/6')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Mais' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar rascunho' }))
+    expect(await screen.findByText('Rascunho descartado.')).toBeInTheDocument()
+    await semEditor()
+    expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
+    expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
+  })
+  it('salvar fica no editor', async () => {
+    montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    expect(e.getByText('Alterações não salvas')).toBeInTheDocument()
+    await userEvent.selectOptions(e.getByLabelText('Destino da etapa 3'), 'Coordenação do curso')
+    await userEvent.click(e.getByRole('button', { name: 'Salvar rascunho' }))
+    expect(await screen.findByText('Rascunho salvo.')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Editar: Fluxos' })).toBeInTheDocument()
+    expect(e.getByText('Rascunho salvo')).toBeInTheDocument()
+  })
+
+  it('sair sem salvar', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+
+    for (const saida of [() => trilha().getByRole('link', { name: 'Fluxos' }), () => trilha().getByRole('link', { name: 'Cadastros' }), () => e.getByRole('button', { name: 'Voltar' })]) {
+      await userEvent.click(saida())
+      const d = within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' }))
+      await userEvent.click(d.getByRole('button', { name: 'Continuar editando' }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+      expect(screen.getByRole('region', { name: 'Editar: Fluxos' })).toBeInTheDocument()
+      expect(e.getByLabelText('Destino da etapa 3')).toBeInTheDocument()
+    }
+
+    await userEvent.click(e.getByRole('button', { name: 'Voltar' }))
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' })).getByRole('button', { name: 'Sair sem salvar' }))
+    await semEditor()
+    expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
+  })
+
+  it('sair sem alterações', async () => {
+    montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
+    abrir('/univag/cadastros/fluxos/7')
+    let e = await editor()
+    await userEvent.click(trilha().getByRole('link', { name: 'Fluxos' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await semEditor()
+    expect(await screen.findByRole('tab', { name: 'Fluxos', selected: true })).toBeInTheDocument()
+
+    await userEvent.click(await within(screen.getByRole('tabpanel', { name: 'Fluxos' })).findByRole('button', { name: 'Boletos' }))
+    e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    await userEvent.selectOptions(e.getByLabelText('Destino da etapa 3'), 'Coordenação do curso')
+    await userEvent.click(e.getByRole('button', { name: 'Salvar rascunho' }))
+    await screen.findByText('Rascunho salvo.')
+    await userEvent.click(e.getByRole('button', { name: 'Voltar' }))
+    expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()
+    await semEditor()
+  })
+
+  it('fechar a aba com alterações', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    const fechar = () => {
+      const ev = new Event('beforeunload', { cancelable: true })
+      window.dispatchEvent(ev)
+      return ev.defaultPrevented
+    }
+    expect(fechar()).toBe(false)
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    expect(fechar()).toBe(true)
+  })
+
+  it('barra lateral com alterações', async () => {
+    montar({ 'GET /api/admin/usuarios': () => [200, []] })
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    const doMenu = () => screen.getAllByRole('link', { name: 'Usuários' }).find((l) => l.closest('[data-sidebar=sidebar]'))!
+
+    await userEvent.click(doMenu())
+    const d = within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' }))
+    await userEvent.click(d.getByRole('button', { name: 'Continuar editando' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(e.getByLabelText('Destino da etapa 3')).toBeInTheDocument()
+
+    await userEvent.click(doMenu())
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Sair sem salvar?' })).getByRole('button', { name: 'Sair sem salvar' }))
+    await semEditor()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Usuários' })).toBeInTheDocument()
+  })
+
+  it('descartar depois de editar sai sem perguntar', async () => {
+    const chamadas = montar({ 'DELETE /api/admin/fluxos/6/rascunho': () => [204, undefined] }, admin, { fluxos: comRascunho })
+    abrir('/univag/cadastros/fluxos/6')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    expect(e.getByText('Alterações não salvas')).toBeInTheDocument()
+    await userEvent.click(e.getByRole('button', { name: 'Mais' }))
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Descartar rascunho' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Descartar rascunho' }))
+    expect(await screen.findByText('Rascunho descartado.')).toBeInTheDocument()
+    await semEditor()
+    expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument()
+    expect(gravadas(chamadas)).toEqual([['DELETE', '/api/admin/fluxos/6/rascunho', undefined]])
+  })
+  it('Ctrl+S salva o rascunho', async () => {
+    let solta: () => void = () => undefined
+    const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => new Promise((r) => (solta = () => r([200, { numero: 3, etapas: [] }]))) })
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    await userEvent.click(e.getByRole('button', { name: 'Adicionar etapa' }))
+    await userEvent.selectOptions(e.getByLabelText('Destino da etapa 3'), 'Coordenação do curso')
+
+    expect(fireEvent.keyDown(document.body, { key: 's', ctrlKey: true })).toBe(false)
+    await waitFor(() => expect(gravadas(chamadas)).toEqual([['PUT', '/api/admin/fluxos/7/rascunho', { etapas: [etapa('LIDERANCA_SEMESTRE'), etapa('COORDENACAO_CURSO', null, 48), etapa('COORDENACAO_CURSO')] }]]))
+    expect(fireEvent.keyDown(document.body, { key: 'S', metaKey: true })).toBe(false)
+    expect(gravadas(chamadas)).toHaveLength(1)
+    solta()
+    expect(await screen.findByText('Rascunho salvo.')).toBeInTheDocument()
+  })
+
+  it('outras teclas não salvam', async () => {
+    const chamadas = montar({ 'PUT /api/admin/fluxos/7/rascunho': () => [200, { numero: 3, etapas: [] }] })
+    abrir('/univag/cadastros/fluxos/7')
+    await editor()
+    expect(fireEvent.keyDown(document.body, { key: 'a', ctrlKey: true })).toBe(true)
+    expect(fireEvent.keyDown(document.body, { key: 's' })).toBe(true)
+    expect(fireEvent.keyDown(document.body, { key: 'z', metaKey: true })).toBe(true)
+    await new Promise((r) => setTimeout(r, 50))
+    expect(gravadas(chamadas)).toEqual([])
+  })
+  it('roteador de dados', () => {
+    const principal = readFileSync('src/main.tsx', 'utf8')
+    const util = readFileSync('src/test/util.tsx', 'utf8')
+    expect(principal.match(/createBrowserRouter\(/g)).toHaveLength(1)
+    expect(principal.match(/<RouterProvider /g)).toHaveLength(1)
+    expect(principal).not.toMatch(/<BrowserRouter/)
+    expect(util).toMatch(/createMemoryRouter\(/)
+    expect(util).not.toMatch(/<MemoryRouter/)
+  })
+  it('barra do editor', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/7')
+    const e = await editor()
+    expect(e.getByText('Publicado v2')).toBeInTheDocument()
+    for (const nome of ['Voltar', 'Simular', 'Salvar rascunho', 'Publicar', 'Mais']) expect(e.getByRole('button', { name: nome })).toBeInTheDocument()
+    expect(e.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Lista', 'Canvas'])
+    expect(e.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
+    await userEvent.click(e.getByRole('button', { name: 'Mais' }))
+    expect(await screen.findByRole('menuitem', { name: 'Descartar rascunho' })).toBeInTheDocument()
+  })
+
+  it('endereço do editor', async () => {
+    montar()
+    abrir('/univag/cadastros/fluxos/abc')
+    expect(await screen.findByText('Fluxo não encontrado.')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cadastros')
+    const app = readFileSync('src/App.tsx', 'utf8')
+    expect(app.match(/path="cadastros\/fluxos\/:id"/g)).toHaveLength(1)
+  })
+
+  it('sem o papel de administrador', async () => {
+    montar({}, me({ papeis: ['ATENDENTE'], matriculas: [] }))
+    abrir('/univag/cadastros/fluxos/7')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Fila' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Editar: Fluxos' })).not.toBeInTheDocument()
+  })
+})

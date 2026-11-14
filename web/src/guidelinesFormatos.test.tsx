@@ -1,8 +1,8 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Rotulos } from './administracao/abasDaAparencia'
-import { CampoImagem } from './administracao/CampoImagem'
+import { Rotulos } from './administracao/aparencia/abasDaAparencia'
+import { CampoImagem } from './administracao/aparencia/CampoImagem'
 import { AjudaDosAnexos } from './assistente/Anexos'
 import { plural } from './formatos'
 import { LinkDeAnexo } from './LinkDeAnexo'
@@ -150,7 +150,7 @@ describe('datas curtas', () => {
 
   it('C38 o código usa Intl.DateTimeFormat com dateStyle short e nenhum slice sobre a data formatada', () => {
     expect(fonte('formatos.ts')).toMatch(/Intl\.DateTimeFormat\('pt-BR',\s*\{\s*dateStyle:\s*'short'/)
-    for (const arquivo of ['administracao/Instituicoes.tsx', 'administracao/Mcp.tsx']) {
+    for (const arquivo of ['administracao/instituicoes/Instituicoes.tsx', 'administracao/integracoes/Mcp.tsx']) {
       expect(fonte(arquivo), arquivo).not.toMatch(/formatarData\([^)]*\)\.slice\(0,\s*10\)/)
       expect(fonte(arquivo), arquivo).toContain('dataCurta(')
     }
@@ -244,8 +244,8 @@ describe('aspas curvas', () => {
   })
 
   it('C45 o texto do Moodle e os de comum, Documentos e Cadastros não citam com aspas retas', () => {
-    expect(fonte('administracao/Moodle.tsx')).not.toMatch(/'[^'\n]*"[^"'\n]+"[^'\n]*'/)
-    for (const arquivo of ['conhecimento/comum.tsx', 'conhecimento/Documentos.tsx', 'administracao/Cadastros.tsx']) {
+    expect(fonte('administracao/integracoes/Moodle.tsx')).not.toMatch(/'[^'\n]*"[^"'\n]+"[^'\n]*'/)
+    for (const arquivo of ['conhecimento/comum.tsx', 'conhecimento/Documentos.tsx', 'administracao/cadastros/Cadastros.tsx']) {
       expect(fonte(arquivo), arquivo).toContain('“')
       expect(fonte(arquivo), arquivo).toContain('”')
       expect(fonte(arquivo), arquivo).not.toMatch(/>\s*"\{|\}"\s/)

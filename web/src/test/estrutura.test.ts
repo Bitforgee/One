@@ -41,7 +41,7 @@ it('estrutura em fatias', () => {
     const importam = new Set(
       arquivos
         .filter((a) => Fatias.includes(pasta(a)) && !a.endsWith('.test.tsx'))
-        .filter((a) => texto(a).includes(`from '../${modulo}'`))
+        .filter((a) => new RegExp(`from '(?:\\.\\./)+${modulo}'`).test(texto(a)))
         .map(pasta),
     )
     expect(importam.size, arquivo).toBeGreaterThanOrEqual(2)
@@ -52,6 +52,37 @@ it('estrutura em fatias', () => {
   expect(arquivos.filter((a) => pasta(a) !== 'ui' && SoDaUi.test(texto(a)))).toEqual([])
 })
 
+it('administracao em subpastas', () => {
+  const Subpastas = ['aparencia', 'fluxos', 'cadastros', 'integracoes', 'instituicoes']
+  const dela = arquivos.filter((a) => a.startsWith('administracao/')).map((a) => a.slice('administracao/'.length))
+  expect(dela.length).toBe(52)
+  for (const arquivo of dela) {
+    const partes = arquivo.split('/')
+    expect(partes.length, arquivo).toBeLessThanOrEqual(2)
+    if (partes.length === 2) expect(Subpastas, arquivo).toContain(partes[0])
+  }
+  expect(dela.filter((a) => !a.includes('/')).sort()).toEqual(['avisoAoFechar.ts', 'comum.tsx'])
+  for (const subpasta of Subpastas) expect(dela.some((a) => a.startsWith(`${subpasta}/`)), subpasta).toBe(true)
+
+  const app = texto('App.tsx')
+  const subpastaDaTela: Record<string, string> = {}
+  for (const [, nome, subpasta] of app.matchAll(/import \{ (\w+) \} from '\.\/administracao\/(\w+)\/\w+'/g)) subpastaDaTela[nome] = subpasta
+  const rotas = [...app.matchAll(/<Route path="([^"]+)" element=\{<(\w+)/g)]
+    .filter(([, , tela]) => subpastaDaTela[tela])
+    .map(([, caminho, tela]) => ({ padrao: new RegExp(`^${caminho.replace(/:\w+/g, '[^/]*')}$`), subpasta: subpastaDaTela[tela] }))
+  expect(rotas.length).toBeGreaterThan(0)
+
+  const testes = dela.filter((a) => a.endsWith('.test.tsx'))
+  expect(testes.length).toBeGreaterThan(0)
+  for (const teste of testes) {
+    const fonte = texto(`administracao/${teste}`)
+    const dasRotas = [...fonte.matchAll(/abrir\('\/[^/'?]+\/([^'?]*)/g)].flatMap(([, caminho]) => rotas.filter((r) => r.padrao.test(caminho)).map((r) => r.subpasta))
+    const dosImports = [...fonte.matchAll(/from '\.\.?\/(?:(\w+)\/)?\w+'/g)].map(([, subpasta]) => subpasta ?? teste.split('/')[0])
+    expect([...dasRotas, ...dosImports], teste).toContain(teste.split('/')[0])
+  }
+
+  for (const arquivo of dela.filter((a) => a.includes('/'))) expect(texto(`administracao/${arquivo}`), arquivo).not.toMatch(/(?:from|import)\s*\(?\s*['"]@\//)
+})
 it('canvas carregado só sob demanda', () => {
   const biblioteca = /(?:from|import)\s*['"]@xyflow\/react[^'"]*['"]/
   const codigo = arquivos.filter((a) => !/\.test\.tsx?$/.test(a))
@@ -60,7 +91,7 @@ it('canvas carregado só sob demanda', () => {
   for (const a of usam) expect(pasta(a), a).toBe('administracao')
 
   const modulo = (a: string) => a.replace(/^.*\//, '').replace(/\.tsx?$/, '')
-  const importam = (a: string) => codigo.filter((o) => new RegExp(`from ['"]\\.{1,2}/(?:administracao/)?${modulo(a)}['"]`).test(texto(o)))
+  const importam = (a: string) => codigo.filter((o) => new RegExp(`from ['"]\\.{1,2}/(?:\\.\\./)*(?:[a-z]+/)*${modulo(a)}['"]`).test(texto(o)))
   for (const a of usam) expect(importam(a).filter((o) => !usam.includes(o)), a).toEqual([])
   const portas = usam.filter((a) => importam(a).length === 0)
   expect(portas.length).toBeGreaterThan(0)

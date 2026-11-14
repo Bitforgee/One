@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CoresProntas } from './administracao/CoresProntas'
+import { CoresProntas } from './administracao/aparencia/CoresProntas'
 import { abrir, api, chamado, me, type Rota } from './test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })

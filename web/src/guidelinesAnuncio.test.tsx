@@ -1,7 +1,7 @@
 import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Carga } from './administracao/EdicaoDoFluxo'
+import { Carga } from './administracao/fluxos/EdicaoDoFluxo'
 import { abrir, api, chamado, instituicao, me, type Rota } from './test/util'
 
 const admin = me({ papeis: ['ADMINISTRADOR'], matriculas: [] })

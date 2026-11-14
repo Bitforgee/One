@@ -266,7 +266,7 @@ describe('interface nova', () => {
 
   it('TanStack Table só nas 3 tabelas', () => {
     const usam = arquivos.filter((a) => texto(a).includes('useReact' + 'Table('))
-    expect(['indicadores/Indicadores.tsx', 'administracao/Matriculas.tsx']).toEqual(expect.arrayContaining(usam))
+    expect(['indicadores/Indicadores.tsx', 'administracao/cadastros/Matriculas.tsx']).toEqual(expect.arrayContaining(usam))
     expect(usam).toContain('indicadores/Indicadores.tsx')
     for (const recurso of ['getSorted' + 'RowModel', 'getFiltered' + 'RowModel', 'getPagination' + 'RowModel']) expect(arquivos.filter((a) => texto(a).includes(recurso)), recurso).toEqual([])
   })
