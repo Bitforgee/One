@@ -3,7 +3,7 @@ import { Check, Clock, Flag, SkipForward, Trash2, TriangleAlert } from 'lucide-r
 import { useState, type CSSProperties } from 'react'
 import { Button } from '../../ui/button'
 import type { Destino } from '../comum'
-import { Icones } from './IconesDoDestino'
+import { Icones } from '../IconesDoDestino'
 
 const Cartao = 'relative flex h-16 items-center gap-3 border bg-card text-card-foreground shadow-xs transition-colors'
 const Bloco = 'flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'

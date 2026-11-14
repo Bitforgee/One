@@ -61,8 +61,19 @@ it('administracao em subpastas', () => {
     expect(partes.length, arquivo).toBeLessThanOrEqual(2)
     if (partes.length === 2) expect(Subpastas, arquivo).toContain(partes[0])
   }
-  expect(dela.filter((a) => !a.includes('/')).sort()).toEqual(['avisoAoFechar.ts', 'comum.tsx'])
+  expect(dela.filter((a) => !a.includes('/')).sort()).toEqual(['avisoAoFechar.ts', 'comum.tsx', 'IconesDoDestino.ts', 'LinhasDosCadastros.tsx'].sort())
   for (const subpasta of Subpastas) expect(dela.some((a) => a.startsWith(`${subpasta}/`)), subpasta).toBe(true)
+  const Mapa: Record<string, string[]> = {
+    aparencia: ['Aparencia.tsx', 'abasDaAparencia.ts', 'CampoImagem.tsx', 'CoresProntas.tsx', 'PreviaAparencia.tsx', 'aparencia.test.tsx', 'aparenciaAbas.test.tsx', 'guidelinesCores.test.tsx', 'guidelinesPrevia.test.tsx', 'identidade.test.tsx'],
+    fluxos: ['Canvas.tsx', 'NosDoCanvas.tsx', 'PainelDoNo.tsx', 'AdicionarEtapa.tsx', 'LigacaoComMais.tsx', 'ListaDeEtapas.tsx', 'EdicaoDoFluxo.tsx', 'PaginaDoFluxo.tsx', 'Simulador.tsx', 'grafo.ts', 'canvas.test.tsx', 'paginaDoFluxo.test.tsx', 'guidelinesFluxo.test.tsx', 'guidelinesSimulador.test.tsx'],
+    cadastros: ['Cadastros.tsx', 'Gerir.tsx', 'Usuarios.tsx', 'Matriculas.tsx', 'admin.test.tsx', 'cadastros.test.tsx', 'fluxos.test.tsx', 'gerir.test.tsx', 'guidelinesBusca.test.tsx', 'icones.test.tsx', 'revisao.test.tsx', 'setorEmFluxo.test.tsx', 'textos.test.tsx', 'usuarios.test.tsx'],
+    integracoes: ['Integracoes.tsx', 'Moodle.tsx', 'Mcp.tsx', 'AbaIntegracao.tsx', 'integracoes.test.tsx', 'mcp.test.tsx', 'guidelinesCopiar.test.tsx', 'guidelinesMoodle.test.tsx'],
+    instituicoes: ['Instituicoes.tsx', 'instituicoes.test.tsx'],
+  }
+  for (const subpasta of Subpastas)
+    expect(dela.filter((a) => a.startsWith(`${subpasta}/`)).map((a) => a.slice(subpasta.length + 1)).sort(), subpasta).toEqual([...Mapa[subpasta]].sort())
+  for (const arquivo of dela.filter((a) => a.includes('/') && !a.endsWith('.test.tsx')))
+    expect(texto(`administracao/${arquivo}`), arquivo).not.toMatch(/from '\.\.\/(?:aparencia|fluxos|cadastros|integracoes|instituicoes)\//)
 
   const app = texto('App.tsx')
   const subpastaDaTela: Record<string, string> = {}

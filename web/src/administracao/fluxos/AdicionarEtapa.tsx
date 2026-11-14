@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '../../ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '../../ui/popover'
 import { Destinos, type Destino } from '../comum'
-import { Icones } from './IconesDoDestino'
+import { Icones } from '../IconesDoDestino'
 
 export const TipoArrastado = 'application/x-fluxo-destino'
 

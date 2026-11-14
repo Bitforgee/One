@@ -55,7 +55,7 @@ Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~ArquiteturaTests.
 
 ### S5 - `web/src/administracao/` em 5 subpastas (P2) · 52 files · 378 KB · ~97k
 
-**C13** - O `it("administracao em subpastas")` de `estrutura.test.ts` exige: os 52 arquivos de `web/src/administracao/` (a contagem do base) ficam em `aparencia/`, `fluxos/`, `cadastros/`, `integracoes/`, `instituicoes/` ou na raiz da fatia; a raiz tem `comum.tsx` e `avisoAoFechar.ts`; nenhum arquivo está a mais de 1 nível de subpasta; cada `*.test.tsx` está na mesma subpasta de uma tela que ele abre (AC 13, 14, door 4)
+**C13** - O `it("administracao em subpastas")` de `estrutura.test.ts` exige: os 52 arquivos de `web/src/administracao/` (a contagem do base) ficam em `aparencia/`, `fluxos/`, `cadastros/`, `integracoes/`, `instituicoes/` ou na raiz da fatia; a raiz tem exatamente `comum.tsx`, `avisoAoFechar.ts`, `IconesDoDestino.ts` e `LinhasDosCadastros.tsx` (os dois últimos usados por `fluxos/` e `cadastros/`, emenda E1); cada subpasta tem exatamente a lista de arquivos do mapa abaixo (aparencia 10, fluxos 14, cadastros 14, integracoes 8, instituicoes 2), conferida arquivo a arquivo (emenda E2); nenhum arquivo de produto de uma subpasta importa de outra subpasta (`../fluxos/`, `../cadastros/` etc.; emenda E1); nenhum arquivo está a mais de 1 nível de subpasta; cada `*.test.tsx` está na mesma subpasta de uma tela que ele abre (AC 13, 14, door 4)
 Proof: `npm --prefix web test -- src/test/estrutura.test.ts -t "administracao em subpastas"`
 
 **C14** - O `it("estrutura em fatias")` existente passa sem mudança de asserção: as pastas de `web/src` continuam as 6 fatias mais `ui` e `ilustracoes`, e cada teste abre uma tela da própria fatia (AC 14)
@@ -67,7 +67,7 @@ Proof: `npm --prefix web run build`
 
 ### S6 - Nada muda por fora (P1) · 0 files novos · ~6k
 
-**C16** - O retrato de rotas (61 linhas), os retratos de resposta e o modelo EF não mudam: `RetratoTests` inteira passa, `Modelo_sem_mudanca_pendente` passa, `dotnet ef migrations has-pending-model-changes --project One.Api` sai 0 e `git diff --stat <base>..HEAD -- One.Api/Dados/Migracoes` não imprime nada (AC 16)
+**C16** - O retrato de rotas (93 linhas, `RetratoTests.cs` fixa `Assert.Equal(93, viva.Count)`; emenda E3), os retratos de resposta e o modelo EF não mudam: `RetratoTests` inteira passa, `Modelo_sem_mudanca_pendente` passa, `dotnet ef migrations has-pending-model-changes --project One.Api` sai 0 e `git diff --stat <base>..HEAD -- One.Api/Dados/Migracoes` não imprime nada (AC 16)
 Proof: `dotnet test One.Api.Tests --filter "FullyQualifiedName~RetratoTests|FullyQualifiedName~ArquiteturaTests.Modelo_sem_mudanca_pendente"`
 Proof: `dotnet ef migrations has-pending-model-changes --project One.Api`
 Proof: `pwsh -NoProfile -Command "if (git diff --stat 5c3c8ee..HEAD -- One.Api/Dados/Migracoes) { exit 1 } else { exit 0 }"`
@@ -84,6 +84,15 @@ Proof: `npm --prefix web run coverage -- --maxWorkers=4`
 Proof: `dotnet build One.slnx`
 Proof: `npm --prefix web run e2e`
 
+## Emendas
+
+Aprovadas pelo dono em 13/11 ("faça isso"), depois da rodada 2 do Verify. Os checks originais não foram apagados; o texto novo está no próprio check.
+
+- **E1 (C13):** `IconesDoDestino.ts` e `LinhasDosCadastros.tsx` são usados por `fluxos/` e `cadastros/` e vão para a raiz de `web/src/administracao/`; nenhum arquivo de produto de uma subpasta importa de outra. Motivo: o build deixou um em cada subpasta, com import cruzado nos dois sentidos.
+- **E2 (C13):** a atribuição arquivo a arquivo do web passa a ser conferida pelo teste, contra a lista literal do mapa (a rodada 1 achou que o teste só exigia 1 arquivo por subpasta).
+- **E3 (C16):** o retrato de rotas tem 93 linhas, não 61 (o número 61 veio do `vertical-slice-completa`; o retrato cresceu depois). A prova não muda.
+- **E4 (C19):** o membro `crapper` do C19 fica sem prova por risco aceito, AD-057 (o executável é bloqueado pelo Controle de Aplicativo deste computador).
+
 ## Coverage
 
 | Set (size) | Member -> proof | Unproven |
@@ -98,7 +107,7 @@ Proof: `npm --prefix web run e2e`
 | 10 ações do chamado (10) | `AbrirChamado` C6 · `AssumirChamado` C6 · `CancelarChamado` C6 · `ConfirmarChamado` C6 · `EncaminharChamado` C6 · `MarcarDuplicado` C6 · `ReclassificarChamado` C6 · `RejeitarChamado` C6 · `ResolverChamado` C6 · `ResponderChamado` C6 | - |
 | arquivos que usam `IgnoreQueryFilters` (9) | `ApagarLancamentos` C7 · `AbandonarConversas` C7 · `IndexarTrechos` C7 · `FecharResolvidos` C7 · `ResolverSemResposta` C7 · `LembrarAguardando` C7 · `SubirPorPrazo` C7 · `EnviarEmails` C7 · `EnviarPushes` C7 | - |
 | fatias planas (3) | `Acesso` C4 · `Mcp` C4 · `Indicadores` C4 | - |
-| rotas do retrato, nenhuma nova ou alterada (61) | todas as 61 linhas do retrato C16, table-driven | - |
+| rotas do retrato, nenhuma nova ou alterada (93) | todas as 93 linhas do retrato C16, table-driven | - |
 | startup config: assemblies de teste (1) | `OneFactory` único, usado por `RetratoTests` C16 e pela suíte C17 | - |
 
 - Claims que citam rota, status ou corpo: C16 - cruza a fronteira HTTP pelo retrato e pelas suítes de integração existentes

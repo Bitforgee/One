@@ -1,8 +1,8 @@
 import { ChevronRight } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
-import { Badge } from '../../ui/badge'
-import { abrangenciaDoFluxo, rotuloDaEtapa, type Categoria, type Curso, type Fluxo, type Pronta, type Setor, type VersaoDoFluxo } from '../comum'
-import { Icones } from '../fluxos/IconesDoDestino'
+import { Badge } from '../ui/badge'
+import { abrangenciaDoFluxo, rotuloDaEtapa, type Categoria, type Curso, type Fluxo, type Pronta, type Setor, type VersaoDoFluxo } from './comum'
+import { Icones } from './IconesDoDestino'
 
 export type Listas = { setores: Setor[]; categorias: Categoria[]; cursos: Curso[]; fluxos: Fluxo[]; prontas: Pronta[] }
 export type Aba = keyof Listas

@@ -18,7 +18,7 @@ import { TableCell, TableRow } from '../../ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { Textarea } from '../../ui/textarea'
 import { abrangenciaDoFluxo, semLideranca, SemestresDe1a12, type Fluxo } from '../comum'
-import { linhas, type Aba, type Linha, type Listas } from './LinhasDosCadastros'
+import { linhas, type Aba, type Linha, type Listas } from '../LinhasDosCadastros'
 
 type Ficha = Record<string, any>
 type Campos = { editando: Ficha; setEditando: Dispatch<SetStateAction<Ficha | undefined>>; dados?: Listas; erros: Record<string, string> }

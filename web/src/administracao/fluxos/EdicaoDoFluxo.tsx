@@ -17,7 +17,7 @@ import { useAvisoAoFechar } from '../avisoAoFechar'
 import { abrangenciaDoFluxo, type Categoria, type Curso, type Fluxo, type Setor } from '../comum'
 import { caminho, cadeiaValida, deEtapas, etapasParaApi, FraseDaCadeia, fixarPosicoes, type Grafo } from './grafo'
 import { ListaDeEtapas } from './ListaDeEtapas'
-import { estadoDoFluxo } from '../cadastros/LinhasDosCadastros'
+import { estadoDoFluxo } from '../LinhasDosCadastros'
 import { BotaoSimular, Simulador, useSimulador, type EstadoDoSimulador, type Simulacao } from './Simulador'
 
 export const Carga = { canvas: () => import('./Canvas') }

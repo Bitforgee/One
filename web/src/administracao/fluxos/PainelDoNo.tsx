@@ -6,7 +6,7 @@ import { Label } from '../../ui/label'
 import { NativeSelect } from '../../ui/native-select'
 import { Destinos, type Setor } from '../comum'
 import type { No } from './grafo'
-import { Icones } from './IconesDoDestino'
+import { Icones } from '../IconesDoDestino'
 
 type Props = { no: No; setores: Setor[]; mudar: (parcial: Partial<No>) => void; remover: () => void; fechar: () => void }
 
