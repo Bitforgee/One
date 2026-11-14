@@ -142,3 +142,6 @@ Estimativa por `wc -c` dos arquivos que cada slice toca, dividido por 4, com o o
 - S6 = ~6k (rodar provas e escrever `asserts_so_caminho.py`) → acumulado 92k, tudo em `One.Api/` e `One.Api.Tests/`
 - S5 = ~97k (`web/src/administracao/`, 378 KB) entra em 189k, acima do orçamento de 150k → corte proposto depois de S4 e S6 (a fronteira da API para o `web/`)
 - Mechanism: **handoff** (escolha do dono) - batch 1 = S1-S4 e S6 da API, batch 2 = S5 do `web/`, em sequência e só no verde; o Verificador roda depois do último commit, dispatchado pelo orquestrador
+- **Boundary:** C1-C12, C16, C18 fechados em bef094d
+- **Settled mid-build:** base real foi eab6d1c (os checks citam 5c3c8ee); `Fatias_do_api` ficou sem mudança (a lista `Fatias` já tem 8 fatias mais `Dados`); `asserts_so_caminho.py` normaliza também `FatiaDo(t) == fatia` como `t.Namespace == $"One.Api.{fatia}"` e o sufixo `\.{SubpastaDoShared[x]}`; `Retratos/servicos.txt`, `AgendadorTarefasTests`, `PlataformaTests` e `ProvedorTests` ganharam só caminhos e namespaces novos; os commits S2 a S4 não compilam o projeto de testes sozinhos (testes e `using` de `One.Api.Tests`, `Mcp` e `Program.cs` vão no último commit)
+- **Abandoned:** nada
